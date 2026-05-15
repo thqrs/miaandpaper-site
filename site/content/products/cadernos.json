@@ -306,7 +306,9 @@
           ],
           "purchaseOptionImages": {
             "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_8.jpg",
-            "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_8.jpg"
+            "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_8.jpg",
+            "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_8.jpg",
+            "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_8.jpg"
           }
         },
         {
@@ -490,6 +492,7 @@
       "maxLength": 25,
       "exampleImage": "content/designs/cadernos/personalizacao/personalizacao-capa.jpg",
       "exampleAlt": "Exemplo de personalização da capa",
+      "showExample": false,
       "note": "Importante: A capa do mini-caderno de oferta não é personalizável.",
       "items": [
         {

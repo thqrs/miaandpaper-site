@@ -6185,6 +6185,7 @@
     var textError = missingText
       ? "Escreve o nome ou frase para personalizar a capa."
       : (tooLong ? "O nome/frase tem de ter no máximo " + limit + " caracteres." : "");
+    var showExample = step.showExample !== false && !!step.exampleImage;
     var exampleVisible = state.selections.show_caderno_personalization_example !== false;
     var html = "";
 
@@ -6218,8 +6219,8 @@
     });
 
     return [
-      step.exampleImage ? '<button class="example-toggle" type="button" data-caderno-personalization-example-toggle>' + (exampleVisible ? "Ocultar exemplo" : "Ver exemplo") + '</button>' : "",
-      step.exampleImage ? '<div class="details-example cadernos-personalization-example"' + (exampleVisible ? "" : " hidden") + '><img class="example-image" src="' + escapeHtml(step.exampleImage) + '" alt="' + escapeHtml(step.exampleAlt || "Exemplo de personalização da capa") + '" loading="lazy"></div>' : "",
+      showExample ? '<button class="example-toggle" type="button" data-caderno-personalization-example-toggle>' + (exampleVisible ? "Ocultar exemplo" : "Ver exemplo") + '</button>' : "",
+      showExample ? '<div class="details-example cadernos-personalization-example"' + (exampleVisible ? "" : " hidden") + '><img class="example-image" src="' + escapeHtml(step.exampleImage) + '" alt="' + escapeHtml(step.exampleAlt || "Exemplo de personalização da capa") + '" loading="lazy"></div>' : "",
       '<div class="option-list size-choice-list crachas-size-card-list cadernos-personalization-list">' + html + '</div>',
       step.note ? '<p class="cadernos-info-note cadernos-info-note--important" role="note">' + escapeHtml(step.note) + '</p>' : ""
     ].join("");
