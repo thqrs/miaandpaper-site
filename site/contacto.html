@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <script data-miaandpaper-theme-bootstrap>(function(){try{var t=window.localStorage.getItem("miaandpaperTheme");if(t==="dark"){document.documentElement.setAttribute("data-theme","dark");}}catch(e){}}());</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mia & Paper | Enviar mensagem</title>
+  <meta name="description" content="Envia uma mensagem à Mia & Paper sobre encomendas, pedidos especiais, ou alguma dúvida que tenhas.">
+  <meta property="og:title" content="Mia & Paper | Enviar mensagem">
+  <meta property="og:description" content="Formulário simples para falar com a Mia & Paper.">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="styles.css?v=20260515014603">
+</head>
+<body data-page="contact">
+  <main class="contact-shell">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Mia & Paper">
+        <span class="brand-mark"><img src="content/brand/logo.jpg" alt="" loading="lazy"></span>
+        <span>Mia &amp; Paper</span>
+      </a>
+            <nav class="header-actions" aria-label="Links rápidos">
+        <a class="header-link header-link-icon" href="https://www.instagram.com/miaandpaper/" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="1.9"></rect><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle><circle cx="17.4" cy="6.6" r="1.2" fill="currentColor"></circle></svg>
+        </a>
+        <a class="header-link header-link-icon" href="contacto.html" aria-label="Enviar mensagem" title="Enviar mensagem">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2.5" ry="2.5" fill="none" stroke="currentColor" stroke-width="1.9"></rect><path d="M4.5 7l7.5 6 7.5-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </a>
+        <button type="button" class="header-link header-link-icon header-theme-toggle" data-theme-toggle aria-pressed="false" aria-hidden="true" hidden aria-label="Modo escuro" title="Modo escuro">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle><g stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="12" y1="2.5" x2="12" y2="5"></line><line x1="12" y1="19" x2="12" y2="21.5"></line><line x1="2.5" y1="12" x2="5" y2="12"></line><line x1="19" y1="12" x2="21.5" y2="12"></line><line x1="5.2" y1="5.2" x2="7" y2="7"></line><line x1="17" y1="17" x2="18.8" y2="18.8"></line><line x1="5.2" y1="18.8" x2="7" y2="17"></line><line x1="17" y1="7" x2="18.8" y2="5.2"></line></g></svg>
+        </button>
+      </nav>
+    </header>
+
+    <section class="contact-card" aria-labelledby="contact-title">
+      <p class="eyebrow">Mensagem direta</p>
+      <h1 id="contact-title">Fala com a Mia</h1>
+      <p>Usa este formulário para encomendas, pedidos especiais ou alguma dúvida que tenhas. A Mia responde-te assim que puder.</p>
+
+      <form class="contact-form" action="send-message.php" method="post" novalidate>
+        <label class="hidden-field" aria-hidden="true"><span>Website</span><input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+
+        <label>
+          <span>Nome</span>
+          <input type="text" name="name" autocomplete="name" required>
+        </label>
+
+        <label>
+          <span>Contacto</span>
+          <input type="text" name="contact" autocomplete="email" required>
+        </label>
+        <p class="form-hint">Pode ser email, Instagram ou telemóvel. Se quiseres receber uma cópia, usa um email.</p>
+
+        <label>
+          <span>Assunto</span>
+          <select name="subject_type" required>
+            <option value="Encomendas">Encomendas</option>
+            <option value="Pedidos Especiais">Pedidos Especiais</option>
+            <option value="Dúvidas">Dúvidas</option>
+            <option value="Outro Assunto">Outro Assunto</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Mensagem</span>
+          <textarea name="message" required></textarea>
+        </label>
+
+        <label class="copy-line">
+          <input type="checkbox" name="send_copy" value="1">
+          <span>Envia uma cópia desta mensagem para o meu email</span>
+        </label>
+
+        <div class="actions">
+          <a class="button secondary" href="index.html">Voltar</a>
+          <button class="button primary" type="submit">Enviar mensagem</button>
+        </div>
+      </form>
+    </section>
+
+    <footer class="site-footer">
+      <a href="privacy.html">Política de Privacidade</a>
+      <span> © Mia & Paper 2026 Todos os Direitos Reservados</span>
+    </footer>
+  </main>
+  <script src="app.js?v=20260515014603"></script>
+</body>
+</html>

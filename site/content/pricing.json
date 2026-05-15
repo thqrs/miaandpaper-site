@@ -1,0 +1,136 @@
+{
+    "currency": "EUR",
+    "note": "Preços em cêntimos. Este ficheiro é a fonte central de preços do site; o modo admin mostra/edita em euros.",
+    "settings": {
+        "smartQuantities": true
+    },
+    "products": {
+        "caderninhos": {
+            "id": "caderninhos",
+            "label": "caderninhos",
+            "unitLabel": "mini-cadernos",
+            "unitSingular": "mini-caderno",
+            "unitShort": "mini-caderno",
+            "defaultPriceKey": "Mini-Cadernos",
+            "prices": {
+                "Mini-Cadernos": {
+                    "1": 450,
+                    "3": 1250,
+                    "5": 1950,
+                    "10": 3600,
+                    "24": 7800,
+                    "48": 14500,
+                    "96": 28000
+                }
+            }
+        },
+        "imanes": {
+            "id": "imanes",
+            "label": "imanes",
+            "unitLabel": "ímanes",
+            "unitSingular": "íman",
+            "unitShort": "íman",
+            "defaultPriceKey": "Achatados",
+            "prices": {
+                "Achatados": {
+                    "15": 1000,
+                    "30": 1800,
+                    "60": 3200,
+                    "105": 5300
+                },
+                "3 mm": {
+                    "1": 200,
+                    "3": 500,
+                    "5": 750,
+                    "30": 3500,
+                    "60": 6400,
+                    "102": 10000
+                }
+            }
+        },
+        "crachas": {
+            "id": "crachas",
+            "label": "crachas",
+            "unitLabel": "crachás",
+            "unitSingular": "crachá",
+            "unitShort": "crachá",
+            "defaultPriceKey": "25 mm",
+            "prices": {
+                "25 mm": {
+                    "1": 150,
+                    "3": 420,
+                    "5": 650,
+                    "24": 2700,
+                    "48": 5000,
+                    "96": 9000
+                },
+                "32 mm": {
+                    "1": 175,
+                    "3": 500,
+                    "5": 750,
+                    "24": 3200,
+                    "48": 5800,
+                    "96": 10500
+                }
+            }
+        },
+        "pins": {
+            "id": "pins",
+            "label": "Pins",
+            "unitLabel": "crachás",
+            "unitSingular": "crachá",
+            "unitShort": "crachá",
+            "defaultPriceKey": null,
+            "prices": {
+                "25 mm": {
+                    "1": 150,
+                    "3": 420,
+                    "5": 650,
+                    "24": 2700,
+                    "48": 5000,
+                    "96": 9000
+                },
+                "32 mm": {
+                    "1": 175,
+                    "3": 500,
+                    "5": 750,
+                    "24": 3200,
+                    "48": 5800,
+                    "96": 10500
+                }
+            }
+        },
+        "cadernos": {
+            "id": "cadernos",
+            "label": "cadernos",
+            "unitLabel": "cadernos",
+            "unitSingular": "caderno",
+            "unitShort": "caderno",
+            "defaultPriceKey": "Cadernos",
+            "prices": {
+                "Cadernos": {
+                    "1": 2990,
+                    "2": 3490,
+                    "3": 3790,
+                    "4": 4290
+                }
+            }
+        },
+        "lembrancas": {
+            "id": "lembrancas",
+            "label": "Lembrancas",
+            "unitLabel": "lembranças",
+            "unitSingular": "lembrança",
+            "unitShort": "lembrança",
+            "defaultPriceKey": "lembrança",
+            "prices": {
+                "lembrança": {
+                    "1": 0,
+                    "3": 0,
+                    "5": 0,
+                    "10": 0
+                }
+            }
+        }
+    }
+}

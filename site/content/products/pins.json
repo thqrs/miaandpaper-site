@@ -1,0 +1,546 @@
+{
+  "slug": "pins",
+  "name": "Crachás",
+  "brand": "Mia & Paper",
+  "homeUrl": "index.html",
+  "instagramUrl": "https://www.instagram.com/miaandpaper/",
+  "form": {
+    "action": "send-order.php",
+    "returnTo": "crachas.html"
+  },
+  "intro": {
+    "eyebrow": "Crachás personalizados",
+    "title": "Começa pelos designs.",
+    "text": "Escolhe os designs de que gostas, distribui o pack entre eles e confirma o tamanho antes de enviar."
+  },
+  "prices": {
+    "25 mm": {
+      "1": 150,
+      "3": 420,
+      "5": 650,
+      "24": 2700,
+      "48": 5000,
+      "96": 9000
+    },
+    "32 mm": {
+      "1": 175,
+      "3": 500,
+      "5": 750,
+      "24": 3200,
+      "48": 5800,
+      "96": 10500
+    }
+  },
+  "deliveryOptions": [
+    {
+      "id": "pickup",
+      "label": "Vou recolher na casa da Mia",
+      "text": "",
+      "feeCents": 0
+    },
+    {
+      "id": "shipping",
+      "label": "Envio CTT - até 2 Kg",
+      "text": "",
+      "feeCents": 850,
+      "priceText": "Valor mínimo:\n8,50 €"
+    },
+    {
+      "id": "join_orders",
+      "label": "Junta as minhas encomendas",
+      "text": "",
+      "feeCents": 0
+    }
+  ],
+  "templates": [
+    {
+      "id": "media-list",
+      "label": "Imagem + 2 linhas"
+    },
+    {
+      "id": "text-grid",
+      "label": "Texto em grelha"
+    },
+    {
+      "id": "price-pack-grid",
+      "label": "Packs/preços"
+    },
+    {
+      "id": "quantity-builder",
+      "label": "Pack + quantidades"
+    },
+    {
+      "id": "design-grid",
+      "label": "Grelha de designs"
+    },
+    {
+      "id": "details-form",
+      "label": "Formulário"
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmação"
+    }
+  ],
+  "steps": [
+    {
+      "id": "designs",
+      "label": "Designs",
+      "title": "Escolhe os que mais gostas",
+      "text": "Seleciona todos os designs de que gostas. No passo seguinte escolhes quantos crachás queres de cada um.",
+      "template": "design-grid",
+      "field": "designs[]",
+      "selection": "multi",
+      "items": [
+        {
+          "id": "pin-01",
+          "value": "Crachá 01",
+          "title": "Crachá 01",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-01.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-02",
+          "value": "Crachá 02",
+          "title": "Crachá 02",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-02.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-03",
+          "value": "Crachá 03",
+          "title": "Crachá 03",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-03.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-04",
+          "value": "Crachá 04",
+          "title": "Crachá 04",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-04.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-05",
+          "value": "Crachá 05",
+          "title": "Crachá 05",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-05.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-06",
+          "value": "Crachá 06",
+          "title": "Crachá 06",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-06.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-07",
+          "value": "Crachá 07",
+          "title": "Crachá 07",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-07.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-08",
+          "value": "Crachá 08",
+          "title": "Crachá 08",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-08.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-09",
+          "value": "Crachá 09",
+          "title": "Crachá 09",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-09.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-10",
+          "value": "Crachá 10",
+          "title": "Crachá 10",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-10.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-11",
+          "value": "Crachá 11",
+          "title": "Crachá 11",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-11.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-12",
+          "value": "Crachá 12",
+          "title": "Crachá 12",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-12.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-13",
+          "value": "Crachá 13",
+          "title": "Crachá 13",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-13.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-14",
+          "value": "Crachá 14",
+          "title": "Crachá 14",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-14.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-15",
+          "value": "Crachá 15",
+          "title": "Crachá 15",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-15.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-16",
+          "value": "Crachá 16",
+          "title": "Crachá 16",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-16.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-17",
+          "value": "Crachá 17",
+          "title": "Crachá 17",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-17.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-18",
+          "value": "Crachá 18",
+          "title": "Crachá 18",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-18.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-19",
+          "value": "Crachá 19",
+          "title": "Crachá 19",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-19.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-20",
+          "value": "Crachá 20",
+          "title": "Crachá 20",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-20.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        },
+        {
+          "id": "pin-21",
+          "value": "Crachá 21",
+          "title": "Crachá 21",
+          "subtitle": "",
+          "image": "content/designs/pins/pin-21.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0
+        }
+      ]
+    },
+    {
+      "id": "pack",
+      "label": "Pack",
+      "title": "Diz-me quantos crachás queres",
+      "text": "Se quiseres também podes ajustar a quantidade de cada crachá individualmente",
+      "template": "quantity-builder",
+      "field": "pack_quantity",
+      "selection": "pack",
+      "items": [
+        {
+          "id": "pack-1",
+          "quantity": 1,
+          "title": "1",
+          "subtitle": "crachá"
+        },
+        {
+          "id": "pack-3",
+          "quantity": 3,
+          "title": "3",
+          "subtitle": "crachás"
+        },
+        {
+          "id": "pack-5",
+          "quantity": 5,
+          "title": "5",
+          "subtitle": "crachás"
+        },
+        {
+          "id": "pack-24",
+          "quantity": 24,
+          "title": "24",
+          "subtitle": "crachás"
+        },
+        {
+          "id": "pack-48",
+          "quantity": 48,
+          "title": "48",
+          "subtitle": "crachás"
+        },
+        {
+          "id": "pack-96",
+          "quantity": 96,
+          "title": "96",
+          "subtitle": "crachás"
+        }
+      ]
+    },
+    {
+      "id": "size",
+      "label": "Tamanho",
+      "title": "Escolhe o tamanho certo",
+      "text": "O preço final depende do tamanho escolhido.",
+      "template": "media-list",
+      "field": "size",
+      "selection": "single",
+      "items": [
+        {
+          "id": "25",
+          "value": "25 mm",
+          "title": "Pequeno",
+          "subtitle": "2,5 cm x 2,5 cm (25 mm)",
+          "note": "Mais discreto",
+          "visual": "pin-small"
+        },
+        {
+          "id": "32",
+          "value": "32 mm",
+          "title": "Médio",
+          "subtitle": "3,2 cm x 3,2 cm (32 mm)",
+          "note": "Maior visibilidade",
+          "visual": "pin-large"
+        }
+      ]
+    },
+    {
+      "id": "details",
+      "label": "Dados",
+      "title": "Vamos personalizar o teu Cartão de Apresentação?",
+      "text": "Estes dados ajudam-me a tornar a tua encomenda única",
+      "template": "details-form",
+      "fields": [
+        {
+          "name": "recipient_name",
+          "label": "Nome",
+          "placeholder": "Nome a colocar no cartão",
+          "required": true,
+          "autocomplete": "name",
+          "section": "Dados para o Cartão de Apresentação"
+        },
+        {
+          "name": "contact",
+          "label": "Telemóvel ou Email",
+          "placeholder": "Email e/ou telemóvel para o cartão",
+          "required": false,
+          "autocomplete": "off",
+          "section": "Dados para o Cartão de Apresentação"
+        },
+        {
+          "name": "congregation",
+          "label": "Congregação",
+          "placeholder": "Nome da Congregação",
+          "required": false,
+          "autocomplete": "organization",
+          "section": "Dados para o Cartão de Apresentação",
+          "sectionText": "Atenção: Estes dados pessoais serão imprimidos e colocados no Cartão de Apresentação que acompanha cada um dos Crachás"
+        }
+      ]
+    },
+    {
+      "id": "delivery_contact",
+      "label": "Entrega e contacto",
+      "title": "Entrega e contacto",
+      "text": "",
+      "template": "delivery-contact",
+      "delivery": {
+        "title": "Como queres receber a tua encomenda?",
+        "subtitle": "Caso já tenhas feito um pedido anteriormente, escolhe \"Junta as minhas encomendas\" e para receberes todas as tuas encomendas na mesma embalagem."
+      },
+      "contact": {
+        "title": "Dados de Contacto",
+        "noteAfter": "Estes dados pessoais serão partilhados com a Mia para que ela te possa contactar para confirmar a encomenda.",
+        "fields": [
+          {
+            "name": "customer_name",
+            "label": "Nome",
+            "placeholder": "O teu nome",
+            "required": true,
+            "autocomplete": "name"
+          },
+          {
+            "name": "customer_contact",
+            "label": "Email ou Telemóvel",
+            "placeholder": "Email ou telemóvel",
+            "required": true,
+            "autocomplete": "email"
+          }
+        ]
+      }
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmar",
+      "title": "Confirma o teu pedido",
+      "text": "Se estiver tudo certo, carrega em \"Enviar Pedido\" e já está!",
+      "template": "confirm"
+    }
+  ],
+  "unitLabel": "crachás",
+  "unitSingular": "crachá",
+  "unitShort": "crachá",
+  "imageShape": "round",
+  "giftRequest": {
+    "label": "Penso oferecer estes artigos a pessoas da minha congregação.",
+    "text": "Escolhe esta opção se quiseres que a Mia te ajude a escolher designs únicos para a tua congregação."
+  }
+}

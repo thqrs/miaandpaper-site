@@ -1,0 +1,118 @@
+{
+    "brand": "Mia & Paper",
+    "instagramUrl": "https://www.instagram.com/miaandpaper/",
+    "intro": {
+        "eyebrow": "Lembranças Para o Congresso de 2026 e Caderno de Apontamentos Anual",
+        "title": "Escolhe o que queres pedir",
+        "text": "Cada lembrança tem um formulário simples para que me possas dizer rapidamente tudo o que preciso de saber para preparar o teu pedido"
+    },
+    "showCategoryNumbers": false,
+    "categories": [
+        {
+            "id": "crachas",
+            "title": "Crachás",
+            "subtitle": "Uma lembrança especial",
+            "href": "crachas.html",
+            "accent": "blue",
+            "available": true,
+            "carouselEnabled": true,
+            "carouselIntervalMs": 5000,
+            "carouselRandomizeOnLoad": true,
+            "clickable": true,
+            "carouselPanPercent": 0
+        },
+        {
+            "id": "imanes",
+            "title": "Ímanes",
+            "subtitle": "Para o teu frigorífico",
+            "href": "imanes.html",
+            "accent": "sage",
+            "available": true,
+            "carouselEnabled": true,
+            "carouselIntervalMs": 5000,
+            "carouselRandomizeOnLoad": true,
+            "clickable": true,
+            "carouselPanPercent": 0,
+            "carouselZoomPercent": 140
+        },
+        {
+            "id": "caderninhos",
+            "title": "Mini-Cadernos",
+            "subtitle": "Para pequenas anotações",
+            "href": "caderninhos.html",
+            "accent": "rose",
+            "available": true,
+            "carouselEnabled": true,
+            "carouselIntervalMs": 5000,
+            "carouselRandomizeOnLoad": true,
+            "clickable": true,
+            "carouselPanPercent": 0
+        },
+        {
+            "id": "cadernos",
+            "title": "Cadernos Anuais",
+            "subtitle": "Para te acompanharem durante todo o ano",
+            "href": "cadernos.html",
+            "accent": "gold",
+            "available": true,
+            "carouselEnabled": true,
+            "carouselIntervalMs": 5000,
+            "carouselRandomizeOnLoad": true,
+            "clickable": true,
+            "unavailableMessage": "Já falta pouco!",
+            "carouselPanPercent": 0
+        },
+        {
+            "id": "lembrancas",
+            "title": "Lembranças Especiais",
+            "subtitle": "Ideias únicas",
+            "href": "lembrancas.html",
+            "accent": "blue",
+            "available": false,
+            "carouselEnabled": true,
+            "carouselRandomizeOnLoad": true,
+            "carouselIntervalMs": 3500,
+            "clickable": true
+        }
+    ],
+    "theme": {
+        "paper": "#fff8df",
+        "card": "#fffdf5",
+        "linen": "#f6e7bf",
+        "sage": "#d6bf77",
+        "moss": "#72551e",
+        "ink": "#2e2413",
+        "muted": "#7f6b42",
+        "gold": "#d7aa36",
+        "goldSoft": "#f4dd91",
+        "rose": "#c58a72",
+        "blue": "#9a8656",
+        "buttonBg": "#72551e",
+        "buttonText": "#fffdf8"
+    },
+    "carousel": {
+        "enabled": true,
+        "speedSeconds": 8,
+        "zoomPercent": 120,
+        "panPercent": 6,
+        "overlayOpacity": 20
+    },
+    "butterfly": {
+        "enabled": true,
+        "idleSeconds": 10,
+        "maxVisible": 3,
+        "restSeconds": 12,
+        "size": 54,
+        "wingColorA": "#e7d3be",
+        "wingColorB": "#d8b686",
+        "wingColorC": "#f3e8d8",
+        "bodyColor": "#8a7058"
+    },
+    "showThemeToggle": false,
+    "deadlineNotice": "Data limite para encomendar lembranças para os Congressos em Portugal 19 de junho de 2026 Excepto situações pontuais.",
+    "deadlineNoticeLabel": "Data limite para encomendar lembranças para os Congressos em Portugal",
+    "deadlineNoticeDateText": "19 de junho de 2026",
+    "deadlineNoticeSuffix": "Excepto situações pontuais.",
+    "deadlineDate": "2026-06-19T23:59:59+01:00",
+    "deadlineNoticeEnabled": true
+}

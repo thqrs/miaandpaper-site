@@ -1,0 +1,235 @@
+{
+  "slug": "lembrancas",
+  "name": "Lembranças Especiais",
+  "brand": "Mia & Paper",
+  "homeUrl": "index.html",
+  "instagramUrl": "https://www.instagram.com/miaandpaper/",
+  "form": {
+    "action": "send-order.php",
+    "returnTo": "lembrancas.html"
+  },
+  "intro": {
+    "eyebrow": "Lembranças Especiais",
+    "title": "Escolhe os designs.",
+    "text": "Escolhe os teus favoritos e completa os dados do pedido."
+  },
+  "deliveryOptions": [
+    {
+      "id": "pickup",
+      "label": "Vou recolher na casa da Mia",
+      "text": "",
+      "feeCents": 0
+    },
+    {
+      "id": "shipping",
+      "label": "Envio CTT - até 2 Kg",
+      "text": "",
+      "feeCents": 850,
+      "priceText": "Valor mínimo:\n8,50 €"
+    },
+    {
+      "id": "join_orders",
+      "label": "Junta as minhas encomendas",
+      "text": "",
+      "feeCents": 0
+    }
+  ],
+  "templates": [
+    {
+      "id": "media-list",
+      "label": "Imagem + 2 linhas"
+    },
+    {
+      "id": "text-grid",
+      "label": "Texto em grelha"
+    },
+    {
+      "id": "price-pack-grid",
+      "label": "Packs/preços"
+    },
+    {
+      "id": "quantity-builder",
+      "label": "Pack + quantidades"
+    },
+    {
+      "id": "design-grid",
+      "label": "Grelha de designs"
+    },
+    {
+      "id": "details-form",
+      "label": "Formulário"
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmação"
+    }
+  ],
+  "prices": {
+    "lembrança": {
+      "1": 0,
+      "3": 0,
+      "5": 0,
+      "10": 0
+    }
+  },
+  "steps": [
+    {
+      "id": "designs",
+      "label": "Designs",
+      "title": "Escolhe os designs das lembranças",
+      "text": "Seleciona os estilos que queres explorar com a Mia.",
+      "template": "design-grid",
+      "field": "designs[]",
+      "selection": "multi",
+      "items": [
+        {
+          "id": "lembranca-01",
+          "value": "Lembrança 01",
+          "title": "Lembrança 01",
+          "subtitle": "Flores suaves",
+          "visual": "flowers",
+          "badge": ""
+        },
+        {
+          "id": "lembranca-02",
+          "value": "Lembrança 02",
+          "title": "Lembrança 02",
+          "subtitle": "Azul e dourado",
+          "visual": "blue-gold",
+          "badge": ""
+        },
+        {
+          "id": "lembranca-03",
+          "value": "Lembrança 03",
+          "title": "Lembrança 03",
+          "subtitle": "Texto simples",
+          "visual": "text-pin",
+          "badge": "Fé"
+        },
+        {
+          "id": "lembranca-04",
+          "value": "Lembrança 04",
+          "title": "Lembrança 04",
+          "subtitle": "Folhas verdes",
+          "visual": "leaves",
+          "badge": ""
+        }
+      ]
+    },
+    {
+      "id": "pack",
+      "label": "Pack",
+      "title": "Escolhe a quantidade",
+      "text": "Escolhe quantas lembranças queres no total.",
+      "template": "quantity-builder",
+      "field": "pack_quantity",
+      "selection": "pack",
+      "items": [
+        {
+          "id": "pack-1",
+          "quantity": 1,
+          "title": "1",
+          "subtitle": "lembrança"
+        },
+        {
+          "id": "pack-3",
+          "quantity": 3,
+          "title": "3",
+          "subtitle": "lembranças"
+        },
+        {
+          "id": "pack-5",
+          "quantity": 5,
+          "title": "5",
+          "subtitle": "lembranças"
+        },
+        {
+          "id": "pack-10",
+          "quantity": 10,
+          "title": "10",
+          "subtitle": "lembranças"
+        }
+      ]
+    },
+    {
+      "id": "details",
+      "label": "Dados",
+      "title": "Dados para o cartão de apresentação",
+      "text": "Estes dados seguem no pedido para preparar a personalização.",
+      "template": "details-form",
+      "fields": [
+        {
+          "name": "recipient_name",
+          "label": "Nome",
+          "placeholder": "Nome a colocar no cartão",
+          "required": true,
+          "autocomplete": "name",
+          "section": "Dados para o Cartão de Apresentação"
+        },
+        {
+          "name": "contact",
+          "label": "Telemóvel ou Email",
+          "placeholder": "Email e/ou telemóvel para o cartão",
+          "required": false,
+          "autocomplete": "off",
+          "section": "Dados para o Cartão de Apresentação"
+        },
+        {
+          "name": "congregation",
+          "label": "Congregação",
+          "placeholder": "Nome da congregação",
+          "required": false,
+          "autocomplete": "organization",
+          "section": "Dados para o Cartão de Apresentação"
+        }
+      ]
+    },
+    {
+      "id": "delivery_contact",
+      "label": "Entrega e contacto",
+      "title": "Entrega e contacto",
+      "text": "",
+      "template": "delivery-contact",
+      "delivery": {
+        "title": "Como queres receber a tua encomenda?",
+        "subtitle": "Caso já tenhas feito um pedido anteriormente, escolhe \"Junta as minhas encomendas\" e para receberes todas as tuas encomendas na mesma embalagem."
+      },
+      "contact": {
+        "title": "Dados de Contacto",
+        "noteAfter": "Estes dados pessoais serão partilhados com a Mia para que ela te possa contactar para confirmar a encomenda.",
+        "fields": [
+          {
+            "name": "customer_name",
+            "label": "Nome",
+            "placeholder": "O teu nome",
+            "required": true,
+            "autocomplete": "name"
+          },
+          {
+            "name": "customer_contact",
+            "label": "Email ou Telemóvel",
+            "placeholder": "Email ou telemóvel",
+            "required": true,
+            "autocomplete": "email"
+          }
+        ]
+      }
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmar",
+      "title": "Confirma antes de enviar",
+      "text": "Se estiver tudo certo, envia o pedido.",
+      "template": "confirm"
+    }
+  ],
+  "unitLabel": "lembranças",
+  "unitSingular": "lembrança",
+  "unitShort": "lembrança",
+  "imageShape": "rect",
+  "defaultPriceKey": "lembrança",
+  "giftRequest": {
+    "label": "Penso oferecer estes artigos a pessoas da minha congregação.",
+    "text": "Escolhe esta opção se quiseres que a Mia te ajude a escolher designs únicos para a tua congregação."
+  }
+}

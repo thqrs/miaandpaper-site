@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <script>(function(){try{var t=window.localStorage.getItem("miaandpaperTheme");if(t==="dark"){document.documentElement.setAttribute("data-theme","dark");}}catch(e){}}());</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mia &amp; Paper · Style guide</title>
+  <link rel="stylesheet" href="styles.css?v=20260515014603">
+  <style>
+    /* Estilos so para a propria pagina de guia (prefixo sg-). Nao colidem com
+       o CSS do site. */
+    .sg-page { max-width: 980px; margin: 0 auto; padding: 24px 18px 80px; }
+    .sg-intro { margin: 0 0 28px; padding: 18px 20px; border: 1px dashed var(--line); border-radius: var(--radius); background: rgba(255, 253, 248, 0.6); }
+    .sg-intro h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.8rem, 5vw, 2.4rem); margin: 0 0 6px; color: var(--ink); }
+    .sg-intro p { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
+    .sg-toc { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px 14px; margin-top: 14px; padding: 0; list-style: none; }
+    .sg-toc a { color: var(--moss); font-weight: 800; font-size: 0.9rem; }
+    .sg-toc a:hover { text-decoration: underline; }
+
+    .sg-section { margin: 36px 0 0; padding-top: 18px; border-top: 1px solid var(--line); scroll-margin-top: 12px; }
+    .sg-section > h2 { margin: 0 0 4px; font-family: Georgia, "Times New Roman", serif; font-size: 1.7rem; color: var(--moss); }
+    .sg-section > p { margin: 0 0 16px; color: var(--muted); font-size: 0.92rem; }
+
+    .sg-block { margin: 18px 0 0; }
+    .sg-block-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; margin-bottom: 10px; }
+    .sg-block-head h3 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 1.1rem; color: var(--ink); font-weight: 700; }
+    .sg-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; background: #fffdf5; color: var(--moss); font-family: ui-monospace, "Cascadia Code", "Fira Code", Menlo, Consolas, monospace; font-size: 0.78rem; font-weight: 700; }
+    .sg-tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sg-block-note { margin: -4px 0 8px; color: var(--muted); font-size: 0.86rem; line-height: 1.45; }
+
+    .sg-frame { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+    .sg-frame.is-paper { background: var(--paper); }
+    .sg-frame.is-flush { padding: 0; }
+    .sg-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .sg-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 575px) { .sg-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+    .sg-swatch { display: grid; gap: 4px; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius); background: #fffdf5; }
+    .sg-swatch-chip { height: 56px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.06); }
+    .sg-swatch-name { font-family: ui-monospace, monospace; font-size: 0.8rem; color: var(--ink); font-weight: 700; }
+    .sg-swatch-hex { color: var(--muted); font-size: 0.78rem; font-family: ui-monospace, monospace; }
+
+    .sg-spacer { height: 12px; }
+
+    /* Para mostrar bem o sticky step-actions sem ele se colar a tudo. */
+    .sg-static-actions .step-actions { position: static !important; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; background: transparent; border-top: 0; padding: 0; }
+
+    /* dark toggle */
+    .sg-theme-toggle { position: fixed; top: 12px; right: 12px; z-index: 9; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); color: var(--moss); font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: var(--shadow); }
+  </style>
+</head>
+<body class="has-site-background">
+  <button class="sg-theme-toggle" type="button" id="sg-theme-toggle" aria-label="Alternar tema">Tema</button>
+
+  <div class="sg-page">
+    <header class="sg-intro">
+      <h1>Style guide · Mia &amp; Paper</h1>
+      <p>Catálogo visual dos componentes definidos em <code>styles.css</code>. Ao lado de cada bloco aparece o nome da classe — usa-o para indicar onde queres aplicar um estilo.</p>
+      <ul class="sg-toc">
+        <li><a href="#tokens">Cores</a></li>
+        <li><a href="#typography">Tipografia</a></li>
+        <li><a href="#buttons">Botões</a></li>
+        <li><a href="#forms">Formulários</a></li>
+        <li><a href="#wizard">Wizard / passos</a></li>
+        <li><a href="#choices">Cartões de escolha</a></li>
+        <li><a href="#packs">Packs e preços</a></li>
+        <li><a href="#quantity">Quantidades</a></li>
+        <li><a href="#summary">Resumos</a></li>
+        <li><a href="#delivery">Entrega</a></li>
+        <li><a href="#result">Resultados</a></li>
+        <li><a href="#categories">Categorias</a></li>
+        <li><a href="#crachas-step2">Crachás passo 2</a></li>
+        <li><a href="#misc">Notas e estados</a></li>
+      </ul>
+    </header>
+
+    <!-- ============================================================ TOKENS -->
+    <section class="sg-section" id="tokens">
+      <h2>Cores</h2>
+      <p>Variáveis CSS expostas em <code>:root</code>. Usar via <code>var(--nome)</code>.</p>
+      <div class="sg-grid-3">
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--paper)"></span><span class="sg-swatch-name">--paper</span><span class="sg-swatch-hex">#fff8df</span></div>
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--card)"></span><span class="sg-swatch-name">--card</span><span class="sg-swatch-hex">#fffdf5</span></div>
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--linen)"></span><span class="sg-swatch-name">--linen</span><span class="sg-swatch-hex">#f6e7bf</span></div>
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--sage)"></span><span class="sg-swatch-name">--sage</span><span class="sg-swatch-hex">#d6bf77</span></div>
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--moss)"></span><span class="sg-swatch-name">--moss</span><span class="sg-swatch-hex">#72551e</span></div>
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--ink)"></span><span class="sg-swatch-name">--ink</span><span class="sg-swatch-hex">#2e2413</span></div>
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--muted)"></span><span class="sg-swatch-name">--muted</span><span class="sg-swatch-hex">#7f6b42</span></div>
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--gold)"></span><span class="sg-swatch-name">--gold</span><span class="sg-swatch-hex">#d7aa36</span></div>
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--gold-soft)"></span><span class="sg-swatch-name">--gold-soft</span><span class="sg-swatch-hex">#f4dd91</span></div>
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--rose)"></span><span class="sg-swatch-name">--rose</span><span class="sg-swatch-hex">#c58a72</span></div>
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--blue)"></span><span class="sg-swatch-name">--blue</span><span class="sg-swatch-hex">#9a8656</span></div>
+      </div>
+    </section>
+
+    <!-- ============================================================ TYPOGRAPHY -->
+    <section class="sg-section" id="typography">
+      <h2>Tipografia</h2>
+      <p>Inter (sans) para corpo, Georgia (serif) para títulos.</p>
+      <div class="sg-frame">
+        <p class="eyebrow">Passo 1 · eyebrow</p>
+        <h1>H1 — Mia &amp; Paper</h1>
+        <h2>H2 — Diz-me quantos crachás queres</h2>
+        <h3>H3 — Subtítulo de secção</h3>
+        <p>Parágrafo padrão (Inter). Lorem ipsum dolor sit amet. <strong>Itens em negrito</strong> e <a href="#">link</a>.</p>
+        <p><small>Texto pequeno (small)</small></p>
+      </div>
+      <div class="sg-tag-list" style="margin-top:8px;">
+        <span class="sg-tag">.eyebrow</span>
+        <span class="sg-tag">h1</span>
+        <span class="sg-tag">h2</span>
+        <span class="sg-tag">h3</span>
+        <span class="sg-tag">p</span>
+        <span class="sg-tag">small</span>
+      </div>
+    </section>
+
+    <!-- ============================================================ BUTTONS -->
+    <section class="sg-section" id="buttons">
+      <h2>Botões</h2>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Primário / secundário / desativado</h3>
+          <span class="sg-tag">.button.primary</span>
+          <span class="sg-tag">.button.secondary</span>
+          <span class="sg-tag">:disabled</span>
+        </div>
+        <div class="sg-frame" style="display:flex; flex-wrap:wrap; gap:10px;">
+          <button class="button primary" type="button">Continuar</button>
+          <button class="button secondary" type="button">Voltar</button>
+          <button class="button primary" type="button" disabled>Indisponível</button>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Barra Voltar / Continuar</h3>
+          <span class="sg-tag">.step-actions</span>
+        </div>
+        <div class="sg-block-note">Em mobile (≤700px) fica sticky no fundo do ecrã. Aqui mostra-se sem o sticky.</div>
+        <div class="sg-frame sg-static-actions">
+          <div class="step-actions">
+            <button class="button secondary" type="button">Voltar</button>
+            <button class="button primary" type="button">Continuar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Distribuir / exemplo / admin add</h3>
+          <span class="sg-tag">.auto-distribute</span>
+          <span class="sg-tag">.example-toggle</span>
+          <span class="sg-tag">.admin-add</span>
+        </div>
+        <div class="sg-frame" style="display:flex; flex-wrap:wrap; gap:10px;">
+          <button class="auto-distribute" type="button">Distribuir por igual</button>
+          <button class="example-toggle" type="button">Ver exemplo</button>
+          <button class="admin-add" type="button">Adicionar pack</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ FORMS -->
+    <section class="sg-section" id="forms">
+      <h2>Formulários</h2>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Inputs base</h3>
+          <span class="sg-tag">input</span>
+          <span class="sg-tag">textarea</span>
+          <span class="sg-tag">select</span>
+        </div>
+        <div class="sg-frame">
+          <div class="details-grid" style="display:grid; gap:12px;">
+            <label><span>Nome</span><input type="text" placeholder="Nome a colocar no cartão"></label>
+            <label><span>Telemóvel ou Email</span><input type="text" placeholder="Email e/ou telemóvel"></label>
+            <label><span>Mensagem</span><textarea placeholder="Escreve aqui"></textarea></label>
+            <label><span>Tamanho</span><select><option>25 mm</option><option>32 mm</option></select></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Secção bege (cartão de apresentação)</h3>
+          <span class="sg-tag">.details-section</span>
+          <span class="sg-tag">.details-section h3</span>
+          <span class="sg-tag">.details-section p</span>
+        </div>
+        <div class="sg-frame">
+          <div class="details-section">
+            <h3>Dados para o Cartão de Apresentação</h3>
+            <p>Estes dados são impressos no cartão que acompanha cada crachá.</p>
+            <div class="details-grid">
+              <label><span>Nome</span><input type="text" placeholder="O teu nome"></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Pedido de cópia</h3>
+          <span class="sg-tag">.copy-request</span>
+        </div>
+        <div class="sg-frame">
+          <div class="copy-request">
+            <label><input type="checkbox"> Quero receber uma cópia da encomenda por email</label>
+            <input type="email" placeholder="O teu email">
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Erro de formulário</h3>
+          <span class="sg-tag">.form-error</span>
+        </div>
+        <div class="sg-frame">
+          <p class="form-error">Falta preencher o campo "Nome".</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ WIZARD -->
+    <section class="sg-section" id="wizard">
+      <h2>Wizard / passos</h2>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Lista de passos</h3>
+          <span class="sg-tag">.step-list</span>
+          <span class="sg-tag">.step-list .is-active</span>
+        </div>
+        <div class="sg-frame">
+          <ol class="step-list">
+            <li><button type="button" aria-label="Passo 1">1</button></li>
+            <li class="is-active"><button type="button" aria-current="step">2</button></li>
+            <li><button type="button">3</button></li>
+            <li><button type="button">4</button></li>
+            <li><button type="button">5</button></li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Cartão de passo</h3>
+          <span class="sg-tag">.wizard-shell</span>
+          <span class="sg-tag">.step-card</span>
+        </div>
+        <div class="sg-frame is-flush">
+          <section class="wizard-shell">
+            <div class="step-card">
+              <p class="eyebrow">Passo 3</p>
+              <h2>Diz-me quantos crachás queres</h2>
+              <p>Quanto mais crachás encomendares maior o desconto.</p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ CHOICES -->
+    <section class="sg-section" id="choices">
+      <h2>Cartões de escolha</h2>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Grelha 2 colunas</h3>
+          <span class="sg-tag">.option-list</span>
+          <span class="sg-tag">.choice-card.media-list</span>
+        </div>
+        <div class="sg-frame">
+          <div class="option-list">
+            <button class="choice-card media-list" type="button">
+              <span class="option-image"></span>
+              <span class="choice-copy"><strong>Achatados</strong><span>finos e flexíveis</span></span>
+            </button>
+            <button class="choice-card media-list" type="button">
+              <span class="option-image"></span>
+              <span class="choice-copy"><strong>3 mm</strong><span>maior agarro</span></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Cartão "design grid"</h3>
+          <span class="sg-tag">.design-grid</span>
+          <span class="sg-tag">.choice-card.design-grid</span>
+        </div>
+        <div class="sg-frame">
+          <div class="design-grid">
+            <button class="choice-card design-grid" type="button">
+              <span class="design-image flowers"></span>
+              <span class="choice-copy"><strong>Flores</strong><span>rosa &amp; verde</span></span>
+            </button>
+            <button class="choice-card design-grid" type="button">
+              <span class="design-image leaves"></span>
+              <span class="choice-copy"><strong>Folhas</strong><span>tons sage</span></span>
+            </button>
+            <button class="choice-card design-grid" type="button">
+              <span class="design-image neutral"></span>
+              <span class="choice-copy"><strong>Neutro</strong><span>creme</span></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ PACKS -->
+    <section class="sg-section" id="packs">
+      <h2>Packs e preços</h2>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Selector de pack</h3>
+          <span class="sg-tag">.pack-control</span>
+          <span class="sg-tag">.pack-options</span>
+          <span class="sg-tag">.pack-option</span>
+          <span class="sg-tag">.pack-option.is-selected</span>
+          <span class="sg-tag">.pack-option.is-disabled</span>
+        </div>
+        <div class="sg-frame">
+          <div class="pack-control">
+            <div class="pack-options">
+              <button class="pack-option" type="button"><strong>1</strong><span>crachá</span></button>
+              <button class="pack-option is-selected" type="button"><strong>3</strong><span>crachás</span></button>
+              <button class="pack-option is-disabled" type="button"><strong>5</strong><span>crachás</span></button>
+            </div>
+            <p class="pack-disabled-message" role="status">5 crachás não chegam para todos os designs que escolheste. Escolhe um número maior.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Resumo de preços</h3>
+          <span class="sg-tag">.pack-price-overview</span>
+          <span class="sg-tag">.pack-price-card</span>
+          <span class="sg-tag">.summary-left</span>
+          <span class="sg-tag">.summary-row.is-discount</span>
+          <span class="sg-tag">.summary-icon</span>
+          <span class="sg-tag">.summary-divider</span>
+          <span class="sg-tag">.summary-total</span>
+        </div>
+        <div class="sg-frame">
+          <section class="pack-price-overview">
+            <article class="pack-price-card">
+              <header>Crachás Médios</header>
+              <div class="summary-left">
+                <div class="summary-row">
+                  <svg class="summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"></circle></svg>
+                  <span class="summary-value">1,33 €</span>
+                  <span class="summary-label">cada</span>
+                </div>
+                <div class="summary-row is-discount">
+                  <svg class="summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76z"></path><line x1="9" y1="15" x2="15" y2="9"></line><circle cx="9.5" cy="9.5" r="0.8" fill="currentColor" stroke="none"></circle><circle cx="14.5" cy="14.5" r="0.8" fill="currentColor" stroke="none"></circle></svg>
+                  <span class="summary-value">24%</span>
+                  <span class="summary-label">desconto</span>
+                </div>
+              </div>
+              <div class="summary-divider" aria-hidden="true"></div>
+              <div class="summary-total">
+                <div class="total-top">
+                  <div class="total-value">32,00 €</div>
+                </div>
+                <div class="total-label">total</div>
+              </div>
+            </article>
+          </section>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Resumo de preços (1 unidade — colapsado)</h3>
+          <span class="sg-tag">.pack-price-card--solo</span>
+          <span class="sg-tag">.summary-total--solo</span>
+        </div>
+        <div class="sg-frame">
+          <section class="pack-price-overview">
+            <article class="pack-price-card pack-price-card--solo">
+              <div class="summary-total summary-total--solo">
+                <div class="total-top">
+                  <div class="total-value">1,75 €</div>
+                </div>
+                <div class="total-label">cada crachá</div>
+              </div>
+            </article>
+          </section>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Subtítulo "ajustar individualmente"</h3>
+          <span class="sg-tag">.quantity-adjust-hint</span>
+        </div>
+        <div class="sg-frame">
+          <p class="quantity-adjust-hint">Se quiseres também podes ajustar a quantidade de cada crachá individualmente</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ QUANTITY -->
+    <section class="sg-section" id="quantity">
+      <h2>Quantidades</h2>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Cartão de quantidade</h3>
+          <span class="sg-tag">.quantity-grid</span>
+          <span class="sg-tag">.quantity-card</span>
+          <span class="sg-tag">.quantity-controls</span>
+          <span class="sg-tag">.quantity-badge</span>
+        </div>
+        <div class="sg-frame">
+          <div class="quantity-grid">
+            <article class="quantity-card">
+              <div class="quantity-hero">
+                <div class="quantity-visual-wrap">
+                  <span class="design-image flowers"></span>
+                  <span class="quantity-badge">x4</span>
+                </div>
+              </div>
+              <div class="quantity-main">
+                <div><strong>Flores</strong><span>rosa &amp; verde</span></div>
+                <div class="pin-stack"></div>
+                <div class="quantity-controls">
+                  <button type="button">−</button>
+                  <span>4</span>
+                  <button type="button">+</button>
+                </div>
+              </div>
+            </article>
+            <article class="quantity-card">
+              <div class="quantity-hero">
+                <div class="quantity-visual-wrap">
+                  <span class="design-image leaves"></span>
+                  <span class="quantity-badge">x2</span>
+                </div>
+              </div>
+              <div class="quantity-main">
+                <div><strong>Folhas</strong><span>tons sage</span></div>
+                <div class="pin-stack"></div>
+                <div class="quantity-controls">
+                  <button type="button">−</button>
+                  <span>2</span>
+                  <button type="button">+</button>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Estado / contagem</h3>
+          <span class="sg-tag">.quantity-status</span>
+          <span class="sg-tag">.quantity-status.is-complete</span>
+          <span class="sg-tag">.unassigned-pins</span>
+        </div>
+        <div class="sg-frame" style="display:grid; gap:10px;">
+          <div class="quantity-status needs-work">
+            <strong>4 / 5 crachás</strong>
+            <span>Faltam 1</span>
+          </div>
+          <div class="quantity-status is-complete">
+            <strong>5 / 5 crachás</strong>
+            <span>Pack completo</span>
+          </div>
+          <section class="unassigned-pins" aria-label="Unidades sem design">
+            <div><strong>Unidades sem design:</strong><span>2</span></div>
+            <div class="sad-pin-list">
+              <span class="sad-pin">:(</span>
+              <span class="sad-pin">:(</span>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ SUMMARY -->
+    <section class="sg-section" id="summary">
+      <h2>Resumos</h2>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Pílulas dos designs escolhidos</h3>
+          <span class="sg-tag">.selected-summary</span>
+          <span class="sg-tag">.selected-pill</span>
+        </div>
+        <div class="sg-frame">
+          <div class="selected-summary">
+            <span class="selected-pill"><span class="design-image flowers"></span><span>Flores</span><strong>x4</strong></span>
+            <span class="selected-pill"><span class="design-image leaves"></span><span>Folhas</span><strong>x2</strong></span>
+            <span class="selected-pill"><span class="design-image neutral"></span><span>Neutro</span><strong>x1</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Cartão de confirmação</h3>
+          <span class="sg-tag">.confirm-card</span>
+          <span class="sg-tag">.confirm-design-row</span>
+          <span class="sg-tag">.confirm-list</span>
+          <span class="sg-tag">.summary-list</span>
+        </div>
+        <div class="sg-frame">
+          <article class="confirm-card">
+            <h3>A tua encomenda</h3>
+            <ul class="confirm-list">
+              <li class="confirm-design-row"><span class="design-image flowers"></span><div><strong>Flores</strong><span>x4</span></div></li>
+              <li class="confirm-design-row"><span class="design-image leaves"></span><div><strong>Folhas</strong><span>x2</span></div></li>
+            </ul>
+            <dl class="summary-list">
+              <div><dt>Subtotal</dt><dd>50,00 €</dd></div>
+              <div><dt>Entrega</dt><dd>3,00 €</dd></div>
+              <div><dt>Total</dt><dd>53,00 €</dd></div>
+            </dl>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ DELIVERY -->
+    <section class="sg-section" id="delivery">
+      <h2>Entrega &amp; preço</h2>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Painel de preço</h3>
+          <span class="sg-tag">.price-panel</span>
+          <span class="sg-tag">.price-panel.muted</span>
+        </div>
+        <div class="sg-frame" style="display:grid; gap:10px;">
+          <div class="price-panel"><strong>50,00 €</strong><span>3 crachás médios</span></div>
+          <div class="price-panel muted"><strong>—</strong><span>Escolhe um pack</span></div>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Opções de entrega</h3>
+          <span class="sg-tag">.delivery-choice</span>
+          <span class="sg-tag">.delivery-option</span>
+          <span class="sg-tag">.delivery-price</span>
+        </div>
+        <div class="sg-frame">
+          <div class="delivery-choice">
+            <label class="delivery-option">
+              <input type="radio" name="sg-delivery">
+              <span class="choice-copy"><strong>Recolha em mão</strong><span>combinar local</span></span>
+              <span class="delivery-price is-text-price">grátis</span>
+            </label>
+            <label class="delivery-option">
+              <input type="radio" name="sg-delivery" checked>
+              <span class="choice-copy"><strong>Correio normal</strong><span>2–3 dias úteis</span></span>
+              <span class="delivery-price">3,00 €</span>
+            </label>
+            <label class="delivery-option">
+              <input type="radio" name="sg-delivery">
+              <span class="choice-copy"><strong>Correio registado</strong><span>com seguimento</span></span>
+              <span class="delivery-price">5,50 €</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ RESULT -->
+    <section class="sg-section" id="result">
+      <h2>Resultados</h2>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Cartão de sucesso / erro</h3>
+          <span class="sg-tag">.result-card</span>
+          <span class="sg-tag">.result-card.error</span>
+          <span class="sg-tag">.result-list</span>
+        </div>
+        <div class="sg-frame" style="display:grid; gap:10px;">
+          <article class="result-card">
+            <h2>Pedido enviado</h2>
+            <p>Recebi a tua encomenda e respondo em breve.</p>
+            <ul class="result-list">
+              <li><strong>Encomenda</strong><span>Crachás Médios · 24 unidades</span></li>
+              <li><strong>Total</strong><span>50,00 €</span></li>
+            </ul>
+          </article>
+          <article class="result-card error">
+            <h2>Algo correu mal</h2>
+            <p>Não consegui submeter o teu pedido. Tenta novamente.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ CATEGORIES -->
+    <section class="sg-section" id="categories">
+      <h2>Categorias (página inicial)</h2>
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Grelha de categorias</h3>
+          <span class="sg-tag">.category-grid</span>
+          <span class="sg-tag">.category-card</span>
+          <span class="sg-tag">.category-number</span>
+        </div>
+        <div class="sg-frame">
+          <div class="category-grid">
+            <a class="category-card" href="#"><span class="category-number">01</span><span class="choice-copy"><strong>Crachás</strong><span>1, 3 ou pack</span></span></a>
+            <a class="category-card" href="#"><span class="category-number">02</span><span class="choice-copy"><strong>Ímanes</strong><span>achatado ou 3 mm</span></span></a>
+            <a class="category-card is-disabled" href="#"><span class="category-number">03</span><span class="choice-copy"><strong>Cadernos</strong><span>em breve</span></span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ CRACHAS STEP 2 -->
+    <section class="sg-section" id="crachas-step2">
+      <h2>Crachás · passo 2 (tamanhos &amp; sumário)</h2>
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Sumário de designs</h3>
+          <span class="sg-tag">.crachas-step2-summary</span>
+          <span class="sg-tag">.crachas-step2-summary-grid</span>
+          <span class="sg-tag">.crachas-step2-summary-tile</span>
+        </div>
+        <div class="sg-frame">
+          <section class="crachas-step2-summary">
+            <h3 class="crachas-step2-summary-title">Os teus designs</h3>
+            <div class="crachas-step2-summary-grid">
+              <div class="crachas-step2-summary-tile"><span class="design-image flowers"></span><span class="crachas-step2-summary-tile-name">Flores</span></div>
+              <div class="crachas-step2-summary-tile"><span class="design-image leaves"></span><span class="crachas-step2-summary-tile-name">Folhas</span></div>
+              <div class="crachas-step2-summary-tile"><span class="design-image neutral"></span><span class="crachas-step2-summary-tile-name">Neutro</span></div>
+              <div class="crachas-step2-summary-tile"><span class="design-image blue-gold"></span><span class="crachas-step2-summary-tile-name">Azul-ouro</span></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ MISC -->
+    <section class="sg-section" id="misc">
+      <h2>Notas e estados</h2>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Nota de privacidade / estado vazio</h3>
+          <span class="sg-tag">.privacy-note</span>
+          <span class="sg-tag">.empty-state</span>
+          <span class="sg-tag">.choice-note</span>
+        </div>
+        <div class="sg-frame" style="display:grid; gap:10px;">
+          <p class="privacy-note">Os teus dados só servem para preparar a encomenda. <a href="#">Política de privacidade</a></p>
+          <p class="empty-state">Volta atrás e escolhe pelo menos um design.</p>
+          <p class="choice-note">Os preços já incluem IVA.</p>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Mensagem de pack indisponível</h3>
+          <span class="sg-tag">.pack-disabled-message</span>
+        </div>
+        <div class="sg-frame">
+          <p class="pack-disabled-message" role="status">5 crachás não chegam para todos os designs que escolheste.</p>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Cabeçalho do site</h3>
+          <span class="sg-tag">.site-header</span>
+          <span class="sg-tag">.brand</span>
+          <span class="sg-tag">.brand-mark</span>
+          <span class="sg-tag">.header-link</span>
+        </div>
+        <div class="sg-frame">
+          <header class="site-header">
+            <a class="brand" href="#">
+              <span class="brand-mark">M&amp;P</span>
+              <span>Mia &amp; Paper</span>
+            </a>
+            <div class="header-actions">
+              <a class="header-link" href="#">Contacto</a>
+            </div>
+          </header>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Rodapé</h3>
+          <span class="sg-tag">.site-footer</span>
+        </div>
+        <div class="sg-frame">
+          <footer class="site-footer">
+            <span>© Mia &amp; Paper 2026</span>
+            <a href="#">Privacidade</a>
+            <a href="#">Contacto</a>
+          </footer>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Toggle simples de tema (light/dark) — mesmo padrão das outras páginas.
+    (function () {
+      var btn = document.getElementById("sg-theme-toggle");
+      if (!btn) return;
+      btn.addEventListener("click", function () {
+        var current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+        var next = current === "dark" ? "light" : "dark";
+        if (next === "dark") {
+          document.documentElement.setAttribute("data-theme", "dark");
+        } else {
+          document.documentElement.removeAttribute("data-theme");
+        }
+        try { window.localStorage.setItem("miaandpaperTheme", next); } catch (e) {}
+      });
+    }());
+  </script>
+</body>
+</html>

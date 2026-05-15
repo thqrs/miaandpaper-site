@@ -1,0 +1,20 @@
+Options -Indexes
+DirectoryIndex index.html
+
+# Enable Force HTTPS Redirect in cPanel after SSL is active.
+# Do not add manual HTTPS rewrite rules here unless cPanel redirect fails.
+
+# SECURITY_HARDENING_V1
+# Bloqueia download directo de arquivos, bases de dados e ficheiros de
+# log/backup mesmo que cheguem por engano à document root. As acções de
+# backup do admin servem o ficheiro via PHP (Content-Disposition) e não
+# dependem de acesso directo.
+<FilesMatch "\.(zip|7z|tar|gz|tgz|bz2|rar|sqlite|sqlite-journal|sqlite-wal|sqlite-shm|sql|db|bak|backup|log|jsonl|tmp|swp)$">
+    Require all denied
+</FilesMatch>
+
+# Bloqueia ficheiros dot e tudo o que vem da pasta privada irmã caso seja
+# alguma vez exposta por engano (defence-in-depth).
+<FilesMatch "^(\.|miaandpaper-mail-config|admin-login-attempts).*$">
+    Require all denied
+</FilesMatch>

@@ -1,0 +1,49 @@
+# ============================================================
+# Mia & Paper - regras de exclusao do Git
+# ============================================================
+
+# --- Pastas locais que nao devem ir para o repo ---
+private/
+imagens/
+.claude/
+
+# --- Backups e arquivos pessoais (defensivo, ja foram movidos) ---
+_deploy_backups/
+_manual_backups/
+*.7z
+*.zip
+
+# --- Lixo gerado pelo servidor cPanel/PHP ---
+# nunca deve ir para o repo, mesmo que o sync do cPanel o traga
+site/error_log
+site/.php-version-check.php
+site/.well-known/
+site/*.zip
+site/*.7z
+
+# --- Pasta antiga (apagada do disco; defensivo) ---
+intermedio/
+
+# --- Logs e temporarios ---
+*.log
+tmp/
+.cache/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# --- Segredos: nunca committar ---
+.env
+.env.*
+*.key
+*.pem
+*.crt
+
+# --- Bases de dados locais ---
+*.sqlite
+*.sqlite-journal
+*.db

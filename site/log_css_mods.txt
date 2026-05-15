@@ -1,0 +1,164 @@
+log_css_mods.txt — Fase 7 (STYLE_TOKENS_V1)
+=================================================================
+Data: 2026-05-11
+Objectivo: uniformizar títulos de secção e cores de fundo no
+            site Mia & Paper. Reduzir variantes de amarelo e
+            criar tokens reutilizáveis em :root.
+
+Para reverter Fase 7 inteira:
+  - restaurar styles.css a partir de "BACKUP Após finalizar fase 6.zip"
+  - cache buster automático no próximo deploy resolve
+
+-----------------------------------------------------------------
+1) NOVOS TOKENS ADICIONADOS EM :root (styles.css ~linha 16-30)
+-----------------------------------------------------------------
+  --surface-cream         #fffbe9   wrapper geral (dc-block, banners discretos)
+  --surface-cream-soft    #fff8df   caixas com mais ênfase (price-panel)
+  --surface-cream-strong  #f6e7bf   caixas com saturação extra (resumos)
+  --surface-stone         #f7f1e6   cinza-creme neutro (confirm-card, listas)
+  --surface-gold-soft     #fff5d0   realce dourado suave (CTAs / notas)
+  --border-soft-gold      rgba(184,134,22,0.42)  borda subtil dourada
+
+(Mantém-se compatíveis com a paleta antiga: cada token tem
+exactamente o valor hex que estava antes pespegado em vários sítios.)
+
+-----------------------------------------------------------------
+2) TÍTULOS DE SECÇÃO — ESTILO CANÓNICO
+-----------------------------------------------------------------
+Foi adicionada uma regra agrupada (styles.css, novo bloco
+"section-title", à volta da linha ~4079) que aplica o estilo
+canónico do .design-grid-section-title a todos estes seletores
+em simultâneo:
+
+  .section-title,
+  .design-grid-section-title,
+  .crachas-step2-summary-title,
+  .dc-block-title {
+    margin: 0 0 10px;
+    padding-bottom: 6px;
+    color: var(--moss);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.04rem, 4.4vw, 1.32rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+    border-bottom: 1px solid var(--line);
+  }
+
+Regras individuais que tinham overrides foram esvaziadas (deixando
+apenas comentário "estilo canónico aplicado pela regra agrupada
+acima"):
+  - .crachas-step2-summary-title  (antes: cor --ink, font-size 1.04rem
+    fixo, sem border-bottom)
+  - .dc-block-title               (antes: font-family inherit, size
+    1.15rem, cor --ink, sem border-bottom)
+
+Para reverter UMA destas regras individualmente:
+  procurar "estilo canónico aplicado pela regra agrupada acima"
+  e substituir pelo bloco antigo (consultar BACKUP Fase 6).
+
+-----------------------------------------------------------------
+3) SUBSTITUIÇÕES DE COR DE FUNDO (hex → token)
+-----------------------------------------------------------------
+Feita uma substituição literal em todo o styles.css. As cores
+mantêm-se exactamente iguais — só o nome é que é agora reutilizável.
+
+  #f7f1e6  →  var(--surface-stone)         11 ocorrências
+  #fff8df  →  var(--surface-cream-soft)    13 ocorrências
+  #f6e7bf  →  var(--surface-cream-strong)   3 ocorrências
+  #fffbe9  →  var(--surface-cream)          7 ocorrências
+  #fff5d0  →  var(--surface-gold-soft)      3 ocorrências
+                                          ───
+                                           37 ocorrências
+
+Locais afectados (não exaustivo, ver styles.css):
+  - .confirm-card
+  - .price-panel  /  .price-panel.muted
+  - .result-list
+  - .dc-block  /  .dc-delivery-option (estado .is-selected)
+  - .crachas-step2-summary
+  - .payment-notice  (gradiente cream → gold-soft)
+  - .order-success-card  (gradiente cream → gold-soft)
+  - .cookie-banner  (background cream)
+  - vários outros blocos do wizard, admin, contacto, etc.
+
+Os valores em :root (--paper, --linen) NÃO foram tocados — mantêm
+os mesmos hex que tinham antes para preservar compatibilidade.
+
+-----------------------------------------------------------------
+4) COMO REVERTER ALTERAÇÕES PONTUAIS
+-----------------------------------------------------------------
+Para voltar um background específico ao hex literal:
+  procurar a referência ao token nesse bloco
+  e substituir por o hex correspondente da tabela acima.
+
+Para anular o agrupamento dos títulos:
+  remover/comentar a regra agrupada e restaurar os blocos
+  individuais a partir de "BACKUP Após finalizar fase 6.zip".
+
+Para remover todos os tokens novos:
+  apagar as linhas --surface-* e --border-soft-gold do :root
+  + correr substituição inversa (token → hex) em todo o ficheiro.
+
+-----------------------------------------------------------------
+5) VERIFICAÇÃO VISUAL
+-----------------------------------------------------------------
+Como cada token resolve para o mesmo hex anterior, o aspecto
+visual em modo claro e modo escuro mantém-se PIXEL-PERFECT igual.
+As únicas alterações VISUAIS reais são:
+  - .crachas-step2-summary-title  → agora cor moss em vez de ink,
+    com border-bottom; font-size é responsive (cresce em ecrãs
+    largos) em vez de fixo 1.04rem.
+  - .dc-block-title               → agora cor moss em vez de ink,
+    font-family Georgia em vez de Inter; com border-bottom.
+
+Testar especialmente:
+  - passos do wizard em mobile (≤480px) — títulos devem caber
+  - dark mode — moss continua a contrastar correctamente
+  - admin panel — não afectado (não usa estas classes)
+
+=================================================================
+Fase 8 (CSS_UNIFORMITY_LAYER_V1)
+=================================================================
+Data: 2026-05-11
+Objectivo: uniformizar visualmente os componentes públicos, não apenas
+substituir cores por tokens.
+
+Alteração feita:
+  - Adicionada uma camada canónica no fim de styles.css.
+  - Centraliza superfícies, cartões, blocos de resumo, blocos de entrega,
+    inputs, botões públicos, estados seleccionados e títulos de secção.
+  - Mantém o CSS antigo acima para histórico e compatibilidade; a camada
+    final ganha por estar no fim.
+
+Para reverter:
+  - Remover o bloco inteiro que começa em "CSS_UNIFORMITY_LAYER_V1".
+
+Nota:
+  - Não foram alterados app.js, JSON de produtos, PHP, imagens nem fluxo do
+    admin. Só styles.css e cache-busters nos HTML públicos.
+
+
+2026-05-11 - REQUEST_FIXES_20260511_V2
+- app.js: nos ímanes, o passo de tipo volta a mostrar item.note/"Notas" no cartão, mantendo escondida apenas a coluna de preço/placeholder.
+- styles.css: .quantity-adjust-hint passa a usar a mesma tipografia dos títulos canónicos do wizard, aplicada globalmente a crachás, ímanes e mini-cadernos.
+- HTML: cache-buster actualizado para v=20260511195500.
+
+2026-05-11 - CRACHAS_SIDEIMAGE_BASE64_FIX_V1
+- admin-api.php: o processamento de uploads agora também trata o campo sideImage, além de image e interiorImages; se o admin gravar uma imagem lateral como data:image/base64, o PHP guarda-a em content/uploads/ e troca o JSON por um caminho normal.
+- content/products/crachas.json: removido base64 dos dois sideImage do passo de escolha de tamanho.
+- content/uploads/: adicionadas as imagens correctas enviadas pelo utilizador:
+  - crachas-25-side-example.jpg
+  - crachas-32-side-example.jpg
+- O tamanho das imagens novas mantém-se 742x372 px, igual ao das antigas base64.
+
+2026-05-11 - Homepage prazo + cadernos inativo + email cliente
+- Adicionado aviso simples de prazo na homepage via content/home.json -> deadlineNotice.
+- Adicionado toggle admin por cartão da homepage: "Link ativo" (category.clickable). A opção "Visível" continua independente.
+- Cadernos fica visível com carrossel, mas sem link enquanto clickable=false.
+- Email de cópia para cliente troca "Oferta à congregação" por "Pedi ajuda para não escolher designs repetidos".
+
+2026-05-11 - Deadline notice admin toggle
+- Adicionada checkbox "Mostrar aviso de data limite" no admin da homepage.
+- content/home.json agora inclui deadlineNoticeEnabled=true.
+- O handler data-admin-home-edit grava checkboxes como booleanos.

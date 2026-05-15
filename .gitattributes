@@ -1,0 +1,29 @@
+# Auto: deteta texto e normaliza para LF no repo
+* text=auto eol=lf
+
+# Scripts Windows tem de manter CRLF para o cmd.exe os interpretar bem
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+*.ps1   text eol=crlf
+
+# Scripts Unix sempre LF
+*.sh    text eol=lf
+
+# Binarios — nao normalizar
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.svg   text
+*.pdf   binary
+*.zip   binary
+*.7z    binary
+*.tar   binary
+*.gz    binary
+*.sqlite binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary

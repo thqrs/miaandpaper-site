@@ -1,0 +1,416 @@
+{
+  "version": 1,
+  "updated": "2026-05-13T21:48:15",
+  "tag_keys": {
+    "F1": "caderno",
+    "F2": "capa_principal",
+    "F3": "capa",
+    "F4": "interior",
+    "F5": "matte",
+    "F6": "glossy",
+    "F7": "glitter",
+    "F8": "holografico",
+    "F9": "marcador",
+    "F10": "pin",
+    "F11": "pack_pioneiro",
+    "F12": "pack_normal"
+  },
+  "images": {
+    "cadernos (1)/img (27).jpg": {
+      "file": "img (27).jpg",
+      "relative_path": "cadernos (1)/img (27).jpg",
+      "folder": "cadernos (1)",
+      "tags": [
+        "matte"
+      ],
+      "updated": "2026-05-13T21:45:54"
+    },
+    "cadernos (1)/img (31).jpg": {
+      "file": "img (31).jpg",
+      "relative_path": "cadernos (1)/img (31).jpg",
+      "folder": "cadernos (1)",
+      "tags": [
+        "glossy"
+      ],
+      "updated": "2026-05-13T21:45:59"
+    },
+    "cadernos (1)/img (36).jpg": {
+      "file": "img (36).jpg",
+      "relative_path": "cadernos (1)/img (36).jpg",
+      "folder": "cadernos (1)",
+      "tags": [
+        "glitter"
+      ],
+      "updated": "2026-05-13T21:46:03"
+    },
+    "cadernos (1)/img (8).jpg": {
+      "file": "img (8).jpg",
+      "relative_path": "cadernos (1)/img (8).jpg",
+      "folder": "cadernos (1)",
+      "tags": [
+        "marcador"
+      ],
+      "updated": "2026-05-13T21:46:07"
+    },
+    "cadernos (1)/img (9).jpg": {
+      "file": "img (9).jpg",
+      "relative_path": "cadernos (1)/img (9).jpg",
+      "folder": "cadernos (1)",
+      "tags": [
+        "holografico"
+      ],
+      "updated": "2026-05-13T21:46:12"
+    },
+    "cadernos (2)/1778703273575_reduced_q95.jpg": {
+      "file": "1778703273575_reduced_q95.jpg",
+      "relative_path": "cadernos (2)/1778703273575_reduced_q95.jpg",
+      "folder": "cadernos (2)",
+      "tags": [
+        "glossy"
+      ],
+      "updated": "2026-05-13T21:46:16"
+    },
+    "cadernos (2)/img (18).jpg": {
+      "file": "img (18).jpg",
+      "relative_path": "cadernos (2)/img (18).jpg",
+      "folder": "cadernos (2)",
+      "tags": [
+        "holografico"
+      ],
+      "updated": "2026-05-13T21:46:20"
+    },
+    "cadernos (2)/img (20).jpg": {
+      "file": "img (20).jpg",
+      "relative_path": "cadernos (2)/img (20).jpg",
+      "folder": "cadernos (2)",
+      "tags": [
+        "glitter"
+      ],
+      "updated": "2026-05-13T21:46:22"
+    },
+    "cadernos (2)/img (21).jpg": {
+      "file": "img (21).jpg",
+      "relative_path": "cadernos (2)/img (21).jpg",
+      "folder": "cadernos (2)",
+      "tags": [
+        "matte"
+      ],
+      "updated": "2026-05-13T21:46:25"
+    },
+    "cadernos (2)/img (4).jpg": {
+      "file": "img (4).jpg",
+      "relative_path": "cadernos (2)/img (4).jpg",
+      "folder": "cadernos (2)",
+      "tags": [
+        "marcador"
+      ],
+      "updated": "2026-05-13T21:46:27"
+    },
+    "cadernos (3)/img (13).jpg": {
+      "file": "img (13).jpg",
+      "relative_path": "cadernos (3)/img (13).jpg",
+      "folder": "cadernos (3)",
+      "tags": [
+        "holografico"
+      ],
+      "updated": "2026-05-13T21:46:32"
+    },
+    "cadernos (3)/img (22).jpg": {
+      "file": "img (22).jpg",
+      "relative_path": "cadernos (3)/img (22).jpg",
+      "folder": "cadernos (3)",
+      "tags": [
+        "matte"
+      ],
+      "updated": "2026-05-13T21:46:36"
+    },
+    "cadernos (3)/img (3).jpg": {
+      "file": "img (3).jpg",
+      "relative_path": "cadernos (3)/img (3).jpg",
+      "folder": "cadernos (3)",
+      "tags": [
+        "marcador"
+      ],
+      "updated": "2026-05-13T21:46:38"
+    },
+    "cadernos (3)/img (30).jpg": {
+      "file": "img (30).jpg",
+      "relative_path": "cadernos (3)/img (30).jpg",
+      "folder": "cadernos (3)",
+      "tags": [
+        "glossy"
+      ],
+      "updated": "2026-05-13T21:46:41"
+    },
+    "cadernos (3)/img (35).jpg": {
+      "file": "img (35).jpg",
+      "relative_path": "cadernos (3)/img (35).jpg",
+      "folder": "cadernos (3)",
+      "tags": [
+        "glitter"
+      ],
+      "updated": "2026-05-13T21:46:49"
+    },
+    "cadernos (4)/img (17).jpg": {
+      "file": "img (17).jpg",
+      "relative_path": "cadernos (4)/img (17).jpg",
+      "folder": "cadernos (4)",
+      "tags": [
+        "glossy"
+      ],
+      "updated": "2026-05-13T21:46:52"
+    },
+    "cadernos (4)/img (25).jpg": {
+      "file": "img (25).jpg",
+      "relative_path": "cadernos (4)/img (25).jpg",
+      "folder": "cadernos (4)",
+      "tags": [
+        "glitter"
+      ],
+      "updated": "2026-05-13T21:47:00"
+    },
+    "cadernos (4)/img (28).jpg": {
+      "file": "img (28).jpg",
+      "relative_path": "cadernos (4)/img (28).jpg",
+      "folder": "cadernos (4)",
+      "tags": [
+        "matte"
+      ],
+      "updated": "2026-05-13T21:47:03"
+    },
+    "cadernos (4)/img (33).jpg": {
+      "file": "img (33).jpg",
+      "relative_path": "cadernos (4)/img (33).jpg",
+      "folder": "cadernos (4)",
+      "tags": [
+        "holografico"
+      ],
+      "updated": "2026-05-13T21:47:05"
+    },
+    "cadernos (4)/img (6).jpg": {
+      "file": "img (6).jpg",
+      "relative_path": "cadernos (4)/img (6).jpg",
+      "folder": "cadernos (4)",
+      "tags": [
+        "marcador"
+      ],
+      "updated": "2026-05-13T21:47:07"
+    },
+    "cadernos (5)/img (15).jpg": {
+      "file": "img (15).jpg",
+      "relative_path": "cadernos (5)/img (15).jpg",
+      "folder": "cadernos (5)",
+      "tags": [
+        "holografico"
+      ],
+      "updated": "2026-05-13T21:47:10"
+    },
+    "cadernos (5)/img (26).jpg": {
+      "file": "img (26).jpg",
+      "relative_path": "cadernos (5)/img (26).jpg",
+      "folder": "cadernos (5)",
+      "tags": [
+        "matte"
+      ],
+      "updated": "2026-05-13T21:47:12"
+    },
+    "cadernos (5)/img (29).jpg": {
+      "file": "img (29).jpg",
+      "relative_path": "cadernos (5)/img (29).jpg",
+      "folder": "cadernos (5)",
+      "tags": [
+        "glitter"
+      ],
+      "updated": "2026-05-13T21:47:17"
+    },
+    "cadernos (5)/img (38).jpg": {
+      "file": "img (38).jpg",
+      "relative_path": "cadernos (5)/img (38).jpg",
+      "folder": "cadernos (5)",
+      "tags": [
+        "glossy"
+      ],
+      "updated": "2026-05-13T21:47:18"
+    },
+    "cadernos (5)/img (40).jpg": {
+      "file": "img (40).jpg",
+      "relative_path": "cadernos (5)/img (40).jpg",
+      "folder": "cadernos (5)",
+      "tags": [
+        "marcador"
+      ],
+      "updated": "2026-05-13T21:47:20"
+    },
+    "cadernos (6)/1778703273549_reduced_q95.jpg": {
+      "file": "1778703273549_reduced_q95.jpg",
+      "relative_path": "cadernos (6)/1778703273549_reduced_q95.jpg",
+      "folder": "cadernos (6)",
+      "tags": [
+        "matte"
+      ],
+      "updated": "2026-05-13T21:47:22"
+    },
+    "cadernos (6)/1778703348803_reduced_q95.jpg": {
+      "file": "1778703348803_reduced_q95.jpg",
+      "relative_path": "cadernos (6)/1778703348803_reduced_q95.jpg",
+      "folder": "cadernos (6)",
+      "tags": [
+        "holografico"
+      ],
+      "updated": "2026-05-13T21:47:28"
+    },
+    "cadernos (6)/1778703348819_reduced_q95.jpg": {
+      "file": "1778703348819_reduced_q95.jpg",
+      "relative_path": "cadernos (6)/1778703348819_reduced_q95.jpg",
+      "folder": "cadernos (6)",
+      "tags": [
+        "glitter"
+      ],
+      "updated": "2026-05-13T21:47:31"
+    },
+    "cadernos (6)/1778703348884_reduced_q95.jpg": {
+      "file": "1778703348884_reduced_q95.jpg",
+      "relative_path": "cadernos (6)/1778703348884_reduced_q95.jpg",
+      "folder": "cadernos (6)",
+      "tags": [
+        "glossy"
+      ],
+      "updated": "2026-05-13T21:47:33"
+    },
+    "cadernos (6)/img (1).jpg": {
+      "file": "img (1).jpg",
+      "relative_path": "cadernos (6)/img (1).jpg",
+      "folder": "cadernos (6)",
+      "tags": [
+        "marcador"
+      ],
+      "updated": "2026-05-13T21:47:35"
+    },
+    "cadernos (6)/img (23).jpg": {
+      "file": "img (23).jpg",
+      "relative_path": "cadernos (6)/img (23).jpg",
+      "folder": "cadernos (6)",
+      "tags": [
+        "glitter"
+      ],
+      "updated": "2026-05-13T21:47:38"
+    },
+    "cadernos (6)/img (32).jpg": {
+      "file": "img (32).jpg",
+      "relative_path": "cadernos (6)/img (32).jpg",
+      "folder": "cadernos (6)",
+      "tags": [
+        "glossy"
+      ],
+      "updated": "2026-05-13T21:47:41"
+    },
+    "cadernos (6)/img (39).jpg": {
+      "file": "img (39).jpg",
+      "relative_path": "cadernos (6)/img (39).jpg",
+      "folder": "cadernos (6)",
+      "tags": [
+        "holografico"
+      ],
+      "updated": "2026-05-13T21:47:43"
+    },
+    "cadernos (7)/img (10).jpg": {
+      "file": "img (10).jpg",
+      "relative_path": "cadernos (7)/img (10).jpg",
+      "folder": "cadernos (7)",
+      "tags": [
+        "glitter"
+      ],
+      "updated": "2026-05-13T21:47:48"
+    },
+    "cadernos (7)/img (12).jpg": {
+      "file": "img (12).jpg",
+      "relative_path": "cadernos (7)/img (12).jpg",
+      "folder": "cadernos (7)",
+      "tags": [
+        "matte"
+      ],
+      "updated": "2026-05-13T21:47:50"
+    },
+    "cadernos (7)/img (14).jpg": {
+      "file": "img (14).jpg",
+      "relative_path": "cadernos (7)/img (14).jpg",
+      "folder": "cadernos (7)",
+      "tags": [
+        "glossy"
+      ],
+      "updated": "2026-05-13T21:47:54"
+    },
+    "cadernos (7)/img (34).jpg": {
+      "file": "img (34).jpg",
+      "relative_path": "cadernos (7)/img (34).jpg",
+      "folder": "cadernos (7)",
+      "tags": [
+        "holografico"
+      ],
+      "updated": "2026-05-13T21:47:56"
+    },
+    "cadernos (7)/img (5).jpg": {
+      "file": "img (5).jpg",
+      "relative_path": "cadernos (7)/img (5).jpg",
+      "folder": "cadernos (7)",
+      "tags": [
+        "marcador"
+      ],
+      "updated": "2026-05-13T21:47:58"
+    },
+    "cadernos (8)/img (11).jpg": {
+      "file": "img (11).jpg",
+      "relative_path": "cadernos (8)/img (11).jpg",
+      "folder": "cadernos (8)",
+      "tags": [
+        "glossy"
+      ],
+      "updated": "2026-05-13T21:48:02"
+    },
+    "cadernos (8)/img (19).jpg": {
+      "file": "img (19).jpg",
+      "relative_path": "cadernos (8)/img (19).jpg",
+      "folder": "cadernos (8)",
+      "tags": [
+        "matte"
+      ],
+      "updated": "2026-05-13T21:48:04"
+    },
+    "cadernos (8)/img (24).jpg": {
+      "file": "img (24).jpg",
+      "relative_path": "cadernos (8)/img (24).jpg",
+      "folder": "cadernos (8)",
+      "tags": [
+        "holografico"
+      ],
+      "updated": "2026-05-13T21:48:06"
+    },
+    "cadernos (8)/img (37).jpg": {
+      "file": "img (37).jpg",
+      "relative_path": "cadernos (8)/img (37).jpg",
+      "folder": "cadernos (8)",
+      "tags": [
+        "glitter"
+      ],
+      "updated": "2026-05-13T21:48:10"
+    },
+    "cadernos (9)/img (16).jpg": {
+      "file": "img (16).jpg",
+      "relative_path": "cadernos (9)/img (16).jpg",
+      "folder": "cadernos (9)",
+      "tags": [
+        "matte"
+      ],
+      "updated": "2026-05-13T21:48:13"
+    },
+    "cadernos (9)/img (7).jpg": {
+      "file": "img (7).jpg",
+      "relative_path": "cadernos (9)/img (7).jpg",
+      "folder": "cadernos (9)",
+      "tags": [
+        "marcador"
+      ],
+      "updated": "2026-05-13T21:48:15"
+    }
+  }
+}

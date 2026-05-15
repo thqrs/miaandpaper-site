@@ -1,0 +1,326 @@
+{
+  "slug": "caderninhos",
+  "name": "Mini-Cadernos",
+  "brand": "Mia & Paper",
+  "homeUrl": "index.html",
+  "instagramUrl": "https://www.instagram.com/miaandpaper/",
+  "form": {
+    "action": "send-order.php",
+    "returnTo": "caderninhos.html"
+  },
+  "intro": {
+    "eyebrow": "Mini-Cadernos",
+    "title": "Escolhe os designs.",
+    "text": "Escolhe os teus favoritos e completa os dados do pedido."
+  },
+  "deliveryOptions": [
+    {
+      "id": "pickup",
+      "label": "Vou recolher na casa da Mia",
+      "text": "",
+      "feeCents": 0
+    },
+    {
+      "id": "shipping",
+      "label": "Envio CTT - até 2 Kg",
+      "text": "",
+      "feeCents": 850,
+      "priceText": "Valor mínimo:\n8,50 €"
+    },
+    {
+      "id": "join_orders",
+      "label": "Junta as minhas encomendas",
+      "text": "",
+      "feeCents": 0
+    }
+  ],
+  "templates": [
+    {
+      "id": "media-list",
+      "label": "Imagem + 2 linhas"
+    },
+    {
+      "id": "text-grid",
+      "label": "Texto em grelha"
+    },
+    {
+      "id": "price-pack-grid",
+      "label": "Packs/preços"
+    },
+    {
+      "id": "quantity-builder",
+      "label": "Pack + quantidades"
+    },
+    {
+      "id": "design-grid",
+      "label": "Grelha de designs"
+    },
+    {
+      "id": "details-form",
+      "label": "Formulário"
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmação"
+    }
+  ],
+  "defaultPriceKey": "Mini-Cadernos",
+  "prices": {
+    "Mini-Cadernos": {
+      "1": 450,
+      "3": 1250,
+      "5": 1950,
+      "10": 3600,
+      "24": 7800,
+      "48": 14500,
+      "96": 28000
+    }
+  },
+  "steps": [
+    {
+      "id": "designs",
+      "label": "Designs",
+      "title": "Escolhe os que mais gostas",
+      "text": "Seleciona os designs de que gostas ou escolhe “Sortido” para deixares a combinação connosco.",
+      "template": "design-grid",
+      "field": "designs[]",
+      "selection": "multi",
+      "items": [
+        {
+          "id": "caderninho-01",
+          "value": "Caderninho 01",
+          "title": "Mini-Caderno 01",
+          "subtitle": "Design Vertical",
+          "badge": "",
+          "image": "content/designs/Fotos_dos_Mini_Cadernos/1000133037.jpg",
+          "imageFit": "contain",
+          "imageZoom": 113,
+          "imagePositionX": -4,
+          "imagePositionY": 1,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "frameHeight": 125
+        },
+        {
+          "id": "caderninho-02",
+          "value": "Caderninho 02",
+          "title": "Mini-Caderno 02",
+          "subtitle": "Design Vertical",
+          "badge": "",
+          "image": "content/designs/Fotos_dos_Mini_Cadernos/1000133040.jpg",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": -5,
+          "imagePositionY": 3,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "frameHeight": 125
+        },
+        {
+          "id": "caderninho-03",
+          "value": "Caderninho 03",
+          "title": "Mini-Caderno 03",
+          "subtitle": "Design Vertical",
+          "badge": "",
+          "image": "content/designs/Fotos_dos_Mini_Cadernos/1000133041.jpg",
+          "imageFit": "contain",
+          "imageZoom": 77,
+          "imagePositionX": -1,
+          "imagePositionY": 1,
+          "imageRotation": 1,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "frameHeight": 125
+        },
+        {
+          "id": "caderninho-04",
+          "value": "Caderninho 04",
+          "title": "Mini-Caderno 04",
+          "subtitle": "Design Vertical",
+          "badge": "",
+          "image": "content/designs/Fotos_dos_Mini_Cadernos/1000133042.jpg",
+          "imageFit": "contain",
+          "imageZoom": 76,
+          "imagePositionX": -2,
+          "imagePositionY": 0,
+          "imageRotation": -1,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "frameHeight": 125
+        },
+        {
+          "id": "caderninho-05",
+          "value": "Caderninho 05",
+          "title": "Mini-Caderno 05",
+          "subtitle": "Design Vertical",
+          "badge": "",
+          "image": "content/designs/Fotos_dos_Mini_Cadernos/1000133043.jpg",
+          "imageFit": "contain",
+          "imageZoom": 76,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": -1,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "frameHeight": 125
+        }
+      ],
+      "sections": [
+        {
+          "id": "grupo-1",
+          "title": "Grupo 1",
+          "labelPrefix": ""
+        },
+        {
+          "id": "grupo-2",
+          "title": "Grupo 2",
+          "labelPrefix": ""
+        }
+      ]
+    },
+    {
+      "id": "pack",
+      "label": "Pack",
+      "title": "Diz-me quantos mini-cadernos queres",
+      "text": "Se quiseres também podes ajustar a quantidade de cada mini-caderno individualmente",
+      "template": "quantity-builder",
+      "field": "pack_quantity",
+      "selection": "pack",
+      "items": [
+        {
+          "id": "pack-1",
+          "quantity": 1,
+          "title": "1",
+          "subtitle": "mini-caderno"
+        },
+        {
+          "id": "pack-3",
+          "quantity": 3,
+          "title": "3",
+          "subtitle": "mini-cadernos"
+        },
+        {
+          "id": "pack-5",
+          "quantity": 5,
+          "title": "5",
+          "subtitle": "mini-cadernos"
+        },
+        {
+          "id": "pack-10",
+          "quantity": 10,
+          "title": "10",
+          "subtitle": "mini-cadernos"
+        },
+        {
+          "id": "pack-24",
+          "quantity": 24,
+          "title": "24",
+          "subtitle": "mini-cadernos"
+        },
+        {
+          "id": "pack-48",
+          "quantity": 48,
+          "title": "48",
+          "subtitle": "mini-cadernos"
+        },
+        {
+          "id": "pack-96",
+          "quantity": 96,
+          "title": "96",
+          "subtitle": "mini-cadernos"
+        }
+      ]
+    },
+    {
+      "id": "details",
+      "label": "Dados",
+      "title": "Dados para o cartão de apresentação",
+      "text": "Estes dados seguem no pedido para preparar a personalização.",
+      "template": "details-form",
+      "fields": [
+        {
+          "name": "recipient_name",
+          "label": "Nome",
+          "placeholder": "Nome a colocar no cartão",
+          "required": true,
+          "autocomplete": "name",
+          "section": "Dados para o Cartão de Apresentação"
+        },
+        {
+          "name": "contact",
+          "label": "Telemóvel ou Email",
+          "placeholder": "Email e/ou telemóvel para o cartão",
+          "required": false,
+          "autocomplete": "off",
+          "section": "Dados para o Cartão de Apresentação"
+        },
+        {
+          "name": "congregation",
+          "label": "Congregação",
+          "placeholder": "Nome da congregação",
+          "required": false,
+          "autocomplete": "organization",
+          "section": "Dados para o Cartão de Apresentação"
+        }
+      ]
+    },
+    {
+      "id": "delivery_contact",
+      "label": "Entrega e contacto",
+      "title": "Entrega e contacto",
+      "text": "",
+      "template": "delivery-contact",
+      "delivery": {
+        "title": "Como queres receber a tua encomenda?",
+        "subtitle": "Caso já tenhas feito um pedido anteriormente, escolhe \"Junta as minhas encomendas\" e para receberes todas as tuas encomendas na mesma embalagem."
+      },
+      "contact": {
+        "title": "Dados de Contacto",
+        "noteAfter": "Estes dados pessoais serão partilhados com a Mia para que ela te possa contactar para confirmar a encomenda.",
+        "fields": [
+          {
+            "name": "customer_name",
+            "label": "Nome",
+            "placeholder": "O teu nome",
+            "required": true,
+            "autocomplete": "name"
+          },
+          {
+            "name": "customer_contact",
+            "label": "Email ou Telemóvel",
+            "placeholder": "Email ou telemóvel",
+            "required": true,
+            "autocomplete": "email"
+          }
+        ]
+      }
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmar",
+      "title": "Confirma antes de enviar",
+      "text": "Se estiver tudo certo, envia o pedido.",
+      "template": "confirm"
+    }
+  ],
+  "unitLabel": "mini-cadernos",
+  "unitSingular": "mini-caderno",
+  "unitShort": "mini-caderno",
+  "imageShape": "rect",
+  "giftRequest": {
+    "label": "Penso oferecer estes artigos a pessoas da minha congregação.",
+    "text": "Escolhe esta opção se quiseres que a Mia te ajude a escolher designs únicos para a tua congregação."
+  }
+}
