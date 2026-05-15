@@ -1,4 +1,10 @@
 (function () {
+  const version = "slot-patch-debug-2026-05-15-01";
+  window.__MIA_SLOT_PATCH_VERSION = version;
+  console.info("[MiaSlotPatch]", version);
+})();
+
+(function () {
   var app = document.querySelector("#app");
   var page = document.body.dataset.page;
   var productSlug = document.body.dataset.product;
@@ -177,6 +183,476 @@
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
+
+  var miaSlotDebugLastElement = null;
+  var miaSlotDebugFlatKeys = ["imageZoom", "imagePositionX", "imagePositionY", "imageRotation"];
+  var miaSlotDebugSideFlatKeys = ["sideImageZoom", "sideImagePositionX", "sideImagePositionY", "sideImageRotation"];
+  var miaSlotDebugFrameKeys = ["frameScale", "frameWidth", "frameHeight", "frameMarginX", "frameMarginY"];
+  var miaSlotDebugSideFrameKeys = ["sideFrameScale", "sideFrameWidth", "sideFrameHeight", "sideFrameMarginX", "sideFrameMarginY"];
+
+  function buildImageEditKey(productSlug, collection, itemId, slotName) {
+    return [
+      productSlug || "unknown",
+      collection || "unknown",
+      itemId || "unknown",
+      slotName || "main"
+    ].join(":");
+  }
+
+  function miaSlotDebugIsFlatKey(key) {
+    return miaSlotDebugFlatKeys.indexOf(key) !== -1 || miaSlotDebugSideFlatKeys.indexOf(key) !== -1;
+  }
+
+  function miaSlotDebugIsFrameKey(key) {
+    return miaSlotDebugFrameKeys.indexOf(key) !== -1 || miaSlotDebugSideFrameKeys.indexOf(key) !== -1;
+  }
+
+  function miaSlotDebugCollection(step) {
+    return step && step.id ? String(step.id) : "";
+  }
+
+  function miaSlotDebugImage(item, side, fallback) {
+    if (fallback) {
+      return String(fallback);
+    }
+    if (!item) {
+      return "";
+    }
+    if (side && item.sideImage) {
+      return String(item.sideImage);
+    }
+    return String(item.image || item.exampleImage || "");
+  }
+
+  function imageEditSlotName(side) {
+    return side ? "side" : "main";
+  }
+
+  function miaSlotDebugEditKey(item, step, side) {
+    if (item && side && item._sideImageEditKey) {
+      return String(item._sideImageEditKey);
+    }
+    if (item && !side && item._imageEditKey) {
+      return String(item._imageEditKey);
+    }
+    return buildImageEditKey(
+      state.product && state.product.slug,
+      miaSlotDebugCollection(step),
+      item && item.id,
+      imageEditSlotName(side)
+    );
+  }
+
+  function miaSlotDebugFallbackEditKey(item, side) {
+    if (item && side && item._sideImageEditFallbackKey) {
+      return String(item._sideImageEditFallbackKey);
+    }
+    if (item && !side && item._imageEditFallbackKey) {
+      return String(item._imageEditFallbackKey);
+    }
+    return "";
+  }
+
+  function imageEditSlotProperty(key) {
+    var normalized = String(key || "");
+
+    if (normalized === "sideImageZoom") { normalized = "imageZoom"; }
+    if (normalized === "sideImagePositionX") { normalized = "imagePositionX"; }
+    if (normalized === "sideImagePositionY") { normalized = "imagePositionY"; }
+    if (normalized === "sideImageRotation") { normalized = "imageRotation"; }
+    if (normalized === "sideFrameScale") { normalized = "frameScale"; }
+    if (normalized === "sideFrameWidth") { normalized = "frameWidth"; }
+    if (normalized === "sideFrameHeight") { normalized = "frameHeight"; }
+    if (normalized === "sideFrameMarginX") { normalized = "frameMarginX"; }
+    if (normalized === "sideFrameMarginY") { normalized = "frameMarginY"; }
+
+    if (normalized === "imageZoom") { return "zoom"; }
+    if (normalized === "imagePositionX") { return "positionX"; }
+    if (normalized === "imagePositionY") { return "positionY"; }
+    if (normalized === "imageRotation") { return "rotation"; }
+
+    return normalized;
+  }
+
+  function miaSlotDebugSlot(item, editKey) {
+    if (!item || !item.imageEdits || typeof item.imageEdits !== "object" || !editKey) {
+      return null;
+    }
+    return item.imageEdits[editKey] && typeof item.imageEdits[editKey] === "object"
+      ? item.imageEdits[editKey]
+      : null;
+  }
+
+  function miaSlotDebugNumberSource(item, key, fallback, min, max, editKey) {
+    var slot = miaSlotDebugSlot(item, editKey);
+    var fallbackEditKey = miaSlotDebugFallbackEditKey(item, /^side/.test(String(key || "")));
+    var fallbackSlot = fallbackEditKey && fallbackEditKey !== editKey ? miaSlotDebugSlot(item, fallbackEditKey) : null;
+    var slotKey = imageEditSlotProperty(key);
+    var hasSlot = !!(slot && slot[slotKey] != null);
+    var hasLegacySlot = !!(slot && slot[key] != null);
+    var hasFallbackSlot = !!(fallbackSlot && fallbackSlot[slotKey] != null);
+    var hasFallbackLegacySlot = !!(fallbackSlot && fallbackSlot[key] != null);
+    var hasFlat = !!(item && item[key] != null);
+    var raw;
+    var from;
+
+    if (hasSlot) {
+      raw = slot[slotKey];
+      from = "slot";
+    } else if (hasLegacySlot) {
+      raw = slot[key];
+      from = "slot";
+    } else if (hasFallbackSlot) {
+      raw = fallbackSlot[slotKey];
+      from = "slot";
+    } else if (hasFallbackLegacySlot) {
+      raw = fallbackSlot[key];
+      from = "slot";
+    } else if (hasFlat) {
+      raw = item[key];
+      from = "flat";
+    } else {
+      raw = fallback;
+      from = "default";
+    }
+
+    return {
+      v: itemImageNumber({ value: raw }, "value", fallback, min, max),
+      from: from,
+      raw: raw
+    };
+  }
+
+  function ensureImageEditSlot(item, editKey) {
+    if (!item || !editKey) {
+      return null;
+    }
+    if (!item.imageEdits || typeof item.imageEdits !== "object") {
+      item.imageEdits = {};
+    }
+    if (!item.imageEdits[editKey] || typeof item.imageEdits[editKey] !== "object") {
+      item.imageEdits[editKey] = {};
+    }
+    return item.imageEdits[editKey];
+  }
+
+  function writeImageEditSlot(item, editKey, flatKey, value) {
+    var slot = ensureImageEditSlot(item, editKey);
+    var slotKey = imageEditSlotProperty(flatKey);
+
+    if (!slot) {
+      return false;
+    }
+
+    slot[slotKey] = value;
+    miaSlotDebugLogSlotWrite({
+      editKey: editKey,
+      flatKey: flatKey,
+      slotKey: slotKey,
+      value: value,
+      itemId: item && item.id
+    });
+    return true;
+  }
+
+  function imageEditNumber(item, step, side, key, fallback, min, max) {
+    return miaSlotDebugNumberSource(
+      item,
+      key,
+      fallback,
+      min,
+      max,
+      miaSlotDebugEditKey(item, step, side)
+    ).v;
+  }
+
+  function frameEditNumber(item, step, side, key, fallback, min, max) {
+    return miaSlotDebugNumberSource(
+      item,
+      key,
+      fallback,
+      min,
+      max,
+      miaSlotDebugEditKey(item, step, side)
+    ).v;
+  }
+
+  function imageSlotProxyItem(item, editKey, fallbackEditKey, storeItem) {
+    var proxy;
+
+    if (!item || !editKey) {
+      return item;
+    }
+
+    proxy = Object.create(item);
+    proxy.imageEdits = storeItem && storeItem.imageEdits ? storeItem.imageEdits : item.imageEdits;
+    proxy._imageEditKey = editKey;
+    proxy._imageEditFallbackKey = fallbackEditKey || "";
+    if (storeItem && storeItem.id) {
+      proxy._imageEditStoreItemId = storeItem.id;
+    }
+    return proxy;
+  }
+
+  function miaSlotDebugFindItem(collectionName, itemId) {
+    var product = state.product;
+    var collection = String(collectionName || "");
+    var id = String(itemId || "");
+    var step;
+    var item = null;
+
+    if (!product || !Array.isArray(product.steps)) {
+      return { product: product || null, step: null, item: null };
+    }
+
+    step = collection ? findStep(product, collection) : null;
+    if (step && Array.isArray(step.items)) {
+      item = step.items.filter(function (candidate) {
+        return String(candidate && candidate.id || "") === id;
+      })[0] || null;
+    }
+
+    if (!item) {
+      product.steps.some(function (candidateStep) {
+        var found = candidateStep && Array.isArray(candidateStep.items)
+          ? candidateStep.items.filter(function (candidate) {
+            return String(candidate && candidate.id || "") === id;
+          })[0]
+          : null;
+        if (found) {
+          step = candidateStep;
+          item = found;
+          return true;
+        }
+        return false;
+      });
+    }
+
+    return { product: product, step: step || null, item: item || null };
+  }
+
+  function miaSlotDebugFlatSnapshot(item) {
+    return {
+      imageZoom: item && item.imageZoom,
+      imagePositionX: item && item.imagePositionX,
+      imagePositionY: item && item.imagePositionY,
+      imageRotation: item && item.imageRotation,
+      frameScale: item && item.frameScale,
+      frameWidth: item && item.frameWidth,
+      frameHeight: item && item.frameHeight,
+      frameMarginX: item && item.frameMarginX,
+      frameMarginY: item && item.frameMarginY
+    };
+  }
+
+  function miaSlotDebugFramePayload(item, step, side, image, applied) {
+    var editKey = miaSlotDebugEditKey(item, step, side);
+    var fallbackEditKey = miaSlotDebugFallbackEditKey(item, side);
+    var slotName = imageEditSlotName(side);
+    var prefix = side ? "side" : "";
+    var zoomKey = prefix ? "sideImageZoom" : "imageZoom";
+    var xKey = prefix ? "sideImagePositionX" : "imagePositionX";
+    var yKey = prefix ? "sideImagePositionY" : "imagePositionY";
+    var rotationKey = prefix ? "sideImageRotation" : "imageRotation";
+    var defaultZoom = applied && applied.defaultZoom != null ? applied.defaultZoom : 168;
+    var zoom = miaSlotDebugNumberSource(item, zoomKey, defaultZoom, 20, 500, editKey);
+    var x = miaSlotDebugNumberSource(item, xKey, 0, -100, 100, editKey);
+    var y = miaSlotDebugNumberSource(item, yKey, 0, -100, 100, editKey);
+    var rotation = miaSlotDebugNumberSource(item, rotationKey, 0, -180, 180, editKey);
+
+    return {
+      stepId: step && step.id ? String(step.id) : "",
+      itemId: item && item.id ? String(item.id) : "",
+      collection: miaSlotDebugCollection(step),
+      editKey: editKey,
+      fallbackEditKey: fallbackEditKey,
+      slotName: slotName,
+      image: miaSlotDebugImage(item, side, image),
+      sources: {
+        imageZoom: { v: zoom.v, from: zoom.from },
+        imagePositionX: { v: x.v, from: x.from },
+        imagePositionY: { v: y.v, from: y.from },
+        imageRotation: { v: rotation.v, from: rotation.from }
+      },
+      appliedZoom: applied && applied.zoom != null ? applied.zoom : zoom.v / 100,
+      appliedX: applied && applied.x != null ? applied.x : x.v,
+      appliedY: applied && applied.y != null ? applied.y : y.v,
+      appliedRotation: applied && applied.rotation != null ? applied.rotation : rotation.v,
+      side: !!side
+    };
+  }
+
+  function miaSlotDebugFrameAttrs(payload) {
+    if (!payload) {
+      return "";
+    }
+    return [
+      ' data-mia-edit-key="' + escapeHtml(payload.editKey) + '"',
+      payload.fallbackEditKey ? ' data-mia-fallback-edit-key="' + escapeHtml(payload.fallbackEditKey) + '"' : "",
+      ' data-mia-step-id="' + escapeHtml(payload.stepId) + '"',
+      ' data-mia-item-id="' + escapeHtml(payload.itemId) + '"',
+      ' data-mia-collection="' + escapeHtml(payload.collection) + '"',
+      ' data-mia-slot-name="' + escapeHtml(payload.slotName) + '"',
+      ' data-mia-image="' + escapeHtml(payload.image) + '"',
+      ' data-mia-source-image-zoom="' + escapeHtml(payload.sources.imageZoom.from) + '"',
+      ' data-mia-source-image-position-x="' + escapeHtml(payload.sources.imagePositionX.from) + '"',
+      ' data-mia-source-image-position-y="' + escapeHtml(payload.sources.imagePositionY.from) + '"',
+      ' data-mia-source-image-rotation="' + escapeHtml(payload.sources.imageRotation.from) + '"',
+      ' data-mia-applied-image-zoom="' + escapeHtml(payload.appliedZoom) + '"',
+      ' data-mia-applied-image-position-x="' + escapeHtml(payload.appliedX) + '"',
+      ' data-mia-applied-image-position-y="' + escapeHtml(payload.appliedY) + '"',
+      ' data-mia-applied-image-rotation="' + escapeHtml(payload.appliedRotation) + '"',
+      payload.side ? ' data-mia-side="1"' : ""
+    ].join("");
+  }
+
+  function miaSlotDebugApplyElementDataset(element, payload) {
+    if (!element || !payload || !element.dataset) {
+      return;
+    }
+    element.dataset.miaEditKey = payload.editKey;
+    if (payload.fallbackEditKey) {
+      element.dataset.miaFallbackEditKey = payload.fallbackEditKey;
+    }
+    element.dataset.miaStepId = payload.stepId;
+    element.dataset.miaItemId = payload.itemId;
+    element.dataset.miaCollection = payload.collection;
+    element.dataset.miaSlotName = payload.slotName;
+    element.dataset.miaImage = payload.image;
+    element.dataset.miaSourceImageZoom = payload.sources.imageZoom.from;
+    element.dataset.miaSourceImagePositionX = payload.sources.imagePositionX.from;
+    element.dataset.miaSourceImagePositionY = payload.sources.imagePositionY.from;
+    element.dataset.miaSourceImageRotation = payload.sources.imageRotation.from;
+    element.dataset.miaAppliedImageZoom = payload.appliedZoom;
+    element.dataset.miaAppliedImagePositionX = payload.appliedX;
+    element.dataset.miaAppliedImagePositionY = payload.appliedY;
+    element.dataset.miaAppliedImageRotation = payload.appliedRotation;
+    if (payload.side) {
+      element.dataset.miaSide = "1";
+    }
+  }
+
+  function miaSlotDebugLogRenderFrame(payload) {
+    if (!payload || !window.console || !console.log) {
+      return;
+    }
+    console.log("[RENDER FRAME STYLE]", {
+      stepId: payload.stepId,
+      itemId: payload.itemId,
+      collection: payload.collection,
+      editKey: payload.editKey,
+      slotName: payload.slotName,
+      image: payload.image,
+      sources: payload.sources,
+      appliedZoom: payload.appliedZoom,
+      appliedX: payload.appliedX,
+      appliedY: payload.appliedY,
+      appliedRotation: payload.appliedRotation
+    });
+  }
+
+  function miaSlotDebugLogSlotWrite(details) {
+    if (window.console && console.warn) {
+      console.warn("[SLOT WRITE]", details);
+    }
+  }
+
+  function miaSlotDebugLogFlatWrite(label, details) {
+    if (window.console && console.error) {
+      console.error(label, details);
+    }
+  }
+
+  function miaSlotDebugElementPayload(element) {
+    var stepId = element && (element.dataset.miaStepId || element.dataset.adminImageStep) || "";
+    var collection = element && (element.dataset.miaCollection || stepId) || "";
+    var itemId = element && (element.dataset.miaItemId || element.dataset.adminImageItem) || "";
+    var found = miaSlotDebugFindItem(collection, itemId);
+    var side = !!(element && (element.dataset.miaSide === "1" || element.hasAttribute("data-admin-side-image-visual")));
+    var appliedValues = {
+      imageZoom: element && element.dataset.miaAppliedImageZoom,
+      imagePositionX: element && element.dataset.miaAppliedImagePositionX,
+      imagePositionY: element && element.dataset.miaAppliedImagePositionY,
+      imageRotation: element && element.dataset.miaAppliedImageRotation
+    };
+    var sources = {
+      imageZoom: { v: appliedValues.imageZoom, from: element && element.dataset.miaSourceImageZoom || "" },
+      imagePositionX: { v: appliedValues.imagePositionX, from: element && element.dataset.miaSourceImagePositionX || "" },
+      imagePositionY: { v: appliedValues.imagePositionY, from: element && element.dataset.miaSourceImagePositionY || "" },
+      imageRotation: { v: appliedValues.imageRotation, from: element && element.dataset.miaSourceImageRotation || "" }
+    };
+
+    return {
+      stepId: stepId,
+      collection: collection,
+      itemId: itemId,
+      editKey: element && element.dataset.miaEditKey || "",
+      slotName: element && element.dataset.miaSlotName || "",
+      image: element && element.dataset.miaImage || "",
+      sources: sources,
+      appliedValues: appliedValues,
+      item: found.item,
+      element: element || null,
+      side: side
+    };
+  }
+
+  function miaSlotDebugRememberClick(event) {
+    var target = event.target && event.target.closest ? event.target.closest("[data-mia-edit-key]") : null;
+    if (target) {
+      miaSlotDebugLastElement = target;
+    }
+  }
+
+  window.__MIA_INSPECT_ITEM__ = function (collectionName, itemId) {
+    var found = miaSlotDebugFindItem(collectionName, itemId);
+    var item = found.item;
+    var result = {
+      collectionName: collectionName,
+      itemId: itemId,
+      found: !!item,
+      flat: miaSlotDebugFlatSnapshot(item),
+      imageEdits: item && item.imageEdits ? item.imageEdits : undefined,
+      rawItem: item || null
+    };
+
+    console.log("[MIA INSPECT ITEM]", result);
+    return result;
+  };
+
+  window.__MIA_LIST_RENDERED_KEYS__ = function () {
+    var rows = Array.prototype.slice.call(document.querySelectorAll("[data-mia-edit-key], [data-admin-image-visual], [data-admin-side-image-visual]")).map(function (element, index) {
+      return {
+        index: index,
+        stepId: element.dataset.miaStepId || element.dataset.adminImageStep || "",
+        collection: element.dataset.miaCollection || element.dataset.miaStepId || element.dataset.adminImageStep || "",
+        itemId: element.dataset.miaItemId || element.dataset.adminImageItem || "",
+        editKey: element.dataset.miaEditKey || "",
+        slotName: element.dataset.miaSlotName || "",
+        src: element.dataset.miaImage || "",
+        classes: element.className || ""
+      };
+    });
+
+    if (console.table) {
+      console.table(rows);
+    } else {
+      console.log("[MIA RENDERED KEYS]", rows);
+    }
+    return rows;
+  };
+
+  window.__miaPaperImageSlotDebug = function () {
+    var element = miaSlotDebugLastElement
+      || document.querySelector(".is-admin-image-active[data-mia-edit-key]")
+      || document.querySelector("[data-mia-edit-key]");
+    var result = miaSlotDebugElementPayload(element);
+
+    console.log("[MIA SLOT DEBUG]", result);
+    return result;
+  };
+
+  document.addEventListener("click", miaSlotDebugRememberClick, true);
 
   function loadJson(path) {
     return fetch(path, { cache: "no-store" }).then(function (response) {
@@ -2338,13 +2814,13 @@
       '<summary>Imagens deste passo</summary>',
       '<p>Aplica a mesma moldura e/ou o mesmo recorte interno da imagem a todos os itens deste passo.</p>',
       '<div class="admin-image-control-grid">',
-      '<label><span>Tamanho moldura (%)</span><input type="number" min="40" max="300" step="1" value="' + escapeHtml(itemImageNumber(first, "frameScale", 100, 40, 300)) + '" data-admin-bulk-frame="frameScale" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
-      '<label><span>Margem moldura X (px)</span><input type="number" min="-100" max="100" step="1" value="' + escapeHtml(itemImageNumber(first, "frameMarginX", 0, -100, 100)) + '" data-admin-bulk-frame="frameMarginX" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
-      '<label><span>Margem moldura Y (px)</span><input type="number" min="-100" max="100" step="1" value="' + escapeHtml(itemImageNumber(first, "frameMarginY", 0, -100, 100)) + '" data-admin-bulk-frame="frameMarginY" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
-      '<label><span>Zoom imagem (%)</span><input type="number" min="20" max="500" step="1" value="' + escapeHtml(itemImageNumber(first, "imageZoom", 168, 20, 500)) + '" data-admin-bulk-frame="imageZoom" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
-      '<label><span>Imagem X (%)</span><input type="number" min="-100" max="100" step="1" value="' + escapeHtml(itemImageNumber(first, "imagePositionX", 0, -100, 100)) + '" data-admin-bulk-frame="imagePositionX" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
-      '<label><span>Imagem Y (%)</span><input type="number" min="-100" max="100" step="1" value="' + escapeHtml(itemImageNumber(first, "imagePositionY", 0, -100, 100)) + '" data-admin-bulk-frame="imagePositionY" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
-      '<label><span>Rotação imagem (°)</span><input type="number" min="-180" max="180" step="1" value="' + escapeHtml(itemImageNumber(first, "imageRotation", 0, -180, 180)) + '" data-admin-bulk-frame="imageRotation" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
+      '<label><span>Tamanho moldura (%)</span><input type="number" min="40" max="300" step="1" value="' + escapeHtml(frameEditNumber(first, step, false, "frameScale", 100, 40, 300)) + '" data-admin-bulk-frame="frameScale" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
+      '<label><span>Margem moldura X (px)</span><input type="number" min="-100" max="100" step="1" value="' + escapeHtml(frameEditNumber(first, step, false, "frameMarginX", 0, -100, 100)) + '" data-admin-bulk-frame="frameMarginX" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
+      '<label><span>Margem moldura Y (px)</span><input type="number" min="-100" max="100" step="1" value="' + escapeHtml(frameEditNumber(first, step, false, "frameMarginY", 0, -100, 100)) + '" data-admin-bulk-frame="frameMarginY" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
+      '<label><span>Zoom imagem (%)</span><input type="number" min="20" max="500" step="1" value="' + escapeHtml(imageEditNumber(first, step, false, "imageZoom", 168, 20, 500)) + '" data-admin-bulk-frame="imageZoom" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
+      '<label><span>Imagem X (%)</span><input type="number" min="-100" max="100" step="1" value="' + escapeHtml(imageEditNumber(first, step, false, "imagePositionX", 0, -100, 100)) + '" data-admin-bulk-frame="imagePositionX" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
+      '<label><span>Imagem Y (%)</span><input type="number" min="-100" max="100" step="1" value="' + escapeHtml(imageEditNumber(first, step, false, "imagePositionY", 0, -100, 100)) + '" data-admin-bulk-frame="imagePositionY" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
+      '<label><span>Rotação imagem (°)</span><input type="number" min="-180" max="180" step="1" value="' + escapeHtml(imageEditNumber(first, step, false, "imageRotation", 0, -180, 180)) + '" data-admin-bulk-frame="imageRotation" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
       '</div>',
       '<button type="button" data-admin-apply-frame="' + escapeHtml(step.id) + '">Aplicar a todos</button>',
       '</details>'
@@ -2392,6 +2868,8 @@
     var active = state.adminActiveImage;
     var step;
     var item;
+    var storeItem;
+    var sourceItem;
     var hasImage;
 
     if (!product || !active || !active.stepId || !active.itemId) {
@@ -2399,16 +2877,26 @@
     }
 
     step = findStep(product, active.stepId);
-    item = step && step.items ? step.items.filter(function (candidate) {
-      return candidate.id === active.itemId;
-    })[0] : null;
+    item = stepItemById(step, active.itemId);
+    storeItem = stepItemById(step, active.imageStoreItemId || active.itemId);
+    sourceItem = active.editKey
+      ? imageSlotProxyItem(item, active.editKey, active.fallbackEditKey || "", storeItem)
+      : item;
 
     hasImage = active.side ? isUploadedSideImage(item) : isUploadedImage(item);
     if (!step || !item || !hasImage) {
       return null;
     }
 
-    return { step: step, item: item, side: !!active.side };
+    return {
+      step: step,
+      item: sourceItem,
+      rawItem: item,
+      storeItem: storeItem || item,
+      side: !!active.side,
+      editKey: active.editKey || "",
+      fallbackEditKey: active.fallbackEditKey || ""
+    };
   }
 
   function renderAdminImageKeyboardPanel(product) {
@@ -2432,10 +2920,10 @@
       '<summary>Ajuste rápido por teclado</summary>',
       item ? '<p class="admin-keyboard-selected">Selecionado: <strong>' + escapeHtml(label) + '</strong></p>' : '<p class="admin-keyboard-selected">Clica numa imagem para a selecionar.</p>',
       '<div class="admin-keyboard-values">',
-      '<span>X <strong data-admin-keyboard-value="' + keyX + '">' + escapeHtml(item ? itemImageNumber(item, keyX, 0, -100, 100) : "–") + '</strong></span>',
-      '<span>Y <strong data-admin-keyboard-value="' + keyY + '">' + escapeHtml(item ? itemImageNumber(item, keyY, 0, -100, 100) : "–") + '</strong></span>',
-      '<span>Zoom <strong data-admin-keyboard-value="' + keyZ + '">' + escapeHtml(item ? itemImageNumber(item, keyZ, 168, 20, 500) : "–") + '</strong></span>',
-      '<span>Rot. <strong data-admin-keyboard-value="' + keyR + '">' + escapeHtml(item ? itemImageNumber(item, keyR, 0, -180, 180) : "–") + '</strong></span>',
+      '<span>X <strong data-admin-keyboard-value="' + keyX + '">' + escapeHtml(item ? imageEditNumber(item, record.step, side, keyX, 0, -100, 100) : "–") + '</strong></span>',
+      '<span>Y <strong data-admin-keyboard-value="' + keyY + '">' + escapeHtml(item ? imageEditNumber(item, record.step, side, keyY, 0, -100, 100) : "–") + '</strong></span>',
+      '<span>Zoom <strong data-admin-keyboard-value="' + keyZ + '">' + escapeHtml(item ? imageEditNumber(item, record.step, side, keyZ, 168, 20, 500) : "–") + '</strong></span>',
+      '<span>Rot. <strong data-admin-keyboard-value="' + keyR + '">' + escapeHtml(item ? imageEditNumber(item, record.step, side, keyR, 0, -180, 180) : "–") + '</strong></span>',
       '</div>',
       '<p class="admin-keyboard-help"><kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> move X/Y · <kbd>Ctrl</kbd> + <kbd>↑</kbd>/<kbd>↓</kbd> zoom · <kbd>Ctrl</kbd> + <kbd>←</kbd>/<kbd>→</kbd> rotação · <kbd>Shift</kbd> = passo maior.</p>',
       '<p class="admin-keyboard-help">Depois de ajustar, carrega em <strong>SAVE</strong> para gravar no JSON.</p>',
@@ -4267,47 +4755,60 @@
     return template === "media-list" ? 70 : 102;
   }
 
-  function uploadedFrameStyle(item, template, step) {
+  function uploadedFrameInfo(item, template, step) {
     var defaultSize = template === "media-list" ? 100 : 168;
     var baseFrameSize = defaultFrameBaseSize(item, template, step);
-    var frameScale = itemImageNumber(item, "frameScale", 100, 40, 300) / 100;
-    var frameMarginX = itemImageNumber(item, "frameMarginX", 0, -100, 100);
-    var frameMarginY = itemImageNumber(item, "frameMarginY", 0, -100, 100);
+    var frameScale = frameEditNumber(item, step, false, "frameScale", 100, 40, 300) / 100;
+    var frameMarginX = frameEditNumber(item, step, false, "frameMarginX", 0, -100, 100);
+    var frameMarginY = frameEditNumber(item, step, false, "frameMarginY", 0, -100, 100);
     var frameRenderSize = Math.round(baseFrameSize * frameScale * 100) / 100;
-    var frameWidth = itemImageNumber(item, "frameWidth", frameRenderSize, 1, 2000);
-    var frameHeight = itemImageNumber(item, "frameHeight", frameRenderSize, 1, 2000);
+    var frameWidth = frameEditNumber(item, step, false, "frameWidth", frameRenderSize, 1, 2000);
+    var frameHeight = frameEditNumber(item, step, false, "frameHeight", frameRenderSize, 1, 2000);
     var frameMarginTop = Math.max(frameMarginY, 0);
     var frameMarginRight = Math.max(-frameMarginX, 0);
     var frameMarginBottom = Math.max(-frameMarginY, 0);
     var frameMarginLeft = Math.max(frameMarginX, 0);
-    var imageZoom = itemImageNumber(item, "imageZoom", defaultSize, 20, 500) / 100;
-    var imagePositionX = itemImageNumber(item, "imagePositionX", 0, -100, 100);
-    var imagePositionY = itemImageNumber(item, "imagePositionY", 0, -100, 100);
-    var imageRotation = itemImageNumber(item, "imageRotation", 0, -180, 180);
+    var imageZoom = imageEditNumber(item, step, false, "imageZoom", defaultSize, 20, 500) / 100;
+    var imagePositionX = imageEditNumber(item, step, false, "imagePositionX", 0, -100, 100);
+    var imagePositionY = imageEditNumber(item, step, false, "imagePositionY", 0, -100, 100);
+    var imageRotation = imageEditNumber(item, step, false, "imageRotation", 0, -180, 180);
     var imageFit = item && item.imageFit === "contain" ? "contain" : "cover";
 
-    return [
-      '--uploaded-image:url(&quot;' + escapeHtml(item.image) + '&quot;)',
-      "--image-zoom-scale:" + imageZoom,
-      "--image-position-x:" + imagePositionX + "%",
-      "--image-position-y:" + imagePositionY + "%",
-      "--image-rotation:" + imageRotation + "deg",
-      "--image-fit:" + imageFit,
-      "--image-frame-render-size:" + frameRenderSize + "px",
-      "--image-frame-scale:1",
-      "--frame-width-px:" + frameWidth + "px",
-      "--frame-height-px:" + frameHeight + "px",
-      "--frame-aspect:" + frameWidth + "/" + frameHeight,
-      "height:" + frameHeight + "px",
-      "width:" + frameWidth + "px",
-      "--image-frame-shift-x:0px",
-      "--image-frame-shift-y:0px",
-      "--image-frame-transform-y:0px",
-      "--image-frame-margin-top:" + frameMarginTop + "px",
-      "--image-frame-margin-right:" + frameMarginRight + "px",
-      "--image-frame-margin-bottom:" + frameMarginBottom + "px",
-      "--image-frame-margin-left:" + frameMarginLeft + "px"
-    ].join(";");
+    return {
+      style: [
+        '--uploaded-image:url(&quot;' + escapeHtml(item.image) + '&quot;)',
+        "--image-zoom-scale:" + imageZoom,
+        "--image-position-x:" + imagePositionX + "%",
+        "--image-position-y:" + imagePositionY + "%",
+        "--image-rotation:" + imageRotation + "deg",
+        "--image-fit:" + imageFit,
+        "--image-frame-render-size:" + frameRenderSize + "px",
+        "--image-frame-scale:1",
+        "--frame-width-px:" + frameWidth + "px",
+        "--frame-height-px:" + frameHeight + "px",
+        "--frame-aspect:" + frameWidth + "/" + frameHeight,
+        "height:" + frameHeight + "px",
+        "width:" + frameWidth + "px",
+        "--image-frame-shift-x:0px",
+        "--image-frame-shift-y:0px",
+        "--image-frame-transform-y:0px",
+        "--image-frame-margin-top:" + frameMarginTop + "px",
+        "--image-frame-margin-right:" + frameMarginRight + "px",
+        "--image-frame-margin-bottom:" + frameMarginBottom + "px",
+        "--image-frame-margin-left:" + frameMarginLeft + "px"
+      ].join(";"),
+      debug: miaSlotDebugFramePayload(item, step, false, item && item.image, {
+        defaultZoom: defaultSize,
+        zoom: imageZoom,
+        x: imagePositionX,
+        y: imagePositionY,
+        rotation: imageRotation
+      })
+    };
+  }
+
+  function uploadedFrameStyle(item, template, step) {
+    return uploadedFrameInfo(item, template, step).style;
   }
 
   // CRACHAS_STEP2_SIDE_PHOTO_ADMIN_V4
@@ -4325,11 +4826,11 @@
 
   function uploadedSideFrameStyle(item) {
     var defaultSize = 100;
-    var frameScale = itemImageNumber(item, "sideFrameScale", 100, 40, 300) / 100;
-    var frameMarginX = itemImageNumber(item, "sideFrameMarginX", 0, -100, 100);
-    var frameMarginY = itemImageNumber(item, "sideFrameMarginY", 0, -100, 100);
-    var frameWidth = itemImageNumber(item, "sideFrameWidth", Math.round(defaultSideFrameWidth(item) * frameScale), 1, 2000);
-    var frameHeight = itemImageNumber(item, "sideFrameHeight", Math.round(defaultSideFrameHeight(item) * frameScale), 1, 2000);
+    var frameScale = frameEditNumber(item, null, true, "sideFrameScale", 100, 40, 300) / 100;
+    var frameMarginX = frameEditNumber(item, null, true, "sideFrameMarginX", 0, -100, 100);
+    var frameMarginY = frameEditNumber(item, null, true, "sideFrameMarginY", 0, -100, 100);
+    var frameWidth = frameEditNumber(item, null, true, "sideFrameWidth", Math.round(defaultSideFrameWidth(item) * frameScale), 1, 2000);
+    var frameHeight = frameEditNumber(item, null, true, "sideFrameHeight", Math.round(defaultSideFrameHeight(item) * frameScale), 1, 2000);
     var frameMarginTop = Math.max(frameMarginY, 0);
     var frameMarginRight = Math.max(-frameMarginX, 0);
     var frameMarginBottom = Math.max(-frameMarginY, 0);
@@ -4368,26 +4869,39 @@
   // A foto grande de comparação não deve herdar a moldura antiga 84x108
   // da miniatura lateral. Usa a mesma imagem/valores de X/Y/zoom, mas o
   // contentor grande controla o recorte de forma independente.
-  function uploadedSideProofStyle(item) {
-    var imageZoom = Math.max(1, itemImageNumber(item, "sideImageZoom", 100, 20, 500) / 100);
-    var imagePositionX = itemImageNumber(item, "sideImagePositionX", 0, -100, 100);
-    var imagePositionY = itemImageNumber(item, "sideImagePositionY", 0, -100, 100);
-    var imageRotation = itemImageNumber(item, "sideImageRotation", 0, -180, 180);
+  function uploadedSideProofInfo(item, step) {
+    var imageZoom = Math.max(1, imageEditNumber(item, step, true, "sideImageZoom", 100, 20, 500) / 100);
+    var imagePositionX = imageEditNumber(item, step, true, "sideImagePositionX", 0, -100, 100);
+    var imagePositionY = imageEditNumber(item, step, true, "sideImagePositionY", 0, -100, 100);
+    var imageRotation = imageEditNumber(item, step, true, "sideImageRotation", 0, -180, 180);
 
-    return [
-      "--image-zoom-scale:" + imageZoom,
-      "--image-position-x:" + imagePositionX + "%",
-      "--image-position-y:" + imagePositionY + "%",
-      "--image-rotation:" + imageRotation + "deg"
-    ].join(";");
+    return {
+      style: [
+        "--image-zoom-scale:" + imageZoom,
+        "--image-position-x:" + imagePositionX + "%",
+        "--image-position-y:" + imagePositionY + "%",
+        "--image-rotation:" + imageRotation + "deg"
+      ].join(";"),
+      debug: miaSlotDebugFramePayload(item, step, true, item && item.sideImage, {
+        defaultZoom: 100,
+        zoom: imageZoom,
+        x: imagePositionX,
+        y: imagePositionY,
+        rotation: imageRotation
+      })
+    };
   }
 
-  function uploadedStackStyle(item) {
+  function uploadedSideProofStyle(item) {
+    return uploadedSideProofInfo(item, null).style;
+  }
+
+  function uploadedStackStyle(item, step) {
     var defaultSize = 168;
-    var imageZoom = itemImageNumber(item, "imageZoom", defaultSize, 20, 500) / 100;
-    var imagePositionX = itemImageNumber(item, "imagePositionX", 0, -100, 100);
-    var imagePositionY = itemImageNumber(item, "imagePositionY", 0, -100, 100);
-    var imageRotation = itemImageNumber(item, "imageRotation", 0, -180, 180);
+    var imageZoom = imageEditNumber(item, step, false, "imageZoom", defaultSize, 20, 500) / 100;
+    var imagePositionX = imageEditNumber(item, step, false, "imagePositionX", 0, -100, 100);
+    var imagePositionY = imageEditNumber(item, step, false, "imagePositionY", 0, -100, 100);
+    var imageRotation = imageEditNumber(item, step, false, "imageRotation", 0, -180, 180);
     var imageFit = item && item.imageFit === "contain" ? "contain" : "cover";
 
     return [
@@ -4414,14 +4928,29 @@
     var className = template === "media-list" ? "option-image" : "design-image";
     var isActive;
     var adminAttrs = "";
+    var frameInfo;
+    var renderEditKey;
 
     if (isUploadedImage(item)) {
-      isActive = !!(state.admin && step && state.adminActiveImage && state.adminActiveImage.stepId === step.id && state.adminActiveImage.itemId === item.id);
+      renderEditKey = step ? miaSlotDebugEditKey(item, step, false) : "";
+      isActive = !!(
+        state.admin
+        && step
+        && state.adminActiveImage
+        && state.adminActiveImage.stepId === step.id
+        && state.adminActiveImage.itemId === item.id
+        && (!state.adminActiveImage.editKey || state.adminActiveImage.editKey === renderEditKey)
+      );
       if (state.admin && step) {
         adminAttrs = ' data-admin-image-visual data-admin-image-step="' + escapeHtml(step.id) + '" data-admin-image-item="' + escapeHtml(item.id) + '" tabindex="0" role="button" title="Selecionar imagem para ajustar com o teclado"';
+        if (item._imageEditStoreItemId) {
+          adminAttrs += ' data-admin-image-store-item="' + escapeHtml(item._imageEditStoreItemId) + '"';
+        }
       }
+      frameInfo = uploadedFrameInfo(item, template, step);
+      miaSlotDebugLogRenderFrame(frameInfo.debug);
 
-      return '<span class="' + className + itemRectOrientationClass(item) + ' uploaded-image' + (isActive ? ' is-admin-image-active' : '') + '" style="' + uploadedFrameStyle(item, template, step) + '"' + (adminAttrs ? "" : ' aria-hidden="true"') + adminAttrs + '><span class="uploaded-image-inner"></span></span>';
+      return '<span class="' + className + itemRectOrientationClass(item) + ' uploaded-image' + (isActive ? ' is-admin-image-active' : '') + '" style="' + frameInfo.style + '"' + (adminAttrs ? "" : ' aria-hidden="true"') + adminAttrs + miaSlotDebugFrameAttrs(frameInfo.debug) + '><span class="uploaded-image-inner"></span></span>';
     }
 
     return '<span class="' + className + " " + escapeHtml(visual) + '" aria-hidden="true">' + escapeHtml(text) + '</span>';
@@ -4851,7 +5380,7 @@
         '<span>' + escapeHtml(item.subtitle) + '</span>',
         note,
         '</span>',
-        adminItemControls(step, item),
+        adminItemControls(step, previewItem),
         '</label>'
       ].join("");
     }
@@ -4941,7 +5470,7 @@
         '<span>' + escapeHtml(item.subtitle) + '</span>',
         note,
         '</span>',
-        adminItemControls(step, item),
+        adminItemControls(step, previewItem),
         '</label>'
       ].join("");
     });
@@ -4996,10 +5525,35 @@
     return '<div class="option-list size-choice-list">' + html + '</div>' + (state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : "");
   }
 
+  function adminImageSlotAttrs(item) {
+    var attrs = "";
+
+    if (item && item._imageEditKey) {
+      attrs += ' data-mia-edit-key="' + escapeHtml(item._imageEditKey) + '"';
+    }
+    if (item && item._imageEditFallbackKey) {
+      attrs += ' data-mia-fallback-edit-key="' + escapeHtml(item._imageEditFallbackKey) + '"';
+    }
+    if (item && item._imageEditStoreItemId) {
+      attrs += ' data-admin-image-store-item-id="' + escapeHtml(item._imageEditStoreItemId) + '"';
+    }
+    return attrs;
+  }
+
   function adminItemControls(step, item) {
+    var frameScaleValue;
+    var frameDefaultSize;
+    var imageSlotAttrs;
+
     if (!state.admin) {
       return "";
     }
+
+    imageSlotAttrs = adminImageSlotAttrs(item);
+    frameScaleValue = step.template !== "quantity-builder"
+      ? frameEditNumber(item, step, false, "frameScale", 100, 40, 300)
+      : 100;
+    frameDefaultSize = Math.round(defaultFrameBaseSize(item, step.template, step) * frameScaleValue / 100);
 
     return [
       '<div class="admin-card-tools">',
@@ -5010,15 +5564,15 @@
       item.quantity != null ? '<label>Quantidade<input type="number" min="1" step="1" value="' + escapeHtml(item.quantity) + '" data-admin-edit="quantity" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
       '<label>Nota<input type="text" value="' + escapeHtml(item.note || "") + '" data-admin-edit="note" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>',
       step.template !== "quantity-builder" ? '<label>Imagem<input type="file" accept="image/*" data-admin-upload data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
-      step.template !== "quantity-builder" ? '<label>Tamanho moldura (%)<input type="number" min="40" max="300" step="1" value="' + escapeHtml(itemImageNumber(item, "frameScale", 100, 40, 300)) + '" data-admin-edit="frameScale" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
-      step.template !== "quantity-builder" ? '<label>Largura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(itemImageNumber(item, "frameWidth", Math.round(defaultFrameBaseSize(item, step.template, step) * itemImageNumber(item, "frameScale", 100, 40, 300) / 100), 1, 2000)) + '" data-admin-edit="frameWidth" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
-      step.template !== "quantity-builder" ? '<label>Altura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(itemImageNumber(item, "frameHeight", Math.round(defaultFrameBaseSize(item, step.template, step) * itemImageNumber(item, "frameScale", 100, 40, 300) / 100), 1, 2000)) + '" data-admin-edit="frameHeight" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
-      step.template !== "quantity-builder" ? '<label>Margem moldura X (px)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(itemImageNumber(item, "frameMarginX", 0, -100, 100)) + '" data-admin-edit="frameMarginX" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
-      step.template !== "quantity-builder" ? '<label>Margem moldura Y (px)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(itemImageNumber(item, "frameMarginY", 0, -100, 100)) + '" data-admin-edit="frameMarginY" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
-      step.template !== "quantity-builder" ? '<label>Zoom imagem (%)<input type="number" min="20" max="500" step="1" value="' + escapeHtml(itemImageNumber(item, "imageZoom", 168, 20, 500)) + '" data-admin-edit="imageZoom" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
-      step.template !== "quantity-builder" ? '<label>Imagem X (%)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(itemImageNumber(item, "imagePositionX", 0, -100, 100)) + '" data-admin-edit="imagePositionX" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
-      step.template !== "quantity-builder" ? '<label>Imagem Y (%)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(itemImageNumber(item, "imagePositionY", 0, -100, 100)) + '" data-admin-edit="imagePositionY" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
-      step.template !== "quantity-builder" ? '<label>Rotação imagem (°)<input type="number" min="-180" max="180" step="1" value="' + escapeHtml(itemImageNumber(item, "imageRotation", 0, -180, 180)) + '" data-admin-edit="imageRotation" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
+      step.template !== "quantity-builder" ? '<label>Tamanho moldura (%)<input type="number" min="40" max="300" step="1" value="' + escapeHtml(frameScaleValue) + '" data-admin-edit="frameScale" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
+      step.template !== "quantity-builder" ? '<label>Largura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameWidth", frameDefaultSize, 1, 2000)) + '" data-admin-edit="frameWidth" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
+      step.template !== "quantity-builder" ? '<label>Altura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameHeight", frameDefaultSize, 1, 2000)) + '" data-admin-edit="frameHeight" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
+      step.template !== "quantity-builder" ? '<label>Margem moldura X (px)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameMarginX", 0, -100, 100)) + '" data-admin-edit="frameMarginX" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
+      step.template !== "quantity-builder" ? '<label>Margem moldura Y (px)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameMarginY", 0, -100, 100)) + '" data-admin-edit="frameMarginY" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
+      step.template !== "quantity-builder" ? '<label>Zoom imagem (%)<input type="number" min="20" max="500" step="1" value="' + escapeHtml(imageEditNumber(item, step, false, "imageZoom", 168, 20, 500)) + '" data-admin-edit="imageZoom" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
+      step.template !== "quantity-builder" ? '<label>Imagem X (%)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(imageEditNumber(item, step, false, "imagePositionX", 0, -100, 100)) + '" data-admin-edit="imagePositionX" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
+      step.template !== "quantity-builder" ? '<label>Imagem Y (%)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(imageEditNumber(item, step, false, "imagePositionY", 0, -100, 100)) + '" data-admin-edit="imagePositionY" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
+      step.template !== "quantity-builder" ? '<label>Rotação imagem (°)<input type="number" min="-180" max="180" step="1" value="' + escapeHtml(imageEditNumber(item, step, false, "imageRotation", 0, -180, 180)) + '" data-admin-edit="imageRotation" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
       state.product && state.product.slug === "cadernos" && step.id === "designs" ? '<label>Imagens do interior (' + escapeHtml((item.interiorImages || []).length) + ')<input type="file" accept="image/*" multiple data-admin-interior-upload data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
       state.product && state.product.slug === "cadernos" && step.id === "designs" && (item.interiorImages || []).length ? '<button type="button" data-admin-interior-clear data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '">Limpar interiores</button>' : "",
       getStepSectionConfig(state.product, step) ? renderSectionItemControls(step, item) : "",
@@ -5036,23 +5590,24 @@
   function renderCrachasSidePhotoAdminControls(step, item) {
     var stepId = escapeHtml(step.id);
     var itemId = escapeHtml(item.id);
-    var defaultWidth = defaultSideFrameWidth(item);
-    var defaultHeight = defaultSideFrameHeight(item);
+    var sideFrameScale = frameEditNumber(item, step, true, "sideFrameScale", 100, 40, 300);
+    var defaultWidth = Math.round(defaultSideFrameWidth(item) * sideFrameScale / 100);
+    var defaultHeight = Math.round(defaultSideFrameHeight(item) * sideFrameScale / 100);
 
     return [
       '<div class="admin-card-tools-section admin-card-tools-side">',
       '<p class="admin-card-tools-heading">Foto de comparação</p>',
       '<label>Imagem<input type="file" accept="image/*" data-admin-side-upload data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
       isUploadedSideImage(item) ? '<button type="button" data-admin-side-clear data-step-id="' + stepId + '" data-item-id="' + itemId + '">Limpar foto de comparação</button>' : "",
-      '<label>Tamanho moldura (%)<input type="number" min="40" max="300" step="1" value="' + escapeHtml(itemImageNumber(item, "sideFrameScale", 100, 40, 300)) + '" data-admin-side-edit="sideFrameScale" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
-      '<label>Largura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(itemImageNumber(item, "sideFrameWidth", defaultWidth, 1, 2000)) + '" data-admin-side-edit="sideFrameWidth" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
-      '<label>Altura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(itemImageNumber(item, "sideFrameHeight", defaultHeight, 1, 2000)) + '" data-admin-side-edit="sideFrameHeight" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
-      '<label>Margem moldura X (px)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(itemImageNumber(item, "sideFrameMarginX", 0, -100, 100)) + '" data-admin-side-edit="sideFrameMarginX" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
-      '<label>Margem moldura Y (px)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(itemImageNumber(item, "sideFrameMarginY", 0, -100, 100)) + '" data-admin-side-edit="sideFrameMarginY" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
-      '<label>Zoom imagem (%)<input type="number" min="20" max="500" step="1" value="' + escapeHtml(itemImageNumber(item, "sideImageZoom", 168, 20, 500)) + '" data-admin-side-edit="sideImageZoom" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
-      '<label>Imagem X (%)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(itemImageNumber(item, "sideImagePositionX", 0, -100, 100)) + '" data-admin-side-edit="sideImagePositionX" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
-      '<label>Imagem Y (%)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(itemImageNumber(item, "sideImagePositionY", 0, -100, 100)) + '" data-admin-side-edit="sideImagePositionY" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
-      '<label>Rotação imagem (°)<input type="number" min="-180" max="180" step="1" value="' + escapeHtml(itemImageNumber(item, "sideImageRotation", 0, -180, 180)) + '" data-admin-side-edit="sideImageRotation" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
+      '<label>Tamanho moldura (%)<input type="number" min="40" max="300" step="1" value="' + escapeHtml(sideFrameScale) + '" data-admin-side-edit="sideFrameScale" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
+      '<label>Largura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(frameEditNumber(item, step, true, "sideFrameWidth", defaultWidth, 1, 2000)) + '" data-admin-side-edit="sideFrameWidth" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
+      '<label>Altura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(frameEditNumber(item, step, true, "sideFrameHeight", defaultHeight, 1, 2000)) + '" data-admin-side-edit="sideFrameHeight" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
+      '<label>Margem moldura X (px)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(frameEditNumber(item, step, true, "sideFrameMarginX", 0, -100, 100)) + '" data-admin-side-edit="sideFrameMarginX" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
+      '<label>Margem moldura Y (px)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(frameEditNumber(item, step, true, "sideFrameMarginY", 0, -100, 100)) + '" data-admin-side-edit="sideFrameMarginY" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
+      '<label>Zoom imagem (%)<input type="number" min="20" max="500" step="1" value="' + escapeHtml(imageEditNumber(item, step, true, "sideImageZoom", 168, 20, 500)) + '" data-admin-side-edit="sideImageZoom" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
+      '<label>Imagem X (%)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(imageEditNumber(item, step, true, "sideImagePositionX", 0, -100, 100)) + '" data-admin-side-edit="sideImagePositionX" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
+      '<label>Imagem Y (%)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(imageEditNumber(item, step, true, "sideImagePositionY", 0, -100, 100)) + '" data-admin-side-edit="sideImagePositionY" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
+      '<label>Rotação imagem (°)<input type="number" min="-180" max="180" step="1" value="' + escapeHtml(imageEditNumber(item, step, true, "sideImageRotation", 0, -180, 180)) + '" data-admin-side-edit="sideImageRotation" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
       '</div>'
     ].join("");
   }
@@ -5087,7 +5642,7 @@
     return renderSectionItemControls(step, item);
   }
 
-  function renderPinStack(item, quantity) {
+  function renderPinStack(item, quantity, step) {
     var count = Math.min(quantity, 12);
     var rest = quantity - count;
     var html = "";
@@ -5095,7 +5650,7 @@
 
     for (i = 0; i < count; i += 1) {
       if (isUploadedImage(item)) {
-        html += '<span class="pin-stack-dot' + itemRectOrientationClass(item) + ' uploaded-image" style="' + uploadedStackStyle(item) + '" aria-hidden="true"><span class="uploaded-image-inner"></span></span>';
+        html += '<span class="pin-stack-dot' + itemRectOrientationClass(item) + ' uploaded-image" style="' + uploadedStackStyle(item, step) + '" aria-hidden="true"><span class="uploaded-image-inner"></span></span>';
       } else {
         html += '<span class="' + escapeHtml(item.visual || "neutral") + '">' + escapeHtml(item.badge || "") + '</span>';
       }
@@ -5543,7 +6098,7 @@
         '<strong>' + escapeHtml(displayItemTitle(item)) + '</strong>',
         '<span>' + escapeHtml(item.subtitle) + '</span>',
         '</div>',
-        renderPinStack(item, quantity),
+        renderPinStack(item, quantity, findStep(product, "designs")),
         controls,
         '</div>',
         '</article>'
@@ -5594,6 +6149,7 @@
     var hasSide = isUploadedSideImage(item);
     var active;
     var adminAttrs;
+    var frameInfo;
 
     if (!hasSide) {
       return "";
@@ -5603,12 +6159,14 @@
     adminAttrs = state.admin && step
       ? ' data-admin-side-image-visual data-admin-image-step="' + escapeHtml(step.id) + '" data-admin-image-item="' + escapeHtml(item.id) + '" tabindex="0" role="button" title="Selecionar foto de comparação para ajustar com o teclado"'
       : ' aria-hidden="true"';
+    frameInfo = uploadedSideProofInfo(item, step);
+    miaSlotDebugLogRenderFrame(frameInfo.debug);
 
     return [
       '<span class="crachas-size-card-proof crachas-size-card-proof--wide">',
       '<span class="crachas-size-card-proof-media">',
       '<span class="crachas-size-card-proof-note">Exemplo do tamanho</span>',
-      '<span class="crachas-size-card-proof-frame uploaded-image' + (active ? ' is-admin-image-active' : '') + '" style="' + uploadedSideProofStyle(item) + '"' + adminAttrs + '>',
+      '<span class="crachas-size-card-proof-frame uploaded-image' + (active ? ' is-admin-image-active' : '') + '" style="' + frameInfo.style + '"' + adminAttrs + miaSlotDebugFrameAttrs(frameInfo.debug) + '>',
       '<img class="crachas-size-card-proof-img" src="' + escapeHtml(item.sideImage) + '" alt="Exemplo do tamanho escolhido em comparação com uma moeda de 50 cêntimos">',
       '</span>',
       '</span>',
@@ -5730,21 +6288,156 @@
     return images[key] || images.matte || (cover && cover.image) || (item && (item.exampleImage || item.image)) || "";
   }
 
-  function cadernoPreviewSetting(item, cover, key, fallback) {
-    if (item && item[key] != null) {
-      return item[key];
+  function cadernoSlotCoverId(cover) {
+    return String((cover && (cover.id || cover.value)) || "unknown-cover");
+  }
+
+  function cadernoScopedImageEditKey(product, collection, cover, itemSlotId, slotName) {
+    return [
+      (product && product.slug) || "cadernos",
+      collection || "unknown",
+      cadernoSlotCoverId(cover),
+      itemSlotId || "unknown",
+      slotName || "main"
+    ].join(":");
+  }
+
+  function cadernoLegacyImageEditKey(product, collection, itemId, slotName) {
+    return buildImageEditKey((product && product.slug) || "cadernos", collection, itemId, slotName || "main");
+  }
+
+  function cadernoPurchaseImageGroup(item) {
+    return item && item.isPack ? "pack" : "caderno";
+  }
+
+  function cadernoPurchaseGroupStoreItem(product, item) {
+    var step = findStep(product, "pack");
+    var group = cadernoPurchaseImageGroup(item);
+    var found = null;
+
+    if (!step || !Array.isArray(step.items)) {
+      return item;
     }
 
-    if (cover && cover[key] != null) {
-      return cover[key];
+    step.items.some(function (candidate) {
+      if (cadernoPurchaseImageGroup(candidate) === group) {
+        found = candidate;
+        return true;
+      }
+      return false;
+    });
+
+    return found || item;
+  }
+
+  function copyImageEditSlot(source) {
+    var copy = {};
+
+    if (!source || typeof source !== "object") {
+      return null;
     }
 
-    return fallback;
+    Object.keys(source).forEach(function (key) {
+      copy[key] = source[key];
+    });
+    return copy;
+  }
+
+  function ensureImageEditSlotCopied(item, targetKey, sourceSlot) {
+    var copy;
+
+    if (!item || !targetKey || !sourceSlot) {
+      return;
+    }
+    if (!item.imageEdits || typeof item.imageEdits !== "object") {
+      item.imageEdits = {};
+    }
+    if (item.imageEdits[targetKey]) {
+      return;
+    }
+    copy = copyImageEditSlot(sourceSlot);
+    if (copy) {
+      item.imageEdits[targetKey] = copy;
+    }
+  }
+
+  function ensureCadernoScopedImageSlots(product) {
+    var designsStep;
+    var laminationStep;
+    var packStep;
+    var covers;
+
+    if (!isCadernosProduct(product)) {
+      return;
+    }
+
+    designsStep = findStep(product, "designs");
+    laminationStep = findStep(product, "lamination");
+    packStep = findStep(product, "pack");
+    covers = designsStep && Array.isArray(designsStep.items) ? designsStep.items : [];
+
+    if (laminationStep && Array.isArray(laminationStep.items)) {
+      laminationStep.items.forEach(function (item) {
+        var legacyKey = cadernoLegacyImageEditKey(product, "lamination", item.id, "main");
+        var legacySlot = item && item.imageEdits ? item.imageEdits[legacyKey] : null;
+
+        covers.forEach(function (cover) {
+          ensureImageEditSlotCopied(
+            item,
+            cadernoScopedImageEditKey(product, "lamination", cover, item.id, "main"),
+            legacySlot
+          );
+        });
+      });
+    }
+
+    if (packStep && Array.isArray(packStep.items)) {
+      ["caderno", "pack"].forEach(function (group) {
+        var storeItem = null;
+        var legacySlot = null;
+
+        packStep.items.some(function (item) {
+          var legacyKey;
+
+          if (cadernoPurchaseImageGroup(item) !== group) {
+            return false;
+          }
+          legacyKey = cadernoLegacyImageEditKey(product, "pack", item.id, "main");
+          if (!storeItem) {
+            storeItem = item;
+          }
+          if (item.imageEdits && item.imageEdits[legacyKey]) {
+            legacySlot = item.imageEdits[legacyKey];
+            storeItem = item;
+            return true;
+          }
+          return false;
+        });
+
+        if (!storeItem) {
+          return;
+        }
+
+        covers.forEach(function (cover) {
+          ensureImageEditSlotCopied(
+            storeItem,
+            cadernoScopedImageEditKey(product, "pack", cover, group, "main"),
+            legacySlot
+          );
+        });
+      });
+    }
+  }
+
+  function cadernoPreviewOwnSetting(item, key, fallback) {
+    return item && item[key] != null ? item[key] : fallback;
   }
 
   function cadernoLaminationPreviewItem(product, item) {
     var cover = selectedCadernoCover(product) || {};
     var image = cadernoLaminationImage(product, item);
+    var editKey = cadernoScopedImageEditKey(product, "lamination", cover, item.id, "main");
+    var fallbackKey = cadernoLegacyImageEditKey(product, "lamination", item.id, "main");
 
     return {
       id: item.id,
@@ -5756,15 +6449,18 @@
       image: image,
       exampleImage: image,
       imageFit: item.imageFit || cover.imageFit || "cover",
-      frameWidth: cadernoPreviewSetting(item, cover, "frameWidth", 70),
-      frameHeight: cadernoPreviewSetting(item, cover, "frameHeight", 124),
-      frameScale: cadernoPreviewSetting(item, cover, "frameScale"),
-      frameMarginX: cadernoPreviewSetting(item, cover, "frameMarginX"),
-      frameMarginY: cadernoPreviewSetting(item, cover, "frameMarginY"),
-      imageZoom: cadernoPreviewSetting(item, cover, "imageZoom"),
-      imagePositionX: cadernoPreviewSetting(item, cover, "imagePositionX"),
-      imagePositionY: cadernoPreviewSetting(item, cover, "imagePositionY"),
-      imageRotation: cadernoPreviewSetting(item, cover, "imageRotation")
+      imageEdits: item.imageEdits,
+      _imageEditKey: editKey,
+      _imageEditFallbackKey: fallbackKey,
+      frameWidth: cadernoPreviewOwnSetting(item, "frameWidth", 70),
+      frameHeight: cadernoPreviewOwnSetting(item, "frameHeight", 124),
+      frameScale: cadernoPreviewOwnSetting(item, "frameScale"),
+      frameMarginX: cadernoPreviewOwnSetting(item, "frameMarginX"),
+      frameMarginY: cadernoPreviewOwnSetting(item, "frameMarginY"),
+      imageZoom: cadernoPreviewOwnSetting(item, "imageZoom"),
+      imagePositionX: cadernoPreviewOwnSetting(item, "imagePositionX"),
+      imagePositionY: cadernoPreviewOwnSetting(item, "imagePositionY"),
+      imageRotation: cadernoPreviewOwnSetting(item, "imageRotation")
     };
   }
 
@@ -5778,6 +6474,10 @@
   function cadernoPurchasePreviewItem(product, item) {
     var cover = selectedCadernoCover(product) || {};
     var image = cadernoPurchaseOptionImage(product, item);
+    var storeItem = cadernoPurchaseGroupStoreItem(product, item);
+    var imageGroup = cadernoPurchaseImageGroup(item);
+    var editKey = cadernoScopedImageEditKey(product, "pack", cover, imageGroup, "main");
+    var fallbackKey = cadernoLegacyImageEditKey(product, "pack", storeItem && storeItem.id || item.id, "main");
 
     return {
       id: item.id,
@@ -5789,16 +6489,51 @@
       image: image,
       exampleImage: image,
       imageFit: item.imageFit || cover.imageFit || "cover",
-      frameWidth: cadernoPreviewSetting(item, cover, "frameWidth", 70),
-      frameHeight: cadernoPreviewSetting(item, cover, "frameHeight", 124),
-      frameScale: cadernoPreviewSetting(item, cover, "frameScale"),
-      frameMarginX: cadernoPreviewSetting(item, cover, "frameMarginX"),
-      frameMarginY: cadernoPreviewSetting(item, cover, "frameMarginY"),
-      imageZoom: cadernoPreviewSetting(item, cover, "imageZoom"),
-      imagePositionX: cadernoPreviewSetting(item, cover, "imagePositionX"),
-      imagePositionY: cadernoPreviewSetting(item, cover, "imagePositionY"),
-      imageRotation: cadernoPreviewSetting(item, cover, "imageRotation")
+      imageEdits: storeItem && storeItem.imageEdits ? storeItem.imageEdits : item.imageEdits,
+      _imageEditKey: editKey,
+      _imageEditFallbackKey: fallbackKey,
+      _imageEditStoreItemId: storeItem && storeItem.id,
+      frameWidth: cadernoPreviewOwnSetting(item, "frameWidth", 86),
+      frameHeight: cadernoPreviewOwnSetting(item, "frameHeight", 64),
+      frameScale: cadernoPreviewOwnSetting(item, "frameScale"),
+      frameMarginX: cadernoPreviewOwnSetting(item, "frameMarginX"),
+      frameMarginY: cadernoPreviewOwnSetting(item, "frameMarginY"),
+      imageZoom: cadernoPreviewOwnSetting(item, "imageZoom"),
+      imagePositionX: cadernoPreviewOwnSetting(item, "imagePositionX"),
+      imagePositionY: cadernoPreviewOwnSetting(item, "imagePositionY"),
+      imageRotation: cadernoPreviewOwnSetting(item, "imageRotation")
     };
+  }
+
+  function cadernoSummaryCoverPreviewItem(product, cover) {
+    if (!cover) {
+      return null;
+    }
+
+    return imageSlotProxyItem(
+      cover,
+      cadernoScopedImageEditKey(product, "designs", cover, cover.id, "summary"),
+      cadernoLegacyImageEditKey(product, "designs", cover.id, "main"),
+      cover
+    );
+  }
+
+  function cadernoSummaryLaminationPreviewItem(product, item) {
+    var cover = selectedCadernoCover(product) || {};
+    var preview = cadernoLaminationPreviewItem(product, item);
+
+    preview._imageEditFallbackKey = preview._imageEditKey;
+    preview._imageEditKey = cadernoScopedImageEditKey(product, "lamination", cover, item.id, "summary");
+    return preview;
+  }
+
+  function cadernoSummaryPurchasePreviewItem(product, item) {
+    var cover = selectedCadernoCover(product) || {};
+    var preview = cadernoPurchasePreviewItem(product, item);
+
+    preview._imageEditFallbackKey = preview._imageEditKey;
+    preview._imageEditKey = cadernoScopedImageEditKey(product, "pack", cover, cadernoPurchaseImageGroup(item), "summary");
+    return preview;
   }
 
   function cadernoPreviewSpeedSeconds(product) {
@@ -6007,7 +6742,8 @@
 
     frame = document.querySelector("[data-cadernos-preview]");
     return {
-      coverValue: state.selections.designs || "",
+      coverValue: frame ? (frame.dataset.cadernosPreviewCoverValue || "") : "",
+      coverItemId: frame ? (frame.dataset.cadernosPreviewItemId || "") : "",
       previewIndex: frame ? cadernoPreviewCurrentIndex(frame) : 0
     };
   }
@@ -6015,14 +6751,26 @@
   function restoreCadernoRenderState(product, renderState) {
     var frame;
 
-    if (!renderState || !isCadernosProduct(product) || renderState.coverValue !== (state.selections.designs || "")) {
+    if (!renderState || !isCadernosProduct(product)) {
       return;
     }
 
     frame = document.querySelector("[data-cadernos-preview]");
-    if (frame) {
+    if (
+      frame
+      && renderState.coverValue === (frame.dataset.cadernosPreviewCoverValue || "")
+      && renderState.coverItemId === (frame.dataset.cadernosPreviewItemId || "")
+    ) {
       activateCadernoPreviewFrame(frame, renderState.previewIndex || 0);
     }
+  }
+
+  function stepItemById(step, itemId) {
+    return step && Array.isArray(step.items)
+      ? step.items.filter(function (candidate) {
+        return candidate && candidate.id === itemId;
+      })[0] || null
+      : null;
   }
 
   function renderCadernoCoverDrawer(product, item) {
@@ -6035,7 +6783,7 @@
 
     return [
       '<div class="cadernos-cover-drawer">',
-      '<div class="cadernos-cover-preview-frame" data-cadernos-preview data-cadernos-preview-interval="' + (speed * 1000) + '">',
+      '<div class="cadernos-cover-preview-frame" data-cadernos-preview data-cadernos-preview-cover-value="' + escapeHtml(item.value || "") + '" data-cadernos-preview-item-id="' + escapeHtml(item.id || "") + '" data-cadernos-preview-interval="' + (speed * 1000) + '">',
       frames.map(function (frame, index) {
         return '<span class="cadernos-cover-preview-slide' + (index === 0 ? ' is-active' : '') + '" style="background-image:url(&quot;' + escapeHtml(frame.image) + '&quot;)"></span>';
       }).join(""),
@@ -6137,7 +6885,7 @@
         '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
         '</button>',
         selected ? renderCadernosProofPhoto(previewItem, "Imagem ilustrativa") : "",
-        state.admin ? adminItemControls(step, item) : "",
+        state.admin ? adminItemControls(step, previewItem) : "",
         '</div>'
       ].join("");
     });
@@ -6226,11 +6974,41 @@
     ].join("");
   }
 
+  function adminCadernoSummaryImageControls(step, item) {
+    var imageSlotAttrs;
+    var frameScaleValue;
+    var frameDefaultSize;
+
+    if (!state.admin || !step || !item || !item._imageEditKey) {
+      return "";
+    }
+
+    imageSlotAttrs = adminImageSlotAttrs(item);
+    frameScaleValue = frameEditNumber(item, step, false, "frameScale", 100, 40, 300);
+    frameDefaultSize = Math.round(defaultFrameBaseSize(item, "media-list", step) * frameScaleValue / 100);
+
+    return [
+      '<div class="admin-card-tools admin-card-tools-image-slot">',
+      '<p class="admin-card-tools-heading">Imagem deste resumo</p>',
+      '<label>Tamanho moldura (%)<input type="number" min="40" max="300" step="1" value="' + escapeHtml(frameScaleValue) + '" data-admin-edit="frameScale" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
+      '<label>Largura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameWidth", frameDefaultSize, 1, 2000)) + '" data-admin-edit="frameWidth" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
+      '<label>Altura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameHeight", frameDefaultSize, 1, 2000)) + '" data-admin-edit="frameHeight" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
+      '<label>Margem X (px)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameMarginX", 0, -100, 100)) + '" data-admin-edit="frameMarginX" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
+      '<label>Margem Y (px)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameMarginY", 0, -100, 100)) + '" data-admin-edit="frameMarginY" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
+      '<label>Zoom imagem (%)<input type="number" min="20" max="500" step="1" value="' + escapeHtml(imageEditNumber(item, step, false, "imageZoom", 168, 20, 500)) + '" data-admin-edit="imageZoom" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
+      '<label>Imagem X (%)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(imageEditNumber(item, step, false, "imagePositionX", 0, -100, 100)) + '" data-admin-edit="imagePositionX" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
+      '<label>Imagem Y (%)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(imageEditNumber(item, step, false, "imagePositionY", 0, -100, 100)) + '" data-admin-edit="imagePositionY" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
+      '<label>Rotação imagem (°)<input type="number" min="-180" max="180" step="1" value="' + escapeHtml(imageEditNumber(item, step, false, "imageRotation", 0, -180, 180)) + '" data-admin-edit="imageRotation" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
+      '</div>'
+    ].join("");
+  }
+
   function renderCadernosBuildPart(label, title, item, step, extraClass) {
     return [
       '<article class="cadernos-build-part' + (extraClass ? ' ' + escapeHtml(extraClass) : '') + '">',
       item ? renderVisual(item, "media-list", step) : "",
       '<span><strong>' + escapeHtml(label) + '</strong><em>' + escapeHtml(title || "") + '</em></span>',
+      adminCadernoSummaryImageControls(step, item),
       '</article>'
     ].join("");
   }
@@ -6257,13 +7035,13 @@
       return "";
     }
 
-    parts += renderCadernosBuildPart("Capa", displayItemTitle(cover), cover, findStep(product, "designs"), "cadernos-build-part--cover");
+    parts += renderCadernosBuildPart("Capa", displayItemTitle(cover), cadernoSummaryCoverPreviewItem(product, cover), findStep(product, "designs"), "cadernos-build-part--cover");
 
     if (currentIndex > laminationIndex && lamination) {
       parts += '<span class="cadernos-build-plus" aria-hidden="true">+</span>';
       parts += [
         '<article class="cadernos-build-part">',
-        renderVisual(cadernoLaminationPreviewItem(product, lamination), "media-list", findStep(product, "lamination")),
+        renderVisual(cadernoSummaryLaminationPreviewItem(product, lamination), "media-list", findStep(product, "lamination")),
         '<span><strong>Laminação</strong><em>' + escapeHtml(lamination.title) + '</em></span>',
         '</article>'
       ].join("");
@@ -6304,17 +7082,17 @@
       return "";
     }
 
-    parts += renderCadernosBuildPart("Capa", displayItemTitle(cover), cover, findStep(product, "designs"), "cadernos-build-part--cover");
+    parts += renderCadernosBuildPart("Capa", displayItemTitle(cover), cadernoSummaryCoverPreviewItem(product, cover), findStep(product, "designs"), "cadernos-build-part--cover");
 
     if (currentIndex >= laminationIndex && lamination) {
-      parts += renderCadernosBuildPart("Laminação", lamination.title, cadernoLaminationPreviewItem(product, lamination), findStep(product, "lamination"), "cadernos-build-part--lamination");
+      parts += renderCadernosBuildPart("Laminação", lamination.title, cadernoSummaryLaminationPreviewItem(product, lamination), findStep(product, "lamination"), "cadernos-build-part--lamination");
     }
 
     if (currentIndex >= optionIndex && option) {
       parts += renderCadernosBuildPart(
         option.title + (orderQuantity > 1 ? " x" + orderQuantity : ""),
         option.summary || option.includes || "",
-        cadernoPurchasePreviewItem(product, option),
+        cadernoSummaryPurchasePreviewItem(product, option),
         findStep(product, "pack"),
         "cadernos-build-part--option"
       );
@@ -7226,6 +8004,7 @@
   function renderProduct(product, cadernoRenderState) {
     clearCadernoPreviewTimers();
     syncGiftRequestSelection(product);
+    ensureCadernoScopedImageSlots(product);
 
     var steps = visibleSteps(product);
     var step;
@@ -8886,28 +9665,46 @@
     var rotKey = prefix ? prefix + "ImageRotation" : "imageRotation";
     var widthKey = prefix ? prefix + "FrameWidth" : "frameWidth";
     var heightKey = prefix ? prefix + "FrameHeight" : "frameHeight";
+    var debugStep = state.product && element.dataset ? findStep(state.product, element.dataset.adminImageStep || element.dataset.miaStepId || "") : null;
+    var storeItem = debugStep && element.dataset && element.dataset.adminImageStoreItem
+      ? stepItemById(debugStep, element.dataset.adminImageStoreItem)
+      : item;
+    var sourceItem = element.dataset && element.dataset.miaEditKey
+      ? imageSlotProxyItem(item, element.dataset.miaEditKey, element.dataset.miaFallbackEditKey || "", storeItem)
+      : item;
     var frameWidth;
     var frameHeight;
+    var appliedZoom = imageEditNumber(sourceItem, debugStep, side, zoomKey, defaultSize, 20, 500) / 100;
+    var appliedX = imageEditNumber(sourceItem, debugStep, side, posXKey, 0, -100, 100);
+    var appliedY = imageEditNumber(sourceItem, debugStep, side, posYKey, 0, -100, 100);
+    var appliedRotation = imageEditNumber(sourceItem, debugStep, side, rotKey, 0, -180, 180);
+    var debugPayload;
+    var debugImage = element.dataset && element.dataset.miaImage ? element.dataset.miaImage : miaSlotDebugImage(sourceItem, side);
 
-    element.style.setProperty("--image-zoom-scale", itemImageNumber(item, zoomKey, defaultSize, 20, 500) / 100);
-    element.style.setProperty("--image-position-x", itemImageNumber(item, posXKey, 0, -100, 100) + "%");
-    element.style.setProperty("--image-position-y", itemImageNumber(item, posYKey, 0, -100, 100) + "%");
-    element.style.setProperty("--image-rotation", itemImageNumber(item, rotKey, 0, -180, 180) + "deg");
+    element.style.setProperty("--image-zoom-scale", appliedZoom);
+    element.style.setProperty("--image-position-x", appliedX + "%");
+    element.style.setProperty("--image-position-y", appliedY + "%");
+    element.style.setProperty("--image-rotation", appliedRotation + "deg");
     if (!element.classList.contains("crachas-size-card-proof-frame")) {
-      if (item && item[widthKey] != null) {
-        frameWidth = itemImageNumber(item, widthKey, element.offsetWidth || 70, 1, 2000);
-        element.style.setProperty("--frame-width-px", frameWidth + "px");
-        element.style.width = frameWidth + "px";
-      }
-      if (item && item[heightKey] != null) {
-        frameHeight = itemImageNumber(item, heightKey, element.offsetHeight || 70, 1, 2000);
-        element.style.setProperty("--frame-height-px", frameHeight + "px");
-        element.style.height = frameHeight + "px";
-      }
+      frameWidth = frameEditNumber(sourceItem, debugStep, side, widthKey, element.offsetWidth || 70, 1, 2000);
+      frameHeight = frameEditNumber(sourceItem, debugStep, side, heightKey, element.offsetHeight || 70, 1, 2000);
+      element.style.setProperty("--frame-width-px", frameWidth + "px");
+      element.style.width = frameWidth + "px";
+      element.style.setProperty("--frame-height-px", frameHeight + "px");
+      element.style.height = frameHeight + "px";
       if (frameWidth && frameHeight) {
         element.style.setProperty("--frame-aspect", frameWidth + " / " + frameHeight);
       }
     }
+    debugPayload = miaSlotDebugFramePayload(sourceItem, debugStep, side, debugImage, {
+      defaultZoom: defaultSize,
+      zoom: appliedZoom,
+      x: appliedX,
+      y: appliedY,
+      rotation: appliedRotation
+    });
+    miaSlotDebugApplyElementDataset(element, debugPayload);
+    miaSlotDebugLogRenderFrame(debugPayload);
   }
 
   function refreshAdminImageAdjustment(stepId, itemId, item, side) {
@@ -8915,25 +9712,50 @@
     var editAttr = side ? "adminSideEdit" : "adminEdit";
     var editSelector = side ? "[data-admin-side-edit]" : "[data-admin-edit]";
     var keys = side
-      ? ["sideFrameWidth", "sideFrameHeight", "sideImageZoom", "sideImagePositionX", "sideImagePositionY", "sideImageRotation"]
-      : ["frameWidth", "frameHeight", "imageZoom", "imagePositionX", "imagePositionY", "imageRotation"];
+      ? ["sideFrameScale", "sideFrameWidth", "sideFrameHeight", "sideFrameMarginX", "sideFrameMarginY", "sideImageZoom", "sideImagePositionX", "sideImagePositionY", "sideImageRotation"]
+      : ["frameScale", "frameWidth", "frameHeight", "frameMarginX", "frameMarginY", "imageZoom", "imagePositionX", "imagePositionY", "imageRotation"];
     var zoomKey = side ? "sideImageZoom" : "imageZoom";
     var rotKey = side ? "sideImageRotation" : "imageRotation";
+    var active = state.adminActiveImage || {};
 
     document.querySelectorAll(visualSelector).forEach(function (element) {
-      if (element.dataset.adminImageStep === stepId && element.dataset.adminImageItem === itemId) {
+      if (
+        element.dataset.adminImageStep === stepId
+        && element.dataset.adminImageItem === itemId
+        && (!active.editKey || element.dataset.miaEditKey === active.editKey)
+      ) {
         applyAdminImageStyleToElement(element, item, side);
       }
     });
 
     document.querySelectorAll(editSelector).forEach(function (input) {
       var key = input.dataset[editAttr];
+      var sourceItem;
       if (input.dataset.stepId !== stepId || input.dataset.itemId !== itemId) {
         return;
       }
+      if (active.editKey && input.dataset.miaEditKey && input.dataset.miaEditKey !== active.editKey) {
+        return;
+      }
+
+      sourceItem = input.dataset.miaEditKey
+        ? imageSlotProxyItem(item, input.dataset.miaEditKey, input.dataset.miaFallbackEditKey || "", stepItemById(findStep(state.product, stepId), input.dataset.adminImageStoreItemId || itemId))
+        : item;
 
       if (keys.indexOf(key) !== -1) {
-        input.value = item[key] != null ? item[key] : (key === zoomKey ? itemImageNumber(item, key, 168, 20, 500) : itemImageNumber(item, key, 0, -180, 180));
+        if ((side ? miaSlotDebugSideFlatKeys : miaSlotDebugFlatKeys).indexOf(key) !== -1) {
+          input.value = key === zoomKey
+            ? imageEditNumber(sourceItem, findStep(state.product, stepId), side, key, 168, 20, 500)
+            : imageEditNumber(sourceItem, findStep(state.product, stepId), side, key, 0, key === rotKey ? -180 : -100, key === rotKey ? 180 : 100);
+        } else if ((side ? miaSlotDebugSideFrameKeys : miaSlotDebugFrameKeys).indexOf(key) !== -1) {
+          input.value = key.indexOf("Scale") !== -1
+            ? frameEditNumber(sourceItem, findStep(state.product, stepId), side, key, 100, 40, 300)
+            : key.indexOf("Margin") !== -1
+              ? frameEditNumber(sourceItem, findStep(state.product, stepId), side, key, 0, -100, 100)
+              : frameEditNumber(sourceItem, findStep(state.product, stepId), side, key, 70, 1, 2000);
+        } else {
+          input.value = item[key] != null ? item[key] : (key === zoomKey ? itemImageNumber(item, key, 168, 20, 500) : itemImageNumber(item, key, 0, -180, 180));
+        }
       }
     });
 
@@ -8941,13 +9763,13 @@
       var target = document.querySelector('[data-admin-keyboard-value="' + key + '"]');
       if (target) {
         target.textContent = key === zoomKey
-          ? itemImageNumber(item, key, 168, 20, 500)
-          : itemImageNumber(item, key, 0, key === rotKey ? -180 : -100, key === rotKey ? 180 : 100);
+          ? imageEditNumber(item, findStep(state.product, stepId), side, key, 168, 20, 500)
+          : imageEditNumber(item, findStep(state.product, stepId), side, key, 0, key === rotKey ? -180 : -100, key === rotKey ? 180 : 100);
       }
     });
   }
 
-  function selectAdminImage(product, stepId, itemId, side) {
+  function selectAdminImage(product, stepId, itemId, side, editKey, fallbackEditKey, imageStoreItemId) {
     var step = findStep(product, stepId);
     var item = step && step.items ? step.items.filter(function (candidate) {
       return candidate.id === itemId;
@@ -8958,27 +9780,45 @@
       return;
     }
 
-    state.adminActiveImage = { stepId: stepId, itemId: itemId, side: !!side };
+    state.adminActiveImage = {
+      stepId: stepId,
+      itemId: itemId,
+      side: !!side,
+      editKey: editKey || "",
+      fallbackEditKey: fallbackEditKey || "",
+      imageStoreItemId: imageStoreItemId || itemId
+    };
     state.adminImageKeyboardUndoFor = "";
     rerenderProduct(product);
   }
 
+  function activeAdminImageElement(active, side) {
+    var selector = side ? "[data-admin-side-image-visual]" : "[data-admin-image-visual]";
+    var found = null;
+
+    document.querySelectorAll(selector).forEach(function (element) {
+      if (
+        !found
+        && element.dataset.adminImageStep === active.stepId
+        && element.dataset.adminImageItem === active.itemId
+        && (!active.editKey || element.dataset.miaEditKey === active.editKey)
+      ) {
+        found = element;
+      }
+    });
+
+    return found;
+  }
+
   function adminImageCurrentNumber(product, record, key, fallback, min, max) {
     var item = record && record.item;
-    var cover;
+    var step = record && record.step;
 
-    if (!record || record.side || !isCadernosProduct(product)) {
-      return itemImageNumber(item, key, fallback, min, max);
+    if (!record || !item) {
+      return fallback;
     }
 
-    if (record.step && (record.step.id === "lamination" || record.step.id === "pack") && item && item[key] == null) {
-      cover = selectedCadernoCover(product);
-      if (cover && cover[key] != null) {
-        return itemImageNumber(cover, key, fallback, min, max);
-      }
-    }
-
-    return itemImageNumber(item, key, fallback, min, max);
+    return imageEditNumber(item, step, !!record.side, key, fallback, min, max);
   }
 
   function bindAdminImageKeyboard(product) {
@@ -8986,14 +9826,14 @@
       element.addEventListener("click", function (event) {
         event.preventDefault();
         event.stopPropagation();
-        selectAdminImage(product, element.dataset.adminImageStep, element.dataset.adminImageItem, false);
+        selectAdminImage(product, element.dataset.adminImageStep, element.dataset.adminImageItem, false, element.dataset.miaEditKey || "", element.dataset.miaFallbackEditKey || "", element.dataset.adminImageStoreItem || "");
       });
 
       element.addEventListener("keydown", function (event) {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           event.stopPropagation();
-          selectAdminImage(product, element.dataset.adminImageStep, element.dataset.adminImageItem, false);
+          selectAdminImage(product, element.dataset.adminImageStep, element.dataset.adminImageItem, false, element.dataset.miaEditKey || "", element.dataset.miaFallbackEditKey || "", element.dataset.adminImageStoreItem || "");
         }
       });
     });
@@ -9002,14 +9842,14 @@
       element.addEventListener("click", function (event) {
         event.preventDefault();
         event.stopPropagation();
-        selectAdminImage(product, element.dataset.adminImageStep, element.dataset.adminImageItem, true);
+        selectAdminImage(product, element.dataset.adminImageStep, element.dataset.adminImageItem, true, element.dataset.miaEditKey || "", element.dataset.miaFallbackEditKey || "", element.dataset.adminImageStoreItem || "");
       });
 
       element.addEventListener("keydown", function (event) {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           event.stopPropagation();
-          selectAdminImage(product, element.dataset.adminImageStep, element.dataset.adminImageItem, true);
+          selectAdminImage(product, element.dataset.adminImageStep, element.dataset.adminImageItem, true, element.dataset.miaEditKey || "", element.dataset.miaFallbackEditKey || "", element.dataset.adminImageStoreItem || "");
         }
       });
     });
@@ -9031,6 +9871,8 @@
       var next;
       var prefix;
       var side;
+      var activeElement;
+      var editKey;
 
       if (!state.admin || !state.product || !state.adminActiveImage || adminKeyboardIgnoredTarget(event.target)) {
         return;
@@ -9049,6 +9891,8 @@
       active = state.adminActiveImage;
       side = !!record.side;
       prefix = side ? "side" : "";
+      activeElement = activeAdminImageElement(active, side);
+      editKey = activeElement && activeElement.dataset ? activeElement.dataset.miaEditKey : "";
 
       if (event.ctrlKey) {
         if (event.key === "ArrowUp") { baseKey = "imageZoom"; delta = step; }
@@ -9071,6 +9915,19 @@
       event.preventDefault();
       event.stopPropagation();
 
+      if (!editKey) {
+        miaSlotDebugLogFlatWrite("[FLAT WRITE — keyboard, no editKey]", {
+          editKey: "",
+          flatKey: actualKey,
+          slotKey: "",
+          value: null,
+          itemId: item && item.id,
+          stepId: active && active.stepId,
+          aborted: true
+        });
+        return;
+      }
+
       current = baseKey === "imageZoom"
         ? adminImageCurrentNumber(state.product, record, actualKey, 168, 20, 500)
         : adminImageCurrentNumber(state.product, record, actualKey, 0, baseKey === "imageRotation" ? -180 : -100, baseKey === "imageRotation" ? 180 : 100);
@@ -9081,8 +9938,8 @@
       }
 
       beginAdminImageKeyboardUndo(state.product);
-      item[actualKey] = next;
-      refreshAdminImageAdjustment(active.stepId, active.itemId, item, side);
+      writeImageEditSlot(record.storeItem || record.rawItem || item, editKey, actualKey, next);
+      refreshAdminImageAdjustment(active.stepId, active.itemId, record.rawItem || item, side);
     });
   }
 
@@ -9202,16 +10059,20 @@
         var step = product.steps.filter(function (candidate) {
           return candidate.id === input.dataset.stepId;
         })[0];
-        var item = step && step.items ? step.items.filter(function (candidate) {
-          return candidate.id === input.dataset.itemId;
-        })[0] : null;
+        var item = stepItemById(step, input.dataset.itemId);
+        var imageStoreItem = stepItemById(step, input.dataset.adminImageStoreItemId || input.dataset.itemId);
+        var editKey = input.dataset.miaEditKey || "";
 
         if (item) {
           pushUndo(product);
           if (input.dataset.adminEdit === "quantity") {
             item[input.dataset.adminEdit] = Math.max(1, parseInt(input.value, 10) || 1);
           } else if (["frameScale", "frameWidth", "frameHeight", "frameMarginX", "frameMarginY", "imageZoom", "imagePositionX", "imagePositionY", "imageRotation"].indexOf(input.dataset.adminEdit) !== -1) {
-            item[input.dataset.adminEdit] = Number(input.value) || 0;
+            if (miaSlotDebugFlatKeys.indexOf(input.dataset.adminEdit) !== -1 || miaSlotDebugFrameKeys.indexOf(input.dataset.adminEdit) !== -1) {
+              writeImageEditSlot(imageStoreItem || item, editKey || miaSlotDebugEditKey(item, step, false), input.dataset.adminEdit, Number(input.value) || 0);
+            } else {
+              item[input.dataset.adminEdit] = Number(input.value) || 0;
+            }
           } else if (input.dataset.adminEdit === "rectOrientation") {
             item.rectOrientation = input.value === "landscape" ? "landscape" : "portrait";
           } else if (input.dataset.adminEdit === "sectionOrder") {
@@ -9250,13 +10111,24 @@
 
         pushUndo(product);
         step.items.forEach(function (item) {
-          item.frameScale = Math.max(40, Math.min(300, values.frameScale || 100));
-          item.frameMarginX = Math.max(-100, Math.min(100, values.frameMarginX || 0));
-          item.frameMarginY = Math.max(-100, Math.min(100, values.frameMarginY || 0));
-          item.imageZoom = Math.max(20, Math.min(500, values.imageZoom || 168));
-          item.imagePositionX = Math.max(-100, Math.min(100, values.imagePositionX || 0));
-          item.imagePositionY = Math.max(-100, Math.min(100, values.imagePositionY || 0));
-          item.imageRotation = Math.max(-180, Math.min(180, values.imageRotation || 0));
+          var cover = selectedCadernoCover(product);
+          var storeItem = item;
+          var editKey = miaSlotDebugEditKey(item, step, false);
+
+          if (isCadernosProduct(product) && cover && step.id === "lamination") {
+            editKey = cadernoScopedImageEditKey(product, "lamination", cover, item.id, "main");
+          } else if (isCadernosProduct(product) && cover && step.id === "pack") {
+            storeItem = cadernoPurchaseGroupStoreItem(product, item) || item;
+            editKey = cadernoScopedImageEditKey(product, "pack", cover, cadernoPurchaseImageGroup(item), "main");
+          }
+
+          writeImageEditSlot(storeItem, editKey, "frameScale", Math.max(40, Math.min(300, values.frameScale || 100)));
+          writeImageEditSlot(storeItem, editKey, "frameMarginX", Math.max(-100, Math.min(100, values.frameMarginX || 0)));
+          writeImageEditSlot(storeItem, editKey, "frameMarginY", Math.max(-100, Math.min(100, values.frameMarginY || 0)));
+          writeImageEditSlot(storeItem, editKey, "imageZoom", Math.max(20, Math.min(500, values.imageZoom || 168)));
+          writeImageEditSlot(storeItem, editKey, "imagePositionX", Math.max(-100, Math.min(100, values.imagePositionX || 0)));
+          writeImageEditSlot(storeItem, editKey, "imagePositionY", Math.max(-100, Math.min(100, values.imagePositionY || 0)));
+          writeImageEditSlot(storeItem, editKey, "imageRotation", Math.max(-180, Math.min(180, values.imageRotation || 0)));
         });
         rerenderProduct(product);
       });
@@ -9387,7 +10259,11 @@
         key = input.dataset.adminSideEdit;
         pushUndo(product);
         if (["sideFrameScale", "sideFrameWidth", "sideFrameHeight", "sideFrameMarginX", "sideFrameMarginY", "sideImageZoom", "sideImagePositionX", "sideImagePositionY", "sideImageRotation"].indexOf(key) !== -1) {
-          item[key] = Number(input.value) || 0;
+          if (miaSlotDebugSideFlatKeys.indexOf(key) !== -1 || miaSlotDebugSideFrameKeys.indexOf(key) !== -1) {
+            writeImageEditSlot(item, miaSlotDebugEditKey(item, step, true), key, Number(input.value) || 0);
+          } else {
+            item[key] = Number(input.value) || 0;
+          }
         } else {
           item[key] = input.value;
         }

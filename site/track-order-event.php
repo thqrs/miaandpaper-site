@@ -5,7 +5,7 @@
  * Endpoint do funil. Recebe POST JSON e:
  *   1) escreve em SQLite (tabela funnel_events) via lib/db.php → fonte
  *      principal a partir desta fase;
- *   2) ainda escreve uma cópia em ../private/order-funnel-events.jsonl
+ *   2) ainda escreve uma cópia privada em order-funnel-events.jsonl
  *      como fallback temporário (auditoria + recuperação se a base falhar).
  *
  * O servidor adiciona timestamp_iso e ip_number (IP completo — o utilizador
@@ -226,12 +226,8 @@ try {
 // Skip se ignore list (não interessa nem como fallback). Em rate-limit
 // continuamos a escrever no JSONL para que o admin possa auditar abuso.
 if ($skipReason !== 'ignore_list') {
-    $privateDir = __DIR__ . '/../private';
-    if (!is_dir($privateDir)) {
-        @mkdir($privateDir, 0700, true);
-    }
-    if (is_dir($privateDir)) {
-        $logPath = $privateDir . '/order-funnel-events.jsonl';
+    $logPath = mp_private_path('order-funnel-events.jsonl');
+    if ($logPath !== null) {
         $line = array_merge(array('timestamp_iso' => $timestampIso, 'ip' => $ipNumber, 'skip_reason' => $skipReason), $cleaned);
         $encoded = json_encode($line, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($encoded !== false) {

@@ -132,11 +132,6 @@
                             "rotation": 1,
                             "positionX": -4,
                             "frameHeight": 147
-                        },
-                        "cadernos:designs:caderno-01:caderno-01:summary": {
-                            "zoom": 70,
-                            "positionY": 4,
-                            "positionX": -3
                         }
                     }
                 },
@@ -174,11 +169,6 @@
                             "frameHeight": 147,
                             "positionY": 1,
                             "positionX": -2
-                        },
-                        "cadernos:designs:caderno-02:caderno-02:summary": {
-                            "zoom": 68,
-                            "rotation": 2,
-                            "positionY": 1
                         }
                     }
                 },
@@ -216,10 +206,6 @@
                             "positionY": 6,
                             "positionX": -2,
                             "rotation": 2
-                        },
-                        "cadernos:designs:caderno-03:caderno-03:summary": {
-                            "zoom": 74,
-                            "positionY": 5
                         }
                     }
                 },
@@ -257,11 +243,6 @@
                             "positionX": -3,
                             "rotation": 2,
                             "positionY": 5
-                        },
-                        "cadernos:designs:caderno-04:caderno-04:summary": {
-                            "zoom": 72,
-                            "positionY": 4,
-                            "positionX": -2
                         }
                     }
                 },
@@ -297,11 +278,6 @@
                             "zoom": 163,
                             "rotation": 1,
                             "positionY": 7,
-                            "positionX": -1
-                        },
-                        "cadernos:designs:caderno-05:caderno-05:summary": {
-                            "zoom": 73,
-                            "positionY": 5,
                             "positionX": -1
                         }
                     }
@@ -339,10 +315,6 @@
                             "rotation": 1,
                             "positionY": 7,
                             "positionX": -2
-                        },
-                        "cadernos:designs:caderno-06:caderno-06:summary": {
-                            "zoom": 70,
-                            "positionY": 5
                         }
                     }
                 },
@@ -378,11 +350,6 @@
                             "zoom": 161,
                             "rotation": 1,
                             "positionY": 2
-                        },
-                        "cadernos:designs:caderno-07:caderno-07:summary": {
-                            "zoom": 68,
-                            "positionY": 3,
-                            "positionX": 0
                         }
                     }
                 },
@@ -417,11 +384,6 @@
                             "frameHeight": 147,
                             "zoom": 164,
                             "rotation": 2,
-                            "positionY": 3
-                        },
-                        "cadernos:designs:caderno-08:caderno-08:summary": {
-                            "zoom": 71,
-                            "positionX": -1,
                             "positionY": 3
                         }
                     }
@@ -458,12 +420,6 @@
                             "zoom": 155,
                             "rotation": 2,
                             "positionY": 1
-                        },
-                        "cadernos:designs:caderno-09:caderno-09:summary": {
-                            "zoom": 68,
-                            "positionY": 1,
-                            "rotation": 1,
-                            "positionX": 0
                         }
                     }
                 }
@@ -510,78 +466,6 @@
                             "frameHeight": 124,
                             "positionX": -2,
                             "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-01:lamination-matte:main": {
-                            "zoom": 329,
-                            "rotation": -7,
-                            "frameWidth": 160,
-                            "frameHeight": 124,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-02:lamination-matte:main": {
-                            "zoom": 329,
-                            "rotation": -7,
-                            "frameWidth": 160,
-                            "frameHeight": 124,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-03:lamination-matte:main": {
-                            "zoom": 329,
-                            "rotation": -7,
-                            "frameWidth": 160,
-                            "frameHeight": 124,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-04:lamination-matte:main": {
-                            "zoom": 329,
-                            "rotation": -7,
-                            "frameWidth": 160,
-                            "frameHeight": 124,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-05:lamination-matte:main": {
-                            "zoom": 329,
-                            "rotation": -7,
-                            "frameWidth": 160,
-                            "frameHeight": 124,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-06:lamination-matte:main": {
-                            "zoom": 329,
-                            "rotation": -7,
-                            "frameWidth": 160,
-                            "frameHeight": 124,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-07:lamination-matte:main": {
-                            "zoom": 329,
-                            "rotation": -7,
-                            "frameWidth": 160,
-                            "frameHeight": 124,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-08:lamination-matte:main": {
-                            "zoom": 329,
-                            "rotation": -7,
-                            "frameWidth": 160,
-                            "frameHeight": 124,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-09:lamination-matte:main": {
-                            "zoom": 329,
-                            "rotation": -7,
-                            "frameWidth": 160,
-                            "frameHeight": 124,
-                            "positionX": -2,
-                            "positionY": 30
                         }
                     }
                 },
@@ -599,78 +483,6 @@
                     "frameHeight": 124,
                     "imageEdits": {
                         "cadernos:lamination:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "frameWidth": 160,
-                            "frameHeight": 124
-                        },
-                        "cadernos:lamination:caderno-01:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "frameWidth": 160,
-                            "frameHeight": 124
-                        },
-                        "cadernos:lamination:caderno-02:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "frameWidth": 160,
-                            "frameHeight": 124
-                        },
-                        "cadernos:lamination:caderno-03:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "frameWidth": 160,
-                            "frameHeight": 124
-                        },
-                        "cadernos:lamination:caderno-04:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "frameWidth": 160,
-                            "frameHeight": 124
-                        },
-                        "cadernos:lamination:caderno-05:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "frameWidth": 160,
-                            "frameHeight": 124
-                        },
-                        "cadernos:lamination:caderno-06:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "frameWidth": 160,
-                            "frameHeight": 124
-                        },
-                        "cadernos:lamination:caderno-07:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "frameWidth": 160,
-                            "frameHeight": 124
-                        },
-                        "cadernos:lamination:caderno-08:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "frameWidth": 160,
-                            "frameHeight": 124
-                        },
-                        "cadernos:lamination:caderno-09:lamination-normal:main": {
                             "zoom": 329,
                             "positionY": 30,
                             "rotation": -7,
@@ -699,69 +511,6 @@
                             "positionX": -2,
                             "rotation": -7,
                             "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-01:lamination-holografica:main": {
-                            "zoom": 329,
-                            "frameWidth": 160,
-                            "positionX": -2,
-                            "rotation": -7,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-02:lamination-holografica:main": {
-                            "zoom": 329,
-                            "frameWidth": 160,
-                            "positionX": -2,
-                            "rotation": -7,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-03:lamination-holografica:main": {
-                            "zoom": 329,
-                            "frameWidth": 160,
-                            "positionX": -2,
-                            "rotation": -7,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-04:lamination-holografica:main": {
-                            "zoom": 329,
-                            "frameWidth": 160,
-                            "positionX": -2,
-                            "rotation": -7,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-05:lamination-holografica:main": {
-                            "zoom": 329,
-                            "frameWidth": 160,
-                            "positionX": -2,
-                            "rotation": -7,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-06:lamination-holografica:main": {
-                            "zoom": 329,
-                            "frameWidth": 160,
-                            "positionX": -2,
-                            "rotation": -7,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-07:lamination-holografica:main": {
-                            "zoom": 329,
-                            "frameWidth": 160,
-                            "positionX": -2,
-                            "rotation": -7,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-08:lamination-holografica:main": {
-                            "zoom": 329,
-                            "frameWidth": 160,
-                            "positionX": -2,
-                            "rotation": -7,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-09:lamination-holografica:main": {
-                            "zoom": 329,
-                            "frameWidth": 160,
-                            "positionX": -2,
-                            "rotation": -7,
-                            "positionY": 30
                         }
                     }
                 },
@@ -769,7 +518,7 @@
                     "id": "lamination-glitter-branco",
                     "value": "glitter_branco",
                     "title": "Glitter branco",
-                    "subtitle": "Brilho tipo glitter/púrpurinas brancas.",
+                    "subtitle": "Brilho tipo glitter/purpurinas brancas.",
                     "image": "content/designs/cadernos/laminacao/laminacao-glitter-branco.jpg",
                     "exampleImage": "content/designs/cadernos/laminacao/laminacao-glitter-branco.jpg",
                     "imageFit": "cover",
@@ -779,69 +528,6 @@
                     "frameHeight": 124,
                     "imageEdits": {
                         "cadernos:lamination:lamination-glitter-branco:main": {
-                            "zoom": 329,
-                            "frameWidth": 159,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-01:lamination-glitter-branco:main": {
-                            "zoom": 329,
-                            "frameWidth": 159,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-02:lamination-glitter-branco:main": {
-                            "zoom": 329,
-                            "frameWidth": 159,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-03:lamination-glitter-branco:main": {
-                            "zoom": 329,
-                            "frameWidth": 159,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-04:lamination-glitter-branco:main": {
-                            "zoom": 329,
-                            "frameWidth": 159,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-05:lamination-glitter-branco:main": {
-                            "zoom": 329,
-                            "frameWidth": 159,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-06:lamination-glitter-branco:main": {
-                            "zoom": 329,
-                            "frameWidth": 159,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-07:lamination-glitter-branco:main": {
-                            "zoom": 329,
-                            "frameWidth": 159,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-08:lamination-glitter-branco:main": {
-                            "zoom": 329,
-                            "frameWidth": 159,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "positionY": 30
-                        },
-                        "cadernos:lamination:caderno-09:lamination-glitter-branco:main": {
                             "zoom": 329,
                             "frameWidth": 159,
                             "rotation": -7,
@@ -895,78 +581,6 @@
                             "rotation": 0,
                             "positionX": -15,
                             "positionY": 2
-                        },
-                        "cadernos:pack:caderno-01:caderno:main": {
-                            "frameWidth": 140,
-                            "frameHeight": 135,
-                            "zoom": 150,
-                            "rotation": 0,
-                            "positionX": -15,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-02:caderno:main": {
-                            "frameWidth": 140,
-                            "frameHeight": 135,
-                            "zoom": 150,
-                            "rotation": 0,
-                            "positionX": -15,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-03:caderno:main": {
-                            "frameWidth": 140,
-                            "frameHeight": 135,
-                            "zoom": 150,
-                            "rotation": 0,
-                            "positionX": -15,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-04:caderno:main": {
-                            "frameWidth": 140,
-                            "frameHeight": 135,
-                            "zoom": 150,
-                            "rotation": 0,
-                            "positionX": -15,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-05:caderno:main": {
-                            "frameWidth": 140,
-                            "frameHeight": 135,
-                            "zoom": 150,
-                            "rotation": 0,
-                            "positionX": -15,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-06:caderno:main": {
-                            "frameWidth": 140,
-                            "frameHeight": 135,
-                            "zoom": 150,
-                            "rotation": 0,
-                            "positionX": -15,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-07:caderno:main": {
-                            "frameWidth": 140,
-                            "frameHeight": 135,
-                            "zoom": 150,
-                            "rotation": 0,
-                            "positionX": -15,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-08:caderno:main": {
-                            "frameWidth": 140,
-                            "frameHeight": 135,
-                            "zoom": 150,
-                            "rotation": 0,
-                            "positionX": -15,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-09:caderno:main": {
-                            "frameWidth": 140,
-                            "frameHeight": 135,
-                            "zoom": 150,
-                            "rotation": 0,
-                            "positionX": -15,
-                            "positionY": 2
                         }
                     }
                 },
@@ -1007,78 +621,6 @@
                     "isPack": true,
                     "imageEdits": {
                         "cadernos:pack:pack-normal:main": {
-                            "zoom": 143,
-                            "frameWidth": 140,
-                            "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-01:pack:main": {
-                            "zoom": 143,
-                            "frameWidth": 140,
-                            "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-02:pack:main": {
-                            "zoom": 143,
-                            "frameWidth": 140,
-                            "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-03:pack:main": {
-                            "zoom": 143,
-                            "frameWidth": 140,
-                            "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-04:pack:main": {
-                            "zoom": 143,
-                            "frameWidth": 140,
-                            "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-05:pack:main": {
-                            "zoom": 143,
-                            "frameWidth": 140,
-                            "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-06:pack:main": {
-                            "zoom": 143,
-                            "frameWidth": 140,
-                            "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-07:pack:main": {
-                            "zoom": 143,
-                            "frameWidth": 140,
-                            "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-08:pack:main": {
-                            "zoom": 143,
-                            "frameWidth": 140,
-                            "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
-                            "positionY": 2
-                        },
-                        "cadernos:pack:caderno-09:pack:main": {
                             "zoom": 143,
                             "frameWidth": 140,
                             "frameHeight": 134,
@@ -1217,5 +759,5 @@
             "content/designs/cadernos/interior/stickers.jpg"
         ]
     },
-    "_backup_created": "cadernos-20260515-152233.json"
+    "_backup_created": "cadernos-20260515-152122.json"
 }

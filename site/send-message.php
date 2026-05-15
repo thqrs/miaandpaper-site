@@ -1,9 +1,8 @@
 <?php
 
-$configPath = getenv('MIAANDPAPER_MAIL_CONFIG');
-if (!$configPath) {
-    $configPath = '/home/currwkdi/private/miaandpaper-mail-config.php';
-}
+require_once __DIR__ . '/lib/private-paths.php';
+
+$configPath = mp_private_mail_config_path();
 
 function h($value)
 {
@@ -173,8 +172,8 @@ if ($errors) {
     render_page('Faltam alguns dados.', 'Revê o formulário e tenta novamente.', 'error', $errors);
 }
 
-if (!is_file($configPath)) {
-    render_page('Falta configurar o envio.', 'O formulário está pronto, mas falta o ficheiro privado de configuração no cPanel.', 'error', array('Ficheiro esperado: ' . $configPath));
+if (!$configPath || !is_file($configPath)) {
+    render_page('Falta configurar o envio.', 'O formulário está pronto, mas falta o ficheiro privado de configuração.', 'error', array('Ficheiro esperado: ' . $configPath));
 }
 
 $config = require $configPath;

@@ -2,17 +2,16 @@
 
 session_start();
 
-$configPath = getenv('MIAANDPAPER_MAIL_CONFIG');
-if (!$configPath) {
-    $configPath = '/home/currwkdi/private/miaandpaper-mail-config.php';
-}
+require_once __DIR__ . '/lib/private-paths.php';
+
+$configPath = mp_private_admin_config_path();
 
 define('MIAANDPAPER_PRODUCT_DIR', __DIR__ . '/content/products');
 define('MIAANDPAPER_HOME_FILE', __DIR__ . '/content/home.json');
 define('MIAANDPAPER_PRICING_FILE', __DIR__ . '/content/pricing.json');
 define('MIAANDPAPER_UPLOAD_DIR', __DIR__ . '/content/uploads');
 define('MIAANDPAPER_UPLOAD_PREFIX', 'content/uploads/');
-define('MIAANDPAPER_SYNC_FLAG', dirname($configPath) . '/miaandpaper-admin-sync-needed.json');
+define('MIAANDPAPER_SYNC_FLAG', mp_private_path('miaandpaper-admin-sync-needed.json') ?: '');
 
 function admin_set_status($code)
 {
@@ -64,7 +63,7 @@ function admin_config()
 {
     global $configPath;
 
-    if (!is_file($configPath)) {
+    if (!$configPath || !is_file($configPath)) {
         return null;
     }
 
@@ -102,6 +101,10 @@ function admin_sync_flag()
 
 function admin_mark_sync_needed($slug)
 {
+    if (MIAANDPAPER_SYNC_FLAG === '') {
+        return false;
+    }
+
     $payload = array(
         'syncNeeded' => true,
         'product' => $slug,
@@ -224,21 +227,11 @@ function admin_require_csrf()
 /**
  * ADMIN_LOGIN_PT_LOG_V1
  * Devolve o caminho absoluto da pasta privada onde guardamos logs e ficheiros
- * fora do document root. Tenta primeiro a pasta-irmã do diretório de scripts
- * (paralela a public_html), que é onde já vive miaandpaper-mail-config.php em
- * produção. Cria a pasta se não existir; falha silenciosa se não puder criar.
+ * fora do document root, usando o resolver central de caminhos privados.
  */
 function admin_private_dir()
 {
-    $candidate = __DIR__ . '/../private';
-    if (!is_dir($candidate)) {
-        // Tenta criar (mode 0700 — só o utilizador). Falha silenciosa.
-        @mkdir($candidate, 0700, true);
-    }
-    if (is_dir($candidate)) {
-        return $candidate;
-    }
-    return null;
+    return mp_private_dir();
 }
 
 /**

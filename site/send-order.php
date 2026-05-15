@@ -4,12 +4,10 @@
 // O ficheiro lib/db.php é carregado tolerantemente — se SQLite não estiver
 // disponível, o site continua a enviar pedidos por email (comportamento
 // antigo), mas mp_db() lança e tratamos isso explicitamente no fluxo.
+require_once __DIR__ . '/lib/private-paths.php';
 require_once __DIR__ . '/lib/db.php';
 
-$configPath = getenv('MIAANDPAPER_MAIL_CONFIG');
-if (!$configPath) {
-    $configPath = '/home/currwkdi/private/miaandpaper-mail-config.php';
-}
+$configPath = mp_private_mail_config_path();
 
 function h($value)
 {
@@ -1636,10 +1634,10 @@ if (field('website') !== '') {
     );
 }
 
-if (!is_file($configPath)) {
+if (!$configPath || !is_file($configPath)) {
     render_page(
         'Falta configurar o envio.',
-        'O formulário está pronto, mas falta criar o ficheiro privado de configuração no cPanel.',
+        'O formulário está pronto, mas falta criar o ficheiro privado de configuração.',
         'error',
         array(
             'Cria o ficheiro: ' . $configPath,

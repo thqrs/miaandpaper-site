@@ -3,7 +3,7 @@
  * lib/mail.php — ADMIN_EMAIL_ACTIONS_V1
  *
  * Wrapper minimal sobre mail() reutilizando a configuração existente do
- * site (ficheiro em $configPath, fora do public root). Helpers para
+ * site (ficheiro privado fora do public root). Helpers para
  * envios automáticos despoletados pelo painel de encomendas:
  *
  *   mp_mail_config()              — carrega config (cached por request)
@@ -16,6 +16,7 @@
  * array {success: bool, error: ?string, recipient: string|null}.
  */
 
+require_once __DIR__ . '/private-paths.php';
 require_once __DIR__ . '/db.php';
 
 function mp_mail_config()
@@ -25,12 +26,9 @@ function mp_mail_config()
         return $config;
     }
 
-    $path = getenv('MIAANDPAPER_MAIL_CONFIG');
-    if (!$path) {
-        $path = '/home/currwkdi/private/miaandpaper-mail-config.php';
-    }
+    $path = mp_private_mail_config_path();
 
-    if (!is_file($path)) {
+    if (!$path || !is_file($path)) {
         $config = array('to' => null, 'from' => null, 'error' => 'config-missing');
         return $config;
     }

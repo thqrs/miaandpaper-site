@@ -28,6 +28,11 @@
   --surface-stone:        #f7f1e6;
   --surface-gold-soft:    #fff5d0;
   --border-soft-gold:     rgba(184, 134, 22, 0.42);
+  /* CHECKMARK_CORNER_MODE_V1: para voltar ao centro-direita, usar
+     --selection-check-top: 50%; --selection-check-transform: translateY(-50%); */
+  --selection-check-top: var(--selection-check-inset, 14px);
+  --selection-check-right: var(--selection-check-inset, 14px);
+  --selection-check-transform: none;
 }
 
 * {
@@ -1107,6 +1112,14 @@ a:focus-visible {
 
 .copy-request input[type="checkbox"] {
   accent-color: var(--moss);
+}
+
+@media (min-width: 701px) {
+  .step-actions + .copy-request,
+  .step-actions ~ .copy-request,
+  .copy-request + .step-actions {
+    margin-top: 22px;
+  }
 }
 
 .button,
@@ -3509,6 +3522,12 @@ body.has-site-background {
   margin-top: 12px;
 }
 
+.checkout-confirm-card + .payment-notice,
+.checkout-copy-request,
+.checkout-copy-request + .checkout-actions {
+  margin-top: 12px;
+}
+
 .checkout-actions {
   margin-top: 0;
 }
@@ -4899,10 +4918,14 @@ html[data-theme="dark"] .design-grid-section-title.is-admin-only {
 }
 
 .crachas-size-card-selected {
+  position: absolute;
+  top: var(--selection-check-top);
+  right: var(--selection-check-right);
+  transform: var(--selection-check-transform);
+  z-index: 5;
   display: none;
   align-items: center;
   justify-content: center;
-  justify-self: end;
   width: 22px;
   height: 22px;
   border-radius: 999px;
@@ -4911,6 +4934,7 @@ html[data-theme="dark"] .design-grid-section-title.is-admin-only {
   font-size: 0.8rem;
   font-weight: 900;
   line-height: 1;
+  pointer-events: none;
 }
 
 .choice-card.crachas-size-card.is-selected .crachas-size-card-selected,
@@ -5017,11 +5041,17 @@ html[data-theme="dark"] .design-grid-section-title.is-admin-only {
 
 .cadernos-proof--adaptive .crachas-size-card-proof-media {
   width: min(420px, 100%);
+  background: #fff;
 }
 
 .cadernos-proof--adaptive .crachas-size-card-proof-img {
   width: auto;
   max-height: min(62vh, 520px);
+  margin-inline: auto;
+}
+
+.cadernos-proof--adaptive .crachas-size-card-proof-frame.uploaded-image {
+  background: #fff;
 }
 
 html[data-theme="dark"] .crachas-size-card-proof-note {
@@ -5031,9 +5061,22 @@ html[data-theme="dark"] .crachas-size-card-proof-note {
 
 .choice-card.cadernos-lamination-card .crachas-size-card-visual .option-image,
 .choice-card.cadernos-lamination-card .crachas-size-card-visual .uploaded-image {
-  width: 86px !important;
-  height: 64px !important;
+  width: var(--frame-width-px, 86px) !important;
+  height: var(--frame-height-px, 64px) !important;
   border-radius: 12px;
+}
+
+.choice-card.cadernos-cover-card .crachas-size-card-visual .uploaded-image,
+.choice-card.cadernos-lamination-card .crachas-size-card-visual .uploaded-image,
+.choice-card.cadernos-purchase-card .crachas-size-card-visual .uploaded-image {
+  background-color: #fff;
+}
+
+.choice-card.cadernos-cover-card .crachas-size-card-visual .uploaded-image-inner,
+.choice-card.cadernos-lamination-card .crachas-size-card-visual .uploaded-image-inner,
+.choice-card.cadernos-purchase-card .crachas-size-card-visual .uploaded-image-inner {
+  inset: 0;
+  background-size: contain !important;
 }
 
 .cadernos-cover-list {
@@ -5045,28 +5088,28 @@ html[data-theme="dark"] .crachas-size-card-proof-note {
 }
 
 .choice-card.cadernos-cover-card {
-  grid-template-columns: 86px minmax(0, 1fr) 32px;
+  grid-template-columns: auto minmax(0, 1fr) 32px;
 }
 
 .choice-card.cadernos-cover-card .cadernos-cover-media {
   position: relative;
   display: inline-grid;
   place-items: center;
-  width: 76px;
-  height: 96px;
+  width: auto;
+  height: auto;
 }
 
 .choice-card.cadernos-cover-card .crachas-size-card-visual .option-image,
 .choice-card.cadernos-cover-card .crachas-size-card-visual .uploaded-image {
-  width: 76px !important;
-  height: 96px !important;
+  width: var(--frame-width-px, 76px) !important;
+  height: var(--frame-height-px, 96px) !important;
   border-radius: 12px;
 }
 
 .choice-card.cadernos-cover-card .cadernos-cover-media .option-image,
 .choice-card.cadernos-cover-card .cadernos-cover-media .uploaded-image {
-  width: 100% !important;
-  height: 100% !important;
+  width: var(--frame-width-px, 76px) !important;
+  height: var(--frame-height-px, 96px) !important;
   margin: 0;
 }
 
@@ -5181,7 +5224,7 @@ html[data-theme="dark"] .crachas-size-card-proof-note {
 }
 
 .choice-card.cadernos-purchase-card {
-  grid-template-columns: 92px minmax(0, 1fr) auto 32px;
+  grid-template-columns: auto minmax(0, 1fr) auto 32px;
 }
 
 .choice-card.cadernos-purchase-card .choice-copy,
@@ -5191,8 +5234,8 @@ html[data-theme="dark"] .crachas-size-card-proof-note {
 
 .choice-card.cadernos-purchase-card .crachas-size-card-visual .option-image,
 .choice-card.cadernos-purchase-card .crachas-size-card-visual .uploaded-image {
-  width: 86px !important;
-  height: 64px !important;
+  width: var(--frame-width-px, 86px) !important;
+  height: var(--frame-height-px, 64px) !important;
   border-radius: 12px;
 }
 
@@ -5352,8 +5395,8 @@ html[data-theme="dark"] .crachas-size-card-proof-note {
 .cadernos-build-part .design-image,
 .cadernos-build-part .option-image,
 .cadernos-build-part .uploaded-image {
-  width: 88px !important;
-  height: 118px !important;
+  width: var(--frame-width-px, 88px) !important;
+  height: var(--frame-height-px, 118px) !important;
   border-radius: 12px;
 }
 
@@ -5375,6 +5418,12 @@ html[data-theme="dark"] .crachas-size-card-proof-note {
   font-style: normal;
   font-weight: 750;
   line-height: 1.25;
+}
+
+.cadernos-build-part .admin-card-tools-image-slot {
+  width: 100%;
+  margin-top: 6px;
+  text-align: left;
 }
 
 .cadernos-build-part--text {
@@ -5418,13 +5467,13 @@ html[data-theme="dark"] .cadernos-info-note {
 
 @media (max-width: 560px) {
   .choice-card.cadernos-purchase-card {
-    grid-template-columns: 76px minmax(0, 1fr) 28px;
+    grid-template-columns: auto minmax(0, 1fr) 28px;
   }
 
   .choice-card.cadernos-purchase-card .crachas-size-card-visual .option-image,
   .choice-card.cadernos-purchase-card .crachas-size-card-visual .uploaded-image {
-    width: 70px !important;
-    height: 58px !important;
+    width: var(--frame-width-px, 70px) !important;
+    height: var(--frame-height-px, 58px) !important;
   }
 
   .choice-card.cadernos-purchase-card .cadernos-purchase-price {
@@ -6125,8 +6174,8 @@ input.is-missing,
 }
 
 /* SELECTED_CHECKMARKS_V1: o visto passa a ser a marca visual comum de selecao.
-   Cards de design usam o canto superior direito; botoes/opcoes usam o lado
-   direito centrado, mantendo os inputs reais no DOM. */
+   Por defeito fica no canto superior direito; as variaveis em :root permitem
+   voltar facilmente ao lado direito centrado. */
 .choice-card.design-grid:has(input:checked)::after,
 .choice-card.media-list:not(.crachas-size-card):has(input:checked)::after,
 .choice-card.text-grid:has(input:checked)::after,
@@ -6163,9 +6212,9 @@ input.is-missing,
 .choice-card.size-choice:has(input:checked)::after,
 .design-action-card.is-selected::after,
 .pack-option.is-selected::after {
-  top: 50%;
-  right: 12px;
-  transform: translateY(-50%);
+  top: var(--selection-check-top);
+  right: var(--selection-check-right);
+  transform: var(--selection-check-transform);
 }
 
 .choice-card.media-list:not(.crachas-size-card),

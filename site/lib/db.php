@@ -3,7 +3,8 @@
  * lib/db.php — SQLITE_INFRA_V1
  *
  * Camada de acesso única à base SQLite privada do site Mia & Paper.
- * - Ficheiro: ../private/miaandpaper.sqlite (paralelo ao public root)
+ * - Ficheiro: miaandpaper.sqlite no armazenamento privado resolvido por
+ *   lib/private-paths.php
  * - PDO SQLite com prepared statements e ERRMODE_EXCEPTION
  * - PRAGMA foreign_keys=ON, busy_timeout=5000ms, tenta journal_mode=WAL
  * - Migrations idempotentes (CREATE TABLE IF NOT EXISTS) registadas em
@@ -28,30 +29,22 @@
  *   - JSON serializado com JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES.
  */
 
+require_once __DIR__ . '/private-paths.php';
+
 if (!defined('MIAANDPAPER_DB_LOADED')) {
     define('MIAANDPAPER_DB_LOADED', true);
 
     /**
-     * Caminho absoluto para a pasta privada (paralela ao public root).
-     * Cria-a se não existir. Devolve null se falhar (em produção isto
-     * deve corresponder a /home/<user>/private/).
+     * Caminho absoluto para a pasta privada, resolvido de forma central.
      */
     function mp_db_private_dir()
     {
-        $dir = __DIR__ . '/../../private';
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0700, true);
-        }
-        return is_dir($dir) ? $dir : null;
+        return mp_private_dir();
     }
 
     function mp_db_path()
     {
-        $dir = mp_db_private_dir();
-        if ($dir === null) {
-            return null;
-        }
-        return $dir . '/miaandpaper.sqlite';
+        return mp_private_path('miaandpaper.sqlite');
     }
 
     function mp_db_now()
@@ -857,9 +850,8 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
     function mp_tracking_log_skipped_event(array $info)
     {
         try {
-            $dir = mp_db_private_dir();
-            if ($dir === null) return false;
-            $path = $dir . '/order-funnel-skipped-events.jsonl';
+            $path = mp_private_path('order-funnel-skipped-events.jsonl');
+            if ($path === null) return false;
 
             $line = array(
                 'timestamp_iso'  => isset($info['timestamp_iso']) ? (string)$info['timestamp_iso'] : mp_db_now(),
