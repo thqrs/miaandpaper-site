@@ -192,7 +192,7 @@
       "template": "delivery-contact",
       "delivery": {
         "title": "Como queres receber a tua encomenda?",
-        "subtitle": "Caso já tenhas feito um pedido anteriormente, escolhe \"Junta as minhas encomendas\" e para receberes todas as tuas encomendas na mesma embalagem."
+        "subtitle": "Caso já tenhas feito uma encomenda que ainda não foi enviada, escolhe \"Junta as minhas encomendas\" para receberes todas as tuas encomendas na mesma embalagem."
       },
       "contact": {
         "title": "Dados de Contacto",

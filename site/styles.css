@@ -5624,6 +5624,16 @@ html[data-theme="dark"] .cadernos-info-note {
   height: var(--frame-height-px, 64px) !important;
 }
 
+@media (max-width: 480px) {
+  .choice-card.cadernos-lamination-card .crachas-size-card-visual .option-image,
+  .choice-card.cadernos-lamination-card .crachas-size-card-visual .uploaded-image,
+  .choice-card.cadernos-lamination-card .crachas-size-card-visual .uploaded-image[data-admin-image-visual] {
+    width: clamp(96px, 30vw, var(--frame-width-px, 160px)) !important;
+    height: auto !important;
+    aspect-ratio: var(--frame-aspect, 160 / 124);
+  }
+}
+
 /* CRACHAS_STEP2_SELECTED_DESIGNS_CLEANUP_V2
    Bloco unico de designs escolhidos com fundo bege quente e tiles
    verticais sem moldura individual. */

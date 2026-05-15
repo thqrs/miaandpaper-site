@@ -7064,7 +7064,7 @@
       '<div class="delivery-choice ' + (standalone ? "is-standalone" : "") + '">',
       '<span>Entrega</span>',
       html,
-      '<p>Se já fizeste outro pedido, escolhe "Junta as minhas encomendas" para receberes tudo na mesma embalagem.</p>',
+      '<p>Caso já tenhas feito uma encomenda que ainda não foi enviada, escolhe "Junta as minhas encomendas" para receberes todas as tuas encomendas na mesma embalagem.</p>',
       (standalone || selected === "shipping") ? '<p>O preço do pedido não inclui portes.</p>' : "",
       '</div>'
     ].join("");
@@ -7194,7 +7194,7 @@
     return [
       '<aside class="open-order-hint" role="note" aria-label="Possível encomenda aberta">',
       '<strong>Parece que já tens uma encomenda em aberto.</strong>',
-      '<span>Se quiseres, podes juntar esta encomenda à anterior e receber tudo na mesma embalagem — Só precisas de escolher <em>"Junta as minhas encomendas"</em>.</span>',
+      '<span>Caso já tenhas feito uma encomenda que ainda não foi enviada, escolhe <em>"Junta as minhas encomendas"</em> para receberes todas as tuas encomendas na mesma embalagem.</span>',
       '</aside>'
     ].join("");
   }
@@ -9160,7 +9160,7 @@
       '</section>',
       '<section class="dc-block dc-delivery' + (hasDeliveryError ? ' is-missing' : '') + '"' + (hasDeliveryError ? ' data-checkout-delivery-error tabindex="-1"' : '') + '>',
       '<h3 class="dc-block-title">Como queres receber a tua encomenda?</h3>',
-      '<p class="dc-block-subtitle">Caso já tenhas feito um pedido anteriormente, escolhe "Junta as minhas encomendas" para receberes todas as tuas encomendas na mesma embalagem.</p>',
+      '<p class="dc-block-subtitle">Caso já tenhas feito uma encomenda que ainda não foi enviada, escolhe "Junta as minhas encomendas" para receberes todas as tuas encomendas na mesma embalagem.</p>',
       hasDeliveryError ? '<p class="form-error" role="alert">Escolhe uma forma de entrega.</p>' : "",
       '<div class="dc-delivery-options">' + deliveryOptionsHtml + '</div>',
       '</section>',
