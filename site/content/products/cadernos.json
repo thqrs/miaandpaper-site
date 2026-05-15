@@ -128,9 +128,9 @@
                             "zoom": 166,
                             "frameWidth": 120,
                             "frameScale": 120,
-                            "positionY": 8,
+                            "positionY": 6,
                             "rotation": 1,
-                            "positionX": -4,
+                            "positionX": -1,
                             "frameHeight": 147
                         },
                         "cadernos:designs:caderno-01:caderno-01:summary": {
@@ -528,36 +528,36 @@
                             "positionY": 30
                         },
                         "cadernos:lamination:caderno-03:lamination-matte:main": {
-                            "zoom": 329,
-                            "rotation": -7,
+                            "zoom": 315,
+                            "rotation": -5,
                             "frameWidth": 160,
                             "frameHeight": 124,
-                            "positionX": -2,
-                            "positionY": 30
+                            "positionX": 0,
+                            "positionY": 55
                         },
                         "cadernos:lamination:caderno-04:lamination-matte:main": {
-                            "zoom": 329,
-                            "rotation": -7,
+                            "zoom": 286,
+                            "rotation": -5,
                             "frameWidth": 160,
                             "frameHeight": 124,
-                            "positionX": -2,
+                            "positionX": 1,
                             "positionY": 30
                         },
                         "cadernos:lamination:caderno-05:lamination-matte:main": {
-                            "zoom": 329,
-                            "rotation": -7,
+                            "zoom": 304,
+                            "rotation": -1,
                             "frameWidth": 160,
                             "frameHeight": 124,
-                            "positionX": -2,
-                            "positionY": 30
+                            "positionX": -3,
+                            "positionY": 25
                         },
                         "cadernos:lamination:caderno-06:lamination-matte:main": {
-                            "zoom": 329,
-                            "rotation": -7,
+                            "zoom": 326,
+                            "rotation": -3,
                             "frameWidth": 160,
                             "frameHeight": 124,
-                            "positionX": -2,
-                            "positionY": 30
+                            "positionX": 1,
+                            "positionY": 45
                         },
                         "cadernos:lamination:caderno-07:lamination-matte:main": {
                             "zoom": 329,
@@ -565,23 +565,122 @@
                             "frameWidth": 160,
                             "frameHeight": 124,
                             "positionX": -2,
-                            "positionY": 30
+                            "positionY": 41
                         },
                         "cadernos:lamination:caderno-08:lamination-matte:main": {
                             "zoom": 329,
                             "rotation": -7,
                             "frameWidth": 160,
                             "frameHeight": 124,
-                            "positionX": -2,
-                            "positionY": 30
+                            "positionX": -4,
+                            "positionY": 15
                         },
                         "cadernos:lamination:caderno-09:lamination-matte:main": {
-                            "zoom": 329,
+                            "zoom": 331,
                             "rotation": -7,
                             "frameWidth": 160,
                             "frameHeight": 124,
+                            "positionX": -5,
+                            "positionY": 11
+                        },
+                        "cadernos:lamination:caderno-01:lamination-matte:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-02:lamination-matte:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -4
+                        },
+                        "cadernos:lamination:caderno-03:lamination-matte:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 105,
+                            "positionX": -1,
+                            "positionY": 19,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-04:lamination-matte:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 95,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-05:lamination-matte:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 103,
+                            "positionX": -8,
+                            "positionY": 13,
+                            "rotation": -1
+                        },
+                        "cadernos:lamination:caderno-06:lamination-matte:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-07:lamination-matte:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 14,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-08:lamination-matte:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-09:lamination-matte:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
                             "positionX": -2,
-                            "positionY": 30
+                            "positionY": 14,
+                            "rotation": -7
                         }
                     }
                 },
@@ -614,6 +713,17 @@
                             "frameWidth": 160,
                             "frameHeight": 124
                         },
+                        "cadernos:lamination:caderno-01:lamination-normal:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
                         "cadernos:lamination:caderno-02:lamination-normal:main": {
                             "zoom": 329,
                             "positionY": 30,
@@ -622,37 +732,92 @@
                             "frameWidth": 160,
                             "frameHeight": 124
                         },
+                        "cadernos:lamination:caderno-02:lamination-normal:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
                         "cadernos:lamination:caderno-03:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
+                            "zoom": 325,
+                            "positionY": 56,
                             "rotation": -7,
-                            "positionX": -2,
+                            "positionX": 2,
                             "frameWidth": 160,
                             "frameHeight": 124
+                        },
+                        "cadernos:lamination:caderno-03:lamination-normal:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 96,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
                         },
                         "cadernos:lamination:caderno-04:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
+                            "zoom": 295,
+                            "positionY": 26,
                             "rotation": -7,
-                            "positionX": -2,
+                            "positionX": 8,
                             "frameWidth": 160,
                             "frameHeight": 124
+                        },
+                        "cadernos:lamination:caderno-04:lamination-normal:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 93,
+                            "positionX": 7,
+                            "positionY": 2,
+                            "rotation": -7
                         },
                         "cadernos:lamination:caderno-05:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
-                            "rotation": -7,
-                            "positionX": -2,
+                            "zoom": 321,
+                            "positionY": 17,
+                            "rotation": -1,
+                            "positionX": -4,
                             "frameWidth": 160,
                             "frameHeight": 124
                         },
+                        "cadernos:lamination:caderno-05:lamination-normal:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 101,
+                            "positionX": -5,
+                            "positionY": 11,
+                            "rotation": -3
+                        },
                         "cadernos:lamination:caderno-06:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
-                            "rotation": -7,
-                            "positionX": -2,
+                            "zoom": 338,
+                            "positionY": 34,
+                            "rotation": -2,
+                            "positionX": 2,
                             "frameWidth": 160,
                             "frameHeight": 124
+                        },
+                        "cadernos:lamination:caderno-06:lamination-normal:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
                         },
                         "cadernos:lamination:caderno-07:lamination-normal:main": {
                             "zoom": 329,
@@ -662,6 +827,17 @@
                             "frameWidth": 160,
                             "frameHeight": 124
                         },
+                        "cadernos:lamination:caderno-07:lamination-normal:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
                         "cadernos:lamination:caderno-08:lamination-normal:main": {
                             "zoom": 329,
                             "positionY": 30,
@@ -670,13 +846,35 @@
                             "frameWidth": 160,
                             "frameHeight": 124
                         },
+                        "cadernos:lamination:caderno-08:lamination-normal:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
                         "cadernos:lamination:caderno-09:lamination-normal:main": {
-                            "zoom": 329,
-                            "positionY": 30,
-                            "rotation": -7,
-                            "positionX": -2,
+                            "zoom": 337,
+                            "positionY": 12,
+                            "rotation": -5,
+                            "positionX": -5,
                             "frameWidth": 160,
                             "frameHeight": 124
+                        },
+                        "cadernos:lamination:caderno-09:lamination-normal:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 100,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
                         }
                     }
                 },
@@ -715,53 +913,152 @@
                             "positionY": 30
                         },
                         "cadernos:lamination:caderno-03:lamination-holografica:main": {
-                            "zoom": 329,
+                            "zoom": 292,
                             "frameWidth": 160,
-                            "positionX": -2,
-                            "rotation": -7,
-                            "positionY": 30
+                            "positionX": -3,
+                            "rotation": -5,
+                            "positionY": 43
                         },
                         "cadernos:lamination:caderno-04:lamination-holografica:main": {
-                            "zoom": 329,
+                            "zoom": 308,
                             "frameWidth": 160,
-                            "positionX": -2,
-                            "rotation": -7,
-                            "positionY": 30
+                            "positionX": 0,
+                            "rotation": -6,
+                            "positionY": 23
                         },
                         "cadernos:lamination:caderno-05:lamination-holografica:main": {
-                            "zoom": 329,
+                            "zoom": 306,
                             "frameWidth": 160,
-                            "positionX": -2,
-                            "rotation": -7,
-                            "positionY": 30
+                            "positionX": 1,
+                            "rotation": -1,
+                            "positionY": 12
                         },
                         "cadernos:lamination:caderno-06:lamination-holografica:main": {
-                            "zoom": 329,
+                            "zoom": 325,
                             "frameWidth": 160,
                             "positionX": -2,
-                            "rotation": -7,
-                            "positionY": 30
+                            "rotation": -1,
+                            "positionY": 34
                         },
                         "cadernos:lamination:caderno-07:lamination-holografica:main": {
                             "zoom": 329,
                             "frameWidth": 160,
                             "positionX": -2,
                             "rotation": -7,
-                            "positionY": 30
+                            "positionY": 26
                         },
                         "cadernos:lamination:caderno-08:lamination-holografica:main": {
                             "zoom": 329,
                             "frameWidth": 160,
-                            "positionX": -2,
+                            "positionX": -4,
                             "rotation": -7,
-                            "positionY": 30
+                            "positionY": 15
                         },
                         "cadernos:lamination:caderno-09:lamination-holografica:main": {
-                            "zoom": 329,
+                            "zoom": 283,
                             "frameWidth": 160,
                             "positionX": -2,
                             "rotation": -7,
-                            "positionY": 30
+                            "positionY": -7
+                        },
+                        "cadernos:lamination:caderno-01:lamination-holografica:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-02:lamination-holografica:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -2,
+                            "positionY": 14,
+                            "rotation": -4
+                        },
+                        "cadernos:lamination:caderno-03:lamination-holografica:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -2,
+                            "positionY": 10,
+                            "rotation": -5
+                        },
+                        "cadernos:lamination:caderno-04:lamination-holografica:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 101,
+                            "positionX": -3,
+                            "positionY": 10,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-05:lamination-holografica:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 110,
+                            "positionX": -3,
+                            "positionY": 3,
+                            "rotation": -3
+                        },
+                        "cadernos:lamination:caderno-06:lamination-holografica:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-07:lamination-holografica:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 10,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-08:lamination-holografica:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-09:lamination-holografica:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 122,
+                            "positionX": -1,
+                            "positionY": -5,
+                            "rotation": -2
                         }
                     }
                 },
@@ -769,7 +1066,7 @@
                     "id": "lamination-glitter-branco",
                     "value": "glitter_branco",
                     "title": "Glitter branco",
-                    "subtitle": "Brilho tipo glitter/púrpurinas brancas.",
+                    "subtitle": "Brilho tipo glitter/purpurinas brancas.",
                     "image": "content/designs/cadernos/laminacao/laminacao-glitter-branco.jpg",
                     "exampleImage": "content/designs/cadernos/laminacao/laminacao-glitter-branco.jpg",
                     "imageFit": "cover",
@@ -800,44 +1097,44 @@
                             "positionY": 30
                         },
                         "cadernos:lamination:caderno-03:lamination-glitter-branco:main": {
-                            "zoom": 329,
+                            "zoom": 317,
                             "frameWidth": 159,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "positionY": 30
+                            "rotation": -2,
+                            "positionX": -1,
+                            "positionY": 50
                         },
                         "cadernos:lamination:caderno-04:lamination-glitter-branco:main": {
-                            "zoom": 329,
+                            "zoom": 304,
                             "frameWidth": 159,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "positionY": 30
+                            "rotation": -4,
+                            "positionX": -3,
+                            "positionY": 22
                         },
                         "cadernos:lamination:caderno-05:lamination-glitter-branco:main": {
-                            "zoom": 329,
+                            "zoom": 326,
                             "frameWidth": 159,
-                            "rotation": -7,
-                            "positionX": -2,
-                            "positionY": 30
+                            "rotation": -2,
+                            "positionX": -3,
+                            "positionY": 17
                         },
                         "cadernos:lamination:caderno-06:lamination-glitter-branco:main": {
                             "zoom": 329,
                             "frameWidth": 159,
-                            "rotation": -7,
+                            "rotation": -1,
                             "positionX": -2,
-                            "positionY": 30
+                            "positionY": 33
                         },
                         "cadernos:lamination:caderno-07:lamination-glitter-branco:main": {
                             "zoom": 329,
                             "frameWidth": 159,
                             "rotation": -7,
                             "positionX": -2,
-                            "positionY": 30
+                            "positionY": 22
                         },
                         "cadernos:lamination:caderno-08:lamination-glitter-branco:main": {
                             "zoom": 329,
                             "frameWidth": 159,
-                            "rotation": -7,
+                            "rotation": -5,
                             "positionX": -2,
                             "positionY": 30
                         },
@@ -846,7 +1143,106 @@
                             "frameWidth": 159,
                             "rotation": -7,
                             "positionX": -2,
-                            "positionY": 30
+                            "positionY": 5
+                        },
+                        "cadernos:lamination:caderno-01:lamination-glitter-branco:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-02:lamination-glitter-branco:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 94,
+                            "positionX": -2,
+                            "positionY": 12,
+                            "rotation": -2
+                        },
+                        "cadernos:lamination:caderno-03:lamination-glitter-branco:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 105,
+                            "positionX": -1,
+                            "positionY": 17,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-04:lamination-glitter-branco:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 93,
+                            "positionX": -2,
+                            "positionY": 2,
+                            "rotation": -4
+                        },
+                        "cadernos:lamination:caderno-05:lamination-glitter-branco:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 104,
+                            "positionX": -4,
+                            "positionY": 11,
+                            "rotation": -3
+                        },
+                        "cadernos:lamination:caderno-06:lamination-glitter-branco:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-07:lamination-glitter-branco:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 9,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-08:lamination-glitter-branco:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
+                        "cadernos:lamination:caderno-09:lamination-glitter-branco:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 115,
+                            "positionX": 0,
+                            "positionY": -1,
+                            "rotation": -7
                         }
                     }
                 }
@@ -860,7 +1256,7 @@
             "template": "purchase-option",
             "field": "pack_quantity",
             "selection": "pack",
-            "promoNote": "As 5 primeiras pessoas que comprarem um Pack recebem gratuitamente o caderno miniatura da capa do caderno normal.",
+            "promoNote": "As 5 primeiras pessoas que comprarem o Pack Normal ou o Pack Pioneiro recebem gratuitamente um mini-caderno com a mesma capa do caderno do Pack.",
             "orderQuantity": {
                 "title": "Quantidade",
                 "text": "Podes encomendar mais do que um caderno ou pack com a mesma capa, laminação e personalização.",
@@ -882,8 +1278,8 @@
                     "title": "Caderno Normal",
                     "subtitle": "29,90 €",
                     "priceCents": 2990,
-                    "includes": "Inclui o caderno com oferta de 1 crachá de 32 mm com o mesmo design da capa.",
-                    "summary": "caderno com oferta de 1 crachá de 32 mm da capa",
+                    "includes": "Oferta: 1 crachá de 32 mm com o mesmo design da capa",
+                    "summary": "Oferta: 1 crachá",
                     "image": "content/designs/cadernos/opcoes/caderno-normal.jpg",
                     "exampleImage": "content/designs/cadernos/opcoes/caderno-normal.jpg",
                     "isPack": false,
@@ -907,41 +1303,41 @@
                         "cadernos:pack:caderno-02:caderno:main": {
                             "frameWidth": 140,
                             "frameHeight": 135,
-                            "zoom": 150,
-                            "rotation": 0,
-                            "positionX": -15,
-                            "positionY": 2
+                            "zoom": 146,
+                            "rotation": 5,
+                            "positionX": 3,
+                            "positionY": 1
                         },
                         "cadernos:pack:caderno-03:caderno:main": {
                             "frameWidth": 140,
                             "frameHeight": 135,
-                            "zoom": 150,
+                            "zoom": 136,
                             "rotation": 0,
-                            "positionX": -15,
-                            "positionY": 2
+                            "positionX": -1,
+                            "positionY": 3
                         },
                         "cadernos:pack:caderno-04:caderno:main": {
                             "frameWidth": 140,
                             "frameHeight": 135,
-                            "zoom": 150,
-                            "rotation": 0,
-                            "positionX": -15,
+                            "zoom": 147,
+                            "rotation": -8,
+                            "positionX": -4,
                             "positionY": 2
                         },
                         "cadernos:pack:caderno-05:caderno:main": {
                             "frameWidth": 140,
                             "frameHeight": 135,
-                            "zoom": 150,
-                            "rotation": 0,
-                            "positionX": -15,
-                            "positionY": 2
+                            "zoom": 135,
+                            "rotation": 2,
+                            "positionX": 3,
+                            "positionY": 3
                         },
                         "cadernos:pack:caderno-06:caderno:main": {
                             "frameWidth": 140,
                             "frameHeight": 135,
-                            "zoom": 150,
+                            "zoom": 134,
                             "rotation": 0,
-                            "positionX": -15,
+                            "positionX": -8,
                             "positionY": 2
                         },
                         "cadernos:pack:caderno-07:caderno:main": {
@@ -949,24 +1345,123 @@
                             "frameHeight": 135,
                             "zoom": 150,
                             "rotation": 0,
-                            "positionX": -15,
+                            "positionX": -1,
                             "positionY": 2
                         },
                         "cadernos:pack:caderno-08:caderno:main": {
                             "frameWidth": 140,
                             "frameHeight": 135,
-                            "zoom": 150,
-                            "rotation": 0,
-                            "positionX": -15,
-                            "positionY": 2
+                            "zoom": 133,
+                            "rotation": 1,
+                            "positionX": 0,
+                            "positionY": -3
                         },
                         "cadernos:pack:caderno-09:caderno:main": {
                             "frameWidth": 140,
                             "frameHeight": 135,
                             "zoom": 150,
                             "rotation": 0,
-                            "positionX": -15,
+                            "positionX": 1,
                             "positionY": 2
+                        },
+                        "cadernos:pack:caderno-01:caderno:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 94,
+                            "positionX": -10,
+                            "positionY": 2,
+                            "rotation": 2
+                        },
+                        "cadernos:pack:caderno-02:caderno:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 99,
+                            "positionX": 9,
+                            "positionY": 1,
+                            "rotation": 5
+                        },
+                        "cadernos:pack:caderno-03:caderno:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 84,
+                            "positionX": -1,
+                            "positionY": 4,
+                            "rotation": -5
+                        },
+                        "cadernos:pack:caderno-04:caderno:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 81,
+                            "positionX": -6,
+                            "positionY": 2,
+                            "rotation": -7
+                        },
+                        "cadernos:pack:caderno-05:caderno:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 78,
+                            "positionX": -1,
+                            "positionY": 2,
+                            "rotation": 1
+                        },
+                        "cadernos:pack:caderno-06:caderno:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 71,
+                            "positionX": 0,
+                            "positionY": 1,
+                            "rotation": -7
+                        },
+                        "cadernos:pack:caderno-07:caderno:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 106,
+                            "positionX": -1,
+                            "positionY": 13,
+                            "rotation": -7
+                        },
+                        "cadernos:pack:caderno-08:caderno:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 77,
+                            "positionX": 0,
+                            "positionY": 1,
+                            "rotation": -7
+                        },
+                        "cadernos:pack:caderno-09:caderno:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 86,
+                            "positionX": -3,
+                            "positionY": 2,
+                            "rotation": 1
                         }
                     }
                 },
@@ -977,8 +1472,8 @@
                     "title": "Caderno Pioneiro",
                     "subtitle": "34,90 €",
                     "priceCents": 3490,
-                    "includes": "Inclui o caderno pioneiro com oferta de 1 crachá de 32 mm com o mesmo design da capa.",
-                    "summary": "caderno pioneiro com oferta de 1 crachá de 32 mm da capa",
+                    "includes": "Oferta: 1 crachá de 32 mm com o mesmo design da capa",
+                    "summary": "Oferta: 1 crachá",
                     "image": "content/designs/cadernos/opcoes/caderno-pioneiro.jpg",
                     "exampleImage": "content/designs/cadernos/opcoes/caderno-pioneiro.jpg",
                     "isPack": false,
@@ -1000,8 +1495,8 @@
                     "title": "Pack Normal",
                     "subtitle": "37,90 €",
                     "priceCents": 3790,
-                    "includes": "Inclui o caderno + 5 crachás de 32 mm, sendo um deles o crachá da capa + marcador laminado dos dois lados.",
-                    "summary": "caderno + 5 crachás de 32 mm, incluindo 1 crachá da capa + marcador laminado dos dois lados",
+                    "includes": "1 Caderno Normal + 1 marcador laminado dos dois lados + 5 crachás de 32 mm, tendo 1 deles o design da capa",
+                    "summary": "Caderno + Marcador + 5 crachás",
                     "image": "content/designs/cadernos/opcoes/pack-normal.jpg",
                     "exampleImage": "content/designs/cadernos/opcoes/pack-normal.jpg",
                     "isPack": true,
@@ -1023,68 +1518,167 @@
                             "positionY": 2
                         },
                         "cadernos:pack:caderno-02:pack:main": {
-                            "zoom": 143,
+                            "zoom": 103,
                             "frameWidth": 140,
                             "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
-                            "positionY": 2
+                            "positionX": -1,
+                            "rotation": 1,
+                            "positionY": -1
                         },
                         "cadernos:pack:caderno-03:pack:main": {
-                            "zoom": 143,
+                            "zoom": 110,
                             "frameWidth": 140,
                             "frameHeight": 134,
-                            "positionX": -23,
+                            "positionX": -2,
                             "rotation": -1,
-                            "positionY": 2
+                            "positionY": 1
                         },
                         "cadernos:pack:caderno-04:pack:main": {
-                            "zoom": 143,
+                            "zoom": 123,
                             "frameWidth": 140,
                             "frameHeight": 134,
-                            "positionX": -23,
+                            "positionX": -6,
                             "rotation": -1,
-                            "positionY": 2
+                            "positionY": -1
                         },
                         "cadernos:pack:caderno-05:pack:main": {
-                            "zoom": 143,
+                            "zoom": 128,
                             "frameWidth": 140,
                             "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
-                            "positionY": 2
+                            "positionX": -9,
+                            "rotation": 3,
+                            "positionY": -1
                         },
                         "cadernos:pack:caderno-06:pack:main": {
-                            "zoom": 143,
+                            "zoom": 104,
                             "frameWidth": 140,
                             "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
+                            "positionX": 0,
+                            "rotation": 0,
                             "positionY": 2
                         },
                         "cadernos:pack:caderno-07:pack:main": {
-                            "zoom": 143,
+                            "zoom": 126,
                             "frameWidth": 140,
                             "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
+                            "positionX": -12,
+                            "rotation": 2,
                             "positionY": 2
                         },
                         "cadernos:pack:caderno-08:pack:main": {
                             "zoom": 143,
                             "frameWidth": 140,
                             "frameHeight": 134,
-                            "positionX": -23,
-                            "rotation": -1,
-                            "positionY": 2
+                            "positionX": -11,
+                            "rotation": 1,
+                            "positionY": 0
                         },
                         "cadernos:pack:caderno-09:pack:main": {
-                            "zoom": 143,
+                            "zoom": 122,
                             "frameWidth": 140,
                             "frameHeight": 134,
-                            "positionX": -23,
+                            "positionX": 0,
                             "rotation": -1,
-                            "positionY": 2
+                            "positionY": 0
+                        },
+                        "cadernos:pack:caderno-01:pack:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 73,
+                            "positionX": -5,
+                            "positionY": 2,
+                            "rotation": 1
+                        },
+                        "cadernos:pack:caderno-02:pack:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 69,
+                            "positionX": -2,
+                            "positionY": -2,
+                            "rotation": 0
+                        },
+                        "cadernos:pack:caderno-03:pack:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 62,
+                            "positionX": 0,
+                            "positionY": 2,
+                            "rotation": 0
+                        },
+                        "cadernos:pack:caderno-04:pack:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 67,
+                            "positionX": -3,
+                            "positionY": -1,
+                            "rotation": -2
+                        },
+                        "cadernos:pack:caderno-05:pack:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 70,
+                            "positionX": 2,
+                            "positionY": 0,
+                            "rotation": -4
+                        },
+                        "cadernos:pack:caderno-06:pack:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 63,
+                            "positionX": 0,
+                            "positionY": 1,
+                            "rotation": -1
+                        },
+                        "cadernos:pack:caderno-07:pack:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 68,
+                            "positionX": -3,
+                            "positionY": 0,
+                            "rotation": 1
+                        },
+                        "cadernos:pack:caderno-08:pack:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 65,
+                            "positionX": 0,
+                            "positionY": 0,
+                            "rotation": -2
+                        },
+                        "cadernos:pack:caderno-09:pack:summary": {
+                            "frameScale": 100,
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "frameMarginX": 0,
+                            "frameMarginY": 0,
+                            "zoom": 71,
+                            "positionX": 0,
+                            "positionY": 0,
+                            "rotation": -7
                         }
                     }
                 },
@@ -1095,8 +1689,8 @@
                     "title": "Pack Pioneiro",
                     "subtitle": "42,90 €",
                     "priceCents": 4290,
-                    "includes": "Inclui o caderno pioneiro + 5 crachás de 32 mm, sendo um deles o crachá da capa + marcador laminado dos dois lados.",
-                    "summary": "caderno pioneiro + 5 crachás de 32 mm, incluindo 1 crachá da capa + marcador laminado dos dois lados",
+                    "includes": "1 Caderno Pioneiro + 1 marcador laminado dos dois lados + 5 crachás de 32 mm, tendo 1 deles o design da capa",
+                    "summary": "Caderno + Marcador + 5 crachás",
                     "image": "content/designs/cadernos/opcoes/pack-pioneiro.jpg",
                     "exampleImage": "content/designs/cadernos/opcoes/pack-pioneiro.jpg",
                     "isPack": true,
@@ -1217,5 +1811,5 @@
             "content/designs/cadernos/interior/stickers.jpg"
         ]
     },
-    "_backup_created": "cadernos-20260515-152233.json"
+    "_backup_created": "cadernos-20260515-184036.json"
 }

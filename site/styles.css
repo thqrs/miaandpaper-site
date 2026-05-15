@@ -5590,6 +5590,26 @@ html[data-theme="dark"] .cadernos-info-note {
   }
 }
 
+/* CADERNOS_MOBILE_FRAME_COLUMN_FIX_V1
+   Os cartões de cadernos podem ter molduras ajustadas no admin. Em mobile,
+   a grelha genérica dos crachás forçava a coluna da imagem a 70/78px e a
+   moldura invadia o texto. Para cadernos, a coluna mede a moldura real. */
+@media (max-width: 480px) {
+  .choice-card.cadernos-cover-card,
+  .choice-card.cadernos-lamination-card,
+  .choice-card.cadernos-purchase-card {
+    grid-template-columns: max-content minmax(0, 1fr) 28px;
+  }
+}
+
+@media (max-width: 390px) {
+  .choice-card.cadernos-cover-card,
+  .choice-card.cadernos-lamination-card,
+  .choice-card.cadernos-purchase-card {
+    grid-template-columns: max-content minmax(0, 1fr) 26px;
+  }
+}
+
 .choice-card.cadernos-cover-card .cadernos-cover-media .uploaded-image[data-admin-image-visual],
 .choice-card.cadernos-cover-card .crachas-size-card-visual .uploaded-image[data-admin-image-visual],
 .choice-card.cadernos-lamination-card .crachas-size-card-visual .uploaded-image[data-admin-image-visual],

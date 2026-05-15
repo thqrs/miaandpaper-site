@@ -1,10 +1,4 @@
 (function () {
-  const version = "slot-patch-debug-2026-05-15-01";
-  window.__MIA_SLOT_PATCH_VERSION = version;
-  console.info("[MiaSlotPatch]", version);
-})();
-
-(function () {
   var app = document.querySelector("#app");
   var page = document.body.dataset.page;
   var productSlug = document.body.dataset.product;
@@ -184,7 +178,6 @@
       .replace(/'/g, "&#039;");
   }
 
-  var miaSlotDebugLastElement = null;
   var miaSlotDebugFlatKeys = ["imageZoom", "imagePositionX", "imagePositionY", "imageRotation"];
   var miaSlotDebugSideFlatKeys = ["sideImageZoom", "sideImagePositionX", "sideImagePositionY", "sideImageRotation"];
   var miaSlotDebugFrameKeys = ["frameScale", "frameWidth", "frameHeight", "frameMarginX", "frameMarginY"];
@@ -345,13 +338,6 @@
     }
 
     slot[slotKey] = value;
-    miaSlotDebugLogSlotWrite({
-      editKey: editKey,
-      flatKey: flatKey,
-      slotKey: slotKey,
-      value: value,
-      itemId: item && item.id
-    });
     return true;
   }
 
@@ -392,57 +378,6 @@
       proxy._imageEditStoreItemId = storeItem.id;
     }
     return proxy;
-  }
-
-  function miaSlotDebugFindItem(collectionName, itemId) {
-    var product = state.product;
-    var collection = String(collectionName || "");
-    var id = String(itemId || "");
-    var step;
-    var item = null;
-
-    if (!product || !Array.isArray(product.steps)) {
-      return { product: product || null, step: null, item: null };
-    }
-
-    step = collection ? findStep(product, collection) : null;
-    if (step && Array.isArray(step.items)) {
-      item = step.items.filter(function (candidate) {
-        return String(candidate && candidate.id || "") === id;
-      })[0] || null;
-    }
-
-    if (!item) {
-      product.steps.some(function (candidateStep) {
-        var found = candidateStep && Array.isArray(candidateStep.items)
-          ? candidateStep.items.filter(function (candidate) {
-            return String(candidate && candidate.id || "") === id;
-          })[0]
-          : null;
-        if (found) {
-          step = candidateStep;
-          item = found;
-          return true;
-        }
-        return false;
-      });
-    }
-
-    return { product: product, step: step || null, item: item || null };
-  }
-
-  function miaSlotDebugFlatSnapshot(item) {
-    return {
-      imageZoom: item && item.imageZoom,
-      imagePositionX: item && item.imagePositionX,
-      imagePositionY: item && item.imagePositionY,
-      imageRotation: item && item.imageRotation,
-      frameScale: item && item.frameScale,
-      frameWidth: item && item.frameWidth,
-      frameHeight: item && item.frameHeight,
-      frameMarginX: item && item.frameMarginX,
-      frameMarginY: item && item.frameMarginY
-    };
   }
 
   function miaSlotDebugFramePayload(item, step, side, image, applied) {
@@ -531,128 +466,6 @@
       element.dataset.miaSide = "1";
     }
   }
-
-  function miaSlotDebugLogRenderFrame(payload) {
-    if (!payload || !window.console || !console.log) {
-      return;
-    }
-    console.log("[RENDER FRAME STYLE]", {
-      stepId: payload.stepId,
-      itemId: payload.itemId,
-      collection: payload.collection,
-      editKey: payload.editKey,
-      slotName: payload.slotName,
-      image: payload.image,
-      sources: payload.sources,
-      appliedZoom: payload.appliedZoom,
-      appliedX: payload.appliedX,
-      appliedY: payload.appliedY,
-      appliedRotation: payload.appliedRotation
-    });
-  }
-
-  function miaSlotDebugLogSlotWrite(details) {
-    if (window.console && console.warn) {
-      console.warn("[SLOT WRITE]", details);
-    }
-  }
-
-  function miaSlotDebugLogFlatWrite(label, details) {
-    if (window.console && console.error) {
-      console.error(label, details);
-    }
-  }
-
-  function miaSlotDebugElementPayload(element) {
-    var stepId = element && (element.dataset.miaStepId || element.dataset.adminImageStep) || "";
-    var collection = element && (element.dataset.miaCollection || stepId) || "";
-    var itemId = element && (element.dataset.miaItemId || element.dataset.adminImageItem) || "";
-    var found = miaSlotDebugFindItem(collection, itemId);
-    var side = !!(element && (element.dataset.miaSide === "1" || element.hasAttribute("data-admin-side-image-visual")));
-    var appliedValues = {
-      imageZoom: element && element.dataset.miaAppliedImageZoom,
-      imagePositionX: element && element.dataset.miaAppliedImagePositionX,
-      imagePositionY: element && element.dataset.miaAppliedImagePositionY,
-      imageRotation: element && element.dataset.miaAppliedImageRotation
-    };
-    var sources = {
-      imageZoom: { v: appliedValues.imageZoom, from: element && element.dataset.miaSourceImageZoom || "" },
-      imagePositionX: { v: appliedValues.imagePositionX, from: element && element.dataset.miaSourceImagePositionX || "" },
-      imagePositionY: { v: appliedValues.imagePositionY, from: element && element.dataset.miaSourceImagePositionY || "" },
-      imageRotation: { v: appliedValues.imageRotation, from: element && element.dataset.miaSourceImageRotation || "" }
-    };
-
-    return {
-      stepId: stepId,
-      collection: collection,
-      itemId: itemId,
-      editKey: element && element.dataset.miaEditKey || "",
-      slotName: element && element.dataset.miaSlotName || "",
-      image: element && element.dataset.miaImage || "",
-      sources: sources,
-      appliedValues: appliedValues,
-      item: found.item,
-      element: element || null,
-      side: side
-    };
-  }
-
-  function miaSlotDebugRememberClick(event) {
-    var target = event.target && event.target.closest ? event.target.closest("[data-mia-edit-key]") : null;
-    if (target) {
-      miaSlotDebugLastElement = target;
-    }
-  }
-
-  window.__MIA_INSPECT_ITEM__ = function (collectionName, itemId) {
-    var found = miaSlotDebugFindItem(collectionName, itemId);
-    var item = found.item;
-    var result = {
-      collectionName: collectionName,
-      itemId: itemId,
-      found: !!item,
-      flat: miaSlotDebugFlatSnapshot(item),
-      imageEdits: item && item.imageEdits ? item.imageEdits : undefined,
-      rawItem: item || null
-    };
-
-    console.log("[MIA INSPECT ITEM]", result);
-    return result;
-  };
-
-  window.__MIA_LIST_RENDERED_KEYS__ = function () {
-    var rows = Array.prototype.slice.call(document.querySelectorAll("[data-mia-edit-key], [data-admin-image-visual], [data-admin-side-image-visual]")).map(function (element, index) {
-      return {
-        index: index,
-        stepId: element.dataset.miaStepId || element.dataset.adminImageStep || "",
-        collection: element.dataset.miaCollection || element.dataset.miaStepId || element.dataset.adminImageStep || "",
-        itemId: element.dataset.miaItemId || element.dataset.adminImageItem || "",
-        editKey: element.dataset.miaEditKey || "",
-        slotName: element.dataset.miaSlotName || "",
-        src: element.dataset.miaImage || "",
-        classes: element.className || ""
-      };
-    });
-
-    if (console.table) {
-      console.table(rows);
-    } else {
-      console.log("[MIA RENDERED KEYS]", rows);
-    }
-    return rows;
-  };
-
-  window.__miaPaperImageSlotDebug = function () {
-    var element = miaSlotDebugLastElement
-      || document.querySelector(".is-admin-image-active[data-mia-edit-key]")
-      || document.querySelector("[data-mia-edit-key]");
-    var result = miaSlotDebugElementPayload(element);
-
-    console.log("[MIA SLOT DEBUG]", result);
-    return result;
-  };
-
-  document.addEventListener("click", miaSlotDebugRememberClick, true);
 
   function loadJson(path) {
     return fetch(path, { cache: "no-store" }).then(function (response) {
@@ -4948,7 +4761,6 @@
         }
       }
       frameInfo = uploadedFrameInfo(item, template, step);
-      miaSlotDebugLogRenderFrame(frameInfo.debug);
 
       return '<span class="' + className + itemRectOrientationClass(item) + ' uploaded-image' + (isActive ? ' is-admin-image-active' : '') + '" style="' + frameInfo.style + '"' + (adminAttrs ? "" : ' aria-hidden="true"') + adminAttrs + miaSlotDebugFrameAttrs(frameInfo.debug) + '><span class="uploaded-image-inner"></span></span>';
     }
@@ -5380,7 +5192,7 @@
         '<span>' + escapeHtml(item.subtitle) + '</span>',
         note,
         '</span>',
-        adminItemControls(step, previewItem),
+        adminItemControls(step, item),
         '</label>'
       ].join("");
     }
@@ -5470,7 +5282,7 @@
         '<span>' + escapeHtml(item.subtitle) + '</span>',
         note,
         '</span>',
-        adminItemControls(step, previewItem),
+        adminItemControls(step, item),
         '</label>'
       ].join("");
     });
@@ -6160,7 +5972,6 @@
       ? ' data-admin-side-image-visual data-admin-image-step="' + escapeHtml(step.id) + '" data-admin-image-item="' + escapeHtml(item.id) + '" tabindex="0" role="button" title="Selecionar foto de comparação para ajustar com o teclado"'
       : ' aria-hidden="true"';
     frameInfo = uploadedSideProofInfo(item, step);
-    miaSlotDebugLogRenderFrame(frameInfo.debug);
 
     return [
       '<span class="crachas-size-card-proof crachas-size-card-proof--wide">',
@@ -6361,6 +6172,20 @@
     }
   }
 
+  function cadernoSummaryImageEditDefaults() {
+    return {
+      frameScale: 100,
+      frameWidth: 120,
+      frameHeight: 147,
+      frameMarginX: 0,
+      frameMarginY: 0,
+      zoom: 106,
+      positionX: -1,
+      positionY: 13,
+      rotation: -7
+    };
+  }
+
   function ensureCadernoScopedImageSlots(product) {
     var designsStep;
     var laminationStep;
@@ -6386,6 +6211,11 @@
             item,
             cadernoScopedImageEditKey(product, "lamination", cover, item.id, "main"),
             legacySlot
+          );
+          ensureImageEditSlotCopied(
+            item,
+            cadernoScopedImageEditKey(product, "lamination", cover, item.id, "summary"),
+            cadernoSummaryImageEditDefaults()
           );
         });
       });
@@ -6423,6 +6253,11 @@
             storeItem,
             cadernoScopedImageEditKey(product, "pack", cover, group, "main"),
             legacySlot
+          );
+          ensureImageEditSlotCopied(
+            storeItem,
+            cadernoScopedImageEditKey(product, "pack", cover, group, "summary"),
+            cadernoSummaryImageEditDefaults()
           );
         });
       });
@@ -9704,7 +9539,6 @@
       rotation: appliedRotation
     });
     miaSlotDebugApplyElementDataset(element, debugPayload);
-    miaSlotDebugLogRenderFrame(debugPayload);
   }
 
   function refreshAdminImageAdjustment(stepId, itemId, item, side) {
@@ -9916,15 +9750,6 @@
       event.stopPropagation();
 
       if (!editKey) {
-        miaSlotDebugLogFlatWrite("[FLAT WRITE — keyboard, no editKey]", {
-          editKey: "",
-          flatKey: actualKey,
-          slotKey: "",
-          value: null,
-          itemId: item && item.id,
-          stepId: active && active.stepId,
-          aborted: true
-        });
         return;
       }
 
