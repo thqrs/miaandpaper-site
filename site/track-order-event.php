@@ -26,6 +26,10 @@ if ($method !== 'POST') {
     exit;
 }
 
+// Carrega lib/db.php cedo — helpers como mp_funnel_strip_pii,
+// mp_funnel_classify_referrer e mp_tracking_client_ip são usados abaixo.
+require_once __DIR__ . '/lib/db.php';
+
 $raw = file_get_contents('php://input');
 if ($raw === false || strlen($raw) === 0 || strlen($raw) > 12288) {
     http_response_code(204);
@@ -54,6 +58,19 @@ function funnel_clean_int($value)
     $i = (int)$value;
     if ($i < 0) return 0;
     if ($i > 2147483647) return 2147483647;
+    return $i;
+}
+
+// 64-bit-safe clean para timestamps em milissegundos (que excedem INT32 já em 2001).
+// Limita ao final do ano 2100 em ms como cap defensivo. PHP_INT_MAX em 64-bit
+// é 9.2e18, então não há overflow.
+function funnel_clean_int64($value)
+{
+    if (!is_numeric($value)) return null;
+    $i = (int)$value;
+    if ($i < 0) return 0;
+    // 2100-01-01 em ms = 4102444800000
+    if ($i > 4102444800000) return 4102444800000;
     return $i;
 }
 
@@ -91,6 +108,37 @@ $stringFields = array(
     'target_tag'         => 16,
     'target_class'       => 120,
     'action_name'        => 60,
+    // ORIGINAL_ATTRIBUTION_V1 (Phase 3): captura única na 1ª página da sessão
+    // e re-enviada com todos os eventos posteriores.
+    'first_landing_page' => 240,
+    'first_referrer'     => 240,
+    'first_url'          => 320,
+    'utm_source'         => 60,
+    'utm_medium'         => 60,
+    'utm_campaign'       => 80,
+    'utm_content'        => 80,
+    'utm_term'           => 80,
+    'fbclid'             => 120,
+    'gclid'              => 120,
+    // TRANSITION_REASON_V1 (Phase 7)
+    'from_step'          => 60,
+    'to_step'            => 60,
+    'transition_reason'  => 24,
+    // MAGNIFIER_TRACKING_V1 (Phase 5)
+    'image_slot'         => 32,
+    'image_src'          => 240,
+    'design_id'          => 80,
+    'item_id'            => 80,
+    'collection'         => 60,
+    // REPLAY_FIELDS_V1 (Phase B)
+    'page_instance_id'   => 32,
+    'external_referrer'  => 240,
+    'referrer_type'      => 24,
+    // SEMANTIC_EVENTS_V1 (Phase C)
+    'design_title'       => 120,
+    'option_type'        => 32,
+    'option_value'       => 120,
+    'option_label'       => 120,
 );
 
 // Whitelist de inteiros.
@@ -112,6 +160,17 @@ $intFields = array(
     'clicked_back_button',
     'scroll_depth_percent',
     'opened_discount_explanation',
+    // TRANSITION_REASON_V1 + HEARTBEAT_V1 + SELECTION_SNAPSHOT_V1
+    'validation_error_count',
+    'selection_count',
+    'is_visible',
+    // REPLAY_FIELDS_V1 (Phase B)
+    'client_event_index',
+);
+
+// 64-bit fields (use funnel_clean_int64) — fora do whitelist int normal.
+$bigIntFields = array(
+    'timestamp_ms',
 );
 
 // Floats / decimals.
@@ -133,10 +192,36 @@ foreach ($intFields as $key) {
         if ($v !== null) $cleaned[$key] = $v;
     }
 }
+foreach ($bigIntFields as $key) {
+    if (isset($payload[$key])) {
+        $v = funnel_clean_int64($payload[$key]);
+        if ($v !== null) $cleaned[$key] = $v;
+    }
+}
 foreach ($floatFields as $key) {
     if (isset($payload[$key])) {
         $v = funnel_clean_float($payload[$key]);
         if ($v !== null) $cleaned[$key] = $v;
+    }
+}
+
+// SELECTION_SNAPSHOT_V1 (Phase 4) + PII_FILTER_BANNED_V2 (Phase M):
+// aceita selection_json como objecto (preferido — limpamos e re-serializamos
+// com tamanho limitado) ou string JSON. Limite 2 KB depois de re-encode.
+// A filtragem de PII vai pela lista canónica em lib/db.php — mp_funnel_strip_pii.
+$selectionJsonClean = null;
+if (isset($payload['selection_json'])) {
+    $sel = $payload['selection_json'];
+    if (is_string($sel)) {
+        $decoded = json_decode($sel, true);
+        if (is_array($decoded)) $sel = $decoded;
+    }
+    if (is_array($sel)) {
+        $sel = mp_funnel_strip_pii($sel);
+        $encoded = json_encode($sel, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($encoded !== false && strlen($encoded) <= 2048) {
+            $selectionJsonClean = $encoded;
+        }
     }
 }
 
@@ -146,13 +231,46 @@ if (empty($cleaned['event_name']) || empty($cleaned['session_id'])) {
     exit;
 }
 
+// REFERRER_FALLBACK_V1 (Phase B): se o cliente não enviou referrer_type,
+// fazer a classificação no servidor para que os relatórios sejam sempre
+// consistentes. Não sobrepõe valor do cliente quando este existe.
+if (empty($cleaned['referrer_type'])) {
+    $cleaned['referrer_type'] = mp_funnel_classify_referrer(
+        isset($cleaned['referrer']) ? $cleaned['referrer'] : '',
+        isset($cleaned['first_referrer']) ? $cleaned['first_referrer'] : '',
+        isset($cleaned['utm_source']) ? $cleaned['utm_source'] : ''
+    );
+}
+// EXTERNAL_REFERRER_V1 (Phase B): se não veio do cliente, derivar de
+// first_referrer/referrer e descartar internos (mesma origem ou admin).
+if (empty($cleaned['external_referrer'])) {
+    $candidate = '';
+    if (!empty($cleaned['first_referrer'])) $candidate = $cleaned['first_referrer'];
+    elseif (!empty($cleaned['referrer'])) $candidate = $cleaned['referrer'];
+    $candidateLower = strtolower((string)$candidate);
+    $isInternal = false;
+    if ($candidate === '') {
+        $isInternal = true;
+    } else {
+        // Considera interno se host coincide com o nosso ou aponta para admin
+        $host = '';
+        if (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== '') $host = strtolower(trim($_SERVER['HTTP_HOST']));
+        if ($host !== '' && strpos($candidateLower, '://' . $host) !== false) $isInternal = true;
+        if (strpos($candidateLower, 'miaandpaper.com') !== false) $isInternal = true;
+        if (strpos($candidateLower, '/admin-') !== false || strpos($candidateLower, 'admin-funnel.php') !== false || strpos($candidateLower, 'admin-live-dashboard.php') !== false) $isInternal = true;
+        if (strpos($candidateLower, 'localhost') !== false || strpos($candidateLower, '127.0.0.1') !== false) $isInternal = true;
+    }
+    if (!$isInternal && $candidate !== '') {
+        $cleaned['external_referrer'] = substr($candidate, 0, 240);
+    }
+}
+
 $timestampIso = gmdate('Y-m-d\TH:i:s\Z');
 
-// TRACKING_CLIENT_IP_V1: IP efectivo via lib/db.php. Sob Cloudflare ou
-// reverse proxy, REMOTE_ADDR é o IP do proxy e todos os visitantes parecem
-// iguais; mp_tracking_client_ip() devolve o IP real do visitante quando
-// é seguro fazê-lo (e fica no REMOTE_ADDR caso contrário).
-require_once __DIR__ . '/lib/db.php';
+// TRACKING_CLIENT_IP_V1: IP efectivo via lib/db.php (já carregado no topo).
+// Sob Cloudflare ou reverse proxy, REMOTE_ADDR é o IP do proxy e todos os
+// visitantes parecem iguais; mp_tracking_client_ip() devolve o IP real do
+// visitante quando é seguro fazê-lo (e fica no REMOTE_ADDR caso contrário).
 $ipNumber = funnel_clean_string(mp_tracking_client_ip(), 64);
 
 // Linha "wide" para SQLite: colunas nativas conhecidas + event_json com o
@@ -174,6 +292,9 @@ $row = array(
     'orientation'          => isset($cleaned['orientation']) ? $cleaned['orientation'] : null,
     'ip_number'            => $ipNumber,
     'event_json'           => json_encode($cleaned, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+    'selection_json'       => $selectionJsonClean,
+    'first_referrer'       => isset($cleaned['first_referrer']) ? $cleaned['first_referrer'] : null,
+    'utm_source'           => isset($cleaned['utm_source']) ? $cleaned['utm_source'] : null,
 );
 
 // ----- Escrita principal: SQLite -----
@@ -221,15 +342,30 @@ try {
 }
 
 // ----- Fallback: JSONL em pasta privada -----
-// Mantemos como rede de segurança caso SQLite esteja em manutenção. Pode
-// ser removido em versões futuras quando a confiança na base for total.
+// FUNNEL_DAILY_JSONL_V1 (Phase G): escrita por dia em
+//   private/funnel-jsonl/YYYY-MM-DD.jsonl
+// Mantemos COMPATIBILIDADE com o ficheiro único antigo
+//   private/order-funnel-events.jsonl
+// — esse continua a ser escrito (não estraga ferramentas antigas), mas o
+// replay/dashboard usa preferencialmente os ficheiros por dia.
 // Skip se ignore list (não interessa nem como fallback). Em rate-limit
 // continuamos a escrever no JSONL para que o admin possa auditar abuso.
 if ($skipReason !== 'ignore_list') {
+    $lineBase = array_merge(array('timestamp_iso' => $timestampIso, 'ip' => $ipNumber, 'skip_reason' => $skipReason), $cleaned);
+    if ($selectionJsonClean !== null) {
+        $sjsDecoded = json_decode($selectionJsonClean, true);
+        if (is_array($sjsDecoded)) $lineBase['selection_snapshot'] = $sjsDecoded;
+    }
+
+    // 1) JSONL diário (novo, preferido para replay)
+    try { mp_funnel_append_jsonl_event($lineBase); } catch (Exception $e) {
+        @error_log('[miaandpaper] daily jsonl exception: ' . $e->getMessage());
+    }
+
+    // 2) JSONL legado (mantido para compatibilidade)
     $logPath = mp_private_path('order-funnel-events.jsonl');
     if ($logPath !== null) {
-        $line = array_merge(array('timestamp_iso' => $timestampIso, 'ip' => $ipNumber, 'skip_reason' => $skipReason), $cleaned);
-        $encoded = json_encode($line, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $encoded = json_encode($lineBase, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($encoded !== false) {
             @file_put_contents($logPath, $encoded . "\n", FILE_APPEND | LOCK_EX);
             @chmod($logPath, 0600);

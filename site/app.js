@@ -852,6 +852,36 @@
   var FUNNEL_ENDPOINT = "track-order-event.php";
   var FUNNEL_SESSION_KEY = "mp_funnel_session_v1";
   var FUNNEL_CONTACT_STARTED_FLAG = "mp_funnel_contact_started_v1";
+  // ORIGINAL_ATTRIBUTION_V1 (Phase 3)
+  var FUNNEL_ATTRIBUTION_KEY = "mp_funnel_attribution_v1";
+  var FUNNEL_SITE_LANDED_FLAG = "mp_funnel_site_landed_v1";
+  // SELECTION_SNAPSHOT_V1 (Phase 4)
+  var FUNNEL_SELECTION_DEBOUNCE_MS = 800;
+  var funnelSelectionDebounceTimer = null;
+  var funnelLastSelectionSignature = "";
+  var funnelSelectionByStepFired = {};
+  // HEARTBEAT_V1 (Phase 6)
+  var FUNNEL_HEARTBEAT_INTERVAL_MS = 45000;
+  var FUNNEL_HEARTBEAT_IDLE_LIMIT_MS = 10 * 60 * 1000;
+  var funnelHeartbeatTimer = null;
+  var funnelHeartbeatLastUserAt = Date.now();
+  // TRANSITION_REASON_V1 (Phase 7)
+  var funnelNextTransitionReason = null;
+  // MAGNIFIER_TRACKING_V1 (Phase 5) — pequeno cache para correlacionar com selecções
+  var funnelLastMagnified = null;
+  // REPLAY_FIELDS_V1 (Phase B): page_instance_id + client_event_index
+  // page_instance_id: fresh per page load (NOT in sessionStorage — different tabs differ)
+  // client_event_index: incrementing counter for this page instance
+  var FUNNEL_PAGE_INSTANCE_ID = (function () {
+    var t = Date.now().toString(36).slice(-4);
+    var r = Math.random().toString(36).slice(2, 8);
+    return "pg_" + t + r;
+  })();
+  var funnelClientEventIndex = 0;
+  // SEMANTIC_EVENTS_V1 (Phase C): dedupe — não disparar design_selected duas
+  // vezes seguidas para o mesmo design.
+  var funnelLastDesignSig = "";
+  var funnelLastOptionSig = {};
 
   function funnelGenerateId() {
     var t = Date.now().toString(36);
@@ -937,11 +967,112 @@
     return ctx;
   }
 
+  // ORIGINAL_ATTRIBUTION_V1 (Phase 3) — guarda na 1ª visita; reutiliza depois.
+  function funnelReadAttribution() {
+    try {
+      var raw = window.sessionStorage.getItem(FUNNEL_ATTRIBUTION_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  function funnelGetAttribution() {
+    var stored = funnelReadAttribution();
+    if (stored) return stored;
+
+    var attribution = {};
+    try {
+      attribution.first_landing_page = (location && location.pathname) || '';
+      attribution.first_url = (location && location.href) ? String(location.href).slice(0, 320) : '';
+      attribution.first_referrer = document.referrer || '';
+    } catch (e) {}
+    try {
+      var qs = (location && location.search) ? location.search : '';
+      if (qs && qs.length > 1) {
+        var params = new URLSearchParams(qs);
+        var paramKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'gclid'];
+        for (var i = 0; i < paramKeys.length; i++) {
+          var v = params.get(paramKeys[i]);
+          if (v && typeof v === 'string') attribution[paramKeys[i]] = v.slice(0, 120);
+        }
+      }
+    } catch (e) {}
+    try { window.sessionStorage.setItem(FUNNEL_ATTRIBUTION_KEY, JSON.stringify(attribution)); } catch (e) {}
+    return attribution;
+  }
+
+  function funnelAttributionFields() {
+    var attribution = funnelGetAttribution();
+    var fields = {};
+    if (!attribution) return fields;
+    ['first_landing_page', 'first_url', 'first_referrer',
+     'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term',
+     'fbclid', 'gclid'].forEach(function (k) {
+      if (attribution[k]) fields[k] = String(attribution[k]).slice(0, 320);
+    });
+    return fields;
+  }
+
+  // REPLAY_FIELDS_V1 (Phase B): classifica referrer no cliente. Devolve
+  // {referrer_type, external_referrer}. Tudo opcional — servidor reclassifica
+  // se vier vazio.
+  function funnelClassifyReferrerClient(attribution) {
+    var refType = 'unknown';
+    var externalRef = '';
+    try {
+      var utm = (attribution && attribution.utm_source) ? String(attribution.utm_source).toLowerCase() : '';
+      var firstRef = (attribution && attribution.first_referrer) ? String(attribution.first_referrer) : '';
+      var curRef = document.referrer || '';
+      var candidate = firstRef || curRef || '';
+      var candidateLower = candidate.toLowerCase();
+
+      function classifyToken(t) {
+        if (!t) return '';
+        if (t.indexOf('instagram') !== -1 || t === 'ig') return 'instagram';
+        if (t.indexOf('facebook') !== -1 || t === 'fb' || t.indexOf('meta') !== -1) return 'facebook';
+        if (t.indexOf('whatsapp') !== -1 || t === 'wa') return 'whatsapp';
+        if (t.indexOf('google') !== -1) return 'google';
+        if (t.indexOf('tiktok') !== -1) return 'tiktok';
+        if (t.indexOf('youtube') !== -1) return 'youtube';
+        if (t.indexOf('email') !== -1 || t.indexOf('newsletter') !== -1) return 'email';
+        return '';
+      }
+      function classifyUrl(url) {
+        if (!url) return '';
+        if (url.indexOf('miaandpaper.com') !== -1) return 'internal';
+        if (url.indexOf('localhost') !== -1 || url.indexOf('127.0.0.1') !== -1) return 'internal';
+        if (url.indexOf('/admin-funnel.php') !== -1 || url.indexOf('/admin-live-dashboard.php') !== -1 || url.indexOf('/admin-orders.php') !== -1) return 'internal_admin';
+        if (url.indexOf('instagram') !== -1) return 'instagram';
+        if (url.indexOf('facebook') !== -1 || url.indexOf('fb.com') !== -1) return 'facebook';
+        if (url.indexOf('whatsapp') !== -1 || url.indexOf('wa.me') !== -1) return 'whatsapp';
+        if (url.indexOf('google.') !== -1) return 'google';
+        if (url.indexOf('tiktok') !== -1) return 'tiktok';
+        if (url.indexOf('youtube') !== -1 || url.indexOf('youtu.be') !== -1) return 'youtube';
+        if (url.indexOf('bing.com') !== -1) return 'bing';
+        return '';
+      }
+
+      if (utm) refType = classifyToken(utm) || 'unknown';
+      else if (candidateLower) refType = classifyUrl(candidateLower) || 'unknown';
+      else refType = 'direct';
+
+      // external_referrer: só se NÃO for interno
+      if (candidate && refType !== 'internal' && refType !== 'internal_admin') {
+        externalRef = candidate.slice(0, 240);
+      }
+    } catch (e) {}
+    return { referrer_type: refType, external_referrer: externalRef };
+  }
+
   function trackOrderEvent(eventName, data) {
     try {
       if (!eventName) return;
       var session = funnelSession();
       var now = Date.now();
+      funnelClientEventIndex++;
       var base = {
         session_id: session.id,
         event_name: String(eventName),
@@ -949,11 +1080,24 @@
         landing_page: (location && location.pathname) || '',
         referrer: document.referrer || '',
         seconds_since_session_start: Math.max(0, Math.round((now - (session.startedAt || now)) / 1000)),
-        seconds_since_previous_event: session.lastEventAt ? Math.max(0, Math.round((now - session.lastEventAt) / 1000)) : 0
+        seconds_since_previous_event: session.lastEventAt ? Math.max(0, Math.round((now - session.lastEventAt) / 1000)) : 0,
+        // REPLAY_FIELDS_V1
+        page_instance_id: FUNNEL_PAGE_INSTANCE_ID,
+        client_event_index: funnelClientEventIndex,
+        timestamp_ms: now
       };
       // Junta dados de dispositivo/viewport — sem PII.
       var extra = funnelExtraContext();
       Object.keys(extra).forEach(function (k) { base[k] = extra[k]; });
+      // ORIGINAL_ATTRIBUTION_V1: re-envia atribuição original em todos os eventos.
+      var attribution = funnelAttributionFields();
+      Object.keys(attribution).forEach(function (k) { base[k] = attribution[k]; });
+      // REPLAY_FIELDS_V1: referrer_type + external_referrer
+      var refInfo = funnelClassifyReferrerClient(attribution);
+      if (refInfo.referrer_type) base.referrer_type = refInfo.referrer_type;
+      if (refInfo.external_referrer) base.external_referrer = refInfo.external_referrer;
+      // HEARTBEAT_V1: estado de visibilidade da página, ajuda a distinguir activo vs idle.
+      try { base.is_visible = document.hidden ? 0 : 1; } catch (e) {}
       session.lastEventAt = now;
       funnelSaveSession(session);
 
@@ -1007,6 +1151,283 @@
     }
     trackOrderEvent(eventName, data);
   }
+
+  // SELECTION_SNAPSHOT_V1 (Phase 4)
+  // Constrói um snapshot leve das selecções actuais para enviar como
+  // selection_json. NÃO inclui texto de personalização nem nada PII.
+  // Funciona para todos os produtos, mas adapta-se aos cadernos.
+  function funnelBuildSelectionSnapshot(product) {
+    if (!product) return null;
+    var sel = state.selections || {};
+    var snap = {};
+    try {
+      // Designs seleccionados — pode ser array (multi) OU string (single).
+      // SELECTION_SNAPSHOT_V2 (Phase C / inspection finding): cadernos usa
+      // single-select para capa, então sel.designs é uma string. Antes não
+      // estava a ser capturada — por isso "Interesse" não mostrava capas.
+      if (Array.isArray(sel.designs)) {
+        snap.selected_designs = sel.designs.slice(0, 40).map(function (v) { return String(v).slice(0, 80); });
+        snap.selection_count = sel.designs.length;
+      } else if (typeof sel.designs === 'string' && sel.designs !== '') {
+        snap.selected_designs = [String(sel.designs).slice(0, 80)];
+        snap.selection_count = 1;
+        snap.selected_cover = String(sel.designs).slice(0, 80);
+      }
+      if (sel.assorted_designs === "1") snap.assorted = 1;
+      if (sel.pack_quantity) snap.selected_pack = Number(sel.pack_quantity) || 0;
+      if (sel.size) snap.selected_size = String(sel.size).slice(0, 60);
+      if (sel.delivery_option) snap.selected_delivery = String(sel.delivery_option).slice(0, 60);
+
+      // Cadernos: extras específicos.
+      try {
+        if (typeof isCadernosProduct === 'function' && isCadernosProduct(product)) {
+          if (typeof selectedCadernoLamination === 'function') {
+            var lam = selectedCadernoLamination(product);
+            if (lam && lam.id) snap.lamination = String(lam.id).slice(0, 60);
+          }
+          if (typeof selectedCadernoPurchaseOption === 'function') {
+            var opt = selectedCadernoPurchaseOption(product);
+            if (opt && opt.id) snap.caderno_option = String(opt.id).slice(0, 60);
+          }
+          if (sel.caderno_order_quantity) snap.caderno_qty = Number(sel.caderno_order_quantity) || 0;
+          // Personalização (yes/no) sem texto.
+          if (sel.cover_personalization) snap.cover_personalization = sel.cover_personalization === 'yes' ? 1 : 0;
+          // Cover title (se houver dados de produto) — label estático, não PII.
+          try {
+            if (typeof sel.designs === 'string' && sel.designs !== '' && product.steps) {
+              for (var si = 0; si < product.steps.length; si++) {
+                var st = product.steps[si];
+                if (st && st.id === 'designs' && Array.isArray(st.items)) {
+                  for (var ii = 0; ii < st.items.length; ii++) {
+                    var item = st.items[ii];
+                    if (item && (item.value === sel.designs || item.id === sel.designs)) {
+                      if (item.title) snap.selected_cover_title = String(item.title).slice(0, 80);
+                      break;
+                    }
+                  }
+                  break;
+                }
+              }
+            }
+          } catch (e2) {}
+        }
+      } catch (e) {}
+    } catch (e) {}
+    if (Object.keys(snap).length === 0) return null;
+    return snap;
+  }
+
+  // SEMANTIC_EVENTS_V1 (Phase C): helper para encontrar o título estático de
+  // um item por value/id dentro de uma step do produto. Sem PII (lê do JSON).
+  function funnelFindItemInStep(product, stepId, value) {
+    try {
+      if (!product || !Array.isArray(product.steps)) return null;
+      for (var i = 0; i < product.steps.length; i++) {
+        var st = product.steps[i];
+        if (!st || st.id !== stepId || !Array.isArray(st.items)) continue;
+        for (var j = 0; j < st.items.length; j++) {
+          var it = st.items[j];
+          if (it && (it.value === value || it.id === value)) return it;
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  // Dispara design_selected (ou unselected). Cap de PII — só estático.
+  function trackDesignToggle(product, designValue, isSelected) {
+    if (!product || !designValue) return;
+    try {
+      var stepInfo = currentStepInfoForTracking();
+      var item = funnelFindItemInStep(product, 'designs', designValue);
+      var snapshot = funnelBuildSelectionSnapshot(product);
+      var imgSrc = '';
+      if (item && item.image && typeof item.image === 'string') {
+        // Limita a paths locais relativos — nunca aceitar absoluto/URL.
+        if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(item.image) && item.image.indexOf('..') === -1) {
+          imgSrc = item.image.slice(0, 240);
+        }
+      }
+      var data = {
+        product_slug: stepInfo.product_slug,
+        product_type: stepInfo.product_slug,
+        step_id: stepInfo.step_id || 'designs',
+        step_index: stepInfo.step_index,
+        design_id: String(designValue).slice(0, 80),
+        item_id: String(designValue).slice(0, 80)
+      };
+      if (item && item.title) data.design_title = String(item.title).slice(0, 120);
+      if (imgSrc) data.image_src = imgSrc;
+      if (snapshot) data.selection_json = snapshot;
+      trackOrderEvent(isSelected ? 'design_selected' : 'design_unselected', data);
+    } catch (e) {}
+  }
+
+  // Dispara option_selected (lamination, pack, size, delivery, personalization, purchase_option).
+  function trackOptionSelected(product, optionType, optionValue, optionLabel) {
+    if (!product || !optionType || optionValue === '' || optionValue == null) return;
+    try {
+      var sig = optionType + '=' + String(optionValue);
+      if (funnelLastOptionSig[optionType] === sig) return; // dedupe
+      funnelLastOptionSig[optionType] = sig;
+      var stepInfo = currentStepInfoForTracking();
+      var snapshot = funnelBuildSelectionSnapshot(product);
+      var data = {
+        product_slug: stepInfo.product_slug,
+        product_type: stepInfo.product_slug,
+        step_id: stepInfo.step_id,
+        step_index: stepInfo.step_index,
+        option_type: String(optionType).slice(0, 32),
+        option_value: String(optionValue).slice(0, 120)
+      };
+      if (optionLabel) data.option_label = String(optionLabel).slice(0, 120);
+      if (snapshot) data.selection_json = snapshot;
+      trackOrderEvent('option_selected', data);
+    } catch (e) {}
+  }
+
+  function funnelSelectionSignature(snapshot) {
+    try { return snapshot ? JSON.stringify(snapshot) : ''; } catch (e) { return ''; }
+  }
+
+  // Dispara selection_updated com debounce, só se mudou desde a última.
+  function maybeTrackSelectionUpdated(product, stepId) {
+    if (!product) return;
+    try {
+      if (funnelSelectionDebounceTimer) {
+        clearTimeout(funnelSelectionDebounceTimer);
+        funnelSelectionDebounceTimer = null;
+      }
+      funnelSelectionDebounceTimer = setTimeout(function () {
+        try {
+          var snap = funnelBuildSelectionSnapshot(product);
+          var sig = funnelSelectionSignature(snap);
+          if (!snap || sig === funnelLastSelectionSignature) return;
+          funnelLastSelectionSignature = sig;
+          trackProductEvent(product, 'selection_updated', {
+            step_id: stepId || '',
+            selection_count: snap.selection_count || (snap.selected_designs ? snap.selected_designs.length : 0),
+            selection_json: snap
+          });
+        } catch (e) {}
+      }, FUNNEL_SELECTION_DEBOUNCE_MS);
+    } catch (e) {}
+  }
+
+  // Snapshot completo ao sair de um passo (mesmo que igual ao anterior).
+  function trackStepSelectionSnapshot(product, stepId) {
+    if (!product) return;
+    try {
+      var snap = funnelBuildSelectionSnapshot(product);
+      if (!snap) return;
+      var key = (product.slug || '') + '|' + (stepId || '');
+      if (funnelSelectionByStepFired[key] === funnelSelectionSignature(snap)) return;
+      funnelSelectionByStepFired[key] = funnelSelectionSignature(snap);
+      trackProductEvent(product, 'step_selection_snapshot', {
+        step_id: stepId || '',
+        selection_count: snap.selection_count || (snap.selected_designs ? snap.selected_designs.length : 0),
+        selection_json: snap
+      });
+    } catch (e) {}
+  }
+
+  // HEARTBEAT_V1 (Phase 6)
+  function funnelHeartbeatTouchUser() {
+    funnelHeartbeatLastUserAt = Date.now();
+  }
+
+  function startFunnelHeartbeat(product) {
+    try {
+      if (funnelHeartbeatTimer) return;
+      if (!product) return;
+      funnelHeartbeatTimer = setInterval(function () {
+        try {
+          if (document.hidden) return; // só com tab visível
+          if (Date.now() - funnelHeartbeatLastUserAt > FUNNEL_HEARTBEAT_IDLE_LIMIT_MS) return;
+          var stepInfo = currentStepInfoForTracking();
+          trackProductEvent(product, 'heartbeat', {
+            step_id: stepInfo.step_id,
+            step_index: stepInfo.step_index
+          });
+        } catch (e) {}
+      }, FUNNEL_HEARTBEAT_INTERVAL_MS);
+      ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(function (evt) {
+        try { document.addEventListener(evt, funnelHeartbeatTouchUser, { passive: true, capture: true }); } catch (e) {
+          try { document.addEventListener(evt, funnelHeartbeatTouchUser, true); } catch (e2) {}
+        }
+      });
+    } catch (e) {}
+  }
+
+  // MAGNIFIER_TRACKING_V1 (Phase 5)
+  // Identifica o "slot" da imagem a partir de pistas leves no URL/atributos
+  // sem alterar o comportamento do magnifier existente.
+  function funnelClassifyImageSlot(src, alt) {
+    var s = String(src || '').toLowerCase();
+    var a = String(alt || '').toLowerCase();
+    if (/laminac|lamination/.test(s) || /lamin/.test(a)) return 'lamination_example';
+    if (/interior/.test(s) || /interior/.test(a)) return 'interior';
+    if (/capa|cover/.test(s) || /capa|cover/.test(a)) return 'cover';
+    if (/iman|magnet/.test(s)) return 'marker';
+    if (/pack/.test(s) || /pack/.test(a)) return 'pack';
+    if (/process/.test(s)) return 'process';
+    return 'main';
+  }
+
+  function funnelExtractDesignIdFromSrc(src) {
+    // Heurística simples: nome do ficheiro sem extensão.
+    try {
+      var clean = String(src || '').split('?')[0];
+      var parts = clean.split('/');
+      var name = parts[parts.length - 1] || '';
+      return name.replace(/\.[a-zA-Z0-9]+$/, '').slice(0, 80);
+    } catch (e) { return ''; }
+  }
+
+  function trackMagnifierOpened(src, alt) {
+    try {
+      var product = state.product || null;
+      var stepInfo = currentStepInfoForTracking();
+      var designId = funnelExtractDesignIdFromSrc(src);
+      var slot = funnelClassifyImageSlot(src, alt);
+      var srcShort = String(src || '').slice(0, 240);
+      funnelLastMagnified = { src: srcShort, design_id: designId, image_slot: slot, at: Date.now() };
+      var snapshot = product ? funnelBuildSelectionSnapshot(product) : null;
+      var data = {
+        product_slug: stepInfo.product_slug,
+        step_id: stepInfo.step_id,
+        step_index: stepInfo.step_index,
+        image_slot: slot,
+        image_src: srcShort,
+        design_id: designId,
+        item_id: designId,
+        target_label: String(alt || '').slice(0, 120)
+      };
+      if (snapshot) data.selection_json = snapshot;
+      trackOrderEvent('image_magnified', data);
+    } catch (e) {}
+  }
+  // Exposto para que openImageViewer possa chamar.
+  window.__mpTrackMagnifierOpened = trackMagnifierOpened;
+
+  // SITE_LANDED_V1 (Phase 3)
+  // Dispara uma vez por sessão; também aplicado em index.html (page === 'home').
+  function fireSiteLandedOnce() {
+    try {
+      if (window.sessionStorage.getItem(FUNNEL_SITE_LANDED_FLAG) === '1') return;
+      window.sessionStorage.setItem(FUNNEL_SITE_LANDED_FLAG, '1');
+    } catch (e) { /* ignore */ }
+    try {
+      // Garante que a atribuição é capturada antes do primeiro evento.
+      funnelGetAttribution();
+      trackOrderEvent('site_landed', {
+        landing_page: (location && location.pathname) || '',
+        page_load_type: 'first_session_event'
+      });
+    } catch (e) {}
+  }
+  // Pre-warm: lê / regista atribuição assim que possível (não envia evento).
+  try { funnelGetAttribution(); } catch (e) {}
 
   // Marca contact_started apenas uma vez por sessão (chave em sessionStorage).
   function maybeFireContactStarted(product) {
@@ -4872,6 +5293,9 @@
       return;
     }
 
+    // MAGNIFIER_TRACKING_V1 (Phase 5): fire-and-forget. Erro silencioso.
+    try { if (typeof trackMagnifierOpened === 'function') trackMagnifierOpened(source, label); } catch (e) {}
+
     closeImageViewer();
     imageViewerZoom = 1;
     document.body.insertAdjacentHTML("beforeend", [
@@ -7937,6 +8361,12 @@
     state.maxVisitedStep = Math.max(state.maxVisitedStep, state.currentStep);
     rebuildProductDisplayLabels(product);
     renderProduct(product, cadernoRenderState);
+    // SELECTION_SNAPSHOT_V1 (Phase 4): após qualquer re-render, dispara update
+    // com debounce. Só é enviado se as selecções realmente mudaram.
+    try {
+      var stepObj = currentStep(product);
+      maybeTrackSelectionUpdated(product, stepObj ? stepObj.id : '');
+    } catch (e) {}
   }
 
   function wizardHistorySupported() {
@@ -8031,6 +8461,9 @@
       return;
     }
 
+    // TRANSITION_REASON_V1
+    funnelNextTransitionReason = 'browser_back';
+
     step = wizardHistoryStepFromState(event.state, product);
     if (step == null) {
       if (state.currentStep > 0) {
@@ -8104,6 +8537,8 @@
     var next = Math.max(0, Math.min(index, steps.length - 1));
     var previous = state.currentStep;
     state.scrollStepOnRender = next !== state.currentStep;
+    var prevStepObj = steps[previous] || null;
+    var prevStepId = prevStepObj ? prevStepObj.id : '';
     state.currentStep = next;
     state.maxVisitedStep = Math.max(state.maxVisitedStep, state.currentStep);
 
@@ -8113,9 +8548,22 @@
     if (next !== previous) {
       var stepObj = steps[next] || null;
       var stepId = stepObj ? stepObj.id : '';
-      trackProductEvent(product, 'step_view', { step_id: stepId, step_index: next });
+      // TRANSITION_REASON_V1 (Phase 7): regista o "porquê" da mudança.
+      var reason = funnelNextTransitionReason;
+      funnelNextTransitionReason = null;
+      if (!reason) reason = next > previous ? 'auto_redirect' : 'auto_redirect';
+      var extraView = {
+        step_id: stepId,
+        step_index: next,
+        from_step: prevStepId,
+        to_step: stepId,
+        transition_reason: reason
+      };
+      // SELECTION_SNAPSHOT_V1 (Phase 4): snapshot ao SAIR do passo anterior.
+      try { if (prevStepId) trackStepSelectionSnapshot(product, prevStepId); } catch (e) {}
+      trackProductEvent(product, 'step_view', extraView);
       if (stepId === 'confirm') {
-        trackProductEvent(product, 'confirmation_view', { step_id: stepId, step_index: next });
+        trackProductEvent(product, 'confirmation_view', extraView);
       }
     }
   }
@@ -8295,9 +8743,14 @@
 
     if (error) {
       // FUNNEL_TRACKING_V1: regista validações falhadas com o ID do passo.
+      // TRANSITION_REASON_V1: marca que a próxima transição foi causada por
+      // falha de validação (não vai haver, mas se houver redirect lateral...)
+      var errCount = state.invalidFields && state.invalidFields.length ? state.invalidFields.length : 1;
       trackProductEvent(product, 'validation_error', {
         step_id: step ? step.id : '',
-        step_index: state.currentStep
+        step_index: state.currentStep,
+        transition_reason: 'validation_failed',
+        validation_error_count: errCount
       });
       state.errors = error;
       rerenderProduct(product);
@@ -8351,6 +8804,8 @@
           state.selections.congregation_gift = false;
         }
         resetQuantityState();
+        // SEMANTIC_EVENTS_V1: option_selected meta para "select all" ou unselect all
+        try { trackOptionSelected(product, 'select_all_designs', allSelected ? 'cleared' : 'all', ''); } catch (e) {}
         state.errors = "";
         rerenderProduct(product);
       });
@@ -8366,6 +8821,8 @@
           state.selections.congregation_gift = false;
         }
         resetQuantityState();
+        // SEMANTIC_EVENTS_V1
+        try { trackOptionSelected(product, 'assorted', active ? 'off' : 'on', ''); } catch (e) {}
         state.errors = "";
         rerenderProduct(product);
       });
@@ -8373,6 +8830,32 @@
 
     document.querySelectorAll("[data-choice-step]").forEach(function (input) {
       input.addEventListener("change", function () {
+        // SEMANTIC_EVENTS_V1 (Phase C): captura semantic ANTES de mutar state
+        // para podermos distinguir select vs unselect e ler o value correcto.
+        try {
+          if (step && step.id === 'designs') {
+            // Multi (crachas/imanes/caderninhos): checked vs unchecked
+            // Single (cadernos): change sempre seleciona um novo
+            if (step.selection === 'multi') {
+              trackDesignToggle(product, input.value, !!input.checked);
+            } else {
+              trackDesignToggle(product, input.value, true);
+            }
+          } else if (step && step.id) {
+            // Outras steps com data-choice-step: option_selected
+            // (lamination, cover_personalization, size, ...)
+            var optType = step.id;
+            // Para cover_personalization, normalizar para yes/no apenas.
+            var optVal = input.value;
+            var optLabel = '';
+            var labelEl = input.closest && input.closest('label');
+            if (labelEl) {
+              optLabel = (labelEl.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+            }
+            trackOptionSelected(product, optType, optVal, optLabel);
+          }
+        } catch (e) {}
+
         setSelection(step, input);
         if (step && step.id === "cover_personalization" && input.value === "no") {
           state.selections.cover_personalization_text = "";
@@ -8401,6 +8884,23 @@
         // configuração admin "Quantidades inteligentes".
         state.packDisabledMessage = "";
         state.selections.pack_quantity = newPackQuantity;
+        // SEMANTIC_EVENTS_V1: pack option chosen.
+        try {
+          var packLabel = '';
+          if (button.dataset && button.dataset.trackLabel) packLabel = button.dataset.trackLabel;
+          // Para cadernos a step "pack" pode ser caderno_normal/caderno_pioneiro
+          // (item.value) — usamos o data-track-id quando existir.
+          var optType = 'pack';
+          var optValue = newPackQuantity;
+          if (step && step.id === 'pack' && button.dataset && button.dataset.trackId) {
+            // Para cadernos o button representa um purchase option (caderno_normal/pioneiro)
+            var trackId = button.dataset.trackId || '';
+            if (trackId.indexOf('cadernos_option_') === 0) {
+              optType = 'purchase_option';
+            }
+          }
+          trackOptionSelected(product, optType, optValue, packLabel);
+        } catch (e) {}
 
         ensurePackAndQuantities(product);
         state.errors = "";
@@ -8410,7 +8910,10 @@
 
     document.querySelectorAll("[data-caderno-order-quantity]").forEach(function (button) {
       button.addEventListener("click", function () {
-        state.selections.caderno_order_quantity = Number(button.dataset.cadernoOrderQuantity);
+        var qty = Number(button.dataset.cadernoOrderQuantity);
+        state.selections.caderno_order_quantity = qty;
+        // SEMANTIC_EVENTS_V1
+        try { trackOptionSelected(product, 'caderno_qty', qty, ''); } catch (e) {}
         state.errors = "";
         rerenderProduct(product);
       });
@@ -8497,6 +9000,13 @@
         trackProductEvent(product, 'delivery_selected', {
           selected_delivery: input.value
         });
+        // SEMANTIC_EVENTS_V1
+        try {
+          var labelTxt = '';
+          var lab = input.closest && input.closest('label');
+          if (lab) labelTxt = (lab.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+          trackOptionSelected(product, 'delivery', input.value, labelTxt);
+        } catch (e) {}
         rerenderProduct(product);
       });
     });
@@ -8602,6 +9112,8 @@
           window.location.href = product.homeUrl || "index.html";
           return;
         }
+        // TRANSITION_REASON_V1
+        funnelNextTransitionReason = 'back_button';
         goToWizardStep(product, state.currentStep - 1);
       });
     }
@@ -8609,6 +9121,8 @@
     if (next) {
       next.addEventListener("click", function () {
         if (state.currentStep < visibleSteps(product).length - 1) {
+          // TRANSITION_REASON_V1
+          funnelNextTransitionReason = 'next_button';
           goNext(product);
         }
       });
@@ -8640,6 +9154,8 @@
 
     document.querySelectorAll("[data-jump-step]").forEach(function (button) {
       button.addEventListener("click", function () {
+        // TRANSITION_REASON_V1
+        funnelNextTransitionReason = 'direct_step_click';
         goToWizardStep(product, Number(button.dataset.jumpStep));
       });
     });
@@ -8666,9 +9182,13 @@
         // FUNNEL_TRACKING_SQLITE_V2: pedido enviado com sucesso. Disparado
         // antes do navegador iniciar a navegação para send-order.php
         // (sendBeacon sobrevive ao unload). Não inclui PII.
-        trackProductEvent(product, 'order_submitted', {
-          step_id: 'submit'
-        });
+        // SELECTION_SNAPSHOT_V1 (Phase 4): snapshot final no envio.
+        var submitExtras = { step_id: 'submit' };
+        try {
+          var submitSnap = funnelBuildSelectionSnapshot(product);
+          if (submitSnap) submitExtras.selection_json = submitSnap;
+        } catch (e) {}
+        trackProductEvent(product, 'order_submitted', submitExtras);
 
         addHiddenFields(form, product);
       });
@@ -10226,6 +10746,10 @@
       initWizardHistory(product);
       renderProduct(product);
 
+      // SITE_LANDED_V1 (Phase 3): primeiro evento da sessão, captura
+      // atribuição original antes do step_view do produto.
+      try { fireSiteLandedOnce(); } catch (e) {}
+
       // FUNNEL_TRACKING_V1: dispara wizard_started uma vez por sessão por
       // produto + step_view do passo inicial (porque setCurrentStep só
       // dispara em transições, e o passo 0 não é uma transição).
@@ -10242,7 +10766,8 @@
       var initialStep = currentStep(product);
       trackProductEvent(product, 'step_view', {
         step_id: initialStep ? initialStep.id : '',
-        step_index: state.currentStep
+        step_index: state.currentStep,
+        transition_reason: 'initial'
       });
       if (initialStep && initialStep.id === 'confirm') {
         trackProductEvent(product, 'confirmation_view', {
@@ -10250,6 +10775,8 @@
           step_index: state.currentStep
         });
       }
+      // HEARTBEAT_V1 (Phase 6): inicia depois de garantir o estado.
+      try { startFunnelHeartbeat(product); } catch (e) {}
     }).catch(function (error) {
       app.innerHTML = '<main class="fallback"><h1>Mia &amp; Paper</h1><p>' + escapeHtml(error.message) + '</p></main>';
     });
@@ -10337,6 +10864,14 @@
 
   applyTheme(currentTheme());
   bindThemeToggle();
+
+  // SITE_LANDED_V1 (Phase 3): primeira página da sessão (qualquer página).
+  // Para o caso de produto, fireSiteLandedOnce é chamado dentro do initProduct
+  // após carregar o JSON. Para as outras páginas, disparamos imediatamente
+  // — atribuição original já está em sessionStorage.
+  if (page !== "product") {
+    try { fireSiteLandedOnce(); } catch (e) {}
+  }
 
   if (page === "home") {
     initHome();
