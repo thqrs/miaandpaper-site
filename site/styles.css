@@ -4188,19 +4188,6 @@ body.has-site-background {
   margin-right: auto !important;
 }
 
-.product-crachas .choice-card.design-grid .design-card-media:has(.item-frame-rounded-square),
-.product-crachas .choice-card.design-grid .design-image.uploaded-image.item-frame-rounded-square {
-  width: 112px !important;
-  height: 112px !important;
-}
-
-.product-crachas .choice-card.design-grid:has(.item-frame-rounded-square) .choice-copy > span {
-  overflow: hidden;
-  max-width: 100%;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
 .product-shape-round .choice-card.design-grid .choice-copy {
   width: 100% !important;
   justify-items: center !important;

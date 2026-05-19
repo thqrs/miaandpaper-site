@@ -1,0 +1,763 @@
+{
+    "slug": "cadernos",
+    "name": "Cadernos de Apontamentos",
+    "brand": "Mia & Paper",
+    "homeUrl": "index.html",
+    "instagramUrl": "https://www.instagram.com/miaandpaper/",
+    "form": {
+        "action": "send-order.php",
+        "returnTo": "cadernos.html"
+    },
+    "intro": {
+        "eyebrow": "Cadernos de Apontamentos",
+        "title": "Escolhe o design da capa.",
+        "text": "Escolhe a capa, a laminação e a opção de compra para preparar o teu pedido."
+    },
+    "deliveryOptions": [
+        {
+            "id": "pickup",
+            "label": "Vou recolher na casa da Mia",
+            "text": "",
+            "feeCents": 0
+        },
+        {
+            "id": "shipping",
+            "label": "Envio CTT - até 2 Kg",
+            "text": "",
+            "feeCents": 850,
+            "priceText": "Valor mínimo:\n8,50 €"
+        },
+        {
+            "id": "join_orders",
+            "label": "Junta as minhas encomendas",
+            "text": "",
+            "feeCents": 0
+        }
+    ],
+    "templates": [
+        {
+            "id": "media-list",
+            "label": "Imagem + 2 linhas"
+        },
+        {
+            "id": "text-grid",
+            "label": "Texto em grelha"
+        },
+        {
+            "id": "price-pack-grid",
+            "label": "Packs/preços"
+        },
+        {
+            "id": "quantity-builder",
+            "label": "Pack + quantidades"
+        },
+        {
+            "id": "design-grid",
+            "label": "Grelha de designs"
+        },
+        {
+            "id": "lamination-choice",
+            "label": "Laminação"
+        },
+        {
+            "id": "purchase-option",
+            "label": "Opções de compra"
+        },
+        {
+            "id": "cover-personalization",
+            "label": "Personalização da capa"
+        },
+        {
+            "id": "details-form",
+            "label": "Formulário"
+        },
+        {
+            "id": "confirm",
+            "label": "Confirmação"
+        }
+    ],
+    "defaultPriceKey": "Cadernos",
+    "prices": {
+        "Cadernos": {
+            "1": 2990,
+            "2": 3490,
+            "3": 3790,
+            "4": 4290
+        }
+    },
+    "steps": [
+        {
+            "id": "designs",
+            "label": "Capa",
+            "title": "Escolhe a capa do caderno",
+            "text": "Escolhe a capa de que mais gostas.",
+            "template": "design-grid",
+            "field": "design",
+            "selection": "single",
+            "items": [
+                {
+                    "id": "caderno-01",
+                    "value": "Caderno 01",
+                    "title": "Caderno 01",
+                    "subtitle": "",
+                    "image": "content/designs/cadernos/process/cadernos (1)/img (27).jpg",
+                    "imageFit": "cover",
+                    "frameWidth": 200,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "laminationImages": {
+                        "matte": "content/designs/cadernos/process/cadernos (1)/img (27).jpg",
+                        "glossy": "content/designs/cadernos/process/cadernos (1)/img (31).jpg",
+                        "glitter": "content/designs/cadernos/process/cadernos (1)/img (36).jpg",
+                        "holografico": "content/designs/cadernos/process/cadernos (1)/img (9).jpg"
+                    },
+                    "interiorImages": [
+                        "content/designs/cadernos/process/cadernos (1)/img (27).jpg"
+                    ],
+                    "purchaseOptionImages": {
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_1.jpg",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_1.jpg",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_1.jpg",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_1.jpg"
+                    },
+                    "imageZoom": 99,
+                    "imageRotation": 2,
+                    "imageEdits": {
+                        "cadernos:designs:caderno-01:main": {
+                            "zoom": 166,
+                            "frameWidth": 120,
+                            "frameScale": 120,
+                            "positionY": 8,
+                            "rotation": 1,
+                            "positionX": -4,
+                            "frameHeight": 147
+                        }
+                    }
+                },
+                {
+                    "id": "caderno-02",
+                    "value": "Caderno 02",
+                    "title": "Caderno 02",
+                    "subtitle": "",
+                    "image": "content/designs/cadernos/process/cadernos (2)/img (21).jpg",
+                    "imageFit": "cover",
+                    "frameWidth": 70,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "laminationImages": {
+                        "matte": "content/designs/cadernos/process/cadernos (2)/img (21).jpg",
+                        "glossy": "content/designs/cadernos/process/cadernos (2)/1778703273575_reduced_q95.jpg",
+                        "glitter": "content/designs/cadernos/process/cadernos (2)/img (20).jpg",
+                        "holografico": "content/designs/cadernos/process/cadernos (2)/img (18).jpg"
+                    },
+                    "interiorImages": [
+                        "content/designs/cadernos/process/cadernos (2)/img (21).jpg"
+                    ],
+                    "purchaseOptionImages": {
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_2.jpg",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_2.jpg",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_2.jpg",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_2.jpg"
+                    },
+                    "imageEdits": {
+                        "cadernos:designs:caderno-02:main": {
+                            "frameWidth": 120,
+                            "zoom": 163,
+                            "rotation": 2,
+                            "frameHeight": 147,
+                            "positionY": 1,
+                            "positionX": -2
+                        }
+                    }
+                },
+                {
+                    "id": "caderno-03",
+                    "value": "Caderno 03",
+                    "title": "Caderno 03",
+                    "subtitle": "",
+                    "image": "content/designs/cadernos/process/cadernos (3)/img (22).jpg",
+                    "imageFit": "cover",
+                    "frameWidth": 70,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "laminationImages": {
+                        "matte": "content/designs/cadernos/process/cadernos (3)/img (22).jpg",
+                        "glossy": "content/designs/cadernos/process/cadernos (3)/img (30).jpg",
+                        "glitter": "content/designs/cadernos/process/cadernos (3)/img (35).jpg",
+                        "holografico": "content/designs/cadernos/process/cadernos (3)/img (13).jpg"
+                    },
+                    "interiorImages": [
+                        "content/designs/cadernos/process/cadernos (3)/img (22).jpg"
+                    ],
+                    "purchaseOptionImages": {
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_3.jpg",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_3.jpg",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_3.jpg",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_3.jpg"
+                    },
+                    "imageEdits": {
+                        "cadernos:designs:caderno-03:main": {
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "zoom": 168,
+                            "positionY": 6,
+                            "positionX": -2,
+                            "rotation": 2
+                        }
+                    }
+                },
+                {
+                    "id": "caderno-04",
+                    "value": "Caderno 04",
+                    "title": "Caderno 04",
+                    "subtitle": "",
+                    "image": "content/designs/cadernos/process/cadernos (4)/img (28).jpg",
+                    "imageFit": "cover",
+                    "frameWidth": 70,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "laminationImages": {
+                        "matte": "content/designs/cadernos/process/cadernos (4)/img (28).jpg",
+                        "glossy": "content/designs/cadernos/process/cadernos (4)/img (17).jpg",
+                        "glitter": "content/designs/cadernos/process/cadernos (4)/img (25).jpg",
+                        "holografico": "content/designs/cadernos/process/cadernos (4)/img (33).jpg"
+                    },
+                    "interiorImages": [
+                        "content/designs/cadernos/process/cadernos (4)/img (28).jpg"
+                    ],
+                    "purchaseOptionImages": {
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_4.jpg",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_4.jpg",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_4.jpg",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_4.jpg"
+                    },
+                    "imageEdits": {
+                        "cadernos:designs:caderno-04:main": {
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "zoom": 168,
+                            "positionX": -3,
+                            "rotation": 2,
+                            "positionY": 5
+                        }
+                    }
+                },
+                {
+                    "id": "caderno-05",
+                    "value": "Caderno 05",
+                    "title": "Caderno 05",
+                    "subtitle": "",
+                    "image": "content/designs/cadernos/process/cadernos (5)/img (26).jpg",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "laminationImages": {
+                        "matte": "content/designs/cadernos/process/cadernos (5)/img (26).jpg",
+                        "glossy": "content/designs/cadernos/process/cadernos (5)/img (38).jpg",
+                        "glitter": "content/designs/cadernos/process/cadernos (5)/img (29).jpg",
+                        "holografico": "content/designs/cadernos/process/cadernos (5)/img (15).jpg"
+                    },
+                    "interiorImages": [
+                        "content/designs/cadernos/process/cadernos (5)/img (26).jpg"
+                    ],
+                    "purchaseOptionImages": {
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_5.jpg",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_5.jpg",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_5.jpg",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_5.jpg"
+                    },
+                    "imageEdits": {
+                        "cadernos:designs:caderno-05:main": {
+                            "frameHeight": 147,
+                            "zoom": 163,
+                            "rotation": 1,
+                            "positionY": 7,
+                            "positionX": -1
+                        }
+                    }
+                },
+                {
+                    "id": "caderno-06",
+                    "value": "Caderno 06",
+                    "title": "Caderno 06",
+                    "subtitle": "",
+                    "image": "content/designs/cadernos/process/cadernos (6)/1778703273549_reduced_q95.jpg",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "laminationImages": {
+                        "matte": "content/designs/cadernos/process/cadernos (6)/1778703273549_reduced_q95.jpg",
+                        "glossy": "content/designs/cadernos/process/cadernos (6)/img (32).jpg",
+                        "glitter": "content/designs/cadernos/process/cadernos (6)/img (23).jpg",
+                        "holografico": "content/designs/cadernos/process/cadernos (6)/img (39).jpg"
+                    },
+                    "interiorImages": [
+                        "content/designs/cadernos/process/cadernos (6)/1778703273549_reduced_q95.jpg"
+                    ],
+                    "purchaseOptionImages": {
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_6.jpg",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_6.jpg",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_6.jpg",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_6.jpg"
+                    },
+                    "imageEdits": {
+                        "cadernos:designs:caderno-06:main": {
+                            "frameHeight": 147,
+                            "zoom": 164,
+                            "rotation": 1,
+                            "positionY": 7,
+                            "positionX": -2
+                        }
+                    }
+                },
+                {
+                    "id": "caderno-07",
+                    "value": "Caderno 07",
+                    "title": "Caderno 07",
+                    "subtitle": "",
+                    "image": "content/designs/cadernos/process/cadernos (7)/img (12).jpg",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "laminationImages": {
+                        "matte": "content/designs/cadernos/process/cadernos (7)/img (12).jpg",
+                        "glossy": "content/designs/cadernos/process/cadernos (7)/img (14).jpg",
+                        "glitter": "content/designs/cadernos/process/cadernos (7)/img (10).jpg",
+                        "holografico": "content/designs/cadernos/process/cadernos (7)/img (34).jpg"
+                    },
+                    "interiorImages": [
+                        "content/designs/cadernos/process/cadernos (7)/img (12).jpg"
+                    ],
+                    "purchaseOptionImages": {
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_7.jpg",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_7.jpg",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_7.jpg",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_7.jpg"
+                    },
+                    "imageEdits": {
+                        "cadernos:designs:caderno-07:main": {
+                            "frameHeight": 146,
+                            "zoom": 161,
+                            "rotation": 1,
+                            "positionY": 2
+                        }
+                    }
+                },
+                {
+                    "id": "caderno-08",
+                    "value": "Caderno 08",
+                    "title": "Caderno 08",
+                    "subtitle": "",
+                    "image": "content/designs/cadernos/process/cadernos (8)/img (19).jpg",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "laminationImages": {
+                        "matte": "content/designs/cadernos/process/cadernos (8)/img (19).jpg",
+                        "glossy": "content/designs/cadernos/process/cadernos (8)/img (11).jpg",
+                        "glitter": "content/designs/cadernos/process/cadernos (8)/img (37).jpg",
+                        "holografico": "content/designs/cadernos/process/cadernos (8)/img (24).jpg"
+                    },
+                    "interiorImages": [
+                        "content/designs/cadernos/process/cadernos (8)/img (19).jpg"
+                    ],
+                    "purchaseOptionImages": {
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_8.jpg",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_8.jpg",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_8.jpg",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_8.jpg"
+                    },
+                    "imageEdits": {
+                        "cadernos:designs:caderno-08:main": {
+                            "frameHeight": 147,
+                            "zoom": 164,
+                            "rotation": 2,
+                            "positionY": 3
+                        }
+                    }
+                },
+                {
+                    "id": "caderno-09",
+                    "value": "Caderno 09",
+                    "title": "Caderno 09",
+                    "subtitle": "",
+                    "image": "content/designs/cadernos/process/cadernos (9)/img (16).jpg",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "laminationImages": {
+                        "matte": "content/designs/cadernos/process/cadernos (9)/img (16).jpg",
+                        "glossy": "content/designs/cadernos/process/cadernos (9)/9_glossy.jpg",
+                        "glitter": "content/designs/cadernos/process/cadernos (9)/9_glit.jpg",
+                        "holografico": "content/designs/cadernos/process/cadernos (9)/9_holo.jpg"
+                    },
+                    "interiorImages": [
+                        "content/designs/cadernos/process/cadernos (9)/img (16).jpg"
+                    ],
+                    "purchaseOptionImages": {
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_9.jpg",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_9.jpg",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_9.jpg",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_9.jpg"
+                    },
+                    "imageEdits": {
+                        "cadernos:designs:caderno-09:main": {
+                            "frameHeight": 147,
+                            "zoom": 155,
+                            "rotation": 2,
+                            "positionY": 1
+                        }
+                    }
+                }
+            ],
+            "sections": [
+                {
+                    "id": "grupo-1",
+                    "title": "Grupo 1",
+                    "labelPrefix": ""
+                },
+                {
+                    "id": "grupo-2",
+                    "title": "Grupo 2",
+                    "labelPrefix": ""
+                }
+            ]
+        },
+        {
+            "id": "lamination",
+            "label": "Laminação",
+            "title": "Escolhe o tipo de laminação",
+            "text": "Escolhe o acabamento da capa.",
+            "template": "lamination-choice",
+            "field": "lamination",
+            "selection": "single",
+            "items": [
+                {
+                    "id": "lamination-matte",
+                    "value": "matte",
+                    "title": "Matte",
+                    "subtitle": "Acabamento suave, sem brilho.",
+                    "image": "content/designs/cadernos/laminacao/laminacao-matte.jpg",
+                    "exampleImage": "content/designs/cadernos/laminacao/laminacao-matte.jpg",
+                    "imageFit": "cover",
+                    "note": "Exemplo visual de laminação matte.",
+                    "laminationKey": "matte",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "imageEdits": {
+                        "cadernos:lamination:lamination-matte:main": {
+                            "zoom": 329,
+                            "rotation": -7,
+                            "frameWidth": 160,
+                            "frameHeight": 124,
+                            "positionX": -2,
+                            "positionY": 30
+                        }
+                    }
+                },
+                {
+                    "id": "lamination-normal",
+                    "value": "normal",
+                    "title": "Glossy",
+                    "subtitle": "Acabamento brilhante normal.",
+                    "image": "content/designs/cadernos/laminacao/laminacao-glossy-normal.jpg",
+                    "exampleImage": "content/designs/cadernos/laminacao/laminacao-glossy-normal.jpg",
+                    "imageFit": "cover",
+                    "note": "Exemplo visual de laminação glossy normal.",
+                    "laminationKey": "glossy",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "imageEdits": {
+                        "cadernos:lamination:lamination-normal:main": {
+                            "zoom": 329,
+                            "positionY": 30,
+                            "rotation": -7,
+                            "positionX": -2,
+                            "frameWidth": 160,
+                            "frameHeight": 124
+                        }
+                    }
+                },
+                {
+                    "id": "lamination-holografica",
+                    "value": "holografica",
+                    "title": "Holográfica",
+                    "subtitle": "Brilho com reflexos coloridos.",
+                    "image": "content/designs/cadernos/laminacao/laminacao-holografica.jpg",
+                    "exampleImage": "content/designs/cadernos/laminacao/laminacao-holografica.jpg",
+                    "imageFit": "cover",
+                    "note": "Exemplo visual de laminação holográfica.",
+                    "laminationKey": "holografico",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "imageEdits": {
+                        "cadernos:lamination:lamination-holografica:main": {
+                            "zoom": 329,
+                            "frameWidth": 160,
+                            "positionX": -2,
+                            "rotation": -7,
+                            "positionY": 30
+                        }
+                    }
+                },
+                {
+                    "id": "lamination-glitter-branco",
+                    "value": "glitter_branco",
+                    "title": "Glitter branco",
+                    "subtitle": "Brilho tipo glitter/purpurinas brancas.",
+                    "image": "content/designs/cadernos/laminacao/laminacao-glitter-branco.jpg",
+                    "exampleImage": "content/designs/cadernos/laminacao/laminacao-glitter-branco.jpg",
+                    "imageFit": "cover",
+                    "note": "Exemplo visual de laminação com glitter branco.",
+                    "laminationKey": "glitter",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "imageEdits": {
+                        "cadernos:lamination:lamination-glitter-branco:main": {
+                            "zoom": 329,
+                            "frameWidth": 159,
+                            "rotation": -7,
+                            "positionX": -2,
+                            "positionY": 30
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "id": "pack",
+            "label": "Opção",
+            "title": "Escolhe a opção de compra",
+            "text": "Escolhe a opção que queres encomendar.",
+            "template": "purchase-option",
+            "field": "pack_quantity",
+            "selection": "pack",
+            "promoNote": "As 5 primeiras pessoas que comprarem um Pack recebem gratuitamente o caderno miniatura da capa do caderno normal.",
+            "orderQuantity": {
+                "title": "Quantidade",
+                "text": "Podes encomendar mais do que um caderno ou pack com a mesma capa, laminação e personalização.",
+                "default": 1,
+                "options": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    10
+                ]
+            },
+            "items": [
+                {
+                    "id": "caderno-normal",
+                    "quantity": 1,
+                    "value": "caderno_normal",
+                    "title": "Caderno Normal",
+                    "subtitle": "29,90 €",
+                    "priceCents": 2990,
+                    "includes": "Inclui o caderno com oferta de 1 crachá de 32 mm com o mesmo design da capa.",
+                    "summary": "caderno com oferta de 1 crachá de 32 mm da capa",
+                    "image": "content/designs/cadernos/opcoes/caderno-normal.jpg",
+                    "exampleImage": "content/designs/cadernos/opcoes/caderno-normal.jpg",
+                    "isPack": false,
+                    "imageEdits": {
+                        "cadernos:pack:caderno-normal:main": {
+                            "frameWidth": 140,
+                            "frameHeight": 135,
+                            "zoom": 150,
+                            "rotation": 0,
+                            "positionX": -15,
+                            "positionY": 2
+                        }
+                    }
+                },
+                {
+                    "id": "caderno-pioneiro",
+                    "quantity": 2,
+                    "value": "caderno_pioneiro",
+                    "title": "Caderno Pioneiro",
+                    "subtitle": "34,90 €",
+                    "priceCents": 3490,
+                    "includes": "Inclui o caderno pioneiro com oferta de 1 crachá de 32 mm com o mesmo design da capa.",
+                    "summary": "caderno pioneiro com oferta de 1 crachá de 32 mm da capa",
+                    "image": "content/designs/cadernos/opcoes/caderno-pioneiro.jpg",
+                    "exampleImage": "content/designs/cadernos/opcoes/caderno-pioneiro.jpg",
+                    "isPack": false,
+                    "imageEdits": {
+                        "cadernos:pack:caderno-pioneiro:main": {
+                            "frameScale": 100,
+                            "frameHeight": 135,
+                            "frameWidth": 140,
+                            "positionX": -15,
+                            "zoom": 150,
+                            "positionY": 2
+                        }
+                    }
+                },
+                {
+                    "id": "pack-normal",
+                    "quantity": 3,
+                    "value": "pack_normal",
+                    "title": "Pack Normal",
+                    "subtitle": "37,90 €",
+                    "priceCents": 3790,
+                    "includes": "Inclui o caderno + 5 crachás de 32 mm, sendo um deles o crachá da capa + marcador laminado dos dois lados.",
+                    "summary": "caderno + 5 crachás de 32 mm, incluindo 1 crachá da capa + marcador laminado dos dois lados",
+                    "image": "content/designs/cadernos/opcoes/pack-normal.jpg",
+                    "exampleImage": "content/designs/cadernos/opcoes/pack-normal.jpg",
+                    "isPack": true,
+                    "imageEdits": {
+                        "cadernos:pack:pack-normal:main": {
+                            "zoom": 143,
+                            "frameWidth": 140,
+                            "frameHeight": 134,
+                            "positionX": -23,
+                            "rotation": -1,
+                            "positionY": 2
+                        }
+                    }
+                },
+                {
+                    "id": "pack-pioneiro",
+                    "quantity": 4,
+                    "value": "pack_pioneiro",
+                    "title": "Pack Pioneiro",
+                    "subtitle": "42,90 €",
+                    "priceCents": 4290,
+                    "includes": "Inclui o caderno pioneiro + 5 crachás de 32 mm, sendo um deles o crachá da capa + marcador laminado dos dois lados.",
+                    "summary": "caderno pioneiro + 5 crachás de 32 mm, incluindo 1 crachá da capa + marcador laminado dos dois lados",
+                    "image": "content/designs/cadernos/opcoes/pack-pioneiro.jpg",
+                    "exampleImage": "content/designs/cadernos/opcoes/pack-pioneiro.jpg",
+                    "isPack": true,
+                    "imageEdits": {
+                        "cadernos:pack:pack-pioneiro:main": {
+                            "frameHeight": 135,
+                            "frameWidth": 140,
+                            "positionX": -23,
+                            "rotation": -1,
+                            "zoom": 144,
+                            "positionY": 2
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "id": "cover_personalization",
+            "label": "Personalização",
+            "title": "Queres personalizar a capa com um nome?",
+            "text": "A personalização acrescenta 2 € ao preço.",
+            "template": "cover-personalization",
+            "field": "cover_personalization",
+            "selection": "single",
+            "extraPriceCents": 200,
+            "maxLength": 25,
+            "exampleImage": "content/designs/cadernos/personalizacao/personalizacao-capa.jpg",
+            "exampleAlt": "Exemplo de personalização da capa",
+            "showExample": false,
+            "note": "Importante: A capa do mini-caderno de oferta não é personalizável.",
+            "items": [
+                {
+                    "id": "cover-personalization-yes",
+                    "value": "yes",
+                    "title": "Sim, quero personalizar",
+                    "subtitle": "2 €"
+                },
+                {
+                    "id": "cover-personalization-no",
+                    "value": "no",
+                    "title": "Não",
+                    "subtitle": "Sem personalização"
+                }
+            ]
+        },
+        {
+            "id": "delivery_contact",
+            "label": "Entrega e contacto",
+            "title": "Entrega e contacto",
+            "text": "",
+            "template": "delivery-contact",
+            "delivery": {
+                "title": "Como queres receber a tua encomenda?",
+                "subtitle": "Caso já tenhas feito um pedido anteriormente, escolhe \"Junta as minhas encomendas\" para receberes todas as tuas encomendas na mesma embalagem."
+            },
+            "contact": {
+                "title": "Dados de Contacto",
+                "noteAfter": "Estes dados pessoais serão partilhados com a Mia para que ela te possa contactar para confirmar a encomenda.",
+                "fields": [
+                    {
+                        "name": "customer_name",
+                        "label": "Nome",
+                        "placeholder": "O teu nome",
+                        "required": true,
+                        "autocomplete": "name"
+                    },
+                    {
+                        "name": "customer_contact",
+                        "label": "Email ou Telemóvel",
+                        "placeholder": "Email ou telemóvel",
+                        "required": true,
+                        "autocomplete": "email"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "confirm",
+            "label": "Confirmar",
+            "title": "Confirma antes de enviar",
+            "text": "Se estiver tudo certo, envia o pedido.",
+            "template": "confirm"
+        }
+    ],
+    "unitLabel": "cadernos",
+    "unitShort": "caderno",
+    "unitSingular": "caderno",
+    "imageShape": "rect",
+    "preview": {
+        "enabled": true,
+        "title": "Pré-visualização do interior",
+        "text": "Aqui podes mostrar uma fotografia ou mockup das páginas interiores do caderno anual. A imagem pode ser alterada no modo admin."
+    },
+    "interiorPreview": {
+        "enabled": true,
+        "title": "Pré-visualização do interior",
+        "text": "Vê um exemplo das páginas interiores deste caderno.",
+        "speedSeconds": 4,
+        "images": [
+            "content/designs/cadernos/interior/1778765447458.jpg",
+            "content/designs/cadernos/interior/1778765447468.jpg",
+            "content/designs/cadernos/interior/1778765447479.jpg",
+            "content/designs/cadernos/interior/1778765447491.jpg",
+            "content/designs/cadernos/interior/1778765447501-PR.jpg",
+            "content/designs/cadernos/interior/1778765447511.jpg",
+            "content/designs/cadernos/interior/1778765447522.jpg",
+            "content/designs/cadernos/interior/1778765447532-PR.jpg",
+            "content/designs/cadernos/interior/1778765447543-PR.jpg",
+            "content/designs/cadernos/interior/1778765447555.jpg",
+            "content/designs/cadernos/interior/1778765447566-PR.jpg",
+            "content/designs/cadernos/interior/1778765447577.jpg",
+            "content/designs/cadernos/interior/1778765447587.jpg",
+            "content/designs/cadernos/interior/1778765447597.jpg",
+            "content/designs/cadernos/interior/1778765447608.jpg",
+            "content/designs/cadernos/interior/1778765447618.jpg",
+            "content/designs/cadernos/interior/1778765447627.jpg",
+            "content/designs/cadernos/interior/1778765447636.jpg",
+            "content/designs/cadernos/interior/stickers.jpg"
+        ]
+    },
+    "_backup_created": "cadernos-20260515-152122.json"
+}
