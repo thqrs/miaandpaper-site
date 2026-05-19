@@ -93,6 +93,126 @@
       "selection": "multi",
       "items": [
         {
+          "id": "cracha-braille-01",
+          "value": "Braille 01",
+          "title": "Braille 01",
+          "subtitle": "Com \"JW\" em relevo braille verdadeiro",
+          "image": "content/designs/crachas/novidades/braille-01.jpg",
+          "visual": "neutral",
+          "frameShape": "rounded-square",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 10,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "imageZoom": 100,
+          "sectionId": "novidades",
+          "sectionOrder": 1
+        },
+        {
+          "id": "cracha-esperanca-01",
+          "value": "Esperança 01",
+          "title": "Esperança 01",
+          "subtitle": "",
+          "image": "content/designs/crachas/novidades/esperanca-01.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 10,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "imageZoom": 100,
+          "sectionId": "novidades",
+          "sectionOrder": 2
+        },
+        {
+          "id": "cracha-esperanca-02",
+          "value": "Esperança 02",
+          "title": "Esperança 02",
+          "subtitle": "",
+          "image": "content/designs/crachas/novidades/esperanca-02.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 10,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "imageZoom": 100,
+          "sectionId": "novidades",
+          "sectionOrder": 3
+        },
+        {
+          "id": "cracha-esperanca-03",
+          "value": "Esperança 03",
+          "title": "Esperança 03",
+          "subtitle": "",
+          "image": "content/designs/crachas/novidades/esperanca-03.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 10,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "imageZoom": 100,
+          "sectionId": "novidades",
+          "sectionOrder": 4
+        },
+        {
+          "id": "cracha-esperanca-04",
+          "value": "Esperança 04",
+          "title": "Esperança 04",
+          "subtitle": "",
+          "image": "content/designs/crachas/novidades/esperanca-04.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 10,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "imageZoom": 100,
+          "sectionId": "novidades",
+          "sectionOrder": 5
+        },
+        {
+          "id": "cracha-lingua-gestual-01",
+          "value": "Língua Gestual 01",
+          "title": "Língua Gestual 01",
+          "subtitle": "",
+          "image": "content/designs/crachas/novidades/lingua-gestual-01.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 10,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "imageZoom": 100,
+          "sectionId": "novidades",
+          "sectionOrder": 6
+        },
+        {
+          "id": "cracha-lingua-gestual-02",
+          "value": "Língua Gestual 02",
+          "title": "Língua Gestual 02",
+          "subtitle": "",
+          "image": "content/designs/crachas/novidades/lingua-gestual-02.jpg",
+          "visual": "neutral",
+          "frameScale": 130,
+          "frameMarginX": 0,
+          "frameMarginY": 10,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "imageZoom": 100,
+          "sectionId": "novidades",
+          "sectionOrder": 7
+        },
+        {
           "id": "pin-01",
           "value": "Felicidade 01",
           "title": "Felicidade 01",
@@ -201,7 +321,8 @@
           "imagePositionX": -2,
           "imagePositionY": 4,
           "imageRotation": 1,
-          "imageZoom": 108
+          "imageZoom": 108,
+          "sectionId": "porto-2026"
         },
         {
           "id": "pin-08",
@@ -264,7 +385,8 @@
           "imagePositionX": 1,
           "imagePositionY": 4,
           "imageRotation": 0,
-          "imageZoom": 100
+          "imageZoom": 100,
+          "sectionId": "porto-2026"
         },
         {
           "id": "pin-12",
@@ -279,7 +401,8 @@
           "imagePositionX": 0,
           "imagePositionY": 3,
           "imageRotation": 0,
-          "imageZoom": 77
+          "imageZoom": 77,
+          "sectionId": "porto-2026"
         },
         {
           "id": "pin-13",
@@ -326,7 +449,8 @@
           "imagePositionX": 1,
           "imagePositionY": 0,
           "imageRotation": 6,
-          "imageZoom": 118
+          "imageZoom": 118,
+          "sectionId": "porto-2026"
         },
         {
           "id": "pin-16",
@@ -490,6 +614,11 @@
         }
       ],
       "sections": [
+        {
+          "id": "novidades",
+          "title": "Novidades",
+          "labelPrefix": ""
+        },
         {
           "id": "porto-2026",
           "title": "Cidade do Porto",

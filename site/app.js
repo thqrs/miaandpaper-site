@@ -3035,6 +3035,10 @@
     return item && item.image ? " item-rect-orientation-" + itemRectOrientation(item) : "";
   }
 
+  function itemFrameShapeClass(item) {
+    return item && item.frameShape === "rounded-square" ? " item-frame-rounded-square" : "";
+  }
+
   function renderAdminStepImagePanel(step) {
     var items = step && step.items ? step.items : [];
     var first = items[0] || {};
@@ -5183,7 +5187,7 @@
       }
       frameInfo = uploadedFrameInfo(item, template, step);
 
-      return '<span class="' + className + itemRectOrientationClass(item) + ' uploaded-image' + (isActive ? ' is-admin-image-active' : '') + '" style="' + frameInfo.style + '"' + (adminAttrs ? "" : ' aria-hidden="true"') + adminAttrs + miaSlotDebugFrameAttrs(frameInfo.debug) + '><span class="uploaded-image-inner"></span></span>';
+      return '<span class="' + className + itemRectOrientationClass(item) + itemFrameShapeClass(item) + ' uploaded-image' + (isActive ? ' is-admin-image-active' : '') + '" style="' + frameInfo.style + '"' + (adminAttrs ? "" : ' aria-hidden="true"') + adminAttrs + miaSlotDebugFrameAttrs(frameInfo.debug) + '><span class="uploaded-image-inner"></span></span>';
     }
 
     return '<span class="' + className + " " + escapeHtml(visual) + '" aria-hidden="true">' + escapeHtml(text) + '</span>';
@@ -5401,6 +5405,7 @@
   // step.sections.length = defaults.length). Sem isto, "Gerais" desaparece
   // porque "criancas" passou a estar antes na ordem do JSON.
   var CRACHAS_DEFAULT_SECTIONS = [
+    { id: "novidades", title: "Novidades", labelPrefix: "" },
     { id: "porto-2026", title: "Cidade do Porto", labelPrefix: "Porto" },
     { id: "restelo", title: "Cidade de Lisboa e Restelo", labelPrefix: "Lisboa" },
     { id: "criancas", title: "Crianças", labelPrefix: "Criança" },
