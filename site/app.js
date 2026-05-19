@@ -5408,6 +5408,7 @@
   ];
 
   var IMANES_DEFAULT_SECTIONS = [
+    { id: "novidades", title: "Novidades", labelPrefix: "Esperança" },
     { id: "verticais", title: "Ímanes Verticais", labelPrefix: "Vertical" },
     { id: "horizontais", title: "Ímanes Horizontais", labelPrefix: "Horizontal" }
   ];
