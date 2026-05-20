@@ -178,6 +178,16 @@
       .replace(/'/g, "&#039;");
   }
 
+  function renderInlineText(value) {
+    return escapeHtml(value)
+      .replace(/&lt;s&gt;/g, "<s>")
+      .replace(/&lt;\/s&gt;/g, "</s>");
+  }
+
+  function plainInlineText(value) {
+    return String(value == null ? "" : value).replace(/<s>.*?<\/s>\s*/g, "");
+  }
+
   var miaSlotDebugFlatKeys = ["imageZoom", "imagePositionX", "imagePositionY", "imageRotation"];
   var miaSlotDebugSideFlatKeys = ["sideImageZoom", "sideImagePositionX", "sideImagePositionY", "sideImageRotation"];
   var miaSlotDebugFrameKeys = ["frameScale", "frameWidth", "frameHeight", "frameMarginX", "frameMarginY"];
@@ -4238,7 +4248,7 @@
 
   function cadernoPromoNote(product) {
     var step = product ? findStep(product, "pack") : null;
-    return step && step.promoNote ? String(step.promoNote) : "";
+    return step && step.promoNote ? plainInlineText(step.promoNote) : "";
   }
 
   function cadernoOrderQuantityConfig(product) {
@@ -5413,7 +5423,7 @@
   ];
 
   var IMANES_DEFAULT_SECTIONS = [
-    { id: "novidades", title: "Novidades", labelPrefix: "Esperança" },
+    { id: "novidades", title: "Novidades", labelPrefix: "" },
     { id: "verticais", title: "Ímanes Verticais", labelPrefix: "Vertical" },
     { id: "horizontais", title: "Ímanes Horizontais", labelPrefix: "Horizontal" }
   ];
@@ -5421,6 +5431,11 @@
   var INVISIBLE_GROUPS_2 = [
     { id: "grupo-1", title: "Grupo 1", labelPrefix: "" },
     { id: "grupo-2", title: "Grupo 2", labelPrefix: "" }
+  ];
+
+  var CADERNOS_DEFAULT_SECTIONS = [
+    { id: "novidades", title: "Novidades", labelPrefix: "", visible: true },
+    { id: "felicidade-eterna", title: "Felicidade Eterna", labelPrefix: "", visible: true }
   ];
 
   function getStepSectionConfig(product, step) {
@@ -5433,7 +5448,10 @@
     if (product.slug === "imanes") {
       return { mode: "visible", defaults: IMANES_DEFAULT_SECTIONS };
     }
-    if (product.slug === "caderninhos" || product.slug === "cadernos" || product.slug === "lembrancas") {
+    if (product.slug === "cadernos" || product.slug === "caderninhos") {
+      return { mode: "mixed", defaults: CADERNOS_DEFAULT_SECTIONS };
+    }
+    if (product.slug === "lembrancas") {
       return { mode: "invisible", defaults: INVISIBLE_GROUPS_2 };
     }
     return null;
@@ -5651,6 +5669,48 @@
         return rowsAll + '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>';
       }
       return renderDesignActionControls(product, step) + '<div class="design-grid">' + rowsAll + '</div>';
+    }
+
+    if (config.mode === "mixed") {
+      var mixedHtml = "";
+
+      sections.forEach(function (section) {
+        var bucket = grouped[section.id] || [];
+        var defaultSection = (config.defaults || []).filter(function (entry) {
+          return entry.id === section.id;
+        })[0] || {};
+        var isVisibleSection = defaultSection.visible !== false;
+        var rowsHtml = bucket.map(function (entry) { return renderItemCard(entry.item); }).join("");
+
+        if (bucket.length === 0 && !state.admin) {
+          return;
+        }
+
+        if (isVisibleSection) {
+          mixedHtml += [
+            '<section class="design-grid-section' + (bucket.length === 0 ? ' is-empty' : '') + '" data-section-id="' + escapeHtml(section.id) + '">',
+            '<h3 class="design-grid-section-title">' + escapeHtml(section.title) + '</h3>',
+            bucket.length === 0 && state.admin ? '<p class="design-grid-section-empty">Sem itens atribuídos. Atribui um item a este separador para que apareça no site.</p>' : "",
+            '<div class="design-grid">' + rowsHtml + '</div>',
+            '</section>'
+          ].join("");
+          return;
+        }
+
+        if (state.admin) {
+          mixedHtml += [
+            '<div class="design-grid-section design-grid-section-invisible' + (bucket.length === 0 ? ' is-empty' : '') + '" data-section-id="' + escapeHtml(section.id) + '">',
+            '<h3 class="design-grid-section-title is-admin-only">' + escapeHtml(section.title) + ' <span class="design-grid-section-hint">(grupo invisível no site público)</span></h3>',
+            bucket.length === 0 ? '<p class="design-grid-section-empty">Sem itens neste grupo.</p>' : "",
+            '<div class="design-grid">' + rowsHtml + '</div>',
+            '</div>'
+          ].join("");
+        } else {
+          mixedHtml += '<div class="design-grid">' + rowsHtml + '</div>';
+        }
+      });
+
+      return renderDesignActionControls(product, step) + mixedHtml + (state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : "");
     }
 
     // Modo visivel: 3 (ou 2) seccoes com titulos e linha por baixo.
@@ -7066,14 +7126,17 @@
 
   function renderCadernosCoverStep(product, step) {
     var selected = selectedValues(step);
+    var config = getStepSectionConfig(product, step);
+    var sections = config ? ensureStepSections(step, config.defaults) : [];
+    var grouped = config ? groupItemsBySection(step.items, sections) : null;
     var html = "";
 
-    (step.items || []).forEach(function (item) {
+    function renderCoverChoice(item) {
       var checked = selected.indexOf(item.value) !== -1 ? " checked" : "";
       var selectedClass = checked ? " is-selected" : "";
       var muted = selected.length && !checked ? " is-muted" : "";
 
-      html += [
+      return [
         '<div class="cadernos-cover-choice">',
         '<label class="choice-card crachas-size-card cadernos-cover-card' + selectedClass + muted + '">',
         '<input type="radio" name="' + escapeHtml(step.field) + '" value="' + escapeHtml(item.value) + '" data-choice-step="' + escapeHtml(step.id) + '"' + checked + '>',
@@ -7089,9 +7152,52 @@
         checked ? renderCadernoCoverDrawer(product, item) : "",
         '</div>'
       ].join("");
-    });
+    }
 
-    return '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list">' + html + '</div>'
+    if (config && config.mode === "mixed") {
+      sections.forEach(function (section) {
+        var bucket = grouped[section.id] || [];
+        var defaultSection = (config.defaults || []).filter(function (entry) {
+          return entry.id === section.id;
+        })[0] || {};
+        var isVisibleSection = defaultSection.visible !== false;
+        var rowsHtml = bucket.map(function (entry) { return renderCoverChoice(entry.item); }).join("");
+
+        if (bucket.length === 0 && !state.admin) {
+          return;
+        }
+
+        if (isVisibleSection) {
+          html += [
+            '<section class="design-grid-section' + (bucket.length === 0 ? ' is-empty' : '') + '" data-section-id="' + escapeHtml(section.id) + '">',
+            '<h3 class="design-grid-section-title">' + escapeHtml(section.title) + '</h3>',
+            bucket.length === 0 && state.admin ? '<p class="design-grid-section-empty">Sem itens atribuídos. Atribui um item a este separador para que apareça no site.</p>' : "",
+            '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list">' + rowsHtml + '</div>',
+            '</section>'
+          ].join("");
+          return;
+        }
+
+        if (state.admin) {
+          html += [
+            '<div class="design-grid-section design-grid-section-invisible' + (bucket.length === 0 ? ' is-empty' : '') + '" data-section-id="' + escapeHtml(section.id) + '">',
+            '<h3 class="design-grid-section-title is-admin-only">' + escapeHtml(section.title) + ' <span class="design-grid-section-hint">(grupo invisível no site público)</span></h3>',
+            bucket.length === 0 ? '<p class="design-grid-section-empty">Sem itens neste grupo.</p>' : "",
+            '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list">' + rowsHtml + '</div>',
+            '</div>'
+          ].join("");
+        } else {
+          html += '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list">' + rowsHtml + '</div>';
+        }
+      });
+    } else {
+      (step.items || []).forEach(function (item) {
+        html += renderCoverChoice(item);
+      });
+      html = '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list">' + html + '</div>';
+    }
+
+    return html
       + (state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : "")
       + renderCadernosBuildSummaryV2(product, step);
   }
@@ -7157,7 +7263,7 @@
 
     return [
       '<div class="option-list size-choice-list crachas-size-card-list cadernos-purchase-list">' + html + '</div>',
-      promo ? '<p class="cadernos-info-note cadernos-info-note--promo" role="note">' + escapeHtml(promo) + '</p>' : "",
+      promo ? '<p class="cadernos-info-note cadernos-info-note--promo" role="note">' + renderInlineText(promo) + '</p>' : "",
       state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : ""
     ].join("");
   }

@@ -314,13 +314,34 @@
                     "sectionId": "horizontais",
                     "frameHeight": 95,
                     "frameWidth": 120
+                },
+                {
+                    "id": "esperanca-06",
+                    "value": "Esperança 06",
+                    "title": "Esperança 06",
+                    "subtitle": "Design vertical",
+                    "badge": "",
+                    "image": "content/designs/Fotos_dos_Imans/cornfield/cornfield-01.jpg",
+                    "imageFit": "contain",
+                    "imageZoom": 100,
+                    "imagePositionX": 0,
+                    "imagePositionY": 0,
+                    "imageRotation": 0,
+                    "frameScale": 100,
+                    "frameMarginX": 0,
+                    "frameMarginY": 0,
+                    "rectOrientation": "portrait",
+                    "sectionId": "novidades",
+                    "sectionOrder": 6,
+                    "frameWidth": 95,
+                    "frameHeight": 120
                 }
             ],
             "sections": [
                 {
                     "id": "novidades",
                     "title": "Novidades",
-                    "labelPrefix": "Esperança"
+                    "labelPrefix": ""
                 },
                 {
                     "id": "verticais",

@@ -87,6 +87,146 @@
       "selection": "multi",
       "items": [
         {
+          "id": "caderninho-06",
+          "value": "Caderninho 06",
+          "title": "Mini-Caderno 06",
+          "subtitle": "Design Vertical",
+          "badge": "",
+          "image": "content/designs/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.jpg",
+          "imageFit": "contain",
+          "imageZoom": 113,
+          "imagePositionX": -4,
+          "imagePositionY": 1,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 1,
+          "frameHeight": 125
+        },
+        {
+          "id": "caderninho-07",
+          "value": "Caderninho 07",
+          "title": "Mini-Caderno 07",
+          "subtitle": "Design Vertical",
+          "badge": "",
+          "image": "content/designs/Fotos_dos_Mini_Cadernos/novos/o_jovem_cadeira_minicaderno.jpg",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": -5,
+          "imagePositionY": 3,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 2,
+          "frameHeight": 125
+        },
+        {
+          "id": "caderninho-08",
+          "value": "Caderninho 08",
+          "title": "Mini-Caderno 08",
+          "subtitle": "Design Vertical",
+          "badge": "",
+          "image": "content/designs/Fotos_dos_Mini_Cadernos/novos/idosa_jovem_minicaderno.jpg",
+          "imageFit": "contain",
+          "imageZoom": 77,
+          "imagePositionX": -1,
+          "imagePositionY": 1,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 3,
+          "frameHeight": 125
+        },
+        {
+          "id": "caderninho-09",
+          "value": "Caderninho 09",
+          "title": "Mini-Caderno 09",
+          "subtitle": "Design Vertical",
+          "badge": "",
+          "image": "content/designs/Fotos_dos_Mini_Cadernos/novos/idoso_jovem_minicaderno.jpg",
+          "imageFit": "contain",
+          "imageZoom": 76,
+          "imagePositionX": -2,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 4,
+          "frameHeight": 125
+        },
+        {
+          "id": "caderninho-10",
+          "value": "Caderninho 10",
+          "title": "Mini-Caderno 10",
+          "subtitle": "Design Vertical",
+          "badge": "",
+          "image": "content/designs/Fotos_dos_Mini_Cadernos/novos/reencontro_minicaderno.jpg",
+          "imageFit": "contain",
+          "imageZoom": 77,
+          "imagePositionX": -1,
+          "imagePositionY": 1,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 5,
+          "frameHeight": 125
+        },
+        {
+          "imageFit": "contain",
+          "imageZoom": 76,
+          "imagePositionX": -2,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "frameHeight": 125,
+          "id": "caderninho-11",
+          "value": "Caderninho 11",
+          "title": "Mini-Caderno 11",
+          "subtitle": "Design Vertical",
+          "badge": "",
+          "image": "content/designs/Fotos_dos_Mini_Cadernos/novos/vestido_verde_minicaderno.jpg",
+          "sectionId": "novidades",
+          "sectionOrder": 6
+        },
+        {
+          "imageFit": "contain",
+          "imageZoom": 76,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "frameHeight": 125,
+          "id": "caderninho-12",
+          "value": "Caderninho 12",
+          "title": "Mini-Caderno 12",
+          "subtitle": "Design Vertical",
+          "badge": "",
+          "image": "content/designs/Fotos_dos_Mini_Cadernos/novos/cornfield_minicaderno.jpg",
+          "sectionId": "novidades",
+          "sectionOrder": 7
+        },
+        {
           "id": "caderninho-01",
           "value": "Caderninho 01",
           "title": "Mini-Caderno 01",
@@ -102,7 +242,8 @@
           "frameMarginX": 0,
           "frameMarginY": 0,
           "rectOrientation": "portrait",
-          "frameHeight": 125
+          "frameHeight": 125,
+          "sectionId": "felicidade-eterna"
         },
         {
           "id": "caderninho-02",
@@ -120,7 +261,8 @@
           "frameMarginX": 0,
           "frameMarginY": 0,
           "rectOrientation": "portrait",
-          "frameHeight": 125
+          "frameHeight": 125,
+          "sectionId": "felicidade-eterna"
         },
         {
           "id": "caderninho-03",
@@ -138,7 +280,8 @@
           "frameMarginX": 0,
           "frameMarginY": 0,
           "rectOrientation": "portrait",
-          "frameHeight": 125
+          "frameHeight": 125,
+          "sectionId": "felicidade-eterna"
         },
         {
           "id": "caderninho-04",
@@ -156,7 +299,8 @@
           "frameMarginX": 0,
           "frameMarginY": 0,
           "rectOrientation": "portrait",
-          "frameHeight": 125
+          "frameHeight": 125,
+          "sectionId": "felicidade-eterna"
         },
         {
           "id": "caderninho-05",
@@ -174,18 +318,19 @@
           "frameMarginX": 0,
           "frameMarginY": 0,
           "rectOrientation": "portrait",
-          "frameHeight": 125
+          "frameHeight": 125,
+          "sectionId": "felicidade-eterna"
         }
       ],
       "sections": [
         {
-          "id": "grupo-1",
-          "title": "Grupo 1",
+          "id": "novidades",
+          "title": "Novidades",
           "labelPrefix": ""
         },
         {
-          "id": "grupo-2",
-          "title": "Grupo 2",
+          "id": "felicidade-eterna",
+          "title": "Felicidade Eterna",
           "labelPrefix": ""
         }
       ]
