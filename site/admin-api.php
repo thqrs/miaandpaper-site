@@ -9,6 +9,7 @@ $configPath = mp_private_admin_config_path();
 define('MIAANDPAPER_PRODUCT_DIR', __DIR__ . '/content/products');
 define('MIAANDPAPER_HOME_FILE', __DIR__ . '/content/home.json');
 define('MIAANDPAPER_PRICING_FILE', __DIR__ . '/content/pricing.json');
+define('MIAANDPAPER_CATALOG_FILE', __DIR__ . '/content/catalogo.json');
 define('MIAANDPAPER_UPLOAD_DIR', __DIR__ . '/content/uploads');
 define('MIAANDPAPER_UPLOAD_PREFIX', 'content/uploads/');
 define('MIAANDPAPER_SYNC_FLAG', mp_private_path('miaandpaper-admin-sync-needed.json') ?: '');
@@ -222,6 +223,32 @@ function admin_require_csrf()
             'message' => 'Pedido bloqueado por CSRF. Recarrega a página de admin.',
         ));
     }
+}
+
+function admin_load_tracking_helpers()
+{
+    static $loaded = false;
+    if (!$loaded) {
+        require_once __DIR__ . '/lib/db.php';
+        $loaded = true;
+    }
+}
+
+function admin_current_ip_info()
+{
+    if (!admin_is_logged_in()) {
+        return null;
+    }
+
+    admin_load_tracking_helpers();
+    $diagnostics = mp_tracking_ip_diagnostics();
+    $ip = isset($diagnostics['effective']) ? (string)$diagnostics['effective'] : '';
+
+    return array(
+        'ip' => $ip,
+        'ignored' => $ip !== '' ? mp_db_is_ip_ignored($ip) : false,
+        'diagnostics' => $diagnostics,
+    );
 }
 
 /**
@@ -868,18 +895,120 @@ function admin_write_home($home)
     return $home;
 }
 
+function admin_catalog_number($value, $fallback, $min, $max)
+{
+    if (!is_numeric($value)) {
+        return $fallback;
+    }
+
+    $number = (float)$value;
+    if (!is_finite($number)) {
+        return $fallback;
+    }
+
+    return max($min, min($max, round($number, 2)));
+}
+
+function admin_normalize_catalog($catalog)
+{
+    $out = array(
+        'schemaVersion' => 1,
+        'imageEdits' => array(),
+        'updatedAt' => gmdate('c'),
+    );
+
+    if (!is_array($catalog)) {
+        return $out;
+    }
+
+    $imageEdits = isset($catalog['imageEdits']) && is_array($catalog['imageEdits'])
+        ? $catalog['imageEdits']
+        : array();
+
+    foreach ($imageEdits as $key => $edit) {
+        $safeKey = trim((string)$key);
+        if ($safeKey === '' || strlen($safeKey) > 260 || preg_match('/[\x00-\x1F\x7F]/', $safeKey)) {
+            continue;
+        }
+        if (!is_array($edit)) {
+            continue;
+        }
+
+        $out['imageEdits'][$safeKey] = array(
+            'zoom' => admin_catalog_number(isset($edit['zoom']) ? $edit['zoom'] : 100, 100, 20, 500),
+            'x' => admin_catalog_number(isset($edit['x']) ? $edit['x'] : 0, 0, -100, 100),
+            'y' => admin_catalog_number(isset($edit['y']) ? $edit['y'] : 0, 0, -100, 100),
+            'rotation' => admin_catalog_number(isset($edit['rotation']) ? $edit['rotation'] : 0, 0, -180, 180),
+        );
+
+        if (count($out['imageEdits']) >= 1000) {
+            break;
+        }
+    }
+
+    return $out;
+}
+
+function admin_write_catalog($catalog)
+{
+    $tmp = '';
+    $json = '';
+    $options = admin_json_options();
+    $normalized = admin_normalize_catalog($catalog);
+
+    if (defined('JSON_PRETTY_PRINT')) {
+        $options |= JSON_PRETTY_PRINT;
+    }
+
+    $json = json_encode($normalized, $options);
+    if ($json === false) {
+        admin_respond(400, array(
+            'ok' => false,
+            'message' => 'Nao foi possivel converter o catalogo para JSON.',
+        ));
+    }
+
+    $tmp = MIAANDPAPER_CATALOG_FILE . '.tmp.' . getmypid();
+    if (file_put_contents($tmp, $json . "\n", LOCK_EX) === false) {
+        admin_respond(500, array(
+            'ok' => false,
+            'message' => 'Nao foi possivel escrever o JSON do catalogo.',
+        ));
+    }
+
+    if (!rename($tmp, MIAANDPAPER_CATALOG_FILE)) {
+        @unlink($tmp);
+        admin_respond(500, array(
+            'ok' => false,
+            'message' => 'Nao foi possivel substituir o JSON antigo do catalogo.',
+        ));
+    }
+
+    chmod(MIAANDPAPER_CATALOG_FILE, 0644);
+
+    return $normalized;
+}
+
 $action = isset($_GET['action']) ? (string)$_GET['action'] : '';
 
 if ($action === 'status') {
     $syncFlag = admin_sync_flag();
-
-    admin_respond(200, array(
+    $ipInfo = admin_current_ip_info();
+    $payload = array(
         'ok' => true,
         'configured' => admin_configured(),
         'loggedIn' => admin_is_logged_in(),
         'syncNeeded' => !empty($syncFlag['needed']),
         'csrf' => admin_csrf_token(),
-    ));
+    );
+
+    if (is_array($ipInfo)) {
+        $payload['adminIp'] = $ipInfo['ip'];
+        $payload['adminIpIgnored'] = !empty($ipInfo['ignored']);
+        $payload['adminIpDiagnostics'] = $ipInfo['diagnostics'];
+    }
+
+    admin_respond(200, $payload);
 }
 
 if ($action === 'login') {
@@ -934,6 +1063,71 @@ if ($action === 'logout') {
     admin_respond(200, array(
         'ok' => true,
         'loggedIn' => false,
+    ));
+}
+
+if ($action === 'toggle-ignore-current-ip') {
+    admin_require_post();
+    admin_require_login();
+    admin_require_csrf();
+    admin_load_tracking_helpers();
+
+    $ip = mp_db_normalize_ip(mp_tracking_client_ip());
+    if ($ip === '') {
+        admin_respond(400, array(
+            'ok' => false,
+            'message' => 'Nao foi possivel detectar um IP valido.',
+        ));
+    }
+
+    if (mp_db_is_ip_ignored($ip)) {
+        $removed = mp_db_remove_ignored_ip($ip);
+        admin_respond(200, array(
+            'ok' => true,
+            'adminIp' => $ip,
+            'adminIpIgnored' => false,
+            'changed' => $removed,
+            'action' => 'removed',
+            'message' => $removed
+                ? 'Este IP foi removido da ignore list.'
+                : 'Este IP ja nao estava na ignore list.',
+        ));
+    }
+
+    $added = mp_db_add_ignored_ip($ip, 'admin basico');
+    admin_respond(200, array(
+        'ok' => true,
+        'adminIp' => $ip,
+        'adminIpIgnored' => true,
+        'changed' => $added,
+        'action' => 'added',
+        'message' => $added
+            ? 'Este IP foi adicionado a ignore list.'
+            : 'Este IP ja estava na ignore list.',
+    ));
+}
+
+if ($action === 'save-catalog') {
+    admin_require_post();
+    admin_require_login();
+    admin_require_csrf();
+    $payload = admin_payload();
+
+    if (empty($payload['catalog']) || !is_array($payload['catalog'])) {
+        admin_respond(400, array(
+            'ok' => false,
+            'message' => 'Falta o catalogo para guardar.',
+        ));
+    }
+
+    $catalog = admin_write_catalog($payload['catalog']);
+    $syncFlagCreated = admin_mark_sync_needed('catalogo');
+
+    admin_respond(200, array(
+        'ok' => true,
+        'catalog' => $catalog,
+        'syncNeeded' => true,
+        'syncFlagCreated' => $syncFlagCreated,
     ));
 }
 

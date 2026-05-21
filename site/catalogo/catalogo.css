@@ -416,6 +416,46 @@ a.catalog-brand:focus-visible,
   line-height: 1.42;
 }
 
+.catalog-price-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 245, 0.94);
+  box-shadow: 0 10px 24px rgba(97, 70, 20, 0.07);
+}
+
+.catalog-price-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.catalog-price-table th,
+.catalog-price-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(114, 85, 30, 0.14);
+  text-align: left;
+  vertical-align: top;
+}
+
+.catalog-price-table th {
+  color: var(--leaf);
+  font-size: 0.9rem;
+}
+
+.catalog-price-table td {
+  color: var(--ink);
+  line-height: 1.42;
+}
+
+.catalog-price-table td:nth-child(2) {
+  white-space: nowrap;
+  font-weight: 900;
+}
+
+.catalog-price-table tr:last-child td {
+  border-bottom: 0;
+}
+
 .price-card {
   display: grid;
   gap: 12px;
@@ -564,12 +604,16 @@ a.catalog-brand:focus-visible,
   transform-origin: center;
 }
 
-.catalog-design-img {
+.catalog-design-frame > .catalog-design-img {
   position: absolute;
   inset: -30%;
   width: 160%;
   height: 160%;
   max-width: none;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   object-fit: var(--catalog-design-fit, cover);
   object-position: center;
   transform:
@@ -644,6 +688,170 @@ a.catalog-brand:focus-visible,
   color: var(--muted);
   font-size: 0.84rem;
   text-align: center;
+}
+
+.catalog-admin-open {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--leaf);
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.catalog-admin-open:hover,
+.catalog-admin-open:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.catalog-admin-panel {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 40;
+  display: grid;
+  gap: 10px;
+  max-height: 42vh;
+  overflow: auto;
+  padding: 10px;
+  border: 2px solid #c74438;
+  border-radius: var(--radius);
+  background: #fffdf8;
+  box-shadow: 0 14px 44px rgba(37, 41, 31, 0.24);
+}
+
+.catalog-admin-panel form {
+  display: grid;
+  gap: 10px;
+}
+
+.catalog-admin-head,
+.catalog-admin-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.catalog-admin-actions {
+  grid-template-columns: 1fr 1fr;
+}
+
+.catalog-admin-panel strong,
+.catalog-admin-panel label,
+.catalog-admin-selected {
+  color: #8c3028;
+}
+
+.catalog-admin-panel label {
+  display: grid;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.catalog-admin-panel input {
+  min-height: 34px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fffaf0;
+  color: var(--ink);
+  font: inherit;
+}
+
+.catalog-admin-panel button {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(199, 68, 56, 0.28);
+  border-radius: 6px;
+  background: #fff7f6;
+  color: #8c3028;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.catalog-admin-panel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.catalog-admin-message,
+.catalog-admin-help,
+.catalog-admin-selected {
+  margin: 0;
+  color: #8c3028;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.catalog-admin-message {
+  padding: 8px 10px;
+  border: 1px solid rgba(199, 68, 56, 0.22);
+  border-radius: 8px;
+  background: #fff7f6;
+  font-weight: 800;
+}
+
+.catalog-admin-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.catalog-admin-values span {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  padding: 5px 8px;
+  border: 1px solid rgba(199, 68, 56, 0.18);
+  border-radius: 999px;
+  background: #fff7f6;
+  color: #8c3028;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.catalog-admin-help kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 22px;
+  margin: 0 2px;
+  padding: 1px 5px;
+  border: 1px solid rgba(199, 68, 56, 0.25);
+  border-radius: 5px;
+  background: #fffaf0;
+  color: #8c3028;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.catalog-admin-mode .catalog-design-frame.is-catalog-admin-selectable {
+  cursor: crosshair;
+}
+
+.catalog-admin-mode .catalog-design-frame.is-catalog-admin-selectable::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  z-index: 2;
+  border: 2px dashed rgba(199, 68, 56, 0.34);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.catalog-admin-mode .catalog-design-frame.is-catalog-admin-active {
+  outline: 3px solid rgba(199, 68, 56, 0.55);
+  outline-offset: 3px;
 }
 
 @media (max-width: 880px) {

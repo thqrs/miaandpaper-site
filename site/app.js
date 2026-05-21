@@ -135,6 +135,10 @@
     adminImageKeyboardBound: false,
     adminImageKeyboardUndoFor: "",
     adminImageKeyboardUndoTimer: null,
+    adminIp: "",
+    adminIpIgnored: false,
+    adminIpLoaded: false,
+    adminIpLoading: false,
     packDisabledMessage: "",
     homeUnavailableMessage: "",
     // OPEN_ORDER_HINT_V1: true quando check-open-orders.php devolve
@@ -1668,7 +1672,7 @@
   // ADMIN_API_CSRF_V1: token em memória (não em localStorage — vive
   // enquanto a página estiver aberta, em sintonia com a sessão server).
   var adminCsrfToken = null;
-  var ADMIN_CSRF_REQUIRED = { "save-product": true, "save-home": true, "logout": true };
+  var ADMIN_CSRF_REQUIRED = { "save-product": true, "save-home": true, "logout": true, "toggle-ignore-current-ip": true };
 
   function ensureAdminCsrf() {
     if (adminCsrfToken) {
@@ -1743,6 +1747,55 @@
         }
         throw err;
       });
+    });
+  }
+
+  function updateAdminIpState(data) {
+    if (!data || data.adminIp == null) {
+      return false;
+    }
+
+    var nextIp = String(data.adminIp || "");
+    var nextIgnored = data.adminIpIgnored === true;
+    var changed = state.adminIp !== nextIp || state.adminIpIgnored !== nextIgnored || !state.adminIpLoaded;
+
+    state.adminIp = nextIp;
+    state.adminIpIgnored = nextIgnored;
+    state.adminIpLoaded = true;
+
+    return changed;
+  }
+
+  function refreshBasicAdminInfo(force) {
+    if (!state.admin || state.adminIpLoading || (state.adminIpLoaded && !force)) {
+      return;
+    }
+
+    state.adminIpLoading = true;
+    fetch(ADMIN_API + "?action=status", {
+      method: "GET",
+      credentials: "same-origin"
+    }).then(function (response) {
+      return response.json().catch(function () { return {}; });
+    }).then(function (data) {
+      var changed;
+
+      if (data && data.csrf) {
+        adminCsrfToken = String(data.csrf);
+      }
+      changed = updateAdminIpState(data);
+      if (data && data.loggedIn === false) {
+        state.admin = false;
+        state.loginOpen = false;
+        safeStorageRemoveItem(ADMIN_KEY);
+        changed = true;
+      }
+      state.adminIpLoading = false;
+      if (changed) {
+        rerender();
+      }
+    }).catch(function () {
+      state.adminIpLoading = false;
     });
   }
 
@@ -3179,6 +3232,26 @@
     ].join("");
   }
 
+  function renderBasicAdminTrackingPanel() {
+    var ipText = state.adminIpLoaded && state.adminIp
+      ? state.adminIp
+      : (state.adminIpLoading ? "a confirmar..." : "indisponivel");
+    var statusText = state.adminIpLoaded && state.adminIp
+      ? (state.adminIpIgnored ? "Este IP esta na ignore list do tracking." : "Este IP ainda entra no tracking.")
+      : "O IP aparece aqui depois de confirmado pelo servidor.";
+    var buttonText = state.adminIpIgnored ? "Remover da ignore list" : "Ignorar este IP";
+    var disabled = !state.adminIpLoaded || !state.adminIp;
+
+    return [
+      '<details class="admin-step-panel" open>',
+      '<summary>Tracking</summary>',
+      '<p class="admin-price-help">IP detectado: <code>' + escapeHtml(ipText) + '</code></p>',
+      '<p class="admin-price-help">' + escapeHtml(statusText) + '</p>',
+      '<button type="button" data-admin-toggle-own-ip-ignore' + (disabled ? " disabled" : "") + '>' + escapeHtml(buttonText) + '</button>',
+      '</details>'
+    ].join("");
+  }
+
 
   function renderAdminHomeSettingsPanel(home) {
     var theme;
@@ -3329,6 +3402,7 @@
       '<button type="button" data-admin-exit>Sair</button>',
       '</div>',
       message,
+      renderBasicAdminTrackingPanel(),
       step ? '<details class="admin-step-panel"><summary>Editar passo</summary><label><span>Template</span><select data-admin-template>' + options + '</select></label>' : "",
       step ? '<label><span>Título</span><input type="text" value="' + escapeHtml(step.title || "") + '" data-admin-step-edit="title"></label>' : "",
       step ? '<label><span>Texto</span><textarea data-admin-step-edit="text">' + escapeHtml(step.text || "") + '</textarea></label>' : "",
@@ -3360,6 +3434,11 @@
     var undo = document.querySelector("[data-admin-undo]");
     var save = document.querySelector("[data-admin-save]");
     var reset = document.querySelector("[data-admin-reset]");
+    var toggleOwnIpIgnore = document.querySelector("[data-admin-toggle-own-ip-ignore]");
+
+    if (state.admin) {
+      refreshBasicAdminInfo(false);
+    }
 
     if (open) {
       open.addEventListener("click", function () {
@@ -3387,6 +3466,8 @@
         adminRequest("login", { password: password }).then(function () {
           state.admin = true;
           state.loginOpen = false;
+          state.adminIpLoaded = false;
+          state.adminIpLoading = false;
           window.localStorage.setItem(ADMIN_KEY, "1");
           rerender();
         }).catch(function (error) {
@@ -3401,9 +3482,27 @@
         state.admin = false;
         state.loginOpen = false;
         state.adminMessage = "";
+        state.adminIp = "";
+        state.adminIpIgnored = false;
+        state.adminIpLoaded = false;
         window.localStorage.removeItem(ADMIN_KEY);
         adminRequest("logout", {}).catch(function () {});
         rerender();
+      });
+    }
+
+    if (toggleOwnIpIgnore) {
+      toggleOwnIpIgnore.addEventListener("click", function () {
+        toggleOwnIpIgnore.disabled = true;
+        state.adminMessage = "";
+        adminRequest("toggle-ignore-current-ip", {}).then(function (data) {
+          updateAdminIpState(data);
+          state.adminMessage = data.message || (state.adminIpIgnored ? "IP ignorado no tracking." : "IP removido da ignore list.");
+          rerender();
+        }).catch(function (error) {
+          state.adminMessage = error.message;
+          rerender();
+        });
       });
     }
 
