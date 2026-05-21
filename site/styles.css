@@ -117,98 +117,28 @@ button {
   display: inline-block;
 }
 
-.brand-butterfly {
-  --brand-butterfly-size: 18px;
+.brand-butterfly-frame {
   position: absolute;
-  left: 58%;
-  top: -1.18em;
+  left: 62%;
+  top: -1.54em;
   z-index: 2;
   display: block;
-  width: calc(var(--brand-butterfly-size) * 1.75);
-  height: calc(var(--brand-butterfly-size) * 1.15);
+  width: 42px;
+  height: 34px;
+  border: 0;
   pointer-events: none;
-  filter: drop-shadow(0 3px 3px rgba(46, 36, 19, 0.18));
+  overflow: hidden;
+  background: transparent;
+  filter: drop-shadow(0 3px 4px rgba(46, 36, 19, 0.18));
   transform: translateX(-50%) rotate(-10deg);
-  transform-style: preserve-3d;
 }
 
-.brand-butterfly-wing,
-.brand-butterfly-body {
-  position: absolute;
-  display: block;
+body:not(.is-brand-butterfly-enabled) .brand-butterfly-frame {
+  display: none;
 }
 
-.brand-butterfly-wing {
-  top: 25%;
-  width: calc(var(--brand-butterfly-size) * 0.82);
-  height: calc(var(--brand-butterfly-size) * 0.66);
-  border: 1px solid #1c140c;
-  background:
-    radial-gradient(circle at 22% 22%, #fff 0 1px, transparent 1.5px),
-    radial-gradient(circle at 72% 22%, #fff 0 1px, transparent 1.5px),
-    radial-gradient(circle at 18% 76%, #fff 0 1px, transparent 1.5px),
-    linear-gradient(135deg, #f7c650 0 34%, #e8751e 35% 76%, #1c140c 77% 100%);
-}
-
-.brand-butterfly-wing-left {
-  left: 0;
-  border-radius: 72% 24% 68% 32%;
-  transform-origin: right center;
-  animation: brandButterflyLeftFlap 520ms ease-in-out infinite alternate;
-}
-
-.brand-butterfly-wing-right {
-  right: 0;
-  border-radius: 24% 72% 32% 68%;
-  transform-origin: left center;
-  animation: brandButterflyRightFlap 520ms ease-in-out infinite alternate;
-}
-
-.brand-butterfly-body {
-  left: 50%;
-  top: 18%;
-  width: calc(var(--brand-butterfly-size) * 0.16);
-  height: calc(var(--brand-butterfly-size) * 0.78);
-  border-radius: 999px;
-  background: #1c140c;
-  transform: translateX(-50%) rotate(3deg);
-}
-
-.brand-butterfly-body::before,
-.brand-butterfly-body::after {
-  content: "";
-  position: absolute;
-  top: calc(var(--brand-butterfly-size) * -0.32);
-  width: 1px;
-  height: calc(var(--brand-butterfly-size) * 0.42);
-  background: #1c140c;
-  transform-origin: bottom;
-}
-
-.brand-butterfly-body::before {
-  left: 0;
-  transform: rotate(-28deg);
-}
-
-.brand-butterfly-body::after {
-  right: 0;
-  transform: rotate(28deg);
-}
-
-@keyframes brandButterflyLeftFlap {
-  from { transform: rotate(-18deg) rotateY(16deg); }
-  to { transform: rotate(-20deg) rotateY(72deg); }
-}
-
-@keyframes brandButterflyRightFlap {
-  from { transform: rotate(18deg) rotateY(-16deg); }
-  to { transform: rotate(20deg) rotateY(-72deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .brand-butterfly-wing {
-    animation: none;
-  }
+body.is-catalog-footer-hidden .catalog-footer-link {
+  display: none;
 }
 
 .brand-mark {
@@ -5742,6 +5672,16 @@ html[data-theme="dark"] .cadernos-info-note {
     width: min(var(--frame-width-px, 86px), max(78px, 27vw)) !important;
     height: auto !important;
     aspect-ratio: var(--frame-aspect, 160 / 124) !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .choice-card.cadernos-purchase-card .crachas-size-card-visual .option-image,
+  .choice-card.cadernos-purchase-card .crachas-size-card-visual .uploaded-image,
+  .choice-card.cadernos-purchase-card .crachas-size-card-visual .uploaded-image[data-admin-image-visual] {
+    width: min(var(--frame-width-px, 86px), max(58px, 20vw)) !important;
+    height: auto !important;
+    aspect-ratio: var(--frame-aspect, 86 / 64) !important;
   }
 }
 

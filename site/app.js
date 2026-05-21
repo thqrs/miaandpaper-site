@@ -131,6 +131,7 @@
     homeCarouselTimers: [],
     homeDeadlineTimer: null,
     brandButterflyEnabled: false,
+    catalogFooterLinkVisible: true,
     itemDisplayLabels: {},
     adminActiveImage: null,
     adminImageKeyboardBound: false,
@@ -585,6 +586,10 @@
       home.brandButterflyEnabled = false;
     }
 
+    if (typeof home.catalogFooterLinkVisible !== "boolean") {
+      home.catalogFooterLinkVisible = true;
+    }
+
     if (Array.isArray(home.categories)) {
       home.categories.forEach(ensureHomeCategoryDefaults);
     }
@@ -628,6 +633,7 @@
 
     if (!home) {
       state.brandButterflyEnabled = false;
+      state.catalogFooterLinkVisible = true;
       return;
     }
 
@@ -667,6 +673,9 @@
 
     applyThemeToggleVisibility(home.showThemeToggle === true);
     state.brandButterflyEnabled = home.brandButterflyEnabled === true;
+    state.catalogFooterLinkVisible = home.catalogFooterLinkVisible !== false;
+    document.body.classList.toggle("is-brand-butterfly-enabled", state.brandButterflyEnabled);
+    document.body.classList.toggle("is-catalog-footer-hidden", !state.catalogFooterLinkVisible);
   }
 
   function applyThemeToggleVisibility(visible) {
@@ -2889,13 +2898,7 @@
   }
 
   function renderBrandButterfly() {
-    return [
-      '<span class="brand-butterfly" aria-hidden="true">',
-      '<span class="brand-butterfly-wing brand-butterfly-wing-left"></span>',
-      '<span class="brand-butterfly-wing brand-butterfly-wing-right"></span>',
-      '<span class="brand-butterfly-body"></span>',
-      '</span>'
-    ].join("");
+    return '<iframe class="brand-butterfly-frame" src="content/brand/brand-butterfly.html" title="" aria-hidden="true" tabindex="-1" inert sandbox=""></iframe>';
   }
 
   function renderBrandText(brand) {
@@ -2940,6 +2943,7 @@
   function renderFooter(brand) {
     return [
       '<footer class="site-footer">',
+      '<a class="catalog-footer-link" href="catalogo/index.html">Encomendar por Catálogo</a>',
       '<a href="privacy.html">Política de Privacidade</a>',
       '<button type="button" data-admin-open>Login de Administrador</button>',
       '<span>© ' + escapeHtml(brand || "Mia & Paper") + ' 2026 Todos os Direitos Reservados</span>',
@@ -3326,6 +3330,7 @@
       '<label class="admin-check"><input type="checkbox"' + (home.showCategoryNumbers === true ? " checked" : "") + ' data-admin-home-toggle="showCategoryNumbers"> Mostrar números dos cartões (01, 02, ...)</label>',
       '<label class="admin-check"><input type="checkbox"' + (home.showThemeToggle === true ? " checked" : "") + ' data-admin-home-toggle="showThemeToggle"> Mostrar botão claro/escuro no header</label>',
       '<label class="admin-check"><input type="checkbox"' + (home.brandButterflyEnabled === true ? " checked" : "") + ' data-admin-home-toggle="brandButterflyEnabled"> Mostrar borboleta no texto da marca</label>',
+      '<label class="admin-check"><input type="checkbox"' + (home.catalogFooterLinkVisible !== false ? " checked" : "") + ' data-admin-home-toggle="catalogFooterLinkVisible"> Mostrar link do catálogo no footer</label>',
       '<label class="admin-check"><input type="checkbox"' + (carousel.enabled !== false ? " checked" : "") + ' data-admin-home-carousel="enabled"> Carousel automático nos cartões (defaults globais)</label>',
       '<div class="admin-image-control-grid">',
       '<label><span>Velocidade (segundos)</span><input type="number" min="3" max="30" step="1" value="' + escapeHtml(carousel.speedSeconds || 8) + '" data-admin-home-carousel="speedSeconds"></label>',

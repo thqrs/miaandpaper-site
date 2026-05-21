@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="monarch-butterfly.css">
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: transparent !important;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 500vmin;
+    }
+
+    .butterfly {
+      position: relative !important;
+      width: 80vmin;
+      height: 60vmin;
+      transform: rotate(-10deg) scale(0.9);
+      pointer-events: none;
+    }
+
+    .butterfly:hover {
+      border: 0;
+      animation: none;
+    }
+
+    .wing.left {
+      animation: flying 620ms ease-in-out infinite alternate;
+    }
+
+    .wing.right {
+      animation: flying2 620ms ease-in-out infinite alternate;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .wing.left,
+      .wing.right {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body aria-hidden="true">
+  <div class="butterfly">
+    <div class="head">
+      <div class="mouth"></div>
+      <div class="l-antenna"></div>
+      <div class="r-antenna"></div>
+      <div class="eyes"></div>
+    </div>
+    <div class="body">
+      <span></span>
+    </div>
+    <div class="wing left">
+      <span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+      <span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+    </div>
+    <div class="wing right">
+      <span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+      <span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+    </div>
+  </div>
+</body>
+</html>

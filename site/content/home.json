@@ -8,6 +8,7 @@
     },
     "showCategoryNumbers": false,
     "brandButterflyEnabled": true,
+    "catalogFooterLinkVisible": true,
     "categories": [
         {
             "id": "crachas",
