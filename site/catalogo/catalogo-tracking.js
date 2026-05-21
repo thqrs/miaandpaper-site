@@ -503,36 +503,63 @@
     function ensureAdminOpenButton() {
       var footer = document.querySelector(".catalog-footer");
       var button = document.querySelector("[data-catalog-admin-open]");
+      var legacyButton = footer ? footer.querySelector("[data-admin-open]") : null;
 
-      if (!footer || button) {
+      // Se o footer foi copiado da homepage, pode trazer o botão errado:
+      // data-admin-open. No catálogo esse botão não tem handler próprio.
+      // Em vez de criar um segundo botão, reaproveitamos esse botão e
+      // transformamo-lo no botão certo do admin do catálogo.
+      if (!button && legacyButton) {
+        button = legacyButton;
+        button.removeAttribute("data-admin-open");
+        button.setAttribute("data-catalog-admin-open", "");
+        if (button.className) {
+          button.className += " catalog-admin-open";
+        } else {
+          button.className = "catalog-admin-open";
+        }
+      }
+
+      // Se não existir botão nenhum, cria um botão no footer.
+      if (!button && footer) {
+        button = document.createElement("button");
+        button.type = "button";
+        button.className = "catalog-admin-open";
+        button.setAttribute("data-catalog-admin-open", "");
+        footer.appendChild(document.createTextNode(" · "));
+        footer.appendChild(button);
+      }
+
+      if (!button) {
         updateAdminOpenButton();
         return;
       }
 
-      button = document.createElement("button");
-      button.type = "button";
-      button.className = "catalog-admin-open";
-      button.setAttribute("data-catalog-admin-open", "");
-      button.addEventListener("click", function () {
-        if (state.admin) {
-          state.panelOpen = !state.panelOpen;
-          state.loginOpen = false;
-          renderCatalogAdmin();
-          return;
-        }
+      // Garante que o botão funciona mesmo quando já vinha no HTML.
+      // Evita também ligar o mesmo click várias vezes após rerenders.
+      if (button.dataset.catalogAdminBound !== "1") {
+        button.dataset.catalogAdminBound = "1";
 
-        refreshAdminStatus(false).then(function (loggedIn) {
-          if (loggedIn) {
-            state.panelOpen = true;
-          } else {
-            state.loginOpen = true;
-            state.panelOpen = true;
+        button.addEventListener("click", function () {
+          if (state.admin) {
+            state.panelOpen = !state.panelOpen;
+            state.loginOpen = false;
+            renderCatalogAdmin();
+            return;
           }
-          renderCatalogAdmin();
+
+          refreshAdminStatus(false).then(function (loggedIn) {
+            if (loggedIn) {
+              state.panelOpen = true;
+            } else {
+              state.loginOpen = true;
+              state.panelOpen = true;
+            }
+            renderCatalogAdmin();
+          });
         });
-      });
-      footer.appendChild(document.createTextNode(" · "));
-      footer.appendChild(button);
+      }
+
       updateAdminOpenButton();
     }
 
@@ -543,7 +570,7 @@
       }
       button.textContent = state.admin
         ? (state.dirty ? "Admin *" : "Admin")
-        : "Login admin";
+        : "Login de Administrador";
       button.setAttribute("aria-expanded", state.panelOpen || state.loginOpen ? "true" : "false");
     }
 
