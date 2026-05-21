@@ -1,4 +1,102 @@
 {
-  "schemaVersion": 1,
-  "imageEdits": {}
+    "schemaVersion": 1,
+    "imageEdits": {
+        "cadernos:content/designs/cadernos/process/cadernos (9)/img (16).jpg": {
+            "zoom": 70,
+            "x": 0,
+            "y": 3,
+            "rotation": 2
+        },
+        "cadernos:content/designs/cadernos/process/cadernos (5)/img (26).jpg": {
+            "zoom": 70,
+            "x": 0,
+            "y": 5,
+            "rotation": 1
+        },
+        "cadernos:content/designs/cadernos/process/cadernos (6)/1778703273549_reduced_q95.jpg": {
+            "zoom": 70,
+            "x": -2,
+            "y": 5,
+            "rotation": 1
+        },
+        "cadernos:content/designs/cadernos/process/cadernos (7)/img (12).jpg": {
+            "zoom": 70,
+            "x": -2,
+            "y": 3,
+            "rotation": 1
+        },
+        "cadernos:content/designs/cadernos/process/cadernos (8)/img (19).jpg": {
+            "zoom": 76,
+            "x": -1,
+            "y": 3,
+            "rotation": -1
+        },
+        "cadernos:content/designs/cadernos/process/cadernos (4)/img (28).jpg": {
+            "zoom": 70,
+            "x": -2,
+            "y": 4,
+            "rotation": 0
+        },
+        "cadernos:content/designs/cadernos/process/cadernos (3)/img (22).jpg": {
+            "zoom": 73,
+            "x": -3,
+            "y": 4,
+            "rotation": 2
+        },
+        "cadernos:content/designs/cadernos/process/cadernos (2)/img (21).jpg": {
+            "zoom": 71,
+            "x": -2,
+            "y": 1,
+            "rotation": 2
+        },
+        "cadernos:content/designs/cadernos/process/cadernos (1)/img (27).jpg": {
+            "zoom": 73,
+            "x": -1,
+            "y": 3,
+            "rotation": 1
+        },
+        "cadernos:content/designs/cadernos/novos/reencontro/reencontro_matte.jpg": {
+            "zoom": 69,
+            "x": 0,
+            "y": 2,
+            "rotation": 2
+        },
+        "cadernos:content/designs/cadernos/novos/vestido_verde/vestido_verde_matte.jpg": {
+            "zoom": 71,
+            "x": 0,
+            "y": 2,
+            "rotation": 1
+        },
+        "cadernos:content/designs/cadernos/novos/cornfield/cornfield_matte.jpg": {
+            "zoom": 79,
+            "x": -2,
+            "y": 5,
+            "rotation": 1
+        },
+        "cadernos:content/designs/cadernos/novos/idoso_jovem/idoso_jovem_matte.jpg": {
+            "zoom": 74,
+            "x": -1,
+            "y": 1,
+            "rotation": 1
+        },
+        "cadernos:content/designs/cadernos/novos/idosa_jovem/idosa_jovem_matte.jpg": {
+            "zoom": 77,
+            "x": 0,
+            "y": 2,
+            "rotation": 1
+        },
+        "cadernos:content/designs/cadernos/novos/o_jovem_cadeira/o_jovem_cadeira_matte.jpg": {
+            "zoom": 76,
+            "x": 1,
+            "y": 1,
+            "rotation": 1
+        },
+        "cadernos:content/designs/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.jpg": {
+            "zoom": 75,
+            "x": 1,
+            "y": 1,
+            "rotation": 2
+        }
+    },
+    "updatedAt": "2026-05-21T14:18:28+00:00"
 }
