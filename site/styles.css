@@ -5634,9 +5634,9 @@ html[data-theme="dark"] .cadernos-info-note {
   .choice-card.cadernos-lamination-card .crachas-size-card-visual .option-image,
   .choice-card.cadernos-lamination-card .crachas-size-card-visual .uploaded-image,
   .choice-card.cadernos-lamination-card .crachas-size-card-visual .uploaded-image[data-admin-image-visual] {
-    width: var(--frame-width-px, 86px) !important;
-    height: var(--frame-height-px, 64px) !important;
-    aspect-ratio: var(--frame-aspect, auto);
+    width: min(var(--frame-width-px, 86px), max(78px, 27vw)) !important;
+    height: auto !important;
+    aspect-ratio: var(--frame-aspect, 160 / 124) !important;
   }
 }
 
