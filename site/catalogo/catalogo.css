@@ -427,6 +427,9 @@ a.catalog-brand:focus-visible,
 .catalog-price-table {
   width: 100%;
   border-collapse: collapse;
+  border-spacing: 0;
+  color: var(--ink);
+  font: inherit;
 }
 
 .catalog-price-table th,
@@ -604,16 +607,17 @@ a.catalog-brand:focus-visible,
   transform-origin: center;
 }
 
-.catalog-design-frame > .catalog-design-img {
+.design-card .catalog-design-frame > img.catalog-design-img {
   position: absolute;
-  inset: -30%;
-  width: 160%;
-  height: 160%;
-  max-width: none;
-  aspect-ratio: auto;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  inset: -30% !important;
+  width: 160% !important;
+  height: 160% !important;
+  min-width: 160%;
+  max-width: none !important;
+  aspect-ratio: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
   object-fit: var(--catalog-design-fit, cover);
   object-position: center;
   transform:
