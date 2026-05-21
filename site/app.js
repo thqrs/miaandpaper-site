@@ -130,6 +130,7 @@
     pricing: null,
     homeCarouselTimers: [],
     homeDeadlineTimer: null,
+    brandButterflyEnabled: false,
     itemDisplayLabels: {},
     adminActiveImage: null,
     adminImageKeyboardBound: false,
@@ -580,6 +581,10 @@
       home.showThemeToggle = false;
     }
 
+    if (typeof home.brandButterflyEnabled !== "boolean") {
+      home.brandButterflyEnabled = false;
+    }
+
     if (Array.isArray(home.categories)) {
       home.categories.forEach(ensureHomeCategoryDefaults);
     }
@@ -622,6 +627,7 @@
     var theme;
 
     if (!home) {
+      state.brandButterflyEnabled = false;
       return;
     }
 
@@ -660,6 +666,7 @@
     }
 
     applyThemeToggleVisibility(home.showThemeToggle === true);
+    state.brandButterflyEnabled = home.brandButterflyEnabled === true;
   }
 
   function applyThemeToggleVisibility(visible) {
@@ -2881,12 +2888,44 @@
     restoreQuantityStateFromSelections(product);
   }
 
+  function renderBrandButterfly() {
+    return [
+      '<span class="brand-butterfly" aria-hidden="true">',
+      '<span class="brand-butterfly-wing brand-butterfly-wing-left"></span>',
+      '<span class="brand-butterfly-wing brand-butterfly-wing-right"></span>',
+      '<span class="brand-butterfly-body"></span>',
+      '</span>'
+    ].join("");
+  }
+
+  function renderBrandText(brand) {
+    var text = brand || "Mia & Paper";
+    var anchorIndex = state.brandButterflyEnabled === true ? text.lastIndexOf("r") : -1;
+
+    if (anchorIndex < 0) {
+      return '<span class="brand-text">' + escapeHtml(text) + '</span>';
+    }
+
+    return [
+      '<span class="brand-text">',
+      escapeHtml(text.slice(0, anchorIndex)),
+      '<span class="brand-letter-r">',
+      escapeHtml(text.charAt(anchorIndex)),
+      renderBrandButterfly(),
+      '</span>',
+      escapeHtml(text.slice(anchorIndex + 1)),
+      '</span>'
+    ].join("");
+  }
+
   function renderBrand(brand, homeUrl, instagramUrl) {
+    var brandLabel = brand || "Mia & Paper";
+
     return [
       '<header class="site-header">',
-      '<a class="brand" href="' + escapeHtml(homeUrl || "index.html") + '" aria-label="' + escapeHtml(brand) + '">',
+      '<a class="brand" href="' + escapeHtml(homeUrl || "index.html") + '" aria-label="' + escapeHtml(brandLabel) + '">',
       '<span class="brand-mark"><img src="content/brand/logo.jpg" alt="" loading="lazy"></span>',
-      '<span>' + escapeHtml(brand) + '</span>',
+      renderBrandText(brandLabel),
       '</a>',
       '<nav class="header-actions" aria-label="Links rápidos">',
       '<a class="header-link header-link-icon" href="' + escapeHtml(instagramUrl) + '" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">' + ICON_INSTAGRAM + '</a>',
@@ -3286,6 +3325,7 @@
       '<hr>',
       '<label class="admin-check"><input type="checkbox"' + (home.showCategoryNumbers === true ? " checked" : "") + ' data-admin-home-toggle="showCategoryNumbers"> Mostrar números dos cartões (01, 02, ...)</label>',
       '<label class="admin-check"><input type="checkbox"' + (home.showThemeToggle === true ? " checked" : "") + ' data-admin-home-toggle="showThemeToggle"> Mostrar botão claro/escuro no header</label>',
+      '<label class="admin-check"><input type="checkbox"' + (home.brandButterflyEnabled === true ? " checked" : "") + ' data-admin-home-toggle="brandButterflyEnabled"> Mostrar borboleta no texto da marca</label>',
       '<label class="admin-check"><input type="checkbox"' + (carousel.enabled !== false ? " checked" : "") + ' data-admin-home-carousel="enabled"> Carousel automático nos cartões (defaults globais)</label>',
       '<div class="admin-image-control-grid">',
       '<label><span>Velocidade (segundos)</span><input type="number" min="3" max="30" step="1" value="' + escapeHtml(carousel.speedSeconds || 8) + '" data-admin-home-carousel="speedSeconds"></label>',

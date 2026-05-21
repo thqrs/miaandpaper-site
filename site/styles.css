@@ -106,6 +106,111 @@ button {
   font-size: 1.04rem;
 }
 
+.brand-text {
+  position: relative;
+  display: inline-block;
+  line-height: 1.1;
+}
+
+.brand-letter-r {
+  position: relative;
+  display: inline-block;
+}
+
+.brand-butterfly {
+  --brand-butterfly-size: 18px;
+  position: absolute;
+  left: 58%;
+  top: -1.18em;
+  z-index: 2;
+  display: block;
+  width: calc(var(--brand-butterfly-size) * 1.75);
+  height: calc(var(--brand-butterfly-size) * 1.15);
+  pointer-events: none;
+  filter: drop-shadow(0 3px 3px rgba(46, 36, 19, 0.18));
+  transform: translateX(-50%) rotate(-10deg);
+  transform-style: preserve-3d;
+}
+
+.brand-butterfly-wing,
+.brand-butterfly-body {
+  position: absolute;
+  display: block;
+}
+
+.brand-butterfly-wing {
+  top: 25%;
+  width: calc(var(--brand-butterfly-size) * 0.82);
+  height: calc(var(--brand-butterfly-size) * 0.66);
+  border: 1px solid #1c140c;
+  background:
+    radial-gradient(circle at 22% 22%, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle at 72% 22%, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle at 18% 76%, #fff 0 1px, transparent 1.5px),
+    linear-gradient(135deg, #f7c650 0 34%, #e8751e 35% 76%, #1c140c 77% 100%);
+}
+
+.brand-butterfly-wing-left {
+  left: 0;
+  border-radius: 72% 24% 68% 32%;
+  transform-origin: right center;
+  animation: brandButterflyLeftFlap 520ms ease-in-out infinite alternate;
+}
+
+.brand-butterfly-wing-right {
+  right: 0;
+  border-radius: 24% 72% 32% 68%;
+  transform-origin: left center;
+  animation: brandButterflyRightFlap 520ms ease-in-out infinite alternate;
+}
+
+.brand-butterfly-body {
+  left: 50%;
+  top: 18%;
+  width: calc(var(--brand-butterfly-size) * 0.16);
+  height: calc(var(--brand-butterfly-size) * 0.78);
+  border-radius: 999px;
+  background: #1c140c;
+  transform: translateX(-50%) rotate(3deg);
+}
+
+.brand-butterfly-body::before,
+.brand-butterfly-body::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--brand-butterfly-size) * -0.32);
+  width: 1px;
+  height: calc(var(--brand-butterfly-size) * 0.42);
+  background: #1c140c;
+  transform-origin: bottom;
+}
+
+.brand-butterfly-body::before {
+  left: 0;
+  transform: rotate(-28deg);
+}
+
+.brand-butterfly-body::after {
+  right: 0;
+  transform: rotate(28deg);
+}
+
+@keyframes brandButterflyLeftFlap {
+  from { transform: rotate(-18deg) rotateY(16deg); }
+  to { transform: rotate(-20deg) rotateY(72deg); }
+}
+
+@keyframes brandButterflyRightFlap {
+  from { transform: rotate(18deg) rotateY(-16deg); }
+  to { transform: rotate(20deg) rotateY(-72deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-butterfly-wing {
+    animation: none;
+  }
+}
+
 .brand-mark {
   display: grid;
   flex: 0 0 auto;

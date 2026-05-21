@@ -7,6 +7,7 @@
         "text": "Cada lembrança tem um formulário simples para que me possas dizer rapidamente tudo o que preciso de saber para preparar o teu pedido"
     },
     "showCategoryNumbers": false,
+    "brandButterflyEnabled": true,
     "categories": [
         {
             "id": "crachas",
