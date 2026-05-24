@@ -609,8 +609,8 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         }
     }
 
-    if (!$isCadernos && (strlen($recipientName) < 2 || strlen($recipientName) > 120)) {
-        $errors[] = 'Indica o nome para o cartão em ' . $productName . '.';
+    if (!$isCadernos && $recipientName !== '' && (strlen($recipientName) < 2 || strlen($recipientName) > 120)) {
+        $errors[] = 'Confirma o nome para o cartão em ' . $productName . '.';
     }
 
     if (!$isCadernos && $contact !== '' && (strlen($contact) < 3 || strlen($contact) > 160)) {
@@ -771,7 +771,7 @@ function cart_item_owner_lines($line)
     $rows[] = '- ' . implode("\n- ", $line['design_lines_owner']);
     $rows[] = '';
     $rows[] = 'Dados para cartão de apresentação:';
-    $rows[] = 'Nome: ' . $line['recipient_name'];
+    $rows[] = 'Nome: ' . ($line['recipient_name'] !== '' ? $line['recipient_name'] : 'Não indicado');
     $rows[] = 'Telemóvel ou Email: ' . ($line['card_contact'] !== '' ? $line['card_contact'] : 'Não indicado');
     $rows[] = 'Congregação: ' . ($line['congregation'] !== '' ? $line['congregation'] : 'Não indicado');
     if (!empty($line['show_congregation_gift_line'])) {
@@ -814,7 +814,7 @@ function cart_item_customer_lines($line)
     $rows[] = '- ' . implode("\n- ", $line['design_lines_customer']);
     $rows[] = '';
     $rows[] = 'Dados que vão ser usados para preencher o Cartão de Apresentação:';
-    $rows[] = 'Nome: ' . $line['recipient_name'];
+    $rows[] = 'Nome: ' . ($line['recipient_name'] !== '' ? $line['recipient_name'] : 'Não indicado');
     $rows[] = 'Telemóvel ou Email: ' . ($line['card_contact'] !== '' ? $line['card_contact'] : 'Não indicado');
     $rows[] = 'Congregação: ' . ($line['congregation'] !== '' ? $line['congregation'] : 'Não indicado');
     if (!empty($line['show_congregation_gift_line'])) {
@@ -1904,8 +1904,8 @@ if (!array_key_exists($deliveryOption, $allowedDeliveryOptions)) {
     $errors[] = 'Escolhe a opção de entrega.';
 }
 
-if (!$isCadernos && (strlen($recipientName) < 2 || strlen($recipientName) > 120)) {
-    $errors[] = 'Indica o nome para o cartão.';
+if (!$isCadernos && $recipientName !== '' && (strlen($recipientName) < 2 || strlen($recipientName) > 120)) {
+    $errors[] = 'Confirma o nome para o cartão.';
 }
 
 if (!$isCadernos && $contact !== '' && (strlen($contact) < 3 || strlen($contact) > 160)) {
@@ -1940,6 +1940,7 @@ if (!empty($errors)) {
 $replyTo = filter_var($customerContact, FILTER_VALIDATE_EMAIL)
     ? clean_header($customerContact)
     : (filter_var($contact, FILTER_VALIDATE_EMAIL) ? clean_header($contact) : $from);
+$recipientNameLine = $recipientName !== '' ? $recipientName : 'Não indicado';
 $contactLine = $contact !== '' ? $contact : 'Não indicado';
 $congregationLine = $congregation !== '' ? $congregation : 'Não indicado';
 $congregationGiftLine = $congregationGift ? 'Sim - pediu ajuda para escolher designs únicos para a congregação.' : 'Não';
@@ -2023,7 +2024,7 @@ $ownerBodyLines = array(
     '- ' . implode("\n- ", $designLinesOwner),
     '',
     'Dados para cartão de apresentação:',
-    'Nome: ' . $recipientName,
+    'Nome: ' . $recipientNameLine,
     'Telemóvel ou Email: ' . $contactLine,
     'Congregação: ' . $congregationLine,
 );
@@ -2099,7 +2100,7 @@ $customerBodyLines = array(
     '- ' . implode("\n- ", $designLinesCustomer),
     '',
     'Dados que vão ser usados para preencher o Cartão de Apresentação:',
-    'Nome: ' . $recipientName,
+    'Nome: ' . $recipientNameLine,
     'Telemóvel ou Email: ' . $contactLine,
     'Congregação: ' . $congregationLine,
 );

@@ -473,7 +473,7 @@
           "name": "recipient_name",
           "label": "Nome",
           "placeholder": "Nome a colocar no cartão",
-          "required": true,
+          "required": false,
           "autocomplete": "name",
           "section": "Dados para o Cartão de Apresentação"
         },

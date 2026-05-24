@@ -2112,7 +2112,7 @@
             "template": "purchase-option",
             "field": "pack_quantity",
             "selection": "pack",
-            "promoNote": "As 3 próximas pessoas que comprarem o Pack Normal ou o Pack Pioneiro recebem gratuitamente um mini-caderno com a mesma capa do caderno do Pack.",
+            "promoNote": "Atenção: Já só resta 1 mini-caderno de oferta. Por isso, a próxima pessoa que encomendar o Pack Normal, ou o Pack Pioneiro, receberá gratuitamente o último mini-caderno com a mesma capa do caderno do Pack.",
             "orderQuantity": {
                 "title": "Quantidade",
                 "text": "Podes encomendar mais do que um caderno ou pack com a mesma capa, laminação e personalização.",
