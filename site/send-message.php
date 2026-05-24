@@ -88,7 +88,7 @@ function render_page($title, $message, $type, $details = array())
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="styles.css?v=20260514153000">
+  <link rel="stylesheet" href="styles.css?v=20260524021000">
 </head>
 <body data-page="contact-result">
   <main class="message-result-shell">

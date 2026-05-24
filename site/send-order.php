@@ -442,12 +442,18 @@ function cart_valid_contact($value)
         return false;
     }
 
-    if (filter_var($value, FILTER_VALIDATE_EMAIL)) {
-        return true;
+    if (strpos($value, '@') !== false) {
+        return (bool)preg_match('/^[^\s@]+@[^\s@]+\.[^\s@]+$/', $value);
     }
 
-    $clean = preg_replace('/[\s-]+/', '', $value);
-    return (bool)preg_match('/^(?:\+?[0-9]{1,3})?[0-9]{9,12}$/', $clean);
+    $clean = preg_replace('/[\s+()\-]/', '', $value);
+    return (bool)preg_match('/^\d{9,}$/', (string)$clean);
+}
+
+function cart_valid_nif($value)
+{
+    $value = trim((string)$value);
+    return $value === '' || (bool)preg_match('/^\d{9}$/', $value);
 }
 
 function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
@@ -1179,7 +1185,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="styles.css?v=20260514153000">
+  <link rel="stylesheet" href="styles.css?v=20260524021000">
 </head>
 <body class="result-body">
   <main class="result-card <?php echo h($kind); ?>">
@@ -1349,6 +1355,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
 
     $customerName = cart_text(isset($checkout['customer_name']) ? $checkout['customer_name'] : '');
     $customerContact = cart_text(isset($checkout['customer_contact']) ? $checkout['customer_contact'] : '');
+    $customerNif = clean_header(cart_text(isset($checkout['customer_nif']) ? $checkout['customer_nif'] : ''));
     $customerCongregation = '';
     $deliveryOption = cart_text(isset($checkout['delivery_option']) ? $checkout['delivery_option'] : '');
     $sendCopy = !empty($checkout['send_copy']);
@@ -1359,7 +1366,11 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     }
 
     if (strlen($customerContact) < 3 || strlen($customerContact) > 160 || !cart_valid_contact($customerContact)) {
-        $errors[] = 'Indica um email ou telemóvel válido para contacto.';
+        $errors[] = 'Indica um email ou telemóvel válido para podermos confirmar a encomenda.';
+    }
+
+    if (!cart_valid_nif($customerNif)) {
+        $errors[] = 'O NIF deve ter 9 dígitos.';
     }
 
     $allowedDeliveryOptions = product_delivery_options(array(), $defaultDeliveryOptions);
@@ -1422,7 +1433,8 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         '',
         'Dados de contacto:',
         'Nome: ' . $customerName,
-        'Email ou telemóvel: ' . $customerContactTrim,
+        'Contacto: ' . $customerContactTrim,
+        'NIF: ' . ($customerNif !== '' ? $customerNif : 'Não indicado'),
         'Cópia para cliente: ' . ($sendCopy ? $copyEmail : 'Não'),
         '',
         'Produtos:',
@@ -1463,7 +1475,8 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         '',
         'Dados de contacto:',
         'Nome: ' . $customerName,
-        'Email ou telemóvel: ' . $customerContactTrim,
+        'Contacto: ' . $customerContactTrim,
+        'NIF: ' . ($customerNif !== '' ? $customerNif : 'Não indicado'),
     ), customer_email_footer_lines());
 
     $ownerBody = implode("\n", $ownerBodyLines);
@@ -1501,6 +1514,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         'checkout' => array(
             'customer_name' => $customerName,
             'customer_contact' => $customerContactTrim,
+            'customer_nif' => $customerNif,
             'delivery_option' => $deliveryOption,
             'delivery_label' => $deliveryLine,
             'send_copy' => $sendCopy,
@@ -1529,6 +1543,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
             'product_type' => $firstProductSlug,
             'customer_name' => $customerName,
             'customer_contact' => $customerContactTrim,
+            'customer_nif' => $customerNif,
             'contact_email' => $contactEmail,
             'contact_phone' => $contactPhone,
             'card_name' => '',
@@ -1751,6 +1766,7 @@ $contact = field('contact');
 $congregation = field('congregation');
 $customerName = field('customer_name');
 $customerContact = field('customer_contact');
+$customerNif = clean_header(field('customer_nif'));
 $sendCopy = field('send_copy') === '1';
 $copyEmail = field('copy_email');
 $congregationGift = field('congregation_gift') === '1';
@@ -1920,8 +1936,12 @@ if (strlen($customerName) < 2 || strlen($customerName) > 120) {
     $errors[] = 'Indica o teu nome nos dados de contacto.';
 }
 
-if (strlen($customerContact) < 3 || strlen($customerContact) > 160) {
-    $errors[] = 'Indica um email ou telemóvel para contacto.';
+if (strlen($customerContact) < 3 || strlen($customerContact) > 160 || !cart_valid_contact($customerContact)) {
+    $errors[] = 'Indica um email ou telemóvel válido para podermos confirmar a encomenda.';
+}
+
+if (!cart_valid_nif($customerNif)) {
+    $errors[] = 'O NIF deve ter 9 dígitos.';
 }
 
 if ($sendCopy && !filter_var($copyEmail, FILTER_VALIDATE_EMAIL)) {
@@ -1946,6 +1966,7 @@ $congregationLine = $congregation !== '' ? $congregation : 'Não indicado';
 $congregationGiftLine = $congregationGift ? 'Sim - pediu ajuda para escolher designs únicos para a congregação.' : 'Não';
 $customerNameLine = $customerName !== '' ? $customerName : 'Não indicado';
 $customerContactLine = $customerContact !== '' ? $customerContact : 'Não indicado';
+$customerNifLine = $customerNif !== '' ? $customerNif : 'Não indicado';
 $unitLabel = isset($productConfig['unitLabel']) && trim((string)$productConfig['unitLabel']) !== '' ? trim((string)$productConfig['unitLabel']) : (($productSlug === 'crachas' || $productSlug === 'pins') ? 'crachás' : 'unidades');
 $unitShort = isset($productConfig['unitShort']) && trim((string)$productConfig['unitShort']) !== '' ? trim((string)$productConfig['unitShort']) : (($productSlug === 'crachas' || $productSlug === 'pins') ? 'crachá' : 'unid.');
 $copyEmail = $sendCopy ? clean_header($copyEmail) : '';
@@ -2035,7 +2056,8 @@ $ownerBodyLines = array_merge($ownerBodyLines, array(
     '',
     'Dados de contacto:',
     'Nome: ' . $customerNameLine,
-    'Email ou telemóvel: ' . $customerContactLine,
+    'Contacto: ' . $customerContactLine,
+    'NIF: ' . $customerNifLine,
     'Cópia para cliente: ' . ($sendCopy ? $copyEmail : 'Não'),
     '',
     'Enviado pelo formulário de miaandpaper.com',
@@ -2075,7 +2097,8 @@ if ($isCadernos) {
         '',
         'Dados de contacto:',
         'Nome: ' . $customerNameLine,
-        'Email ou telemóvel: ' . $customerContactLine,
+        'Contacto: ' . $customerContactLine,
+        'NIF: ' . $customerNifLine,
         'Cópia para cliente: ' . ($sendCopy ? $copyEmail : 'Não'),
         '',
         'Enviado pelo formulário de miaandpaper.com',
@@ -2111,7 +2134,8 @@ $customerBodyLines = array_merge($customerBodyLines, array(
     '',
     'Dados de contacto:',
     'Nome: ' . $customerNameLine,
-    'Email ou telemóvel: ' . $customerContactLine,
+    'Contacto: ' . $customerContactLine,
+    'NIF: ' . $customerNifLine,
 ), customer_email_footer_lines());
 
 if ($isCadernos) {
@@ -2151,7 +2175,8 @@ if ($isCadernos) {
         '',
         'Dados de contacto:',
         'Nome: ' . $customerNameLine,
-        'Email ou telemóvel: ' . $customerContactLine,
+        'Contacto: ' . $customerContactLine,
+        'NIF: ' . $customerNifLine,
     ), customer_email_footer_lines());
 }
 $customerBody = implode("\n", $customerBodyLines);
@@ -2222,6 +2247,7 @@ $rawOrderSnapshot = array(
     'congregation' => $congregation,
     'customer_name' => $customerName,
     'customer_contact' => $customerContactTrim,
+    'customer_nif' => $customerNif,
     'congregation_gift' => $congregationGift,
     'send_copy' => $sendCopy,
     'copy_email' => $copyEmail,
@@ -2248,6 +2274,7 @@ try {
         'product_type' => $productSlug,
         'customer_name' => $customerName,
         'customer_contact' => $customerContactTrim,
+        'customer_nif' => $customerNif,
         'contact_email' => $contactEmail,
         'contact_phone' => $contactPhone,
         'card_name' => $recipientName,

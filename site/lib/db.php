@@ -117,6 +117,7 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
                 product_type TEXT,
                 customer_name TEXT,
                 customer_contact TEXT,
+                customer_nif TEXT,
                 contact_email TEXT,
                 contact_phone TEXT,
                 card_name TEXT,
@@ -194,6 +195,7 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
                 ON orders (fulfillment_status, created_at DESC)",
             '2026-05-11_idx_orders_contact' => "CREATE INDEX IF NOT EXISTS idx_orders_contact
                 ON orders (customer_contact, customer_name)",
+            '2026-05-24_add_orders_customer_nif' => "ALTER TABLE orders ADD COLUMN customer_nif TEXT",
             '2026-05-11_idx_orders_ip' => "CREATE INDEX IF NOT EXISTS idx_orders_ip
                 ON orders (ip_number)",
             '2026-05-11_idx_funnel_session' => "CREATE INDEX IF NOT EXISTS idx_funnel_session
@@ -314,7 +316,7 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
         $allowed = array(
             'order_code', 'created_at', 'updated_at', 'source',
             'product_slug', 'product_type',
-            'customer_name', 'customer_contact', 'contact_email', 'contact_phone',
+            'customer_name', 'customer_contact', 'customer_nif', 'contact_email', 'contact_phone',
             'card_name', 'card_contact', 'congregation',
             'delivery_option', 'delivery_label',
             'subtotal_cents', 'shipping_estimate_cents', 'total_estimate_cents', 'currency',
@@ -1473,7 +1475,7 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
     {
         return array(
             // Identidade
-            'name', 'customer_name', 'card_name',
+            'name', 'customer_name', 'customer_nif', 'nif', 'card_name',
             // Contacto
             'email', 'customer_email', 'contact_email', 'copy_email',
             'phone', 'customer_phone', 'contact_phone',

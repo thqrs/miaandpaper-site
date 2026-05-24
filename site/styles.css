@@ -5911,6 +5911,12 @@ html[data-theme="dark"] .crachas-step2-summary-tile-name {
   gap: 6px;
 }
 
+.dc-field > label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .dc-field span {
   font-size: 0.9rem;
   font-weight: 700;
@@ -5921,6 +5927,13 @@ html[data-theme="dark"] .crachas-step2-summary-tile-name {
   font-weight: 600;
   color: var(--muted);
   font-size: 0.8rem;
+}
+
+.dc-field-note {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.35;
 }
 
 .dc-field input {
@@ -6194,6 +6207,7 @@ html[data-theme="dark"] .open-order-hint {
 .dc-block-subtitle,
 .dc-block-note,
 .dc-delivery-text em,
+.dc-field-note,
 .privacy-summary p,
 .privacy-content p,
 .form-hint,
@@ -6233,7 +6247,7 @@ input.is-missing,
 
 .form-error,
 .details-grid label:has(.is-missing) > span,
-.dc-field:has(.is-missing) > span {
+.dc-field:has(.is-missing) span {
   color: var(--ui-danger-text);
   font-weight: 900;
 }

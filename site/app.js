@@ -109,6 +109,7 @@
     checkout: {
       customer_name: "",
       customer_contact: "",
+      customer_nif: "",
       customer_congregation: "",
       delivery_option: "",
       send_copy: false,
@@ -2605,6 +2606,7 @@
 
     delete selections.customer_name;
     delete selections.customer_contact;
+    delete selections.customer_nif;
     delete selections.delivery_option;
     delete selections.send_copy;
     delete selections.send_copy_touched;
@@ -7847,8 +7849,7 @@
   // ordem título → campos → texto explicativo (cumpre requisito global),
   // (3) reaproveita renderCrachasSelectedDesigns como "Designs que vais
   // receber". Os campos contact.fields são lidos/escritos directamente em
-  // state.selections (mesmas keys que antes: customer_name, customer_contact)
-  // para o submit final manter o payload inalterado.
+  // state.selections para o submit final acompanhar o JSON do produto.
   function renderDeliveryContactStep(product, step) {
     var deliveryConfig = step.delivery || {};
     var contactConfig = step.contact || {};
@@ -7915,13 +7916,20 @@
 
   function renderDeliveryContactContact(config) {
     var fields = (config.fields || []);
+    var notesAfter = Array.isArray(config.notesAfter)
+      ? config.notesAfter
+      : (config.noteAfter ? [config.noteAfter] : []);
     var fieldsHtml = fields.map(function (field) {
       var isMissing = state.invalidFields.indexOf(field.name) !== -1;
+      var inputMode = field.inputmode ? ' inputmode="' + escapeHtml(field.inputmode) + '"' : "";
       return [
-        '<label class="dc-field">',
+        '<div class="dc-field">',
+        '<label>',
         '<span>' + escapeHtml(field.label) + (field.required ? "" : " <small>(opcional)</small>") + '</span>',
-        '<input class="' + (isMissing ? "is-missing" : "") + '" type="text" name="' + escapeHtml(field.name) + '" value="' + escapeHtml(state.selections[field.name] || "") + '" placeholder="' + escapeHtml(field.placeholder || "") + '" autocomplete="' + escapeHtml(field.autocomplete || "off") + '"' + (field.required ? " required" : "") + (isMissing ? ' aria-invalid="true"' : "") + ' data-detail-field>',
-        '</label>'
+        '<input class="' + (isMissing ? "is-missing" : "") + '" type="text" name="' + escapeHtml(field.name) + '" value="' + escapeHtml(state.selections[field.name] || "") + '" placeholder="' + escapeHtml(field.placeholder || "") + '" autocomplete="' + escapeHtml(field.autocomplete || "off") + '"' + inputMode + (field.required ? " required" : "") + (isMissing ? ' aria-invalid="true"' : "") + ' data-detail-field>',
+        '</label>',
+        field.note ? '<small class="dc-field-note">' + escapeHtml(field.note) + '</small>' : "",
+        '</div>'
       ].join("");
     }).join("");
 
@@ -7930,7 +7938,9 @@
       config.title ? '<h3 class="dc-block-title">' + escapeHtml(config.title) + '</h3>' : "",
       '<div class="dc-contact-grid">' + fieldsHtml + '</div>',
       // Phase B: texto explicativo aparece DEPOIS dos campos.
-      config.noteAfter ? '<p class="dc-block-note">' + escapeHtml(config.noteAfter) + '</p>' : "",
+      notesAfter.map(function (note) {
+        return '<p class="dc-block-note">' + escapeHtml(note) + '</p>';
+      }).join(""),
       '</section>'
     ].join("");
   }
@@ -8076,7 +8086,8 @@
       ];
       var cadernoContactRows = [
         ["Nome de contacto:", state.selections.customer_name || ""],
-        ["Email ou telemóvel:", state.selections.customer_contact || ""]
+        ["Contacto:", state.selections.customer_contact || ""],
+        ["NIF:", state.selections.customer_nif || "Não indicado"]
       ];
       var cadernoKeep = function (row) { return row[1] !== ""; };
 
@@ -8124,7 +8135,8 @@
 
     var contactRows = [
       ["Nome de contacto:", state.selections.customer_name || ""],
-      ["Email ou telemóvel:", state.selections.customer_contact || ""]
+      ["Contacto:", state.selections.customer_contact || ""],
+      ["NIF:", state.selections.customer_nif || "Não indicado"]
     ];
 
     var keep = function (row) { return row[1] !== ""; };
@@ -8287,22 +8299,14 @@
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
   }
 
-  // CONTACT_VALIDATION_V1: aplicado ao campo customer_contact em
-  // delivery_contact. Devolve "" quando o valor é um email válido OU um
-  // número de telemóvel válido (≥9 dígitos, com +<código> opcional). Caso
-  // contrário devolve uma string de erro composta com a mensagem-base do
-  // pedido + um detalhe específico para ajudar o utilizador a corrigir.
-  //
-  // Heurística: se o input tiver letras, assumimos que é tentativa de email
-  // e aplicamos regexEmail; se não tiver letras, assumimos telemóvel e
-  // verificamos só dígitos e comprimento.
+  // CONTACT_VALIDATION_V1: se tiver @, valida como email básico. Sem @,
+  // trata como telefone e exige pelo menos 9 dígitos depois de limpar
+  // espaços, +, parênteses e hífenes.
   function validateContactInput(rawValue) {
     var value = String(rawValue || "").trim();
-    var base = "Insere um número de telemóvel ou um endereço de email. Detalhes do erro: ";
-    var hasLetters = /[a-zA-Z]/;
-    var emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
-    var phoneRegex = /^(?:\+?[0-9]{1,3})?[0-9]{9,12}$/;
-    var onlyDigitsRegex = /^\+?[0-9]+$/;
+    var error = "Indica um email ou telemóvel válido para podermos confirmar a encomenda.";
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var phoneDigits;
 
     if (!value) {
       // Vazio cai no fluxo de "campo obrigatório" gerido no validateStep,
@@ -8310,26 +8314,18 @@
       return "";
     }
 
-    if (hasLetters.test(value)) {
-      if (!emailRegex.test(value)) {
-        return base + "o formato do email é inválido (exemplo válido: nome@dominio.pt). Certifica-te que não tem espaços.";
-      }
-      return "";
+    if (value.indexOf("@") !== -1) {
+      return emailRegex.test(value) ? "" : error;
     }
 
-    // Sem letras → assume número de telemóvel. Limpa espaços e hifens
-    // antes de validar.
-    var cleaned = value.replace(/[\s-]/g, "");
+    phoneDigits = value.replace(/[\s+()-]/g, "");
 
-    if (!cleaned || !onlyDigitsRegex.test(cleaned)) {
-      return base + "o formato introduzido contém caracteres não permitidos.";
-    }
+    return /^\d{9,}$/.test(phoneDigits) ? "" : error;
+  }
 
-    if (!phoneRegex.test(cleaned) || cleaned.replace("+", "").length < 9) {
-      return base + "o número não parece ser um contacto válido (deve ter pelo menos 9 dígitos).";
-    }
-
-    return "";
+  function validNifInput(value) {
+    var trimmed = String(value || "").trim();
+    return !trimmed || /^\d{9}$/.test(trimmed);
   }
 
   function selectedInteriorImages(product) {
@@ -8987,6 +8983,11 @@
       if (contactError) {
         state.invalidFields = ["customer_contact"];
         return contactError;
+      }
+
+      if (!validNifInput(state.selections.customer_nif)) {
+        state.invalidFields = ["customer_nif"];
+        return "O NIF deve ter 9 dígitos.";
       }
     }
 
@@ -9693,6 +9694,7 @@
       checkout: {
         customer_name: String(state.checkout.customer_name || ""),
         customer_contact: String(state.checkout.customer_contact || ""),
+        customer_nif: String(state.checkout.customer_nif || ""),
         delivery_option: String(state.checkout.delivery_option || ""),
         send_copy: !!state.checkout.send_copy,
         send_copy_touched: !!state.checkout.send_copy_touched,
@@ -9711,6 +9713,7 @@
     if (checkout) {
       state.checkout.customer_name = String(checkout.customer_name || "");
       state.checkout.customer_contact = String(checkout.customer_contact || "");
+      state.checkout.customer_nif = String(checkout.customer_nif || "");
       state.checkout.customer_congregation = "";
       state.checkout.delivery_option = String(checkout.delivery_option || "");
       state.checkout.send_copy = !!checkout.send_copy;
@@ -9808,13 +9811,18 @@
 
     if (!String(state.checkout.customer_contact || "").trim()) {
       state.invalidFields = ["customer_contact"];
-      return "Indica um email ou telemóvel.";
+      return "Indica um email ou telemóvel válido para podermos confirmar a encomenda.";
     }
 
     contactError = validateContactInput(state.checkout.customer_contact);
     if (contactError) {
       state.invalidFields = ["customer_contact"];
       return contactError;
+    }
+
+    if (!validNifInput(state.checkout.customer_nif)) {
+      state.invalidFields = ["customer_nif"];
+      return "O NIF deve ter 9 dígitos.";
     }
 
     if (!state.checkout.delivery_option) {
@@ -9931,8 +9939,10 @@
       '<div class="dc-contact-grid">',
       '<label class="dc-field"><span>Nome</span><input class="' + (state.invalidFields.indexOf("customer_name") !== -1 ? "is-missing" : "") + '" type="text" name="customer_name" value="' + escapeHtml(state.checkout.customer_name) + '" autocomplete="name" data-checkout-field required></label>',
       '<label class="dc-field"><span>Email ou telemóvel</span><input class="' + (state.invalidFields.indexOf("customer_contact") !== -1 ? "is-missing" : "") + '" type="text" name="customer_contact" value="' + escapeHtml(state.checkout.customer_contact) + '" autocomplete="email" data-checkout-field required></label>',
+      '<div class="dc-field"><label><span>Número de Contribuinte (NIF) <small>(opcional)</small></span><input class="' + (state.invalidFields.indexOf("customer_nif") !== -1 ? "is-missing" : "") + '" type="text" name="customer_nif" value="' + escapeHtml(state.checkout.customer_nif) + '" placeholder="Se quiseres receber fatura com NIF" autocomplete="off" inputmode="numeric" data-checkout-field' + (state.invalidFields.indexOf("customer_nif") !== -1 ? ' aria-invalid="true"' : '') + '></label></div>',
       '</div>',
-      '<p class="dc-block-note">Estes dados pessoais serão partilhados com a Mia para que ela te possa contactar para confirmar a encomenda.</p>',
+      '<p class="dc-block-note">Se quiseres fatura com número de contribuinte, preenche este campo. Se deixares em branco, a fatura será emitida como consumidor final.</p>',
+      '<p class="dc-block-note">A fatura será emitida após confirmação do pagamento. Se indicares email, enviamos por email. Se indicares telemóvel, podemos enviar por WhatsApp.</p>',
       '</section>',
       '<section class="dc-block dc-delivery' + (hasDeliveryError ? ' is-missing' : '') + '"' + (hasDeliveryError ? ' data-checkout-delivery-error tabindex="-1"' : '') + '>',
       '<h3 class="dc-block-title">Como queres receber a tua encomenda?</h3>',
@@ -9961,7 +9971,8 @@
       '<h3>Dados de contacto e entrega</h3>',
       '<dl class="confirm-list">',
       '<div><dt>Nome:</dt><dd>' + escapeHtml(state.checkout.customer_name || "") + '</dd></div>',
-      '<div><dt>Email ou telemóvel:</dt><dd>' + escapeHtml(state.checkout.customer_contact || "") + '</dd></div>',
+      '<div><dt>Contacto:</dt><dd>' + escapeHtml(state.checkout.customer_contact || "") + '</dd></div>',
+      '<div><dt>NIF:</dt><dd>' + escapeHtml(state.checkout.customer_nif || "Não indicado") + '</dd></div>',
       '<div><dt>Entrega:</dt><dd>' + escapeHtml(delivery ? delivery.label : "") + '</dd></div>',
       '<div><dt>Cópia por email:</dt><dd>' + escapeHtml(state.checkout.send_copy ? state.checkout.copy_email : "Não") + '</dd></div>',
       '</dl>',
@@ -9996,6 +10007,7 @@
       checkout: {
         customer_name: String(state.checkout.customer_name || "").trim(),
         customer_contact: String(state.checkout.customer_contact || "").trim(),
+        customer_nif: String(state.checkout.customer_nif || "").trim(),
         delivery_option: String(state.checkout.delivery_option || "").trim(),
         send_copy: !!state.checkout.send_copy,
         copy_email: state.checkout.send_copy ? String(state.checkout.copy_email || "").trim() : ""

@@ -296,6 +296,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                 'product_type' => trim((string)($_POST['product_slug'] ?? '')),
                 'customer_name' => trim((string)($_POST['customer_name'] ?? '')),
                 'customer_contact' => trim((string)($_POST['customer_contact'] ?? '')),
+                'customer_nif' => trim((string)($_POST['customer_nif'] ?? '')),
                 'card_name' => trim((string)($_POST['card_name'] ?? '')),
                 'congregation' => trim((string)($_POST['congregation'] ?? '')),
                 'delivery_option' => trim((string)($_POST['delivery_option'] ?? 'pickup')),
@@ -309,6 +310,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                     'product_slug' => trim((string)($_POST['product_slug'] ?? '')),
                     'customer_name' => trim((string)($_POST['customer_name'] ?? '')),
                     'customer_contact' => trim((string)($_POST['customer_contact'] ?? '')),
+                    'customer_nif' => trim((string)($_POST['customer_nif'] ?? '')),
                     'notes' => trim((string)($_POST['admin_notes'] ?? '')),
                 ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             ));
@@ -536,9 +538,9 @@ if ($view === 'list') :
         $params[] = $product;
     }
     if ($q !== '' && strlen($q) >= 2) {
-        $where[] = '(order_code LIKE ? OR customer_name LIKE ? OR customer_contact LIKE ? OR card_name LIKE ?)';
+        $where[] = '(order_code LIKE ? OR customer_name LIKE ? OR customer_contact LIKE ? OR customer_nif LIKE ? OR card_name LIKE ?)';
         $like = '%' . $q . '%';
-        $params[] = $like; $params[] = $like; $params[] = $like; $params[] = $like;
+        $params[] = $like; $params[] = $like; $params[] = $like; $params[] = $like; $params[] = $like;
     }
     $whereSql = implode(' AND ', $where);
 
@@ -649,6 +651,14 @@ if ($view === 'list') :
 
     $raw = json_decode($order['raw_order_json'], true);
     if (!is_array($raw)) $raw = array();
+    $customerNif = '';
+    if (isset($order['customer_nif']) && trim((string)$order['customer_nif']) !== '') {
+        $customerNif = trim((string)$order['customer_nif']);
+    } elseif (isset($raw['customer_nif'])) {
+        $customerNif = trim((string)$raw['customer_nif']);
+    } elseif (isset($raw['checkout']) && is_array($raw['checkout']) && isset($raw['checkout']['customer_nif'])) {
+        $customerNif = trim((string)$raw['checkout']['customer_nif']);
+    }
 ?>
   <p><a class="back-link" href="admin-orders.php?view=list">← Lista de encomendas</a></p>
   <h2 style="margin:0 0 4px;font-size:1.4rem;"><?= admin_orders_h($order['order_code']) ?> <small style="color:var(--muted);font-weight:600;font-size:1rem;"><?= admin_orders_h(admin_orders_friendly_status($order['payment_status'], $order['fulfillment_status'])) ?></small></h2>
@@ -661,6 +671,7 @@ if ($view === 'list') :
         <dt>Produto</dt><dd><?= admin_orders_h($order['product_slug']) ?></dd>
         <dt>Cliente</dt><dd><?= admin_orders_h($order['customer_name']) ?></dd>
         <dt>Contacto</dt><dd><?= admin_orders_h($order['customer_contact']) ?></dd>
+        <?php if ($customerNif !== ''): ?><dt>NIF</dt><dd><?= admin_orders_h($customerNif) ?></dd><?php endif; ?>
         <?php if (!empty($order['contact_email'])): ?><dt>Email</dt><dd><?= admin_orders_h($order['contact_email']) ?></dd><?php endif; ?>
         <?php if (!empty($order['contact_phone'])): ?><dt>Telemóvel</dt><dd><?= admin_orders_h($order['contact_phone']) ?></dd><?php endif; ?>
         <dt>Cartão (nome)</dt><dd><?= admin_orders_h($order['card_name']) ?></dd>
@@ -811,6 +822,7 @@ if ($view === 'list') :
       <label class="field"><span>Produto (slug)</span><input type="text" name="product_slug" placeholder="crachas / imanes / cadernos..." required></label>
       <label class="field"><span>Nome do cliente</span><input type="text" name="customer_name" required></label>
       <label class="field"><span>Contacto (email ou telemóvel)</span><input type="text" name="customer_contact" required></label>
+      <label class="field"><span>NIF</span><input type="text" name="customer_nif" inputmode="numeric"></label>
       <label class="field"><span>Nome para o cartão</span><input type="text" name="card_name"></label>
       <label class="field"><span>Congregação</span><input type="text" name="congregation"></label>
       <label class="field"><span>Tipo de entrega (id)</span>

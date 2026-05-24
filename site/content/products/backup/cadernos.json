@@ -2870,7 +2870,10 @@
             },
             "contact": {
                 "title": "Dados de Contacto",
-                "noteAfter": "Estes dados pessoais serão partilhados com a Mia para que ela te possa contactar para confirmar a encomenda.",
+                "notesAfter": [
+                  "Se quiseres fatura com número de contribuinte, preenche este campo. Se deixares em branco, a fatura será emitida como consumidor final.",
+                  "A fatura será emitida após confirmação do pagamento. Se indicares email, enviamos por email. Se indicares telemóvel, podemos enviar por WhatsApp."
+                ],
                 "fields": [
                     {
                         "name": "customer_name",
@@ -2885,6 +2888,14 @@
                         "placeholder": "Email ou telemóvel",
                         "required": true,
                         "autocomplete": "email"
+                    },
+                    {
+                        "name": "customer_nif",
+                        "label": "Número de Contribuinte (NIF)",
+                        "placeholder": "Se quiseres receber fatura com NIF",
+                        "required": false,
+                        "autocomplete": "off",
+                        "inputmode": "numeric"
                     }
                 ]
             }
