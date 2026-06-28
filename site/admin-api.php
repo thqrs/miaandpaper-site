@@ -10,6 +10,7 @@ define('MIAANDPAPER_PRODUCT_DIR', __DIR__ . '/content/products');
 define('MIAANDPAPER_HOME_FILE', __DIR__ . '/content/home.json');
 define('MIAANDPAPER_PRICING_FILE', __DIR__ . '/content/pricing.json');
 define('MIAANDPAPER_CATALOG_FILE', __DIR__ . '/content/catalogo.json');
+define('MIAANDPAPER_OFFERS_FILE', __DIR__ . '/content/ofertas.json');
 define('MIAANDPAPER_UPLOAD_DIR', __DIR__ . '/content/uploads');
 define('MIAANDPAPER_UPLOAD_PREFIX', 'content/uploads/');
 define('MIAANDPAPER_SYNC_FLAG', mp_private_path('miaandpaper-admin-sync-needed.json') ?: '');
@@ -989,6 +990,46 @@ function admin_write_catalog($catalog)
     return $normalized;
 }
 
+function admin_write_offers($offers)
+{
+    $tmp = '';
+    $json = '';
+    $options = admin_json_options();
+    $normalized = admin_normalize_catalog($offers);
+
+    if (defined('JSON_PRETTY_PRINT')) {
+        $options |= JSON_PRETTY_PRINT;
+    }
+
+    $json = json_encode($normalized, $options);
+    if ($json === false) {
+        admin_respond(400, array(
+            'ok' => false,
+            'message' => 'Nao foi possivel converter as ofertas para JSON.',
+        ));
+    }
+
+    $tmp = MIAANDPAPER_OFFERS_FILE . '.tmp.' . getmypid();
+    if (file_put_contents($tmp, $json . "\n", LOCK_EX) === false) {
+        admin_respond(500, array(
+            'ok' => false,
+            'message' => 'Nao foi possivel escrever o JSON das ofertas.',
+        ));
+    }
+
+    if (!rename($tmp, MIAANDPAPER_OFFERS_FILE)) {
+        @unlink($tmp);
+        admin_respond(500, array(
+            'ok' => false,
+            'message' => 'Nao foi possivel substituir o JSON antigo das ofertas.',
+        ));
+    }
+
+    chmod(MIAANDPAPER_OFFERS_FILE, 0644);
+
+    return $normalized;
+}
+
 $action = isset($_GET['action']) ? (string)$_GET['action'] : '';
 
 if ($action === 'status') {
@@ -1126,6 +1167,30 @@ if ($action === 'save-catalog') {
     admin_respond(200, array(
         'ok' => true,
         'catalog' => $catalog,
+        'syncNeeded' => true,
+        'syncFlagCreated' => $syncFlagCreated,
+    ));
+}
+
+if ($action === 'save-offers') {
+    admin_require_post();
+    admin_require_login();
+    admin_require_csrf();
+    $payload = admin_payload();
+
+    if (empty($payload['offers']) || !is_array($payload['offers'])) {
+        admin_respond(400, array(
+            'ok' => false,
+            'message' => 'Faltam as ofertas para guardar.',
+        ));
+    }
+
+    $offers = admin_write_offers($payload['offers']);
+    $syncFlagCreated = admin_mark_sync_needed('ofertas');
+
+    admin_respond(200, array(
+        'ok' => true,
+        'offers' => $offers,
         'syncNeeded' => true,
         'syncFlagCreated' => $syncFlagCreated,
     ));
