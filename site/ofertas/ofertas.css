@@ -2,9 +2,61 @@
   margin-top: 8px;
 }
 
+body[data-catalog-page="ofertas"],
+body[data-catalog-page^="oferta-"] {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(244, 221, 145, 0.4), transparent 28%),
+    linear-gradient(90deg, rgba(202, 162, 59, 0.04) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(142, 103, 31, 0.035) 1px, transparent 1px),
+    var(--paper);
+  background-size: 44px 44px;
+}
+
+body[data-catalog-page="ofertas"] .catalog-shell,
+body[data-catalog-page^="oferta-"] .catalog-shell {
+  width: min(100%, 720px);
+  position: relative;
+  isolation: isolate;
+}
+
+body[data-catalog-page="ofertas"] .catalog-shell::before,
+body[data-catalog-page^="oferta-"] .catalog-shell::before {
+  content: "";
+  position: absolute;
+  top: 88px;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  z-index: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 248, 0.92);
+  box-shadow: var(--shadow);
+}
+
+body[data-catalog-page="ofertas"] .catalog-shell > *,
+body[data-catalog-page^="oferta-"] .catalog-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+body[data-catalog-page="ofertas"] .catalog-shell > :not(.catalog-header),
+body[data-catalog-page^="oferta-"] .catalog-shell > :not(.catalog-header) {
+  margin-right: clamp(14px, 3vw, 28px);
+  margin-left: clamp(14px, 3vw, 28px);
+}
+
+body[data-catalog-page="ofertas"] .catalog-header,
+body[data-catalog-page^="oferta-"] .catalog-header {
+  padding-bottom: 22px;
+}
+
+body[data-catalog-page^="oferta-"] .catalog-back-row {
+  padding-top: 18px;
+}
+
 body[data-catalog-page="ofertas"] .catalog-product-list {
-  grid-template-columns: minmax(0, min(100%, 680px));
-  justify-content: center;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .offer-product-section .catalog-product-copy strong {
@@ -209,7 +261,7 @@ body[data-catalog-page="ofertas"] .catalog-product-list {
 }
 
 .offer-congresso-shell {
-  max-width: 1180px;
+  max-width: 720px;
   overflow-x: clip;
 }
 
@@ -239,7 +291,7 @@ body[data-catalog-page="ofertas"] .catalog-product-list {
 }
 
 .congresso-hero-copy {
-  max-width: 780px;
+  max-width: none;
 }
 
 .congresso-hero-copy p,
@@ -343,8 +395,7 @@ body[data-catalog-page="ofertas"] .catalog-product-list {
 
 .congresso-download-grid {
   display: grid;
-  grid-template-columns: minmax(0, min(100%, 680px));
-  justify-content: center;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
