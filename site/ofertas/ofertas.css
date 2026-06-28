@@ -51,6 +51,20 @@ body[data-catalog-page^="oferta-"] .catalog-header {
   padding-bottom: 22px;
 }
 
+body[data-catalog-page="ofertas"] .catalog-kicker,
+body[data-catalog-page^="oferta-"] .catalog-kicker,
+body[data-catalog-page^="oferta-"] .catalog-back-link {
+  color: var(--moss);
+}
+
+body[data-catalog-page="ofertas"] > .catalog-footer,
+body[data-catalog-page^="oferta-"] > .catalog-footer {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: 24px clamp(14px, 3vw, 28px) 28px;
+  background: transparent;
+}
+
 body[data-catalog-page^="oferta-"] .catalog-back-row {
   padding-top: 18px;
 }
@@ -552,17 +566,139 @@ body[data-catalog-page="ofertas"] .offer-card-image-frame > img {
 }
 
 .congresso-photo-frame {
+  position: relative;
   display: block;
   width: 100%;
   padding: 0;
   appearance: none;
-  cursor: zoom-in;
+  cursor: default;
 }
 
 .congresso-photo-frame:focus-visible {
   outline: 3px solid rgba(102, 123, 77, 0.36);
   outline-offset: 3px;
   border-radius: var(--radius);
+}
+
+.congresso-image-zoom-button {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 253, 248, 0.78);
+  border-radius: 999px;
+  background: rgba(46, 36, 19, 0.54);
+  color: #fffdf8;
+  cursor: zoom-in;
+}
+
+.congresso-image-zoom-button svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.3;
+}
+
+.congresso-image-zoom-button:hover,
+.congresso-image-zoom-button:focus-visible {
+  background: rgba(46, 36, 19, 0.72);
+  outline: 3px solid rgba(102, 123, 77, 0.36);
+  outline-offset: 2px;
+}
+
+.congresso-carousel-frame {
+  position: relative;
+  height: clamp(280px, 76vw, 460px);
+  touch-action: pan-y;
+}
+
+.congresso-carousel-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+
+.congresso-carousel-slide.is-active {
+  opacity: 1;
+}
+
+.congresso-carousel-slide img {
+  width: 100%;
+  height: 100%;
+}
+
+.congresso-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 42px;
+  border: 1px solid rgba(255, 253, 248, 0.7);
+  border-radius: 999px;
+  background: rgba(46, 36, 19, 0.36);
+  color: #fffdf8;
+  cursor: pointer;
+  font: inherit;
+  font-size: 2rem;
+  font-weight: 650;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.congresso-carousel-arrow--prev {
+  left: 10px;
+}
+
+.congresso-carousel-arrow--next {
+  right: 10px;
+}
+
+.congresso-carousel-arrow:hover,
+.congresso-carousel-arrow:focus-visible {
+  background: rgba(46, 36, 19, 0.52);
+  outline: 3px solid rgba(102, 123, 77, 0.36);
+  outline-offset: 2px;
+}
+
+.congresso-carousel-pill {
+  position: absolute;
+  right: 58px;
+  bottom: 10px;
+  left: 10px;
+  z-index: 4;
+  display: grid;
+  min-height: 42px;
+  place-items: center;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 253, 248, 0.74);
+  border-radius: 999px;
+  background: rgba(46, 36, 19, 0.46);
+  color: #fffdf8;
+  font-size: 0.82rem;
+  font-weight: 850;
+  text-align: center;
+}
+
+.congresso-carousel-pill-label {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.congresso-carousel-pill-label.is-active {
+  opacity: 1;
 }
 
 .congresso-download-meta {
@@ -613,6 +749,26 @@ body[data-catalog-page="ofertas"] .offer-card-image-frame > img {
   background: rgba(255, 253, 245, 0.82);
   color: var(--muted);
   text-align: center;
+}
+
+.congresso-video-panel.has-video {
+  padding: 0;
+  overflow: hidden;
+}
+
+.congresso-video-panel.has-video .congresso-video-placeholder {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: #000;
+}
+
+.congresso-video-placeholder iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
 }
 
 .congresso-video-placeholder strong {

@@ -1,5 +1,60 @@
 {
-  "schemaVersion": 1,
-  "imageEdits": {},
-  "updatedAt": ""
+    "schemaVersion": 1,
+    "imageEdits": {
+        "ofertas/convite-congresso/assets/modelos-todos.webp": {
+            "zoom": 215,
+            "x": 17,
+            "y": 48,
+            "rotation": 0
+        },
+        "ofertas/convite-congresso/assets/completo-casal.webp": {
+            "zoom": 102,
+            "x": 0,
+            "y": 0,
+            "rotation": 0
+        },
+        "ofertas/convite-congresso/assets/modelo-casal.webp": {
+            "zoom": 139,
+            "x": 2,
+            "y": 18,
+            "rotation": 0
+        },
+        "ofertas/convite-congresso/assets/modelo-familia.webp": {
+            "zoom": 143,
+            "x": 2,
+            "y": 18,
+            "rotation": 0
+        },
+        "ofertas/convite-congresso/assets/completo-familia.webp": {
+            "zoom": 100,
+            "x": 0,
+            "y": 0,
+            "rotation": 0
+        },
+        "ofertas/convite-congresso/assets/modelo-mulher.webp": {
+            "zoom": 136,
+            "x": 2,
+            "y": 16,
+            "rotation": 0
+        },
+        "ofertas/convite-congresso/assets/modelo-mulher-promessas.webp": {
+            "zoom": 144,
+            "x": 2,
+            "y": 20,
+            "rotation": 0
+        },
+        "ofertas/convite-congresso/assets/modelo-homem-promessas.webp": {
+            "zoom": 141,
+            "x": 2,
+            "y": 12,
+            "rotation": 0
+        },
+        "ofertas/convite-congresso/assets/modelo-homem.webp": {
+            "zoom": 130,
+            "x": 1,
+            "y": 14,
+            "rotation": 0
+        }
+    },
+    "updatedAt": "2026-06-28T19:04:20+00:00"
 }

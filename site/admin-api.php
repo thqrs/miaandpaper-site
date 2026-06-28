@@ -910,7 +910,7 @@ function admin_catalog_number($value, $fallback, $min, $max)
     return max($min, min($max, round($number, 2)));
 }
 
-function admin_normalize_catalog($catalog)
+function admin_normalize_catalog($catalog, $minZoom = 20)
 {
     $out = array(
         'schemaVersion' => 1,
@@ -936,7 +936,7 @@ function admin_normalize_catalog($catalog)
         }
 
         $out['imageEdits'][$safeKey] = array(
-            'zoom' => admin_catalog_number(isset($edit['zoom']) ? $edit['zoom'] : 100, 100, 20, 500),
+            'zoom' => admin_catalog_number(isset($edit['zoom']) ? $edit['zoom'] : 100, 100, $minZoom, 500),
             'x' => admin_catalog_number(isset($edit['x']) ? $edit['x'] : 0, 0, -100, 100),
             'y' => admin_catalog_number(isset($edit['y']) ? $edit['y'] : 0, 0, -100, 100),
             'rotation' => admin_catalog_number(isset($edit['rotation']) ? $edit['rotation'] : 0, 0, -180, 180),
@@ -995,7 +995,7 @@ function admin_write_offers($offers)
     $tmp = '';
     $json = '';
     $options = admin_json_options();
-    $normalized = admin_normalize_catalog($offers);
+    $normalized = admin_normalize_catalog($offers, 100);
 
     if (defined('JSON_PRETTY_PRINT')) {
         $options |= JSON_PRETTY_PRINT;

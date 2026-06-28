@@ -326,7 +326,7 @@
   function clampEditValue(key, value) {
     var number = Number(value);
     var limits = {
-      zoom: [20, 500],
+      zoom: [100, 500],
       x: [-100, 100],
       y: [-100, 100],
       rotation: [-180, 180]
