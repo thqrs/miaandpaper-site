@@ -169,7 +169,7 @@ function lr_thumb($path, $alt = '', $size = 64) {
 $catalog = lr_build_catalog(__DIR__ . '/content/products');
 
 function lr_product_friendly_name($slug) {
-    static $m = array('crachas'=>'Crachás','imanes'=>'Ímanes','caderninhos'=>'Mini-Cadernos','cadernos'=>'Cadernos','lembrancas'=>'Lembranças','pins'=>'Pins');
+    static $m = array('crachas'=>'Crachás','imanes'=>'Ímanes','caderninhos'=>'Mini-Cadernos','cadernos'=>'Cadernos','lembrancas'=>'Lembranças','pins'=>'Pins','ofertas'=>'Ofertas','oferta-pdf'=>'PDF de oferta','oferta-convite-congresso'=>'Envelopes do Congresso');
     return isset($m[$slug]) ? $m[$slug] : ($slug ?: '—');
 }
 function lr_step_label($id) {
@@ -177,6 +177,7 @@ function lr_step_label($id) {
         'designs'=>'Escolheram designs','size'=>'Escolheram tamanho','pack'=>'Escolheram quantidade',
         'details'=>'Dados do cartão','delivery_contact'=>'Entrega e contacto','confirm'=>'Confirmação',
         'lamination'=>'Escolheram laminação','cover_personalization'=>'Personalização da capa',
+        'ofertas'=>'Ofertas','oferta-pdf'=>'PDF de oferta','oferta-convite-congresso'=>'Envelopes do Congresso',
     );
     return isset($l[$id]) ? $l[$id] : ($id ?: '—');
 }
@@ -537,6 +538,11 @@ function lr_timeline_icon($name) {
         'confirmation_view' => '🧾',
         'selection_updated' => '🎛️',
         'step_selection_snapshot' => '📸',
+        'offer_page_view' => '📄',
+        'offer_downloads_seen' => '👀',
+        'offer_pdf_download_clicked' => '⬇️',
+        'offer_image_zoom_clicked' => '🔍',
+        'offer_scroll_depth' => '↓',
     );
     return isset($icons[$name]) ? $icons[$name] : '·';
 }
@@ -563,6 +569,11 @@ function lr_render_timeline_entry($t) {
     $msg = '';
     if ($nm === 'site_landed') $msg = 'entrou no site' . ($t['landing_page'] ? ' (' . $t['landing_page'] . ')' : '');
     elseif ($nm === 'wizard_started') $msg = 'abriu ' . lr_product_friendly_name($t['product_slug']);
+    elseif ($nm === 'offer_page_view') $msg = 'abriu ' . lr_product_friendly_name($t['product_slug']);
+    elseif ($nm === 'offer_downloads_seen') $msg = 'viu a zona de downloads';
+    elseif ($nm === 'offer_pdf_download_clicked') $msg = 'descarregou PDF "' . ($t['target_label'] ?: 'PDF') . '"';
+    elseif ($nm === 'offer_image_zoom_clicked') $msg = 'ampliou imagem' . ($t['target_label'] ? ' "' . $t['target_label'] . '"' : '');
+    elseif ($nm === 'offer_scroll_depth') $msg = 'continuou a ver a página';
     elseif ($nm === 'step_view') {
         if ($t['transition_reason'] === 'back_button' || $t['transition_reason'] === 'browser_back') {
             $msg = 'voltou para ' . lr_step_label($t['to_step'] ?: $t['step_id']);
@@ -652,6 +663,9 @@ function lr_pin_color($slug) {
         'cadernos' => '#b68be8',
         'lembrancas' => '#d49a55',
         'pins' => '#ef767a',
+        'ofertas' => '#b7925a',
+        'oferta-pdf' => '#b7925a',
+        'oferta-convite-congresso' => '#b7925a',
     );
     return isset($c[$slug]) ? $c[$slug] : '#b7925a';
 }
@@ -1486,7 +1500,12 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
       delivery_selected: 'escolheu entrega', ui_interaction: 'clicou',
       cart_item_added: 'adicionou ao carrinho', cart_checkout_started: 'iniciou checkout',
       contact_completed: 'completou contacto', confirmation_view: 'viu confirmação',
-      selection_updated: 'mudou selecção'
+      selection_updated: 'mudou selecção',
+      offer_page_view: 'abriu oferta',
+      offer_downloads_seen: 'viu downloads',
+      offer_pdf_download_clicked: 'descarregou PDF',
+      offer_image_zoom_clicked: 'ampliou imagem',
+      offer_scroll_depth: 'continuou na página'
     };
     return m[n] || n;
   }
@@ -1498,6 +1517,7 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
     if (n === 'option_selected') return (ev.optionType ? ev.optionType + ' ' : '') + (ev.optionLabel || '');
     if (n === 'step_view') return ev.stepId || '';
     if (n === 'ui_interaction') return ev.targetLabel || '';
+    if (n === 'offer_pdf_download_clicked' || n === 'offer_image_zoom_clicked') return ev.targetLabel || '';
     return '';
   }
 

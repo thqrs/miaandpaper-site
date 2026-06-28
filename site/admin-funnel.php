@@ -281,6 +281,12 @@ try {
                 $msg = 'abriu ' . $productLabel;
             } elseif ($nm === 'site_landed') {
                 $msg = 'entrou no site';
+            } elseif ($nm === 'offer_page_view') {
+                $msg = 'abriu ' . ($productLabel ?: 'oferta');
+            } elseif ($nm === 'offer_downloads_seen') {
+                $msg = 'viu a zona de downloads';
+            } elseif ($nm === 'offer_pdf_download_clicked') {
+                $msg = 'descarregou PDF' . ($t['target_label'] ? ' “' . $t['target_label'] . '”' : '');
             } elseif ($nm === 'step_view' && $t['to_step']) {
                 $msg = 'passou para ' . step_label($t['to_step']);
             } elseif ($nm === 'step_view') {
@@ -522,7 +528,7 @@ foreach ($bySession as $session) {
             $stepId = $e['step_id'];
             if (!isset($products[$slug]['validation_errors'][$stepId])) $products[$slug]['validation_errors'][$stepId] = 0;
             $products[$slug]['validation_errors'][$stepId]++;
-        } elseif ($name === 'ui_interaction' && !empty($e['step_id'])) {
+        } elseif (($name === 'ui_interaction' || $name === 'offer_pdf_download_clicked') && !empty($e['step_id'])) {
             // CLICK_TRACKING_V1: agregar acções por passo
             $stepId = $e['step_id'];
             $action = '';
@@ -679,6 +685,9 @@ function step_label($id)
         // CADERNOS_FUNNEL_V1: passos próprios dos cadernos.
         'lamination'           => 'Escolheram laminação',
         'cover_personalization'=> 'Personalização da capa',
+        'ofertas'              => 'Ofertas',
+        'oferta-pdf'           => 'PDF de oferta',
+        'oferta-convite-congresso' => 'Envelopes do Congresso',
     );
     return isset($labels[$id]) ? $labels[$id] : $id;
 }
@@ -696,6 +705,9 @@ function product_friendly_name($slug, $fallbackFromJson = '')
         'cadernos'    => 'Cadernos',
         'lembrancas'  => 'Lembranças',
         'pins'        => 'Pins',
+        'ofertas'     => 'Ofertas',
+        'oferta-pdf'  => 'PDF de oferta',
+        'oferta-convite-congresso' => 'Envelopes do Congresso',
     );
     if (isset($names[$slug]) && $names[$slug] !== '') return $names[$slug];
     if ($fallbackFromJson !== '' && $fallbackFromJson !== $slug) return $fallbackFromJson;
@@ -755,6 +767,17 @@ function render_timeline_entry($t, $localTzHHMM = '') {
     $name = isset($t['event_name']) ? $t['event_name'] : '';
     if ($name === 'site_landed') $msg = 'entrou no site';
     elseif ($name === 'wizard_started') $msg = 'iniciou ' . $product;
+    elseif ($name === 'offer_page_view') $msg = 'abriu ' . ($product ?: 'oferta');
+    elseif ($name === 'offer_downloads_seen') $msg = 'viu a zona de downloads';
+    elseif ($name === 'offer_pdf_download_clicked') {
+        $lab = $t['target_label'] !== '' ? $t['target_label'] : 'PDF';
+        $msg = 'descarregou PDF “' . $lab . '”';
+    }
+    elseif ($name === 'offer_image_zoom_clicked') {
+        $lab = $t['target_label'] !== '' ? $t['target_label'] : 'imagem';
+        $msg = 'ampliou ' . $lab;
+    }
+    elseif ($name === 'offer_scroll_depth') $msg = 'continuou a ver a página';
     elseif ($name === 'step_view') {
         if ($t['transition_reason'] === 'back_button' || $t['transition_reason'] === 'browser_back') {
             $msg = 'voltou para ' . ($t['to_step'] ? step_label($t['to_step']) : $stepLabel);

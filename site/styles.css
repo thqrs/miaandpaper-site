@@ -80,6 +80,18 @@ button {
   min-height: 100vh;
 }
 
+.orders-suspended-banner {
+  width: min(calc(100% - 32px), 760px);
+  margin: 14px auto 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(114, 85, 30, 0.28);
+  border-radius: var(--radius);
+  background: var(--surface-gold-soft);
+  color: var(--moss);
+  font-weight: 850;
+  text-align: center;
+}
+
 .home-shell,
 .product-shell,
 .fallback {
@@ -1193,6 +1205,13 @@ a:focus-visible {
 .button:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+.button.is-disabled,
+.button[aria-disabled="true"] {
+  opacity: 0.58;
+  cursor: not-allowed;
+  filter: grayscale(0.45);
 }
 
 .form-error {
@@ -3054,6 +3073,16 @@ body.has-site-background {
   transform: rotate(45deg);
 }
 
+.checkout-action-error {
+  position: static;
+  max-width: none;
+  margin: 12px 0 0;
+}
+
+.checkout-action-error::after {
+  display: none;
+}
+
 .button,
 .pack-option,
 .example-toggle,
@@ -4540,6 +4569,14 @@ html[data-theme="dark"] [class*="button"].primary {
   background: var(--button-bg);
   color: var(--button-text);
   border-color: var(--button-bg);
+}
+
+html[data-theme="dark"] .button.is-disabled,
+html[data-theme="dark"] .button[aria-disabled="true"] {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  opacity: 0.76;
 }
 
 html[data-theme="dark"] input,
@@ -6411,6 +6448,16 @@ input.is-missing,
   border-color: var(--button-bg);
   background: var(--button-bg);
   color: var(--button-text);
+}
+
+.button.is-disabled,
+.button[aria-disabled="true"] {
+  border-color: var(--ui-border-strong);
+  background: var(--ui-card-muted);
+  color: var(--muted);
+  opacity: 0.72;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
 }
 
 .button.secondary,

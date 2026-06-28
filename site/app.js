@@ -133,6 +133,7 @@
     homeDeadlineTimer: null,
     brandButterflyEnabled: false,
     catalogFooterLinkVisible: true,
+    ordersSuspended: false,
     itemDisplayLabels: {},
     adminActiveImage: null,
     adminImageKeyboardBound: false,
@@ -591,6 +592,10 @@
       home.catalogFooterLinkVisible = true;
     }
 
+    if (typeof home.ordersSuspended !== "boolean") {
+      home.ordersSuspended = false;
+    }
+
     if (Array.isArray(home.categories)) {
       home.categories.forEach(ensureHomeCategoryDefaults);
     }
@@ -635,6 +640,7 @@
     if (!home) {
       state.brandButterflyEnabled = false;
       state.catalogFooterLinkVisible = true;
+      state.ordersSuspended = false;
       return;
     }
 
@@ -675,8 +681,22 @@
     applyThemeToggleVisibility(home.showThemeToggle === true);
     state.brandButterflyEnabled = home.brandButterflyEnabled === true;
     state.catalogFooterLinkVisible = home.catalogFooterLinkVisible !== false;
+    state.ordersSuspended = home.ordersSuspended === true;
     document.body.classList.toggle("is-brand-butterfly-enabled", state.brandButterflyEnabled);
     document.body.classList.toggle("is-catalog-footer-hidden", !state.catalogFooterLinkVisible);
+    document.body.classList.toggle("has-orders-suspended", state.ordersSuspended);
+  }
+
+  function ordersAreSuspended() {
+    return state.ordersSuspended === true;
+  }
+
+  function ordersSuspendedBannerMessage() {
+    return "Já não estamos a aceitar encomendas para o Congresso de 2026";
+  }
+
+  function ordersSuspendedCheckoutMessage() {
+    return "Lamento, mas já não é possível fazer encomendas para o Congresso de 2026.";
   }
 
   function applyThemeToggleVisibility(visible) {
@@ -1875,11 +1895,19 @@
   }
 
   function renderChrome(innerHtml, currentProduct) {
-    app.innerHTML = innerHtml + renderAdminSurface(currentProduct) + renderCartSurface();
+    app.innerHTML = renderOrdersSuspendedBanner() + innerHtml + renderAdminSurface(currentProduct) + renderCartSurface();
     bindAdminSurface(currentProduct);
     bindThemeToggle();
     bindCartUi();
     applyTheme(currentTheme());
+  }
+
+  function renderOrdersSuspendedBanner() {
+    if (!ordersAreSuspended()) {
+      return "";
+    }
+
+    return '<div class="orders-suspended-banner" role="status">' + escapeHtml(ordersSuspendedBannerMessage()) + '</div>';
   }
 
   function currentTheme() {
@@ -3333,6 +3361,7 @@
       '<label class="admin-check"><input type="checkbox"' + (home.showThemeToggle === true ? " checked" : "") + ' data-admin-home-toggle="showThemeToggle"> Mostrar botão claro/escuro no header</label>',
       '<label class="admin-check"><input type="checkbox"' + (home.brandButterflyEnabled === true ? " checked" : "") + ' data-admin-home-toggle="brandButterflyEnabled"> Mostrar borboleta no texto da marca</label>',
       '<label class="admin-check"><input type="checkbox"' + (home.catalogFooterLinkVisible !== false ? " checked" : "") + ' data-admin-home-toggle="catalogFooterLinkVisible"> Mostrar link do catálogo no footer</label>',
+      '<label class="admin-check"><input type="checkbox"' + (home.ordersSuspended === true ? " checked" : "") + ' data-admin-home-toggle="ordersSuspended"> encomendas suspensas</label>',
       '<label class="admin-check"><input type="checkbox"' + (carousel.enabled !== false ? " checked" : "") + ' data-admin-home-carousel="enabled"> Carousel automático nos cartões (defaults globais)</label>',
       '<div class="admin-image-control-grid">',
       '<label><span>Velocidade (segundos)</span><input type="number" min="3" max="30" step="1" value="' + escapeHtml(carousel.speedSeconds || 8) + '" data-admin-home-carousel="speedSeconds"></label>',
@@ -8524,6 +8553,7 @@
     var nextLabel;
     var entryIndex;
     var stepNumber;
+    var suspended;
 
     if (!steps.length) {
       steps = product.steps || [];
@@ -8543,6 +8573,7 @@
     cartEntry = isCartEntryStep(product);
     stepNumber = displayStepNumber(product, step);
     nextLabel = isLast ? "Enviar pedido" : state.currentStep === steps.length - 2 ? "Confirmar" : "Continuar";
+    suspended = isLast && ordersAreSuspended();
 
     renderChrome([
       '<main class="product-shell ' + productSlugClass(product) + ' ' + productShapeClass(product) + ' ' + productOrientationClass(product) + '">',
@@ -8565,7 +8596,7 @@
       '<button class="button secondary" type="button" data-back data-track="true" data-track-action="back" data-track-id="back">Voltar</button>',
       '<div class="next-action-wrap">',
       state.errors ? '<p class="form-error action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
-      '<button class="button primary" type="' + (isLast ? "submit" : "button") + '" data-next data-track="true" data-track-action="' + (isLast ? 'submit' : 'next') + '" data-track-id="' + (isLast ? 'submit' : 'next') + '">' + escapeHtml(nextLabel) + '</button>',
+      '<button class="button primary' + (suspended ? ' is-disabled' : '') + '" type="' + (isLast && !suspended ? "submit" : "button") + '" data-next' + (suspended ? ' data-order-suspended-submit aria-disabled="true"' : '') + ' data-track="true" data-track-action="' + (isLast ? 'submit' : 'next') + '" data-track-id="' + (isLast ? 'submit' : 'next') + '">' + escapeHtml(nextLabel) + '</button>',
       '</div>',
       '</div>'
       ].join(""),
@@ -9385,6 +9416,13 @@
       });
     }
 
+    document.querySelectorAll("[data-order-suspended-submit]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.errors = ordersSuspendedCheckoutMessage();
+        rerenderProduct(product);
+      });
+    });
+
     document.querySelectorAll("[data-cart-add-another]").forEach(function (button) {
       button.addEventListener("click", function () {
         addCurrentProductToCart(product, "adicionar-produto.html");
@@ -9419,7 +9457,16 @@
 
     if (form) {
       form.addEventListener("submit", function (event) {
-        var allPreviousValid = visibleSteps(product).slice(0, -1).map(function (candidate) {
+        var allPreviousValid;
+
+        if (ordersAreSuspended()) {
+          event.preventDefault();
+          state.errors = ordersSuspendedCheckoutMessage();
+          rerenderProduct(product);
+          return;
+        }
+
+        allPreviousValid = visibleSteps(product).slice(0, -1).map(function (candidate) {
           return validateStep(product, candidate);
         }).filter(Boolean)[0];
 
@@ -9960,6 +10007,7 @@
     var shipping = checkoutShippingCents();
     var subtotal = checkoutSubtotalCents();
     var total = checkoutTotalCents();
+    var suspended = ordersAreSuspended();
 
     return [
       '<form id="cart-checkout-form" action="send-order.php" method="post" novalidate>',
@@ -9989,9 +10037,10 @@
       state.checkout.send_copy ? '<input class="' + (state.invalidFields.indexOf("copy_email") !== -1 ? "is-missing" : "") + '" type="text" name="copy_email" data-checkout-copy-email placeholder="O teu email" value="' + escapeHtml(state.checkout.copy_email) + '" autocomplete="email">' : "",
       state.checkout.send_copy && state.invalidFields.indexOf("copy_email") !== -1 ? '<p class="form-error" role="alert">Indica um email válido para receber a cópia.</p>' : "",
       '</div>',
+      state.errors === ordersSuspendedCheckoutMessage() ? '<p class="form-error action-error checkout-action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
       '<div class="step-actions checkout-actions">',
       '<button class="button secondary" type="button" data-checkout-back>Voltar</button>',
-      '<button class="button primary" type="submit">Confirmar pedido</button>',
+      '<button class="button primary' + (suspended ? ' is-disabled' : '') + '" type="' + (suspended ? "button" : "submit") + '"' + (suspended ? ' data-checkout-suspended-submit aria-disabled="true"' : "") + '>Confirmar pedido</button>',
       '</div>',
       '</form>'
     ].join("");
@@ -10032,7 +10081,7 @@
       '<div class="step-card">',
       '<p class="eyebrow">Checkout</p>',
       '<h1 id="checkout-title">' + (state.checkoutStep === 0 ? "Contacto e entrega" : "Confirmar pedido") + '</h1>',
-      state.errors ? '<p class="form-error action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
+      state.errors && !(state.checkoutStep === 1 && state.errors === ordersSuspendedCheckoutMessage()) ? '<p class="form-error action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
       getCartCount() < 1 ? [
         '<div class="cart-empty-state checkout-empty-state">',
         '<strong>O carrinho está vazio.</strong>',
@@ -10168,11 +10217,29 @@
       });
     });
 
+    document.querySelectorAll("[data-checkout-suspended-submit]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.errors = ordersSuspendedCheckoutMessage();
+        renderCheckoutPage(home);
+        bindCheckoutPage(home);
+      });
+    });
+
     var form = document.querySelector("#cart-checkout-form");
     if (form) {
       form.addEventListener("submit", function (event) {
-        var error = validateCheckoutStep(0) || validateCheckoutCopyRequest();
+        var error;
         var payload;
+
+        if (ordersAreSuspended()) {
+          event.preventDefault();
+          state.errors = ordersSuspendedCheckoutMessage();
+          renderCheckoutPage(home);
+          bindCheckoutPage(home);
+          return;
+        }
+
+        error = validateCheckoutStep(0) || validateCheckoutCopyRequest();
 
         if (error) {
           event.preventDefault();

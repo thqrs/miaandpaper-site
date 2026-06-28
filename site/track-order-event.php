@@ -139,6 +139,15 @@ $stringFields = array(
     'option_type'        => 32,
     'option_value'       => 120,
     'option_label'       => 120,
+    // OFFER_DOWNLOAD_TRACKING_V1
+    'offer_slug'         => 80,
+    'download_id'        => 80,
+    'download_label'     => 120,
+    'download_file'      => 160,
+    'download_kind'      => 32,
+    'download_size'      => 32,
+    'download_url'       => 240,
+    'download_name'      => 160,
 );
 
 // Whitelist de inteiros.

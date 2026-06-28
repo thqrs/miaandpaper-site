@@ -624,11 +624,13 @@ body[data-catalog-page="ofertas"] .offer-card-image-frame > img {
   position: absolute;
   inset: 0;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 320ms ease;
 }
 
 .congresso-carousel-slide.is-active {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .congresso-carousel-slide img {

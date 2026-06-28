@@ -9,6 +9,7 @@
     "showCategoryNumbers": false,
     "brandButterflyEnabled": false,
     "catalogFooterLinkVisible": true,
+    "ordersSuspended": true,
     "categories": [
         {
             "id": "crachas",

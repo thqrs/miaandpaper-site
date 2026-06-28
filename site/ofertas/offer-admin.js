@@ -201,7 +201,8 @@
   }
 
   function imageRecordFromElement(img) {
-    var frame = img.closest(".offer-card-image-frame, .congresso-download-preview, .congresso-photo-frame");
+    var frame = img.closest(".congresso-carousel-slide")
+      || img.closest(".offer-card-image-frame, .congresso-download-preview, .congresso-photo-frame");
     return {
       img: img,
       frame: frame,
@@ -215,6 +216,7 @@
     var selector = [
       ".offer-card-image-frame > img",
       ".congresso-download-preview > img",
+      ".congresso-carousel-slide > img",
       ".congresso-photo-frame > img"
     ].join(",");
 
