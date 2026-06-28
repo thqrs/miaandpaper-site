@@ -2,6 +2,11 @@
   margin-top: 8px;
 }
 
+body[data-catalog-page="ofertas"] .catalog-product-list {
+  grid-template-columns: minmax(0, min(100%, 680px));
+  justify-content: center;
+}
+
 .offer-product-section .catalog-product-copy strong {
   font-size: clamp(1.25rem, 5vw, 1.72rem);
 }
@@ -25,7 +30,7 @@
 
 .offer-media-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   align-items: start;
 }
@@ -97,6 +102,93 @@
   border: 1px solid var(--line);
   background: rgba(255, 253, 245, 0.78);
   color: var(--moss);
+}
+
+.offer-admin-panel {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  z-index: 60;
+  display: grid;
+  gap: 10px;
+  max-width: 420px;
+  margin-left: auto;
+  padding: 12px;
+  border: 2px solid rgba(199, 68, 56, 0.72);
+  border-radius: var(--radius);
+  background: #fffdf8;
+  box-shadow: 0 14px 44px rgba(37, 41, 31, 0.24);
+}
+
+.offer-admin-panel[hidden] {
+  display: none;
+}
+
+.offer-admin-panel form,
+.offer-admin-panel label,
+.offer-admin-panel-head {
+  display: grid;
+  gap: 8px;
+}
+
+.offer-admin-panel-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.offer-admin-panel strong,
+.offer-admin-panel label {
+  color: #8c3028;
+  font-weight: 850;
+}
+
+.offer-admin-panel label {
+  font-size: 0.82rem;
+}
+
+.offer-admin-panel input {
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fffaf0;
+  font: inherit;
+}
+
+.offer-admin-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.offer-admin-panel button {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--button-bg, var(--moss));
+  border-radius: var(--radius);
+  background: var(--button-bg, var(--moss));
+  color: var(--button-text, #fffdf8);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 850;
+}
+
+.offer-admin-panel button[data-offer-admin-close] {
+  border-color: var(--line);
+  background: rgba(255, 253, 245, 0.94);
+  color: var(--moss);
+}
+
+.offer-admin-message {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(199, 68, 56, 0.22);
+  border-radius: var(--radius);
+  background: #fff7f6;
+  color: #8c3028;
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 @media (max-width: 820px) {
@@ -251,7 +343,8 @@
 
 .congresso-download-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: minmax(0, min(100%, 680px));
+  justify-content: center;
   gap: 12px;
 }
 
@@ -482,7 +575,7 @@
 
 @media (min-width: 760px) {
   .congresso-download-card.is-featured {
-    grid-column: span 2;
+    grid-column: auto;
   }
 }
 
