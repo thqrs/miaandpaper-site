@@ -113,8 +113,8 @@
     "showThemeToggle": false,
     "deadlineNotice": "Data limite para encomendar lembranças para os Congressos em Portugal 19 de junho de 2026 Excepto situações pontuais.",
     "deadlineNoticeLabel": "Data limite para encomendar lembranças para os Congressos em Portugal",
-    "deadlineNoticeDateText": "19 de junho de 2026",
+    "deadlineNoticeDateText": "15 de junho de 2026",
     "deadlineNoticeSuffix": "Excepto situações pontuais.",
-    "deadlineDate": "2026-06-19T23:59:59+01:00",
-    "deadlineNoticeEnabled": true
+    "deadlineDate": "2026-06-15T23:59:59+01:00",
+    "deadlineNoticeEnabled": false
 }
