@@ -150,6 +150,61 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $events = $stmt->fetchAll();
 
+// OFFER_DOWNLOAD_VISIBILITY_V1: downloads de PDFs de oferta em secção própria.
+// Estes eventos já eram guardados como event_json; aqui ficam agregados e
+// fáceis de ver no painel, incluindo "quem" (etiqueta/IP técnico) e PDF.
+$offerDownloads = array();
+$offerDownloadsByFile = array();
+$offerDownloadsBySession = array();
+foreach ($events as $eventRow) {
+    $download = mp_offer_download_from_event($eventRow);
+    if (!$download) continue;
+
+    $offerDownloads[] = $download;
+
+    $key = $download['download_key'];
+    if (!isset($offerDownloadsByFile[$key])) {
+        $offerDownloadsByFile[$key] = array(
+            'download_key' => $key,
+            'download_label' => $download['download_label'],
+            'download_file' => $download['download_file'],
+            'download_kind' => $download['download_kind'],
+            'download_size' => $download['download_size'],
+            'product_label' => $download['product_label'],
+            'count' => 0,
+            'sessions' => array(),
+            'visitors' => array(),
+            'last_at' => '',
+        );
+    }
+    $offerDownloadsByFile[$key]['count']++;
+    if ($download['session_id'] !== '') $offerDownloadsByFile[$key]['sessions'][$download['session_id']] = true;
+    if ($download['ip_number'] !== '') $offerDownloadsByFile[$key]['visitors'][$download['ip_number']] = true;
+    if ($offerDownloadsByFile[$key]['last_at'] === '' || strcmp($download['created_at'], $offerDownloadsByFile[$key]['last_at']) > 0) {
+        $offerDownloadsByFile[$key]['last_at'] = $download['created_at'];
+    }
+}
+usort($offerDownloads, function ($a, $b) {
+    return strcmp($b['created_at'], $a['created_at']);
+});
+uasort($offerDownloadsByFile, function ($a, $b) {
+    if ($a['count'] === $b['count']) return strcmp($b['last_at'], $a['last_at']);
+    return $b['count'] - $a['count'];
+});
+foreach ($offerDownloads as $download) {
+    if ($download['session_id'] === '') continue;
+    if (!isset($offerDownloadsBySession[$download['session_id']])) $offerDownloadsBySession[$download['session_id']] = array();
+    $offerDownloadsBySession[$download['session_id']][] = $download;
+}
+$offerDownloadTotal = count($offerDownloads);
+$offerDownloadSessionsCount = count($offerDownloadsBySession);
+$offerDownloadAllCount = 0;
+$offerDownloadSingleCount = 0;
+foreach ($offerDownloads as $download) {
+    if ($download['download_kind'] === 'all') $offerDownloadAllCount++;
+    else $offerDownloadSingleCount++;
+}
+
 // VISITANTES_TEMPO_REAL_V2 (Phase 1)
 // Janela maior (até 60 min) e leitura dos últimos eventos completos
 // para cada sessão (até 40), de forma a poder reconstruir step path,
@@ -252,6 +307,9 @@ try {
             $row['utm_source']     = $utmSource;
             $row['action_name']    = isset($extra['action_name']) ? (string)$extra['action_name'] : '';
             $row['target_label']   = isset($extra['target_label']) ? (string)$extra['target_label'] : '';
+            $row['offer_downloads'] = isset($offerDownloadsBySession[$row['session_id']])
+                ? array_slice($offerDownloadsBySession[$row['session_id']], 0, 4)
+                : array();
             $row['step_path']      = $stepPath;
             $row['timeline']       = $timeline;
             $row['selection_latest'] = $selectionLatest;
@@ -712,6 +770,75 @@ function product_friendly_name($slug, $fallbackFromJson = '')
     if (isset($names[$slug]) && $names[$slug] !== '') return $names[$slug];
     if ($fallbackFromJson !== '' && $fallbackFromJson !== $slug) return $fallbackFromJson;
     return $slug;
+}
+
+function mp_offer_download_from_event($event)
+{
+    $name = isset($event['event_name']) ? (string)$event['event_name'] : '';
+    if ($name !== 'offer_pdf_download_clicked') return null;
+
+    $extra = mp_safe_json_decode(isset($event['event_json']) ? $event['event_json'] : '', array());
+    if (!is_array($extra)) $extra = array();
+    $selection = mp_safe_json_decode(isset($event['selection_json']) ? $event['selection_json'] : '', array());
+    if (!is_array($selection)) $selection = array();
+    $selectionDownload = isset($selection['download']) && is_array($selection['download']) ? $selection['download'] : array();
+
+    $productSlug = isset($event['product_slug']) ? (string)$event['product_slug'] : '';
+    $downloadLabel = isset($extra['download_label']) ? (string)$extra['download_label'] : '';
+    if ($downloadLabel === '' && isset($extra['target_label'])) $downloadLabel = (string)$extra['target_label'];
+    if ($downloadLabel === '' && isset($selectionDownload['label'])) $downloadLabel = (string)$selectionDownload['label'];
+    if ($downloadLabel === '') $downloadLabel = 'PDF';
+
+    $downloadFile = isset($extra['download_file']) ? (string)$extra['download_file'] : '';
+    if ($downloadFile === '' && isset($selectionDownload['file'])) $downloadFile = (string)$selectionDownload['file'];
+    if ($downloadFile === '' && isset($extra['target_id'])) $downloadFile = basename((string)$extra['target_id']);
+
+    $downloadId = isset($extra['download_id']) ? (string)$extra['download_id'] : '';
+    if ($downloadId === '' && isset($selectionDownload['id'])) $downloadId = (string)$selectionDownload['id'];
+    if ($downloadId === '') $downloadId = $downloadFile !== '' ? $downloadFile : $downloadLabel;
+
+    $downloadKind = isset($extra['download_kind']) ? (string)$extra['download_kind'] : '';
+    if ($downloadKind === '' && isset($selectionDownload['kind'])) $downloadKind = (string)$selectionDownload['kind'];
+    if ($downloadKind === '') $downloadKind = stripos($downloadId . ' ' . $downloadLabel, 'todo') !== false ? 'all' : 'single';
+
+    $downloadSize = isset($extra['download_size']) ? (string)$extra['download_size'] : '';
+    if ($downloadSize === '' && isset($selectionDownload['size'])) $downloadSize = (string)$selectionDownload['size'];
+
+    $downloadUrl = isset($extra['download_url']) ? (string)$extra['download_url'] : '';
+    if ($downloadUrl === '' && isset($selectionDownload['href'])) $downloadUrl = (string)$selectionDownload['href'];
+
+    $downloadName = isset($extra['download_name']) ? (string)$extra['download_name'] : '';
+    if ($downloadName === '' && isset($selectionDownload['download_name'])) $downloadName = (string)$selectionDownload['download_name'];
+
+    $attribution = mp_attribution_classify(array(
+        'utm_source' => isset($event['utm_source']) ? (string)$event['utm_source'] : (isset($extra['utm_source']) ? (string)$extra['utm_source'] : ''),
+        'first_referrer' => isset($event['first_referrer']) ? (string)$event['first_referrer'] : (isset($extra['first_referrer']) ? (string)$extra['first_referrer'] : ''),
+        'referrer' => isset($extra['referrer']) ? (string)$extra['referrer'] : '',
+        'fbclid' => isset($extra['fbclid']) ? (string)$extra['fbclid'] : '',
+        'gclid' => isset($extra['gclid']) ? (string)$extra['gclid'] : '',
+    ));
+
+    return array(
+        'created_at' => isset($event['created_at']) ? (string)$event['created_at'] : '',
+        'session_id' => isset($event['session_id']) ? (string)$event['session_id'] : '',
+        'ip_number' => isset($event['ip_number']) ? (string)$event['ip_number'] : '',
+        'visitor_label' => mp_visitor_label_for_ip(isset($event['ip_number']) ? (string)$event['ip_number'] : ''),
+        'product_slug' => $productSlug,
+        'product_label' => product_friendly_name($productSlug),
+        'step_id' => isset($event['step_id']) ? (string)$event['step_id'] : '',
+        'device_type' => isset($event['device_type']) ? (string)$event['device_type'] : '',
+        'viewport_width' => isset($event['viewport_width']) ? $event['viewport_width'] : null,
+        'landing_page' => isset($extra['landing_page']) ? (string)$extra['landing_page'] : '',
+        'download_id' => $downloadId,
+        'download_key' => $downloadFile !== '' ? $downloadFile : $downloadId,
+        'download_label' => $downloadLabel,
+        'download_file' => $downloadFile,
+        'download_kind' => $downloadKind,
+        'download_size' => $downloadSize,
+        'download_url' => $downloadUrl,
+        'download_name' => $downloadName,
+        'attribution' => $attribution,
+    );
 }
 
 // LIVE_DASHBOARD_HELPERS_V1 (Phase 1)
@@ -1666,6 +1793,9 @@ table.funnel td.bar-cell { width: 32%; }
 .visitor-card .vc-row { display: flex; flex-wrap: wrap; gap: 6px 10px; }
 .visitor-card .vc-row span.k { color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .visitor-card .vc-row strong { font-weight: 700; }
+.visitor-card .download-highlight { padding: 8px 10px; border: 1px solid rgba(79,122,58,0.24); border-radius: 9px; background: rgba(79,122,58,0.09); align-items: baseline; }
+.visitor-card .download-highlight span.k { color: var(--moss); }
+.visitor-card .download-highlight strong { color: var(--moss); }
 .visitor-card details { border-top: 1px dashed var(--line); padding-top: 6px; }
 .visitor-card details summary { cursor: pointer; color: var(--muted); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; outline: none; }
 .visitor-card details summary::-webkit-details-marker { display: none; }
@@ -1699,6 +1829,12 @@ table.funnel td.bar-cell { width: 32%; }
 .ip-table th, .ip-table td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--line); font-size: 0.85rem; vertical-align: top; }
 .ip-table th { color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; font-size: 0.72rem; }
 .ip-table tr.ip-row.has-orders td:first-child::before { content: '✓ '; color: var(--moss); font-weight: 800; }
+.offer-download-table td { vertical-align: top; }
+.offer-download-grid { display:grid; grid-template-columns:minmax(0,0.9fr) minmax(0,1.4fr); gap:16px; align-items:start; }
+.download-kind { display:inline-block; padding:2px 7px; border-radius:999px; border:1px solid var(--line); color:var(--muted); font-size:0.72rem; font-weight:800; }
+.download-kind.is-all { background: rgba(79,122,58,0.12); color: var(--moss); border-color: rgba(79,122,58,0.24); }
+.download-file { display:block; color:var(--muted); font-size:0.74rem; margin-top:2px; overflow-wrap:anywhere; }
+@media (max-width: 860px) { .offer-download-grid { grid-template-columns: 1fr; } }
 
 /* Phase 2 map */
 .geo-map { width: 100%; height: 360px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,0.45); }
@@ -1947,6 +2083,18 @@ details.report-collapse > summary:hover { color: var(--ink); }
           </div>
           <?php endif; ?>
 
+          <?php if (!empty($vs['offer_downloads'])):
+            $latestDownload = $vs['offer_downloads'][0];
+            $extraDownloads = max(0, count($vs['offer_downloads']) - 1);
+          ?>
+          <div class="vc-row download-highlight">
+            <span class="k">Download PDF</span>
+            <strong><?= admin_funnel_h($latestDownload['download_label']) ?></strong>
+            <?php if ($latestDownload['download_size'] !== ''): ?><span><?= admin_funnel_h($latestDownload['download_size']) ?></span><?php endif; ?>
+            <?php if ($extraDownloads > 0): ?><span class="muted">+<?= (int)$extraDownloads ?> nesta sessão</span><?php endif; ?>
+          </div>
+          <?php endif; ?>
+
           <div class="vc-row">
             <span class="k">Passo</span><strong><?= admin_funnel_h($stepLabelVal ?: '—') ?></strong>
             <span class="k">Dispositivo</span><strong><?= admin_funnel_h($deviceLabel) ?><?php if ($vs['viewport_width']): ?> · <?= (int)$vs['viewport_width'] ?>px<?php endif; ?></strong>
@@ -2006,6 +2154,88 @@ details.report-collapse > summary:hover { color: var(--ink); }
   </ul>
 </section>
 <?php endif; ?>
+
+<!-- OFFER_DOWNLOADS_VISIBILITY_V1 -->
+<section class="product-card" id="downloads-ofertas">
+  <h2 style="margin:0 0 4px;font-size:1.2rem;">Downloads de PDFs de oferta</h2>
+  <p class="period" style="margin:0 0 12px;">Mostra quem descarregou cada PDF nas páginas de ofertas, dentro do período escolhido.</p>
+
+  <div class="metrics" style="margin-bottom:14px;">
+    <div class="metric"><div class="label">Downloads</div><div class="value"><?= (int)$offerDownloadTotal ?></div></div>
+    <div class="metric"><div class="label">Sessões com download</div><div class="value"><?= (int)$offerDownloadSessionsCount ?></div></div>
+    <div class="metric"><div class="label">Descarregar tudo</div><div class="value"><?= (int)$offerDownloadAllCount ?></div></div>
+    <div class="metric"><div class="label">PDFs individuais</div><div class="value"><?= (int)$offerDownloadSingleCount ?></div></div>
+  </div>
+
+  <?php if (empty($offerDownloads)): ?>
+    <div class="empty-state" style="margin:6px 0 0;">
+      Ainda não há downloads de PDFs de oferta neste período.
+      <p style="margin:8px 0 0;">Quando alguém carregar num botão de descarregar PDF, aparece aqui com visitante, hora e ficheiro.</p>
+    </div>
+  <?php else: ?>
+    <div class="offer-download-grid">
+      <div>
+        <p class="kicker" style="margin-top:0;">PDFs mais descarregados</p>
+        <table class="sessions-table offer-download-table">
+          <thead><tr><th>PDF</th><th class="num">Downloads</th><th class="num">Sessões</th></tr></thead>
+          <tbody>
+            <?php foreach (array_slice($offerDownloadsByFile, 0, 10, true) as $pdf): ?>
+              <tr>
+                <td>
+                  <strong><?= admin_funnel_h($pdf['download_label']) ?></strong>
+                  <?php if ($pdf['download_file'] !== ''): ?><span class="download-file"><?= admin_funnel_h($pdf['download_file']) ?></span><?php endif; ?>
+                  <span class="download-kind<?= $pdf['download_kind'] === 'all' ? ' is-all' : '' ?>"><?= $pdf['download_kind'] === 'all' ? 'Tudo' : 'Individual' ?></span>
+                  <?php if ($pdf['download_size'] !== ''): ?><span class="muted" style="font-size:0.74rem;"> <?= admin_funnel_h($pdf['download_size']) ?></span><?php endif; ?>
+                </td>
+                <td class="num"><?= (int)$pdf['count'] ?></td>
+                <td class="num"><?= count($pdf['sessions']) ?></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+
+      <div>
+        <p class="kicker" style="margin-top:0;">Últimos downloads</p>
+        <table class="sessions-table offer-download-table">
+          <thead>
+            <tr>
+              <th>Quando</th>
+              <th>Visitante</th>
+              <th>PDF</th>
+              <th>Origem</th>
+              <th>Dispositivo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach (array_slice($offerDownloads, 0, 80) as $download):
+              $deviceLabel = '—';
+              if ($download['device_type'] === 'mobile') $deviceLabel = 'Telemóvel';
+              elseif ($download['device_type'] === 'tablet') $deviceLabel = 'Tablet';
+              elseif ($download['device_type'] === 'desktop') $deviceLabel = 'Desktop';
+            ?>
+              <tr>
+                <td title="<?= admin_funnel_h($download['created_at']) ?>"><?= admin_funnel_h(mp_tracking_humanize_iso($download['created_at'])) ?></td>
+                <td>
+                  <strong><?= admin_funnel_h($download['visitor_label']) ?></strong>
+                  <span class="download-file"><code><?= admin_funnel_h($download['ip_number'] ?: '—') ?></code></span>
+                </td>
+                <td>
+                  <strong><?= admin_funnel_h($download['download_label']) ?></strong>
+                  <?php if ($download['download_file'] !== ''): ?><span class="download-file"><?= admin_funnel_h($download['download_file']) ?></span><?php endif; ?>
+                  <span class="download-kind<?= $download['download_kind'] === 'all' ? ' is-all' : '' ?>"><?= $download['download_kind'] === 'all' ? 'Tudo' : 'Individual' ?></span>
+                  <?php if ($download['download_size'] !== ''): ?><span class="muted" style="font-size:0.74rem;"> <?= admin_funnel_h($download['download_size']) ?></span><?php endif; ?>
+                </td>
+                <td><?= render_attribution_chip($download['attribution']) ?></td>
+                <td><?= admin_funnel_h($deviceLabel) ?><?php if ($download['viewport_width']): ?><span class="download-file"><?= (int)$download['viewport_width'] ?>px</span><?php endif; ?></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <?php endif; ?>
+</section>
 
 <!-- INTERESSE_VISITANTES_V1 -->
 <section class="product-card" id="interesse-visitantes">
