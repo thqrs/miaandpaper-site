@@ -1290,4 +1290,60 @@ async function generate() {
 
 
 /* ---------- geração Print Then Cut ---------- */
-async fun
+async function generatePTC(batches, off, res) {
+  const files = [];
+  const pageList = [];
+  let pageNo = 0;
+  const sizeOrder = [];
+  for (const b of batches) if (!sizeOrder.includes(b.tpl.size)) sizeOrder.push(b.tpl.size);
+  for (const sizeKey of sizeOrder) {
+    const group = batches.filter(b => b.tpl.size === sizeKey);
+    const s = SIZES[sizeKey];
+    const seq = [];
+    for (const b of group) {
+      const cv = await composeCard(b.tpl, b.lines, null, b.ty);
+      for (let k = 0; k < b.qty; k++) seq.push({ cv, lote: batches.indexOf(b) + 1 });
+    }
+    const sheets = ptcLayoutSheets(sizeKey, seq.length);
+    const pxmm = 639 / s.w;
+    let idx = 0;
+    for (const sheet of sheets) {
+      pageNo++;
+      const bc = document.createElement('canvas');
+      bc.width = Math.round(sheet.blockW * pxmm);
+      bc.height = Math.round(sheet.blockH * pxmm);
+      const ctx = bc.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, bc.width, bc.height);
+      const counts = new Map();
+      for (const c of sheet.cards) {
+        const card = seq[idx++];
+        ctx.drawImage(card.cv, Math.round(c.x * pxmm), Math.round(c.y * pxmm),
+                      Math.round(s.w * pxmm), Math.round(s.h * pxmm));
+        counts.set(card.lote, (counts.get(card.lote) || 0) + 1);
+      }
+      const svg = ptcSVG(sizeKey, sheet, off, bc.toDataURL('image/png'));
+      const sizePt = sizeKey === 'big' ? 'grande' : 'pequeno';
+      const name = `ptc_${sizePt}_pag${pageNo}_${sheet.n}cartoes.svg`;
+      files.push([name, svg]);
+      const lotesTxt = [...counts.entries()].map(([l, n]) => `lote ${l} ×${n}`).join(' + ');
+      pageList.push({ pageNo, batch: lotesTxt, tpl: sizePt, n: sheet.n,
+                      dim: `${sheet.blockW.toFixed(1)} × ${sheet.blockH.toFixed(1)} mm`, name });
+    }
+  }
+  let delay = 100;
+  for (const [name, content] of files) {
+    setTimeout(() => download(name, new Blob([content], { type: 'image/svg+xml' })), delay);
+    delay += 500;
+  }
+  res.innerHTML = `<p class="ok">✓ Print Then Cut: ${files.length} SVG(s) — sem PDF (a impressão é feita pelo Design Space)</p>
+    <table><tr><th>Pág.</th><th>Lotes</th><th>Tamanho</th><th>Cartões</th><th>Ficheiro · dimensões reais</th></tr>
+    ${pageList.map(p => `<tr><td>${p.pageNo}</td><td>${p.batch}</td><td>${p.tpl}</td><td>${p.n}</td><td>${p.name} · ${p.dim}</td></tr>`).join('')}
+    </table>
+    <p class="muted">No Design Space: Upload do SVG → confirmar a <b>largura exata</b> indicada acima → selecionar tudo → <b>Attach/Anexar</b> → a imagem fica Print Then Cut e as linhas ficam Basic Cut → imprimir do Design Space na ET‑8550 (escala 100%) → cortar.</p>`;
+}
+
+addBatch();
+
+</script>
+</body>
+</html>
