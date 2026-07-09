@@ -17,6 +17,7 @@ if (empty($_SESSION['miaandpaper_admin'])) {
 <html lang="pt-PT">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mia &amp; Paper — Gerador de Cartões</title>
 <style>
   :root { --ink:#2a2a2a; --line:#ddd; --accent:#3b6ea5; --bg:#faf9f7; }
@@ -56,6 +57,19 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   .calbox span { min-width: 56px; color: #666; font-weight: 600; }
   .calbox input { width: 58px; text-align: center; padding: 5px 2px; }
   .st { background: #eef2f7; color: var(--accent); font-weight: 700; padding: 5px 8px; font-size: 12px; }
+  /* MOBILE_V1: telemóveis e ecrãs estreitos */
+  @media (max-width: 700px) {
+    body { padding: 10px; }
+    h1 { font-size: 18px; }
+    .panel { padding: 12px; }
+    .settings { flex-wrap: wrap; gap: 10px; }
+    #batches { display: block; overflow-x: auto; }
+    #batches input[type=text], #batches select { min-width: 120px; }
+    #batches input[type=number] { min-width: 56px; }
+    .gen { width: 100%; }
+    .right { flex: 1 1 100%; }
+    .calbox { flex: 1 1 45%; }
+  }
 </style>
 </head>
 <body>
@@ -1128,6 +1142,20 @@ async function saveNames() {
   }
   const text = serializeNames(NAMES);
   applyNames(NAMES, 'guardado');
+  // no site: gravar no servidor (endpoint privado com sessão admin)
+  if (location.protocol !== 'file:') {
+    try {
+      const r = await fetch('nomes.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        body: text
+      });
+      if (r.ok) {
+        document.getElementById('namesInfo').textContent = `${NAMES.length} nome(s) · gravado no servidor ✓`;
+        return;
+      }
+    } catch (e) {}
+  }
   try {
     if (!namesHandle) namesHandle = await idbGet('nomesHandle').catch(() => null);
     if (namesHandle && (await namesHandle.requestPermission({ mode: 'readwrite' })) === 'granted') {
@@ -1159,7 +1187,17 @@ document.addEventListener('drop', e => {
     const c = localStorage.getItem('miaNames');
     if (c) { applyNames(JSON.parse(c), 'memória'); loadedFromMemory = true; }
   } catch (e) {}
-  // 2) tentar ler nomes.txt da mesma pasta diretamente
+  // 2) no site: endpoint privado nomes.php (sessão admin; ficheiro fora da pasta pública)
+  if (location.protocol !== 'file:') {
+    try {
+      const r = await fetch(`nomes.php?t=${Date.now()}`, { cache: 'no-store' });
+      if (r.ok) {
+        const entries = parseNames(await r.text());
+        if (entries.length) { applyNames(entries, 'servidor (auto)'); return; }
+      }
+    } catch (e) {}
+  }
+  // 3) tentar ler nomes.txt da mesma pasta diretamente
   try {
     const namesUrl = location.protocol === 'file:' ? 'nomes.txt' : `nomes.txt?t=${Date.now()}`;
     const r = await fetch(namesUrl, { cache: 'no-store' });
