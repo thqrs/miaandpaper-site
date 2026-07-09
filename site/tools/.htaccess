@@ -1,0 +1,3 @@
+# TOOLS_INDEX_V1: o .htaccess da raiz define DirectoryIndex index.html;
+# aqui o índice é PHP (guard de sessão admin), senão /tools/ dá 403.
+DirectoryIndex index.php
