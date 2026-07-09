@@ -3474,6 +3474,9 @@
       '<a class="admin-funnel-link" href="admin-funnel.php" target="_blank" rel="noopener">Funil</a>',
       // ADMIN_ORDERS_V1: link para o painel de encomendas.
       '<a class="admin-funnel-link" href="admin-orders.php" target="_blank" rel="noopener">Encomendas</a>',
+      // TOOLS_INDEX_V1: link para as ferramentas internas (só admin; a página
+      // valida a sessão no servidor, como admin-funnel.php).
+      '<a class="admin-funnel-link" href="tools/" target="_blank" rel="noopener">Ferramentas</a>',
       '<a class="admin-funnel-link" href="cadernos.html">Cadernos</a>',
       '<button type="button" data-admin-exit>Sair</button>',
       '</div>',
