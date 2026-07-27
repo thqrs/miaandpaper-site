@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Enviar fotos · Mia &amp; Paper</title>
+  <meta name="description" content="Página simples para enviar fotos à Mia & Paper.">
+  <link rel="icon" href="content/brand/logo.webp" type="image/webp">
+  <link rel="stylesheet" href="styles.css?v=2026072708">
+  <style>
+    :root { --paper:#fff8df; --card:#fffdf8; --ink:#2e2413; --muted:#746642; --line:rgba(114,85,30,.22); --moss:#4f7a3a; --gold:#d7aa36; --red:#9b3f35; }
+    * { box-sizing:border-box; }
+    body { min-height:100vh; margin:0; padding:18px; background:radial-gradient(circle at 10% 0,#fffdf4,transparent 36%),var(--paper); color:var(--ink); font:16px/1.5 Inter,system-ui,sans-serif; }
+    main { width:min(620px,100%); margin:0 auto; }
+    .brand { display:inline-flex; align-items:center; gap:10px; margin:4px 0 20px; color:inherit; text-decoration:none; font:700 1.05rem Georgia,serif; }
+    .brand img { width:42px; height:42px; border-radius:50%; object-fit:cover; }
+    .card { padding:clamp(20px,5vw,34px); border:1px solid var(--line); border-radius:20px; background:var(--card); box-shadow:0 18px 50px rgba(83,61,20,.12); }
+    h1 { margin:0 0 8px; font:700 clamp(1.75rem,7vw,2.55rem)/1.05 Georgia,serif; }
+    .intro { margin:0 0 24px; color:var(--muted); }
+    form { display:grid; gap:18px; }
+    label { display:grid; gap:7px; font-weight:750; }
+    label small { color:var(--muted); font-weight:500; }
+    input[type="text"],input[type="tel"],textarea { width:100%; min-height:50px; padding:12px 14px; border:1px solid var(--line); border-radius:11px; background:#fff; color:var(--ink); font:inherit; }
+    textarea { min-height:96px; resize:vertical; }
+    .picker { position:relative; display:grid; place-items:center; min-height:150px; padding:22px; border:2px dashed rgba(79,122,58,.42); border-radius:15px; background:rgba(79,122,58,.055); text-align:center; cursor:pointer; }
+    .picker input { position:absolute; inset:0; width:100%; opacity:0; cursor:pointer; }
+    .picker strong { color:var(--moss); font-size:1.08rem; }
+    .picker span { color:var(--muted); font-size:.88rem; }
+    .previews { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:0; padding:0; list-style:none; }
+    .previews li { position:relative; overflow:hidden; border-radius:10px; background:#eee4cc; aspect-ratio:1; }
+    .previews img { width:100%; height:100%; object-fit:cover; }
+    .previews button { position:absolute; top:5px; right:5px; width:30px; height:30px; padding:0; border:0; border-radius:50%; background:rgba(45,35,20,.82); color:#fff; font-size:1.1rem; cursor:pointer; }
+    .submit { min-height:54px; border:0; border-radius:12px; background:var(--moss); color:#fff; font:800 1rem/1 system-ui,sans-serif; cursor:pointer; box-shadow:0 8px 20px rgba(79,122,58,.18); }
+    .submit:disabled { opacity:.58; cursor:wait; }
+    .status { min-height:24px; margin:0; color:var(--muted); font-weight:650; }
+    .status.error { color:var(--red); }
+    .success { display:grid; gap:18px; text-align:center; }
+    .success[hidden] { display:none; }
+    .code { display:block; padding:16px; border:1px dashed var(--gold); border-radius:12px; background:#fff8dc; color:#6f5520; font:900 clamp(1.45rem,8vw,2.2rem)/1 ui-monospace,monospace; letter-spacing:.06em; }
+    .copy { min-height:48px; border:1px solid var(--moss); border-radius:11px; background:#fff; color:var(--moss); font:800 .95rem system-ui,sans-serif; cursor:pointer; }
+    @media(max-width:420px){ body{padding:10px}.previews{grid-template-columns:repeat(2,minmax(0,1fr))}.card{border-radius:16px} }
+  </style>
+</head>
+<body data-page="static">
+  <main>
+    <a class="brand" href="index.html"><img src="content/brand/logo.webp" alt=""><span>Mia &amp; Paper</span></a>
+    <section class="card">
+      <div data-form-view>
+        <h1>Enviar fotos</h1>
+        <p class="intro">Escolhe as imagens no telemóvel. No fim recebes um código para enviares à Mia.</p>
+        <form data-form novalidate>
+          <label>O teu nome<input type="text" name="name" autocomplete="name" maxlength="100" required></label>
+          <label>Contacto <small>(opcional)</small><input type="tel" name="contact" autocomplete="tel" maxlength="120" placeholder="Telemóvel, email ou Instagram"></label>
+          <label class="picker"><input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" multiple data-files><strong>Escolher fotos</strong><span>Até 10 imagens · máximo 15 MB cada</span></label>
+          <ul class="previews" data-previews></ul>
+          <label>Nota <small>(opcional)</small><textarea name="note" maxlength="800" placeholder="Explica a que encomenda ou ideia pertencem estas fotos."></textarea></label>
+          <p class="status" data-status role="status"></p>
+          <button class="submit" type="submit">Enviar fotos</button>
+        </form>
+      </div>
+      <div class="success" data-success hidden>
+        <h1>Fotos enviadas</h1>
+        <p>Envia este código à Mia para ela encontrar as tuas imagens:</p>
+        <strong class="code" data-code></strong>
+        <button class="copy" type="button" data-copy>Copiar código</button>
+        <a href="ajuda-upload.html">Enviar mais fotos</a>
+      </div>
+    </section>
+  </main>
+  <script src="app.js?v=2026072705"></script>
+  <script>
+  (function(){
+    if(window.trackOrderEvent){window.trackOrderEvent("help_upload_view",{step_id:"help_upload"});}
+    var files=[]; var input=document.querySelector("[data-files]"); var previews=document.querySelector("[data-previews]"); var form=document.querySelector("[data-form]"); var status=document.querySelector("[data-status]"); var submit=form.querySelector(".submit");
+    function showStatus(text,error){status.textContent=text;status.classList.toggle("error",!!error);}
+    function render(){previews.innerHTML="";files.forEach(function(file,index){var li=document.createElement("li");var img=document.createElement("img");var button=document.createElement("button");img.src=URL.createObjectURL(file);img.alt="";button.type="button";button.textContent="×";button.setAttribute("aria-label","Remover foto");button.addEventListener("click",function(){files.splice(index,1);render();});li.appendChild(img);li.appendChild(button);previews.appendChild(li);});}
+    input.addEventListener("change",function(){var chosen=Array.prototype.slice.call(input.files||[]);var invalid=chosen.some(function(file){return file.size>15*1024*1024;});if(invalid){showStatus("Cada imagem pode ter no máximo 15 MB.",true);return;}files=files.concat(chosen).slice(0,10);input.value="";showStatus(files.length+(files.length===1?" foto escolhida":" fotos escolhidas"),false);if(window.trackOrderEvent&&chosen.length){window.trackOrderEvent("help_upload_started",{step_id:"help_upload",selection_count:files.length});}render();});
+    form.addEventListener("submit",function(event){event.preventDefault();var name=form.elements.name.value.trim();if(!name){showStatus("Indica o teu nome.",true);form.elements.name.focus();return;}if(!files.length){showStatus("Escolhe pelo menos uma foto.",true);input.focus();return;}submit.disabled=true;showStatus("A enviar as fotos…",false);var data=new FormData();files.forEach(function(file){data.append("media[]",file,file.name);});fetch("upload-order-photo.php",{method:"POST",body:data,credentials:"same-origin"}).then(function(response){return response.json().then(function(payload){if(!response.ok)throw new Error(payload.message||"Não foi possível enviar as fotos.");return payload;});}).then(function(payload){showStatus("A criar o código…",false);return fetch("help-upload.php",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:name,contact:form.elements.contact.value.trim(),note:form.elements.note.value.trim(),uploads:payload.uploads})});}).then(function(response){return response.json().then(function(payload){if(!response.ok)throw new Error(payload.message||"Não foi possível concluir o envio.");return payload;});}).then(function(payload){document.querySelector("[data-form-view]").hidden=true;document.querySelector("[data-success]").hidden=false;document.querySelector("[data-code]").textContent=payload.reference;document.querySelector("[data-copy]").dataset.code=payload.reference;if(window.trackOrderEvent){window.trackOrderEvent("help_upload_completed",{step_id:"help_upload",selection_count:files.length});}}).catch(function(error){submit.disabled=false;showStatus(error.message,true);});});
+    document.querySelector("[data-copy]").addEventListener("click",function(){var button=this;navigator.clipboard.writeText(button.dataset.code||"").then(function(){button.textContent="Código copiado";}).catch(function(){button.textContent="Seleciona e copia o código acima";});});
+  }());
+  </script>
+</body>
+</html>

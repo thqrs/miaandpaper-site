@@ -1,0 +1,1346 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Galeria de imagens · Mia &amp; Paper</title>
+  <link rel="icon" href="content/brand/logo.webp" type="image/webp">
+  <style>
+    /* GALERIA_V2 — página de trabalho para desktop: o objectivo é ser
+       funcional. Cada linha mostra UMA imagem, com a pré-visualização
+       desenhada pelo próprio app.js dentro de um iframe à largura de ecrã
+       escolhida — por isso o cartão, o recorte, o zoom e a rotação são
+       exactamente os do site. */
+    :root {
+      --paper: #f7f1e3; --card: #fffdf8; --ink: #2e2413; --muted: #746a59;
+      --line: #d9ccb2; --moss: #72551e; --linen: #efe6d2; --danger: #b9342b;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink);
+      font: 14px/1.4 Inter, system-ui, sans-serif; }
+    h1 { margin: 0; font: 700 1.3rem/1.2 Georgia, serif; }
+    h2 { margin: 30px 0 8px; padding-bottom: 5px; border-bottom: 2px solid var(--moss);
+      font: 700 1.2rem/1.2 Georgia, serif; }
+    h3 { margin: 18px 0 6px; font: 700 .98rem/1.2 Georgia, serif; color: var(--moss); }
+
+    .bar { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; gap: 10px;
+      align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--line);
+      background: var(--card); }
+    .bar .grow { flex: 1 1 200px; }
+    main { padding: 0 14px 120px; }
+
+    button { min-height: 32px; padding: 5px 10px; border: 1px solid var(--moss);
+      border-radius: 6px; background: var(--card); color: var(--moss);
+      font: 700 .84rem/1.2 inherit; cursor: pointer; }
+    button.primary { background: var(--moss); color: #fffdf8; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .btn { display: inline-flex; align-items: center; min-height: 32px; padding: 5px 10px;
+      border: 1px solid var(--moss); border-radius: 6px; background: var(--card);
+      color: var(--moss); font: 700 .84rem/1.2 inherit; cursor: pointer; }
+    input[type="text"], input[type="number"], select { min-height: 28px; padding: 3px 6px;
+      border: 1px solid var(--line); border-radius: 5px; background: #fff; color: var(--ink);
+      font: 400 .82rem/1.2 inherit; }
+
+    .hint { margin: 4px 0 0; color: var(--muted); font-size: .8rem; }
+    .warn { padding: 8px 11px; border: 1px solid var(--danger); border-radius: 7px;
+      background: #fff7f6; color: var(--danger); font-size: .82rem; }
+    .status { font-size: .82rem; color: var(--muted); }
+    .status.is-error { color: var(--danger); font-weight: 700; }
+
+    /* Uma imagem por linha: controlos à esquerda, cartão real à direita. */
+    .slot { display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 14px;
+      align-items: start; margin-bottom: 8px; padding: 9px;
+      border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+    .slot.is-active { border-color: var(--moss); box-shadow: 0 0 0 2px var(--moss); }
+    .slot.is-dirty { background: #fdf7e4; }
+    .slot.is-done { border-left: 5px solid var(--moss); }
+    .done-choice { display: inline-flex; gap: 5px; align-items: center; color: var(--moss);
+      font-size: .78rem; font-weight: 700; }
+    .done-choice input { width: 16px; height: 16px; accent-color: var(--moss); }
+
+    .ctl { display: grid; gap: 6px; min-width: 0; }
+    .ctl .head { display: flex; gap: 7px; align-items: baseline; }
+    .ctl .head input { width: 18px; height: 18px; accent-color: var(--moss); }
+    .ctl .head strong { font-size: .9rem; }
+    .ctl .where { color: var(--muted); font-size: .76rem; }
+    .ctl .path { width: 100%; font: 400 .73rem/1.3 ui-monospace, monospace; }
+    .ctl .row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+    .ctl label.field { display: inline-flex; align-items: center; gap: 3px;
+      color: var(--muted); font-size: .72rem; }
+    .ctl label.field input, .ctl label.field select { width: 66px; }
+    .ctl .note { color: var(--muted); font-size: .72rem; }
+
+    .menu-panel { position: fixed; top: 54px; right: 10px; z-index: 40; width: min(360px, 92vw);
+      max-height: 78vh; overflow: auto; padding: 10px 12px; border: 1px solid var(--line);
+      border-radius: 8px; background: var(--card); box-shadow: 0 12px 30px rgba(60, 44, 12, .22); }
+    .menu-panel h3 { margin: 10px 0 4px; }
+    .index { margin: 12px 0 18px; padding: 10px 12px; border: 1px solid var(--line);
+      border-radius: 8px; background: var(--card); }
+    .index h2 { margin: 0 0 6px; padding: 0; border: 0; font-size: 1.05rem; }
+    .index a, .menu-panel a { display: block; padding: 1px 0; color: var(--moss);
+      font-size: .82rem; text-decoration: none; }
+    .index a:hover, .menu-panel a:hover { text-decoration: underline; }
+    .index .product-row { margin-top: 8px; font-weight: 700; }
+    .index .sub { margin-left: 12px; font-weight: 400; }
+    .orphan { color: var(--danger); font-weight: 700; font-size: .78rem; }
+
+    .stage { position: relative; min-width: 0; overflow: auto; }
+    .stage .page-link { display: inline-block; margin-bottom: 4px; color: var(--moss);
+      font-size: .76rem; }
+    .slot-id { margin-bottom: 4px; }
+    .slot-id code { display: inline-block; padding: 2px 7px; border: 1px solid var(--moss);
+      border-radius: 5px; background: #f3ead2; color: #4a3814; cursor: pointer;
+      font: 700 .78rem/1.3 ui-monospace, monospace; user-select: all; word-break: break-all; }
+    .slot-id code.is-copied { background: var(--moss); color: #fffdf8; }
+    .crop { position: relative; overflow: hidden; overflow: clip; border: 1px dashed var(--line);
+      background: var(--linen); }
+    .crop iframe { display: block; border: 0; background: transparent; }
+    .crop.is-waiting::after { content: "a desenhar…"; position: absolute; inset: 0;
+      display: grid; place-items: center; color: var(--muted); font-size: .76rem; }
+    .crop.is-missing { padding: 8px; }
+    .crop.is-missing::after { content: "O site não mostra esta imagem neste passo, por isso não há cartão para pré-visualizar. Vê/edita o caminho ao lado."; position: absolute;
+      inset: 0; display: grid; place-items: center; padding: 8px; text-align: center;
+      color: var(--danger); font-size: .74rem; line-height: 1.3; }
+
+    dialog { width: min(1100px, 96vw); max-height: 90vh; padding: 0;
+      border: 1px solid var(--line); border-radius: 9px; background: var(--card); color: var(--ink); }
+    dialog::backdrop { background: rgba(30, 24, 12, .55); }
+    .dlg-head { position: sticky; top: 0; display: flex; flex-wrap: wrap; gap: 8px;
+      align-items: center; padding: 9px 11px; border-bottom: 1px solid var(--line); background: var(--card); }
+    .dlg-body { padding: 11px; overflow: auto; max-height: calc(90vh - 54px); }
+    .lib { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 7px; }
+    .lib button { display: grid; gap: 3px; padding: 4px; border-color: var(--line);
+      background: #fff; text-align: left; font-weight: 400; }
+    .lib img { width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: var(--linen); }
+    .lib span { font: 400 .66rem/1.2 ui-monospace, monospace; word-break: break-all; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <div class="grow">
+      <h1>Galeria de imagens</h1>
+      <p class="hint" id="summary">A carregar…</p>
+    </div>
+    <label class="hint" style="display:flex;gap:5px;align-items:center">
+      Largura do ecrã
+      <select id="screen-width">
+        <option value="290">290 (muito estreito)</option>
+        <option value="360">360 (telemóvel pequeno)</option>
+        <option value="390">390 (telemóvel)</option>
+        <option value="430">430 (telemóvel grande)</option>
+        <option value="620">620</option>
+        <option value="768">768 (tablet)</option>
+        <option value="1024">1024</option>
+        <option value="1280" selected>1280 (desktop)</option>
+        <option value="1600">1600</option>
+      </select>
+    </label>
+    <label class="hint" style="display:flex;gap:5px;align-items:center">
+      Previews em simultâneo
+      <input type="number" id="max-frames" value="60" min="1" max="400" step="1" style="width:64px">
+    </label>
+    <label class="hint" style="display:flex;gap:4px;align-items:center">
+      <input type="checkbox" id="hide-unused" checked> Esconder as que o site não usa
+    </label>
+    <label class="hint" style="display:flex;gap:4px;align-items:center">
+      <input type="checkbox" id="hide-done" checked> Esconder finalizadas
+    </label>
+    <label class="btn">Enviar imagens<input type="file" id="bulk-upload" accept="image/*" multiple hidden></label>
+    <button type="button" id="undo" disabled>↶ Anular</button>
+    <button type="button" id="redo" disabled>↷ Refazer</button>
+    <button type="button" id="clear-picks">Limpar seleção</button>
+    <button type="button" id="save" class="primary" disabled>Guardar alterações</button>
+    <span class="status" id="status"></span>
+    <button type="button" id="menu-toggle" aria-expanded="false" aria-controls="menu-panel" title="Índice">☰</button>
+  </div>
+
+  <nav id="menu-panel" class="menu-panel" hidden aria-label="Índice">
+    <div id="menu-index"></div>
+  </nav>
+
+  <main>
+    <p class="warn" id="public-warning" hidden>
+      Esta página está acessível a qualquer pessoa que saiba o endereço. Para a fechar,
+      põe <code>GALERIA_REQUIRE_ADMIN</code> a <code>true</code> em <code>galeria-api.php</code>.
+    </p>
+    <p class="hint">
+      Setas = mover · Ctrl+↑/↓ = zoom · Ctrl+←/→ = rodar · Shift = passos de 5 ·
+      Ctrl+Z = anular. Os ajustes aplicam-se às imagens com visto; sem vistos,
+      aplicam-se à imagem selecionada (clica na pré-visualização).
+      Nada é gravado até carregares em <strong>Guardar alterações</strong>.
+    </p>
+    <nav class="index" aria-label="Índice"><h2>Índice</h2><div id="page-index"></div></nav>
+    <div id="content"></div>
+  </main>
+
+  <script src="galeria-slots.js?v=2026072602"></script>
+
+  <dialog id="picker">
+    <div class="dlg-head">
+      <strong id="picker-title">Escolher imagem</strong>
+      <input type="text" id="picker-filter" placeholder="filtrar por caminho…" style="flex:1 1 160px">
+      <label class="hint" style="display:flex;gap:4px;align-items:center">
+        Ordenar
+        <select id="picker-sort">
+          <option value="recent" selected>Mais recentes primeiro</option>
+          <option value="oldest">Mais antigas primeiro</option>
+          <option value="logical">Lógica (pasta e nome)</option>
+          <option value="name-desc">Nome (Z→A)</option>
+          <option value="largest">Maiores primeiro</option>
+          <option value="smallest">Mais pequenas primeiro</option>
+        </select>
+      </label>
+      <label class="btn">Enviar nova<input type="file" id="picker-upload" accept="image/*" multiple hidden></label>
+      <button type="button" id="picker-clear">Sem imagem</button>
+      <button type="button" id="picker-close">Fechar</button>
+    </div>
+    <div class="dlg-body"><div class="lib" id="picker-grid"></div></div>
+  </dialog>
+
+<script>
+(function () {
+  "use strict";
+
+  var MAX_UNDO = 60;
+
+  // Selecções que fazem aparecer cada placeholder da caixa "O que vais
+  // encomendar" — assim a pré-visualização usa o mesmo tile do site.
+  var SUMMARY_SELECTIONS = {
+    frame_size: { designs: "Foto e Frase" },
+    phrase: { designs: "Foto e Frase", quadro_text: "Com frase" },
+    baby_details: { designs: "Quadro para bebé", baby_name: "Exemplo" },
+    baby_custom_animal: { designs: "Quadro para bebé", baby_animal: "Outro animal", baby_custom_animal: "Girafa" },
+    super_description: { designs: "Super Personalizado", quadro_description: "Exemplo de ideia" },
+    photo_help: { designs: "Foto e Frase", photo_help: true },
+    audio: { designs: "Foto e Frase", quadro_audio_uploads: [{ token: "exemplo" }] }
+  };
+
+  var state = {
+    products: [],
+    library: [],
+    slots: [],
+    pages: {},
+    done: {},        // doneKey -> true (imagens já dadas por terminadas)
+    dirty: {},
+    undo: [],
+    redo: [],
+    activeKey: "",
+    pickerSlotKey: "",
+    screenWidth: 1280,
+    csrf: "",
+    sizes: {},      // key -> {width, height} da última medição
+    effective: {}   // key -> valores que o site está mesmo a aplicar
+  };
+
+  var frames = {};   // key -> {iframe, ready, pending}
+
+  function el(id) { return document.getElementById(id); }
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function sel(key) { return '.slot[data-key="' + key.replace(/"/g, '\\"') + '"]'; }
+  function setStatus(text, isError) {
+    el("status").textContent = text || "";
+    el("status").classList.toggle("is-error", !!isError);
+  }
+  function clampNumber(value, fallback, min, max) {
+    var n = Number(value);
+    return isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+  }
+  function apiHeaders(json) {
+    var headers = {};
+    if (json) { headers["Content-Type"] = "application/json"; }
+    if (state.csrf) { headers["X-Admin-CSRF"] = state.csrf; }
+    return headers;
+  }
+  function responseJson(response) {
+    return response.text().then(function (text) {
+      var data;
+      try { data = JSON.parse(text); }
+      catch (error) { throw new Error("O servidor devolveu uma resposta inválida (HTTP " + response.status + ")."); }
+      if (!response.ok || !data.ok) {
+        throw new Error(data.message || ("Pedido falhou (HTTP " + response.status + ")."));
+      }
+      return data;
+    });
+  }
+  function productEntryBySlug(slug) {
+    return state.products.filter(function (p) { return p.slug === slug; })[0] || null;
+  }
+  function productBySlug(slug) {
+    var found = productEntryBySlug(slug);
+    return found ? found.product : null;
+  }
+  function resolve(slug, trail) {
+    var node = productBySlug(slug);
+    for (var i = 0; i < trail.length && node != null; i++) { node = node[trail[i]]; }
+    return node;
+  }
+
+  // --- histórico ------------------------------------------------------------
+  // Guarda o estado do produto ANTES de cada alteração; nada vai para o
+  // servidor sem ser pelo botão de guardar.
+  function capture(slugs) {
+    var list = (Array.isArray(slugs) ? slugs : [slugs]).filter(function (slug, index, all) {
+      return slug && all.indexOf(slug) === index;
+    });
+    var products = {};
+    list.forEach(function (slug) { products[slug] = JSON.stringify(productBySlug(slug)); });
+    return { slugs: list, products: products, dirty: Object.assign({}, state.dirty) };
+  }
+
+  function snapshot(slugs) {
+    state.undo.push(capture(slugs));
+    if (state.undo.length > MAX_UNDO) { state.undo.shift(); }
+    state.redo = [];
+    updateHistoryButtons();
+  }
+
+  function updateHistoryButtons() {
+    el("undo").disabled = state.undo.length === 0;
+    el("redo").disabled = state.redo.length === 0;
+  }
+
+  function restore(entry) {
+    state.products.forEach(function (p) {
+      if (Object.prototype.hasOwnProperty.call(entry.products, p.slug)) {
+        p.product = JSON.parse(entry.products[p.slug]);
+      }
+    });
+    state.dirty = entry.dirty;
+
+    // Os slots resolvem tudo pelo trail, por isso basta redesenhar os cartões
+    // do produto afectado.
+    state.slots.filter(function (slot) { return entry.slugs.indexOf(slot.slug) !== -1; }).forEach(function (slot) {
+      delete state.effective[slot.key];   // volta a ser medido pela pré-visualização
+      refreshSlot(slot);
+    });
+    updateSummary();
+    updateHistoryButtons();
+  }
+
+  function undo() {
+    var entry = state.undo.pop();
+    if (!entry) { return; }
+    state.redo.push(capture(entry.slugs));
+    restore(entry);
+    setStatus("Anulado. Restam " + state.undo.length + " passos para trás.");
+  }
+
+  function redo() {
+    var entry = state.redo.pop();
+    if (!entry) { return; }
+    state.undo.push(capture(entry.slugs));
+    restore(entry);
+    setStatus("Refeito. Restam " + state.redo.length + " passos para a frente.");
+  }
+
+  // --- descoberta dos sítios com imagem -------------------------------------
+  // A varredura do JSON vive em galeria-slots.js, partilhada com o multimedia.html.
+  var collectSlots = window.MiaGaleriaSlots.collect;
+
+  // Tudo é resolvido pelo caminho, nunca por referência guardada — assim o
+  // "anular" pode trocar o objecto do produto sem partir nada.
+  function slotItem(slot) { return slot.itemTrail ? resolve(slot.slug, slot.itemTrail) : null; }
+  function slotEditItem(slot) {
+    return slot.editItemTrail ? resolve(slot.slug, slot.editItemTrail) : slotItem(slot);
+  }
+  function slotFitItem(slot) {
+    return slot.fitItemTrail ? resolve(slot.slug, slot.fitItemTrail) : slotEditItem(slot);
+  }
+  function slotValue(slot) {
+    var value = resolve(slot.slug, slot.trail);
+    if (typeof value === "string" && value) { return value; }
+    // Gaveta ainda não substituída: mostra o caminho que o site compõe.
+    if (slot.gaveta) { return slot.gaveta.siblings[slot.gaveta.index] || ""; }
+    return typeof value === "string" ? value : "";
+  }
+  function setSlotValue(slot, value) {
+    delete state.effective[slot.key];
+    syncInputs(slot.key);
+    // As gavetas não têm um campo próprio no JSON: o site compõe o caminho a
+    // partir da pasta. Ao substituir uma, materializamos o interiorImages da
+    // capa com a lista completa (o site passa a usá-la em vez de compor) e só
+    // depois trocamos a posição escolhida.
+    if (slot.gaveta) {
+      var item = slotItem(slot);
+      if (!item) { return; }
+      if (!Array.isArray(item.interiorImages)) { item.interiorImages = []; }
+      slot.gaveta.siblings.forEach(function (fallback, index) {
+        if (typeof item.interiorImages[index] !== "string" || !item.interiorImages[index]) {
+          item.interiorImages[index] = fallback;
+        }
+      });
+      item.interiorImages[slot.gaveta.index] = value;
+      state.dirty[slot.slug] = true;
+      return;
+    }
+
+    var container = resolve(slot.slug, slot.trail.slice(0, -1));
+    if (!container) { return; }
+    container[slot.trail[slot.trail.length - 1]] = value;
+    state.dirty[slot.slug] = true;
+  }
+
+  function slotIsDone(slot) {
+    return !!(slot && state.done[slot.doneKey]);
+  }
+
+  function migrateDoneKeys() {
+    var previous = Object.assign({}, state.done);
+    var aliases = {};
+
+    state.slots.forEach(function (slot) {
+      (slot.doneAliases || []).forEach(function (alias) { aliases[alias] = true; });
+    });
+    Object.keys(aliases).forEach(function (alias) { delete state.done[alias]; });
+    state.slots.forEach(function (slot) {
+      var wasDone = !!previous[slot.doneKey] || (slot.doneAliases || []).some(function (alias) {
+        return !!previous[alias];
+      });
+      if (wasDone) { state.done[slot.doneKey] = true; }
+    });
+  }
+
+  function syncDonePeers(slot) {
+    state.slots.forEach(function (peer) {
+      var node;
+      var input;
+      if (peer.doneKey !== slot.doneKey) { return; }
+      node = document.querySelector(sel(peer.key));
+      if (!node) { return; }
+      input = node.querySelector("[data-done]");
+      if (input) { input.checked = slotIsDone(peer); }
+      node.classList.toggle("is-done", slotIsDone(peer));
+    });
+  }
+
+  // --- ajustes (mesmas chaves e defaults do app.js) --------------------------
+  var ADJUST_FIELDS = [
+    { key: "imageZoom", label: "zoom %", fallback: null, min: 20, max: 500 },
+    { key: "imagePositionX", label: "x %", fallback: 0, min: -100, max: 100 },
+    { key: "imagePositionY", label: "y %", fallback: 0, min: -100, max: 100 },
+    { key: "imageRotation", label: "rodar °", fallback: 0, min: -180, max: 180 },
+    { key: "frameWidth", label: "larg. px", fallback: null, min: 1, max: 2000 },
+    { key: "frameHeight", label: "alt. px", fallback: null, min: 1, max: 2000 }
+  ];
+
+  // O site guarda os ajustes em item.imageEdits[editKey] (por contexto) e cai
+  // para as propriedades planas do item quando não há slot. Escrevemos sempre
+  // no slot — é o que o teclado do admin faz — e lemos o valor efectivo que a
+  // pré-visualização reporta, para os números baterem certo com o que se vê.
+  var SLOT_PROPERTY = {
+    imageZoom: "zoom", imagePositionX: "positionX", imagePositionY: "positionY",
+    imageRotation: "rotation", frameWidth: "frameWidth", frameHeight: "frameHeight"
+  };
+
+  function flatKey(slot, base) {
+    return slot.adjustPrefix ? slot.adjustPrefix + base.charAt(0).toUpperCase() + base.slice(1) : base;
+  }
+  function defaultFrameSize(slot) {
+    var item = slotFitItem(slot);
+    var base = slot.template === "media-list" ? 70 : 102;
+    var scale = clampNumber(item && item[flatKey(slot, "frameScale")], 100, 40, 300) / 100;
+    return Math.round(base * scale * 100) / 100;
+  }
+  function adjustFallback(slot, field) {
+    if (field.key === "imageZoom") { return slot.template === "media-list" ? 100 : 168; }
+    if (field.key === "frameWidth" || field.key === "frameHeight") { return defaultFrameSize(slot); }
+    return field.fallback;
+  }
+  function readAdjust(slot, field) {
+    var effective = state.effective[slot.key];
+    var item = slotEditItem(slot);
+    var fallback = adjustFallback(slot, field);
+    var raw;
+
+    if (effective && effective[field.key] != null) {
+      return clampNumber(effective[field.key], fallback, field.min, field.max);
+    }
+    raw = item ? item[flatKey(slot, field.key)] : undefined;
+    return raw == null || raw === "" ? fallback : clampNumber(raw, fallback, field.min, field.max);
+  }
+  function writeAdjust(slot, field, value) {
+    var item = slotEditItem(slot);
+    var effective = state.effective[slot.key];
+    var next;
+
+    if (!item || slot.adjustPrefix === null || !slot.expectedEditKey || !effective
+        || effective.editKey !== slot.expectedEditKey) {
+      setStatus("Espera que a pré-visualização confirme o contexto desta imagem.", true);
+      return false;
+    }
+    next = clampNumber(value, adjustFallback(slot, field), field.min, field.max);
+
+    if (!item.imageEdits || typeof item.imageEdits !== "object") { item.imageEdits = {}; }
+    if (!item.imageEdits[slot.expectedEditKey]) { item.imageEdits[slot.expectedEditKey] = {}; }
+    item.imageEdits[slot.expectedEditKey][SLOT_PROPERTY[field.key]] = next;
+
+    effective[field.key] = next;
+    state.dirty[slot.slug] = true;
+    return true;
+  }
+
+  // --- markup ---------------------------------------------------------------
+  function fieldAllowed(slot, field) {
+    return !slot.allowedFields || slot.allowedFields.indexOf(field.key) !== -1;
+  }
+
+  function slotMarkup(slot) {
+    var item = slotFitItem(slot);
+    var size = state.sizes[slot.key] || { width: 240, height: 150 };
+    var fitValue = item && item[flatKey(slot, "imageFit")] === "contain" ? "contain" : "cover";
+    var adjustReady = !!(state.effective[slot.key] && state.effective[slot.key].editKey);
+    var controls;
+
+    if (slot.adjustPrefix !== null) {
+      controls = '<div class="row">'
+        + ADJUST_FIELDS.map(function (field, index) {
+          if (!fieldAllowed(slot, field)) { return ""; }
+          return '<label class="field">' + esc(field.label)
+            + '<input type="number" data-adjust="' + index + '" value="' + esc(readAdjust(slot, field)) + '"'
+            + ' min="' + field.min + '" max="' + field.max + '" step="1"'
+            + (adjustReady ? "" : " disabled") + '></label>';
+        }).join("")
+        + (slot.allowFit === false ? "" : '<label class="field">recorte<select data-fit'
+          + (adjustReady ? "" : " disabled") + '>'
+          + '<option value="cover"' + (fitValue === "cover" ? " selected" : "") + '>cover</option>'
+          + '<option value="contain"' + (fitValue === "contain" ? " selected" : "") + '>contain</option>'
+          + '</select></label>') + '</div>'
+        + '<span class="note" data-adjust-wait' + (adjustReady ? " hidden" : "")
+        + '>A aguardar o contexto exacto da pré-visualização.</span>';
+    } else {
+      controls = '<span class="note">Esta imagem não tem ajustes próprios — só substituição.</span>';
+    }
+
+    return '<article class="slot' + (state.activeKey === slot.key ? " is-active" : "")
+      + (state.dirty[slot.slug] ? " is-dirty" : "")
+      + (slotIsDone(slot) ? " is-done" : "") + '" data-key="' + esc(slot.key) + '">'
+      + '<div class="ctl">'
+      + '<label class="head"><input type="checkbox" class="pick">'
+      + '<strong>' + esc(slot.itemLabel || slot.detail) + '</strong>'
+      + '<span class="where">' + esc(slot.detail) + '</span></label>'
+      + '<label class="done-choice"><input type="checkbox" data-done'
+      + (slotIsDone(slot) ? " checked" : "") + '> Já terminei esta imagem</label>'
+      + '<input type="text" class="path" data-path value="' + esc(slotValue(slot)) + '" placeholder="content/…">'
+      + '<div class="row"><button type="button" data-replace>Trocar imagem</button></div>'
+      + controls
+      + '</div>'
+      + '<div class="stage">'
+      + '<div class="slot-id"><code data-id title="Identificador desta localização — clica para copiar">' + esc(slot.id) + '</code></div>'
+      + pageLinkMarkup(slot) + stageMarkup(slot, size)
+      + '</div>'
+      + '</article>';
+  }
+
+  function stageMarkup(slot, size) {
+    return '<div class="crop is-waiting" data-crop'
+      + ' style="width:' + size.width + 'px;height:' + size.height + 'px"></div>';
+  }
+
+  // Link para a página onde a imagem aparece de verdade. Produtos sem página
+  // (o pins.json ficou órfão quando o pins.html passou a redirecionar) são
+  // assinalados, para não se perder tempo a afinar imagens que ninguém vê.
+  function pageLinkMarkup(slot) {
+    var page = state.pages[slot.slug];
+
+    if (!page) {
+      return '<span class="orphan">Nenhuma página usa este produto — estas imagens não aparecem no site.</span>';
+    }
+
+    return '<a class="page-link" href="' + esc(page) + '" target="_blank" rel="noopener">Abrir ' + esc(page) + ' ↗</a>';
+  }
+
+  // Filtros da barra de topo. Por defeito escondem o que já não precisa de
+  // atenção: imagens de produtos sem página e imagens dadas por terminadas.
+  function visibleSlots() {
+    var hideUnused = el("hide-unused").checked;
+    var hideDone = el("hide-done").checked;
+
+    return state.slots.filter(function (slot) {
+      if (hideUnused && !state.pages[slot.slug]) { return false; }
+      if (hideDone && slotIsDone(slot)) { return false; }
+      return true;
+    });
+  }
+
+  function saveDone(slot, value) {
+    return fetch("galeria-api.php?action=save-done", {
+      method: "POST",
+      headers: apiHeaders(true),
+      body: JSON.stringify({ key: slot.doneKey, done: !!value })
+    }).then(responseJson);
+  }
+
+  function groupSections(slots) {
+    var sections = [];
+    slots.forEach(function (slot) {
+      var bucket = sections.filter(function (s) { return s.name === slot.section; })[0];
+      if (!bucket) { bucket = { name: slot.section, slots: [] }; sections.push(bucket); }
+      bucket.slots.push(slot);
+    });
+    return sections;
+  }
+
+  function anchorId(slug, sectionName) {
+    return "s-" + slug + "-" + String(sectionName).replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+  }
+
+  function resetFrames() {
+    Object.keys(frames).forEach(function (key) {
+      var frame = frames[key];
+      if (frame.timeout) { window.clearTimeout(frame.timeout); }
+      if (frame.iframe.parentNode) { frame.iframe.parentNode.removeChild(frame.iframe); }
+    });
+    frames = {};
+    frameQueue = [];
+    framesLoading = 0;
+  }
+
+  function render() {
+    var indexHtml = "";
+    var shown = visibleSlots();
+
+    resetFrames();
+    el("content").innerHTML = state.products.map(function (entry) {
+      var slots = shown.filter(function (slot) { return slot.slug === entry.slug; });
+      if (!slots.length) { return ""; }
+
+      var sections = groupSections(slots);
+      var page = state.pages[entry.slug];
+      var name = entry.name || entry.product.name || entry.slug;
+
+      indexHtml += '<div class="product-row"><a href="#p-' + esc(entry.slug) + '">' + esc(name)
+        + ' (' + esc(entry.slug) + ') · ' + slots.length + '</a>'
+        + (page ? "" : ' <span class="orphan">sem página</span>') + '</div>'
+        + sections.map(function (section) {
+          return '<a class="sub" href="#' + esc(anchorId(entry.slug, section.name)) + '">'
+            + esc(section.name) + ' · ' + section.slots.length + '</a>';
+        }).join("");
+
+      return '<section id="p-' + esc(entry.slug) + '"><h2>' + esc(name)
+        + ' <small>(' + esc(entry.slug) + ')</small>'
+        + (page ? ' <small><a href="' + esc(page) + '" target="_blank" rel="noopener">' + esc(page) + ' ↗</a></small>'
+                : ' <span class="orphan">— nenhuma página usa este conteúdo</span>')
+        + '</h2>'
+        + sections.map(function (section) {
+          return '<h3 id="' + esc(anchorId(entry.slug, section.name)) + '">' + esc(section.name) + '</h3>'
+            + section.slots.map(slotMarkup).join("");
+        }).join("") + '</section>';
+    }).join("");
+
+    el("page-index").innerHTML = indexHtml;
+    el("menu-index").innerHTML = indexHtml;
+    observeStages();
+    updateSummary();
+  }
+
+  function updateSummary() {
+    var dirty = Object.keys(state.dirty);
+    var shown = visibleSlots().length;
+    var doneCount = state.slots.filter(slotIsDone).length;
+
+    el("summary").textContent = shown + " de " + state.slots.length + " sítios com imagem · "
+      + doneCount + " finalizadas · " + state.library.length + " imagens na biblioteca"
+      + (dirty.length ? " · por guardar: " + dirty.join(", ") : "");
+    el("save").disabled = dirty.length === 0;
+    el("undo").disabled = state.undo.length === 0;
+  }
+
+  function slotByKey(key) {
+    return state.slots.filter(function (slot) { return slot.key === key; })[0] || null;
+  }
+
+  function setActive(key) {
+    var node = document.querySelector(sel(key));
+    state.activeKey = key;
+    document.querySelectorAll(".slot.is-active").forEach(function (n) { n.classList.remove("is-active"); });
+    if (node) { node.classList.add("is-active"); }
+  }
+  function targetSlots() {
+    var keys = Array.prototype.slice.call(document.querySelectorAll(".slot .pick:checked"))
+      .map(function (input) { return input.closest(".slot").dataset.key; });
+    if (!keys.length) { return state.activeKey ? [slotByKey(state.activeKey)].filter(Boolean) : []; }
+    return keys.map(slotByKey).filter(Boolean);
+  }
+
+  function refreshSlot(slot) {
+    var node = document.querySelector(sel(slot.key));
+    if (!node) { return; }
+    var checked = node.querySelector(".pick").checked;
+    var wrapper = document.createElement("div");
+    wrapper.innerHTML = slotMarkup(slot);
+    var fresh = wrapper.firstChild;
+    fresh.querySelector(".pick").checked = checked;
+    destroyFrame(slot.key);
+    node.replaceWith(fresh);
+    observeStage();
+  }
+
+  // --- pré-visualização real (iframe com o app.js) ---------------------------
+  function renderRequest(slot) {
+    var product = productBySlug(slot.slug);
+    var entry = productEntryBySlug(slot.slug);
+    var selections = Object.assign(
+      {},
+      slot.summaryKey ? (SUMMARY_SELECTIONS[slot.summaryKey] || {}) : {},
+      slot.previewSelections || {}
+    );
+
+    return {
+      type: "mia-preview-render",
+      key: slot.key,
+      kind: slot.kind || (entry && entry.kind) || "product",
+      product: product,
+      stepIndex: slot.previewStepIndex == null ? slot.stepIndex : slot.previewStepIndex,
+      itemId: slot.itemId || "",
+      slotName: slot.slotName || "",
+      expectedEditKey: slot.expectedEditKey || "",
+      slideIndex: slot.slideIndex == null ? null : slot.slideIndex,
+      image: slotValue(slot),
+      selections: selections,
+      highlight: true
+    };
+  }
+
+  function sendRender(slot) {
+    var frame = frames[slot.key];
+    if (!frame) { return; }
+    var message = renderRequest(slot);
+    if (!frame.ready) { frame.pending = message; return; }
+    frame.iframe.contentWindow.postMessage(message, window.location.origin);
+  }
+
+  // Cada iframe carrega o app.js inteiro, por isso são criados em fila e em
+  // número limitado — abrir uma dúzia ao mesmo tempo bloqueia o browser.
+  var MAX_LIVE_FRAMES = 10;   // configurável na barra de topo
+  var frameQueue = [];
+  var framesLoading = 0;
+
+  function createFrame(node) {
+    var key = node.dataset.key;
+    if (frames[key] || frameQueue.indexOf(key) !== -1) { return; }
+    frameQueue.push(key);
+    pumpFrameQueue();
+  }
+
+  function pumpFrameQueue() {
+    while (frameQueue.length && framesLoading < 2 && Object.keys(frames).length < MAX_LIVE_FRAMES) {
+      mountFrame(frameQueue.shift());
+    }
+  }
+
+  function mountFrame(key) {
+    var node = document.querySelector(sel(key));
+    var slot = slotByKey(key);
+    if (!node || !slot || frames[key]) { return; }
+
+    var crop = node.querySelector("[data-crop]");
+    var iframe = document.createElement("iframe");
+    if (!crop) { return; }
+
+    iframe.src = "galeria-preview.html?v=2026072304";
+    iframe.setAttribute("scrolling", "no");
+    iframe.style.width = state.screenWidth + "px";
+    iframe.style.height = "1600px";
+    iframe.style.visibility = "hidden";
+    crop.appendChild(iframe);
+
+    framesLoading++;
+    frames[key] = { iframe: iframe, ready: false, pending: renderRequest(slot), timeout: null };
+    frames[key].timeout = window.setTimeout(function () {
+      failFrame(key, "A pré-visualização demorou demasiado a carregar.");
+    }, 12000);
+    iframe.addEventListener("error", function () {
+      failFrame(key, "Não foi possível carregar a pré-visualização.");
+    });
+  }
+
+  function failFrame(key, message) {
+    var frame = frames[key];
+    var node = document.querySelector(sel(key));
+    var crop = node && node.querySelector("[data-crop]");
+    if (!frame || frame.ready) { return; }
+    frame.ready = true;
+    frame.failed = true;
+    frame.pending = null;
+    if (frame.timeout) { window.clearTimeout(frame.timeout); frame.timeout = null; }
+    framesLoading = Math.max(0, framesLoading - 1);
+    frame.iframe.style.visibility = "hidden";
+    if (crop) {
+      crop.classList.remove("is-waiting");
+      crop.classList.add("is-missing");
+      crop.title = message;
+    }
+    pumpFrameQueue();
+  }
+
+  function destroyFrame(key) {
+    var frame = frames[key];
+    var queued = frameQueue.indexOf(key);
+
+    if (queued !== -1) { frameQueue.splice(queued, 1); }
+    if (!frame) { return; }
+    if (frame.timeout) { window.clearTimeout(frame.timeout); }
+    if (!frame.ready) { framesLoading = Math.max(0, framesLoading - 1); }
+    if (frame.iframe.parentNode) { frame.iframe.parentNode.removeChild(frame.iframe); }
+    delete frames[key];
+    pumpFrameQueue();
+  }
+
+  // Só as linhas perto do ecrã ganham iframe — 290 cópias do app.js de uma vez
+  // seria insuportável. Feito à mão com getBoundingClientRect em vez de
+  // IntersectionObserver, que não dispara em todos os contextos.
+  var visibilityQueued = false;
+
+  // As linhas mais perto do meio do ecrã ganham a vez: com um limite fixo sem
+  // prioridade, as primeiras a chegar ficavam com todos os lugares e as que o
+  // utilizador está mesmo a ver ficavam à espera para sempre.
+  function updateVisibleFrames() {
+    var center = window.innerHeight / 2;
+    var margin = 400;
+    var wanted = [];
+    var keep = {};
+
+    document.querySelectorAll(".slot").forEach(function (node) {
+      var rect = node.getBoundingClientRect();
+      if (rect.bottom > -margin && rect.top < window.innerHeight + margin) {
+        wanted.push({ key: node.dataset.key, distance: Math.abs(rect.top + rect.height / 2 - center) });
+      }
+    });
+
+    wanted.sort(function (a, b) { return a.distance - b.distance; });
+    wanted.slice(0, MAX_LIVE_FRAMES).forEach(function (entry) { keep[entry.key] = true; });
+
+    Object.keys(frames).forEach(function (key) { if (!keep[key]) { destroyFrame(key); } });
+    frameQueue = frameQueue.filter(function (key) { return keep[key]; });
+    Object.keys(keep).forEach(function (key) {
+      var node = document.querySelector(sel(key));
+      if (node) { createFrame(node); }
+    });
+  }
+
+  function queueVisibility() {
+    if (visibilityQueued) { return; }
+    visibilityQueued = true;
+    window.setTimeout(function () {
+      visibilityQueued = false;
+      updateVisibleFrames();
+    }, 60);
+  }
+
+  function observeStage() { queueVisibility(); }
+  function observeStages() { queueVisibility(); }
+
+  window.addEventListener("scroll", queueVisibility, { passive: true });
+  window.addEventListener("resize", queueVisibility);
+
+  window.addEventListener("message", function (event) {
+    if (event.origin !== window.location.origin) { return; }
+    var data = event.data || {};
+
+    if (data.type === "mia-preview-ready") {
+      Object.keys(frames).forEach(function (key) {
+        var frame = frames[key];
+        if (frame.iframe.contentWindow === event.source && !frame.ready) {
+          frame.ready = true;
+          if (frame.timeout) { window.clearTimeout(frame.timeout); frame.timeout = null; }
+          framesLoading = Math.max(0, framesLoading - 1);
+          if (frame.pending) {
+            frame.iframe.contentWindow.postMessage(frame.pending, window.location.origin);
+            frame.pending = null;
+          }
+          pumpFrameQueue();
+        }
+      });
+      return;
+    }
+
+    if (data.type === "mia-preview-clicked") {
+      if (data.key) { setActive(data.key); }
+      return;
+    }
+
+    if (data.type === "mia-preview-key") {
+      if (data.key) { setActive(data.key); }
+      if ((data.ctrlKey || data.metaKey) && String(data.eventKey).toLowerCase() === "z") {
+        if (data.shiftKey) { redo(); } else { undo(); }
+        return;
+      }
+      applyArrow(data.eventKey, data.ctrlKey, data.shiftKey);
+      return;
+    }
+
+    if (data.type !== "mia-preview-measured") { return; }
+    var frame = frames[data.key];
+    var node = document.querySelector(sel(data.key));
+    if (!frame || !node) { return; }
+    var crop = node.querySelector("[data-crop]");
+
+    var wanted = Math.max(400, data.documentHeight || 600) + "px";
+    if (frame.iframe.style.height !== wanted) { frame.iframe.style.height = wanted; }
+
+    if (!data.found) {
+      delete state.effective[data.key];
+      syncInputs(data.key);
+      crop.classList.remove("is-waiting");
+      crop.classList.add("is-missing");
+      crop.style.width = "260px";
+      crop.style.height = "80px";
+      frame.iframe.style.visibility = "hidden";
+      return;
+    }
+
+    crop.classList.remove("is-waiting", "is-missing");
+    crop.style.width = data.rect.width + "px";
+    crop.style.height = data.rect.height + "px";
+    frame.iframe.style.visibility = "visible";
+    frame.iframe.style.marginLeft = (-data.rect.left) + "px";
+    frame.iframe.style.marginTop = (-data.rect.top) + "px";
+    // Alterar o tamanho/margens do iframe pode activar scroll anchoring mesmo
+    // com overflow:hidden. Um scrollTop residual deslocava o recorte para um
+    // cartão completamente diferente (muito visível nas gavetas).
+    crop.scrollLeft = 0;
+    crop.scrollTop = 0;
+    state.sizes[data.key] = { width: data.rect.width, height: data.rect.height };
+
+    if (data.effective) {
+      var measuredSlot = slotByKey(data.key);
+      if (measuredSlot && measuredSlot.expectedEditKey
+          && data.effective.editKey !== measuredSlot.expectedEditKey) {
+        delete state.effective[data.key];
+        crop.classList.add("is-missing");
+      } else {
+        state.effective[data.key] = Object.assign(state.effective[data.key] || {}, data.effective);
+      }
+      syncInputs(data.key);
+    } else if (slotByKey(data.key) && slotByKey(data.key).adjustPrefix !== null) {
+      state.effective[data.key] = { unavailable: true };
+      syncInputs(data.key);
+    }
+  });
+
+  // Põe os campos com os valores que o site está mesmo a aplicar, sem mexer
+  // naquele que estiver a ser escrito.
+  function syncInputs(key) {
+    var node = document.querySelector(sel(key));
+    var slot = slotByKey(key);
+    if (!node || !slot) { return; }
+
+    var effective = state.effective[key];
+    var ready = !!(effective && effective.editKey);
+
+    ADJUST_FIELDS.forEach(function (field, index) {
+      var input = node.querySelector('[data-adjust="' + index + '"]');
+      if (input) {
+        input.disabled = !ready;
+        if (input !== document.activeElement) { input.value = readAdjust(slot, field); }
+      }
+    });
+
+    var fit = node.querySelector("[data-fit]");
+    if (fit) { fit.disabled = !ready; }
+    if (fit && fit !== document.activeElement && effective && effective.imageFit) {
+      fit.value = effective.imageFit;
+    }
+    var waiting = node.querySelector("[data-adjust-wait]");
+    if (waiting) {
+      waiting.hidden = ready;
+      waiting.textContent = effective && effective.unavailable
+        ? "O site não expõe ajustes para esta imagem."
+        : "A aguardar o contexto exacto da pré-visualização.";
+    }
+  }
+
+  el("screen-width").addEventListener("change", function () {
+    state.screenWidth = Number(this.value) || 1280;
+    Object.keys(frames).forEach(function (key) {
+      frames[key].iframe.style.width = state.screenWidth + "px";
+      var slot = slotByKey(key);
+      if (slot) { sendRender(slot); }
+    });
+  });
+
+  // --- edição ---------------------------------------------------------------
+  // Se o cartão editado tem visto, a alteração vai para todos os que têm visto.
+  function adjustReady(slot) {
+    return !!(slot && slot.expectedEditKey && state.effective[slot.key]
+      && state.effective[slot.key].editKey === slot.expectedEditKey);
+  }
+
+  function applyToTargets(slot, mutate, predicate, refreshSharedSource) {
+    var node = document.querySelector(sel(slot.key));
+    var isChecked = node && node.querySelector(".pick").checked;
+    var targets = isChecked ? targetSlots() : [slot];
+    var slugs = {};
+
+    if (predicate) { targets = targets.filter(predicate); }
+    if (!targets.length) {
+      setStatus("Nenhuma das imagens escolhidas tem ainda um contexto de ajuste confirmado.", true);
+      return;
+    }
+
+    targets.forEach(function (target) { slugs[target.slug] = true; });
+    snapshot(Object.keys(slugs));
+
+    targets.forEach(function (target) {
+      mutate(target);
+      if (target.key === slot.key) {
+        if (node) { node.classList.add("is-dirty"); }
+        sendRender(target);
+      } else {
+        refreshSlot(target);
+      }
+    });
+    if (refreshSharedSource) {
+      var targetKeys = {};
+      var sourceKeys = {};
+      targets.forEach(function (target) {
+        targetKeys[target.key] = true;
+        sourceKeys[target.sourceKey || target.key] = true;
+      });
+      state.slots.forEach(function (sibling) {
+        if (!sourceKeys[sibling.sourceKey || sibling.key] || targetKeys[sibling.key]) { return; }
+        delete state.effective[sibling.key];
+        if (document.querySelector(sel(sibling.key))) { refreshSlot(sibling); }
+      });
+    }
+    updateSummary();
+  }
+
+  // Copia o identificador. Usa a Clipboard API quando existe (contexto seguro)
+  // e cai para execCommand quando não — para funcionar em qualquer contexto.
+  function copyIdentifier(id, codeEl) {
+    function feedback() {
+      codeEl.classList.add("is-copied");
+      setStatus("Copiado: " + id);
+      setTimeout(function () { codeEl.classList.remove("is-copied"); }, 900);
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(id).then(feedback, function () { legacyCopy(id); feedback(); });
+      return;
+    }
+    legacyCopy(id);
+    feedback();
+  }
+
+  function legacyCopy(text) {
+    var area = document.createElement("textarea");
+    area.value = text;
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand("copy"); } catch (error) { /* sem clipboard */ }
+    document.body.removeChild(area);
+  }
+
+  el("content").addEventListener("click", function (event) {
+    var node = event.target.closest(".slot");
+    if (!node) { return; }
+    var slot = slotByKey(node.dataset.key);
+    if (!slot) { return; }
+
+    if (event.target.closest("[data-replace]")) { openPicker(slot); return; }
+
+    var idCode = event.target.closest("[data-id]");
+    if (idCode) { copyIdentifier(slot.id, idCode); return; }
+
+    if (event.target.matches("[data-done]")) {
+      var checkbox = event.target;
+      var wanted = checkbox.checked;
+      var previous = slotIsDone(slot);
+      if (wanted) { state.done[slot.doneKey] = true; }
+      else { delete state.done[slot.doneKey]; }
+      checkbox.disabled = true;
+      syncDonePeers(slot);
+      saveDone(slot, wanted).then(function () {
+        // Com o filtro ligado, marcar como terminada faz a linha sair da lista.
+        if (wanted && el("hide-done").checked) { render(); }
+        else { checkbox.disabled = false; updateSummary(); }
+      }).catch(function (error) {
+        if (previous) { state.done[slot.doneKey] = true; }
+        else { delete state.done[slot.doneKey]; }
+        checkbox.checked = previous;
+        checkbox.disabled = false;
+        syncDonePeers(slot);
+        setStatus(error.message, true);
+        updateSummary();
+      });
+      return;
+    }
+
+    setActive(slot.key);
+  });
+
+  el("content").addEventListener("input", function (event) {
+    var node = event.target.closest(".slot");
+    if (!node) { return; }
+    var slot = slotByKey(node.dataset.key);
+    if (!slot) { return; }
+
+    if (event.target.matches("[data-path]")) {
+      var path = event.target.value.trim();
+      applyToTargets(slot, function (target) { setSlotValue(target, path); }, null, true);
+      return;
+    }
+    if (event.target.matches("[data-adjust]")) {
+      var field = ADJUST_FIELDS[Number(event.target.dataset.adjust)];
+      var value = event.target.value;
+      applyToTargets(slot, function (target) { writeAdjust(target, field, value); }, adjustReady);
+      return;
+    }
+    if (event.target.matches("[data-fit]")) {
+      var fit = event.target.value;
+      applyToTargets(slot, function (target) {
+        var item = slotFitItem(target);
+        if (item) { item[flatKey(target, "imageFit")] = fit; state.dirty[target.slug] = true; }
+      }, adjustReady);
+    }
+  });
+
+  // Só os campos de escrita engolem as setas. O visto da linha é um checkbox e
+  // fica com o foco depois de clicado — antes bloqueava o teclado todo.
+  function typingTarget(node) {
+    if (!node) { return false; }
+    if (node.tagName === "TEXTAREA" || node.tagName === "SELECT") { return true; }
+    return node.tagName === "INPUT" && node.type !== "checkbox" && node.type !== "radio";
+  }
+
+  function applyArrow(eventKey, ctrl, shift) {
+    var targets = targetSlots().filter(function (slot) { return slot.adjustPrefix !== null && adjustReady(slot); });
+    var step = shift ? 5 : 1;
+    var field = null;
+    var delta = 0;
+    var slugs = {};
+
+    if (!targets.length) {
+      setStatus("Escolhe uma imagem primeiro: clica na pré-visualização ou marca o visto.", true);
+      return false;
+    }
+
+    if (ctrl) {
+      if (eventKey === "ArrowUp") { field = ADJUST_FIELDS[0]; delta = step; }
+      else if (eventKey === "ArrowDown") { field = ADJUST_FIELDS[0]; delta = -step; }
+      else if (eventKey === "ArrowLeft") { field = ADJUST_FIELDS[3]; delta = -step; }
+      else if (eventKey === "ArrowRight") { field = ADJUST_FIELDS[3]; delta = step; }
+    } else {
+      if (eventKey === "ArrowLeft") { field = ADJUST_FIELDS[1]; delta = -step; }
+      else if (eventKey === "ArrowRight") { field = ADJUST_FIELDS[1]; delta = step; }
+      else if (eventKey === "ArrowUp") { field = ADJUST_FIELDS[2]; delta = -step; }
+      else if (eventKey === "ArrowDown") { field = ADJUST_FIELDS[2]; delta = step; }
+    }
+    if (!field) { return false; }
+
+    targets.forEach(function (slot) { slugs[slot.slug] = true; });
+    snapshot(Object.keys(slugs));
+
+    targets.forEach(function (slot) {
+      var node = document.querySelector(sel(slot.key));
+      var input = node && node.querySelector('[data-adjust="' + ADJUST_FIELDS.indexOf(field) + '"]');
+      writeAdjust(slot, field, readAdjust(slot, field) + delta);
+      if (input) { input.value = readAdjust(slot, field); }
+      if (node) { node.classList.add("is-dirty"); }
+      sendRender(slot);
+    });
+    setStatus(field.label + " " + (delta > 0 ? "+" : "") + delta + " em " + targets.length + " imagem(ns).");
+    updateSummary();
+    return true;
+  }
+
+  document.addEventListener("keydown", function (event) {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+      event.preventDefault();
+      if (event.shiftKey) { redo(); } else { undo(); }
+      return;
+    }
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") {
+      event.preventDefault();
+      redo();
+      return;
+    }
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].indexOf(event.key) === -1) { return; }
+    if (typingTarget(event.target)) { return; }
+    if (el("picker").open) { return; }
+
+    if (applyArrow(event.key, event.ctrlKey, event.shiftKey)) { event.preventDefault(); }
+  });
+
+  el("undo").addEventListener("click", undo);
+  el("redo").addEventListener("click", redo);
+  el("clear-picks").addEventListener("click", function () {
+    document.querySelectorAll(".slot .pick:checked").forEach(function (input) { input.checked = false; });
+  });
+
+  el("max-frames").addEventListener("change", function () {
+    MAX_LIVE_FRAMES = Math.min(400, Math.max(1, parseInt(this.value, 10) || 60));
+    this.value = MAX_LIVE_FRAMES;
+    queueVisibility();
+  });
+
+  el("hide-unused").addEventListener("change", render);
+  el("hide-done").addEventListener("change", render);
+
+  el("menu-toggle").addEventListener("click", function () {
+    var panel = el("menu-panel");
+    panel.hidden = !panel.hidden;
+    this.setAttribute("aria-expanded", panel.hidden ? "false" : "true");
+  });
+
+  el("menu-panel").addEventListener("click", function (event) {
+    if (event.target.closest("a")) {
+      this.hidden = true;
+      el("menu-toggle").setAttribute("aria-expanded", "false");
+    }
+  });
+
+  // --- seletor de imagem ----------------------------------------------------
+  function openPicker(slot) {
+    state.pickerSlotKey = slot.key;
+    el("picker-title").textContent = "Imagem para: " + (slot.itemLabel || slot.detail);
+    el("picker-filter").value = "";
+    el("picker-clear").hidden = !!slot.gaveta;
+    renderLibrary("");
+    el("picker").showModal();
+  }
+  var LIBRARY_SORTS = {
+    recent: function (a, b) { return (b.modified || 0) - (a.modified || 0); },
+    oldest: function (a, b) { return (a.modified || 0) - (b.modified || 0); },
+    logical: function (a, b) { return a.path < b.path ? -1 : (a.path > b.path ? 1 : 0); },
+    "name-desc": function (a, b) { return a.path < b.path ? 1 : (a.path > b.path ? -1 : 0); },
+    largest: function (a, b) { return (b.size || 0) - (a.size || 0); },
+    smallest: function (a, b) { return (a.size || 0) - (b.size || 0); }
+  };
+
+  function renderLibrary(filter) {
+    var needle = String(filter || "").toLowerCase();
+    var sort = LIBRARY_SORTS[el("picker-sort").value] || LIBRARY_SORTS.recent;
+    var rows = state.library.filter(function (image) {
+      return !needle || image.path.toLowerCase().indexOf(needle) !== -1;
+    }).slice().sort(sort);
+
+    el("picker-grid").innerHTML = rows.map(function (image) {
+      return '<button type="button" data-path="' + esc(image.path) + '">'
+        + '<img src="' + esc(image.path) + '" alt="" loading="lazy">'
+        + '<span>' + esc(image.path.replace(/^content\//, "")) + '</span></button>';
+    }).join("") || '<p class="hint">Nenhuma imagem corresponde ao filtro.</p>';
+  }
+  el("picker-filter").addEventListener("input", function () { renderLibrary(this.value); });
+  el("picker-sort").addEventListener("change", function () { renderLibrary(el("picker-filter").value); });
+  el("picker-close").addEventListener("click", function () { el("picker").close(); });
+  el("picker-clear").addEventListener("click", function () { choosePath(""); });
+  el("picker-grid").addEventListener("click", function (event) {
+    var button = event.target.closest("button[data-path]");
+    if (button) { choosePath(button.dataset.path); }
+  });
+  function choosePath(path) {
+    var slot = slotByKey(state.pickerSlotKey);
+    if (!slot) { return; }
+    applyToTargets(slot, function (target) { setSlotValue(target, path); }, null, true);
+    refreshSlot(slot);
+    el("picker").close();
+  }
+
+  // --- envio de ficheiros ---------------------------------------------------
+  function upload(files, onDone) {
+    if (!files || !files.length) { return; }
+    var form = new FormData();
+    Array.prototype.forEach.call(files, function (file) { form.append("files[]", file); });
+
+    setStatus("A enviar " + files.length + " ficheiro(s)…");
+    fetch("galeria-api.php?action=upload", { method: "POST", headers: apiHeaders(false), body: form })
+      .then(responseJson)
+      .then(function (data) {
+        state.library = state.library.concat(data.saved.map(function (item) {
+          return {
+            path: item.path, size: item.size, modified: item.modified,
+            width: item.width, height: item.height
+          };
+        })).sort(function (a, b) { return a.path < b.path ? -1 : 1; });
+        var rejected = (data.rejected || []).length;
+        setStatus(data.saved.length + " enviada(s)" + (rejected ? " · " + rejected + " recusada(s)" : ""), rejected > 0);
+        updateSummary();
+        if (onDone) { onDone(data.saved); }
+      })
+      .catch(function (error) { setStatus(error.message, true); });
+  }
+  el("bulk-upload").addEventListener("change", function () {
+    upload(this.files, function () { renderLibrary(el("picker-filter").value); });
+    this.value = "";
+  });
+  el("picker-upload").addEventListener("change", function () {
+    var input = this;
+    upload(this.files, function (saved) {
+      renderLibrary(el("picker-filter").value);
+      if (saved.length === 1) { choosePath(saved[0].path); }
+      input.value = "";
+    });
+  });
+
+  // --- gravar ---------------------------------------------------------------
+  el("save").addEventListener("click", function () {
+    var slugs = Object.keys(state.dirty);
+    if (!slugs.length) { return; }
+
+    el("save").disabled = true;
+    setStatus("A guardar…");
+
+    slugs.reduce(function (chain, slug) {
+      return chain.then(function () {
+        var entry = productEntryBySlug(slug);
+        return fetch("galeria-api.php?action=save", {
+          method: "POST",
+          headers: apiHeaders(true),
+          body: JSON.stringify({
+            slug: slug,
+            product: productBySlug(slug),
+            revision: entry && entry.revision
+          })
+        }).then(responseJson)
+          .then(function (data) {
+            if (entry) { entry.revision = data.revision; }
+            delete state.dirty[slug];
+          });
+      });
+    }, Promise.resolve())
+      .then(function () {
+        setStatus("Guardado.");
+        state.undo = [];
+        document.querySelectorAll(".slot.is-dirty").forEach(function (n) { n.classList.remove("is-dirty"); });
+        updateSummary();
+      })
+      .catch(function (error) { setStatus(error.message, true); el("save").disabled = false; });
+  });
+
+  window.addEventListener("beforeunload", function (event) {
+    if (Object.keys(state.dirty).length) { event.preventDefault(); event.returnValue = ""; }
+  });
+
+  // --- arranque -------------------------------------------------------------
+  fetch("galeria-api.php?action=data")
+    .then(responseJson)
+    .then(function (data) {
+      state.csrf = data.csrf || "";
+      state.products = data.products;
+      state.library = data.library;
+      state.pages = data.pages || {};
+      (data.done || []).forEach(function (key) { state.done[key] = true; });
+      MAX_LIVE_FRAMES = Math.min(400, Math.max(1, parseInt(el("max-frames").value, 10) || 60));
+      state.slots = data.products.reduce(function (all, entry) {
+        return all.concat(collectSlots(entry));
+      }, []);
+      migrateDoneKeys();
+      el("public-warning").hidden = !data.public;
+      render();
+    })
+    .catch(function (error) {
+      el("content").innerHTML = '<p class="warn">' + esc(error.message) + '</p>';
+    });
+}());
+</script>
+</body>
+</html>

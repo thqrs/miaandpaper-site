@@ -24,8 +24,8 @@
       "id": "shipping",
       "label": "Envio CTT - até 2 Kg",
       "text": "",
-      "feeCents": 850,
-      "priceText": "Valor mínimo:\n8,50 €"
+      "feeCents": 555,
+      "priceText": "Valor mínimo:\n5,55 €"
     },
     {
       "id": "join_orders",
@@ -157,6 +157,7 @@
       "title": "Dados para o cartão de apresentação",
       "text": "Estes dados seguem no pedido para preparar a personalização.",
       "template": "details-form",
+      "exampleImage": "media_tiago/exemplo.webp",
       "fields": [
         {
           "name": "recipient_name",

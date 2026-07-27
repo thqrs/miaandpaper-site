@@ -205,6 +205,69 @@ foreach ($offerDownloads as $download) {
     else $offerDownloadSingleCount++;
 }
 
+// CATALOG_TRACKING_V2: leitura dedicada dos eventos enviados pelas páginas
+// de catálogo. A sessão é a mesma do site principal, por isso estes cliques
+// também aparecem no percurso individual de cada visitante.
+$catalogStats = array(
+    'events' => 0,
+    'views' => 0,
+    'product_clicks' => 0,
+    'site_product_clicks' => 0,
+    'order_clicks' => 0,
+    'contact_clicks' => 0,
+    'scroll_50' => 0,
+    'scroll_90' => 0,
+    'sessions' => array(),
+);
+$catalogTargets = array();
+foreach ($events as $catalogEvent) {
+    $catalogName = isset($catalogEvent['event_name']) ? (string)$catalogEvent['event_name'] : '';
+    if (strpos($catalogName, 'catalog_') !== 0) continue;
+
+    $catalogStats['events']++;
+    $catalogSession = isset($catalogEvent['session_id']) ? (string)$catalogEvent['session_id'] : '';
+    if ($catalogSession !== '') $catalogStats['sessions'][$catalogSession] = true;
+    if ($catalogName === 'catalog_page_view') $catalogStats['views']++;
+    elseif ($catalogName === 'catalog_product_clicked') $catalogStats['product_clicks']++;
+    elseif ($catalogName === 'catalog_site_product_clicked') $catalogStats['site_product_clicks']++;
+    elseif ($catalogName === 'catalog_order_clicked') $catalogStats['order_clicks']++;
+    elseif ($catalogName === 'catalog_contact_clicked') $catalogStats['contact_clicks']++;
+
+    $catalogExtra = mp_safe_json_decode(isset($catalogEvent['event_json']) ? $catalogEvent['event_json'] : '');
+    if ($catalogName === 'catalog_scroll_depth') {
+        $depth = isset($catalogExtra['depth_percent']) ? (int)$catalogExtra['depth_percent'] : 0;
+        if ($depth === 50) $catalogStats['scroll_50']++;
+        if ($depth === 90) $catalogStats['scroll_90']++;
+    }
+
+    if (substr($catalogName, -8) !== '_clicked') continue;
+    $targetId = isset($catalogExtra['target_id']) ? trim((string)$catalogExtra['target_id']) : '';
+    $targetLabel = isset($catalogExtra['target_label']) ? trim((string)$catalogExtra['target_label']) : '';
+    $targetHref = isset($catalogExtra['target_href']) ? trim((string)$catalogExtra['target_href']) : '';
+    $targetType = isset($catalogExtra['target_type']) ? trim((string)$catalogExtra['target_type']) : '';
+    $targetKey = $targetId !== '' ? $targetId : ($targetHref !== '' ? $targetHref : ($targetLabel !== '' ? $targetLabel : $catalogName));
+    if (!isset($catalogTargets[$targetKey])) {
+        $catalogTargets[$targetKey] = array(
+            'label' => $targetLabel !== '' ? $targetLabel : $targetKey,
+            'href' => $targetHref,
+            'type' => $targetType,
+            'count' => 0,
+            'sessions' => array(),
+            'last_at' => '',
+        );
+    }
+    $catalogTargets[$targetKey]['count']++;
+    if ($catalogSession !== '') $catalogTargets[$targetKey]['sessions'][$catalogSession] = true;
+    if ($catalogTargets[$targetKey]['last_at'] === '' || strcmp($catalogEvent['created_at'], $catalogTargets[$targetKey]['last_at']) > 0) {
+        $catalogTargets[$targetKey]['last_at'] = $catalogEvent['created_at'];
+    }
+}
+uasort($catalogTargets, function ($a, $b) {
+    if ($a['count'] === $b['count']) return strcmp($b['last_at'], $a['last_at']);
+    return $b['count'] - $a['count'];
+});
+$catalogSessionCount = count($catalogStats['sessions']);
+
 // VISITANTES_TEMPO_REAL_V2 (Phase 1)
 // Janela maior (até 60 min) e leitura dos últimos eventos completos
 // para cada sessão (até 40), de forma a poder reconstruir step path,
@@ -256,10 +319,14 @@ try {
             foreach ($eventsRecentAsc as $ev) {
                 $exJ = mp_safe_json_decode(isset($ev['event_json']) ? $ev['event_json'] : '');
                 $nm = isset($ev['event_name']) ? (string)$ev['event_name'] : '';
-                // Step path: só step_view, dedup consecutivos.
-                if ($nm === 'step_view' && !empty($ev['step_id'])) {
-                    if (empty($stepPath) || end($stepPath) !== $ev['step_id']) {
-                        $stepPath[] = $ev['step_id'];
+                // Step path: só step_view, dedup consecutivos. Nos funis novos
+                // de crachás/ímanes, agrupa também os IDs do fluxo antigo para
+                // que o histórico continue comparável.
+                $eventProductSlug = isset($ev['product_slug']) ? (string)$ev['product_slug'] : '';
+                $eventStepId = funnel_step_group(isset($ev['step_id']) ? (string)$ev['step_id'] : '', $eventProductSlug);
+                if ($nm === 'step_view' && $eventStepId !== '') {
+                    if (empty($stepPath) || end($stepPath) !== $eventStepId) {
+                        $stepPath[] = $eventStepId;
                     }
                 }
                 if ($nm === 'heartbeat') $heartbeatLatestAt = $ev['created_at'];
@@ -281,14 +348,14 @@ try {
                     $timeline[] = array(
                         'at' => $ev['created_at'],
                         'event_name' => $nm,
-                        'step_id' => isset($ev['step_id']) ? (string)$ev['step_id'] : '',
+                        'step_id' => $eventStepId,
                         'product_slug' => isset($ev['product_slug']) ? (string)$ev['product_slug'] : '',
                         'action_name' => isset($exJ['action_name']) ? (string)$exJ['action_name'] : '',
                         'target_label' => isset($exJ['target_label']) ? (string)$exJ['target_label'] : '',
                         'selected_pack' => isset($exJ['selected_pack']) ? (int)$exJ['selected_pack'] : null,
                         'transition_reason' => isset($exJ['transition_reason']) ? (string)$exJ['transition_reason'] : '',
-                        'from_step' => isset($exJ['from_step']) ? (string)$exJ['from_step'] : '',
-                        'to_step' => isset($exJ['to_step']) ? (string)$exJ['to_step'] : '',
+                        'from_step' => funnel_step_group(isset($exJ['from_step']) ? (string)$exJ['from_step'] : '', $eventProductSlug),
+                        'to_step' => funnel_step_group(isset($exJ['to_step']) ? (string)$exJ['to_step'] : '', $eventProductSlug),
                         'image_slot' => isset($exJ['image_slot']) ? (string)$exJ['image_slot'] : '',
                         'design_id' => isset($exJ['design_id']) ? (string)$exJ['design_id'] : '',
                     );
@@ -297,7 +364,10 @@ try {
             $row['last_event']     = $last;
             $row['last_event_name']= isset($last['event_name']) ? (string)$last['event_name'] : '';
             $row['product_slug']   = isset($last['product_slug']) ? (string)$last['product_slug'] : '';
-            $row['step_id']        = isset($last['step_id']) ? (string)$last['step_id'] : '';
+            $row['step_id']        = funnel_step_group(
+                isset($last['step_id']) ? (string)$last['step_id'] : '',
+                isset($last['product_slug']) ? (string)$last['product_slug'] : ''
+            );
             $row['device_type']    = isset($last['device_type']) ? (string)$last['device_type'] : '';
             $row['viewport_width'] = isset($last['viewport_width']) ? $last['viewport_width'] : null;
             $row['ip_number']      = isset($last['ip_number']) ? (string)$last['ip_number'] : '';
@@ -345,14 +415,24 @@ try {
                 $msg = 'viu a zona de downloads';
             } elseif ($nm === 'offer_pdf_download_clicked') {
                 $msg = 'descarregou PDF' . ($t['target_label'] ? ' “' . $t['target_label'] . '”' : '');
+            } elseif ($nm === 'catalog_page_view') {
+                $msg = 'abriu o catálogo' . ($productLabel && $vs['product_slug'] !== 'catalogo' ? ' de ' . $productLabel : '');
+            } elseif ($nm === 'catalog_product_clicked') {
+                $msg = 'abriu o catálogo “' . ($t['target_label'] ?: 'produto') . '”';
+            } elseif ($nm === 'catalog_site_product_clicked') {
+                $msg = 'seguiu do catálogo para “' . ($t['target_label'] ?: 'produto') . '”';
+            } elseif ($nm === 'catalog_order_clicked') {
+                $msg = 'carregou em começar encomenda no catálogo';
+            } elseif ($nm === 'catalog_contact_clicked') {
+                $msg = 'abriu o contacto a partir do catálogo';
             } elseif ($nm === 'step_view' && $t['to_step']) {
-                $msg = 'passou para ' . step_label($t['to_step']);
+                $msg = 'passou para ' . step_label($t['to_step'], $vs['product_slug']);
             } elseif ($nm === 'step_view') {
-                $msg = 'abriu passo ' . step_label($t['step_id']);
+                $msg = 'abriu passo ' . step_label($t['step_id'], $vs['product_slug']);
             } elseif ($nm === 'step_completed') {
-                $msg = 'concluiu ' . step_label($t['step_id']);
+                $msg = 'concluiu ' . step_label($t['step_id'], $vs['product_slug']);
             } elseif ($nm === 'validation_error') {
-                $msg = 'tentou continuar em ' . step_label($t['step_id']) . ' (faltava algo)';
+                $msg = 'tentou continuar em ' . step_label($t['step_id'], $vs['product_slug']) . ' (faltava algo)';
             } elseif ($nm === 'order_submitted') {
                 $msg = 'enviou pedido' . ($productLabel ? ' (' . $productLabel . ')' : '');
             } elseif ($nm === 'image_magnified') {
@@ -448,7 +528,11 @@ if (is_dir($productDir)) {
         if (!is_array($config) || !isset($config['steps'])) continue;
         $order = array();
         foreach ($config['steps'] as $step) {
-            if (isset($step['id'])) $order[] = $step['id'];
+            // Passos escondidos existem para ferramentas internas/galeria e
+            // não pertencem ao percurso que o cliente vê.
+            if (empty($step['id']) || !empty($step['hidden'])) continue;
+            $stepId = funnel_step_group((string)$step['id'], $slug);
+            if ($stepId !== '' && !in_array($stepId, $order, true)) $order[] = $stepId;
         }
         $productOrders[$slug] = $order;
         $productNames[$slug] = isset($config['name']) ? (string)$config['name'] : $slug;
@@ -543,6 +627,7 @@ foreach ($bySession as $session) {
         if ($sessionStart === null) $sessionStart = $time;
         $lastEvent = $time;
         $name = $e['event_name'] ?: '';
+        $eventStepId = funnel_step_group(isset($e['step_id']) ? (string)$e['step_id'] : '', $slug);
 
         if (!$deviceLogged) {
             $dev = $e['device_type'] ?: 'desktop';
@@ -558,11 +643,11 @@ foreach ($bySession as $session) {
             if ($bucket !== null) $products[$slug]['viewport_buckets'][$bucket]++;
         }
 
-        if ($name === 'step_view' && !empty($e['step_id'])) {
-            $stepsSeen[$e['step_id']] = true;
-            $lastStepStart[$e['step_id']] = $time;
-        } elseif ($name === 'step_completed' && !empty($e['step_id'])) {
-            $stepId = $e['step_id'];
+        if ($name === 'step_view' && $eventStepId !== '') {
+            $stepsSeen[$eventStepId] = true;
+            $lastStepStart[$eventStepId] = $time;
+        } elseif ($name === 'step_completed' && $eventStepId !== '') {
+            $stepId = $eventStepId;
             if (isset($lastStepStart[$stepId])) {
                 $delta = $time - $lastStepStart[$stepId];
                 if ($delta >= 0) {
@@ -582,13 +667,13 @@ foreach ($bySession as $session) {
             if ($sessionStart !== null) {
                 $products[$slug]['submit_durations'][] = $time - $sessionStart;
             }
-        } elseif ($name === 'validation_error' && !empty($e['step_id'])) {
-            $stepId = $e['step_id'];
+        } elseif ($name === 'validation_error' && $eventStepId !== '') {
+            $stepId = $eventStepId;
             if (!isset($products[$slug]['validation_errors'][$stepId])) $products[$slug]['validation_errors'][$stepId] = 0;
             $products[$slug]['validation_errors'][$stepId]++;
-        } elseif (($name === 'ui_interaction' || $name === 'offer_pdf_download_clicked') && !empty($e['step_id'])) {
+        } elseif (($name === 'ui_interaction' || $name === 'offer_pdf_download_clicked') && $eventStepId !== '') {
             // CLICK_TRACKING_V1: agregar acções por passo
-            $stepId = $e['step_id'];
+            $stepId = $eventStepId;
             $action = '';
             $extra = isset($e['event_json']) ? json_decode($e['event_json'], true) : null;
             if (is_array($extra) && !empty($extra['action_name'])) {
@@ -602,7 +687,7 @@ foreach ($bySession as $session) {
             if (!isset($products[$slug]['actions_by_step'][$stepId][$action])) $products[$slug]['actions_by_step'][$stepId][$action] = 0;
             $products[$slug]['actions_by_step'][$stepId][$action]++;
         } elseif ($name === 'dead_tap') {
-            $stepId = $e['step_id'] ?: '(sem passo)';
+            $stepId = $eventStepId !== '' ? $eventStepId : '(sem passo)';
             if (!isset($products[$slug]['dead_taps_by_step'][$stepId])) $products[$slug]['dead_taps_by_step'][$stepId] = 0;
             $products[$slug]['dead_taps_by_step'][$stepId]++;
             $bucket = viewport_bucket($e['viewport_width']);
@@ -646,7 +731,14 @@ foreach ($bySession as $session) {
                         $products[$slug]['design_selected_sessions'][$did][$e['session_id']] = true;
                     }
                 }
-                $optionKeys = array('selected_pack', 'selected_size', 'lamination', 'caderno_option', 'caderno_qty', 'cover_personalization', 'assorted');
+                // Apenas sinais não-PII: presença/contagem de anexos e texto,
+                // nunca o conteúdo, nomes de ficheiro ou transcrições.
+                $optionKeys = array(
+                    'selected_pack', 'selected_size', 'lamination', 'caderno_option',
+                    'caderno_qty', 'cover_personalization', 'assorted',
+                    'artwork_attached', 'artwork_count', 'artwork_help',
+                    'card_has_text', 'card_photo_count', 'card_audio_count'
+                );
                 foreach ($optionKeys as $ok) {
                     if (!isset($sel[$ok])) continue;
                     $val = (string)$sel[$ok];
@@ -731,10 +823,86 @@ function avg_seconds($arr)
     return array_sum($arr) / count($arr);
 }
 
-function step_label($id)
+function is_artwork_product($slug)
 {
+    return $slug === 'crachas' || $slug === 'imanes';
+}
+
+// BADGES_MAGNETS_FUNNEL_V2: mantém os eventos do funil antigo legíveis no
+// percurso novo. Os aliases adicionais aceitam versões intermédias sem criar
+// linhas duplicadas no relatório.
+function funnel_step_group($id, $productSlug = '')
+{
+    $id = (string)$id;
+    if (!is_artwork_product($productSlug)) return $id;
+
+    static $aliases = array(
+        'designs' => 'artwork_upload',
+        'artwork' => 'artwork_upload',
+        'upload_artwork' => 'artwork_upload',
+        'image_upload' => 'artwork_upload',
+        'type' => 'size',
+        'product_type' => 'size',
+        'badge_type' => 'size',
+        'magnet_type' => 'size',
+        'quantity' => 'pack',
+        'free_quantity' => 'pack',
+        'order_quantity' => 'pack',
+        'card_personalization' => 'details',
+        'card_details' => 'details',
+        'presentation_card' => 'details',
+    );
+    return isset($aliases[$id]) ? $aliases[$id] : $id;
+}
+
+function step_label($id, $productSlug = '')
+{
+    $id = funnel_step_group($id, $productSlug);
+    // QUADROS_FUNNEL_V3: os passos das molduras são condicionais ao modelo
+    // escolhido. Mantém aqui os mesmos nomes curtos usados no progresso do
+    // configurador para que rotas, funil, validações e sessões recentes não
+    // mostrem IDs internos nem os rótulos genéricos do fluxo antigo.
+    if ($productSlug === 'quadros') {
+        static $quadroLabels = array(
+            'designs'                 => 'Tipo',
+            'photo_upload'            => 'Foto',
+            'baby_gender'             => 'Menino ou menina',
+            'baby_animal'             => 'Silhueta',
+            'baby_custom_animal'      => 'Animal',
+            'baby_color'              => 'Cor',
+            'baby_details'            => 'Dados do bebé',
+            'silhouette'              => 'Silhueta',
+            'silhouette_details'      => 'Silhueta imaginada',
+            'heart_finish'            => 'Acabamento',
+            'colors'                  => 'Cores',
+            'heart_background_colors' => 'Cor do fundo',
+            'photo_orientation'       => 'Orientação',
+            'phrase_details'          => 'Personalização do texto',
+            'love_dedication'         => 'Dedicatória',
+            'silhouette_text_details' => 'Personalização do texto',
+            'super_details'           => 'A tua ideia',
+            'packaging'               => 'Proteção e embrulho',
+            'delivery_contact'        => 'Entrega e contacto',
+            'confirm'                 => 'Confirmar',
+        );
+        if (isset($quadroLabels[$id])) return $quadroLabels[$id];
+    }
+
+    if (is_artwork_product($productSlug)) {
+        $artworkLabels = array(
+            'artwork_upload' => 'Imagem para personalizar',
+            'size' => $productSlug === 'imanes' ? 'Tipo de íman' : 'Tamanho do crachá',
+            'pack' => 'Quantidade',
+            'details' => 'Personalização do cartão',
+            'delivery_contact' => 'Entrega e contacto',
+            'confirm' => 'Confirmação',
+        );
+        if (isset($artworkLabels[$id])) return $artworkLabels[$id];
+    }
+
     static $labels = array(
         'designs'              => 'Escolheram designs',
+        'artwork_upload'       => 'Imagem para personalizar',
         'size'                 => 'Escolheram tamanho',
         'pack'                 => 'Escolheram quantidade',
         'details'              => 'Dados do cartão',
@@ -748,6 +916,35 @@ function step_label($id)
         'oferta-convite-congresso' => 'Envelopes do Congresso',
     );
     return isset($labels[$id]) ? $labels[$id] : $id;
+}
+
+function tracking_metric_is_true($value)
+{
+    return $value === true || $value === 1 || $value === '1'
+        || $value === 'yes' || $value === 'true' || $value === 'on';
+}
+
+function option_metric_label($key, $productSlug = '')
+{
+    $parts = explode('=', (string)$key, 2);
+    $name = $parts[0];
+    $value = isset($parts[1]) ? $parts[1] : '';
+    $count = max(0, (int)$value);
+
+    if ($name === 'selected_pack') {
+        return is_artwork_product($productSlug) ? 'Quantidade: ' . $count : 'Pack ' . $count;
+    }
+    if ($name === 'selected_size') {
+        if ($productSlug === 'imanes') return 'Tipo: ' . $value;
+        return 'Tamanho: ' . $value;
+    }
+    if ($name === 'artwork_attached' && tracking_metric_is_true($value)) return 'Imagem anexada';
+    if ($name === 'artwork_count' && $count > 0) return $count . ($count === 1 ? ' imagem anexada' : ' imagens anexadas');
+    if ($name === 'artwork_help' && tracking_metric_is_true($value)) return 'Pediu ajuda com a imagem';
+    if ($name === 'card_has_text' && tracking_metric_is_true($value)) return 'Cartão com texto';
+    if ($name === 'card_photo_count' && $count > 0) return $count . ($count === 1 ? ' foto para o cartão' : ' fotos para o cartão');
+    if ($name === 'card_audio_count' && $count > 0) return $count . ($count === 1 ? ' áudio para o cartão' : ' áudios para o cartão');
+    return (string)$key;
 }
 
 // CADERNOS_FUNNEL_V1: nome amigável por slug. Cobre o caso em que o JSON do
@@ -847,10 +1044,11 @@ function mp_offer_download_from_event($event)
 function render_step_track($productSlug, $currentStepId, $productOrders) {
     $stepIds = isset($productOrders[$productSlug]) ? $productOrders[$productSlug] : array();
     if (empty($stepIds)) return '';
+    $currentStepId = funnel_step_group($currentStepId, $productSlug);
     $out = '<div class="step-track" aria-label="Progresso do funil">';
     foreach ($stepIds as $sid) {
         $active = $sid === $currentStepId ? ' is-current' : '';
-        $label = step_label($sid);
+        $label = step_label($sid, $productSlug);
         $out .= '<span class="step-track-dot' . $active . '" title="' . admin_funnel_h($label) . '"></span>';
     }
     $out .= '</div>';
@@ -858,8 +1056,11 @@ function render_step_track($productSlug, $currentStepId, $productOrders) {
 }
 
 // Texto da rota recente (Designs → Quantidade → Designs)
-function render_step_path($stepPath) {
+function render_step_path($stepPath, $productSlug = '') {
     if (empty($stepPath)) return '<span class="muted">—</span>';
+    $stepPath = array_map(function ($stepId) use ($productSlug) {
+        return funnel_step_group($stepId, $productSlug);
+    }, $stepPath);
     // Se houver ping-pong entre 2 passos, colapsa em A ⇄ B.
     if (count($stepPath) >= 3) {
         $unique = array_values(array_unique($stepPath));
@@ -870,11 +1071,11 @@ function render_step_path($stepPath) {
                 if ($stepPath[$i] !== $stepPath[$i - 1]) $changes++;
             }
             if ($changes >= 2) {
-                return admin_funnel_h(step_label($a)) . ' ⇄ ' . admin_funnel_h(step_label($b));
+                return admin_funnel_h(step_label($a, $productSlug)) . ' ⇄ ' . admin_funnel_h(step_label($b, $productSlug));
             }
         }
     }
-    $labels = array_map(function ($s) { return admin_funnel_h(step_label($s)); }, $stepPath);
+    $labels = array_map(function ($s) use ($productSlug) { return admin_funnel_h(step_label($s, $productSlug)); }, $stepPath);
     return implode(' → ', $labels);
 }
 
@@ -889,7 +1090,8 @@ function render_timeline_entry($t, $localTzHHMM = '') {
     } catch (Exception $e) { $time = substr($t['at'], 11, 8); }
 
     $product = isset($t['product_slug']) && $t['product_slug'] !== '' ? product_friendly_name($t['product_slug']) : '';
-    $stepLabel = isset($t['step_id']) && $t['step_id'] !== '' ? step_label($t['step_id']) : '';
+    $productSlug = isset($t['product_slug']) ? (string)$t['product_slug'] : '';
+    $stepLabel = isset($t['step_id']) && $t['step_id'] !== '' ? step_label($t['step_id'], $productSlug) : '';
     $msg = '';
     $name = isset($t['event_name']) ? $t['event_name'] : '';
     if ($name === 'site_landed') $msg = 'entrou no site';
@@ -907,9 +1109,9 @@ function render_timeline_entry($t, $localTzHHMM = '') {
     elseif ($name === 'offer_scroll_depth') $msg = 'continuou a ver a página';
     elseif ($name === 'step_view') {
         if ($t['transition_reason'] === 'back_button' || $t['transition_reason'] === 'browser_back') {
-            $msg = 'voltou para ' . ($t['to_step'] ? step_label($t['to_step']) : $stepLabel);
+            $msg = 'voltou para ' . ($t['to_step'] ? step_label($t['to_step'], $productSlug) : $stepLabel);
         } else {
-            $msg = 'passou para ' . ($t['to_step'] ? step_label($t['to_step']) : $stepLabel);
+            $msg = 'passou para ' . ($t['to_step'] ? step_label($t['to_step'], $productSlug) : $stepLabel);
         }
     }
     elseif ($name === 'step_completed') $msg = 'completou ' . $stepLabel;
@@ -934,8 +1136,9 @@ function render_timeline_entry($t, $localTzHHMM = '') {
     return '<li class="timeline-entry">' . $head . ' ' . $body . '</li>';
 }
 
-// Resumo de selecção: ex "3 designs · Pack 24", "Caderno 04 · Holográfico · Pack Normal"
-function render_selection_summary($selectionJson) {
+// Resumo de selecção. Para os novos fluxos mostra apenas sinais agregados e
+// não-PII da imagem/cartão; nunca mostra texto ou dados dos ficheiros enviados.
+function render_selection_summary($selectionJson, $productSlug = '') {
     if (empty($selectionJson) || !is_array($selectionJson)) return '';
     $parts = array();
     if (!empty($selectionJson['selected_designs']) && is_array($selectionJson['selected_designs'])) {
@@ -945,9 +1148,35 @@ function render_selection_summary($selectionJson) {
         $parts[] = 'modo sortido';
     }
     if (!empty($selectionJson['selected_pack'])) {
-        $parts[] = 'Pack ' . (int)$selectionJson['selected_pack'];
+        $quantity = (int)$selectionJson['selected_pack'];
+        $parts[] = is_artwork_product($productSlug) ? 'quantidade ' . $quantity : 'Pack ' . $quantity;
     }
-    if (!empty($selectionJson['selected_size'])) $parts[] = $selectionJson['selected_size'];
+    if (!empty($selectionJson['selected_size'])) {
+        if ($productSlug === 'imanes') $parts[] = 'tipo ' . $selectionJson['selected_size'];
+        elseif ($productSlug === 'crachas') $parts[] = 'tamanho ' . $selectionJson['selected_size'];
+        else $parts[] = $selectionJson['selected_size'];
+    }
+
+    $artworkCount = isset($selectionJson['artwork_count']) ? max(0, (int)$selectionJson['artwork_count']) : 0;
+    if ($artworkCount > 0) {
+        $parts[] = $artworkCount . ($artworkCount === 1 ? ' imagem anexada' : ' imagens anexadas');
+    } elseif (isset($selectionJson['artwork_attached']) && tracking_metric_is_true($selectionJson['artwork_attached'])) {
+        $parts[] = 'imagem anexada';
+    }
+    if (isset($selectionJson['artwork_help']) && tracking_metric_is_true($selectionJson['artwork_help'])) {
+        $parts[] = 'pediu ajuda com a imagem';
+    }
+    if (isset($selectionJson['card_has_text']) && tracking_metric_is_true($selectionJson['card_has_text'])) {
+        $parts[] = 'cartão com texto';
+    }
+    $cardPhotoCount = isset($selectionJson['card_photo_count']) ? max(0, (int)$selectionJson['card_photo_count']) : 0;
+    if ($cardPhotoCount > 0) {
+        $parts[] = $cardPhotoCount . ($cardPhotoCount === 1 ? ' foto para o cartão' : ' fotos para o cartão');
+    }
+    $cardAudioCount = isset($selectionJson['card_audio_count']) ? max(0, (int)$selectionJson['card_audio_count']) : 0;
+    if ($cardAudioCount > 0) {
+        $parts[] = $cardAudioCount . ($cardAudioCount === 1 ? ' áudio para o cartão' : ' áudios para o cartão');
+    }
     if (!empty($selectionJson['lamination'])) {
         $lam = $selectionJson['lamination'];
         $lamMap = array(
@@ -1224,7 +1453,7 @@ function mp_friendly_visitor_context($productSlug, $landingPage, $stepId, $stepP
     }
     return array(
         'product_label' => product_friendly_name($productSlug),
-        'step_label_text' => $stepId !== '' ? step_label($stepId) : '—',
+        'step_label_text' => $stepId !== '' ? step_label($stepId, $productSlug) : '—',
         'route_text' => '',
         'main_text' => '',
         'is_home' => false,
@@ -2043,7 +2272,7 @@ details.report-collapse > summary:hover { color: var(--ink); }
         $ipDisplay = $vs['ip_number'] !== '' ? $vs['ip_number'] : '—';
         $idleSec = $nowTs - strtotime($vs['last_seen']);
         $label = mp_visitor_label_for_ip($vs['ip_number']);
-        $selectionSummary = render_selection_summary($vs['selection_latest']);
+        $selectionSummary = render_selection_summary($vs['selection_latest'], $vs['product_slug']);
       ?>
         <article class="visitor-card">
           <div class="vc-head">
@@ -2067,7 +2296,7 @@ details.report-collapse > summary:hover { color: var(--ink); }
           <?php else: ?>
             <?= render_step_track($vs['product_slug'], $vs['step_id'], $productOrders) ?>
             <div class="vc-row">
-              <span class="k">Rota</span><span><?= render_step_path($vs['step_path']) ?></span>
+              <span class="k">Rota</span><span><?= render_step_path($vs['step_path'], $vs['product_slug']) ?></span>
             </div>
           <?php endif; ?>
 
@@ -2154,6 +2383,42 @@ details.report-collapse > summary:hover { color: var(--ink); }
   </ul>
 </section>
 <?php endif; ?>
+
+<!-- CATALOG_TRACKING_V2 -->
+<section class="product-card" id="catalogo">
+  <h2 style="margin:0 0 4px;font-size:1.2rem;">Catálogo</h2>
+  <p class="period" style="margin:0 0 12px;">Visitas e saídas do catálogo no período escolhido. Estes eventos usam a mesma sessão dos wizards.</p>
+
+  <div class="metrics" style="margin-bottom:14px;">
+    <div class="metric"><div class="label">Visitas a páginas</div><div class="value"><?= (int)$catalogStats['views'] ?></div></div>
+    <div class="metric"><div class="label">Visitantes</div><div class="value"><?= (int)$catalogSessionCount ?></div></div>
+    <div class="metric"><div class="label">Catálogos abertos</div><div class="value"><?= (int)$catalogStats['product_clicks'] ?></div></div>
+    <div class="metric"><div class="label">Idas para produtos</div><div class="value"><?= (int)$catalogStats['site_product_clicks'] ?></div></div>
+    <div class="metric"><div class="label">Começar encomenda</div><div class="value"><?= (int)$catalogStats['order_clicks'] ?></div></div>
+    <div class="metric"><div class="label">Contacto</div><div class="value"><?= (int)$catalogStats['contact_clicks'] ?></div></div>
+    <div class="metric"><div class="label">Chegaram a 50%</div><div class="value"><?= (int)$catalogStats['scroll_50'] ?></div></div>
+    <div class="metric"><div class="label">Chegaram a 90%</div><div class="value"><?= (int)$catalogStats['scroll_90'] ?></div></div>
+  </div>
+
+  <?php if (empty($catalogTargets)): ?>
+    <div class="empty-state">Ainda não há cliques registados no catálogo neste período.</div>
+  <?php else: ?>
+    <table class="sessions-table">
+      <thead><tr><th>Destino</th><th>Tipo</th><th class="num">Cliques</th><th class="num">Sessões</th><th>Último clique</th></tr></thead>
+      <tbody>
+        <?php foreach (array_slice($catalogTargets, 0, 30, true) as $catalogTarget): ?>
+          <tr>
+            <td><strong><?= admin_funnel_h($catalogTarget['label']) ?></strong><?php if ($catalogTarget['href'] !== ''): ?><span class="download-file"><?= admin_funnel_h($catalogTarget['href']) ?></span><?php endif; ?></td>
+            <td><?= admin_funnel_h($catalogTarget['type'] ?: 'link') ?></td>
+            <td class="num"><?= (int)$catalogTarget['count'] ?></td>
+            <td class="num"><?= count($catalogTarget['sessions']) ?></td>
+            <td title="<?= admin_funnel_h($catalogTarget['last_at']) ?>"><?= admin_funnel_h(mp_tracking_humanize_iso($catalogTarget['last_at'])) ?></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  <?php endif; ?>
+</section>
 
 <!-- OFFER_DOWNLOADS_VISIBILITY_V1 -->
 <section class="product-card" id="downloads-ofertas">
@@ -2387,7 +2652,7 @@ details.report-collapse > summary:hover { color: var(--ink); }
                   <tbody>
                     <?php foreach ($r['sessions'] as $s):
                       $prodLabel = $s['last_product'] ? product_friendly_name($s['last_product']) : '—';
-                      $stepLab   = $s['last_step'] ? step_label($s['last_step']) : '—';
+                      $stepLab   = $s['last_step'] ? step_label($s['last_step'], $s['last_product']) : '—';
                     ?>
                       <tr>
                         <td title="<?= admin_funnel_h($s['started_at']) ?>"><?= admin_funnel_h(mp_tracking_humanize_iso($s['started_at'])) ?></td>
@@ -2631,10 +2896,10 @@ details.report-collapse > summary:hover { color: var(--ink); }
         $count = isset($stepCounts[$stepId]) ? $stepCounts[$stepId] : 0;
         $drop = $prevCount - $count;
         if ($biggestDrop === null || $drop > $biggestDrop['drop']) {
-            $biggestDrop = array('from' => $prevLabel, 'to' => step_label($stepId), 'drop' => $drop);
+            $biggestDrop = array('from' => $prevLabel, 'to' => step_label($stepId, $slug), 'drop' => $drop);
         }
         $prevCount = $count;
-        $prevLabel = step_label($stepId);
+        $prevLabel = step_label($stepId, $slug);
     }
     $submitDrop = $prevCount - $data['submitted'];
     if ($biggestDrop === null || $submitDrop > $biggestDrop['drop']) {
@@ -2669,7 +2934,7 @@ details.report-collapse > summary:hover { color: var(--ink); }
             $avgDesktop = isset($data['step_durations_by_device'][$stepId . '|desktop']) ? avg_seconds($data['step_durations_by_device'][$stepId . '|desktop']) : null;
           ?>
             <tr>
-              <td><?= htmlspecialchars(step_label($stepId)) ?></td>
+              <td><?= htmlspecialchars(step_label($stepId, $slug)) ?></td>
               <td class="num"><?= (int)$count ?></td>
               <td class="bar-cell"><div class="bar"><span style="width:<?= $width ?>%"></span></div></td>
               <td class="num"><?= $avgStep !== null ? fmt_seconds($avgStep) : '—' ?></td>
@@ -2700,7 +2965,7 @@ details.report-collapse > summary:hover { color: var(--ink); }
         <div class="errors-list">
           <?php arsort($data['validation_errors']);
           foreach (array_slice($data['validation_errors'], 0, 8, true) as $stepId => $count): ?>
-            <span class="tag"><?= htmlspecialchars(step_label($stepId)) ?> · <?= (int)$count ?></span>
+            <span class="tag"><?= htmlspecialchars(step_label($stepId, $slug)) ?> · <?= (int)$count ?></span>
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
@@ -2723,7 +2988,7 @@ details.report-collapse > summary:hover { color: var(--ink); }
               $parts = array();
               foreach ($top as $act => $cnt) { $parts[] = htmlspecialchars($act) . ' ×' . (int)$cnt; }
             ?>
-              <tr><td><?= htmlspecialchars(step_label($stepId)) ?></td><td><?= implode(' · ', $parts) ?></td></tr>
+              <tr><td><?= htmlspecialchars(step_label($stepId, $slug)) ?></td><td><?= implode(' · ', $parts) ?></td></tr>
             <?php endforeach; ?>
           </tbody>
         </table>
@@ -2741,7 +3006,7 @@ details.report-collapse > summary:hover { color: var(--ink); }
               $parts = array();
               foreach ($topCells as $cell => $c) { $parts[] = '(' . htmlspecialchars($cell) . ') ×' . (int)$c; }
             ?>
-              <tr><td><?= htmlspecialchars(step_label($stepId)) ?></td><td class="num"><?= (int)$cnt ?></td><td><?= implode(' · ', $parts) ?></td></tr>
+              <tr><td><?= htmlspecialchars(step_label($stepId, $slug)) ?></td><td class="num"><?= (int)$cnt ?></td><td><?= implode(' · ', $parts) ?></td></tr>
             <?php endforeach; ?>
           </tbody>
         </table>
@@ -2768,7 +3033,7 @@ details.report-collapse > summary:hover { color: var(--ink); }
               <tr>
                 <td title="<?= htmlspecialchars($startedIso) ?>"><?= htmlspecialchars($startedIso ? mp_tracking_humanize_iso($startedIso) : '—') ?></td>
                 <td><?= htmlspecialchars($deviceLabel) ?><?php if ($s['viewport'] !== null): ?> <span style="color:var(--muted);">· <?= (int)$s['viewport'] ?>px</span><?php endif; ?></td>
-                <td><?= htmlspecialchars($lastStepId ? step_label($lastStepId) : '—') ?></td>
+                <td><?= htmlspecialchars($lastStepId ? step_label($lastStepId, $slug) : '—') ?></td>
                 <td><code><?= htmlspecialchars($s['ip'] ?: '—') ?></code></td>
                 <td><?= $s['submitted'] ? '<span style="color:var(--moss);font-weight:800;">Enviou pedido</span>' : '<span style="color:var(--muted);">Em progresso/abandonou</span>' ?></td>
               </tr>
@@ -2843,10 +3108,10 @@ details.report-collapse > summary:hover { color: var(--ink); }
         $topOpts = array_slice($data['options_selected'], 0, 16, true);
       ?>
         <details style="margin-top:10px;">
-          <summary style="cursor:pointer;color:var(--muted);font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;">Opções mais escolhidas</summary>
+          <summary style="cursor:pointer;color:var(--muted);font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;"><?= is_artwork_product($slug) ? 'Escolhas e sinais de personalização' : 'Opções mais escolhidas' ?></summary>
           <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
             <?php foreach ($topOpts as $key => $cnt): ?>
-              <span class="tag" style="background:rgba(184,134,22,0.12);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:0.82rem;"><?= admin_funnel_h($key) ?> · <strong><?= (int)$cnt ?></strong></span>
+              <span class="tag" style="background:rgba(184,134,22,0.12);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:0.82rem;"><?= admin_funnel_h(option_metric_label($key, $slug)) ?> · <strong><?= (int)$cnt ?></strong></span>
             <?php endforeach; ?>
           </div>
         </details>

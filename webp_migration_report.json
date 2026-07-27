@@ -1,0 +1,30 @@
+{
+  "converted": 620,
+  "referencesRewritten": 979,
+  "textFilesChanged": 54,
+  "sourceBytes": 208415655,
+  "webpBytes": 66863194,
+  "savedBytes": 141552461,
+  "collisions": [
+    {
+      "source": "content/designs/Fotos_dos_Mini_Cadernos/1000133037.png",
+      "target": "content/designs/Fotos_dos_Mini_Cadernos/1000133037-png.webp"
+    },
+    {
+      "source": "content/designs/Fotos_dos_Mini_Cadernos/1000133040.png",
+      "target": "content/designs/Fotos_dos_Mini_Cadernos/1000133040-png.webp"
+    },
+    {
+      "source": "content/designs/Fotos_dos_Mini_Cadernos/1000133041.png",
+      "target": "content/designs/Fotos_dos_Mini_Cadernos/1000133041-png.webp"
+    },
+    {
+      "source": "content/designs/Fotos_dos_Mini_Cadernos/1000133042.png",
+      "target": "content/designs/Fotos_dos_Mini_Cadernos/1000133042-png.webp"
+    },
+    {
+      "source": "content/designs/Fotos_dos_Mini_Cadernos/1000133043.png",
+      "target": "content/designs/Fotos_dos_Mini_Cadernos/1000133043-png.webp"
+    }
+  ]
+}

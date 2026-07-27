@@ -24,8 +24,8 @@
             "id": "shipping",
             "label": "Envio CTT - até 2 Kg",
             "text": "",
-            "feeCents": 850,
-            "priceText": "Valor mínimo:\n8,50 €"
+            "feeCents": 555,
+            "priceText": "Valor mínimo:\n5,55 €"
         },
         {
             "id": "join_orders",
@@ -100,26 +100,26 @@
                     "value": "Caderno 01",
                     "title": "Caderno 01",
                     "subtitle": "",
-                    "image": "content/designs/cadernos/process/cadernos (1)/img (27).jpg",
+                    "image": "content/designs/cadernos/process/cadernos (1)/img (27).webp",
                     "imageFit": "cover",
                     "frameWidth": 200,
                     "frameHeight": 124,
                     "visual": "neutral",
                     "badge": "",
                     "laminationImages": {
-                        "matte": "content/designs/cadernos/process/cadernos (1)/img (27).jpg",
-                        "glossy": "content/designs/cadernos/process/cadernos (1)/img (31).jpg",
-                        "glitter": "content/designs/cadernos/process/cadernos (1)/img (36).jpg",
-                        "holografico": "content/designs/cadernos/process/cadernos (1)/img (9).jpg"
+                        "matte": "content/designs/cadernos/process/cadernos (1)/img (27).webp",
+                        "glossy": "content/designs/cadernos/process/cadernos (1)/img (31).webp",
+                        "glitter": "content/designs/cadernos/process/cadernos (1)/img (36).webp",
+                        "holografico": "content/designs/cadernos/process/cadernos (1)/img (9).webp"
                     },
                     "interiorImages": [
-                        "content/designs/cadernos/process/cadernos (1)/img (27).jpg"
+                        "content/designs/cadernos/process/cadernos (1)/img (27).webp"
                     ],
                     "purchaseOptionImages": {
-                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_1.jpg",
-                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_1.jpg",
-                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_1.jpg",
-                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_1.jpg"
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_1.webp",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_1.webp",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_1.webp",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_1.webp"
                     },
                     "imageZoom": 99,
                     "imageRotation": 2,
@@ -140,26 +140,26 @@
                     "value": "Caderno 02",
                     "title": "Caderno 02",
                     "subtitle": "",
-                    "image": "content/designs/cadernos/process/cadernos (2)/img (21).jpg",
+                    "image": "content/designs/cadernos/process/cadernos (2)/img (21).webp",
                     "imageFit": "cover",
                     "frameWidth": 70,
                     "frameHeight": 124,
                     "visual": "neutral",
                     "badge": "",
                     "laminationImages": {
-                        "matte": "content/designs/cadernos/process/cadernos (2)/img (21).jpg",
-                        "glossy": "content/designs/cadernos/process/cadernos (2)/1778703273575_reduced_q95.jpg",
-                        "glitter": "content/designs/cadernos/process/cadernos (2)/img (20).jpg",
-                        "holografico": "content/designs/cadernos/process/cadernos (2)/img (18).jpg"
+                        "matte": "content/designs/cadernos/process/cadernos (2)/img (21).webp",
+                        "glossy": "content/designs/cadernos/process/cadernos (2)/1778703273575_reduced_q95.webp",
+                        "glitter": "content/designs/cadernos/process/cadernos (2)/img (20).webp",
+                        "holografico": "content/designs/cadernos/process/cadernos (2)/img (18).webp"
                     },
                     "interiorImages": [
-                        "content/designs/cadernos/process/cadernos (2)/img (21).jpg"
+                        "content/designs/cadernos/process/cadernos (2)/img (21).webp"
                     ],
                     "purchaseOptionImages": {
-                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_2.jpg",
-                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_2.jpg",
-                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_2.jpg",
-                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_2.jpg"
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_2.webp",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_2.webp",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_2.webp",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_2.webp"
                     },
                     "imageEdits": {
                         "cadernos:designs:caderno-02:main": {
@@ -177,26 +177,26 @@
                     "value": "Caderno 03",
                     "title": "Caderno 03",
                     "subtitle": "",
-                    "image": "content/designs/cadernos/process/cadernos (3)/img (22).jpg",
+                    "image": "content/designs/cadernos/process/cadernos (3)/img (22).webp",
                     "imageFit": "cover",
                     "frameWidth": 70,
                     "frameHeight": 124,
                     "visual": "neutral",
                     "badge": "",
                     "laminationImages": {
-                        "matte": "content/designs/cadernos/process/cadernos (3)/img (22).jpg",
-                        "glossy": "content/designs/cadernos/process/cadernos (3)/img (30).jpg",
-                        "glitter": "content/designs/cadernos/process/cadernos (3)/img (35).jpg",
-                        "holografico": "content/designs/cadernos/process/cadernos (3)/img (13).jpg"
+                        "matte": "content/designs/cadernos/process/cadernos (3)/img (22).webp",
+                        "glossy": "content/designs/cadernos/process/cadernos (3)/img (30).webp",
+                        "glitter": "content/designs/cadernos/process/cadernos (3)/img (35).webp",
+                        "holografico": "content/designs/cadernos/process/cadernos (3)/img (13).webp"
                     },
                     "interiorImages": [
-                        "content/designs/cadernos/process/cadernos (3)/img (22).jpg"
+                        "content/designs/cadernos/process/cadernos (3)/img (22).webp"
                     ],
                     "purchaseOptionImages": {
-                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_3.jpg",
-                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_3.jpg",
-                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_3.jpg",
-                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_3.jpg"
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_3.webp",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_3.webp",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_3.webp",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_3.webp"
                     },
                     "imageEdits": {
                         "cadernos:designs:caderno-03:main": {
@@ -214,26 +214,26 @@
                     "value": "Caderno 04",
                     "title": "Caderno 04",
                     "subtitle": "",
-                    "image": "content/designs/cadernos/process/cadernos (4)/img (28).jpg",
+                    "image": "content/designs/cadernos/process/cadernos (4)/img (28).webp",
                     "imageFit": "cover",
                     "frameWidth": 70,
                     "frameHeight": 124,
                     "visual": "neutral",
                     "badge": "",
                     "laminationImages": {
-                        "matte": "content/designs/cadernos/process/cadernos (4)/img (28).jpg",
-                        "glossy": "content/designs/cadernos/process/cadernos (4)/img (17).jpg",
-                        "glitter": "content/designs/cadernos/process/cadernos (4)/img (25).jpg",
-                        "holografico": "content/designs/cadernos/process/cadernos (4)/img (33).jpg"
+                        "matte": "content/designs/cadernos/process/cadernos (4)/img (28).webp",
+                        "glossy": "content/designs/cadernos/process/cadernos (4)/img (17).webp",
+                        "glitter": "content/designs/cadernos/process/cadernos (4)/img (25).webp",
+                        "holografico": "content/designs/cadernos/process/cadernos (4)/img (33).webp"
                     },
                     "interiorImages": [
-                        "content/designs/cadernos/process/cadernos (4)/img (28).jpg"
+                        "content/designs/cadernos/process/cadernos (4)/img (28).webp"
                     ],
                     "purchaseOptionImages": {
-                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_4.jpg",
-                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_4.jpg",
-                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_4.jpg",
-                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_4.jpg"
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_4.webp",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_4.webp",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_4.webp",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_4.webp"
                     },
                     "imageEdits": {
                         "cadernos:designs:caderno-04:main": {
@@ -251,26 +251,26 @@
                     "value": "Caderno 05",
                     "title": "Caderno 05",
                     "subtitle": "",
-                    "image": "content/designs/cadernos/process/cadernos (5)/img (26).jpg",
+                    "image": "content/designs/cadernos/process/cadernos (5)/img (26).webp",
                     "imageFit": "cover",
                     "frameWidth": 120,
                     "frameHeight": 124,
                     "visual": "neutral",
                     "badge": "",
                     "laminationImages": {
-                        "matte": "content/designs/cadernos/process/cadernos (5)/img (26).jpg",
-                        "glossy": "content/designs/cadernos/process/cadernos (5)/img (38).jpg",
-                        "glitter": "content/designs/cadernos/process/cadernos (5)/img (29).jpg",
-                        "holografico": "content/designs/cadernos/process/cadernos (5)/img (15).jpg"
+                        "matte": "content/designs/cadernos/process/cadernos (5)/img (26).webp",
+                        "glossy": "content/designs/cadernos/process/cadernos (5)/img (38).webp",
+                        "glitter": "content/designs/cadernos/process/cadernos (5)/img (29).webp",
+                        "holografico": "content/designs/cadernos/process/cadernos (5)/img (15).webp"
                     },
                     "interiorImages": [
-                        "content/designs/cadernos/process/cadernos (5)/img (26).jpg"
+                        "content/designs/cadernos/process/cadernos (5)/img (26).webp"
                     ],
                     "purchaseOptionImages": {
-                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_5.jpg",
-                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_5.jpg",
-                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_5.jpg",
-                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_5.jpg"
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_5.webp",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_5.webp",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_5.webp",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_5.webp"
                     },
                     "imageEdits": {
                         "cadernos:designs:caderno-05:main": {
@@ -287,26 +287,26 @@
                     "value": "Caderno 06",
                     "title": "Caderno 06",
                     "subtitle": "",
-                    "image": "content/designs/cadernos/process/cadernos (6)/1778703273549_reduced_q95.jpg",
+                    "image": "content/designs/cadernos/process/cadernos (6)/1778703273549_reduced_q95.webp",
                     "imageFit": "cover",
                     "frameWidth": 120,
                     "frameHeight": 124,
                     "visual": "neutral",
                     "badge": "",
                     "laminationImages": {
-                        "matte": "content/designs/cadernos/process/cadernos (6)/1778703273549_reduced_q95.jpg",
-                        "glossy": "content/designs/cadernos/process/cadernos (6)/img (32).jpg",
-                        "glitter": "content/designs/cadernos/process/cadernos (6)/img (23).jpg",
-                        "holografico": "content/designs/cadernos/process/cadernos (6)/img (39).jpg"
+                        "matte": "content/designs/cadernos/process/cadernos (6)/1778703273549_reduced_q95.webp",
+                        "glossy": "content/designs/cadernos/process/cadernos (6)/img (32).webp",
+                        "glitter": "content/designs/cadernos/process/cadernos (6)/img (23).webp",
+                        "holografico": "content/designs/cadernos/process/cadernos (6)/img (39).webp"
                     },
                     "interiorImages": [
-                        "content/designs/cadernos/process/cadernos (6)/1778703273549_reduced_q95.jpg"
+                        "content/designs/cadernos/process/cadernos (6)/1778703273549_reduced_q95.webp"
                     ],
                     "purchaseOptionImages": {
-                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_6.jpg",
-                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_6.jpg",
-                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_6.jpg",
-                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_6.jpg"
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_6.webp",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_6.webp",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_6.webp",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_6.webp"
                     },
                     "imageEdits": {
                         "cadernos:designs:caderno-06:main": {
@@ -323,26 +323,26 @@
                     "value": "Caderno 07",
                     "title": "Caderno 07",
                     "subtitle": "",
-                    "image": "content/designs/cadernos/process/cadernos (7)/img (12).jpg",
+                    "image": "content/designs/cadernos/process/cadernos (7)/img (12).webp",
                     "imageFit": "cover",
                     "frameWidth": 120,
                     "frameHeight": 124,
                     "visual": "neutral",
                     "badge": "",
                     "laminationImages": {
-                        "matte": "content/designs/cadernos/process/cadernos (7)/img (12).jpg",
-                        "glossy": "content/designs/cadernos/process/cadernos (7)/img (14).jpg",
-                        "glitter": "content/designs/cadernos/process/cadernos (7)/img (10).jpg",
-                        "holografico": "content/designs/cadernos/process/cadernos (7)/img (34).jpg"
+                        "matte": "content/designs/cadernos/process/cadernos (7)/img (12).webp",
+                        "glossy": "content/designs/cadernos/process/cadernos (7)/img (14).webp",
+                        "glitter": "content/designs/cadernos/process/cadernos (7)/img (10).webp",
+                        "holografico": "content/designs/cadernos/process/cadernos (7)/img (34).webp"
                     },
                     "interiorImages": [
-                        "content/designs/cadernos/process/cadernos (7)/img (12).jpg"
+                        "content/designs/cadernos/process/cadernos (7)/img (12).webp"
                     ],
                     "purchaseOptionImages": {
-                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_7.jpg",
-                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_7.jpg",
-                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_7.jpg",
-                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_7.jpg"
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_7.webp",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_7.webp",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_7.webp",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_7.webp"
                     },
                     "imageEdits": {
                         "cadernos:designs:caderno-07:main": {
@@ -358,26 +358,26 @@
                     "value": "Caderno 08",
                     "title": "Caderno 08",
                     "subtitle": "",
-                    "image": "content/designs/cadernos/process/cadernos (8)/img (19).jpg",
+                    "image": "content/designs/cadernos/process/cadernos (8)/img (19).webp",
                     "imageFit": "cover",
                     "frameWidth": 120,
                     "frameHeight": 124,
                     "visual": "neutral",
                     "badge": "",
                     "laminationImages": {
-                        "matte": "content/designs/cadernos/process/cadernos (8)/img (19).jpg",
-                        "glossy": "content/designs/cadernos/process/cadernos (8)/img (11).jpg",
-                        "glitter": "content/designs/cadernos/process/cadernos (8)/img (37).jpg",
-                        "holografico": "content/designs/cadernos/process/cadernos (8)/img (24).jpg"
+                        "matte": "content/designs/cadernos/process/cadernos (8)/img (19).webp",
+                        "glossy": "content/designs/cadernos/process/cadernos (8)/img (11).webp",
+                        "glitter": "content/designs/cadernos/process/cadernos (8)/img (37).webp",
+                        "holografico": "content/designs/cadernos/process/cadernos (8)/img (24).webp"
                     },
                     "interiorImages": [
-                        "content/designs/cadernos/process/cadernos (8)/img (19).jpg"
+                        "content/designs/cadernos/process/cadernos (8)/img (19).webp"
                     ],
                     "purchaseOptionImages": {
-                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_8.jpg",
-                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_8.jpg",
-                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_8.jpg",
-                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_8.jpg"
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_8.webp",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_8.webp",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_8.webp",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_8.webp"
                     },
                     "imageEdits": {
                         "cadernos:designs:caderno-08:main": {
@@ -393,26 +393,26 @@
                     "value": "Caderno 09",
                     "title": "Caderno 09",
                     "subtitle": "",
-                    "image": "content/designs/cadernos/process/cadernos (9)/img (16).jpg",
+                    "image": "content/designs/cadernos/process/cadernos (9)/img (16).webp",
                     "imageFit": "cover",
                     "frameWidth": 120,
                     "frameHeight": 124,
                     "visual": "neutral",
                     "badge": "",
                     "laminationImages": {
-                        "matte": "content/designs/cadernos/process/cadernos (9)/img (16).jpg",
-                        "glossy": "content/designs/cadernos/process/cadernos (9)/9_glossy.jpg",
-                        "glitter": "content/designs/cadernos/process/cadernos (9)/9_glit.jpg",
-                        "holografico": "content/designs/cadernos/process/cadernos (9)/9_holo.jpg"
+                        "matte": "content/designs/cadernos/process/cadernos (9)/img (16).webp",
+                        "glossy": "content/designs/cadernos/process/cadernos (9)/9_glossy.webp",
+                        "glitter": "content/designs/cadernos/process/cadernos (9)/9_glit.webp",
+                        "holografico": "content/designs/cadernos/process/cadernos (9)/9_holo.webp"
                     },
                     "interiorImages": [
-                        "content/designs/cadernos/process/cadernos (9)/img (16).jpg"
+                        "content/designs/cadernos/process/cadernos (9)/img (16).webp"
                     ],
                     "purchaseOptionImages": {
-                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_9.jpg",
-                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_9.jpg",
-                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_9.jpg",
-                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_9.jpg"
+                        "caderno_normal": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_9.webp",
+                        "caderno_pioneiro": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_9.webp",
+                        "pack_normal": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_9.webp",
+                        "pack_pioneiro": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_9.webp"
                     },
                     "imageEdits": {
                         "cadernos:designs:caderno-09:main": {
@@ -451,8 +451,8 @@
                     "value": "matte",
                     "title": "Matte",
                     "subtitle": "Acabamento suave, sem brilho.",
-                    "image": "content/designs/cadernos/laminacao/laminacao-matte.jpg",
-                    "exampleImage": "content/designs/cadernos/laminacao/laminacao-matte.jpg",
+                    "image": "content/designs/cadernos/laminacao/laminacao-matte.webp",
+                    "exampleImage": "content/designs/cadernos/laminacao/laminacao-matte.webp",
                     "imageFit": "cover",
                     "note": "Exemplo visual de laminação matte.",
                     "laminationKey": "matte",
@@ -474,8 +474,8 @@
                     "value": "normal",
                     "title": "Glossy",
                     "subtitle": "Acabamento brilhante normal.",
-                    "image": "content/designs/cadernos/laminacao/laminacao-glossy-normal.jpg",
-                    "exampleImage": "content/designs/cadernos/laminacao/laminacao-glossy-normal.jpg",
+                    "image": "content/designs/cadernos/laminacao/laminacao-glossy-normal.webp",
+                    "exampleImage": "content/designs/cadernos/laminacao/laminacao-glossy-normal.webp",
                     "imageFit": "cover",
                     "note": "Exemplo visual de laminação glossy normal.",
                     "laminationKey": "glossy",
@@ -497,8 +497,8 @@
                     "value": "holografica",
                     "title": "Holográfica",
                     "subtitle": "Brilho com reflexos coloridos.",
-                    "image": "content/designs/cadernos/laminacao/laminacao-holografica.jpg",
-                    "exampleImage": "content/designs/cadernos/laminacao/laminacao-holografica.jpg",
+                    "image": "content/designs/cadernos/laminacao/laminacao-holografica.webp",
+                    "exampleImage": "content/designs/cadernos/laminacao/laminacao-holografica.webp",
                     "imageFit": "cover",
                     "note": "Exemplo visual de laminação holográfica.",
                     "laminationKey": "holografico",
@@ -519,8 +519,8 @@
                     "value": "glitter_branco",
                     "title": "Glitter branco",
                     "subtitle": "Brilho tipo glitter/purpurinas brancas.",
-                    "image": "content/designs/cadernos/laminacao/laminacao-glitter-branco.jpg",
-                    "exampleImage": "content/designs/cadernos/laminacao/laminacao-glitter-branco.jpg",
+                    "image": "content/designs/cadernos/laminacao/laminacao-glitter-branco.webp",
+                    "exampleImage": "content/designs/cadernos/laminacao/laminacao-glitter-branco.webp",
                     "imageFit": "cover",
                     "note": "Exemplo visual de laminação com glitter branco.",
                     "laminationKey": "glitter",
@@ -570,8 +570,8 @@
                     "priceCents": 2990,
                     "includes": "Inclui o caderno com oferta de 1 crachá de 32 mm com o mesmo design da capa.",
                     "summary": "caderno com oferta de 1 crachá de 32 mm da capa",
-                    "image": "content/designs/cadernos/opcoes/caderno-normal.jpg",
-                    "exampleImage": "content/designs/cadernos/opcoes/caderno-normal.jpg",
+                    "image": "content/designs/cadernos/opcoes/caderno-normal.webp",
+                    "exampleImage": "content/designs/cadernos/opcoes/caderno-normal.webp",
                     "isPack": false,
                     "imageEdits": {
                         "cadernos:pack:caderno-normal:main": {
@@ -593,8 +593,8 @@
                     "priceCents": 3490,
                     "includes": "Inclui o caderno pioneiro com oferta de 1 crachá de 32 mm com o mesmo design da capa.",
                     "summary": "caderno pioneiro com oferta de 1 crachá de 32 mm da capa",
-                    "image": "content/designs/cadernos/opcoes/caderno-pioneiro.jpg",
-                    "exampleImage": "content/designs/cadernos/opcoes/caderno-pioneiro.jpg",
+                    "image": "content/designs/cadernos/opcoes/caderno-pioneiro.webp",
+                    "exampleImage": "content/designs/cadernos/opcoes/caderno-pioneiro.webp",
                     "isPack": false,
                     "imageEdits": {
                         "cadernos:pack:caderno-pioneiro:main": {
@@ -616,8 +616,8 @@
                     "priceCents": 3790,
                     "includes": "Inclui o caderno + 5 crachás de 32 mm, sendo um deles o crachá da capa + marcador laminado dos dois lados.",
                     "summary": "caderno + 5 crachás de 32 mm, incluindo 1 crachá da capa + marcador laminado dos dois lados",
-                    "image": "content/designs/cadernos/opcoes/pack-normal.jpg",
-                    "exampleImage": "content/designs/cadernos/opcoes/pack-normal.jpg",
+                    "image": "content/designs/cadernos/opcoes/pack-normal.webp",
+                    "exampleImage": "content/designs/cadernos/opcoes/pack-normal.webp",
                     "isPack": true,
                     "imageEdits": {
                         "cadernos:pack:pack-normal:main": {
@@ -639,8 +639,8 @@
                     "priceCents": 4290,
                     "includes": "Inclui o caderno pioneiro + 5 crachás de 32 mm, sendo um deles o crachá da capa + marcador laminado dos dois lados.",
                     "summary": "caderno pioneiro + 5 crachás de 32 mm, incluindo 1 crachá da capa + marcador laminado dos dois lados",
-                    "image": "content/designs/cadernos/opcoes/pack-pioneiro.jpg",
-                    "exampleImage": "content/designs/cadernos/opcoes/pack-pioneiro.jpg",
+                    "image": "content/designs/cadernos/opcoes/pack-pioneiro.webp",
+                    "exampleImage": "content/designs/cadernos/opcoes/pack-pioneiro.webp",
                     "isPack": true,
                     "imageEdits": {
                         "cadernos:pack:pack-pioneiro:main": {
@@ -665,10 +665,9 @@
             "selection": "single",
             "extraPriceCents": 200,
             "maxLength": 25,
-            "exampleImage": "content/designs/cadernos/personalizacao/personalizacao-capa.jpg",
+            "exampleImage": "content/designs/cadernos/personalizacao/personalizacao-capa.webp",
             "exampleAlt": "Exemplo de personalização da capa",
             "showExample": false,
-            "note": "Importante: A capa do mini-caderno de oferta não é personalizável.",
             "items": [
                 {
                     "id": "cover-personalization-yes",
@@ -741,7 +740,7 @@
     "preview": {
         "enabled": true,
         "title": "Pré-visualização do interior",
-        "text": "Aqui podes mostrar uma fotografia ou mockup das páginas interiores do caderno anual. A imagem pode ser alterada no modo admin."
+        "text": "Aqui podes mostrar uma foto ou mockup das páginas interiores do caderno anual. A imagem pode ser alterada no modo admin."
     },
     "interiorPreview": {
         "enabled": true,
@@ -749,25 +748,25 @@
         "text": "Vê um exemplo das páginas interiores deste caderno.",
         "speedSeconds": 4,
         "images": [
-            "content/designs/cadernos/interior/1778765447458.jpg",
-            "content/designs/cadernos/interior/1778765447468.jpg",
-            "content/designs/cadernos/interior/1778765447479.jpg",
-            "content/designs/cadernos/interior/1778765447491.jpg",
-            "content/designs/cadernos/interior/1778765447501-PR.jpg",
-            "content/designs/cadernos/interior/1778765447511.jpg",
-            "content/designs/cadernos/interior/1778765447522.jpg",
-            "content/designs/cadernos/interior/1778765447532-PR.jpg",
-            "content/designs/cadernos/interior/1778765447543-PR.jpg",
-            "content/designs/cadernos/interior/1778765447555.jpg",
-            "content/designs/cadernos/interior/1778765447566-PR.jpg",
-            "content/designs/cadernos/interior/1778765447577.jpg",
-            "content/designs/cadernos/interior/1778765447587.jpg",
-            "content/designs/cadernos/interior/1778765447597.jpg",
-            "content/designs/cadernos/interior/1778765447608.jpg",
-            "content/designs/cadernos/interior/1778765447618.jpg",
-            "content/designs/cadernos/interior/1778765447627.jpg",
-            "content/designs/cadernos/interior/1778765447636.jpg",
-            "content/designs/cadernos/interior/stickers.jpg"
+            "content/designs/cadernos/interior/1778765447458.webp",
+            "content/designs/cadernos/interior/1778765447468.webp",
+            "content/designs/cadernos/interior/1778765447479.webp",
+            "content/designs/cadernos/interior/1778765447491.webp",
+            "content/designs/cadernos/interior/1778765447501-PR.webp",
+            "content/designs/cadernos/interior/1778765447511.webp",
+            "content/designs/cadernos/interior/1778765447522.webp",
+            "content/designs/cadernos/interior/1778765447532-PR.webp",
+            "content/designs/cadernos/interior/1778765447543-PR.webp",
+            "content/designs/cadernos/interior/1778765447555.webp",
+            "content/designs/cadernos/interior/1778765447566-PR.webp",
+            "content/designs/cadernos/interior/1778765447577.webp",
+            "content/designs/cadernos/interior/1778765447587.webp",
+            "content/designs/cadernos/interior/1778765447597.webp",
+            "content/designs/cadernos/interior/1778765447608.webp",
+            "content/designs/cadernos/interior/1778765447618.webp",
+            "content/designs/cadernos/interior/1778765447627.webp",
+            "content/designs/cadernos/interior/1778765447636.webp",
+            "content/designs/cadernos/interior/stickers.webp"
         ]
     },
     "_backup_created": "cadernos-20260515-152122.json"

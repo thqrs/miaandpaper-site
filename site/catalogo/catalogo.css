@@ -370,6 +370,61 @@ a.catalog-brand:focus-visible,
   font-weight: 850;
 }
 
+.catalog-link-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.catalog-link-grid > a {
+  display: grid;
+  gap: 6px;
+  min-height: 106px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 245, 0.94);
+  box-shadow: 0 10px 24px rgba(97, 70, 20, 0.07);
+}
+
+.catalog-link-grid strong {
+  color: var(--ink);
+  font: 500 1.35rem/1.1 Georgia, "Times New Roman", serif;
+}
+
+.catalog-link-grid span {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.catalog-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.catalog-primary-action,
+.catalog-secondary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 10px 16px;
+  border: 1px solid var(--leaf);
+  border-radius: 999px;
+  font-weight: 850;
+}
+
+.catalog-primary-action {
+  background: var(--leaf);
+  color: #fffdf5;
+}
+
+.catalog-secondary-action {
+  color: var(--leaf);
+}
+
 .quick-guide {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -968,7 +1023,8 @@ a.catalog-brand:focus-visible,
   .quick-guide,
   .size-grid,
   .price-grid,
-  .catalog-option-grid {
+  .catalog-option-grid,
+  .catalog-link-grid {
     grid-template-columns: 1fr;
   }
 

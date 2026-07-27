@@ -2,7 +2,8 @@
     "slug": "imanes",
     "name": "Ímanes",
     "brand": "Mia & Paper",
-    "homeUrl": "index.html",
+    "ordersSuspended": false,
+    "homeUrl": "congressos.html",
     "instagramUrl": "https://www.instagram.com/miaandpaper/",
     "form": {
         "action": "send-order.php",
@@ -24,8 +25,8 @@
             "id": "shipping",
             "label": "Envio CTT - até 2 Kg",
             "text": "",
-            "feeCents": 850,
-            "priceText": "Valor mínimo:\n8,50 €"
+            "feeCents": 555,
+            "priceText": "Valor mínimo:\n5,55 €"
         },
         {
             "id": "join_orders",
@@ -54,6 +55,10 @@
         {
             "id": "design-grid",
             "label": "Grelha de designs"
+        },
+        {
+            "id": "photo-upload",
+            "label": "Envio de imagem"
         },
         {
             "id": "details-form",
@@ -89,6 +94,7 @@
             "template": "design-grid",
             "field": "designs[]",
             "selection": "multi",
+            "hidden": true,
             "items": [
                 {
                     "id": "esperanca-01",
@@ -96,7 +102,7 @@
                     "title": "Esperança 01",
                     "subtitle": "Design vertical",
                     "badge": "",
-                    "image": "content/designs/Fotos_dos_Imans/esperanca/esperanca-01.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/esperanca/esperanca-01.webp",
                     "imageFit": "contain",
                     "imageZoom": 70,
                     "imagePositionX": 0,
@@ -117,7 +123,7 @@
                     "title": "Esperança 02",
                     "subtitle": "Design vertical",
                     "badge": "",
-                    "image": "content/designs/Fotos_dos_Imans/esperanca/esperanca-02.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/esperanca/esperanca-02.webp",
                     "imageFit": "contain",
                     "imageZoom": 70,
                     "imagePositionX": 0,
@@ -138,7 +144,7 @@
                     "title": "Esperança 03",
                     "subtitle": "Design vertical",
                     "badge": "",
-                    "image": "content/designs/Fotos_dos_Imans/esperanca/esperanca-03.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/esperanca/esperanca-03.webp",
                     "imageFit": "contain",
                     "imageZoom": 70,
                     "imagePositionX": 0,
@@ -159,7 +165,7 @@
                     "title": "Esperança 04",
                     "subtitle": "Design vertical",
                     "badge": "",
-                    "image": "content/designs/Fotos_dos_Imans/esperanca/esperanca-04.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/esperanca/esperanca-04.webp",
                     "imageFit": "contain",
                     "imageZoom": 70,
                     "imagePositionX": 0,
@@ -180,7 +186,7 @@
                     "title": "Esperança 05",
                     "subtitle": "Design vertical",
                     "badge": "",
-                    "image": "content/designs/Fotos_dos_Imans/esperanca/esperanca-05.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/esperanca/esperanca-05.webp",
                     "imageFit": "contain",
                     "imageZoom": 67,
                     "imagePositionX": 0,
@@ -201,7 +207,7 @@
                     "title": "Esperança 06",
                     "subtitle": "Design vertical",
                     "badge": "",
-                    "image": "content/designs/Fotos_dos_Imans/cornfield/cornfield-01.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/cornfield/cornfield-01.webp",
                     "imageFit": "contain",
                     "imageZoom": 88,
                     "imagePositionX": 0,
@@ -228,7 +234,7 @@
                     "title": "Íman 01",
                     "subtitle": "Design Horizontal",
                     "badge": "",
-                    "image": "content/designs/Fotos_dos_Imans/1000132974.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/1000132974.webp",
                     "imageFit": "contain",
                     "imageZoom": 84,
                     "imagePositionX": 0,
@@ -248,7 +254,7 @@
                     "title": "Íman 02",
                     "subtitle": "Design Vertical",
                     "badge": "",
-                    "image": "content/designs/Fotos_dos_Imans/1000132976.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/1000132976.webp",
                     "imageFit": "contain",
                     "imageZoom": 99,
                     "imagePositionX": 1,
@@ -268,7 +274,7 @@
                     "title": "Íman 03",
                     "subtitle": "Design Vertical",
                     "badge": "",
-                    "image": "content/designs/Fotos_dos_Imans/1000132978.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/1000132978.webp",
                     "imageFit": "contain",
                     "imageZoom": 108,
                     "imagePositionX": 1,
@@ -288,7 +294,7 @@
                     "title": "Íman 04",
                     "subtitle": "Design Horizontal",
                     "badge": "",
-                    "image": "content/designs/Fotos_dos_Imans/1000132980.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/1000132980.webp",
                     "imageFit": "contain",
                     "imageZoom": 115,
                     "imagePositionX": 3,
@@ -308,7 +314,7 @@
                     "title": "Íman 05",
                     "subtitle": "Design Vertical",
                     "badge": "",
-                    "image": "content/designs/Fotos_dos_Imans/1000132982.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/1000132982.webp",
                     "imageFit": "contain",
                     "imageZoom": 95,
                     "imagePositionX": -1,
@@ -328,7 +334,7 @@
                     "title": "Íman 06",
                     "subtitle": "Design Horizontal",
                     "badge": "",
-                    "image": "content/designs/Fotos_dos_Imans/1000132984.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/1000132984.webp",
                     "imageFit": "contain",
                     "imageZoom": 120,
                     "imagePositionX": -1,
@@ -362,6 +368,22 @@
             ]
         },
         {
+            "id": "artwork_upload",
+            "label": "Imagem",
+            "title": "Envia a imagem para o teu íman",
+            "text": "Podes enviar a imagem pronta ou pedir-nos ajuda.",
+            "template": "photo-upload",
+            "upload": {
+                "selectionKey": "iman_artwork_uploads",
+                "multiple": false,
+                "maxFiles": 1,
+                "buttonLabel": "Escolher imagem",
+                "requiredUnlessHelp": true,
+                "helpKey": "iman_artwork_help",
+                "helpLabel": "Quero ajuda"
+            }
+        },
+        {
             "id": "size",
             "label": "Tipo",
             "title": "Escolhe o tipo",
@@ -371,12 +393,14 @@
             "selection": "single",
             "items": [
                 {
-                    "id": "achatado",
-                    "value": "Achatados",
-                    "title": "Finos e flexíveis",
+                    "id": "fino-retangular",
+                    "value": "Fino rectangular",
+                    "priceKey": "Achatados",
+                    "minQuantity": 15,
+                    "title": "Fino rectangular",
                     "subtitle": "Tens de encomendar pelo menos 15 unidades",
                     "note": "5.5 cm x 6.5 cm. 0.7 mm de espessura",
-                    "image": "content/designs/Fotos_dos_Imans/tipo/iman-flexivel.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/tipo/iman-flexivel.webp",
                     "imageFit": "contain",
                     "imageZoom": 100,
                     "imagePositionX": 0,
@@ -387,12 +411,32 @@
                     "frameMarginY": 0
                 },
                 {
-                    "id": "3mm",
-                    "value": "3 mm",
-                    "title": "3 milímetros de espessura",
+                    "id": "grosso-retangular",
+                    "value": "Grosso rectangular",
+                    "priceKey": "3 mm",
+                    "minQuantity": 1,
+                    "title": "Grosso rectangular",
                     "subtitle": "Podes encomendar uma, ou mais unidades",
                     "note": "5.5 cm x 6.5 cm. 3 mm de espessura",
-                    "image": "content/designs/Fotos_dos_Imans/tipo/iman-2mm.jpg",
+                    "image": "content/designs/Fotos_dos_Imans/tipo/iman-2mm.webp",
+                    "imageFit": "contain",
+                    "imageZoom": 100,
+                    "imagePositionX": 0,
+                    "imagePositionY": 0,
+                    "imageRotation": 0,
+                    "frameScale": 100,
+                    "frameMarginX": 0,
+                    "frameMarginY": 0
+                },
+                {
+                    "id": "fino-corte-personalizado",
+                    "value": "Fino com corte personalizado",
+                    "priceKey": "Achatados",
+                    "minQuantity": 15,
+                    "title": "Fino com corte personalizado",
+                    "subtitle": "Tens de encomendar pelo menos 15 unidades",
+                    "note": "",
+                    "image": "",
                     "imageFit": "contain",
                     "imageZoom": 100,
                     "imagePositionX": 0,
@@ -413,6 +457,7 @@
             "template": "quantity-builder",
             "field": "pack_quantity",
             "selection": "pack",
+            "freeQuantity": true,
             "items": [
                 {
                     "id": "pack-1",
@@ -472,31 +517,31 @@
             "template": "details-form",
             "fields": [
                 {
-                    "name": "recipient_name",
-                    "label": "Nome",
-                    "placeholder": "Nome a colocar no cartão",
+                    "name": "iman_card_description",
+                    "label": "Descreve o fundo e o texto do cartão, ou envia-nos um áudio ou uma foto",
+                    "placeholder": "Indica a mensagem, as cores do fundo e outros detalhes importantes",
                     "required": false,
-                    "autocomplete": "name",
-                    "section": "Dados para o Cartão de Apresentação"
-                },
-                {
-                    "name": "contact",
-                    "label": "Telemóvel ou Email",
-                    "placeholder": "Email e/ou telemóvel para o cartão",
-                    "required": false,
-                    "autocomplete": "off",
-                    "section": "Dados para o Cartão de Apresentação"
-                },
-                {
-                    "name": "congregation",
-                    "label": "Congregação",
-                    "placeholder": "Nome da Congregação",
-                    "required": false,
-                    "autocomplete": "organization",
-                    "section": "Dados para o Cartão de Apresentação",
-                    "sectionText": "Atenção: Estes dados pessoais serão imprimidos e colocados no Cartão de Apresentação que acompanha cada um dos Ímanes"
+                    "type": "textarea",
+                    "section": "Personalização do cartão",
+                    "sectionNoBorder": true
                 }
-            ]
+            ],
+            "mediaAttachments": {
+                "photos": {
+                    "selectionKey": "iman_card_reference_uploads",
+                    "multiple": true,
+                    "maxFiles": 0,
+                    "buttonLabel": "Escolher foto",
+                    "helperText": "Podes enviar referências para o fundo ou para o texto do cartão"
+                },
+                "audio": {
+                    "selectionKey": "iman_card_audio_uploads",
+                    "multiple": true,
+                    "maxFiles": 0,
+                    "buttonLabel": "Mantém premido para falar",
+                    "helperText": "Solta para anexar o áudio"
+                }
+            }
         },
         {
             "id": "delivery_contact",
@@ -555,7 +600,7 @@
     "defaultPriceKey": "Achatados",
     "giftRequest": {
         "label": "Penso oferecer estes artigos a pessoas da minha congregação.",
-        "text": "Escolhe esta opção se quiseres que a Mia te ajude a escolher designs únicos para a tua congregação."
+        "text": "Escolhe esta opção se quiseres que a Mia te ajude a preparar a imagem e o cartão para a tua congregação."
     },
     "rectOrientation": "portrait",
     "_backup_created": "imanes-20260512-135758.json"

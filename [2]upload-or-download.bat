@@ -19,7 +19,7 @@ REM            Depois copia o site live do cPanel e espelha para a pasta site no
 REM            Nao faz commit, push, nem deploy.
 REM ==========================================================
 
-set "REPO=C:\Users\Tiago Henriques\Documents\Projects\miaandpaper-site"
+set "REPO=F:\Projects\miaandpaper-site"
 set "SITE=%REPO%\site"
 set "SSH_KEY=C:\Users\Tiago Henriques\.ssh\miaandpaper_cpanel"
 set "KNOWN_HOSTS=C:\tmp\miaandpaper_known_hosts"

@@ -72,7 +72,7 @@ function parse_email_recipients($value)
 function safe_return_to()
 {
     $returnTo = field('return_to');
-    $allowed = array('index.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'imanes.html', 'lembrancas.html', 'adicionar-produto.html', 'checkout.html');
+    $allowed = array('index.html', 'molduras.html', 'quadros.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'imanes.html', 'lembrancas.html', 'adicionar-produto.html', 'checkout.html');
 
     if (in_array($returnTo, $allowed, true)) {
         return $returnTo;
@@ -84,7 +84,7 @@ function safe_return_to()
 function safe_product_slug()
 {
     $slug = strtolower(field('product_slug'));
-    $allowed = array('crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas');
 
     if (in_array($slug, $allowed, true)) {
         return $slug;
@@ -212,6 +212,22 @@ function product_design_values($product, $fallback)
     }
 
     return !empty($values) ? $values : $fallback;
+}
+
+function product_step_values($product, $stepId)
+{
+    $step = product_step($product, $stepId);
+    $values = array();
+
+    if (!empty($step['items']) && is_array($step['items'])) {
+        foreach ($step['items'] as $item) {
+            if (isset($item['value']) && trim((string)$item['value']) !== '') {
+                $values[] = trim((string)$item['value']);
+            }
+        }
+    }
+
+    return $values;
 }
 
 function product_step_item_by_value($step, $value)
@@ -344,7 +360,7 @@ function product_delivery_options($product, $fallback)
 function cart_allowed_product_slug($slug)
 {
     $slug = strtolower(trim((string)$slug));
-    $allowed = array('crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas');
 
     return in_array($slug, $allowed, true) ? $slug : '';
 }
@@ -392,6 +408,220 @@ function cart_list_selection($selections, $name)
     }
 
     return $clean;
+}
+
+function quadro_tone_label($tone)
+{
+    $tone = (int)$tone;
+    if ($tone === 0) {
+        return 'claro';
+    }
+    if ($tone === 2) {
+        return 'escuro';
+    }
+    return 'principal';
+}
+
+function quadro_color_families($step, $product = array())
+{
+    if (isset($step['configuredColors']) && is_array($step['configuredColors'])) {
+        return $step['configuredColors'];
+    }
+    if (isset($step['individualColors']) && is_array($step['individualColors'])) {
+        return $step['individualColors'];
+    }
+    if (!empty($step['colorSourceStep']) && is_array($product)) {
+        $sourceStep = product_step($product, (string)$step['colorSourceStep']);
+        if (!empty($sourceStep) && $sourceStep !== $step) {
+            return quadro_color_families($sourceStep, $product);
+        }
+    }
+    return array();
+}
+
+// Cada cor escolhida tem uma família e um tom (claro, principal ou escuro).
+// Sem o tom e sem o hexadecimal, quem produz o quadro não sabe qual dos três
+// tons da família há-de usar.
+function quadro_color_label($families, $value, $tone)
+{
+    $title = cart_text($value);
+    $index = max(0, min(2, (int)$tone));
+    $hex = '';
+
+    foreach ($families as $family) {
+        if (!is_array($family) || !isset($family['value']) || (string)$family['value'] !== (string)$value) {
+            continue;
+        }
+        if (!empty($family['title'])) {
+            $title = cart_text($family['title']);
+        }
+        $stops = isset($family['colorStops']) && is_array($family['colorStops']) ? $family['colorStops'] : array();
+        if (isset($stops[$index]) && preg_match('/^#[0-9a-f]{6}$/i', trim((string)$stops[$index]))) {
+            $hex = strtolower(trim((string)$stops[$index]));
+        } elseif (!empty($family['swatch'])) {
+            $hex = strtolower(cart_text($family['swatch']));
+        }
+        break;
+    }
+
+    return $title . ' — tom ' . quadro_tone_label($index) . ($hex !== '' ? ' (' . $hex . ')' : '');
+}
+
+function quadro_color_selection_keys($step)
+{
+    $configured = isset($step['selectionKeys']) && is_array($step['selectionKeys'])
+        ? $step['selectionKeys']
+        : array();
+
+    return array(
+        'colors' => !empty($configured['colors']) ? (string)$configured['colors'] : 'colors',
+        'tones' => !empty($configured['tones']) ? (string)$configured['tones'] : 'quadro_color_tones',
+        'palette' => !empty($configured['palette']) ? (string)$configured['palette'] : 'color_palette',
+        'mia' => !empty($configured['mia']) ? (string)$configured['mia'] : 'mia_choose_colors',
+    );
+}
+
+function quadro_prepare_color_selection($product, $step, $selections, $count)
+{
+    $count = max(1, (int)$count);
+    $keys = quadro_color_selection_keys($step);
+    $families = quadro_color_families($step, $product);
+    $allowedValues = array();
+    foreach ($families as $family) {
+        if (is_array($family) && isset($family['value']) && trim((string)$family['value']) !== '') {
+            $allowedValues[] = trim((string)$family['value']);
+        }
+    }
+
+    $rawColors = cart_selection($selections, $keys['colors'], array());
+    $rawTones = cart_selection($selections, $keys['tones'], array());
+    $rawColors = is_array($rawColors) ? array_values($rawColors) : array($rawColors);
+    $rawTones = is_array($rawTones) ? array_values($rawTones) : array($rawTones);
+    $values = array();
+    $tones = array();
+    $labels = array();
+    $pairs = array();
+    $individualValid = count($rawColors) === $count && count($rawTones) === $count && !empty($allowedValues);
+
+    for ($index = 0; $index < $count; $index += 1) {
+        $value = isset($rawColors[$index]) ? cart_text($rawColors[$index]) : '';
+        $toneText = isset($rawTones[$index]) ? trim((string)$rawTones[$index]) : '';
+        $toneValid = preg_match('/^[0-2]$/', $toneText) === 1;
+        $tone = $toneValid ? (int)$toneText : 1;
+
+        if ($value === '' || !in_array($value, $allowedValues, true) || !$toneValid) {
+            $individualValid = false;
+            continue;
+        }
+
+        $pair = $value . "\x1f" . $tone;
+        if (isset($pairs[$pair])) {
+            $individualValid = false;
+        }
+        $pairs[$pair] = true;
+        $values[] = $value;
+        $tones[] = $tone;
+        $labels[] = quadro_color_label($families, $value, $tone);
+    }
+
+    $palette = cart_string_selection($selections, $keys['palette']);
+    $paletteItem = product_step_item_by_value($step, $palette);
+    if (empty($paletteItem) && !empty($step['colorSourceStep'])) {
+        $paletteItem = product_step_item_by_value(product_step($product, (string)$step['colorSourceStep']), $palette);
+    }
+    $paletteColors = array();
+    if (!empty($paletteItem['palette']) && is_array($paletteItem['palette'])) {
+        foreach (array_slice($paletteItem['palette'], 0, $count) as $paletteColor) {
+            $paletteColor = strtolower(trim((string)$paletteColor));
+            if (preg_match('/^#[0-9a-f]{6}$/', $paletteColor)) {
+                $paletteColors[] = $paletteColor;
+            }
+        }
+    }
+    $paletteValid = $palette !== '' && !empty($paletteItem) && count($paletteColors) === $count;
+    $mia = cart_bool(cart_selection($selections, $keys['mia'], false));
+    $allowMia = !array_key_exists('allowMiaChoice', $step) || !empty($step['allowMiaChoice']);
+
+    if ($mia && $allowMia) {
+        $palette = '';
+        $paletteItem = array();
+        $paletteColors = array();
+        $values = array();
+        $tones = array();
+        $labels = array();
+    } elseif ($individualValid) {
+        // O valor/tom exacto é a fonte de verdade. A paleta fica apenas como
+        // contexto caso a pessoa tenha partido de uma sugestão.
+        if (!$paletteValid) {
+            $palette = '';
+            $paletteItem = array();
+            $paletteColors = array();
+        }
+    } elseif ($paletteValid) {
+        $values = array();
+        $tones = array();
+        $labels = array();
+    } else {
+        $palette = '';
+        $paletteItem = array();
+        $paletteColors = array();
+    }
+
+    return array(
+        'valid' => ($mia && $allowMia) || $individualValid || $paletteValid,
+        'mia' => $mia && $allowMia,
+        'values' => $values,
+        'tones' => $tones,
+        'labels' => $labels,
+        'palette' => $palette,
+        'palette_item' => $paletteItem,
+        'palette_colors' => $paletteColors,
+    );
+}
+
+function product_selected_size_item($product, $value)
+{
+    return product_step_item_by_value(product_step($product, 'size'), $value);
+}
+
+function product_tier_price_cents($table, $quantity)
+{
+    if (!is_array($table) || empty($table) || (int)$quantity <= 0) {
+        return 0;
+    }
+
+    $quantity = (int)$quantity;
+    $tiers = array();
+    foreach ($table as $tierQuantity => $totalCents) {
+        $tierQuantity = (int)$tierQuantity;
+        $totalCents = (int)$totalCents;
+        if ($tierQuantity > 0 && $totalCents >= 0) {
+            $tiers[$tierQuantity] = $totalCents;
+        }
+    }
+    if (empty($tiers)) {
+        return 0;
+    }
+    ksort($tiers, SORT_NUMERIC);
+    if (isset($tiers[$quantity])) {
+        return $tiers[$quantity];
+    }
+
+    $selectedQuantity = 0;
+    $selectedTotal = 0;
+    foreach ($tiers as $tierQuantity => $totalCents) {
+        if ($tierQuantity <= $quantity || $selectedQuantity === 0) {
+            $selectedQuantity = $tierQuantity;
+            $selectedTotal = $totalCents;
+        }
+        if ($tierQuantity > $quantity) {
+            break;
+        }
+    }
+
+    return $selectedQuantity > 0
+        ? (int)round($quantity * ($selectedTotal / $selectedQuantity))
+        : 0;
 }
 
 function cart_assoc_int_selection($selections, $name)
@@ -456,6 +686,186 @@ function cart_valid_nif($value)
     return $value === '' || (bool)preg_match('/^\d{9}$/', $value);
 }
 
+function order_upload_temp_info($token)
+{
+    $token = strtolower(trim((string)$token));
+    if (!preg_match('/^[a-f0-9]{32,40}$/', $token)) {
+        return null;
+    }
+
+    $dir = mp_private_path('order-uploads' . DIRECTORY_SEPARATOR . 'tmp');
+    if ($dir === null) {
+        return null;
+    }
+    $metadataPath = $dir . DIRECTORY_SEPARATOR . $token . '.json';
+    if (!is_file($metadataPath)) {
+        return null;
+    }
+
+    $metadata = json_decode((string)@file_get_contents($metadataPath), true);
+    if (!is_array($metadata) || empty($metadata['stored_name'])) {
+        return null;
+    }
+    $storedName = basename((string)$metadata['stored_name']);
+    if (strpos($storedName, $token . '.') !== 0 || !preg_match('/\.(?:jpe?g|png|webp|heic|heif|webm|ogg|wav|mp3|m4a|mp4)$/i', $storedName)) {
+        return null;
+    }
+    $filePath = $dir . DIRECTORY_SEPARATOR . $storedName;
+    if (!is_file($filePath)) {
+        return null;
+    }
+
+    return array(
+        'token' => $token,
+        'name' => isset($metadata['name']) ? cart_text($metadata['name']) : 'foto',
+        'size' => isset($metadata['size']) ? max(0, (int)$metadata['size']) : (int)@filesize($filePath),
+        'mime' => isset($metadata['mime']) ? cart_text($metadata['mime']) : 'application/octet-stream',
+        'kind' => isset($metadata['kind']) && $metadata['kind'] === 'audio' ? 'audio' : 'photo',
+        'width' => isset($metadata['width']) ? max(0, (int)$metadata['width']) : 0,
+        'height' => isset($metadata['height']) ? max(0, (int)$metadata['height']) : 0,
+        'dpi' => isset($metadata['dpi']) ? max(0, (int)$metadata['dpi']) : 0,
+        'stored_name' => $storedName,
+        'temp_path' => $filePath,
+        'metadata_path' => $metadataPath,
+    );
+}
+
+function cart_upload_selection($selections, $name, &$invalid, $maxFiles = 5, $expectedKind = '')
+{
+    $values = isset($selections[$name]) && is_array($selections[$name]) ? $selections[$name] : array();
+    $uploads = array();
+    $seen = array();
+    $invalid = false;
+
+    foreach ($values as $value) {
+        $token = is_array($value) && isset($value['token']) ? $value['token'] : $value;
+        $info = order_upload_temp_info($token);
+        if ($info === null) {
+            $invalid = true;
+            continue;
+        }
+        if ($expectedKind !== '' && $info['kind'] !== $expectedKind) {
+            $invalid = true;
+            continue;
+        }
+        if (isset($seen[$info['token']])) {
+            continue;
+        }
+        $seen[$info['token']] = true;
+        $uploads[] = $info;
+        if ($maxFiles > 0 && count($uploads) >= $maxFiles) {
+            break;
+        }
+    }
+
+    return $uploads;
+}
+
+function order_upload_copy_to_order(&$items, $orderCode)
+{
+    $safeCode = preg_replace('/[^A-Za-z0-9_-]/', '', (string)$orderCode);
+    $relativeDir = 'order-uploads/orders/' . $safeCode;
+    $dir = mp_private_path(str_replace('/', DIRECTORY_SEPARATOR, $relativeDir));
+    $tokens = array();
+
+    if ($safeCode === '' || $dir === null) {
+        throw new RuntimeException('Não foi possível preparar os anexos da encomenda.');
+    }
+
+    $attachmentFields = array(
+        'quadro_uploads',
+        'quadro_reference_uploads',
+        'quadro_silhouette_uploads',
+        'quadro_silhouette_audio_uploads',
+        'quadro_audio_uploads',
+        'artwork_uploads',
+        'card_reference_uploads',
+        'card_audio_uploads',
+    );
+
+    foreach ($items as $item) {
+        foreach ($attachmentFields as $attachmentField) {
+            if (empty($item[$attachmentField])) {
+                continue;
+            }
+            if (!is_dir($dir) && !@mkdir($dir, 0700, true)) {
+                throw new RuntimeException('Não foi possível criar a pasta dos anexos da encomenda.');
+            }
+            break 2;
+        }
+    }
+
+    foreach ($items as $itemIndex => $item) {
+        foreach ($attachmentFields as $attachmentField) {
+            if (empty($item[$attachmentField]) || !is_array($item[$attachmentField])) {
+                continue;
+            }
+            $stored = array();
+            foreach ($item[$attachmentField] as $upload) {
+                $info = isset($upload['token']) ? order_upload_temp_info($upload['token']) : null;
+                if ($info === null) {
+                    throw new RuntimeException('Um anexo deixou de estar disponível.');
+                }
+                $extension = strtolower(pathinfo($info['stored_name'], PATHINFO_EXTENSION));
+                $filename = $info['token'] . '.' . $extension;
+                $destination = $dir . DIRECTORY_SEPARATOR . $filename;
+                if (!is_file($destination) && !@copy($info['temp_path'], $destination)) {
+                    throw new RuntimeException('Não foi possível associar um anexo à encomenda.');
+                }
+                @chmod($destination, 0600);
+                $tokens[$info['token']] = $info;
+                $stored[] = array(
+                    'id' => $info['token'],
+                    'name' => $info['name'],
+                    'size' => $info['size'],
+                    'mime' => $info['mime'],
+                    'kind' => $info['kind'],
+                    'width' => $info['width'],
+                    'height' => $info['height'],
+                    'dpi' => $info['dpi'],
+                    'relative_path' => $relativeDir . '/' . $filename,
+                );
+            }
+            $items[$itemIndex][$attachmentField] = $stored;
+        }
+    }
+
+    return array_values($tokens);
+}
+
+function order_upload_consume_temp($uploads)
+{
+    foreach ($uploads as $upload) {
+        if (!empty($upload['temp_path'])) {
+            @unlink($upload['temp_path']);
+        }
+        if (!empty($upload['metadata_path'])) {
+            @unlink($upload['metadata_path']);
+        }
+    }
+}
+
+function order_upload_cleanup_order($orderCode)
+{
+    $safeCode = preg_replace('/[^A-Za-z0-9_-]/', '', (string)$orderCode);
+    if ($safeCode === '') {
+        return;
+    }
+    $dir = mp_private_path('order-uploads' . DIRECTORY_SEPARATOR . 'orders' . DIRECTORY_SEPARATOR . $safeCode);
+    if ($dir === null || !is_dir($dir)) {
+        return;
+    }
+    $files = glob($dir . DIRECTORY_SEPARATOR . '*');
+    if (is_array($files)) {
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                @unlink($file);
+            }
+        }
+    }
+    @rmdir($dir);
+}
+
 function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
 {
     $errors = array();
@@ -464,6 +874,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $productName = isset($productConfig['name']) ? trim((string)$productConfig['name']) : '';
     $selections = isset($item['selections']) && is_array($item['selections']) ? $item['selections'] : array();
     $isCadernos = $slug === 'cadernos';
+    $isQuadros = $slug === 'quadros';
 
     if ($slug === '' || empty($productConfig)) {
         return array('errors' => array('Um dos produtos do carrinho não é válido.'));
@@ -476,8 +887,12 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $centralPackPrices = load_pricing_prices($slug);
     $packPrices = !empty($centralPackPrices) ? $centralPackPrices : product_prices($productConfig, empty($productConfig) ? $defaultPackPrices : array());
     $allowedDesigns = product_design_values($productConfig, $defaultAllowedDesigns);
-    $hasPackStep = !empty(product_step($productConfig, 'pack'));
+    $packStep = product_step($productConfig, 'pack');
+    $hasPackStep = !empty($packStep);
     $hasPrices = !empty($packPrices);
+    $isCustomArtwork = in_array($slug, array('crachas', 'imanes'), true)
+        && !empty(product_step($productConfig, 'artwork_upload'))
+        && !empty($packStep['freeQuantity']);
 
     $size = cart_string_selection($selections, 'size');
     $packQuantity = (int)cart_selection($selections, 'pack_quantity', 0);
@@ -489,6 +904,123 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $contact = cart_string_selection($selections, 'contact');
     $congregation = cart_string_selection($selections, 'congregation');
     $congregationGift = cart_bool(cart_selection($selections, 'congregation_gift', false));
+    $selectedSizeItem = $isCustomArtwork ? product_selected_size_item($productConfig, $size) : array();
+    $priceKey = $isCustomArtwork && !empty($selectedSizeItem['priceKey'])
+        ? cart_text($selectedSizeItem['priceKey'])
+        : $size;
+    $sizeLabel = $isCustomArtwork && !empty($selectedSizeItem['title'])
+        ? cart_text($selectedSizeItem['title'])
+        : $size;
+    if ($isCustomArtwork && $sizeLabel !== '' && $size !== '' && strcasecmp($sizeLabel, $size) !== 0) {
+        $sizeLabel .= ' (' . $size . ')';
+    }
+    $minimumQuantity = $isCustomArtwork && isset($selectedSizeItem['minQuantity'])
+        ? max(1, (int)$selectedSizeItem['minQuantity'])
+        : 1;
+
+    $artworkUploadKey = $slug === 'crachas' ? 'cracha_artwork_uploads' : 'iman_artwork_uploads';
+    $artworkHelpKey = $slug === 'crachas' ? 'cracha_artwork_help' : 'iman_artwork_help';
+    $cardDescriptionKey = $slug === 'crachas' ? 'cracha_card_description' : 'iman_card_description';
+    $cardReferenceKey = $slug === 'crachas' ? 'cracha_card_reference_uploads' : 'iman_card_reference_uploads';
+    $cardAudioKey = $slug === 'crachas' ? 'cracha_card_audio_uploads' : 'iman_card_audio_uploads';
+    $artworkUploadInvalid = false;
+    $cardReferenceUploadInvalid = false;
+    $cardAudioUploadInvalid = false;
+    $artworkUploads = $isCustomArtwork
+        ? cart_upload_selection($selections, $artworkUploadKey, $artworkUploadInvalid, 1, 'photo')
+        : array();
+    $artworkHelp = $isCustomArtwork ? cart_bool(cart_selection($selections, $artworkHelpKey, false)) : false;
+    $cardDescription = $isCustomArtwork ? cart_string_selection($selections, $cardDescriptionKey) : '';
+    $cardReferenceUploads = $isCustomArtwork
+        ? cart_upload_selection($selections, $cardReferenceKey, $cardReferenceUploadInvalid, 0, 'photo')
+        : array();
+    $cardAudioUploads = $isCustomArtwork
+        ? cart_upload_selection($selections, $cardAudioKey, $cardAudioUploadInvalid, 0, 'audio')
+        : array();
+
+    $quadroType = $isQuadros && !empty($designs) ? (string)$designs[0] : '';
+    $quadroTypeStep = $isQuadros ? product_step($productConfig, 'designs') : array();
+    $quadroTypeItem = $isQuadros ? product_step_item_by_value($quadroTypeStep, $quadroType) : array();
+    $quadroTypeLabel = !empty($quadroTypeItem['title']) ? cart_text($quadroTypeItem['title']) : $quadroType;
+    $quadroPaletteStepId = $isQuadros && $quadroType === 'Quadro para bebé' ? 'baby_color' : 'colors';
+    $quadroPaletteStep = $isQuadros ? product_step($productConfig, $quadroPaletteStepId) : array();
+    $quadroSuperStep = $isQuadros ? product_step($productConfig, 'super_details') : array();
+    $quadroColorCount = $isQuadros && isset($quadroPaletteStep['colorCount']) ? max(1, (int)$quadroPaletteStep['colorCount']) : 3;
+    if ($isQuadros && !empty($quadroPaletteStep['colorCountByField']['designs'][$quadroType])) {
+        $quadroColorCount = max(1, (int)$quadroPaletteStep['colorCountByField']['designs'][$quadroType]);
+    }
+    $quadroColorSelection = $isQuadros
+        ? quadro_prepare_color_selection($productConfig, $quadroPaletteStep, $selections, $quadroColorCount)
+        : array('valid' => false, 'mia' => false, 'values' => array(), 'tones' => array(), 'labels' => array(), 'palette' => '', 'palette_item' => array(), 'palette_colors' => array());
+    $quadroPalette = $quadroColorSelection['palette'];
+    $quadroPaletteItem = $quadroColorSelection['palette_item'];
+    $quadroPaletteColors = $quadroColorSelection['palette_colors'];
+    $quadroColorValues = $quadroColorSelection['values'];
+    $quadroColorTones = $quadroColorSelection['tones'];
+    $quadroColors = $quadroColorSelection['labels'];
+    $quadroMiaColors = $quadroColorSelection['mia'];
+    $quadroPhotoOrientation = $isQuadros ? cart_string_selection($selections, 'photo_orientation') : '';
+    $quadroText = $isQuadros ? cart_string_selection($selections, 'quadro_text') : '';
+    $quadroNoPhrase = $isQuadros ? cart_bool(cart_selection($selections, 'no_phrase', false)) : false;
+    $quadroNoText = $isQuadros ? cart_bool(cart_selection($selections, 'no_text', false)) : false;
+    $quadroDedication = $isQuadros ? cart_string_selection($selections, 'quadro_dedication') : '';
+    $quadroNoDedication = $isQuadros ? cart_bool(cart_selection($selections, 'no_dedication', false)) : false;
+    $quadroDescription = $isQuadros ? cart_string_selection($selections, 'quadro_description') : '';
+    $quadroSuperExample = $isQuadros ? cart_string_selection($selections, 'quadro_super_example') : '';
+    $quadroHeartFinish = $isQuadros ? cart_string_selection($selections, 'heart_finish') : '';
+    $quadroSilhouette = $isQuadros ? cart_string_selection($selections, 'silhouette') : '';
+    $quadroSilhouetteDescription = $isQuadros ? cart_string_selection($selections, 'quadro_silhouette_description') : '';
+    $quadroSilhouetteContactMe = $isQuadros ? cart_bool(cart_selection($selections, 'silhouette_contact_me', false)) : false;
+    $quadroBackgroundStep = $isQuadros ? product_step($productConfig, 'heart_background_colors') : array();
+    $quadroBackgroundSelection = $isQuadros && !empty($quadroBackgroundStep)
+        ? quadro_prepare_color_selection($productConfig, $quadroBackgroundStep, $selections, 1)
+        : array('valid' => false, 'mia' => false, 'values' => array(), 'tones' => array(), 'labels' => array(), 'palette' => '', 'palette_item' => array(), 'palette_colors' => array());
+    $quadroBackgroundPalette = $quadroBackgroundSelection['palette'];
+    $quadroBackgroundPaletteItem = $quadroBackgroundSelection['palette_item'];
+    $quadroBackgroundPaletteColors = $quadroBackgroundSelection['palette_colors'];
+    $quadroBackgroundColorValues = $quadroBackgroundSelection['values'];
+    $quadroBackgroundColorTones = $quadroBackgroundSelection['tones'];
+    $quadroBackgroundColors = $quadroBackgroundSelection['labels'];
+    $quadroBackgroundMia = $quadroBackgroundSelection['mia'];
+    $quadroFrameSize = $isQuadros ? cart_string_selection($selections, 'frame_size') : '';
+    if ($isQuadros && !empty($quadroTypeItem['frameSize'])) {
+        $quadroFrameSize = cart_text($quadroTypeItem['frameSize']);
+    }
+    $quadroFrameStep = $isQuadros ? product_step($productConfig, 'frame_size') : array();
+    $quadroFrameItem = $isQuadros ? product_step_item_by_value($quadroFrameStep, $quadroFrameSize) : array();
+    $quadroFramePriceCents = 0;
+    if (!empty($quadroFrameItem['priceByDesignCents']) && is_array($quadroFrameItem['priceByDesignCents']) && isset($quadroFrameItem['priceByDesignCents'][$quadroType])) {
+        $quadroFramePriceCents = max(0, (int)$quadroFrameItem['priceByDesignCents'][$quadroType]);
+    }
+    $quadroPackaging = $isQuadros ? cart_string_selection($selections, 'packaging') : '';
+    $quadroPackagingStep = $isQuadros ? product_step($productConfig, 'packaging') : array();
+    $quadroPackagingItem = $isQuadros ? product_step_item_by_value($quadroPackagingStep, $quadroPackaging) : array();
+    $quadroPackagingLabel = !empty($quadroPackagingItem['title']) ? cart_text($quadroPackagingItem['title']) : $quadroPackaging;
+    $quadroPackagingExtraCents = !empty($quadroPackagingItem) && isset($quadroPackagingItem['extraPriceCents'])
+        ? max(0, (int)$quadroPackagingItem['extraPriceCents'])
+        : 0;
+    $quadroBabyAnimal = $isQuadros ? cart_string_selection($selections, 'baby_animal') : '';
+    $quadroBabyGender = $isQuadros ? cart_string_selection($selections, 'baby_gender') : '';
+    $quadroBabyName = $isQuadros ? cart_string_selection($selections, 'baby_name') : '';
+    $quadroBabyBirthDate = $isQuadros ? cart_string_selection($selections, 'baby_birth_date') : '';
+    $quadroBabyBirthTime = $isQuadros ? cart_string_selection($selections, 'baby_birth_time') : '';
+    $quadroBabyBirthWeight = $isQuadros ? cart_string_selection($selections, 'baby_birth_weight') : '';
+    $quadroPhotoHelp = $isQuadros ? cart_bool(cart_selection($selections, 'photo_help', false)) : false;
+    $quadroUploadInvalid = false;
+    $quadroReferenceUploadInvalid = false;
+    $quadroSilhouetteUploadInvalid = false;
+    $quadroSilhouetteAudioUploadInvalid = false;
+    $quadroAudioUploadInvalid = false;
+    $quadroUploads = $isQuadros ? cart_upload_selection($selections, 'quadro_uploads', $quadroUploadInvalid, 1, 'photo') : array();
+    $quadroReferenceUploads = $isQuadros ? cart_upload_selection($selections, 'quadro_reference_uploads', $quadroReferenceUploadInvalid, 0, 'photo') : array();
+    $quadroSilhouetteUploads = $isQuadros ? cart_upload_selection($selections, 'quadro_silhouette_uploads', $quadroSilhouetteUploadInvalid, 0, 'photo') : array();
+    $quadroSilhouetteAudioUploads = $isQuadros ? cart_upload_selection($selections, 'quadro_silhouette_audio_uploads', $quadroSilhouetteAudioUploadInvalid, 0, 'audio') : array();
+    $quadroAudioUploads = $isQuadros ? cart_upload_selection($selections, 'quadro_audio_uploads', $quadroAudioUploadInvalid, 0, 'audio') : array();
+    $allowedQuadroSilhouettes = $isQuadros ? product_step_values($productConfig, 'silhouette') : array();
+    $quadroQuoteOnly = $isQuadros && !empty($quadroTypeItem['quoteOnly']);
+    $quadroPriceMinCents = $quadroQuoteOnly && isset($quadroTypeItem['priceMinCents']) ? max(0, (int)$quadroTypeItem['priceMinCents']) : 0;
+    $quadroPriceMaxCents = $quadroQuoteOnly && isset($quadroTypeItem['priceMaxCents']) ? max(0, (int)$quadroTypeItem['priceMaxCents']) : 0;
+    $quadroPriceNote = $quadroQuoteOnly && isset($quadroTypeItem['note']) ? cart_text($quadroTypeItem['note']) : '';
 
     $lamination = cart_string_selection($selections, 'lamination');
     $coverPersonalization = cart_string_selection($selections, 'cover_personalization');
@@ -518,40 +1050,289 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         && !empty($allowedDesigns)
         && count($uniqueDesigns) === count($allowedDesigns)
         && count(array_diff($allowedDesigns, $uniqueDesigns)) === 0;
-    $showCongregationGiftLine = !$isCadernos && !$assortedDesigns && !$allDesignsSelected;
+    $showCongregationGiftLine = !$isCadernos && !$isQuadros && !$isCustomArtwork && !$assortedDesigns && !$allDesignsSelected;
     if (!$showCongregationGiftLine) {
         $congregationGift = false;
     }
 
-    if ($isCadernos) {
+    if ($isCadernos || $isQuadros) {
         $size = isset($productConfig['defaultPriceKey']) && trim((string)$productConfig['defaultPriceKey']) !== ''
             ? (string)$productConfig['defaultPriceKey']
-            : 'Cadernos';
+            : ($isQuadros ? 'Moldura personalizada' : 'Cadernos');
     }
 
     if ($size === '' && count($packPrices) === 1) {
         $keys = array_keys($packPrices);
         $size = (string)$keys[0];
     }
+    if (!$isCustomArtwork) {
+        $priceKey = $size;
+        $sizeLabel = $size;
+    }
 
-    if ($hasPrices && !array_key_exists($size, $packPrices)) {
+    if ($isCustomArtwork && empty($selectedSizeItem)) {
+        $errors[] = 'Escolhe um tipo válido para ' . $productName . '.';
+    } elseif ($hasPrices && !array_key_exists($priceKey, $packPrices)) {
         $errors[] = 'Escolhe um tamanho válido para ' . $productName . '.';
     }
 
     if ($hasPackStep && $packQuantity <= 0) {
-        $errors[] = $isCadernos ? 'Escolhe uma opção de compra para ' . $productName . '.' : 'Escolhe um pack para ' . $productName . '.';
-    } elseif ($hasPrices && $hasPackStep && (!isset($packPrices[$size]) || !isset($packPrices[$size][$packQuantity]))) {
+        $errors[] = $isCadernos ? 'Escolhe uma opção de compra para ' . $productName . '.' : ($isCustomArtwork ? 'Indica a quantidade para ' . $productName . '.' : 'Escolhe um pack para ' . $productName . '.');
+    } elseif ($isCustomArtwork && ($packQuantity < $minimumQuantity || $packQuantity > 9999)) {
+        $errors[] = 'A quantidade de ' . $productName . ' deve ser entre ' . $minimumQuantity . ' e 9999.';
+    } elseif ($hasPrices && $hasPackStep && !$isCustomArtwork && (!isset($packPrices[$priceKey]) || !isset($packPrices[$priceKey][$packQuantity]))) {
         $errors[] = $isCadernos ? 'Escolhe uma opção de compra válida para ' . $productName . '.' : 'Escolhe um pack válido para ' . $productName . '.';
     }
 
-    if (empty($designs) && !$assortedDesigns) {
+    if (!$isCustomArtwork && empty($designs) && !$assortedDesigns) {
         $errors[] = $isCadernos ? 'Escolhe uma capa para ' . $productName . '.' : 'Escolhe pelo menos um design para ' . $productName . '.';
-    } elseif (!$assortedDesigns) {
+    } elseif (!$isCustomArtwork && !$assortedDesigns) {
         foreach ($designs as $design) {
             if (!in_array($design, $allowedDesigns, true)) {
                 $errors[] = 'Um dos designs escolhidos em ' . $productName . ' não é válido.';
                 break;
             }
+        }
+    }
+
+    if ($isCustomArtwork) {
+        if ($artworkUploadInvalid || $cardReferenceUploadInvalid || $cardAudioUploadInvalid) {
+            $errors[] = 'Um dos anexos deixou de estar disponível. Volta a enviá-lo.';
+        }
+        if (empty($artworkUploads) && !$artworkHelp) {
+            $errors[] = 'Envia a imagem ou indica que queres ajuda para a preparar.';
+        }
+        if (count($artworkUploads) > 1) {
+            $errors[] = 'Envia apenas uma imagem para personalizar este produto.';
+        }
+        $cardDescriptionLength = function_exists('mb_strlen')
+            ? mb_strlen($cardDescription, 'UTF-8')
+            : strlen($cardDescription);
+        if ($cardDescriptionLength > 2000) {
+            $errors[] = 'A descrição do cartão deve ter no máximo 2000 caracteres.';
+        }
+        $designs = array();
+        $designQuantities = array();
+        $designLabels = array();
+        $assortedDesigns = false;
+    }
+
+    if ($isQuadros) {
+        $standardQuadroTypes = array(
+            'Foto e Frase',
+            'Jardim de Flores e Frase',
+            'Coração e Frase',
+            'O Amor Nunca Acaba',
+            'Silhueta e Frase',
+        );
+        $allowedQuadroTypes = array_merge($standardQuadroTypes, array('Quadro para bebé', 'Super Personalizado'));
+
+        if (!in_array($quadroType, $allowedQuadroTypes, true) || empty($quadroTypeItem)) {
+            $errors[] = 'Escolhe um tipo de moldura válido.';
+        }
+        if (empty($quadroPackagingItem)) {
+            $errors[] = 'Escolhe a proteção ou o embrulho da moldura.';
+        }
+        if ($quadroUploadInvalid || $quadroReferenceUploadInvalid || $quadroAudioUploadInvalid || ($quadroType === 'Silhueta e Frase' && ($quadroSilhouetteUploadInvalid || $quadroSilhouetteAudioUploadInvalid))) {
+            $errors[] = 'Um dos anexos deixou de estar disponível. Volta a enviá-lo.';
+        }
+        if (in_array($quadroType, $standardQuadroTypes, true)) {
+            if (empty($quadroColorSelection['valid'])) {
+                $errors[] = 'Escolhe uma combinação ou o número indicado de cores válidas para a moldura.';
+            }
+
+            if ($quadroType === 'O Amor Nunca Acaba') {
+                $dedicationLength = function_exists('mb_strlen')
+                    ? mb_strlen($quadroDedication, 'UTF-8')
+                    : strlen($quadroDedication);
+                if ($dedicationLength > 500) {
+                    $errors[] = 'A dedicatória deve ter no máximo 500 caracteres.';
+                }
+                if ($quadroNoDedication) {
+                    $quadroDedication = '';
+                }
+                $quadroText = '';
+                $quadroNoPhrase = false;
+                $quadroNoText = false;
+            } else {
+                $quadroTextLength = function_exists('mb_strlen')
+                    ? mb_strlen($quadroText, 'UTF-8')
+                    : strlen($quadroText);
+                $skipText = $quadroType === 'Silhueta e Frase' ? $quadroNoText : $quadroNoPhrase;
+                $hasTextDetails = $quadroText !== '' || $skipText || !empty($quadroReferenceUploads) || !empty($quadroAudioUploads);
+                if (!$hasTextDetails) {
+                    $errors[] = $quadroType === 'Silhueta e Frase'
+                        ? 'Indica a personalização do texto ou escolhe a opção sem texto.'
+                        : 'Indica a personalização do texto ou escolhe a opção sem frase.';
+                } elseif ($quadroTextLength > 500) {
+                    $errors[] = 'O texto da moldura deve ter no máximo 500 caracteres.';
+                }
+                if ($skipText) {
+                    $quadroText = '';
+                }
+            }
+        }
+
+        if ($quadroType === 'Coração e Frase') {
+            $allowedHeartFinishes = product_step_values($productConfig, 'heart_finish');
+            if (!in_array($quadroHeartFinish, $allowedHeartFinishes, true)) {
+                $errors[] = 'Escolhe flores 3D ou glitter para o coração.';
+            }
+            if (empty($quadroBackgroundSelection['valid'])) {
+                $errors[] = 'Escolhe uma cor válida para o fundo do coração.';
+            }
+        } else {
+            $quadroHeartFinish = '';
+            $quadroBackgroundPalette = '';
+            $quadroBackgroundPaletteItem = array();
+            $quadroBackgroundPaletteColors = array();
+            $quadroBackgroundColorValues = array();
+            $quadroBackgroundColorTones = array();
+            $quadroBackgroundColors = array();
+            $quadroBackgroundMia = false;
+        }
+
+        if ($quadroType === 'Foto e Frase') {
+            if ($quadroPhotoOrientation !== 'Horizontal' && $quadroPhotoOrientation !== 'Vertical') {
+                $errors[] = 'Escolhe a orientação da foto da moldura.';
+            }
+            if (count($quadroUploads) > 1) {
+                $errors[] = 'Escolhe apenas uma foto para esta moldura.';
+            } elseif (empty($quadroUploads) && !$quadroPhotoHelp) {
+                $errors[] = 'Escolhe uma foto ou indica que precisas de ajuda para a enviar.';
+            }
+        } elseif ($quadroType === 'Super Personalizado') {
+            $quadroPalette = '';
+            $quadroPaletteItem = array();
+            $quadroPaletteColors = array();
+            $quadroColorValues = array();
+            $quadroColorTones = array();
+            $quadroColors = array();
+            $quadroMiaColors = false;
+            $quadroPhotoOrientation = '';
+            $quadroPhotoHelp = false;
+            $quadroSilhouette = '';
+            $quadroText = '';
+            $quadroNoPhrase = false;
+            $quadroNoText = false;
+            $quadroDedication = '';
+            $quadroNoDedication = false;
+            $quadroUploads = array();
+            $quadroFrameSize = '';
+            $quadroFrameItem = array();
+            $quadroFramePriceCents = 0;
+
+            $quadroDescriptionLength = function_exists('mb_strlen')
+                ? mb_strlen($quadroDescription, 'UTF-8')
+                : strlen($quadroDescription);
+            $allowedSuperExamples = array();
+            if (!empty($quadroSuperStep['exampleImages']) && is_array($quadroSuperStep['exampleImages'])) {
+                foreach ($quadroSuperStep['exampleImages'] as $exampleItem) {
+                    if (is_array($exampleItem) && !empty($exampleItem['value'])) {
+                        $exampleValue = trim((string)$exampleItem['value']);
+                        $allowedSuperExamples[] = $exampleValue;
+                        if ($quadroSuperExample === $exampleValue && !empty($exampleItem['frameSize'])) {
+                            $quadroFrameSize = cart_text($exampleItem['frameSize']);
+                        }
+                    }
+                }
+            }
+            if ($quadroSuperExample !== '' && !in_array($quadroSuperExample, $allowedSuperExamples, true)) {
+                $errors[] = 'A sugestão escolhida para a moldura não é válida.';
+            }
+            if ($quadroDescription === '' && $quadroSuperExample === '' && empty($quadroReferenceUploads) && empty($quadroAudioUploads)) {
+                $errors[] = 'Escolhe uma sugestão ou descreve a moldura que pretendes.';
+            } elseif ($quadroDescriptionLength > 1500) {
+                $errors[] = 'A descrição deve ter no máximo 1500 caracteres.';
+            }
+        } else {
+            $quadroPhotoOrientation = '';
+            $quadroPhotoHelp = false;
+            $quadroUploads = array();
+        }
+
+        if ($quadroType === 'Quadro para bebé') {
+            $allowedBabyAnimals = product_step_values($productConfig, 'baby_animal');
+            $allowedBabyGenders = product_step_values($productConfig, 'baby_gender');
+            if (!in_array($quadroBabyAnimal, $allowedBabyAnimals, true)) {
+                $errors[] = 'Escolhe um animal válido para a moldura de bebé.';
+            }
+            if (!in_array($quadroBabyGender, $allowedBabyGenders, true)) {
+                $errors[] = 'Escolhe se a moldura é para menino ou menina.';
+            }
+
+            $babyFields = array(
+                array($quadroBabyName, 100, 'Indica o nome da criança.', 'O nome da criança deve ter no máximo 100 caracteres.'),
+                array($quadroBabyBirthDate, 60, 'Indica a data de nascimento.', 'A data de nascimento deve ter no máximo 60 caracteres.'),
+                array($quadroBabyBirthTime, 30, 'Indica a hora de nascimento.', 'A hora de nascimento deve ter no máximo 30 caracteres.'),
+                array($quadroBabyBirthWeight, 30, 'Indica o peso à nascença.', 'O peso à nascença deve ter no máximo 30 caracteres.'),
+            );
+            foreach ($babyFields as $babyField) {
+                $babyLength = function_exists('mb_strlen') ? mb_strlen($babyField[0], 'UTF-8') : strlen($babyField[0]);
+                if ($babyField[0] !== '' && $babyLength > $babyField[1]) {
+                    $errors[] = $babyField[3];
+                }
+            }
+
+            if (empty($quadroColorSelection['valid'])) {
+                $errors[] = 'Escolhe uma cor válida para a moldura de bebé ou deixa a escolha com a Mia.';
+            }
+
+            $quadroText = '';
+            $quadroNoPhrase = false;
+            $quadroNoText = false;
+            $quadroDedication = '';
+            $quadroNoDedication = false;
+            $quadroSilhouette = '';
+            $quadroDescription = '';
+            $quadroSuperExample = '';
+        } else {
+            $quadroBabyAnimal = '';
+            $quadroBabyGender = '';
+            $quadroBabyName = '';
+            $quadroBabyBirthDate = '';
+            $quadroBabyBirthTime = '';
+            $quadroBabyBirthWeight = '';
+        }
+
+        if ($quadroType === 'Silhueta e Frase') {
+            if (!in_array($quadroSilhouette, $allowedQuadroSilhouettes, true)) {
+                $errors[] = 'Escolhe uma silhueta válida para a moldura.';
+            }
+            $silhouetteDescriptionLength = function_exists('mb_strlen')
+                ? mb_strlen($quadroSilhouetteDescription, 'UTF-8')
+                : strlen($quadroSilhouetteDescription);
+            if ($silhouetteDescriptionLength > 1500) {
+                $errors[] = 'A descrição da silhueta deve ter no máximo 1500 caracteres.';
+            }
+            if ($quadroSilhouette === 'Outra silhueta') {
+                $hasSilhouetteDetails = $quadroSilhouetteDescription !== ''
+                    || $quadroSilhouetteContactMe
+                    || !empty($quadroSilhouetteUploads)
+                    || !empty($quadroSilhouetteAudioUploads);
+                if (!$hasSilhouetteDetails) {
+                    $errors[] = 'Descreve a silhueta, envia uma foto ou um áudio, ou pede que entremos em contacto.';
+                }
+            } else {
+                $quadroSilhouetteDescription = '';
+                $quadroSilhouetteContactMe = false;
+                $quadroSilhouetteUploads = array();
+                $quadroSilhouetteAudioUploads = array();
+            }
+        } else {
+            $quadroSilhouette = '';
+            $quadroSilhouetteDescription = '';
+            $quadroSilhouetteContactMe = false;
+            $quadroSilhouetteUploads = array();
+            $quadroSilhouetteAudioUploads = array();
+        }
+
+        if ($quadroType !== 'O Amor Nunca Acaba') {
+            $quadroDedication = '';
+            $quadroNoDedication = false;
+        }
+        if ($quadroType !== 'Silhueta e Frase') {
+            $quadroNoText = false;
         }
     }
 
@@ -633,16 +1414,40 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
 
     $unitLabel = isset($productConfig['unitLabel']) && trim((string)$productConfig['unitLabel']) !== '' ? trim((string)$productConfig['unitLabel']) : (($slug === 'crachas' || $slug === 'pins') ? 'crachás' : 'unidades');
     $unitShort = isset($productConfig['unitShort']) && trim((string)$productConfig['unitShort']) !== '' ? trim((string)$productConfig['unitShort']) : (($slug === 'crachas' || $slug === 'pins') ? 'crachá' : 'unid.');
-    $basePriceCents = ($hasPrices && isset($packPrices[$size][$packQuantity])) ? $packPrices[$size][$packQuantity] : 0;
+    $basePriceCents = $isCustomArtwork
+        ? (isset($packPrices[$priceKey]) ? product_tier_price_cents($packPrices[$priceKey], $packQuantity) : 0)
+        : (($hasPrices && isset($packPrices[$priceKey][$packQuantity])) ? $packPrices[$priceKey][$packQuantity] : 0);
     if ($isCadernos && !empty($purchaseItem) && isset($purchaseItem['priceCents'])) {
         $basePriceCents = (int)$purchaseItem['priceCents'];
+    } elseif ($isQuadros) {
+        $quadroFixedPriceCents = isset($quadroTypeItem['priceCents'])
+            ? max(0, (int)$quadroTypeItem['priceCents'])
+            : 0;
+        $basePriceCents = $quadroQuoteOnly
+            ? 0
+            : ($quadroFixedPriceCents > 0 ? $quadroFixedPriceCents : $quadroFramePriceCents);
     }
     $personalizationExtraCents = $isCadernos && $coverPersonalization === 'yes'
         ? (isset($personalizationStep['extraPriceCents']) ? (int)$personalizationStep['extraPriceCents'] : 0)
         : 0;
-    $unitPriceCents = $basePriceCents + $personalizationExtraCents;
+    $packagingExtraCents = $isQuadros ? $quadroPackagingExtraCents : 0;
+    $unitPriceCents = $isQuadros && $quadroQuoteOnly
+        ? 0
+        : $basePriceCents + $personalizationExtraCents + $packagingExtraCents;
     $priceCents = $isCadernos ? $unitPriceCents * $cadernoOrderQuantity : $unitPriceCents;
-    $priceLine = $priceCents ? format_euros($priceCents) : 'Não calculado';
+    $priceRangeLine = '';
+    if ($quadroQuoteOnly) {
+        if ($quadroPriceNote !== '') {
+            $priceRangeLine = $quadroPriceNote;
+        } elseif ($quadroPriceMaxCents > $quadroPriceMinCents) {
+            $priceRangeLine = 'Entre ' . format_euros($quadroPriceMinCents) . ' e ' . format_euros($quadroPriceMaxCents);
+        } else {
+            $priceRangeLine = 'A partir de ' . format_euros($quadroPriceMinCents);
+        }
+    }
+    $priceLine = $quadroQuoteOnly
+        ? $priceRangeLine . ' (a confirmar)'
+        : ($priceCents ? format_euros($priceCents) : 'Não calculado');
     $unitPriceLine = (!$isCadernos && $priceCents) ? format_unit_price($priceCents, $packQuantity, $unitShort) : '';
 
     if ($isCadernos && !empty($laminationItem)) {
@@ -698,14 +1503,69 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $personalizationExtraLine = $personalizationExtraCents
         ? ($isCadernos && $cadernoOrderQuantity > 1 ? format_euros($personalizationExtraCents) . ' x ' . $cadernoOrderQuantity . ' = ' . format_euros($personalizationExtraCents * $cadernoOrderQuantity) : format_euros($personalizationExtraCents))
         : '';
+    $packagingExtraLine = $packagingExtraCents ? format_euros($packagingExtraCents) : 'Grátis';
 
     return array(
         'errors' => array(),
         'product_slug' => $slug,
         'product_name' => $productName,
         'is_cadernos' => $isCadernos,
+        'is_quadros' => $isQuadros,
+        'is_custom_artwork' => $isCustomArtwork,
+        'quadro_type' => $quadroType,
+        'quadro_type_label' => $quadroTypeLabel,
+        'quadro_palette' => $quadroPalette,
+        'quadro_palette_label' => !empty($quadroPaletteItem['title']) ? (string)$quadroPaletteItem['title'] : $quadroPalette,
+        'quadro_palette_colors' => $quadroPaletteColors,
+        'quadro_color_values' => $quadroColorValues,
+        'quadro_color_tones' => $quadroColorTones,
+        'quadro_colors' => $quadroColors,
+        'quadro_mia_colors' => $quadroMiaColors,
+        'quadro_background_palette' => $quadroBackgroundPalette,
+        'quadro_background_palette_label' => !empty($quadroBackgroundPaletteItem['title']) ? (string)$quadroBackgroundPaletteItem['title'] : $quadroBackgroundPalette,
+        'quadro_background_palette_colors' => $quadroBackgroundPaletteColors,
+        'quadro_background_color_values' => $quadroBackgroundColorValues,
+        'quadro_background_color_tones' => $quadroBackgroundColorTones,
+        'quadro_background_colors' => $quadroBackgroundColors,
+        'quadro_background_mia' => $quadroBackgroundMia,
+        'quadro_photo_orientation' => $quadroPhotoOrientation,
+        'quadro_silhouette' => $quadroSilhouette,
+        'quadro_silhouette_description' => $quadroSilhouetteDescription,
+        'quadro_silhouette_contact_me' => $quadroSilhouetteContactMe,
+        'quadro_text' => $quadroText,
+        'quadro_no_phrase' => $quadroNoPhrase,
+        'quadro_no_text' => $quadroNoText,
+        'quadro_dedication' => $quadroDedication,
+        'quadro_no_dedication' => $quadroNoDedication,
+        'quadro_description' => $quadroDescription,
+        'quadro_super_example' => $quadroSuperExample,
+        'quadro_heart_finish' => $quadroHeartFinish,
+        'quadro_frame_size' => $quadroFrameSize,
+        'quadro_packaging' => $quadroPackaging,
+        'quadro_packaging_label' => $quadroPackagingLabel,
+        'quadro_packaging_extra_cents' => $packagingExtraCents,
+        'quadro_packaging_extra_line' => $packagingExtraLine,
+        'quadro_baby_animal' => $quadroBabyAnimal,
+        'quadro_baby_gender' => $quadroBabyGender,
+        'quadro_baby_name' => $quadroBabyName,
+        'quadro_baby_birth_date' => $quadroBabyBirthDate,
+        'quadro_baby_birth_time' => $quadroBabyBirthTime,
+        'quadro_baby_birth_weight' => $quadroBabyBirthWeight,
+        'quadro_photo_help' => $quadroPhotoHelp,
+        'quadro_uploads' => $quadroUploads,
+        'quadro_reference_uploads' => $quadroReferenceUploads,
+        'quadro_silhouette_uploads' => $quadroSilhouetteUploads,
+        'quadro_silhouette_audio_uploads' => $quadroSilhouetteAudioUploads,
+        'quadro_audio_uploads' => $quadroAudioUploads,
         'size' => $size,
+        'size_label' => $sizeLabel,
+        'price_key' => $priceKey,
         'pack_quantity' => $packQuantity,
+        'artwork_uploads' => $artworkUploads,
+        'artwork_help' => $artworkHelp,
+        'card_description' => $cardDescription,
+        'card_reference_uploads' => $cardReferenceUploads,
+        'card_audio_uploads' => $cardAudioUploads,
         'unit_label' => $unitLabel,
         'unit_short' => $unitShort,
         'designs' => $designs,
@@ -738,6 +1598,10 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         'unit_price_cents' => $unitPriceCents,
         'price_cents' => $priceCents,
         'price_line' => $priceLine,
+        'price_quote_only' => $quadroQuoteOnly,
+        'price_min_cents' => $quadroPriceMinCents,
+        'price_max_cents' => $quadroPriceMaxCents,
+        'price_range_line' => $priceRangeLine,
         'unit_price_line' => $unitPriceLine,
         'pack_promo_note' => $packPromoNote,
         'raw_selections' => $selections,
@@ -747,6 +1611,144 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
 function cart_item_owner_lines($line)
 {
     $rows = array();
+
+    if (!empty($line['is_custom_artwork'])) {
+        $rows[] = 'Produto: ' . $line['product_name'];
+        if (!empty($line['artwork_uploads'])) {
+            $names = array();
+            foreach ($line['artwork_uploads'] as $upload) {
+                $names[] = isset($upload['name']) ? $upload['name'] : 'imagem';
+            }
+            $rows[] = 'Imagem para personalizar: ' . implode(', ', $names) . ' (disponível no painel de encomendas)';
+        } else {
+            $rows[] = 'Imagem para personalizar: cliente pediu ajuda';
+        }
+        $rows[] = 'Tipo/tamanho: ' . $line['size_label'];
+        $rows[] = 'Quantidade: ' . $line['pack_quantity'] . ' ' . $line['unit_label'];
+        $rows[] = 'Preço do produto: ' . $line['price_line'] . ($line['unit_price_line'] !== '' ? ' (' . $line['unit_price_line'] . ')' : '');
+        $rows[] = 'Personalização do cartão: ' . ($line['card_description'] !== '' ? $line['card_description'] : 'Sem indicações em texto');
+        if (!empty($line['card_reference_uploads'])) {
+            $names = array();
+            foreach ($line['card_reference_uploads'] as $upload) {
+                $names[] = isset($upload['name']) ? $upload['name'] : 'foto';
+            }
+            $rows[] = 'Referências para o cartão: ' . implode(', ', $names) . ' (disponíveis no painel de encomendas)';
+        }
+        if (!empty($line['card_audio_uploads'])) {
+            $rows[] = 'Áudios sobre o cartão: ' . count($line['card_audio_uploads']) . ' (disponíveis no painel de encomendas)';
+        }
+        return $rows;
+    }
+
+    if (!empty($line['is_quadros'])) {
+        $rows[] = 'Produto: ' . $line['product_name'];
+        $rows[] = 'Tipo: ' . $line['quadro_type_label'];
+        if ($line['quadro_type'] === 'Foto e Frase') {
+            $rows[] = 'Orientação da foto: ' . $line['quadro_photo_orientation'];
+            if (!empty($line['quadro_uploads'])) {
+                $names = array();
+                foreach ($line['quadro_uploads'] as $upload) {
+                    $names[] = isset($upload['name']) ? $upload['name'] : 'foto';
+                }
+                $rows[] = 'Foto recebida: ' . implode(', ', $names) . ' (disponível no painel de encomendas)';
+            } else {
+                $rows[] = 'Foto: o cliente pediu ajuda para a enviar';
+            }
+        }
+        if ($line['quadro_type'] === 'Silhueta e Frase') {
+            $rows[] = 'Silhueta: ' . $line['quadro_silhouette'];
+        }
+        if ($line['quadro_type'] === 'Quadro para bebé') {
+            $rows[] = 'Animal: ' . $line['quadro_baby_animal'];
+            $rows[] = 'Menino ou menina: ' . $line['quadro_baby_gender'];
+            if ($line['quadro_baby_name'] !== '') $rows[] = 'Nome da criança: ' . $line['quadro_baby_name'];
+            if ($line['quadro_baby_birth_date'] !== '') $rows[] = 'Data de nascimento: ' . $line['quadro_baby_birth_date'];
+            if ($line['quadro_baby_birth_time'] !== '') $rows[] = 'Hora de nascimento: ' . $line['quadro_baby_birth_time'];
+            if ($line['quadro_baby_birth_weight'] !== '') $rows[] = 'Peso à nascença: ' . $line['quadro_baby_birth_weight'];
+        }
+        if (!empty($line['quadro_heart_finish'])) {
+            $rows[] = 'Acabamento do coração: ' . $line['quadro_heart_finish'];
+        }
+        if (!empty($line['quadro_palette_label'])) {
+            $rows[] = 'Combinação de cores: ' . $line['quadro_palette_label'];
+        }
+        // As cores vão sempre, mesmo quando há uma combinação com nome: o nome
+        // da sugestão não diz quais são as cores nem em que tom ficaram.
+        if (!empty($line['quadro_mia_colors'])) {
+            $rows[] = 'Cores: a Mia escolhe';
+        } elseif (($line['quadro_type'] === 'Coração e Frase' || $line['quadro_type'] === 'O Amor Nunca Acaba') && count($line['quadro_colors']) === 2) {
+            $rows[] = 'Cor inicial do degradê: ' . $line['quadro_colors'][0];
+            $rows[] = 'Cor final do degradê: ' . $line['quadro_colors'][1];
+        } elseif (!empty($line['quadro_colors'])) {
+            $rows[] = 'Cores escolhidas: ' . implode(', ', $line['quadro_colors']);
+        }
+        if (!empty($line['quadro_background_palette_label'])) {
+            $rows[] = 'Combinação do fundo: ' . $line['quadro_background_palette_label'];
+        }
+        if (!empty($line['quadro_background_mia'])) {
+            $rows[] = 'Cor do fundo: a Mia escolhe';
+        } elseif (!empty($line['quadro_background_colors'])) {
+            $rows[] = 'Cor do fundo: ' . implode(', ', $line['quadro_background_colors']);
+        }
+        if ($line['quadro_type'] === 'Super Personalizado') {
+            if (!empty($line['quadro_super_example'])) {
+                $rows[] = 'Sugestão escolhida: ' . $line['quadro_super_example'];
+            }
+            if ($line['quadro_description'] !== '') {
+                $rows[] = 'Descrição: ' . $line['quadro_description'];
+            }
+        } elseif ($line['quadro_type'] === 'O Amor Nunca Acaba') {
+            $rows[] = !empty($line['quadro_no_dedication'])
+                ? 'Dedicatória: sem dedicatória'
+                : 'Dedicatória: ' . ($line['quadro_dedication'] !== '' ? $line['quadro_dedication'] : 'Em branco');
+        } elseif ($line['quadro_type'] === 'Silhueta e Frase') {
+            if (!empty($line['quadro_no_text'])) {
+                $rows[] = 'Texto em vinil: sem texto';
+            } elseif ($line['quadro_text'] !== '') {
+                $rows[] = 'Texto em vinil: ' . $line['quadro_text'];
+            }
+        } elseif ($line['quadro_type'] !== 'Quadro para bebé') {
+            if (!empty($line['quadro_no_phrase'])) {
+                $rows[] = 'Frase em Vinil: Sem frase';
+            } elseif ($line['quadro_text'] !== '') {
+                $rows[] = 'Frase em Vinil: ' . $line['quadro_text'];
+            }
+        }
+        if ($line['quadro_frame_size'] !== '') {
+            $rows[] = 'Tamanho da moldura: ' . $line['quadro_frame_size'];
+        }
+        if ($line['quadro_packaging_label'] !== '') {
+            $rows[] = 'Proteção e embrulho: ' . $line['quadro_packaging_label'] . ' (' . $line['quadro_packaging_extra_line'] . ')';
+        }
+        if (!empty($line['quadro_reference_uploads'])) {
+            $names = array();
+            foreach ($line['quadro_reference_uploads'] as $upload) {
+                $names[] = isset($upload['name']) ? $upload['name'] : 'foto';
+            }
+            $rows[] = 'Fotos de referência: ' . implode(', ', $names) . ' (disponíveis no painel de encomendas)';
+        }
+        if (!empty($line['quadro_silhouette_uploads'])) {
+            $names = array();
+            foreach ($line['quadro_silhouette_uploads'] as $upload) {
+                $names[] = isset($upload['name']) ? $upload['name'] : 'silhueta';
+            }
+            $rows[] = 'Silhueta enviada: ' . implode(', ', $names) . ' (disponível no painel de encomendas)';
+        }
+        if (!empty($line['quadro_silhouette_description'])) {
+            $rows[] = 'Descrição da silhueta: ' . $line['quadro_silhouette_description'];
+        }
+        if (!empty($line['quadro_silhouette_contact_me'])) {
+            $rows[] = 'Silhueta: prefere que entrem em contacto para explicar';
+        }
+        if (!empty($line['quadro_silhouette_audio_uploads'])) {
+            $rows[] = 'Áudios sobre a silhueta: ' . count($line['quadro_silhouette_audio_uploads']) . ' (disponíveis no painel de encomendas)';
+        }
+        if (!empty($line['quadro_audio_uploads'])) {
+            $rows[] = 'Áudios recebidos: ' . count($line['quadro_audio_uploads']) . ' (disponíveis no painel de encomendas)';
+        }
+        $rows[] = 'Preço do produto: ' . $line['price_line'];
+        return $rows;
+    }
 
     if (!empty($line['is_cadernos'])) {
         $rows[] = 'Produto: ' . $line['product_name'];
@@ -790,6 +1792,120 @@ function cart_item_owner_lines($line)
 function cart_item_customer_lines($line)
 {
     $rows = array();
+
+    if (!empty($line['is_custom_artwork'])) {
+        $rows[] = 'Produto: ' . $line['product_name'];
+        $rows[] = !empty($line['artwork_uploads'])
+            ? 'Imagem para personalizar: recebida com o pedido'
+            : 'Imagem para personalizar: pediste ajuda';
+        $rows[] = 'Tipo/tamanho: ' . $line['size_label'];
+        $rows[] = 'Quantidade: ' . $line['pack_quantity'] . ' ' . $line['unit_label'];
+        $rows[] = 'Preço do produto: ' . $line['price_line'] . ($line['unit_price_line'] !== '' ? ', ou seja: ' . $line['unit_price_line'] : '');
+        $rows[] = 'Personalização do cartão: ' . ($line['card_description'] !== '' ? $line['card_description'] : 'Sem indicações em texto');
+        if (!empty($line['card_reference_uploads'])) {
+            $rows[] = 'Referências para o cartão: ' . count($line['card_reference_uploads']) . ' recebida(s)';
+        }
+        if (!empty($line['card_audio_uploads'])) {
+            $rows[] = 'Áudios sobre o cartão: ' . count($line['card_audio_uploads']) . ' recebido(s)';
+        }
+        return $rows;
+    }
+
+    if (!empty($line['is_quadros'])) {
+        $rows[] = 'Produto: ' . $line['product_name'];
+        $rows[] = 'Tipo: ' . $line['quadro_type_label'];
+        if ($line['quadro_type'] === 'Foto e Frase') {
+            $rows[] = 'Orientação da foto: ' . $line['quadro_photo_orientation'];
+            $rows[] = !empty($line['quadro_uploads'])
+                ? 'Foto: recebida com o pedido'
+                : 'Foto: pediste ajuda para a enviar';
+        }
+        if ($line['quadro_type'] === 'Silhueta e Frase') {
+            $rows[] = 'Silhueta: ' . $line['quadro_silhouette'];
+        }
+        if ($line['quadro_type'] === 'Quadro para bebé') {
+            $rows[] = 'Animal: ' . $line['quadro_baby_animal'];
+            $rows[] = 'Menino ou menina: ' . $line['quadro_baby_gender'];
+            if ($line['quadro_baby_name'] !== '') $rows[] = 'Nome da criança: ' . $line['quadro_baby_name'];
+            if ($line['quadro_baby_birth_date'] !== '') $rows[] = 'Data de nascimento: ' . $line['quadro_baby_birth_date'];
+            if ($line['quadro_baby_birth_time'] !== '') $rows[] = 'Hora de nascimento: ' . $line['quadro_baby_birth_time'];
+            if ($line['quadro_baby_birth_weight'] !== '') $rows[] = 'Peso à nascença: ' . $line['quadro_baby_birth_weight'];
+        }
+        if (!empty($line['quadro_heart_finish'])) {
+            $rows[] = 'Acabamento do coração: ' . $line['quadro_heart_finish'];
+        }
+        if (!empty($line['quadro_palette_label'])) {
+            $rows[] = 'Combinação de cores: ' . $line['quadro_palette_label'];
+        }
+        // As cores vão sempre, mesmo quando há uma combinação com nome: o nome
+        // da sugestão não diz quais são as cores nem em que tom ficaram.
+        if (!empty($line['quadro_mia_colors'])) {
+            $rows[] = 'Cores: a Mia escolhe';
+        } elseif (($line['quadro_type'] === 'Coração e Frase' || $line['quadro_type'] === 'O Amor Nunca Acaba') && count($line['quadro_colors']) === 2) {
+            $rows[] = 'Cor inicial do degradê: ' . $line['quadro_colors'][0];
+            $rows[] = 'Cor final do degradê: ' . $line['quadro_colors'][1];
+        } elseif (!empty($line['quadro_colors'])) {
+            $rows[] = 'Cores escolhidas: ' . implode(', ', $line['quadro_colors']);
+        }
+        if (!empty($line['quadro_background_palette_label'])) {
+            $rows[] = 'Combinação do fundo: ' . $line['quadro_background_palette_label'];
+        }
+        if (!empty($line['quadro_background_mia'])) {
+            $rows[] = 'Cor do fundo: a Mia escolhe';
+        } elseif (!empty($line['quadro_background_colors'])) {
+            $rows[] = 'Cor do fundo: ' . implode(', ', $line['quadro_background_colors']);
+        }
+        if ($line['quadro_type'] === 'Super Personalizado') {
+            if (!empty($line['quadro_super_example'])) {
+                $rows[] = 'Sugestão escolhida: ' . $line['quadro_super_example'];
+            }
+            if ($line['quadro_description'] !== '') {
+                $rows[] = 'Descrição: ' . $line['quadro_description'];
+            }
+        } elseif ($line['quadro_type'] === 'O Amor Nunca Acaba') {
+            $rows[] = !empty($line['quadro_no_dedication'])
+                ? 'Dedicatória: sem dedicatória'
+                : 'Dedicatória: ' . ($line['quadro_dedication'] !== '' ? $line['quadro_dedication'] : 'Em branco');
+        } elseif ($line['quadro_type'] === 'Silhueta e Frase') {
+            if (!empty($line['quadro_no_text'])) {
+                $rows[] = 'Texto em vinil: sem texto';
+            } elseif ($line['quadro_text'] !== '') {
+                $rows[] = 'Texto em vinil: ' . $line['quadro_text'];
+            }
+        } elseif ($line['quadro_type'] !== 'Quadro para bebé') {
+            if (!empty($line['quadro_no_phrase'])) {
+                $rows[] = 'Frase em Vinil: Sem frase';
+            } elseif ($line['quadro_text'] !== '') {
+                $rows[] = 'Frase em Vinil: ' . $line['quadro_text'];
+            }
+        }
+        if ($line['quadro_frame_size'] !== '') {
+            $rows[] = 'Tamanho da moldura: ' . $line['quadro_frame_size'];
+        }
+        if ($line['quadro_packaging_label'] !== '') {
+            $rows[] = 'Proteção e embrulho: ' . $line['quadro_packaging_label'] . ' (' . $line['quadro_packaging_extra_line'] . ')';
+        }
+        if (!empty($line['quadro_reference_uploads'])) {
+            $rows[] = 'Fotos de referência: ' . count($line['quadro_reference_uploads']) . ' recebida(s)';
+        }
+        if (!empty($line['quadro_silhouette_uploads'])) {
+            $rows[] = 'Silhueta: recebida com o pedido';
+        }
+        if (!empty($line['quadro_silhouette_description'])) {
+            $rows[] = 'Descrição da silhueta: ' . $line['quadro_silhouette_description'];
+        }
+        if (!empty($line['quadro_silhouette_contact_me'])) {
+            $rows[] = 'Silhueta: pediste que entremos em contacto para explicares';
+        }
+        if (!empty($line['quadro_silhouette_audio_uploads'])) {
+            $rows[] = 'Áudios sobre a silhueta: ' . count($line['quadro_silhouette_audio_uploads']) . ' recebido(s)';
+        }
+        if (!empty($line['quadro_audio_uploads'])) {
+            $rows[] = 'Áudios: ' . count($line['quadro_audio_uploads']) . ' recebido(s)';
+        }
+        $rows[] = 'Preço do produto: ' . $line['price_line'];
+        return $rows;
+    }
 
     if (!empty($line['is_cadernos'])) {
         $rows[] = 'Produto: ' . $line['product_name'];
@@ -1007,7 +2123,7 @@ function process_post_success_copy($from)
 
 function load_home_config()
 {
-    $path = __DIR__ . '/content/home.json';
+    $path = __DIR__ . '/content/order-products.json';
 
     if (!is_file($path)) {
         return array();
@@ -1019,7 +2135,7 @@ function load_home_config()
 }
 
 // RESULT_CATEGORIES_CAROUSEL_V1: a página após envio usa os mesmos
-// carrosséis dos cartões da homepage. O home.json não guarda
+// carrosséis dos cartões de produtos. O order-products.json não guarda
 // carouselImages; o frontend carrega-as a partir do primeiro passo de cada
 // produto. Aqui fazemos o mesmo em PHP para que a página de sucesso não
 // volte aos cartões antigos.
@@ -1185,12 +2301,12 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="styles.css?v=20260524021000">
+  <link rel="stylesheet" href="styles.css?v=2026072604">
 </head>
 <body class="result-body">
   <main class="result-card <?php echo h($kind); ?>">
     <a class="brand" href="index.html" aria-label="Mia & Paper">
-      <span class="brand-mark"><img src="content/brand/logo.jpg" alt=""></span>
+      <span class="brand-mark"><img src="content/brand/logo.webp" alt=""></span>
       <span>Mia &amp; Paper</span>
     </a>
 
@@ -1403,6 +2519,27 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         );
     }
 
+    $orderCode = '';
+    $orderUploadTemps = array();
+    try {
+        $orderCode = mp_db_generate_order_code();
+        $orderUploadTemps = order_upload_copy_to_order($preparedItems, $orderCode);
+    } catch (Exception $e) {
+        if ($orderCode !== '') {
+            order_upload_cleanup_order($orderCode);
+        }
+        @error_log('[miaandpaper] preparação dos anexos cart falhou: ' . $e->getMessage());
+        render_page(
+            'Não foi possível preparar as fotos.',
+            'Tenta enviar novamente dentro de alguns minutos. As fotos escolhidas não foram associadas a nenhuma encomenda.',
+            'error',
+            array(),
+            '',
+            '',
+            true
+        );
+    }
+
     $delivery = isset($allowedDeliveryOptions[$deliveryOption]) ? $allowedDeliveryOptions[$deliveryOption] : null;
     $deliveryLine = $delivery ? $delivery['label'] : 'Não indicado';
     $deliveryFeeCents = $delivery ? (int)$delivery['fee_cents'] : 0;
@@ -1411,8 +2548,19 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     foreach ($preparedItems as $line) {
         $subtotalCents += (int)$line['price_cents'];
     }
+    $hasQuoteOnly = false;
+    foreach ($preparedItems as $line) {
+        if (!empty($line['price_quote_only'])) {
+            $hasQuoteOnly = true;
+            break;
+        }
+    }
     $totalEstimateCents = $subtotalCents + $deliveryFeeCents;
     $totalEstimateLabel = $deliveryFeeCents > 0 ? 'Total estimado' : 'Total';
+    $productsTotalLine = $hasQuoteOnly
+        ? ($subtotalCents > 0 ? format_euros($subtotalCents) . ' + preço a confirmar' : 'A confirmar pela Mia')
+        : format_euros($subtotalCents);
+    $totalEstimateLine = $hasQuoteOnly ? 'A confirmar pela Mia' : format_euros($totalEstimateCents);
 
     $customerContactTrim = trim($customerContact);
     $contactEmail = filter_var($customerContactTrim, FILTER_VALIDATE_EMAIL)
@@ -1426,10 +2574,10 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         '',
         'Resumo do pedido',
         'Produtos: ' . count($preparedItems),
-        'Total dos produtos: ' . format_euros($subtotalCents),
+        'Total dos produtos: ' . $productsTotalLine,
         'Entrega: ' . $deliveryLine,
         'Portes: ' . $deliveryFeeLine,
-        $totalEstimateLabel . ': ' . format_euros($totalEstimateCents),
+        $totalEstimateLabel . ': ' . $totalEstimateLine,
         '',
         'Dados de contacto:',
         'Nome: ' . $customerName,
@@ -1447,10 +2595,10 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         '',
         'Resumo do pedido',
         'Produtos: ' . count($preparedItems),
-        'Total dos produtos: ' . format_euros($subtotalCents),
+        'Total dos produtos: ' . $productsTotalLine,
         'Entrega: ' . $deliveryLine,
         'Portes: ' . $deliveryFeeLine,
-        $totalEstimateLabel . ': ' . format_euros($totalEstimateCents),
+        $totalEstimateLabel . ': ' . $totalEstimateLine,
         '',
         'Produtos:',
     );
@@ -1523,13 +2671,13 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         'subtotal_cents' => $subtotalCents,
         'shipping_estimate_cents' => $deliveryFeeCents,
         'total_estimate_cents' => $totalEstimateCents,
+        'has_price_to_confirm' => $hasQuoteOnly,
         'currency' => 'EUR',
     );
 
-    $orderCode = '';
     $orderId = 0;
+    $orderStored = false;
     try {
-        $orderCode = mp_db_generate_order_code();
         $customerCopySubject = 'Recebemos o teu pedido (' . $orderCode . ') - Mia & Paper';
         $rawOrderSnapshot['order_code'] = $orderCode;
         $rawOrderSnapshot['post_success_copy_available'] = !$sendCopy;
@@ -1563,8 +2711,13 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
             'referrer' => $referrerLine,
             'raw_order_json' => json_encode($rawOrderSnapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         ));
+        $orderStored = true;
+        order_upload_consume_temp($orderUploadTemps);
         mp_db_log_order_event($orderId, 'created', array('source' => 'site_cart'));
     } catch (Exception $e) {
+        if (!$orderStored) {
+            order_upload_cleanup_order($orderCode);
+        }
         @error_log('[miaandpaper] mp_db_insert_order cart falhou: ' . $e->getMessage());
         render_page(
             'Não foi possível guardar o teu pedido.',
@@ -1730,8 +2883,8 @@ $defaultDeliveryOptions = array(
     ),
     'shipping' => array(
         'label' => 'Envio CTT - até 2 Kg',
-        'fee_cents' => 850,
-        'price_text' => "Valor mínimo:\n8,50 €",
+        'fee_cents' => 555,
+        'price_text' => "Valor mínimo:\n5,55 €",
     ),
     'join_orders' => array(
         'label' => 'Junta as minhas encomendas',

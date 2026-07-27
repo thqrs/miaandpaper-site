@@ -14,8 +14,11 @@
   if (location.protocol === "file:") return;
   if (location.hostname === "localhost" || location.hostname === "127.0.0.1") return;
 
-  var sessionKey = "mp_catalog_session_v1";
-  var attributionKey = "mp_catalog_attribution_v1";
+  // Usa a mesma sessão e atribuição do site principal. Assim, uma visita que
+  // passa do catálogo para um wizard aparece como um só percurso no funil.
+  var sessionKey = "mp_funnel_session_v1";
+  var attributionKey = "mp_funnel_attribution_v1";
+  var catalogStartedKey = "mp_catalog_started_v2";
   var eventIndex = 0;
   var pageInstanceId = Math.random().toString(36).slice(2, 10);
 
@@ -59,12 +62,21 @@
   }
 
   function sessionId() {
-    var id = storageGet(sessionKey);
-    if (!id) {
-      id = "catalog_" + randomId();
-      storageSet(sessionKey, id);
+    var raw = sessionGet(sessionKey);
+    var data;
+    if (raw) {
+      try {
+        data = JSON.parse(raw);
+        if (data && data.id) return String(data.id);
+      } catch (error) {}
     }
-    return id;
+    data = {
+      id: Date.now().toString(36) + "-" + randomId().slice(0, 8),
+      startedAt: Date.now(),
+      lastEventAt: Date.now()
+    };
+    sessionSet(sessionKey, JSON.stringify(data));
+    return data.id;
   }
 
   function queryValue(name) {
@@ -144,7 +156,11 @@
   }
 
   window.addEventListener("pageshow", function () {
-    send("catalog_page_view");
+    if (!sessionGet(catalogStartedKey)) {
+      sessionSet(catalogStartedKey, "1");
+      send("catalog_session_started");
+    }
+    send("catalog_page_view", { page_kind: pageKind });
   });
 
   document.addEventListener("click", function (event) {
@@ -153,10 +169,26 @@
     var trackType = link.getAttribute("data-catalog-track") || "link";
     send("catalog_" + trackType + "_clicked", {
       target_type: trackType,
-      target_label: (link.textContent || "").trim().slice(0, 120),
-      target_id: link.getAttribute("href") || ""
+      target_label: (link.getAttribute("data-catalog-label") || link.textContent || "").trim().slice(0, 120),
+      target_id: link.getAttribute("data-catalog-product") || "",
+      target_href: link.getAttribute("href") || "",
+      page_kind: pageKind
     });
   });
+
+  var scrollDepthSent = {};
+  function trackCatalogScrollDepth() {
+    var root = document.documentElement;
+    var available = Math.max(1, root.scrollHeight - window.innerHeight);
+    var percent = Math.round((window.scrollY / available) * 100);
+    [50, 90].forEach(function (depth) {
+      if (percent >= depth && !scrollDepthSent[depth]) {
+        scrollDepthSent[depth] = true;
+        send("catalog_scroll_depth", { depth_percent: depth, page_kind: pageKind });
+      }
+    });
+  }
+  window.addEventListener("scroll", trackCatalogScrollDepth, { passive: true });
 
   function initCatalogAdmin(trackEndpoint, slug) {
     var ADMIN_KEY = "miaandpaper-admin-session-v1";

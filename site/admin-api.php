@@ -561,6 +561,22 @@ function admin_decode_image($value, &$ext)
     return $data === false ? false : $data;
 }
 
+function admin_write_webp_image($data, $path, $sourceExt)
+{
+    if ($sourceExt === 'webp') {
+        return file_put_contents($path, $data, LOCK_EX) !== false;
+    }
+    if (!function_exists('imagecreatefromstring') || !function_exists('imagewebp')) return false;
+    $image = @imagecreatefromstring($data);
+    if (!$image) return false;
+    if (function_exists('imagepalettetotruecolor')) @imagepalettetotruecolor($image);
+    imagealphablending($image, true);
+    imagesavealpha($image, true);
+    $ok = @imagewebp($image, $path, 88);
+    imagedestroy($image);
+    return $ok;
+}
+
 function admin_ensure_upload_dir()
 {
     if (is_dir(MIAANDPAPER_UPLOAD_DIR)) {
@@ -607,12 +623,12 @@ function admin_process_item_image_field(&$item, $slug, $field)
 
     admin_ensure_upload_dir();
 
-    $filename = $slug . '-' . $itemId . $fieldSuffix . '-' . substr(sha1($data), 0, 12) . '.' . $ext;
+    $filename = $slug . '-' . $itemId . $fieldSuffix . '-' . substr(sha1($data), 0, 12) . '.webp';
 
-    if (file_put_contents(MIAANDPAPER_UPLOAD_DIR . '/' . $filename, $data, LOCK_EX) === false) {
+    if (!admin_write_webp_image($data, MIAANDPAPER_UPLOAD_DIR . '/' . $filename, $ext)) {
         admin_respond(500, array(
             'ok' => false,
-            'message' => 'Nao foi possivel guardar uma imagem.',
+            'message' => 'Nao foi possivel converter e guardar uma imagem em WebP.',
         ));
     }
 
@@ -1194,6 +1210,53 @@ if ($action === 'save-offers') {
         'syncNeeded' => true,
         'syncFlagCreated' => $syncFlagCreated,
     ));
+}
+
+if ($action === 'get-colors') {
+    admin_require_login();
+    require_once __DIR__ . '/lib/color-catalog.php';
+
+    try {
+        admin_respond(200, array(
+            'ok' => true,
+            'catalog' => mp_color_catalog_data(),
+            'csrf' => admin_csrf_token(),
+        ));
+    } catch (Exception $error) {
+        admin_respond(500, array(
+            'ok' => false,
+            'message' => 'Não foi possível carregar a grelha de cores.',
+        ));
+    }
+}
+
+if ($action === 'save-colors') {
+    admin_require_post();
+    admin_require_login();
+    admin_require_csrf();
+    $payload = admin_payload();
+    require_once __DIR__ . '/lib/color-catalog.php';
+
+    try {
+        $catalog = mp_color_catalog_save($payload);
+        $syncFlagCreated = admin_mark_sync_needed('colors');
+        admin_respond(200, array(
+            'ok' => true,
+            'catalog' => $catalog,
+            'syncNeeded' => true,
+            'syncFlagCreated' => $syncFlagCreated,
+        ));
+    } catch (InvalidArgumentException $error) {
+        admin_respond(400, array(
+            'ok' => false,
+            'message' => $error->getMessage(),
+        ));
+    } catch (Exception $error) {
+        admin_respond(500, array(
+            'ok' => false,
+            'message' => 'Não foi possível guardar a grelha de cores.',
+        ));
+    }
 }
 
 if ($action === 'save-product') {

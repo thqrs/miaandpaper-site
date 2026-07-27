@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cores dos flows · Mia &amp; Paper</title>
+  <link rel="icon" href="content/brand/logo.webp" type="image/webp">
+  <style>
+    :root { color-scheme: light; --paper:#f7f1e3; --card:#fffdf8; --ink:#30291e; --muted:#746a59; --line:#d9ccb2; --moss:#4f7a3a; --red:#b9342b; --gold:#b88616; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.45 Georgia, "Times New Roman", serif; }
+    main { width:min(1180px, calc(100% - 28px)); margin:28px auto 60px; }
+    header { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:18px; }
+    h1 { margin:0 0 6px; font-size:clamp(1.65rem,4vw,2.35rem); }
+    p { margin:0; color:var(--muted); }
+    a { color:var(--moss); font-weight:700; }
+    .panel { overflow:hidden; border:1px solid var(--line); border-radius:18px; background:var(--card); box-shadow:0 14px 38px rgba(71,53,20,.10); }
+    .toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:14px; border-bottom:1px solid var(--line); }
+    button { min-height:42px; padding:9px 14px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:700 .95rem/1 Georgia,serif; cursor:pointer; }
+    button.primary { border-color:var(--moss); background:var(--moss); color:#fff; }
+    button:disabled { opacity:.55; cursor:wait; }
+    .message { margin-left:auto; color:var(--moss); font-weight:700; }
+    .message.error { color:var(--red); }
+    .table-wrap { overflow:auto; }
+    table { width:100%; min-width:720px; border-collapse:separate; border-spacing:0; }
+    th, td { padding:10px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); text-align:center; vertical-align:middle; }
+    th:last-child, td:last-child { border-right:0; }
+    tbody tr:last-child td { border-bottom:0; }
+    th { position:sticky; top:0; z-index:2; background:#f3ead7; color:var(--muted); font-size:.78rem; letter-spacing:.025em; }
+    th:first-child, td:first-child { position:sticky; left:0; z-index:1; min-width:270px; text-align:left; background:var(--card); }
+    th:first-child { z-index:3; background:#f3ead7; }
+    .color-edit { display:grid; grid-template-columns:42px minmax(120px,1fr) 94px 36px; align-items:center; gap:8px; }
+    .color-edit input[type="color"] { width:42px; height:42px; padding:2px; border:1px solid var(--line); border-radius:9px; background:#fff; }
+    .color-edit input[type="text"] { width:100%; min-height:42px; padding:8px 10px; border:1px solid var(--line); border-radius:9px; font:inherit; }
+    .delete { padding:0; color:var(--red); font-size:1.25rem; }
+    .state { width:46px; min-height:46px; padding:0; border-radius:12px; font-size:1.15rem; }
+    .state[data-status="available"] { border-color:rgba(79,122,58,.45); background:rgba(79,122,58,.13); color:var(--moss); }
+    .state[data-status="unavailable"] { border-color:rgba(185,52,43,.45); background:linear-gradient(135deg,transparent 43%,rgba(185,52,43,.85) 44%,rgba(185,52,43,.85) 56%,transparent 57%),#fff7f6; color:var(--red); }
+    .legend { display:flex; flex-wrap:wrap; gap:14px; padding:13px 15px; border-top:1px solid var(--line); color:var(--muted); font-size:.88rem; }
+    .legend b { color:var(--ink); }
+    .empty { padding:28px; text-align:center; }
+    @media (max-width:640px) { header { display:block; } header a { display:inline-block; margin-top:10px; } main { width:min(100% - 18px,1180px); margin-top:14px; } .message { width:100%; margin-left:0; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div><h1>Cores disponíveis</h1><p>Edita a cor uma vez e define em que flow aparece.</p></div>
+      <a href="index.html">Voltar ao site</a>
+    </header>
+    <section class="panel">
+      <div class="toolbar">
+        <button type="button" data-add>Adicionar cor</button>
+        <button type="button" class="primary" data-save>Guardar alterações</button>
+        <span class="message" data-message role="status">A carregar…</span>
+      </div>
+      <div class="table-wrap" data-grid></div>
+      <div class="legend"><span><b>✓</b> disponível</span><span><b>×</b> aparece riscada a vermelho</span><span><b>vazio</b> não aparece</span><span>Clica numa célula para mudar o estado.</span></div>
+    </section>
+  </main>
+  <script>
+  (function () {
+    var catalog = { colors: [], flows: [], statuses: {} };
+    var csrf = "";
+    var grid = document.querySelector("[data-grid]");
+    var message = document.querySelector("[data-message]");
+    var save = document.querySelector("[data-save]");
+
+    function esc(value) { return String(value == null ? "" : value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+    function slug(value) { return String(value || "cor").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "cor"; }
+    function statusFor(colorId, flowKey) { return catalog.statuses[flowKey] && catalog.statuses[flowKey][colorId] || "hidden"; }
+    function stateLabel(status) { return status === "available" ? "✓" : status === "unavailable" ? "×" : ""; }
+    function stateTitle(status) { return status === "available" ? "Disponível" : status === "unavailable" ? "Indisponível no momento" : "Não mostrar"; }
+    function render() {
+      if (!catalog.flows.length) { grid.innerHTML = '<p class="empty">Ainda não há flows com escolha de cores.</p>'; return; }
+      grid.innerHTML = '<table><thead><tr><th>Cor</th>' + catalog.flows.map(function(flow){ return '<th>' + esc(flow.label) + '</th>'; }).join("") + '</tr></thead><tbody>' + catalog.colors.map(function(color,index){
+        return '<tr data-row="' + index + '"><td><div class="color-edit"><input type="color" value="' + esc(color.hex) + '" data-hex aria-label="Cor"><input type="text" value="' + esc(color.name) + '" data-name aria-label="Nome da cor"><input type="text" value="' + esc(color.hex) + '" data-hex-text aria-label="Código hexadecimal"><button type="button" class="delete" data-delete aria-label="Remover cor">×</button></div></td>' + catalog.flows.map(function(flow){ var status=statusFor(color.id,flow.key); return '<td><button type="button" class="state" data-flow="' + esc(flow.key) + '" data-status="' + status + '" aria-label="' + esc(color.name + ': ' + stateTitle(status)) + '" title="' + stateTitle(status) + '">' + stateLabel(status) + '</button></td>'; }).join("") + '</tr>';
+      }).join("") + '</tbody></table>';
+    }
+    function setMessage(text,isError){ message.textContent=text; message.classList.toggle("error",!!isError); }
+    function syncFromDom(){
+      grid.querySelectorAll("[data-row]").forEach(function(row){ var color=catalog.colors[Number(row.dataset.row)]; if(!color)return; color.name=row.querySelector("[data-name]").value.trim(); color.hex=row.querySelector("[data-hex-text]").value.trim().toLowerCase(); catalog.flows.forEach(function(flow){ catalog.statuses[flow.key]=catalog.statuses[flow.key]||{}; catalog.statuses[flow.key][color.id]=row.querySelector('[data-flow="'+flow.key+'"]').dataset.status; }); });
+    }
+    grid.addEventListener("input",function(event){ var row=event.target.closest("[data-row]"); if(!row)return; if(event.target.matches("[data-hex]")){ row.querySelector("[data-hex-text]").value=event.target.value; } if(event.target.matches("[data-hex-text]") && /^#[0-9a-fA-F]{6}$/.test(event.target.value)){ row.querySelector("[data-hex]").value=event.target.value; } });
+    grid.addEventListener("click",function(event){
+      var button=event.target.closest("button"); if(!button)return;
+      var row=button.closest("[data-row]"); var index=row?Number(row.dataset.row):-1;
+      if(button.matches("[data-delete]")){ syncFromDom(); catalog.colors.splice(index,1); render(); return; }
+      if(button.matches("[data-flow]")){ var next=button.dataset.status === "hidden" ? "available" : button.dataset.status === "available" ? "unavailable" : "hidden"; button.dataset.status=next; catalog.statuses[button.dataset.flow]=catalog.statuses[button.dataset.flow]||{}; catalog.statuses[button.dataset.flow][catalog.colors[index].id]=next; button.textContent=stateLabel(next); button.title=stateTitle(next); button.setAttribute("aria-label",catalog.colors[index].name+": "+stateTitle(next)); }
+    });
+    document.querySelector("[data-add]").addEventListener("click",function(){ syncFromDom(); var id=slug("nova-cor-"+Date.now()); catalog.colors.push({id:id,name:"Nova cor",hex:"#d7aa36"}); catalog.flows.forEach(function(flow){ catalog.statuses[flow.key]=catalog.statuses[flow.key]||{}; catalog.statuses[flow.key][id]="hidden"; }); render(); });
+    save.addEventListener("click",function(){
+      syncFromDom(); save.disabled=true; setMessage("A guardar…",false);
+      var colors=catalog.colors.map(function(color){ var statuses={}; catalog.flows.forEach(function(flow){ statuses[flow.key]=statusFor(color.id,flow.key); }); return {id:color.id,name:color.name,hex:color.hex,statuses:statuses}; });
+      fetch("admin-api.php?action=save-colors",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json","X-Admin-CSRF":csrf},body:JSON.stringify({colors:colors})}).then(function(response){ return response.json().then(function(data){ if(!response.ok)throw new Error(data.message||"Não foi possível guardar."); return data; }); }).then(function(data){ catalog=data.catalog; save.disabled=false; setMessage("Alterações guardadas.",false); render(); }).catch(function(error){ save.disabled=false; setMessage(error.message,true); });
+    });
+    fetch("admin-api.php?action=get-colors",{credentials:"same-origin"}).then(function(response){ return response.json().then(function(data){ if(!response.ok)throw new Error(data.message||"Inicia sessão de administradora no site."); return data; }); }).then(function(data){ catalog=data.catalog; csrf=data.csrf||""; setMessage("",false); render(); }).catch(function(error){ setMessage(error.message,true); grid.innerHTML='<p class="empty">Acesso restrito. <a href="index.html">Inicia sessão no site</a> e volta a esta página.</p>'; });
+  }());
+  </script>
+</body>
+</html>

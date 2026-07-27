@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Reviews · Administração | Mia &amp; Paper</title>
+  <link rel="stylesheet" href="reviews-admin.css?v=2026072601">
+</head>
+<body>
+  <header class="reviews-admin-header">
+    <div>
+      <a href="index.html">Mia &amp; Paper</a>
+      <p>Administração</p>
+      <h1>Reviews</h1>
+    </div>
+    <nav aria-label="Páginas de administração">
+      <a href="galeria.html">Galeria</a>
+      <a href="multimedia.html">Multimédia</a>
+      <a href="admin-funnel.php">Funil</a>
+      <a href="tools/index.php">Ferramentas</a>
+    </nav>
+  </header>
+
+  <main class="reviews-admin-shell">
+    <div class="reviews-status" data-status role="status">A carregar…</div>
+
+    <section class="reviews-login" data-login hidden aria-labelledby="reviews-login-title">
+      <h2 id="reviews-login-title">Iniciar sessão</h2>
+      <p>A proteção desta ferramenta está ativa.</p>
+      <form data-login-form>
+        <label>Password <input type="password" name="password" autocomplete="current-password" required></label>
+        <button type="submit">Entrar</button>
+      </form>
+    </section>
+
+    <div data-editor hidden>
+      <section class="reviews-settings" aria-labelledby="reviews-settings-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">Aspeto e comportamento</p><h2 id="reviews-settings-title">Definições gerais</h2></div>
+          <label class="switch"><input type="checkbox" data-setting="enabled"><span>Mostrar reviews no site</span></label>
+        </div>
+        <div class="settings-grid">
+          <label>Tempo entre reviews (segundos)<input type="number" min="2" max="60" step="0.5" data-setting="intervalSeconds"></label>
+          <label>Posição<select data-setting="position"><option value="left">Esquerda</option><option value="right">Direita</option></select></label>
+          <label>Tamanho<select data-setting="size"><option value="compact">Compacto</option><option value="normal">Normal</option><option value="large">Grande</option></select></label>
+          <label>Tema<select data-setting="theme"><option value="paper">Papel</option><option value="rose">Rosa</option><option value="sage">Verde</option><option value="dark">Escuro</option></select></label>
+          <label>Forma da imagem<select data-setting="imageShape"><option value="rounded">Cantos redondos</option><option value="circle">Círculo</option><option value="square">Quadrada</option></select></label>
+          <label>Avaliação predefinida<select data-setting="defaultRatingMode"><option value="stars">Estrelas</option><option value="icon">Outro ícone</option><option value="none">Sem avaliação</option></select></label>
+          <label>Número de estrelas<input type="number" min="1" max="5" data-setting="defaultStars"></label>
+          <label>Ícone predefinido<select data-setting="defaultIcon"><option value="heart">Coração</option><option value="flower">Flor</option><option value="sparkle">Brilho</option><option value="check">Visto</option><option value="quote">Aspas</option><option value="custom">Personalizado</option></select></label>
+          <label>Ícone personalizado<input type="text" maxlength="8" data-setting="defaultCustomIcon" placeholder="✦"></label>
+        </div>
+        <div class="inline-checks">
+          <label><input type="checkbox" data-setting="showImage"> Mostrar imagem</label>
+          <label><input type="checkbox" data-setting="showName"> Mostrar nome</label>
+          <label><input type="checkbox" data-setting="showText"> Mostrar texto</label>
+        </div>
+      </section>
+
+      <section class="reviews-list-section" aria-labelledby="reviews-list-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">Conteúdo</p><h2 id="reviews-list-title">Reviews e ordem</h2><p>Só aparecem no site as reviews com a caixa “Visível” marcada.</p></div>
+          <button type="button" class="secondary" data-add>Adicionar review</button>
+        </div>
+        <div class="reviews-list" data-list></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="reviews-savebar" data-savebar hidden>
+    <span data-dirty>Sem alterações por guardar.</span>
+    <a href="index.html" target="_blank" rel="noopener">Ver homepage</a>
+    <button type="button" data-save>Guardar alterações</button>
+  </div>
+
+  <template id="review-card-template">
+    <article class="review-admin-card" data-review-card>
+      <div class="review-card-head">
+        <label class="switch"><input type="checkbox" data-field="enabled"><span>Visível</span></label>
+        <strong data-card-title>Review</strong>
+        <div class="review-order-actions">
+          <button type="button" title="Subir" data-move="up">↑</button>
+          <button type="button" title="Descer" data-move="down">↓</button>
+          <input type="number" min="1" data-field="order" aria-label="Ordem">
+        </div>
+      </div>
+      <div class="review-card-grid">
+        <div class="review-image-column">
+          <div class="review-image-preview"><img data-image-preview alt="Pré-visualização da review"></div>
+          <label>Caminho ou URL da imagem<input type="text" data-field="image" placeholder="content/uploads/reviews/foto.webp"></label>
+          <label class="upload-button">Enviar imagem<input type="file" accept="image/*" data-upload hidden></label>
+        </div>
+        <div class="review-copy-column">
+          <label>Nome<input type="text" maxlength="120" data-field="name"></label>
+          <label>Texto<textarea rows="4" maxlength="1000" data-field="text"></textarea></label>
+          <label class="switch inline"><input type="checkbox" data-field="linkEnabled"><span>A review tem link</span></label>
+          <label>Destino do link<input type="text" maxlength="500" data-field="link" placeholder="cadernos.html ou https://…"></label>
+        </div>
+      </div>
+      <div class="review-rating-row">
+        <label>Avaliação<select data-field="ratingMode"><option value="default">Usar predefinição</option><option value="stars">Estrelas</option><option value="icon">Outro ícone</option><option value="none">Sem avaliação</option></select></label>
+        <label>Estrelas<input type="number" min="1" max="5" data-field="stars"></label>
+        <label>Ícone<select data-field="icon"><option value="default">Usar predefinição</option><option value="heart">Coração</option><option value="flower">Flor</option><option value="sparkle">Brilho</option><option value="check">Visto</option><option value="quote">Aspas</option><option value="custom">Personalizado</option></select></label>
+        <label>Personalizado<input type="text" maxlength="8" data-field="customIcon"></label>
+      </div>
+      <div class="review-card-footer">
+        <div class="review-live-preview" data-live-preview></div>
+        <div><button type="button" class="text-button" data-duplicate>Duplicar</button><button type="button" class="danger text-button" data-delete>Apagar</button></div>
+      </div>
+    </article>
+  </template>
+  <script src="reviews-admin.js?v=2026072601" defer></script>
+</body>
+</html>

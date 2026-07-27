@@ -5,7 +5,8 @@
   <script>(function(){try{var t=window.localStorage.getItem("miaandpaperTheme");if(t==="dark"){document.documentElement.setAttribute("data-theme","dark");}}catch(e){}}());</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mia &amp; Paper · Style guide</title>
-  <link rel="stylesheet" href="styles.css?v=20260709221220">
+  <link rel="icon" href="content/brand/logo.webp" type="image/webp">
+  <link rel="stylesheet" href="styles.css?v=2026072708">
   <style>
     /* Estilos so para a propria pagina de guia (prefixo sg-). Nao colidem com
        o CSS do site. */
@@ -68,6 +69,7 @@
         <li><a href="#summary">Resumos</a></li>
         <li><a href="#delivery">Entrega</a></li>
         <li><a href="#result">Resultados</a></li>
+        <li><a href="#homepage">Homepage editorial</a></li>
         <li><a href="#categories">Categorias</a></li>
         <li><a href="#crachas-step2">Crachás passo 2</a></li>
         <li><a href="#misc">Notas e estados</a></li>
@@ -90,6 +92,9 @@
         <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--gold-soft)"></span><span class="sg-swatch-name">--gold-soft</span><span class="sg-swatch-hex">#f4dd91</span></div>
         <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--rose)"></span><span class="sg-swatch-name">--rose</span><span class="sg-swatch-hex">#c58a72</span></div>
         <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--blue)"></span><span class="sg-swatch-name">--blue</span><span class="sg-swatch-hex">#9a8656</span></div>
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--surface-page)"></span><span class="sg-swatch-name">--surface-page</span><span class="sg-swatch-hex">fundo global</span></div>
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--surface-panel)"></span><span class="sg-swatch-name">--surface-panel</span><span class="sg-swatch-hex">secções</span></div>
+        <div class="sg-swatch"><span class="sg-swatch-chip" style="background:var(--surface-raised)"></span><span class="sg-swatch-name">--surface-raised</span><span class="sg-swatch-hex">cartões</span></div>
       </div>
     </section>
 
@@ -582,9 +587,54 @@
       </div>
     </section>
 
+    <!-- ============================================================ HOMEPAGE -->
+    <section class="sg-section" id="homepage">
+      <h2>Homepage editorial</h2>
+      <p>Hierarquia e cartões canónicos da homepage, também usados nos hubs de Congressos e Acrescentar produto.</p>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Cabeçalho de secção</h3><span class="sg-tag">.home-section-heading</span></div>
+        <div class="sg-frame">
+          <header class="home-section-heading">
+            <p class="eyebrow">Papelaria personalizada</p>
+            <h2>Escolhe o que queres pedir</h2>
+            <p>Uma frase curta explica a secção sem competir com o título.</p>
+          </header>
+        </div>
+      </div>
+
+      <div class="sg-block">
+        <div class="sg-block-head"><h3>Cartão editorial</h3><span class="sg-tag">.home-news-card</span></div>
+        <div class="home-news-grid">
+          <a class="home-news-card" href="#homepage">
+            <span class="home-news-card__media" aria-hidden="true"></span>
+            <span class="home-news-card__copy">
+              <span class="home-news-card__label">Novidade</span>
+              <strong>Uma peça com presença</strong>
+              <span>Imagem, título, texto curto e uma ação direta.</span>
+              <b>Ver produto <span aria-hidden="true">→</span></b>
+            </span>
+          </a>
+        </div>
+      </div>
+
+      <div class="sg-block home-products-section">
+        <div class="sg-block-head"><h3>Produto da homepage</h3><span class="sg-tag">.home-products-section .category-card</span></div>
+        <nav class="category-grid" aria-label="Exemplo de produto">
+          <a class="category-card" href="#homepage">
+            <span class="category-number is-placeholder" aria-hidden="true">00</span>
+            <span class="category-art" aria-hidden="true"></span>
+            <strong>Cadernos</strong>
+            <span>Escolhe a capa, o acabamento e a opção de compra.</span>
+          </a>
+        </nav>
+      </div>
+    </section>
+
     <!-- ============================================================ CATEGORIES -->
     <section class="sg-section" id="categories">
-      <h2>Categorias (página inicial)</h2>
+      <h2>Grelha base de categorias</h2>
+      <p>Variante compacta usada em contextos de administração. A homepage pública usa os cartões editoriais documentados acima.</p>
       <div class="sg-block">
         <div class="sg-block-head"><h3>Grelha de categorias</h3>
           <span class="sg-tag">.category-grid</span>

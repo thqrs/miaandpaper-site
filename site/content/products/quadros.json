@@ -1,0 +1,1449 @@
+{
+  "slug": "quadros",
+  "name": "Moldura personalizada",
+  "brand": "Mia & Paper",
+  "homeUrl": "index.html",
+  "instagramUrl": "https://www.instagram.com/miaandpaper/",
+  "ordersSuspended": false,
+  "initialProgressSteps": 6,
+  "form": {
+    "action": "send-order.php",
+    "returnTo": "molduras.html"
+  },
+  "intro": {
+    "eyebrow": "Molduras personalizadas",
+    "title": "Cria uma memória única",
+    "text": ""
+  },
+  "deliveryOptions": [
+    {
+      "id": "pickup",
+      "label": "Vou recolher na casa da Mia",
+      "text": "",
+      "feeCents": 0
+    },
+    {
+      "id": "shipping",
+      "label": "Envio CTT - até 2 Kg",
+      "text": "",
+      "feeCents": 555,
+      "priceText": "Valor mínimo:\n5,55 €"
+    },
+    {
+      "id": "join_orders",
+      "label": "Junta as minhas encomendas",
+      "text": "",
+      "feeCents": 0
+    }
+  ],
+  "templates": [
+    {
+      "id": "media-list",
+      "label": "Imagem + 2 linhas"
+    },
+    {
+      "id": "design-grid",
+      "label": "Grelha de opções"
+    },
+    {
+      "id": "palette-grid",
+      "label": "Combinações de cores"
+    },
+    {
+      "id": "photo-upload",
+      "label": "Envio de fotos"
+    },
+    {
+      "id": "details-form",
+      "label": "Formulário"
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmação"
+    }
+  ],
+  "prices": {
+    "Moldura personalizada": {
+      "1": 4500
+    }
+  },
+  "steps": [
+    {
+      "id": "designs",
+      "label": "Tipo",
+      "title": "Escolhe o tipo de moldura",
+      "text": "",
+      "template": "design-grid",
+      "field": "designs",
+      "selection": "single",
+      "autoAdvance": false,
+      "items": [
+        {
+          "id": "foto-frase",
+          "value": "Foto e Frase",
+          "title": "Foto e Flores 3D",
+          "subtitle": "Foto com flores 3D",
+          "priceCents": 4500,
+          "frameSize": "20 × 25 cm",
+          "image": "content/designs/quadros/fotos-reais/foto-flores-azul-amarelo-frontal.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/foto-flores-azul-amarelo-angulo.webp",
+            "content/designs/quadros/fotos-reais/foto-flores-azul-lilas-frontal.webp",
+            "content/designs/quadros/fotos-reais/foto-flores-rosa-frontal.webp",
+            "content/designs/quadros/fotos-reais/foto-flores-vintage-rosa.webp",
+            "content/designs/quadros/fotos-reais/foto-flores-duas-paletas.webp"
+          ],
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        },
+        {
+          "id": "quadro-bebe",
+          "value": "Quadro para bebé",
+          "title": "Moldura para Bebé",
+          "subtitle": "Silhueta de animal personalizável",
+          "priceCents": 4500,
+          "frameSize": "20 × 25 cm",
+          "image": "content/designs/quadros/fotos-reais/bebe-elefante-dados.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/bebe-selva-frontal.webp",
+            "content/designs/quadros/fotos-reais/bebe-selva-angulo.webp",
+            "content/designs/quadros/fotos-reais/bebe-dados-detalhe.webp",
+            "content/designs/quadros/fotos-reais/bebe-dados-texto.webp",
+            "content/designs/quadros/fotos-reais/bebe-selva-detalhe.webp"
+          ],
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        },
+        {
+          "id": "coracao-frase",
+          "value": "Coração e Frase",
+          "title": "Coração de Flores",
+          "subtitle": "Personaliza as cores e coloca a tua frase",
+          "priceCents": 4500,
+          "frameSize": "20 × 25 cm",
+          "image": "content/designs/quadros/fotos-reais/coracao-flores-frontal.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/coracao-flores-angulo.webp",
+            "content/designs/quadros/fotos-reais/coracao-flores-detalhe.webp",
+            "content/designs/quadros/fotos-reais/coracao-frase-frontal.webp",
+            "content/designs/quadros/fotos-reais/coracao-frase-detalhe.webp"
+          ],
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        },
+        {
+          "id": "amor-nunca-acaba",
+          "value": "O Amor Nunca Acaba",
+          "title": "O Amor Nunca Acaba",
+          "subtitle": "Coração em degradê com 1 Coríntios 13:6",
+          "priceCents": 5500,
+          "frameSize": "A4",
+          "defaultSelections": {
+            "colors": [
+              "Laranja",
+              "Vermelho"
+            ],
+            "quadro_color_tones": [
+              0,
+              2
+            ]
+          },
+          "image": "content/designs/quadros/fotos-reais/amor-frontal.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/amor-angulo.webp",
+            "content/designs/quadros/fotos-reais/amor-detalhe.webp",
+            "content/designs/quadros/fotos-reais/amor-terracota-frontal.webp",
+            "content/designs/quadros/fotos-reais/amor-terracota-detalhe.webp"
+          ],
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        },
+        {
+          "id": "jardim-frase",
+          "value": "Jardim de Flores e Frase",
+          "title": "Jardim de Flores",
+          "subtitle": "Flores 3D com texto opcional",
+          "priceCents": 4500,
+          "frameSize": "20 × 25 cm",
+          "image": "content/designs/quadros/fotos-reais/jardim-flores-pasteis.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/jardim-flores-frontal.webp",
+            "content/designs/quadros/fotos-reais/jardim-flores-detalhe.webp",
+            "content/designs/quadros/fotos-reais/jardim-gerbera-detalhe.webp"
+          ],
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        },
+        {
+          "id": "silhueta-frase",
+          "value": "Silhueta e Frase",
+          "title": "Silhueta Personalizada em Vinil",
+          "subtitle": "Silhueta e flores 3D",
+          "priceCents": 5500,
+          "frameSize": "20 × 25 cm",
+          "image": "content/designs/quadros/fotos-reais/silhueta-bodas-frontal.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/silhueta-bodas-detalhe.webp",
+            "content/designs/quadros/fotos-reais/silhueta-casal-flores.webp",
+            "content/designs/quadros/fotos-reais/silhueta-arvore.webp"
+          ],
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        },
+        {
+          "id": "super-personalizado",
+          "value": "Super Personalizado",
+          "title": "Super Personalizado",
+          "subtitle": "Descreve livremente a tua ideia",
+          "quoteOnly": true,
+          "priceMinCents": 4500,
+          "image": "content/designs/quadros/fotos-reais/silhueta-pessoa.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/bebe-selva-frontal.webp",
+            "content/designs/quadros/fotos-reais/jardim-flores-frontal.webp",
+            "content/designs/quadros/fotos-reais/foto-flores-duas-paletas.webp",
+            "content/designs/quadros/fotos-reais/super-photobooth.webp"
+          ],
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        }
+      ]
+    },
+    {
+      "id": "photo_upload",
+      "label": "Foto",
+      "title": "Enviar foto",
+      "text": "",
+      "template": "photo-upload",
+      "when": {
+        "field": "designs",
+        "equals": "Foto e Frase"
+      },
+      "upload": {
+        "selectionKey": "quadro_uploads",
+        "multiple": false,
+        "maxFiles": 1,
+        "buttonLabel": "Escolher foto",
+        "requiredUnlessHelp": true,
+        "helpKey": "photo_help",
+        "helpLabel": "Preciso de ajuda para enviar a foto"
+      }
+    },
+    {
+      "id": "baby_gender",
+      "label": "Menino ou menina",
+      "title": "É para menino ou menina?",
+      "text": "",
+      "template": "text-grid",
+      "field": "baby_gender",
+      "selection": "single",
+      "when": {
+        "field": "designs",
+        "equals": "Quadro para bebé"
+      },
+      "items": [
+        {
+          "id": "bebe-menino",
+          "value": "Menino",
+          "title": "Menino",
+          "subtitle": "",
+          "image": "content/designs/quadros/fotos-reais/bebe-selva-frontal.webp",
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        },
+        {
+          "id": "bebe-menina",
+          "value": "Menina",
+          "title": "Menina",
+          "subtitle": "",
+          "image": "content/designs/quadros/fotos-reais/bebe-elefante-dados.webp",
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        }
+      ]
+    },
+    {
+      "id": "baby_animal",
+      "label": "Silhueta",
+      "title": "Escolhe a silhueta",
+      "text": "",
+      "template": "text-grid",
+      "field": "baby_animal",
+      "selection": "single",
+      "when": {
+        "field": "designs",
+        "equals": "Quadro para bebé"
+      },
+      "items": [
+        {
+          "id": "animal-elefante",
+          "value": "Elefante",
+          "title": "Elefante",
+          "subtitle": "",
+          "image": "content/designs/quadros/fotos-reais/bebe-elefante-dados.webp",
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        },
+        {
+          "id": "animal-outro",
+          "value": "Outro animal",
+          "title": "Outro animal",
+          "subtitle": "Diz-nos qual",
+          "image": "content/designs/quadros/fotos-reais/bebe-selva-detalhe.webp",
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        }
+      ]
+    },
+    {
+      "id": "baby_custom_animal",
+      "label": "Animal",
+      "title": "Que animal gostarias?",
+      "text": "",
+      "template": "details-form",
+      "when": {
+        "field": "baby_animal",
+        "equals": "Outro animal"
+      },
+      "fields": [
+        {
+          "name": "baby_custom_animal",
+          "label": "",
+          "placeholder": "Ex.: girafa, leão ou ursinho",
+          "required": true,
+          "type": "text",
+          "maxLength": 80,
+          "maxLengthError": "O nome do animal deve ter no máximo 80 caracteres."
+        }
+      ]
+    },
+    {
+      "id": "baby_color",
+      "label": "Cor",
+      "title": "Escolhe a cor",
+      "text": "",
+      "template": "palette-grid",
+      "field": "color_palette",
+      "selection": "single",
+      "tonePicker": true,
+      "useConfiguredColors": true,
+      "colorCount": 1,
+      "selectionError": "Escolhe uma cor ou deixa a escolha com a Mia.",
+      "when": {
+        "field": "designs",
+        "equals": "Quadro para bebé"
+      },
+      "items": [
+        {
+          "id": "paleta-bebe-rosa",
+          "value": "Rosa bebé",
+          "title": "Rosa bebé",
+          "palette": [
+            "#efb7c5"
+          ]
+        },
+        {
+          "id": "paleta-bebe-azul",
+          "value": "Azul bebé",
+          "title": "Azul bebé",
+          "palette": [
+            "#91cbd4"
+          ]
+        }
+      ],
+      "configuredColors": [
+        {
+          "id": "branco-creme",
+          "value": "Branco / creme",
+          "title": "Branco / creme",
+          "swatch": "#f3ead6",
+          "colorStops": ["#fffdf7", "#f3ead6", "#dfcda7"]
+        },
+        {
+          "id": "amarelo",
+          "value": "Amarelo",
+          "title": "Amarelo",
+          "swatch": "#efbd25",
+          "colorStops": ["#ffe78a", "#efbd25", "#cf8c1d"]
+        },
+        {
+          "id": "laranja",
+          "value": "Laranja",
+          "title": "Laranja",
+          "swatch": "#ef7b2d",
+          "colorStops": ["#ffc27b", "#ef7b2d", "#c95627"]
+        },
+        {
+          "id": "vermelho",
+          "value": "Vermelho",
+          "title": "Vermelho",
+          "swatch": "#b7342c",
+          "colorStops": ["#d94a3c", "#b7342c", "#8f2727"]
+        },
+        {
+          "id": "rosa-bebe",
+          "value": "Rosa-bebé",
+          "title": "Rosa-bebé",
+          "swatch": "#ecafc1",
+          "colorStops": ["#f7d3dd", "#ecafc1", "#d88da7"]
+        },
+        {
+          "id": "rosa",
+          "value": "Rosa",
+          "title": "Rosa",
+          "swatch": "#cb6d8c",
+          "colorStops": ["#e795b0", "#cb6d8c", "#a8456f"]
+        },
+        {
+          "id": "bordeaux",
+          "value": "Bordeaux",
+          "title": "Bordeaux",
+          "swatch": "#6f203c",
+          "colorStops": ["#8c3450", "#6f203c", "#4f142d"]
+        },
+        {
+          "id": "lilas-roxo",
+          "value": "Lilás / roxo",
+          "title": "Lilás / roxo",
+          "swatch": "#a77cb8",
+          "colorStops": ["#d6b6df", "#a77cb8", "#6e4b8b"]
+        },
+        {
+          "id": "azul-claro",
+          "value": "Azul-claro",
+          "title": "Azul-claro",
+          "swatch": "#8cc8d5",
+          "colorStops": ["#c7e8ee", "#8cc8d5", "#4a9bb4"]
+        },
+        {
+          "id": "azul",
+          "value": "Azul",
+          "title": "Azul",
+          "swatch": "#224d7b",
+          "colorStops": ["#4d84b5", "#224d7b", "#173358"]
+        },
+        {
+          "id": "turquesa",
+          "value": "Turquesa",
+          "title": "Turquesa",
+          "swatch": "#2f8e9c",
+          "colorStops": ["#69c4c4", "#2f8e9c", "#1d6876"]
+        },
+        {
+          "id": "verde",
+          "value": "Verde",
+          "title": "Verde",
+          "swatch": "#6da76f",
+          "colorStops": ["#b8d5a1", "#6da76f", "#356642"]
+        },
+        {
+          "id": "verde-salvia",
+          "value": "Verde-sálvia",
+          "title": "Verde-sálvia",
+          "swatch": "#9eaf8b",
+          "colorStops": ["#d6dfca", "#9eaf8b", "#6c7f5f"]
+        },
+        {
+          "id": "castanho",
+          "value": "Castanho",
+          "title": "Castanho",
+          "swatch": "#875638",
+          "colorStops": ["#c79164", "#875638", "#593725"]
+        },
+        {
+          "id": "cinzento",
+          "value": "Cinzento",
+          "title": "Cinzento",
+          "swatch": "#a9aaa7",
+          "colorStops": ["#e2e0db", "#a9aaa7", "#676b6b"]
+        }
+      ]
+    },
+    {
+      "id": "baby_details",
+      "label": "Dados do bebé",
+      "title": "Quais os dados do bebé?",
+      "text": "",
+      "template": "details-form",
+      "when": {
+        "field": "designs",
+        "equals": "Quadro para bebé"
+      },
+      "fields": [
+        {
+          "name": "baby_name",
+          "label": "Nome da criança",
+          "placeholder": "Nome que deve aparecer na moldura",
+          "required": false,
+          "type": "text",
+          "maxLength": 100,
+          "maxLengthError": "O nome deve ter no máximo 100 caracteres."
+        },
+        {
+          "name": "baby_birth_date",
+          "label": "Data de nascimento",
+          "placeholder": "Ex.: 17 maio 2026",
+          "required": false,
+          "type": "text",
+          "maxLength": 60,
+          "maxLengthError": "A data deve ter no máximo 60 caracteres."
+        },
+        {
+          "name": "baby_birth_time",
+          "label": "Hora de nascimento",
+          "placeholder": "Ex.: 14:30",
+          "required": false,
+          "type": "text",
+          "maxLength": 30,
+          "maxLengthError": "A hora deve ter no máximo 30 caracteres."
+        },
+        {
+          "name": "baby_birth_weight",
+          "label": "Peso à nascença",
+          "placeholder": "Ex.: 3,250 kg",
+          "required": false,
+          "type": "text",
+          "inputmode": "decimal",
+          "maxLength": 30,
+          "maxLengthError": "O peso deve ter no máximo 30 caracteres."
+        },
+        {
+          "name": "baby_notes",
+          "label": "Outros dados",
+          "placeholder": "Acrescenta qualquer outro dado ou detalhe que queiras incluir",
+          "required": false,
+          "type": "textarea"
+        }
+      ]
+    },
+    {
+      "id": "silhouette",
+      "label": "Silhueta",
+      "title": "Que silhueta queres?",
+      "text": "Escolhe a temática principal. Depois entramos em contacto para confirmar o aspecto final.",
+      "template": "text-grid",
+      "field": "silhouette",
+      "selection": "single",
+      "resetSelectionKeys": [
+        "quadro_silhouette_description",
+        "silhouette_contact_me",
+        "quadro_silhouette_uploads",
+        "quadro_silhouette_audio_uploads"
+      ],
+      "when": {
+        "field": "designs",
+        "equals": "Silhueta e Frase"
+      },
+      "items": [
+        {
+          "id": "silhueta-casal",
+          "value": "Casal",
+          "title": "Casal",
+          "subtitle": "Duas pessoas",
+          "image": "content/designs/quadros/fotos-reais/silhueta-bodas-frontal.webp",
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        },
+        {
+          "id": "silhueta-familia",
+          "value": "Família",
+          "title": "Família",
+          "subtitle": "Adultos e crianças",
+          "image": "content/designs/quadros/fotos-reais/silhueta-familia.webp",
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        },
+        {
+          "id": "silhueta-pessoa",
+          "value": "Pessoa",
+          "title": "Pessoa",
+          "subtitle": "Uma pessoa",
+          "image": "content/designs/quadros/fotos-reais/silhueta-pessoa.webp",
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        },
+        {
+          "id": "silhueta-outro",
+          "value": "Outra silhueta",
+          "title": "Outra silhueta",
+          "subtitle": "Descreve o que imaginas no próximo passo",
+          "image": "content/designs/quadros/fotos-reais/silhueta-arvore.webp",
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        }
+      ]
+    },
+    {
+      "id": "silhouette_details",
+      "label": "Silhueta imaginada",
+      "title": "Que silhueta imaginas?",
+      "text": "",
+      "template": "details-form",
+      "requireAnyInput": true,
+      "requireAnyInputError": "Descreve a silhueta, envia uma foto ou um áudio, ou escolhe a opção de contacto.",
+      "when": {
+        "field": "silhouette",
+        "equals": "Outra silhueta"
+      },
+      "skipOption": {
+        "selectionKey": "silhouette_contact_me",
+        "label": "Prefiro que entrem em contacto comigo para eu explicar"
+      },
+      "fields": [
+        {
+          "name": "quadro_silhouette_description",
+          "label": "Descreve aqui o tipo de silhueta que pretendes, ou envia-nos uma foto",
+          "hideOptionalLabel": true,
+          "placeholder": "Descreve a silhueta que imaginas",
+          "required": false,
+          "type": "textarea",
+          "section": "Silhueta",
+          "sectionNoBorder": true
+        }
+      ],
+      "mediaAttachments": {
+        "photos": {
+          "selectionKey": "quadro_silhouette_uploads",
+          "multiple": true,
+          "maxFiles": 0,
+          "buttonLabel": "Escolher foto",
+          "helperText": "Podes enviar as fotos que quiseres"
+        },
+        "audio": {
+          "selectionKey": "quadro_silhouette_audio_uploads",
+          "multiple": true,
+          "maxFiles": 0,
+          "buttonLabel": "Mantém premido para falar",
+          "helperText": "Solta para anexar o áudio"
+        }
+      }
+    },
+    {
+      "id": "heart_finish",
+      "label": "Acabamento",
+      "title": "Queres o fundo em flores ou folha de glitter?",
+      "text": "",
+      "template": "text-grid",
+      "field": "heart_finish",
+      "selection": "single",
+      "autoAdvance": false,
+      "resetSelectionKeys": [
+        "heart_background_colors",
+        "heart_background_color_tones",
+        "heart_background_palette",
+        "mia_choose_heart_background_colors"
+      ],
+      "resetColorSteps": [
+        "heart_background_colors"
+      ],
+      "when": {
+        "field": "designs",
+        "equals": "Coração e Frase"
+      },
+      "items": [
+        {
+          "id": "coracao-flores",
+          "value": "Flores 3D",
+          "title": "Fundo com flores 3D",
+          "subtitle": "Coração em degradê, com fundo de flores",
+          "image": "content/designs/quadros/fotos-reais/coracao-flores-frontal.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/coracao-flores-angulo.webp",
+            "content/designs/quadros/fotos-reais/coracao-flores-detalhe.webp",
+            "content/designs/quadros/fotos-reais/coracao-frase-frontal.webp",
+            "content/designs/quadros/fotos-reais/coracao-frase-detalhe.webp"
+          ],
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape",
+          "defaultSelections": {
+            "heart_background_colors": [
+              "Branco / creme"
+            ],
+            "heart_background_color_tones": [
+              0
+            ],
+            "heart_background_palette": "",
+            "mia_choose_heart_background_colors": false
+          }
+        },
+        {
+          "id": "coracao-glitter",
+          "value": "Glitter",
+          "title": "Fundo com folha de glitter",
+          "subtitle": "Coração em degradê, com fundo de folha de purpurinas",
+          "image": "content/designs/quadros/fotos-reais/silhueta-arvore.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/coracao-flores-angulo.webp",
+            "content/designs/quadros/fotos-reais/coracao-frase-frontal.webp",
+            "content/designs/quadros/fotos-reais/coracao-frase-detalhe.webp"
+          ],
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        }
+      ]
+    },
+    {
+      "id": "colors",
+      "label": "Cores",
+      "title": "Escolhe as cores das Flores 3D",
+      "text": "",
+      "template": "palette-grid",
+      "field": "color_palette",
+      "selection": "single",
+      "tonePicker": true,
+      "useConfiguredColors": true,
+      "showPhotoColorAnalysis": false,
+      "showColorNames": false,
+      "colorCount": 3,
+      "compositionStyleByField": {
+        "designs": {
+          "Coração e Frase": "gradient",
+          "O Amor Nunca Acaba": "gradient"
+        }
+      },
+      "titleByField": {
+        "designs": {
+          "Jardim de Flores e Frase": "Escolhe as cores das Flores 3D do teu jardim"
+        }
+      },
+      "textByField": {
+        "designs": {
+          "Coração e Frase": "Escolhe a cor inicial e final do degradê",
+          "O Amor Nunca Acaba": "Escolhe a cor inicial e final do degradê"
+        }
+      },
+      "colorCountByField": {
+        "designs": {
+          "Coração e Frase": 2,
+          "O Amor Nunca Acaba": 2
+        }
+      },
+      "when": {
+        "field": "designs",
+        "in": [
+          "Foto e Frase",
+          "Jardim de Flores e Frase",
+          "Coração e Frase",
+          "O Amor Nunca Acaba",
+          "Silhueta e Frase"
+        ]
+      },
+      "items": [
+        {
+          "id": "paleta-azuis",
+          "value": "Azuis frescos",
+          "title": "Azuis frescos",
+          "palette": [
+            "#173358",
+            "#2f8e9c",
+            "#c7e8ee"
+          ]
+        },
+        {
+          "id": "paleta-rosa",
+          "value": "Rosa e bordeaux",
+          "title": "Rosa e bordeaux",
+          "palette": [
+            "#4f142d",
+            "#cb6d8c",
+            "#f7d3dd"
+          ]
+        },
+        {
+          "id": "paleta-amarelo-azul",
+          "value": "Amarelo e azul",
+          "title": "Amarelo e azul",
+          "palette": [
+            "#efbd25",
+            "#173358",
+            "#fffdf7"
+          ]
+        },
+        {
+          "id": "paleta-vermelhos",
+          "value": "Vermelhos quentes",
+          "title": "Vermelhos quentes",
+          "palette": [
+            "#8f2727",
+            "#ef7b2d",
+            "#ffe78a"
+          ]
+        },
+        {
+          "id": "paleta-dourados",
+          "value": "Dourados naturais",
+          "title": "Dourados naturais",
+          "palette": [
+            "#cf8c1d",
+            "#c79164",
+            "#f3ead6"
+          ]
+        },
+        {
+          "id": "paleta-rosa-claro",
+          "value": "Rosa suave",
+          "title": "Rosa suave",
+          "palette": [
+            "#ecafc1",
+            "#d6b6df",
+            "#fffdf7"
+          ]
+        },
+        {
+          "id": "paleta-verdes",
+          "value": "Verdes naturais",
+          "title": "Verdes naturais",
+          "palette": [
+            "#356642",
+            "#9eaf8b",
+            "#f3ead6"
+          ]
+        },
+        {
+          "id": "paleta-terra",
+          "value": "Terra e creme",
+          "title": "Terra e creme",
+          "palette": [
+            "#593725",
+            "#c79164",
+            "#dfcda7"
+          ]
+        }
+      ],
+      "individualTitle": "Escolhe três cores",
+      "configuredColors": [
+        {
+          "id": "branco-creme",
+          "value": "Branco / creme",
+          "title": "Branco / creme",
+          "swatch": "#f3ead6",
+          "colorStops": ["#fffdf7", "#f3ead6", "#dfcda7"]
+        },
+        {
+          "id": "amarelo",
+          "value": "Amarelo",
+          "title": "Amarelo",
+          "swatch": "#efbd25",
+          "colorStops": ["#ffe78a", "#efbd25", "#cf8c1d"]
+        },
+        {
+          "id": "laranja",
+          "value": "Laranja",
+          "title": "Laranja",
+          "swatch": "#ef7b2d",
+          "colorStops": ["#ffc27b", "#ef7b2d", "#c95627"]
+        },
+        {
+          "id": "vermelho",
+          "value": "Vermelho",
+          "title": "Vermelho",
+          "swatch": "#b7342c",
+          "colorStops": ["#d94a3c", "#b7342c", "#8f2727"]
+        },
+        {
+          "id": "rosa-bebe",
+          "value": "Rosa-bebé",
+          "title": "Rosa-bebé",
+          "swatch": "#ecafc1",
+          "colorStops": ["#f7d3dd", "#ecafc1", "#d88da7"]
+        },
+        {
+          "id": "rosa",
+          "value": "Rosa",
+          "title": "Rosa",
+          "swatch": "#cb6d8c",
+          "colorStops": ["#e795b0", "#cb6d8c", "#a8456f"]
+        },
+        {
+          "id": "bordeaux",
+          "value": "Bordeaux",
+          "title": "Bordeaux",
+          "swatch": "#6f203c",
+          "colorStops": ["#8c3450", "#6f203c", "#4f142d"]
+        },
+        {
+          "id": "lilas-roxo",
+          "value": "Lilás / roxo",
+          "title": "Lilás / roxo",
+          "swatch": "#a77cb8",
+          "colorStops": ["#d6b6df", "#a77cb8", "#6e4b8b"]
+        },
+        {
+          "id": "azul-claro",
+          "value": "Azul-claro",
+          "title": "Azul-claro",
+          "swatch": "#8cc8d5",
+          "colorStops": ["#c7e8ee", "#8cc8d5", "#4a9bb4"]
+        },
+        {
+          "id": "azul",
+          "value": "Azul",
+          "title": "Azul",
+          "swatch": "#224d7b",
+          "colorStops": ["#4d84b5", "#224d7b", "#173358"]
+        },
+        {
+          "id": "turquesa",
+          "value": "Turquesa",
+          "title": "Turquesa",
+          "swatch": "#2f8e9c",
+          "colorStops": ["#69c4c4", "#2f8e9c", "#1d6876"]
+        },
+        {
+          "id": "verde",
+          "value": "Verde",
+          "title": "Verde",
+          "swatch": "#6da76f",
+          "colorStops": ["#b8d5a1", "#6da76f", "#356642"]
+        },
+        {
+          "id": "verde-salvia",
+          "value": "Verde-sálvia",
+          "title": "Verde-sálvia",
+          "swatch": "#9eaf8b",
+          "colorStops": ["#d6dfca", "#9eaf8b", "#6c7f5f"]
+        },
+        {
+          "id": "castanho",
+          "value": "Castanho",
+          "title": "Castanho",
+          "swatch": "#875638",
+          "colorStops": ["#c79164", "#875638", "#593725"]
+        },
+        {
+          "id": "cinzento",
+          "value": "Cinzento",
+          "title": "Cinzento",
+          "swatch": "#a9aaa7",
+          "colorStops": ["#e2e0db", "#a9aaa7", "#676b6b"]
+        }
+      ]
+    },
+    {
+      "id": "heart_background_colors",
+      "label": "Cor do fundo",
+      "summaryLabel": "Cor do fundo",
+      "title": "Escolhe a cor do fundo",
+      "text": "",
+      "titleByField": {
+        "heart_finish": {
+          "Flores 3D": "Escolhe a cor das flores do fundo",
+          "Glitter": "Escolhe a cor da folha de glitter"
+        }
+      },
+      "textByField": {
+        "heart_finish": {
+          "Flores 3D": "O branco já está selecionado, mas podes escolher outra cor.",
+          "Glitter": "Escolhe a cor da folha de purpurinas."
+        }
+      },
+      "template": "palette-grid",
+      "field": "heart_background_palette",
+      "selection": "single",
+      "tonePicker": true,
+      "colorSourceStep": "colors",
+      "useConfiguredColors": true,
+      "allowMiaChoice": false,
+      "colorCount": 1,
+      "selectionKeys": {
+        "colors": "heart_background_colors",
+        "tones": "heart_background_color_tones",
+        "palette": "heart_background_palette",
+        "mia": "mia_choose_heart_background_colors"
+      },
+      "colorEffectByField": {
+        "heart_finish": {
+          "Glitter": "glitter"
+        }
+      },
+      "selectionError": "Escolhe a cor do fundo.",
+      "when": {
+        "field": "designs",
+        "equals": "Coração e Frase"
+      }
+    },
+    {
+      "id": "photo_orientation",
+      "label": "Orientação",
+      "title": "Escolhe a orientação da moldura",
+      "text": "Escolhe a orientação da moldura",
+      "template": "media-list",
+      "field": "photo_orientation",
+      "selection": "single",
+      "when": {
+        "field": "designs",
+        "equals": "Foto e Frase"
+      },
+      "items": [
+        {
+          "id": "foto-horizontal",
+          "value": "Horizontal",
+          "title": "Horizontal",
+          "subtitle": "Moldura deitada",
+          "image": "content/designs/quadros/fotos-reais/foto-flores-azul-amarelo-frontal.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/foto-flores-azul-lilas-frontal.webp",
+            "content/designs/quadros/fotos-reais/foto-flores-vintage-rosa.webp",
+            "content/designs/quadros/fotos-reais/foto-flores-vintage-azul.webp"
+          ],
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        },
+        {
+          "id": "foto-vertical",
+          "value": "Vertical",
+          "title": "Vertical",
+          "subtitle": "Moldura em pé",
+          "image": "content/designs/quadros/fotos-reais/foto-flores-rosa-frontal.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/foto-flores-rosa-angulo.webp",
+            "content/designs/quadros/fotos-reais/foto-flores-rosa-detalhe.webp"
+          ],
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        }
+      ]
+    },
+    {
+      "id": "phrase_details",
+      "label": "Personalização do Texto",
+      "title": "Que frase queres colocar em vinil?",
+      "text": "Pode ser uma frase, uma data, um texto bíblico ou uma dedicatória curta.",
+      "template": "details-form",
+      "requireAnyInput": true,
+      "requireAnyInputError": "Escreve uma frase ou escolhe «Não quero frase».",
+      "exampleImage": "content/designs/quadros/fotos-reais/frase-vinil-detalhe.webp",
+      "exampleAlt": "Pormenor de uma frase em vinil aplicada no vidro de uma moldura",
+      "exampleByField": {
+        "photo_orientation": {
+          "Horizontal": {
+            "image": "content/designs/quadros/fotos-reais/frase-vinil-detalhe.webp",
+            "alt": "Moldura horizontal com fotografia, flores azuis e amarelas e frase em vinil"
+          },
+          "Vertical": {
+            "image": "content/designs/quadros/fotos-reais/foto-flores-rosa-frontal.webp",
+            "alt": "Moldura vertical com fotografia, flores rosa e frase em vinil"
+          }
+        },
+        "designs": {
+          "Jardim de Flores e Frase": {
+            "image": "content/designs/quadros/fotos-reais/jardim-flores-frontal.webp",
+            "alt": "Moldura com jardim de girassóis e gerberas de papel e frase em vinil"
+          },
+          "Coração e Frase": {
+            "image": "content/designs/quadros/fotos-reais/coracao-frase-frontal.webp",
+            "alt": "Coração de flores de papel em tons rosa com frase em vinil"
+          }
+        }
+      },
+      "when": {
+        "field": "designs",
+        "in": [
+          "Foto e Frase",
+          "Jardim de Flores e Frase",
+          "Coração e Frase"
+        ]
+      },
+      "skipOption": {
+        "selectionKey": "no_phrase",
+        "label": "Não quero frase"
+      },
+      "fields": [
+        {
+          "name": "quadro_text",
+          "label": "Escreve aqui a tua frase, ou envia-nos um áudio ou uma foto do texto que queres colocar na moldura",
+          "hideOptionalLabel": true,
+          "placeholder": "Escreve a frase, data, texto bíblico ou dedicatória",
+          "required": false,
+          "type": "textarea",
+          "section": "Personalização do Texto",
+          "sectionNoBorder": true
+        }
+      ],
+      "mediaAttachments": {
+        "photos": {
+          "selectionKey": "quadro_reference_uploads",
+          "multiple": true,
+          "maxFiles": 0,
+          "buttonLabel": "Escolher foto",
+          "helperText": "Podes enviar as fotos que quiseres"
+        },
+        "audio": {
+          "selectionKey": "quadro_audio_uploads",
+          "multiple": true,
+          "maxFiles": 0,
+          "buttonLabel": "Mantém premido para falar",
+          "helperText": "Solta para anexar o áudio"
+        }
+      }
+    },
+    {
+      "id": "love_dedication",
+      "label": "Dedicatória",
+      "title": "Personaliza a dedicatória",
+      "text": "Coloca uma pequena dedicatória, ou deixa em branco",
+      "template": "details-form",
+      "requireAnyInput": false,
+      "exampleImage": "content/designs/quadros/fotos-reais/amor-frontal.webp",
+      "exampleAlt": "Modelo O Amor Nunca Acaba com dedicatória no canto inferior direito",
+      "when": {
+        "field": "designs",
+        "equals": "O Amor Nunca Acaba"
+      },
+      "skipOption": {
+        "selectionKey": "no_dedication",
+        "label": "Não quero dedicatória"
+      },
+      "fields": [
+        {
+          "name": "quadro_dedication",
+          "label": "Escreve aqui a tua dedicatória, ou envia-nos um áudio ou uma foto do texto que queres colocar na moldura",
+          "hideOptionalLabel": true,
+          "placeholder": "Escreve uma pequena dedicatória",
+          "required": false,
+          "type": "textarea",
+          "section": "Dedicatória",
+          "sectionNoBorder": true,
+          "note": "Exemplos:\nCom carinho,\n[O teu nome]\n\nCom amor,\nda tua filha\n\nOu outro texto pequeno, que ocupe até 2 linhas"
+        }
+      ],
+      "mediaAttachments": {
+        "photos": {
+          "selectionKey": "quadro_reference_uploads",
+          "multiple": true,
+          "maxFiles": 0,
+          "buttonLabel": "Escolher foto",
+          "helperText": "Podes enviar as fotos que quiseres"
+        },
+        "audio": {
+          "selectionKey": "quadro_audio_uploads",
+          "multiple": true,
+          "maxFiles": 0,
+          "buttonLabel": "Mantém premido para falar",
+          "helperText": "Solta para anexar o áudio"
+        }
+      }
+    },
+    {
+      "id": "silhouette_text_details",
+      "label": "Personalização do Texto",
+      "title": "Que texto queres colocar em vinil?",
+      "text": "Pode ser uma frase, uma data, um texto bíblico ou uma dedicatória curta.",
+      "template": "details-form",
+      "requireAnyInput": true,
+      "requireAnyInputError": "Escreve um texto ou escolhe «Não quero texto».",
+      "exampleImage": "content/designs/quadros/fotos-reais/silhueta-bodas-frontal.webp",
+      "exampleAlt": "Moldura de Bodas de Ouro com silhueta, flores e texto em vinil",
+      "when": {
+        "field": "designs",
+        "equals": "Silhueta e Frase"
+      },
+      "skipOption": {
+        "selectionKey": "no_text",
+        "label": "Não quero texto"
+      },
+      "fields": [
+        {
+          "name": "quadro_text",
+          "label": "Escreve aqui o teu texto, ou envia-nos um áudio ou uma foto do texto que queres colocar na moldura",
+          "hideOptionalLabel": true,
+          "placeholder": "Escreve o texto, data, texto bíblico ou dedicatória",
+          "required": false,
+          "type": "textarea",
+          "section": "Personalização do Texto",
+          "sectionNoBorder": true
+        }
+      ],
+      "mediaAttachments": {
+        "photos": {
+          "selectionKey": "quadro_reference_uploads",
+          "multiple": true,
+          "maxFiles": 0,
+          "buttonLabel": "Escolher foto",
+          "helperText": "Podes enviar as fotos que quiseres"
+        },
+        "audio": {
+          "selectionKey": "quadro_audio_uploads",
+          "multiple": true,
+          "maxFiles": 0,
+          "buttonLabel": "Mantém premido para falar",
+          "helperText": "Solta para anexar o áudio"
+        }
+      }
+    },
+    {
+      "id": "super_details",
+      "label": "A tua ideia",
+      "title": "Escolhe um destes estilos…",
+      "text": "",
+      "formHeading": "…ou descreve a moldura que imaginas:",
+      "formText": "Podes escrever, enviar fotos ou gravar um áudio.",
+      "template": "details-form",
+      "requireAnyInput": true,
+      "requireAnyInputError": "Escolhe uma sugestão, escreve uma mensagem, grava um áudio ou envia uma foto.",
+      "when": {
+        "field": "designs",
+        "equals": "Super Personalizado"
+      },
+      "exampleSelectionKey": "quadro_super_example",
+      "selectableExamples": true,
+      "exampleImages": [
+        {
+          "id": "super-cenario-infantil",
+          "value": "Cenário infantil",
+          "title": "Cenário infantil",
+          "image": "content/designs/quadros/fotos-reais/bebe-selva-frontal.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/bebe-selva-angulo.webp",
+            "content/designs/quadros/fotos-reais/bebe-selva-detalhe.webp",
+            "content/designs/quadros/fotos-reais/bebe-dados-detalhe.webp"
+          ],
+          "alt": "Moldura infantil personalizada com cenário de savana"
+        },
+        {
+          "id": "super-borboleta-vinil",
+          "value": "Borboleta em vinil",
+          "title": "Borboleta em vinil",
+          "text": "Modelo A4",
+          "frameSize": "A4",
+          "image": "content/designs/quadros/fotos-reais/borboleta-detalhe.webp",
+          "drawerImages": [
+            "content/designs/quadros/exemplos/quadro-super-borboleta.webp",
+            "content/designs/quadros/fotos-reais/super-photobooth.webp",
+            "content/designs/quadros/fotos-reais/ideia-em-processo.webp"
+          ],
+          "alt": "Moldura personalizada com borboleta e girassóis"
+        },
+        {
+          "id": "super-ramo-flores",
+          "value": "Ramo de Flores",
+          "title": "Ramo de Flores",
+          "text": "Gerberas, girassóis, entre outras",
+          "image": "content/designs/quadros/fotos-reais/jardim-flores-pasteis.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/jardim-flores-frontal.webp",
+            "content/designs/quadros/fotos-reais/jardim-flores-detalhe.webp",
+            "content/designs/quadros/fotos-reais/jardim-gerbera-detalhe.webp"
+          ],
+          "alt": "Moldura personalizada com ramo de flores de papel"
+        }
+      ],
+      "fields": [
+        {
+          "name": "quadro_description",
+          "label": "",
+          "placeholder": "Descreve as cores, formas, pessoas, texto e outros detalhes importantes",
+          "required": false,
+          "type": "textarea",
+          "section": ""
+        }
+      ],
+      "mediaAttachments": {
+        "photos": {
+          "selectionKey": "quadro_reference_uploads",
+          "multiple": true,
+          "maxFiles": 0,
+          "buttonLabel": "Escolher foto",
+          "helperText": "Podes enviar as fotos que quiseres"
+        },
+        "audio": {
+          "selectionKey": "quadro_audio_uploads",
+          "multiple": true,
+          "maxFiles": 0,
+          "buttonLabel": "Mantém premido para falar",
+          "helperText": "Solta para anexar o áudio"
+        }
+      },
+      "examplesAlwaysVisible": true,
+      "examplesAfterForm": false
+    },
+    {
+      "id": "packaging",
+      "label": "Proteção e embrulho",
+      "title": "Como queres receber a moldura?",
+      "text": "Escolhe a proteção normal ou um embrulho pronto para oferecer.",
+      "template": "media-list",
+      "field": "packaging",
+      "selection": "single",
+      "items": [
+        {
+          "id": "protecao-normal",
+          "value": "Proteção normal",
+          "title": "Proteção normal",
+          "subtitle": "A moldura é protegida com plástico-bolha, e colocada num saco de papel",
+          "note": "Grátis",
+          "extraPriceCents": 0,
+          "image": "content/designs/quadros/fotos-reais/protecao-bolha.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/protecao-plastico.webp",
+            "content/designs/quadros/fotos-reais/protecao-rebordo.webp",
+            "content/designs/quadros/fotos-reais/moldura-base-frontal.webp",
+            "content/designs/quadros/fotos-reais/moldura-base-perspetiva.webp"
+          ],
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        },
+        {
+          "id": "embrulho-oferecer",
+          "value": "Embrulho para oferecer",
+          "title": "Embrulho para oferecer",
+          "subtitle": "A moldura é envolvida em papel de embrulho lustroso, com fita, e depois protegida com plástico-bolha, e colocada num saco de papel com fita",
+          "note": "3 €",
+          "extraPriceCents": 300,
+          "image": "content/designs/quadros/fotos-reais/embrulho-final.webp",
+          "drawerImages": [
+            "content/designs/quadros/fotos-reais/embrulho-processo.webp",
+            "content/designs/quadros/fotos-reais/embrulho-marca.webp",
+            "content/designs/quadros/fotos-reais/embrulho-kraft.webp"
+          ],
+          "imageFit": "contain",
+          "imageZoom": 60,
+          "frameWidth": 96,
+          "frameHeight": 76,
+          "rectOrientation": "landscape"
+        }
+      ]
+    },
+    {
+      "id": "pack",
+      "label": "Quantidade",
+      "title": "Quantidade",
+      "text": "",
+      "template": "quantity-builder",
+      "field": "pack_quantity",
+      "selection": "pack",
+      "hidden": true,
+      "items": [
+        {
+          "id": "pack-1",
+          "quantity": 1,
+          "title": "1",
+          "subtitle": "moldura"
+        }
+      ]
+    },
+    {
+      "id": "delivery_contact",
+      "label": "Entrega e contacto",
+      "title": "Entrega e contacto",
+      "text": "",
+      "template": "delivery-contact",
+      "delivery": {
+        "title": "Como queres receber a tua encomenda?",
+        "subtitle": "Caso já tenhas feito uma encomenda que ainda não foi enviada, escolhe \"Junta as minhas encomendas\" para receberes tudo na mesma embalagem."
+      },
+      "contact": {
+        "title": "Dados de Contacto",
+        "notesAfter": [
+          "Se quiseres fatura com número de contribuinte, preenche este campo. Se deixares em branco, a fatura será emitida como consumidor final.",
+          "A fatura será emitida após confirmação do pagamento. Se indicares email, enviamos por email. Se indicares telemóvel, podemos enviar por WhatsApp."
+        ],
+        "fields": [
+          {
+            "name": "customer_name",
+            "label": "Nome",
+            "placeholder": "O teu nome",
+            "required": true,
+            "autocomplete": "name"
+          },
+          {
+            "name": "customer_contact",
+            "label": "Email ou Telemóvel",
+            "placeholder": "Email ou telemóvel",
+            "required": true,
+            "autocomplete": "email"
+          },
+          {
+            "name": "customer_nif",
+            "label": "Número de Contribuinte (NIF)",
+            "placeholder": "Se quiseres receber fatura com NIF",
+            "required": false,
+            "autocomplete": "off",
+            "inputmode": "numeric"
+          }
+        ]
+      }
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmar",
+      "title": "Confirma o teu pedido",
+      "text": "Revê as escolhas antes de enviares o pedido.",
+      "template": "confirm"
+    }
+  ],
+  "unitLabel": "molduras",
+  "unitSingular": "moldura",
+  "unitShort": "moldura",
+  "imageShape": "rect",
+  "rectOrientation": "landscape",
+  "defaultPriceKey": "Moldura personalizada",
+  "summaryPlaceholders": {
+    "phrase": "content/designs/quadros/fotos-reais/frase-vinil-detalhe.webp",
+    "baby_details": "content/designs/quadros/fotos-reais/bebe-dados-detalhe.webp",
+    "baby_custom_animal": "content/designs/quadros/fotos-reais/bebe-selva-detalhe.webp",
+    "super_description": "content/designs/quadros/fotos-reais/ideia-em-processo.webp",
+    "photo_help": "content/designs/quadros/fotos-reais/ajuda-foto.webp",
+    "audio": "content/designs/quadros/fotos-reais/coracao-frase-detalhe.webp"
+  }
+}

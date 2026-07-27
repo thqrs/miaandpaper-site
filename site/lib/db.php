@@ -280,6 +280,37 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
             )",
             '2026-05-16_idx_ip_lookup_country' => "CREATE INDEX IF NOT EXISTS idx_ip_lookup_country
                 ON ip_lookup_cache (country_code)",
+            '2026-07-20_init_colors' => "CREATE TABLE IF NOT EXISTS colors (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                hex TEXT NOT NULL,
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )",
+            '2026-07-20_init_color_flows' => "CREATE TABLE IF NOT EXISTS color_flows (
+                color_id TEXT NOT NULL,
+                product_slug TEXT NOT NULL,
+                step_id TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'hidden',
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY (color_id, product_slug, step_id),
+                FOREIGN KEY(color_id) REFERENCES colors(id) ON DELETE CASCADE
+            )",
+            '2026-07-20_idx_color_flows_scope' => "CREATE INDEX IF NOT EXISTS idx_color_flows_scope
+                ON color_flows (product_slug, step_id, status)",
+            '2026-07-20_init_assisted_uploads' => "CREATE TABLE IF NOT EXISTS assisted_uploads (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                reference_code TEXT UNIQUE NOT NULL,
+                created_at TEXT NOT NULL,
+                sender_name TEXT,
+                sender_contact TEXT,
+                note TEXT,
+                files_json TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'new'
+            )",
+            '2026-07-20_idx_assisted_uploads_created' => "CREATE INDEX IF NOT EXISTS idx_assisted_uploads_created
+                ON assisted_uploads (created_at DESC)",
         );
 
         $check = $pdo->prepare("SELECT 1 FROM schema_migrations WHERE id = ?");

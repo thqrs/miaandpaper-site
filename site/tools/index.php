@@ -21,14 +21,14 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Ferramentas | Mia &amp; Paper</title>
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="../catalogo/catalogo.css?v=20260521150213">
+  <link rel="stylesheet" href="../catalogo/catalogo.css?v=2026072601">
   <link rel="stylesheet" href="../ofertas/ofertas.css?v=2026062809">
 </head>
 <body data-catalog-page="tools">
   <main class="catalog-shell">
     <header class="catalog-header" aria-label="Mia &amp; Paper">
       <a class="catalog-brand" href="../index.html" aria-label="Ir para o site principal Mia &amp; Paper">
-        <span class="catalog-brand-mark"><img src="../content/brand/logo.jpg" alt="Mia &amp; Paper" width="92" height="92"></span>
+        <span class="catalog-brand-mark"><img src="../content/brand/logo.webp" alt="Mia &amp; Paper" width="92" height="92"></span>
         <span>Mia &amp; Paper</span>
       </a>
       <div class="catalog-path">Ferramentas</div>
@@ -49,6 +49,34 @@ if (empty($_SESSION['miaandpaper_admin'])) {
             <span>Cartões de botões personalizados — PDF para a ET&#8209;8550 e SVG de corte para a Cricut.</span>
             <span class="catalog-product-action">Abrir ferramenta</span>
           </span>
+        </a>
+        <a class="catalog-product-card" href="../galeria.html">
+          <span class="catalog-product-thumb" aria-hidden="true">G</span>
+          <span class="catalog-product-copy"><strong>Galeria</strong><span>Enquadrar, substituir e organizar as imagens usadas nos produtos.</span><span class="catalog-product-action">Abrir gestão</span></span>
+        </a>
+        <a class="catalog-product-card" href="../multimedia.html">
+          <span class="catalog-product-thumb" aria-hidden="true">M</span>
+          <span class="catalog-product-copy"><strong>Multimédia</strong><span>Inventário dos ficheiros de imagem e dos locais onde são usados.</span><span class="catalog-product-action">Abrir inventário</span></span>
+        </a>
+        <a class="catalog-product-card" href="../reviews.html">
+          <span class="catalog-product-thumb" aria-hidden="true">★</span>
+          <span class="catalog-product-copy"><strong>Reviews</strong><span>Editar testemunhos, imagens, links, ordem e apresentação.</span><span class="catalog-product-action">Abrir editor</span></span>
+        </a>
+        <a class="catalog-product-card" href="../admin-funnel.php">
+          <span class="catalog-product-thumb" aria-hidden="true">F</span>
+          <span class="catalog-product-copy"><strong>Funil</strong><span>Acompanhar visitas, catálogo, escolhas e encomendas.</span><span class="catalog-product-action">Abrir painel</span></span>
+        </a>
+        <a class="catalog-product-card" href="../admin-orders.php">
+          <span class="catalog-product-thumb" aria-hidden="true">E</span>
+          <span class="catalog-product-copy"><strong>Encomendas</strong><span>Consultar os pedidos recebidos e o respetivo estado.</span><span class="catalog-product-action">Abrir painel</span></span>
+        </a>
+        <a class="catalog-product-card" href="../admin-colors.html">
+          <span class="catalog-product-thumb" aria-hidden="true">C</span>
+          <span class="catalog-product-copy"><strong>Cores</strong><span>Gerir o catálogo de cores usado nos produtos.</span><span class="catalog-product-action">Abrir gestão</span></span>
+        </a>
+        <a class="catalog-product-card" href="../admin-uploads.php">
+          <span class="catalog-product-thumb" aria-hidden="true">U</span>
+          <span class="catalog-product-copy"><strong>Uploads assistidos</strong><span>Preparar e acompanhar ficheiros enviados para encomendas.</span><span class="catalog-product-action">Abrir gestão</span></span>
         </a>
       </div>
     </section>

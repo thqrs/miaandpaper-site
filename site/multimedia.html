@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Multimédia · Mia &amp; Paper</title>
+  <link rel="icon" href="content/brand/logo.webp" type="image/webp">
+  <style>
+    /* MULTIMEDIA_V1 — inventário de todas as imagens do site em forma de
+       tabela. Página de trabalho: interessa ser consultável, não bonita. */
+    :root {
+      --paper: #f7f1e3; --card: #fffdf8; --ink: #2e2413; --muted: #746a59;
+      --line: #d9ccb2; --moss: #72551e; --linen: #efe6d2; --danger: #b9342b;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink);
+      font: 14px/1.4 Inter, system-ui, sans-serif; }
+    h1 { margin: 0; font: 700 1.3rem/1.2 Georgia, serif; }
+    a { color: var(--moss); }
+
+    .bar { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 10px;
+      align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--line);
+      background: var(--card); }
+    .bar .grow { flex: 1 1 200px; }
+    .hint { margin: 4px 0 0; color: var(--muted); font-size: .8rem; }
+    .warn { margin: 12px 14px; padding: 8px 11px; border: 1px solid var(--danger);
+      border-radius: 7px; background: #fff7f6; color: var(--danger); font-size: .82rem; }
+
+    input[type="text"], select { min-height: 30px; padding: 4px 7px; border: 1px solid var(--line);
+      border-radius: 6px; background: #fff; color: var(--ink); font: 400 .84rem/1.2 inherit; }
+    label.check { display: inline-flex; gap: 5px; align-items: center; color: var(--muted); font-size: .82rem; }
+
+    main { padding: 10px 14px 80px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; background: var(--card); }
+    th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left;
+      vertical-align: top; }
+    thead th { position: sticky; top: 47px; z-index: 10; background: var(--linen);
+      cursor: pointer; white-space: nowrap; font-size: .8rem; }
+    thead th::after { content: ""; }
+    thead th.is-sorted-asc::after { content: " ▲"; }
+    thead th.is-sorted-desc::after { content: " ▼"; }
+    tbody tr:hover { background: #fffaf0; }
+    td.thumb { width: 78px; }
+    td.thumb img { width: 68px; height: 68px; object-fit: contain; background: var(--linen);
+      border: 1px solid var(--line); border-radius: 5px; }
+    td.path { font: 400 .74rem/1.35 ui-monospace, monospace; word-break: break-all; max-width: 330px; }
+    td.uses { font-size: .76rem; max-width: 380px; }
+    td.uses div { padding: 1px 0; }
+    td.num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .tag-unused { color: var(--danger); font-weight: 700; }
+    .tag-orphan { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <div class="grow">
+      <h1>Multimédia</h1>
+      <p class="hint" id="summary">A carregar…</p>
+    </div>
+    <input type="text" id="filter" placeholder="filtrar por caminho ou onde é usada…" style="flex:1 1 240px">
+    <label class="check"><input type="checkbox" id="only-unused"> Só as que não são usadas</label>
+    <label class="check"><input type="checkbox" id="only-orphan"> Só as de produtos sem página</label>
+    <a href="galeria.html">Ir para a galeria ↗</a>
+  </div>
+
+  <p class="warn" id="public-warning" hidden>
+    Esta página está acessível a qualquer pessoa que saiba o endereço. Fecha-a com
+    <code>GALERIA_REQUIRE_ADMIN</code> em <code>galeria-api.php</code>.
+  </p>
+
+  <main>
+    <table>
+      <thead>
+        <tr>
+          <th data-sort="thumb">Imagem</th>
+          <th data-sort="path">Caminho</th>
+          <th data-sort="folder">Pasta</th>
+          <th data-sort="pixels">Dimensões</th>
+          <th data-sort="size">Tamanho</th>
+          <th data-sort="modified">Modificada</th>
+          <th data-sort="useCount">Usos</th>
+          <th data-sort="uses">Onde aparece</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </main>
+
+  <script src="galeria-slots.js?v=2026072602"></script>
+  <script>
+  (function () {
+    "use strict";
+
+    var state = { rows: [], sort: "modified", direction: -1, pages: {} };
+
+    function el(id) { return document.getElementById(id); }
+    function esc(value) {
+      return String(value == null ? "" : value).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
+    function formatSize(bytes) {
+      var n = Number(bytes) || 0;
+      return n >= 1048576 ? (n / 1048576).toFixed(1).replace(".", ",") + " MB"
+        : Math.max(1, Math.round(n / 1024)) + " KB";
+    }
+    function formatDate(seconds) {
+      if (!seconds) { return "—"; }
+      var d = new Date(seconds * 1000);
+      function pad(n) { return String(n).length === 1 ? "0" + n : String(n); }
+      return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate())
+        + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+    }
+    function responseJson(response) {
+      return response.text().then(function (text) {
+        var data;
+        try { data = JSON.parse(text); }
+        catch (error) { throw new Error("O servidor devolveu uma resposta inválida (HTTP " + response.status + ")."); }
+        if (!response.ok || !data.ok) {
+          throw new Error(data.message || ("Pedido falhou (HTTP " + response.status + ")."));
+        }
+        return data;
+      });
+    }
+
+    function build(data) {
+      var usage = {};   // caminho da imagem -> [{slug, section, label, detail}]
+
+      data.products.forEach(function (entry) {
+        window.MiaGaleriaSlots.collect(entry).forEach(function (slot) {
+          var image = window.MiaGaleriaSlots.resolveTrail(entry.product, slot.trail);
+          // Gavetas: o caminho é composto (pasta + nome), não está no JSON.
+          if ((typeof image !== "string" || !image) && slot.gaveta) {
+            image = slot.gaveta.siblings[slot.gaveta.index];
+          }
+          if (typeof image !== "string" || !image) { return; }
+          if (!usage[image]) { usage[image] = []; }
+          usage[image].push({
+            slug: entry.slug,
+            name: entry.name || entry.product.name || entry.slug,
+            id: slot.id,
+            section: slot.section,
+            label: slot.itemLabel || slot.detail,
+            detail: slot.detail
+          });
+        });
+      });
+
+      // Outros ficheiros de conteúdo que não têm modelo editável na galeria
+      // continuam a contar como uso — senão apareciam aqui como órfãos.
+      Object.keys(data.extraUsage || {}).forEach(function (path) {
+        if (!usage[path]) { usage[path] = []; }
+        data.extraUsage[path].forEach(function (source) {
+          usage[path].push({ slug: "", name: source, section: "ficheiro do site",
+            label: "não editável na galeria", detail: source, external: true });
+        });
+      });
+
+      return (data.inventory || data.library || []).map(function (image) {
+        var uses = usage[image.path] || [];
+        var slash = image.path.lastIndexOf("/");
+
+        return {
+          path: image.path,
+          folder: slash > 0 ? image.path.slice(0, slash) : "",
+          width: image.width || 0,
+          height: image.height || 0,
+          pixels: (image.width || 0) * (image.height || 0),
+          size: image.size || 0,
+          modified: image.modified || 0,
+          uses: uses,
+          useCount: uses.length,
+          // Só conta como usada se alguma página do site a carregar: um produto
+          // com página, ou um ficheiro de conteúdo (home.json e afins).
+          liveCount: uses.filter(function (use) {
+            return use.external || !!state.pages[use.slug];
+          }).length
+        };
+      });
+    }
+
+    function compare(a, b) {
+      var key = state.sort;
+      var av = key === "uses" ? a.useCount : a[key];
+      var bv = key === "uses" ? b.useCount : b[key];
+
+      if (key === "path" || key === "folder" || key === "thumb") {
+        av = a.path; bv = b.path;
+      }
+      if (av === bv) { return a.path < b.path ? -1 : 1; }
+      if (typeof av === "string") { return av < bv ? -state.direction : state.direction; }
+      return (av - bv) * state.direction;
+    }
+
+    function filtered() {
+      var needle = el("filter").value.trim().toLowerCase();
+      var onlyUnused = el("only-unused").checked;
+      var onlyOrphan = el("only-orphan").checked;
+
+      return state.rows.filter(function (row) {
+        if (onlyUnused && row.liveCount > 0) { return false; }
+        if (onlyOrphan && !(row.useCount > 0 && row.liveCount === 0)) { return false; }
+        if (!needle) { return true; }
+        if (row.path.toLowerCase().indexOf(needle) !== -1) { return true; }
+        return row.uses.some(function (use) {
+          return (use.name + " " + use.section + " " + use.label + " " + use.detail + " " + (use.id || ""))
+            .toLowerCase().indexOf(needle) !== -1;
+        });
+      }).sort(compare);
+    }
+
+    function usesMarkup(row) {
+      if (!row.uses.length) { return '<span class="tag-unused">não é usada em lado nenhum</span>'; }
+
+      return row.uses.map(function (use) {
+        if (use.external) {
+          return '<div>' + esc(use.name) + ' · <span class="tag-orphan">'
+            + esc(use.label) + '</span></div>';
+        }
+        var page = state.pages[use.slug];
+        return '<div><code>' + esc(use.id || "sem identificador") + '</code> · '
+          + esc(use.name) + " · " + esc(use.section) + " · " + esc(use.detail || use.label)
+          + (page ? ' <a href="' + esc(page) + '" target="_blank" rel="noopener">↗</a>'
+                  : ' <span class="tag-orphan">(sem página)</span>')
+          + '</div>';
+      }).join("");
+    }
+
+    function render() {
+      var rows = filtered();
+
+      el("rows").innerHTML = rows.map(function (row) {
+        return '<tr>'
+          + '<td class="thumb"><a href="' + esc(row.path) + '" target="_blank" rel="noopener">'
+          + '<img src="' + esc(row.path) + '" alt="" loading="lazy"></a></td>'
+          + '<td class="path">' + esc(row.path) + '</td>'
+          + '<td class="path">' + esc(row.folder.replace(/^content\//, "")) + '</td>'
+          + '<td class="num">' + (row.width ? row.width + " × " + row.height : "—") + '</td>'
+          + '<td class="num">' + esc(formatSize(row.size)) + '</td>'
+          + '<td class="num">' + esc(formatDate(row.modified)) + '</td>'
+          + '<td class="num">' + row.useCount + (row.useCount && !row.liveCount ? " (0 vivos)" : "") + '</td>'
+          + '<td class="uses">' + usesMarkup(row) + '</td>'
+          + '</tr>';
+      }).join("") || '<tr><td colspan="8" class="hint">Nenhuma imagem corresponde ao filtro.</td></tr>';
+
+      document.querySelectorAll("thead th").forEach(function (th) {
+        th.classList.remove("is-sorted-asc", "is-sorted-desc");
+        if (th.dataset.sort === state.sort) {
+          th.classList.add(state.direction === 1 ? "is-sorted-asc" : "is-sorted-desc");
+        }
+      });
+
+      var unused = state.rows.filter(function (row) { return row.liveCount === 0; }).length;
+      el("summary").textContent = rows.length + " de " + state.rows.length + " imagens · "
+        + unused + " sem uso vivo no site";
+    }
+
+    document.querySelector("thead").addEventListener("click", function (event) {
+      var th = event.target.closest("th[data-sort]");
+      if (!th) { return; }
+      if (state.sort === th.dataset.sort) { state.direction = -state.direction; }
+      else { state.sort = th.dataset.sort; state.direction = th.dataset.sort === "path" || th.dataset.sort === "folder" ? 1 : -1; }
+      render();
+    });
+
+    el("filter").addEventListener("input", render);
+    el("only-unused").addEventListener("change", render);
+    el("only-orphan").addEventListener("change", render);
+
+    fetch("galeria-api.php?action=data")
+      .then(responseJson)
+      .then(function (data) {
+        state.pages = data.pages || {};
+        state.rows = build(data);
+        el("public-warning").hidden = !data.public;
+        render();
+      })
+      .catch(function (error) {
+        el("rows").innerHTML = '<tr><td colspan="8" class="tag-unused">' + esc(error.message) + '</td></tr>';
+      });
+  }());
+  </script>
+</body>
+</html>

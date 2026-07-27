@@ -88,13 +88,13 @@ function render_page($title, $message, $type, $details = array())
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="styles.css?v=20260524021000">
+  <link rel="stylesheet" href="styles.css?v=2026072604">
 </head>
 <body data-page="contact-result">
   <main class="message-result-shell">
     <header class="site-header">
       <a class="brand" href="index.html" aria-label="Mia & Paper">
-        <span class="brand-mark"><img src="content/brand/logo.jpg" alt="" loading="lazy"></span>
+        <span class="brand-mark"><img src="content/brand/logo.webp" alt="" loading="lazy"></span>
         <span>Mia &amp; Paper</span>
       </a>
       <nav class="header-actions" aria-label="Links rápidos">
@@ -128,6 +128,15 @@ function render_page($title, $message, $type, $details = array())
       <span>© Mia &amp; Paper 2026 Todos os Direitos Reservados</span>
     </footer>
   </main>
+  <script src="app.js?v=2026072605"></script>
+  <script>
+    if (window.trackOrderEvent) {
+      window.trackOrderEvent("contact_result_view", {
+        step_id: "contact-result",
+        target_id: <?php echo json_encode((string)$type, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>
+      });
+    }
+  </script>
 </body>
 </html>
     <?php

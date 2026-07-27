@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#ff4d8d">
+  <title>Mockup 05 · Risofólio | Mia &amp; Paper</title>
+  <meta name="description" content="Proposta de homepage Mia & Paper em estilo riso-print: cores fortes e blocos com contorno.">
+  <style>
+    :root{
+      --paper:#fdf3e3; --ink:#141018;
+      --pink:#ff4d8d; --yellow:#ffd21f; --blue:#2b4cff; --mint:#12c9a0;
+      --border:3px solid var(--ink);
+      --hard:6px 6px 0 var(--ink);
+      --hard-sm:4px 4px 0 var(--ink);
+      --sans:"Arial Black","Helvetica Neue",Arial,sans-serif;
+      --body:"Helvetica Neue",Arial,sans-serif;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;overflow-x:hidden}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
+      -webkit-font-smoothing:antialiased;overflow-x:hidden;
+      background-image:radial-gradient(var(--ink) 1.1px,transparent 1.2px);
+      background-size:22px 22px;background-attachment:fixed}
+    body.menu-is-open{overflow:hidden}
+    img{display:block;max-width:100%}
+    a{color:inherit;text-decoration:none}
+    button{font:inherit;color:inherit;cursor:pointer}
+    h1,h2,h3,p,blockquote{margin:0}
+    .wrap{width:min(100% - 26px,1180px);margin-inline:auto}
+
+    /* header */
+    .head{position:sticky;top:0;z-index:40;background:var(--yellow);border-bottom:var(--border);
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:9px max(13px,calc((100% - 1180px)/2))}
+    .brand{display:inline-flex;align-items:center;gap:9px;font-family:var(--sans);
+      font-weight:900;letter-spacing:-.03em;font-size:1rem}
+    .brand img{width:42px;height:42px;border:var(--border);border-radius:50%;object-fit:cover;
+      box-shadow:var(--hard-sm)}
+    .head-actions{display:flex;align-items:center;gap:8px}
+    .cta-mini{display:inline-flex;align-items:center;min-height:44px;padding:0 15px;
+      background:var(--pink);color:#fff;border:var(--border);box-shadow:var(--hard-sm);
+      font-family:var(--sans);font-size:.74rem;letter-spacing:.02em;text-transform:uppercase}
+    .cta-mini:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+    .burger{width:46px;height:46px;display:grid;place-items:center;background:#fff;
+      border:var(--border);box-shadow:var(--hard-sm)}
+    .burger span,.burger span::before,.burger span::after{content:"";display:block;width:20px;height:3px;background:var(--ink)}
+    .burger span{position:relative}
+    .burger span::before{position:absolute;top:-7px}.burger span::after{position:absolute;top:7px}
+
+    /* marquee */
+    .marquee{background:var(--blue);color:#fff;border-bottom:var(--border);overflow:hidden;
+      font-family:var(--sans);text-transform:uppercase;letter-spacing:.08em;font-size:.8rem}
+    .marquee div{display:inline-block;white-space:nowrap;padding:9px 0;
+      animation:slide 22s linear infinite}
+    .marquee span{padding:0 18px}
+    @keyframes slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+    @media (prefers-reduced-motion:reduce){.marquee div{animation:none}}
+
+    /* menu */
+    .backdrop{position:fixed;inset:0;z-index:45;background:rgba(20,16,24,.45);border:0;
+      opacity:0;visibility:hidden;transition:.2s}
+    body.menu-is-open .backdrop{opacity:1;visibility:visible}
+    .menu{position:fixed;top:0;right:0;z-index:46;height:100%;width:min(86vw,330px);
+      background:var(--paper);border-left:var(--border);padding:18px;transform:translateX(105%);
+      transition:transform .25s ease;display:flex;flex-direction:column;gap:14px}
+    body.menu-is-open .menu{transform:none}
+    .menu-top{display:flex;align-items:center;justify-content:space-between}
+    .menu-x{width:44px;height:44px;background:var(--pink);color:#fff;border:var(--border);
+      box-shadow:var(--hard-sm);font-family:var(--sans);font-size:1.2rem}
+    .menu nav{display:flex;flex-direction:column;gap:9px}
+    .menu nav a{padding:13px 15px;background:#fff;border:var(--border);box-shadow:var(--hard-sm);
+      font-family:var(--sans);text-transform:uppercase;font-size:.9rem;letter-spacing:.01em}
+    .menu nav a:nth-child(2n){background:var(--yellow)}
+    .menu-note{font-size:.76rem;color:#5a5060;line-height:1.5;margin-top:auto}
+
+    section{padding-block:34px}
+    .tag{display:inline-block;font-family:var(--sans);text-transform:uppercase;letter-spacing:.06em;
+      font-size:.72rem;padding:6px 12px;border:var(--border);background:#fff;box-shadow:var(--hard-sm)}
+
+    /* hero */
+    .hero{padding-top:30px}
+    .hero-eyebrow{background:var(--mint)}
+    .hero h1{font-family:var(--sans);font-weight:900;line-height:.94;letter-spacing:-.035em;
+      font-size:clamp(2.5rem,13vw,5.5rem);margin:16px 0 0;text-transform:uppercase}
+    .hero h1 em{font-style:normal;color:var(--pink);-webkit-text-stroke:2px var(--ink);
+      text-shadow:var(--hard-sm)}
+    .hero h1 b{font-style:normal;color:var(--blue)}
+    .hero-lead{margin-top:16px;font-size:1.05rem;line-height:1.5;max-width:36ch;font-weight:600}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 22px;
+      font-family:var(--sans);text-transform:uppercase;letter-spacing:.02em;font-size:.86rem;
+      border:var(--border);box-shadow:var(--hard)}
+    .btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+    .btn-1{background:var(--pink);color:#fff}
+    .btn-2{background:#fff}
+    .hero-media{position:relative;margin-top:26px}
+    .hero-media img{width:100%;border:var(--border);box-shadow:var(--hard);object-fit:cover;
+      aspect-ratio:4/3}
+    .sticker{position:absolute;font-family:var(--sans);text-transform:uppercase;font-size:.74rem;
+      padding:9px 13px;border:var(--border);box-shadow:var(--hard-sm);line-height:1.1;text-align:center}
+    .sticker-1{top:-14px;right:6px;background:var(--yellow);transform:rotate(7deg)}
+    .sticker-2{bottom:-16px;left:-4px;background:var(--blue);color:#fff;transform:rotate(-6deg)}
+
+    /* section head */
+    .sec-head{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+    .sec-head h2{font-family:var(--sans);text-transform:uppercase;line-height:.98;
+      letter-spacing:-.02em;font-size:clamp(1.7rem,7vw,3rem)}
+    .sec-head p{font-weight:600;line-height:1.5;max-width:46ch}
+
+    /* testimonials */
+    .quotes{display:grid;gap:16px}
+    .quote{background:#fff;border:var(--border);box-shadow:var(--hard);padding:18px}
+    .quote:nth-child(1){background:var(--yellow)}
+    .quote:nth-child(2){background:var(--mint)}
+    .quote:nth-child(3){background:var(--pink);color:#fff}
+    .quote .stars{font-size:1.1rem;letter-spacing:2px}
+    .quote blockquote{font-size:1.08rem;line-height:1.4;font-weight:700;margin-top:10px}
+    .quote footer{margin-top:12px;font-family:var(--sans);text-transform:uppercase;font-size:.68rem;letter-spacing:.05em}
+
+    /* news */
+    .news{display:grid;gap:16px}
+    .news-card{display:block;background:#fff;border:var(--border);box-shadow:var(--hard);overflow:hidden}
+    .news-card:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+    .news-card img{width:100%;aspect-ratio:16/10;object-fit:cover;border-bottom:var(--border)}
+    .news-body{padding:16px}
+    .news-label{display:inline-block;font-family:var(--sans);text-transform:uppercase;font-size:.66rem;
+      letter-spacing:.05em;background:var(--blue);color:#fff;padding:5px 10px;border:var(--border)}
+    .news-body h3{font-family:var(--sans);text-transform:uppercase;font-size:1.25rem;margin-top:11px;line-height:1}
+    .news-body p{margin-top:9px;font-weight:600;line-height:1.5}
+    .news-link{display:inline-block;margin-top:12px;font-family:var(--sans);text-transform:uppercase;
+      font-size:.78rem;border-bottom:3px solid var(--pink)}
+
+    /* products */
+    .prods{display:grid;gap:14px}
+    .prod{display:flex;gap:14px;align-items:center;background:#fff;border:var(--border);
+      box-shadow:var(--hard-sm);padding:12px}
+    .prod:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+    .prod img{width:82px;height:82px;flex:0 0 auto;object-fit:cover;border:var(--border)}
+    .prod-copy{flex:1;min-width:0}
+    .prod-num{font-family:var(--sans);font-size:.66rem;color:var(--blue)}
+    .prod h3{font-family:var(--sans);text-transform:uppercase;font-size:1.15rem;margin-top:2px}
+    .prod p{font-weight:600;font-size:.9rem;margin-top:3px;color:#4a4350}
+    .prod-arrow{font-family:var(--sans);font-size:1.4rem;flex:0 0 auto}
+
+    /* process */
+    .proc-band{background:var(--blue);color:#fff;border-block:var(--border)}
+    .steps{display:grid;gap:16px;margin-top:22px}
+    .step{background:var(--paper);color:var(--ink);border:var(--border);box-shadow:var(--hard-sm);padding:18px}
+    .step b{display:inline-grid;place-items:center;width:48px;height:48px;background:var(--yellow);
+      border:var(--border);font-family:var(--sans);font-size:1.1rem}
+    .step h3{font-family:var(--sans);text-transform:uppercase;font-size:1.15rem;margin-top:12px}
+    .step small{display:block;font-family:var(--sans);text-transform:uppercase;font-size:.64rem;color:var(--pink);margin-top:2px}
+    .step p{font-weight:600;margin-top:7px;line-height:1.5}
+    .proc-band .sec-head h2,.proc-band .sec-head p{color:#fff}
+
+    /* final */
+    .final{text-align:center}
+    .final-box{background:var(--pink);color:#fff;border:var(--border);box-shadow:var(--hard);
+      padding:34px 20px}
+    .final-box h2{font-family:var(--sans);text-transform:uppercase;line-height:.95;
+      font-size:clamp(1.9rem,8vw,3.4rem)}
+    .final-box .btn{margin-top:20px;background:var(--yellow);color:var(--ink)}
+
+    /* footer */
+    .foot{background:var(--ink);color:var(--paper);border-top:var(--border);padding:26px 0 90px}
+    .foot .wrap{display:flex;flex-direction:column;gap:12px}
+    .foot a{font-family:var(--sans);text-transform:uppercase;font-size:.74rem}
+    .foot nav{display:flex;flex-wrap:wrap;gap:14px}
+
+    /* switcher */
+    .mk-switcher{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:50;
+      display:flex;gap:5px;max-width:calc(100% - 20px);overflow-x:auto;padding:6px;
+      background:#fff;border:var(--border);box-shadow:var(--hard-sm);scrollbar-width:none}
+    .mk-switcher::-webkit-scrollbar{display:none}
+    .mk-switcher a{flex:0 0 auto;min-width:34px;height:34px;display:grid;place-items:center;padding:0 9px;
+      font-family:var(--sans);font-size:.72rem;background:var(--paper);border:2px solid var(--ink)}
+    .mk-switcher a[aria-current="page"]{background:var(--pink);color:#fff}
+
+    @media(min-width:720px){
+      .quotes{grid-template-columns:repeat(3,1fr)}
+      .news{grid-template-columns:1fr 1fr}
+      .prods{grid-template-columns:1fr 1fr}
+      .steps{grid-template-columns:repeat(3,1fr)}
+      .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
+      .hero-media{margin-top:0}
+    }
+  </style>
+</head>
+<body data-concept="riso" data-mockup-page="5">
+  <div id="app"></div>
+  <script src="mockups-data.js?v=20260718"></script>
+  <script>
+  (function(){
+    var M=window.MIA,e=M.esc,app=document.getElementById("app");
+    function stars(){return '<span class="stars" aria-label="5 estrelas">★★★★★</span>';}
+    var nav=M.nav.map(function(n){return '<a href="'+n.href+'">'+e(n.label)+'</a>';}).join("");
+
+    var quotes=M.quotes.map(function(q){
+      return '<article class="quote">'+stars()+'<blockquote>“'+e(q.text)+'”</blockquote><footer>'+e(q.source)+'</footer></article>';
+    }).join("");
+
+    var news=M.news.map(function(n){
+      return '<a class="news-card" href="'+n.href+'"><img src="'+n.image+'" alt="'+e(n.alt)+'" loading="lazy">'+
+        '<span class="news-body"><span class="news-label">'+e(n.label)+'</span><h3>'+e(n.title)+'</h3>'+
+        '<p>'+e(n.text)+'</p><span class="news-link">'+e(n.cta)+' →</span></span></a>';
+    }).join("");
+
+    var prods=M.products.map(function(p,i){
+      var num=(i+1<10?"0":"")+(i+1);
+      return '<a class="prod" href="'+p.href+'"><img src="'+p.image+'" alt="'+e(p.alt)+'" loading="lazy">'+
+        '<span class="prod-copy"><span class="prod-num">'+num+'</span><h3>'+e(p.name)+'</h3><p>'+e(p.text)+'</p></span>'+
+        '<span class="prod-arrow" aria-hidden="true">→</span></a>';
+    }).join("");
+
+    var steps=M.process.map(function(s){
+      return '<article class="step"><b>'+s.n+'</b><small>'+e(s.key)+'</small><h3>'+e(s.title)+'</h3><p>'+e(s.text)+'</p></article>';
+    }).join("");
+
+    var marqueeText='<span>papelaria personalizada ✱</span><span>feita por encomenda ✱</span><span>cadernos · molduras · lembranças ✱</span><span>Mia &amp; Paper ✱</span>';
+
+    app.innerHTML=[
+      '<header class="head">',
+        '<a class="brand" href="index.html" aria-label="Ver todos os mockups"><img src="'+M.logo+'" alt="" width="92" height="92"><span>Mia &amp; Paper</span></a>',
+        '<div class="head-actions"><a class="cta-mini" href="'+M.catalog+'">Catálogo</a>',
+        '<button class="burger" type="button" aria-label="Abrir menu" aria-expanded="false" data-menu-button><span></span></button></div>',
+      '</header>',
+      '<div class="marquee" aria-hidden="true"><div>'+marqueeText+marqueeText+'</div></div>',
+
+      '<button class="backdrop" type="button" aria-label="Fechar menu" data-menu-close></button>',
+      '<aside class="menu" aria-label="Menu principal" aria-hidden="true" data-menu-panel>',
+        '<div class="menu-top"><span class="brand"><img src="'+M.logo+'" alt="" width="92" height="92"><span>Mia &amp; Paper</span></span>',
+        '<button class="menu-x" type="button" aria-label="Fechar menu" data-menu-close>×</button></div>',
+        '<nav>'+nav+'<a href="'+M.catalog+'">Catálogo simples</a></nav>',
+        '<p class="menu-note">Mockup visual isolado. A homepage real não foi alterada.</p>',
+      '</aside>',
+
+      '<main class="wrap">',
+        '<section class="hero" id="inicio" aria-labelledby="h5-title">',
+          '<div><span class="tag hero-eyebrow">Papelaria personalizada</span>',
+            '<h1 id="h5-title">Ideias que <em>ganham</em> <b>forma</b>.</h1>',
+            '<p class="hero-lead">Cadernos, molduras e pequenos objetos personalizados para oferecer, guardar ou tornar teus.</p>',
+            '<div class="hero-actions"><a class="btn btn-1" href="#produtos">Explorar produtos →</a><a class="btn btn-2" href="#novidades">Ver novidades</a></div>',
+          '</div>',
+          '<div class="hero-media"><img src="'+M.hero.image+'" alt="'+e(M.hero.alt)+'" width="1200" height="900">',
+            '<span class="sticker sticker-1">Por<br>encomenda</span><span class="sticker sticker-2">Feito<br>em Portugal</span></div>',
+        '</section>',
+
+        '<section id="testemunhos" aria-labelledby="t5-title">',
+          '<div class="sec-head"><span class="tag">Testemunhos · textos provisórios</span><h2 id="t5-title">Peças que chegam e ficam.</h2></div>',
+          '<div class="quotes">'+quotes+'</div>',
+        '</section>',
+
+        '<section id="novidades" aria-labelledby="n5-title">',
+          '<div class="sec-head"><span class="tag">Novidades</span><h2 id="n5-title">O que chegou ao atelier.</h2><p>Novos produtos e novas formas de personalizar o teu pedido.</p></div>',
+          '<div class="news">'+news+'</div>',
+        '</section>',
+
+        '<section id="produtos" aria-labelledby="p5-title">',
+          '<div class="sec-head"><span class="tag">Produtos · 07</span><h2 id="p5-title">Começa pela categoria certa.</h2><p>Sete pontos de partida. Em cada página encontras as opções, os materiais e a forma de personalizar.</p></div>',
+          '<div class="prods">'+prods+'</div>',
+        '</section>',
+      '</main>',
+
+      '<section class="proc-band" id="como-encomendar" aria-labelledby="c5-title"><div class="wrap">',
+        '<div class="sec-head"><span class="tag">Como encomendar</span><h2 id="c5-title">Do primeiro clique ao pedido final.</h2><p>O processo mantém-se curto e claro, mesmo quando há pormenores para escolher.</p></div>',
+        '<div class="steps">'+steps+'</div>',
+      '</div></section>',
+
+      '<main class="wrap"><section class="final"><div class="final-box"><h2>Já sabes o que procuras?</h2><a class="btn" href="'+M.catalog+'">Abrir catálogo →</a></div></section></main>',
+
+      '<footer class="foot"><div class="wrap"><span style="font-family:var(--sans);text-transform:uppercase;font-size:.78rem">© Mia &amp; Paper 2026 · mockup visual</span>',
+        '<nav><a href="'+M.base+'privacy.html">Privacidade</a><a href="'+M.base+'contacto.html">Contacto</a><a href="index.html">Todos os mockups</a></nav></div></footer>',
+
+      M.switcherHTML(5)
+    ].join("");
+
+    M.wireMenu();
+  })();
+  </script>
+</body>
+</html>

@@ -2,18 +2,68 @@
   var app = document.querySelector("#app");
   var page = document.body.dataset.page;
   var productSlug = document.body.dataset.product;
+  var homeContentPath = document.body.dataset.homeContent || "content/home.json";
+  var ORDER_HOME_CONTENT = "content/order-products.json";
   var ADMIN_KEY = "miaandpaper-admin-session-v1";
   var ADMIN_API = "admin-api.php";
+  var COLORS_API = "colors-api.php";
+  var ORDER_UPLOAD_API = "upload-order-photo.php";
+  var ORDER_MEDIA_PREVIEW_API = "order-media-preview.php";
   var CART_KEY = "miaandpaper_cart_v1";
   var CART_SCHEMA_VERSION = 1;
   var CARD_DETAILS_SESSION_KEY = "miaandpaper_card_details_session";
   var CHECKOUT_SESSION_KEY = "miaandpaper_checkout_session";
+  // O topo nao tem fundo, por isso o texto da marca desvaneceria por cima do conteudo
+  // ao fazer scroll. Marcamos o estado no body e o CSS trata da transicao; os icones
+  // ficam sempre visiveis porque tem fundo proprio.
+  (function installBrandScrollFade() {
+    var THRESHOLD = 8;
+
+    function apply() {
+      var offset = window.pageYOffset || document.documentElement.scrollTop || 0;
+      var value = offset > THRESHOLD ? "1" : "0";
+
+      if (document.body.dataset.scrolled !== value) {
+        document.body.dataset.scrolled = value;
+      }
+    }
+
+    window.addEventListener("scroll", apply, { passive: true });
+    apply();
+  }());
+
   var cartMemoryStore = "";
   var cartEscapeBound = false;
+  var siteMenuEscapeBound = false;
+  var siteMenuGesture = null;
+  var siteMenuSuppressClickUntil = 0;
   var checkoutHistoryBound = false;
   var imageViewerZoom = 1;
   var imageViewerEscapeBound = false;
   var cadernoPreviewTimers = [];
+  var orderUploadPreviews = {};
+  var orderAudioRecorder = null;
+  var orderAudioStream = null;
+  var orderAudioChunks = [];
+  var orderAudioPointerHeld = false;
+  var orderAudioPendingStart = false;
+  var orderAudioContext = null;
+  var orderUploadOperations = [];
+  var orderUploadNextOperationId = 1;
+  var orderFilePickerRevision = 0;
+  var orderActiveFilePicker = null;
+
+  function installFavicon() {
+    var link = document.querySelector('link[rel~="icon"]') || document.createElement("link");
+    link.rel = "icon";
+    link.type = "image/jpeg";
+    link.href = "content/brand/logo.webp";
+    if (!link.parentNode) {
+      document.head.appendChild(link);
+    }
+  }
+
+  installFavicon();
 
   function safeStorageGetItem(key) {
     var value;
@@ -101,6 +151,8 @@
     adminMessage: "",
     cartPanelOpen: false,
     cartNotice: "",
+    siteMenuOpen: false,
+    siteMenuCategories: [],
     editingCartItemId: "",
     editingCartReturnTo: "",
     editingCartOriginalItem: null,
@@ -148,15 +200,45 @@
     // OPEN_ORDER_HINT_V1: true quando check-open-orders.php devolve
     // has_possible_open_order=true para o nome+contacto correntes.
     openOrderHint: false,
-    openOrderHintLastQuery: ""
+    openOrderHintLastQuery: "",
+    orderUploadBusy: false,
+    orderUploadMessage: "",
+    orderUploadError: "",
+    orderUploadFeedbackKind: "",
+    orderUploadProgress: null,
+    orderAudioRecording: false,
+    colorSuggestionsOpen: false,
+    quadroColorSuggestionsOpen: true,
+    paletteColorSlots: [],
+    // Quadrado que a próxima cor escolhida na grelha vai preencher.
+    quadroActiveColorSlot: 0,
+    // Cor expandida na grelha a mostrar os tons: { value, slot } ou null.
+    quadroToneEdit: null,
+    // Estado de interacção isolado por passo. Sem este mapa, o degradê do
+    // coração e as cores do respectivo fundo partilhariam quadrados, foco e
+    // tons, fazendo uma escolha apagar silenciosamente a outra.
+    quadroColorUi: {},
+    quadroPhotoColorAnalysis: {
+      token: "",
+      status: "idle",
+      detected: [],
+      palettes: [],
+      error: ""
+    },
+    progressAnimationFromPercent: null
   };
 
   var ICON_INSTAGRAM = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="1.9"></rect><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle><circle cx="17.4" cy="6.6" r="1.2" fill="currentColor"></circle></svg>';
   var ICON_MAIL = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2.5" ry="2.5" fill="none" stroke="currentColor" stroke-width="1.9"></rect><path d="M4.5 7l7.5 6 7.5-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
   var ICON_CART = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 5.5h2.4l2 9.2a2 2 0 0 0 2 1.6h6.6a2 2 0 0 0 1.9-1.4l1.3-5.2H8.1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="10.8" cy="20" r="1.2" fill="currentColor"></circle><circle cx="17.6" cy="20" r="1.2" fill="currentColor"></circle></svg>';
+  var ICON_MENU = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>';
+  var ICON_CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>';
   var ICON_ZOOM = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="5.7" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M15 15l4.6 4.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>';
   var ICON_SUN = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle><g stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="12" y1="2.5" x2="12" y2="5"></line><line x1="12" y1="19" x2="12" y2="21.5"></line><line x1="2.5" y1="12" x2="5" y2="12"></line><line x1="19" y1="12" x2="21.5" y2="12"></line><line x1="5.2" y1="5.2" x2="7" y2="7"></line><line x1="17" y1="17" x2="18.8" y2="18.8"></line><line x1="5.2" y1="18.8" x2="7" y2="17"></line><line x1="17" y1="7" x2="18.8" y2="5.2"></line></g></svg>';
   var ICON_MOON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.5 14.2A8 8 0 0 1 9.8 3.5a8.2 8.2 0 1 0 10.7 10.7z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"></path></svg>';
+  var ICON_UPLOAD = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+  var ICON_PHOTO = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.9"></rect><circle cx="9" cy="10" r="2" fill="none" stroke="currentColor" stroke-width="1.9"></circle><path d="m4 17 5-5 4 4 2-2 5 5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+  var ICON_MICROPHONE = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8.5" y="3" width="7" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.9"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>';
   var THEME_KEY = "miaandpaperTheme";
 
   var templateLabels = {
@@ -165,6 +247,9 @@
     "price-pack-grid": "Packs/preços",
     "quantity-builder": "Pack + quantidades",
     "design-grid": "Grelha de designs",
+    "color-grid": "Cores",
+    "palette-grid": "Combinações de cores",
+    "photo-upload": "Envio de fotos",
     "lamination-choice": "Laminação",
     "purchase-option": "Opções de compra",
     "cover-personalization": "Personalização da capa",
@@ -494,6 +579,154 @@
     });
   }
 
+  function setRuntimeIndividualColors(step, colors) {
+    if (Array.isArray(step && step.configuredColors)) {
+      Object.defineProperty(step, "individualColors", {
+        value: colors,
+        writable: true,
+        configurable: true,
+        enumerable: false
+      });
+      return;
+    }
+    step.individualColors = colors;
+  }
+
+  function applyColorCatalog(product, response) {
+    var catalog = response && response.catalog ? response.catalog : response;
+    var colors = catalog && Array.isArray(catalog.colors) ? catalog.colors : [];
+    var statuses = catalog && catalog.statuses && typeof catalog.statuses === "object" ? catalog.statuses : {};
+
+    if (!product || !Array.isArray(product.steps)) {
+      return product;
+    }
+
+    product.steps.forEach(function (step) {
+      if (step && Array.isArray(step.configuredColors)) {
+        setRuntimeIndividualColors(step, step.configuredColors.map(function (color) {
+          return Object.assign({}, color);
+        }));
+      }
+    });
+
+    // Alguns passos usam exactamente o mesmo papel/catálogo de outro passo,
+    // mas precisam de selecções e disponibilidade próprias. A referência evita
+    // duplicar dezenas de cores no JSON sem transformar o passo numa cópia
+    // independente no editor administrativo.
+    product.steps.forEach(function (step) {
+      var source;
+      var inheritedColors;
+      if (!step || !step.colorSourceStep) {
+        return;
+      }
+      source = product.steps.filter(function (candidate) {
+        return candidate && candidate.id === step.colorSourceStep;
+      })[0] || null;
+      inheritedColors = source && (Array.isArray(source.configuredColors)
+        ? source.configuredColors
+        : (Array.isArray(source.individualColors) ? source.individualColors : []));
+      if (inheritedColors && inheritedColors.length) {
+        Object.defineProperty(step, "configuredColors", {
+          value: inheritedColors.map(function (color) { return Object.assign({}, color); }),
+          writable: true,
+          configurable: true,
+          enumerable: false
+        });
+        setRuntimeIndividualColors(step, inheritedColors.map(function (color) {
+          return Object.assign({}, color);
+        }));
+      }
+      if ((!Array.isArray(step.items) || !step.items.length) && source && Array.isArray(source.items)) {
+        Object.defineProperty(step, "items", {
+          value: source.items.map(function (item) { return Object.assign({}, item); }),
+          writable: true,
+          configurable: true,
+          enumerable: false
+        });
+      }
+    });
+
+    if (!colors.length) {
+      return product;
+    }
+
+    product.steps.forEach(function (step) {
+      var flowKey;
+      var flowStatuses;
+      var blockedHex = {};
+      var availableHex = {};
+      var configuredColors;
+      var configuredById = {};
+      var sourceColors;
+      var resolvedColors;
+
+      if (!step || step.template !== "palette-grid") {
+        return;
+      }
+      flowKey = String(product.slug || "") + ":" + String(step.id || "");
+      flowStatuses = statuses[flowKey];
+      if (!flowStatuses || typeof flowStatuses !== "object") {
+        return;
+      }
+
+      configuredColors = Array.isArray(step.configuredColors)
+        ? step.configuredColors.slice()
+        : (Array.isArray(step.individualColors) ? step.individualColors.slice() : []);
+      configuredColors.forEach(function (color) {
+        if (color && color.id) {
+          configuredById[String(color.id)] = color;
+        }
+      });
+      sourceColors = step.useConfiguredColors === true
+        ? configuredColors.map(function (configured) {
+          return colors.filter(function (color) {
+            return color && String(color.id) === String(configured.id);
+          })[0] || {
+            id: configured.id,
+            name: configured.title || configured.value || configured.id,
+            hex: configured.swatch
+          };
+        })
+        : colors;
+
+      resolvedColors = sourceColors.map(function (color) {
+        var status = String(flowStatuses[color.id] || "hidden");
+        var configured = configuredById[String(color.id)] || {};
+        var swatch = safeSwatchColor(configured.swatch || color.hex);
+        if (status === "available") {
+          availableHex[swatch.toLowerCase()] = true;
+        } else {
+          blockedHex[swatch.toLowerCase()] = true;
+        }
+        if (status === "hidden") {
+          return null;
+        }
+        return {
+          id: String(color.id),
+          value: String(configured.value || configured.title || color.name),
+          title: String(configured.title || configured.value || color.name),
+          swatch: swatch,
+          colorStops: Array.isArray(configured.colorStops) ? configured.colorStops.slice(0, 3) : null,
+          availability: status
+        };
+      }).filter(Boolean);
+      setRuntimeIndividualColors(step, resolvedColors);
+
+      // O catálogo tem ids diferentes com o mesmo hex (azul-bebe/azul-claro,
+      // rosa-bebe/rosa-claro) e cada fluxo só dá estado a um deles. Sem o
+      // availableHex, o id sem estado bloqueava a cor para o fluxo todo e as
+      // combinações sugeridas com esse hex desapareciam.
+      step.items = (step.items || []).filter(function (item) {
+        return paletteColors(item).every(function (hex) {
+          var key = String(hex).toLowerCase();
+          return availableHex[key] || !blockedHex[key];
+        });
+      });
+    });
+
+    return product;
+  }
+
   function validHex(value) {
     return /^#[0-9a-fA-F]{6}$/.test(String(value || "").trim());
   }
@@ -737,7 +970,15 @@
     ensureHomeSettings(home);
 
     return Promise.all((home.categories || []).map(function (category) {
+      var manualImages = Array.isArray(category.carouselSourceImages)
+        ? category.carouselSourceImages.filter(Boolean).slice(0, 12)
+        : [];
       var slug = slugFromHref(category.href);
+
+      if (manualImages.length) {
+        category.carouselImages = manualImages;
+        return category;
+      }
 
       if (!slug) {
         category.carouselImages = [];
@@ -891,7 +1132,17 @@
   }
 
   function cloneProduct(product) {
-    return JSON.parse(JSON.stringify(product));
+    var clone = JSON.parse(JSON.stringify(product));
+    if (clone && Array.isArray(clone.steps)) {
+      clone.steps.forEach(function (step) {
+        if (step && Array.isArray(step.configuredColors)) {
+          setRuntimeIndividualColors(step, step.configuredColors.map(function (color) {
+            return Object.assign({}, color);
+          }));
+        }
+      });
+    }
+    return clone;
   }
 
   // FUNNEL_TRACKING_V1
@@ -1228,6 +1479,66 @@
       if (sel.pack_quantity) snap.selected_pack = Number(sel.pack_quantity) || 0;
       if (sel.size) snap.selected_size = String(sel.size).slice(0, 60);
       if (sel.delivery_option) snap.selected_delivery = String(sel.delivery_option).slice(0, 60);
+
+      // Cores e variantes sem conteúdo pessoal. Mantém a posição dos tons —
+      // num degradê, 0 é a cor inicial e 1 a final.
+      (product.steps || []).filter(function (step) {
+        return step && step.template === "palette-grid";
+      }).forEach(function (step) {
+        var keys = quadrosColorSelectionKeys(step);
+        var families = Array.isArray(sel[keys.colors]) ? sel[keys.colors].slice(0, 6) : [];
+        var tones = Array.isArray(sel[keys.tones]) ? sel[keys.tones].slice(0, 6) : [];
+        var prefix = String(step.id || "colors").replace(/[^a-z0-9_]/gi, "_");
+        if (families.length) {
+          snap[prefix + "_colors"] = families.map(function (value) { return String(value).slice(0, 60); });
+          snap[prefix + "_tones"] = tones.map(function (value) { return Math.max(0, Math.min(2, Number(value) || 0)); });
+        } else if (sel[keys.mia]) {
+          snap[prefix + "_mia"] = 1;
+        }
+      });
+      ["heart_finish", "silhouette", "quadro_super_example"].forEach(function (key) {
+        if (sel[key]) snap[key] = String(sel[key]).slice(0, 80);
+      });
+      ["no_phrase", "no_dedication", "no_text", "silhouette_contact_me"].forEach(function (key) {
+        if (sel[key]) snap[key] = 1;
+      });
+
+      // Molduras: regista apenas presença/contagem nos passos de texto e
+      // anexos. Nunca envia dedicatórias, descrições, nomes de ficheiro,
+      // tokens de upload ou qualquer outro conteúdo introduzido pela pessoa.
+      if (product.slug === "quadros") {
+        [
+          ["quadro_uploads", "photo_count"],
+          ["quadro_reference_uploads", "reference_photo_count"],
+          ["quadro_audio_uploads", "reference_audio_count"],
+          ["quadro_silhouette_uploads", "silhouette_photo_count"],
+          ["quadro_silhouette_audio_uploads", "silhouette_audio_count"]
+        ].forEach(function (record) {
+          var uploads = Array.isArray(sel[record[0]]) ? sel[record[0]] : [];
+          if (uploads.length) snap[record[1]] = uploads.length;
+        });
+        if (String(sel.quadro_text || "").trim()) snap.quadro_has_text = 1;
+        if (String(sel.quadro_dedication || "").trim()) snap.dedication_has_text = 1;
+        if (String(sel.quadro_silhouette_description || "").trim()) snap.silhouette_has_description = 1;
+        if (String(sel.quadro_description || "").trim()) snap.super_has_description = 1;
+      }
+
+      // Novo fluxo de crachás/ímanes: só presença e contagens, nunca texto,
+      // áudio, nomes de ficheiro ou outros dados enviados pela pessoa.
+      if (isCustomArtworkProduct(product)) {
+        var custom = customArtworkConfig(product);
+        var artworkItems = Array.isArray(sel[custom.uploadKey]) ? sel[custom.uploadKey] : [];
+        var cardPhotos = Array.isArray(sel[custom.cardPhotoKey]) ? sel[custom.cardPhotoKey] : [];
+        var cardAudio = Array.isArray(sel[custom.cardAudioKey]) ? sel[custom.cardAudioKey] : [];
+        if (artworkItems.length) {
+          snap.artwork_attached = 1;
+          snap.artwork_count = artworkItems.length;
+        }
+        if (sel[custom.helpKey]) snap.artwork_help = 1;
+        if (String(sel[custom.cardField] || "").trim()) snap.card_has_text = 1;
+        if (cardPhotos.length) snap.card_photo_count = cardPhotos.length;
+        if (cardAudio.length) snap.card_audio_count = cardAudio.length;
+      }
 
       // Cadernos: extras específicos.
       try {
@@ -1896,9 +2207,13 @@
 
   function renderChrome(innerHtml, currentProduct) {
     app.innerHTML = renderOrdersSuspendedBanner() + innerHtml + renderAdminSurface(currentProduct) + renderCartSurface();
+    if (state.home) {
+      applyThemeToggleVisibility(state.home.showThemeToggle === true);
+    }
     bindAdminSurface(currentProduct);
     bindThemeToggle();
     bindCartUi();
+    bindSiteMenu();
     applyTheme(currentTheme());
   }
 
@@ -1994,6 +2309,8 @@
         title: String(summary.title || source.productName || "Produto").trim() || "Produto",
         subtitle: String(summary.subtitle || "").trim(),
         priceCents: Math.max(0, Number.isFinite(priceCents) ? priceCents : 0),
+        priceText: String(summary.priceText || "").trim(),
+        priceToConfirm: summary.priceToConfirm === true,
         image: summary.image ? String(summary.image).trim() : null
       },
       selections: source.selections && typeof source.selections === "object" && !Array.isArray(source.selections)
@@ -2101,21 +2418,122 @@
     }, 0);
   }
 
+  function cartHasPriceToConfirm() {
+    return getCartItems().some(function (item) {
+      return !!(item && item.summary && item.summary.priceToConfirm === true);
+    });
+  }
+
+  function molduraDisplayText(value) {
+    return String(value || "")
+      .replace(/\bQUADROS PERSONALIZADOS\b/g, "MOLDURAS PERSONALIZADAS")
+      .replace(/\bQuadros personalizados\b/g, "Molduras personalizadas")
+      .replace(/\bquadros personalizados\b/g, "molduras personalizadas")
+      .replace(/\bQUADRO PERSONALIZADO\b/g, "MOLDURA PERSONALIZADA")
+      .replace(/\bQuadro personalizado\b/g, "Moldura personalizada")
+      .replace(/\bquadro personalizado\b/g, "moldura personalizada")
+      .replace(/\bDOS QUADROS\b/g, "DAS MOLDURAS")
+      .replace(/\bDos quadros\b/g, "Das molduras")
+      .replace(/\bdos quadros\b/g, "das molduras")
+      .replace(/\bDO QUADRO\b/g, "DA MOLDURA")
+      .replace(/\bDo quadro\b/g, "Da moldura")
+      .replace(/\bdo quadro\b/g, "da moldura")
+      .replace(/\bNOS QUADROS\b/g, "NAS MOLDURAS")
+      .replace(/\bNos quadros\b/g, "Nas molduras")
+      .replace(/\bnos quadros\b/g, "nas molduras")
+      .replace(/\bNO QUADRO\b/g, "NA MOLDURA")
+      .replace(/\bNo quadro\b/g, "Na moldura")
+      .replace(/\bno quadro\b/g, "na moldura")
+      .replace(/\bOS QUADROS\b/g, "AS MOLDURAS")
+      .replace(/\bOs quadros\b/g, "As molduras")
+      .replace(/\bos quadros\b/g, "as molduras")
+      .replace(/\bO QUADRO\b/g, "A MOLDURA")
+      .replace(/\bO quadro\b/g, "A moldura")
+      .replace(/\bo quadro\b/g, "a moldura")
+      .replace(/\bUNS QUADROS\b/g, "UMAS MOLDURAS")
+      .replace(/\bUns quadros\b/g, "Umas molduras")
+      .replace(/\buns quadros\b/g, "umas molduras")
+      .replace(/\bUM QUADRO\b/g, "UMA MOLDURA")
+      .replace(/\bUm quadro\b/g, "Uma moldura")
+      .replace(/\bum quadro\b/g, "uma moldura")
+      .replace(/\bQUADROS\b/g, "MOLDURAS")
+      .replace(/\bQuadros\b/g, "Molduras")
+      .replace(/\bquadros\b/g, "molduras")
+      .replace(/\bQUADRO\b/g, "MOLDURA")
+      .replace(/\bQuadro\b/g, "Moldura")
+      .replace(/\bquadro\b/g, "moldura");
+  }
+
+  function molduraCartDesignTitle(item) {
+    var selections = item && item.selections && typeof item.selections === "object" ? item.selections : {};
+    var designs = Array.isArray(selections.designs) ? selections.designs : [];
+    var labels = selections.design_labels && typeof selections.design_labels === "object" ? selections.design_labels : {};
+    var firstDesign = designs.length ? designs[0] : "";
+
+    return firstDesign && labels[firstDesign] ? molduraDisplayText(labels[firstDesign]) : "";
+  }
+
+  function formatMolduraCartSubtitle(item, value, designTitle) {
+    var selections = item && item.selections && typeof item.selections === "object" ? item.selections : {};
+    var colors = Array.isArray(selections.colors) ? selections.colors.filter(Boolean) : [];
+    var palette = String(selections.color_palette || "").trim();
+    var colorNames = colors.join(", ");
+    var colorCount = colors.length ? colors.length + (colors.length === 1 ? " Cor" : " Cores") : "";
+
+    return String(value || "").split(/\s+·\s+/).filter(function (part) {
+      return String(part).trim().toLowerCase() !== String(designTitle || "").trim().toLowerCase();
+    }).map(function (part) {
+      var text = String(part).trim();
+      var lower = text.toLowerCase();
+
+      if (colorCount && (text === colorNames || text === palette)) {
+        return colorCount;
+      }
+      if (/^foto\s+/i.test(text)) {
+        return "Foto" + text.slice(4);
+      }
+      if (lower === "sem frase") {
+        return "Sem frase";
+      }
+      if (lower === "precisa de ajuda com a foto") {
+        return "Precisa de ajuda com a foto";
+      }
+      return text;
+    }).filter(Boolean).join(" · ");
+  }
+
   function formatCartItemSummary(item) {
     var summary = item && item.summary ? item.summary : {};
     var priceCents = parseInt(summary.priceCents, 10);
+    var isMoldura = !!(item && item.productSlug === "quadros");
+    var productName = String((item && item.productName) || "Produto");
+    var title = String(summary.title || (item && item.productName) || "Produto");
+    var subtitle = String(summary.subtitle || "");
+    var priceText = String(summary.priceText || "").trim() || (priceCents > 0 ? formatCents(priceCents) : "Preço a confirmar");
+
+    if (isMoldura) {
+      productName = molduraDisplayText(productName);
+      title = molduraDisplayText(title);
+      subtitle = molduraDisplayText(subtitle);
+      priceText = molduraDisplayText(priceText);
+      title = molduraCartDesignTitle(item) || title;
+      subtitle = formatMolduraCartSubtitle(item, subtitle, title);
+    }
 
     return {
-      productName: String((item && item.productName) || "Produto"),
-      title: String(summary.title || (item && item.productName) || "Produto"),
-      subtitle: String(summary.subtitle || ""),
-      priceText: priceCents > 0 ? formatCents(priceCents) : "Preço a confirmar",
+      productName: productName,
+      title: title,
+      subtitle: subtitle,
+      priceText: priceText,
       image: summary.image ? String(summary.image) : ""
     };
   }
 
   function cartProductPage(productSlugValue) {
     var slug = String(productSlugValue || "").trim().replace(/[^a-z0-9_-]/gi, "");
+    if (slug === "quadros") {
+      return "molduras.html";
+    }
     return slug ? slug + ".html" : "adicionar-produto.html";
   }
 
@@ -2132,6 +2550,9 @@
     }
     if (target === "adicionar-produto" || target === "adicionar-produto.html") {
       return "adicionar-produto.html";
+    }
+    if (target === "index" || target === "index.html") {
+      return "index.html";
     }
     return "checkout.html?step=1";
   }
@@ -2268,7 +2689,7 @@
 
   function renderCartItem(item, index) {
     var summary = formatCartItemSummary(item);
-    var returnTo = page === "checkout" ? checkoutUrlForStep(state.checkoutStep) : "adicionar-produto.html";
+    var returnTo = page === "checkout" ? checkoutUrlForStep(state.checkoutStep) : "index.html";
     var thumb = summary.image
       ? '<img src="' + escapeHtml(summary.image) + '" alt="" loading="lazy">'
       : '<span aria-hidden="true">' + escapeHtml(summary.productName.slice(0, 1).toUpperCase()) + '</span>';
@@ -2296,6 +2717,7 @@
     var items = getCartItems();
     var count = items.length;
     var subtotal = getCartSubtotalCents();
+    var hasPriceToConfirm = cartHasPriceToConfirm();
 
     return [
       '<aside class="cart-panel' + (state.cartPanelOpen ? ' is-open' : '') + '" id="cart-panel" role="dialog" aria-modal="false" aria-labelledby="cart-panel-title" aria-hidden="' + (state.cartPanelOpen ? "false" : "true") + '">',
@@ -2311,9 +2733,10 @@
         items.map(renderCartItem).join(""),
         '</ol>',
         '<div class="cart-panel-total">',
-        '<span>Subtotal</span>',
-        '<strong>' + escapeHtml(formatCents(subtotal)) + '</strong>',
+        '<span>' + (hasPriceToConfirm ? 'Subtotal calculado' : 'Subtotal') + '</span>',
+        '<strong>' + escapeHtml(subtotal > 0 ? formatCents(subtotal) : (hasPriceToConfirm ? 'Preço a confirmar' : formatCents(0))) + '</strong>',
         '</div>',
+        hasPriceToConfirm ? '<p class="cart-panel-note">O valor do Super Personalizado será confirmado pela Mia.</p>' : '',
         '<button type="button" class="button primary cart-finalize-button" data-cart-finalize>Finalizar pedido</button>'
       ].join("") : [
         '<div class="cart-empty-state">',
@@ -2439,7 +2862,7 @@
       button.dataset.cartBound = "1";
       button.addEventListener("click", function (event) {
         event.preventDefault();
-        openCartItemEditor(button.dataset.cartEdit, button.dataset.cartEditReturn || "adicionar-produto.html");
+        openCartItemEditor(button.dataset.cartEdit, button.dataset.cartEditReturn || "index.html");
       });
     });
 
@@ -2545,6 +2968,10 @@
   }
 
   function isCartEntryStep(product) {
+    if (isQuadrosProduct(product) && !state.selections.designs) {
+      return false;
+    }
+
     return !state.admin && state.currentStep === cartEntryStepIndex(product);
   }
 
@@ -2647,6 +3074,10 @@
     selections.pack_quantity = getPackQuantity(product);
     selections.size = priceInfo(product).size || selections.size || "";
 
+    if (isQuadrosProduct(product)) {
+      selections.frame_size = priceInfo(product).frameSize || selections.frame_size || "";
+    }
+
     if (isCadernosProduct(product)) {
       selections.lamination = cadernoLamination ? cadernoLamination.value : "";
       selections.lamination_label = cadernoLamination ? cadernoLamination.title : "";
@@ -2669,6 +3100,14 @@
     var item = selectedDesignItems(product)[0] || null;
     var lamination = isCadernosProduct(product) ? selectedCadernoLamination(product) : null;
     var laminationKey = lamination ? (lamination.laminationKey || lamination.value || "") : "";
+    var custom;
+    var uploads;
+
+    if (isCustomArtworkProduct(product)) {
+      custom = customArtworkConfig(product);
+      uploads = orderUploadItems(custom.uploadKey);
+      return uploads.length ? orderUploadPreviewUrl(uploads[0]) : null;
+    }
 
     if (item && laminationKey && item.laminationImages && item.laminationImages[laminationKey]) {
       return item.laminationImages[laminationKey];
@@ -2683,6 +3122,71 @@
     var lamination;
     var option;
     var parts;
+
+    if (isCustomArtworkProduct(product)) {
+      var custom = customArtworkConfig(product);
+      parts = [selectedSizeLabel(product), productQuantityLabel(product, getPackQuantity(product))].filter(Boolean);
+      if (String(state.selections[custom.cardField] || "").trim()
+          || orderUploadItems(custom.cardPhotoKey).length
+          || orderUploadItems(custom.cardAudioKey).length) {
+        parts.push("cartão personalizado");
+      }
+      return parts.join(" · ");
+    }
+
+    if (isQuadrosProduct(product)) {
+      parts = [];
+      designs = selectedDesignItems(product);
+      if (state.selections.silhouette) {
+        parts.push(String(state.selections.silhouette));
+      }
+      if (state.selections.mia_choose_colors) {
+        parts.push("Cores escolhidas pela Mia");
+      } else if (Array.isArray(state.selections.colors) && state.selections.colors.length) {
+        parts.push(state.selections.colors.length + (state.selections.colors.length === 1 ? " Cor" : " Cores"));
+      } else if (state.selections.color_palette) {
+        parts.push("Cores");
+      }
+      if (state.selections.photo_orientation) {
+        parts.push("Foto " + String(state.selections.photo_orientation).toLowerCase());
+      }
+      if (state.selections.baby_animal) {
+        parts.push(String(state.selections.baby_animal));
+      }
+      if (state.selections.baby_gender) {
+        parts.push(String(state.selections.baby_gender));
+      }
+      if (state.selections.baby_name) {
+        parts.push(String(state.selections.baby_name));
+      }
+      if (designs[0] && priceInfo(product).frameSize) {
+        parts.push(String(priceInfo(product).frameSize));
+      }
+      if (state.selections.no_phrase) {
+        parts.push("Sem frase");
+      }
+      if (state.selections.quadro_super_example) {
+        parts.push(String(state.selections.quadro_super_example));
+      }
+      if (selectedQuadroPackaging(product)) {
+        parts.push(selectedQuadroPackaging(product).title || String(state.selections.packaging || ""));
+      }
+      if (orderUploadItems("quadro_uploads").length) {
+        parts.push(orderUploadItems("quadro_uploads").length + (orderUploadItems("quadro_uploads").length === 1 ? " foto" : " fotos"));
+      } else if (state.selections.photo_help) {
+        parts.push("Precisa de ajuda com a foto");
+      }
+      if (orderUploadItems("quadro_reference_uploads").length) {
+        parts.push(orderUploadItems("quadro_reference_uploads").length + (orderUploadItems("quadro_reference_uploads").length === 1 ? " foto de referência" : " fotos de referência"));
+      }
+      if (orderUploadItems("quadro_audio_uploads").length) {
+        parts.push(orderUploadItems("quadro_audio_uploads").length + (orderUploadItems("quadro_audio_uploads").length === 1 ? " áudio" : " áudios"));
+      }
+      if (orderUploadItems("quadro_silhouette_uploads").length) {
+        parts.push("silhueta enviada");
+      }
+      return parts.join(" · ");
+    }
 
     if (isCadernosProduct(product)) {
       lamination = selectedCadernoLamination(product);
@@ -2723,8 +3227,12 @@
     var selectedSize;
     var cover;
     var option;
+    var designs;
 
-    if (isCadernosProduct(product)) {
+    if (isQuadrosProduct(product)) {
+      designs = selectedDesignItems(product);
+      title = designs[0] ? displayItemTitle(designs[0]) : "Moldura personalizada";
+    } else if (isCadernosProduct(product)) {
       cover = selectedCadernoCover(product);
       option = selectedCadernoPurchaseOption(product);
       title = [
@@ -2746,6 +3254,8 @@
         title: title,
         subtitle: cartItemSubtitle(product),
         priceCents: Math.max(0, parseInt(info.cents, 10) || 0),
+        priceText: isQuadrosProduct(product) ? info.total || "Preço a confirmar" : "",
+        priceToConfirm: isQuadrosProduct(product) && info.priceToConfirm === true,
         image: cartItemImage(product)
       }
     };
@@ -2832,7 +3342,7 @@
       '<button class="button secondary" type="button" data-back data-track="true" data-track-action="back" data-track-id="back">Voltar</button>',
       '<div class="cart-entry-buttons">',
       state.errors ? '<p class="form-error action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
-      '<button class="button secondary" type="button" data-cart-add-another>Adicionar outro produto</button>',
+      '<button class="button secondary" type="button" data-cart-add-another>Adicionar ao cesto e escolher outro produto</button>',
       '<button class="button primary" type="button" data-cart-finalize-current>Finalizar pedido</button>',
       '</div>',
       '</div>'
@@ -2860,6 +3370,11 @@
 
       value = normalized[step.id];
       if (step.selection === "multi") {
+        normalized[step.id] = Array.isArray(value) ? value : (value ? [value] : []);
+        return;
+      }
+
+      if (step.template === "palette-grid") {
         normalized[step.id] = Array.isArray(value) ? value : (value ? [value] : []);
         return;
       }
@@ -2951,31 +3466,325 @@
     ].join("");
   }
 
-  function renderBrand(brand, homeUrl, instagramUrl) {
-    var brandLabel = brand || "Mia & Paper";
+  function homeCategoryAnchor(category) {
+    var id = String(category && category.id ? category.id : "produto")
+      .trim()
+      .replace(/[^a-z0-9_-]/gi, "-");
+    return "#produto-" + id;
+  }
+
+  function siteMenuCategoryHref(category) {
+    var href = category ? String(category.menuHref || category.href || "").trim() : "";
+    return href || "index.html";
+  }
+
+  function renderSiteMenu(categories, instagramUrl) {
+    var isOpen = state.siteMenuOpen === true;
+    var orderedCategories = categories.map(function (category, index) {
+      return { category: category, index: index };
+    }).sort(function (a, b) {
+      var aOrder = Number(a.category && a.category.menuOrder);
+      var bOrder = Number(b.category && b.category.menuOrder);
+      aOrder = isFinite(aOrder) && aOrder > 0 ? aOrder : 1000 + a.index;
+      bOrder = isFinite(bOrder) && bOrder > 0 ? bOrder : 1000 + b.index;
+      return aOrder - bOrder;
+    }).map(function (record) {
+      return record.category;
+    });
+    var categoryLinks = orderedCategories.map(function (category) {
+      return [
+        '<a class="site-menu-category-link" href="' + escapeHtml(siteMenuCategoryHref(category)) + '" data-site-menu-link>',
+        '<span>' + escapeHtml(category.menuTitle || category.title || "Produto") + '</span>',
+        '<b aria-hidden="true">→</b>',
+        '</a>'
+      ].join("");
+    }).join("");
 
     return [
-      '<header class="site-header">',
-      '<a class="brand" href="' + escapeHtml(homeUrl || "index.html") + '" aria-label="' + escapeHtml(brandLabel) + '">',
-      '<span class="brand-mark"><img src="content/brand/logo.jpg" alt="" loading="lazy"></span>',
-      renderBrandText(brandLabel),
-      '</a>',
-      '<nav class="header-actions" aria-label="Links rápidos">',
-      '<a class="header-link header-link-icon" href="' + escapeHtml(instagramUrl) + '" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">' + ICON_INSTAGRAM + '</a>',
-      '<a class="header-link header-link-icon" href="contacto.html" aria-label="Enviar mensagem" title="Enviar mensagem">' + ICON_MAIL + '</a>',
-      renderCartHeaderButton(),
-      '<button type="button" class="header-link header-link-icon header-theme-toggle" data-theme-toggle aria-pressed="false" aria-hidden="true" hidden aria-label="Modo escuro" title="Modo escuro">' + ICON_SUN + '</button>',
+      '<div class="site-menu-surface' + (isOpen ? ' is-open' : '') + '" id="site-menu" data-site-menu-surface aria-hidden="' + (isOpen ? 'false' : 'true') + '">',
+      '<button type="button" class="site-menu-backdrop" data-site-menu-close aria-label="Fechar menu"></button>',
+      '<aside class="site-menu-panel" role="dialog" aria-modal="true" aria-labelledby="site-menu-title">',
+      '<div class="site-menu-head">',
+      '<div><p>Menu</p><h2 id="site-menu-title">Mia &amp; Paper</h2></div>',
+      '<button type="button" class="site-menu-close" data-site-menu-close aria-label="Fechar menu">' + ICON_CLOSE + '</button>',
+      '</div>',
+      '<nav class="site-menu-nav" aria-label="Produtos">',
+      '<a class="site-menu-home-link" href="index.html" data-site-menu-link>Início</a>',
+      '<p>Produtos</p>',
+      categoryLinks,
       '</nav>',
-      '</header>'
+      '<div class="site-menu-secondary">',
+      '<a href="catalogo/index.html" data-site-menu-link>Encomendar por Catálogo</a>',
+      '<a href="contacto.html" data-site-menu-link>Contacto</a>',
+      '<a href="' + escapeHtml(instagramUrl || "https://www.instagram.com/miaandpaper/") + '" target="_blank" rel="noopener" data-site-menu-link>Instagram</a>',
+      '</div>',
+      '</aside>',
+      '</div>'
     ].join("");
   }
 
-  function renderFooter(brand) {
+  function resetSiteMenuDrag(surface) {
+    var panel = surface ? surface.querySelector(".site-menu-panel") : null;
+    var backdrop = surface ? surface.querySelector(".site-menu-backdrop") : null;
+
+    siteMenuGesture = null;
+    if (panel) {
+      panel.classList.remove("is-dragging");
+      panel.style.removeProperty("transform");
+    }
+    if (backdrop) {
+      backdrop.style.removeProperty("opacity");
+    }
+  }
+
+  function bindSiteMenuSwipe(surface) {
+    var panel = surface ? surface.querySelector(".site-menu-panel") : null;
+    var backdrop = surface ? surface.querySelector(".site-menu-backdrop") : null;
+
+    if (!panel || panel.dataset.siteMenuSwipeBound === "1") {
+      return;
+    }
+    panel.dataset.siteMenuSwipeBound = "1";
+
+    panel.addEventListener("pointerdown", function (event) {
+      if (!state.siteMenuOpen || event.isPrimary === false || (event.button != null && event.button !== 0)) {
+        return;
+      }
+      siteMenuGesture = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        startedAt: Date.now(),
+        distance: 0,
+        dragging: false
+      };
+    });
+
+    panel.addEventListener("pointermove", function (event) {
+      var gesture = siteMenuGesture;
+      var deltaX;
+      var deltaY;
+      var width;
+
+      if (!gesture || gesture.pointerId !== event.pointerId || !state.siteMenuOpen) {
+        return;
+      }
+
+      deltaX = event.clientX - gesture.startX;
+      deltaY = event.clientY - gesture.startY;
+      if (!gesture.dragging) {
+        if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) {
+          return;
+        }
+        if (deltaX <= 0 || Math.abs(deltaY) >= Math.abs(deltaX)) {
+          siteMenuGesture = null;
+          return;
+        }
+        gesture.dragging = true;
+        panel.classList.add("is-dragging");
+        if (panel.setPointerCapture) {
+          try {
+            panel.setPointerCapture(event.pointerId);
+          } catch (error) {
+            /* Alguns browsers não permitem captura em eventos simulados. */
+          }
+        }
+      }
+
+      gesture.distance = Math.max(0, deltaX);
+      width = Math.max(1, panel.getBoundingClientRect().width);
+      panel.style.transform = "translateX(" + Math.min(width, gesture.distance) + "px)";
+      if (backdrop) {
+        backdrop.style.opacity = String(Math.max(0, 1 - (gesture.distance / width)));
+      }
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+
+    function finishSwipe(event) {
+      var gesture = siteMenuGesture;
+      var width;
+      var elapsed;
+      var velocity;
+      var shouldClose;
+
+      if (!gesture || gesture.pointerId !== event.pointerId) {
+        return;
+      }
+      if (!gesture.dragging) {
+        siteMenuGesture = null;
+        return;
+      }
+
+      width = Math.max(1, panel.getBoundingClientRect().width);
+      elapsed = Math.max(1, Date.now() - gesture.startedAt);
+      velocity = gesture.distance / elapsed;
+      shouldClose = gesture.distance >= Math.min(88, width * 0.24) || (gesture.distance >= 36 && velocity >= 0.55);
+      siteMenuSuppressClickUntil = Date.now() + 350;
+      resetSiteMenuDrag(surface);
+      if (shouldClose) {
+        setSiteMenuOpen(false, true);
+      }
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+    }
+
+    panel.addEventListener("pointerup", finishSwipe);
+    panel.addEventListener("pointercancel", function (event) {
+      if (siteMenuGesture && siteMenuGesture.pointerId === event.pointerId) {
+        resetSiteMenuDrag(surface);
+      }
+    });
+    panel.addEventListener("click", function (event) {
+      if (Date.now() < siteMenuSuppressClickUntil) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }, true);
+  }
+
+  function setSiteMenuOpen(open, restoreFocus) {
+    var surface = document.querySelector("[data-site-menu-surface]");
+    var trigger = document.querySelector("[data-site-menu-open]");
+    var closeButton = surface ? surface.querySelector(".site-menu-close") : null;
+
+    resetSiteMenuDrag(surface);
+    state.siteMenuOpen = open === true;
+    document.body.classList.toggle("is-site-menu-open", state.siteMenuOpen);
+
+    if (surface) {
+      surface.classList.toggle("is-open", state.siteMenuOpen);
+      surface.setAttribute("aria-hidden", state.siteMenuOpen ? "false" : "true");
+    }
+    if (trigger) {
+      trigger.setAttribute("aria-expanded", state.siteMenuOpen ? "true" : "false");
+    }
+
+    if (state.siteMenuOpen && closeButton) {
+      window.requestAnimationFrame(function () {
+        closeButton.focus();
+      });
+    } else if (!state.siteMenuOpen && restoreFocus && trigger) {
+      trigger.focus();
+    }
+  }
+
+  function bindSiteMenu() {
+    var trigger = document.querySelector("[data-site-menu-open]");
+    var surface = document.querySelector("[data-site-menu-surface]");
+
+    if (!trigger || !surface) {
+      document.body.classList.remove("is-site-menu-open");
+      return;
+    }
+
+    if (trigger.dataset.siteMenuBound !== "1") {
+      trigger.dataset.siteMenuBound = "1";
+      trigger.addEventListener("click", function (event) {
+        event.preventDefault();
+        setSiteMenuOpen(true, false);
+      });
+    }
+
+    surface.querySelectorAll("[data-site-menu-close]").forEach(function (button) {
+      if (button.dataset.siteMenuBound === "1") {
+        return;
+      }
+      button.dataset.siteMenuBound = "1";
+      button.addEventListener("click", function (event) {
+        event.preventDefault();
+        setSiteMenuOpen(false, true);
+      });
+    });
+
+    surface.querySelectorAll("[data-site-menu-link]").forEach(function (link) {
+      if (link.dataset.siteMenuBound === "1") {
+        return;
+      }
+      link.dataset.siteMenuBound = "1";
+      link.addEventListener("click", function () {
+        setSiteMenuOpen(false, false);
+      });
+    });
+
+    bindSiteMenuSwipe(surface);
+
+    if (!siteMenuEscapeBound) {
+      siteMenuEscapeBound = true;
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && state.siteMenuOpen) {
+          setSiteMenuOpen(false, true);
+        }
+      });
+    }
+  }
+
+  function renderBrand(brand, homeUrl, instagramUrl, menuCategories) {
+    var brandLabel = brand || "Mia & Paper";
+    var categories = Array.isArray(menuCategories) ? menuCategories.filter(homeCategoryIsVisible) : [];
+    var hasSiteMenu = categories.length > 0;
+    var actions = hasSiteMenu ? [
+      renderCartHeaderButton(),
+      '<button type="button" class="header-link header-link-icon site-menu-trigger" data-site-menu-open aria-expanded="' + (state.siteMenuOpen ? 'true' : 'false') + '" aria-controls="site-menu" aria-label="Abrir menu" title="Menu">' + ICON_MENU + '</button>',
+      '<button type="button" class="header-link header-link-icon header-theme-toggle" data-theme-toggle aria-pressed="false" aria-hidden="true" hidden aria-label="Modo escuro" title="Modo escuro">' + ICON_SUN + '</button>'
+    ].join("") : [
+      '<a class="header-link header-link-icon" href="' + escapeHtml(instagramUrl) + '" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">' + ICON_INSTAGRAM + '</a>',
+      '<a class="header-link header-link-icon" href="contacto.html" aria-label="Enviar mensagem" title="Enviar mensagem">' + ICON_MAIL + '</a>',
+      renderCartHeaderButton(),
+      '<button type="button" class="header-link header-link-icon header-theme-toggle" data-theme-toggle aria-pressed="false" aria-hidden="true" hidden aria-label="Modo escuro" title="Modo escuro">' + ICON_SUN + '</button>'
+    ].join("");
+
+    return [
+      '<header class="site-header' + (hasSiteMenu ? ' has-site-menu' : '') + '">',
+      '<a class="brand" href="' + escapeHtml(homeUrl || "index.html") + '" aria-label="' + escapeHtml(brandLabel) + '">',
+      '<span class="brand-mark"><img src="content/brand/logo.webp" alt="" loading="lazy"></span>',
+      renderBrandText(brandLabel),
+      '</a>',
+      '<nav class="header-actions" aria-label="Links rápidos">' + actions + '</nav>',
+      '</header>',
+      hasSiteMenu ? renderSiteMenu(categories, instagramUrl) : ""
+    ].join("");
+  }
+
+  function installStaticSiteNavigation(home) {
+    var header = document.querySelector(".site-header");
+    var footer = document.querySelector(".site-footer");
+    var categories = home && Array.isArray(home.categories) ? home.categories.filter(homeCategoryIsVisible) : [];
+    var template;
+
+    if (!header || !categories.length) {
+      return;
+    }
+
+    state.siteMenuCategories = categories;
+    template = document.createElement("template");
+    template.innerHTML = renderBrand(home.brand || "Mia & Paper", "index.html", home.instagramUrl, categories);
+    header.replaceWith(template.content.cloneNode(true));
+
+    if (footer) {
+      template = document.createElement("template");
+      template.innerHTML = renderFooter(home.brand || "Mia & Paper", false);
+      footer.replaceWith(template.content.cloneNode(true));
+    }
+
+    if (!document.querySelector("[data-cart-surface]")) {
+      document.body.insertAdjacentHTML("beforeend", renderCartSurface());
+    }
+
+    bindSiteMenu();
+    bindCartUi();
+    bindThemeToggle();
+    refreshCartUi();
+  }
+
+  function renderFooter(brand, showAdminLogin) {
     return [
       '<footer class="site-footer">',
       '<a class="catalog-footer-link" href="catalogo/index.html">Encomendar por Catálogo</a>',
       '<a href="privacy.html">Política de Privacidade</a>',
-      '<button type="button" data-admin-open>Login de Administrador</button>',
+      showAdminLogin === false ? "" : '<button type="button" data-admin-open>Login de Administrador</button>',
       '<span>© ' + escapeHtml(brand || "Mia & Paper") + ' 2026 Todos os Direitos Reservados</span>',
       '</footer>'
     ].join("");
@@ -3188,7 +3997,7 @@
       '<summary>Imagens deste passo</summary>',
       '<p>Aplica a mesma moldura e/ou o mesmo recorte interno da imagem a todos os itens deste passo.</p>',
       '<div class="admin-image-control-grid">',
-      '<label><span>Tamanho moldura (%)</span><input type="number" min="40" max="300" step="1" value="' + escapeHtml(frameEditNumber(first, step, false, "frameScale", 100, 40, 300)) + '" data-admin-bulk-frame="frameScale" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
+      '<label><span>Tamanho da moldura (%)</span><input type="number" min="40" max="300" step="1" value="' + escapeHtml(frameEditNumber(first, step, false, "frameScale", 100, 40, 300)) + '" data-admin-bulk-frame="frameScale" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
       '<label><span>Margem moldura X (px)</span><input type="number" min="-100" max="100" step="1" value="' + escapeHtml(frameEditNumber(first, step, false, "frameMarginX", 0, -100, 100)) + '" data-admin-bulk-frame="frameMarginX" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
       '<label><span>Margem moldura Y (px)</span><input type="number" min="-100" max="100" step="1" value="' + escapeHtml(frameEditNumber(first, step, false, "frameMarginY", 0, -100, 100)) + '" data-admin-bulk-frame="frameMarginY" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
       '<label><span>Zoom imagem (%)</span><input type="number" min="20" max="500" step="1" value="' + escapeHtml(imageEditNumber(first, step, false, "imageZoom", 168, 20, 500)) + '" data-admin-bulk-frame="imageZoom" data-admin-bulk-step="' + escapeHtml(step.id) + '"></label>',
@@ -3393,6 +4202,21 @@
     ].join("");
   }
 
+  function renderAdminQuadrosColorSettingsPanel(product, step) {
+    if (!product || product.slug !== "quadros" || !step || step.id !== "colors") {
+      return "";
+    }
+
+    return [
+      '<details class="admin-step-panel admin-global-panel" open>',
+      '<summary>Apresentação das cores</summary>',
+      '<p class="admin-price-help">Estas opções alteram apenas o que a pessoa vê neste passo.</p>',
+      '<label class="admin-check"><input type="checkbox"' + (step.showPhotoColorAnalysis === true ? " checked" : "") + ' data-admin-quadros-color-setting="showPhotoColorAnalysis" data-step-id="' + escapeHtml(step.id) + '"> Mostrar caixa “Cores encontradas”</label>',
+      '<label class="admin-check"><input type="checkbox"' + (step.showColorNames === true ? " checked" : "") + ' data-admin-quadros-color-setting="showColorNames" data-step-id="' + escapeHtml(step.id) + '"> Mostrar nomes dentro dos swatches</label>',
+      '</details>'
+    ].join("");
+  }
+
 
   function renderAdminGiftPanel(product) {
     var gift = product && product.giftRequest ? product.giftRequest : {};
@@ -3474,6 +4298,11 @@
       '<a class="admin-funnel-link" href="admin-funnel.php" target="_blank" rel="noopener">Funil</a>',
       // ADMIN_ORDERS_V1: link para o painel de encomendas.
       '<a class="admin-funnel-link" href="admin-orders.php" target="_blank" rel="noopener">Encomendas</a>',
+      '<a class="admin-funnel-link" href="admin-colors.html" target="_blank" rel="noopener">Cores</a>',
+      '<a class="admin-funnel-link" href="admin-uploads.php" target="_blank" rel="noopener">Uploads assistidos</a>',
+      '<a class="admin-funnel-link" href="galeria.html" target="_blank" rel="noopener">Galeria</a>',
+      '<a class="admin-funnel-link" href="multimedia.html" target="_blank" rel="noopener">Multimédia</a>',
+      '<a class="admin-funnel-link" href="reviews.html" target="_blank" rel="noopener">Reviews</a>',
       // TOOLS_INDEX_V1: link para as ferramentas internas (só admin; a página
       // valida a sessão no servidor, como admin-funnel.php).
       '<a class="admin-funnel-link" href="tools/index.php" target="_blank" rel="noopener">Ferramentas</a>',
@@ -3488,6 +4317,7 @@
       step ? '<label class="admin-check"><input type="checkbox"' + (step.hidden ? "" : " checked") + (step.id === "confirm" ? " disabled" : "") + ' data-admin-step-visible> Passo visível para clientes</label>' : "",
       step ? '<button type="button" data-admin-add-step>Adicionar passo novo</button></details>' : "",
       step ? renderAdminStepImagePanel(step) : "",
+      step ? renderAdminQuadrosColorSettingsPanel(currentProduct, step) : "",
       step && getStepSectionConfig(currentProduct, step) ? renderAdminSectionsPanel(currentProduct, step) : "",
       currentProduct ? renderAdminImageKeyboardPanel(currentProduct) : "",
       currentProduct ? renderAdminRectOrientationPanel(currentProduct) : "",
@@ -3616,6 +4446,21 @@
 
         pushUndo(currentProduct);
         step.hidden = !input.checked;
+        rerenderProduct(currentProduct);
+      });
+    });
+
+    document.querySelectorAll("[data-admin-quadros-color-setting]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        var step = currentProduct ? findStep(currentProduct, input.dataset.stepId) : null;
+        var key = input.dataset.adminQuadrosColorSetting;
+
+        if (!step || currentProduct.slug !== "quadros" || ["showPhotoColorAnalysis", "showColorNames"].indexOf(key) === -1) {
+          return;
+        }
+
+        pushUndo(currentProduct);
+        step[key] = !!input.checked;
         rerenderProduct(currentProduct);
       });
     });
@@ -4108,7 +4953,11 @@
         var direction = index % 4;
         var panX = direction === 0 || direction === 3 ? pan : -pan;
         var panY = direction < 2 ? -pan : pan;
-        return '<span class="category-carousel-frame' + (index === 0 ? ' is-active' : '') + '" style="background-image:url(&quot;' + escapeHtml(image) + '&quot;);--carousel-pan-x:' + panX + '%;--carousel-pan-y:' + panY + '%"></span>';
+        return '<span class="category-carousel-frame' + (index === 0 ? ' is-active' : '')
+          + '" data-mia-image="' + escapeHtml(image)
+          + '" data-mia-item-id="' + escapeHtml(category.id || "")
+          + '" data-mia-slot-name="home-carousel" data-mia-slide-index="' + index
+          + '" style="background-image:url(&quot;' + escapeHtml(image) + '&quot;);--carousel-pan-x:' + panX + '%;--carousel-pan-y:' + panY + '%"></span>';
       }).join(""),
       '</span>'
     ].join("");
@@ -4164,25 +5013,74 @@
     ].join("");
   }
 
+  function renderHomeIntroAdminTools(home, adminEditing) {
+    if (!adminEditing) {
+      return "";
+    }
+
+    return [
+      '<div class="admin-card-tools home-intro-tools">',
+      '<label>Marca<input type="text" value="' + escapeHtml(home.brand || "") + '" data-admin-home-edit="brand"></label>',
+      '<label>Instagram<input type="text" value="' + escapeHtml(home.instagramUrl || "") + '" data-admin-home-edit="instagramUrl"></label>',
+      '<label>Etiqueta<input type="text" value="' + escapeHtml(home.intro.eyebrow || "") + '" data-admin-home-edit="intro.eyebrow"></label>',
+      '<label>Título<input type="text" value="' + escapeHtml(home.intro.title || "") + '" data-admin-home-edit="intro.title"></label>',
+      '<label>Texto<textarea data-admin-home-edit="intro.text">' + escapeHtml(home.intro.text || "") + '</textarea></label>',
+      '<label class="admin-check"><input type="checkbox"' + (home.deadlineNoticeEnabled !== false ? " checked" : "") + ' data-admin-home-edit="deadlineNoticeEnabled"> Mostrar aviso de data limite</label>',
+      '<label>Aviso etiqueta<input type="text" value="' + escapeHtml(home.deadlineNoticeLabel || "") + '" data-admin-home-edit="deadlineNoticeLabel"></label>',
+      '<label>Aviso data<input type="text" value="' + escapeHtml(home.deadlineNoticeDateText || "") + '" data-admin-home-edit="deadlineNoticeDateText"></label>',
+      '<label>Aviso texto<input type="text" value="' + escapeHtml(home.deadlineNoticeSuffix || "") + '" data-admin-home-edit="deadlineNoticeSuffix"></label>',
+      '<label>Countdown ISO<input type="text" value="' + escapeHtml(home.deadlineDate || "") + '" data-admin-home-edit="deadlineDate"></label>',
+      '</div>'
+    ].join("");
+  }
+
+  function renderHomeFeatureCard(category, adminEditing) {
+    var isClickable = !adminEditing && category.clickable !== false && String(category.href || "").trim();
+    var tag = isClickable ? "a" : "article";
+    var href = isClickable ? ' href="' + escapeHtml(category.href) + '"' : "";
+    var image = category.featureImage || category.image || "";
+    var title = category.featureTitle || category.title || "";
+    var text = category.featureText || category.subtitle || "";
+    var cta = category.featureCta || "Ver produto";
+
+    return [
+      '<' + tag + ' class="home-news-card"' + href + '>',
+      image ? '<span class="home-news-card__media"><img src="' + escapeHtml(image) + '" alt="" loading="lazy" data-mia-image="' + escapeHtml(image) + '" data-mia-item-id="' + escapeHtml(category.id || "") + '" data-mia-slot-name="home-feature"></span>' : "",
+      '<span class="home-news-card__copy">',
+      category.featureLabel ? '<span class="home-news-card__label">' + escapeHtml(category.featureLabel) + '</span>' : "",
+      '<strong>' + escapeHtml(title) + '</strong>',
+      text ? '<span>' + escapeHtml(text) + '</span>' : "",
+      isClickable ? '<b>' + escapeHtml(cta) + ' <span aria-hidden="true">→</span></b>' : "",
+      '</span>',
+      '</' + tag + '>'
+    ].join("");
+  }
+
   function renderHome(home) {
     ensureHomeSettings(home);
     applySiteSettings(home);
     state.home = home;
 
+    var adminEditing = state.admin && home.adminEditable !== false;
     var allCategories = (home.categories || []).map(function (category, originalIndex) {
       return { category: category, originalIndex: originalIndex };
     });
     var visibleCategories = allCategories.filter(function (record) {
       return homeCategoryIsVisible(record.category);
     });
-    var displayCategories = state.admin ? allCategories : visibleCategories;
-    var gridCount = Math.max(1, Math.min(5, displayCategories.length));
+    var homeCategories = visibleCategories.filter(function (record) {
+      return record.category.showOnHome !== false;
+    });
+    var displayCategories = adminEditing ? allCategories.filter(function (record) {
+      return record.category.showOnHome !== false;
+    }) : homeCategories;
+    var gridCount = Math.max(1, Math.min(7, displayCategories.length));
 
     function renderHomeCategoryCard(record, displayIndex) {
       var category = record.category;
       var originalIndex = record.originalIndex;
       var isVisible = homeCategoryIsVisible(category);
-      var isAdminHidden = state.admin && !isVisible;
+      var isAdminHidden = adminEditing && !isVisible;
       var hiddenClass = isAdminHidden ? " is-admin-hidden" : "";
       var carouselImages = home.carousel.enabled !== false && category.carouselEnabled !== false ? (category.carouselImages || []) : [];
       var hasCarousel = carouselImages.length > 0;
@@ -4199,10 +5097,10 @@
       var carouselStyle = hasCarousel ? ' style="--carousel-speed:' + escapeHtml(effSpeed) + 's;--carousel-zoom-scale:' + escapeHtml((effZoom / 100).toFixed(3)) + ';--carousel-overlay:' + escapeHtml((effOverlay / 100).toFixed(2)) + ';--carousel-pan:' + escapeHtml(effPan) + '%"' : "";
       var imageStyle = hasStaticImage ? ' style="--category-image:url(&quot;' + escapeHtml(category.image) + '&quot;)"' : carouselStyle;
       var isClickable = category.clickable !== false;
-      var unavailableMessage = !state.admin && !isClickable && category.unavailableMessage ? String(category.unavailableMessage) : "";
+      var unavailableMessage = !adminEditing && !isClickable && category.unavailableMessage ? String(category.unavailableMessage) : "";
       var disabledClass = !isClickable ? " is-link-disabled" : "";
       var messageClass = unavailableMessage ? " has-unavailable-message" : "";
-      var tag = !state.admin && isVisible && isClickable ? "a" : "span";
+      var tag = !adminEditing && isVisible && isClickable ? "a" : "span";
       var href = tag === "a"
         ? ' href="' + escapeHtml(category.href) + '"'
         : ' aria-disabled="' + (!isClickable ? "true" : "false") + '"' + (unavailableMessage ? ' role="button" tabindex="0" data-home-unavailable-message="' + escapeHtml(unavailableMessage) + '"' : "");
@@ -4215,8 +5113,12 @@
       var numberHtml = showNumbers
         ? '<span class="category-number">' + String(displayIndex + 1).padStart(2, "0") + '</span>'
         : '<span class="category-number is-placeholder" aria-hidden="true">00</span>';
+      var anchorId = ' id="' + escapeHtml(homeCategoryAnchor(category).slice(1)) + '"';
       var dataCategoryId = category.id ? ' data-category-id="' + escapeHtml(category.id) + '"' : "";
-      var adminControls = state.admin ? [
+      var homeImageAttrs = hasStaticImage
+        ? ' data-mia-image="' + escapeHtml(category.image) + '" data-mia-item-id="' + escapeHtml(category.id || "") + '" data-mia-slot-name="home-card"'
+        : "";
+      var adminControls = adminEditing ? [
         '<span class="admin-card-tools home-admin-tools">',
         adminBadge,
         '<label>Título<input type="text" value="' + escapeHtml(category.title || "") + '" data-admin-home-category="' + originalIndex + '" data-admin-home-category-edit="title"></label>',
@@ -4237,7 +5139,7 @@
       ].join("") : "";
 
       return [
-        '<' + tag + ' class="category-card ' + escapeHtml(category.accent || "gold") + imageClass + hiddenClass + disabledClass + messageClass + '"' + href + dataCategoryId + imageStyle + ' aria-label="' + escapeHtml(category.title || "") + '">',
+        '<' + tag + ' class="category-card ' + escapeHtml(category.accent || "gold") + imageClass + hiddenClass + disabledClass + messageClass + '"' + anchorId + href + dataCategoryId + homeImageAttrs + imageStyle + ' aria-label="' + escapeHtml(category.title || "") + '">',
         carouselHtml,
         numberHtml,
         '<span class="category-art" aria-hidden="true"></span>',
@@ -4251,37 +5153,107 @@
     var cards = displayCategories.map(function (record, displayIndex) {
       return renderHomeCategoryCard(record, displayIndex);
     }).join("");
+    var adminIntroTools = renderHomeIntroAdminTools(home, adminEditing);
 
-    renderChrome([
-      '<main class="home-shell">',
-      renderBrand(home.brand, "index.html", home.instagramUrl),
-      '<section class="home-intro" aria-labelledby="home-title">',
-      '<p class="eyebrow">' + escapeHtml(home.intro.eyebrow) + '</p>',
-      '<h1 id="home-title">' + escapeHtml(home.intro.title) + '</h1>',
-      '<p>' + escapeHtml(home.intro.text) + '</p>',
-      state.admin ? [
-        '<div class="admin-card-tools home-intro-tools">',
-        '<label>Marca<input type="text" value="' + escapeHtml(home.brand || "") + '" data-admin-home-edit="brand"></label>',
-        '<label>Instagram<input type="text" value="' + escapeHtml(home.instagramUrl || "") + '" data-admin-home-edit="instagramUrl"></label>',
-        '<label>Etiqueta<input type="text" value="' + escapeHtml(home.intro.eyebrow || "") + '" data-admin-home-edit="intro.eyebrow"></label>',
-        '<label>Título<input type="text" value="' + escapeHtml(home.intro.title || "") + '" data-admin-home-edit="intro.title"></label>',
-        '<label>Texto<textarea data-admin-home-edit="intro.text">' + escapeHtml(home.intro.text || "") + '</textarea></label>',
-        '<label class="admin-check"><input type="checkbox"' + (home.deadlineNoticeEnabled !== false ? " checked" : "") + ' data-admin-home-edit="deadlineNoticeEnabled"> Mostrar aviso de data limite</label>',
-        '<label>Aviso etiqueta<input type="text" value="' + escapeHtml(home.deadlineNoticeLabel || "") + '" data-admin-home-edit="deadlineNoticeLabel"></label>',
-        '<label>Aviso data<input type="text" value="' + escapeHtml(home.deadlineNoticeDateText || "") + '" data-admin-home-edit="deadlineNoticeDateText"></label>',
-        '<label>Aviso texto<input type="text" value="' + escapeHtml(home.deadlineNoticeSuffix || "") + '" data-admin-home-edit="deadlineNoticeSuffix"></label>',
-        '<label>Countdown ISO<input type="text" value="' + escapeHtml(home.deadlineDate || "") + '" data-admin-home-edit="deadlineDate"></label>',
+    if (home.layout !== "brand-home") {
+      renderChrome([
+        '<main class="home-shell home-shell--hub">',
+        renderBrand(home.brand, "index.html", home.instagramUrl, state.siteMenuCategories.length ? state.siteMenuCategories : visibleCategories.map(function (record) { return record.category; })),
+        '<section class="home-section home-hub-section home-products-section" aria-labelledby="home-title">',
+        '<div class="home-section-inner">',
+        home.backLink && home.backLink.href ? '<p class="home-back-row"><a class="home-back-link" href="' + escapeHtml(home.backLink.href) + '">&larr; ' + escapeHtml(home.backLink.label || "Voltar") + '</a></p>' : "",
+        '<header class="home-section-heading">',
+        '<p class="eyebrow">' + escapeHtml(home.intro.eyebrow) + '</p>',
+        '<h1 id="home-title">' + escapeHtml(home.intro.title) + '</h1>',
+        '<p>' + escapeHtml(home.intro.text) + '</p>',
+        '</header>',
+        adminIntroTools ? '<div class="home-admin-edit-band">' + adminIntroTools + '</div>' : "",
+        '<nav class="category-grid category-grid-count-' + gridCount + (adminEditing ? ' is-admin-home-grid' : '') + '" aria-label="Categorias">',
+        cards,
+        '</nav>',
+        state.homeUnavailableMessage ? '<p class="open-order-hint home-unavailable-message" role="status" aria-live="polite">' + escapeHtml(state.homeUnavailableMessage) + '</p>' : "",
+        renderHomeDeadlineNote(home),
+        '</div>',
+        '</section>',
+        renderFooter(home.brand),
+        '</main>'
+      ].join(""));
+    } else {
+      var menuCategories = visibleCategories.map(function (record) { return record.category; });
+      var featuredCategories = menuCategories.filter(function (category) { return category.featured === true; });
+      var hero = home.hero || {};
+      var news = home.news || {};
+      var productsIntro = home.productsIntro || {};
+      var heroImage = hero.image || (menuCategories[0] && menuCategories[0].image) || "";
+      var heroPosition = String(hero.imagePosition || "center").trim();
+      var heroStyle;
+      var newsCards;
+      var heroActions;
+
+      if (!/^[a-z0-9.%\s-]+$/i.test(heroPosition)) {
+        heroPosition = "center";
+      }
+      heroStyle = heroImage
+        ? ' style="--home-hero-image:url(&quot;' + escapeHtml(heroImage) + '&quot;);--home-hero-position:' + escapeHtml(heroPosition) + '"'
+        : "";
+
+      if (!featuredCategories.length) {
+        featuredCategories = menuCategories.filter(function (category) {
+          return category.clickable !== false && String(category.href || "").trim();
+        }).slice(0, 2);
+      }
+      newsCards = featuredCategories.slice(0, 3).map(function (category) {
+        return renderHomeFeatureCard(category, adminEditing);
+      }).join("");
+      heroActions = [
+        '<div class="home-brand-hero__actions">',
+        hero.primaryLabel && hero.primaryHref ? '<a class="home-hero-action home-hero-action--primary" href="' + escapeHtml(hero.primaryHref) + '">' + escapeHtml(hero.primaryLabel) + '<span aria-hidden="true">→</span></a>' : "",
+        hero.secondaryLabel && hero.secondaryHref ? '<a class="home-hero-action home-hero-action--secondary" href="' + escapeHtml(hero.secondaryHref) + '">' + escapeHtml(hero.secondaryLabel) + '<span aria-hidden="true">→</span></a>' : "",
         '</div>'
-      ].join("") : "",
-      '</section>',
-      '<nav class="category-grid category-grid-count-' + gridCount + (state.admin ? ' is-admin-home-grid' : '') + '" aria-label="Categorias">',
-      cards,
-      '</nav>',
-      state.homeUnavailableMessage ? '<p class="open-order-hint home-unavailable-message" role="status" aria-live="polite">' + escapeHtml(state.homeUnavailableMessage) + '</p>' : "",
-      renderHomeDeadlineNote(home),
-      renderFooter(home.brand),
-      '</main>'
-    ].join(""));
+      ].join("");
+
+      renderChrome([
+        '<main class="home-shell home-shell--brand">',
+        renderBrand(home.brand, "index.html", home.instagramUrl, menuCategories),
+        '<section class="home-brand-hero" aria-labelledby="home-title"' + (heroImage ? ' data-mia-image="' + escapeHtml(heroImage) + '" data-mia-slot-name="home-hero"' : "") + heroStyle + '>',
+        '<div class="home-brand-hero__inner">',
+        '<div class="home-brand-hero__copy">',
+        '<p class="eyebrow">' + escapeHtml(home.intro.eyebrow) + '</p>',
+        '<h1 id="home-title">' + escapeHtml(home.intro.title) + '</h1>',
+        '<p>' + escapeHtml(home.intro.text) + '</p>',
+        heroActions,
+        '</div>',
+        '</div>',
+        '</section>',
+        adminIntroTools ? '<section class="home-admin-edit-band"><div class="home-section-inner">' + adminIntroTools + '</div></section>' : "",
+        '<section class="home-section home-news-section" id="novidades" aria-labelledby="home-news-title">',
+        '<div class="home-section-inner">',
+        '<header class="home-section-heading">',
+        news.eyebrow ? '<p class="eyebrow">' + escapeHtml(news.eyebrow) + '</p>' : "",
+        '<h2 id="home-news-title">' + escapeHtml(news.title || "O que há de novo") + '</h2>',
+        news.text ? '<p>' + escapeHtml(news.text) + '</p>' : "",
+        '</header>',
+        '<div class="home-news-grid">' + newsCards + '</div>',
+        '</div>',
+        '</section>',
+        '<section class="home-section home-products-section" id="produtos" aria-labelledby="home-products-title">',
+        '<div class="home-section-inner">',
+        '<header class="home-section-heading">',
+        productsIntro.eyebrow ? '<p class="eyebrow">' + escapeHtml(productsIntro.eyebrow) + '</p>' : "",
+        '<h2 id="home-products-title">' + escapeHtml(productsIntro.title || "Escolhe o que queres pedir") + '</h2>',
+        productsIntro.text ? '<p>' + escapeHtml(productsIntro.text) + '</p>' : "",
+        '</header>',
+        '<nav class="category-grid category-grid-count-' + gridCount + (adminEditing ? ' is-admin-home-grid' : '') + '" aria-label="Categorias">',
+        cards,
+        '</nav>',
+        state.homeUnavailableMessage ? '<p class="open-order-hint home-unavailable-message" role="status" aria-live="polite">' + escapeHtml(state.homeUnavailableMessage) + '</p>' : "",
+        '</div>',
+        '</section>',
+        renderHomeDeadlineNote(home),
+        renderFooter(home.brand),
+        '</main>'
+      ].join(""));
+    }
 
     bindUnavailableCategoryCards();
     startHomeCarousels(home);
@@ -4312,6 +5284,10 @@
 
   function isCadernosProduct(product) {
     return !!(product && product.slug === "cadernos");
+  }
+
+  function isQuadrosProduct(product) {
+    return !!(product && product.slug === "quadros");
   }
 
   function allDesignsSelected(product) {
@@ -4472,12 +5448,87 @@
     return formatCents(cents) + " x " + count + " = " + formatCents(cents * count);
   }
 
+  function freeQuantityStep(product) {
+    var step = product ? findStep(product, "pack") : null;
+    return step && step.freeQuantity === true ? step : null;
+  }
+
+  function isCustomArtworkProduct(product) {
+    return !!(product && findStep(product, "artwork_upload") && freeQuantityStep(product));
+  }
+
+  function customArtworkConfig(product) {
+    var artworkStep = product ? findStep(product, "artwork_upload") : null;
+    var detailsStep = product ? findStep(product, "details") : null;
+    var upload = artworkStep && artworkStep.upload ? artworkStep.upload : {};
+    var media = detailsStep && detailsStep.mediaAttachments ? detailsStep.mediaAttachments : {};
+    var field = detailsStep && Array.isArray(detailsStep.fields) ? detailsStep.fields[0] : null;
+
+    return {
+      uploadKey: String(upload.selectionKey || "artwork_uploads"),
+      helpKey: String(upload.helpKey || "artwork_help"),
+      cardField: String(field && field.name || "card_description"),
+      cardPhotoKey: String(media.photos && media.photos.selectionKey || "card_reference_uploads"),
+      cardAudioKey: String(media.audio && media.audio.selectionKey || "card_audio_uploads")
+    };
+  }
+
+  function selectedSizeItem(product, size) {
+    var step = product ? findStep(product, "size") : null;
+    var selected = String(size == null ? state.selections.size || "" : size);
+    return step && Array.isArray(step.items) ? step.items.filter(function (item) {
+      return item && String(item.value) === selected;
+    })[0] || null : null;
+  }
+
+  function priceKeyForSize(product, size) {
+    var item = selectedSizeItem(product, size);
+    return String(item && item.priceKey || size || "");
+  }
+
+  function minimumFreeQuantity(product) {
+    var item = selectedSizeItem(product);
+    return Math.max(1, parseInt(item && item.minQuantity, 10) || 1);
+  }
+
+  function maximumFreeQuantity(product) {
+    var step = freeQuantityStep(product);
+    return Math.max(minimumFreeQuantity(product), parseInt(step && step.maxQuantity, 10) || 9999);
+  }
+
+  function tierPriceCents(priceTable, quantity) {
+    var count = Math.max(0, parseInt(quantity, 10) || 0);
+    var tiers;
+    var tier;
+
+    if (!priceTable || !count) {
+      return 0;
+    }
+    if (priceTable[String(count)] != null) {
+      return Math.max(0, Math.round(Number(priceTable[String(count)]) || 0));
+    }
+    tiers = Object.keys(priceTable).map(function (key) { return parseInt(key, 10) || 0; })
+      .filter(Boolean).sort(function (a, b) { return a - b; });
+    if (!tiers.length) {
+      return 0;
+    }
+    tier = tiers[0];
+    tiers.forEach(function (candidate) {
+      if (candidate <= count) {
+        tier = candidate;
+      }
+    });
+    return Math.max(0, Math.round(count * (Number(priceTable[String(tier)]) || 0) / tier));
+  }
+
   function activePriceTableForPackFilter(product) {
     var prices = product && product.prices ? product.prices : {};
     var keys = Object.keys(prices);
 
-    if (state.selections.size && prices[state.selections.size]) {
-      return prices[state.selections.size];
+    var selectedPriceKey = priceKeyForSize(product, state.selections.size);
+
+    if (selectedPriceKey && prices[selectedPriceKey]) {
+      return prices[selectedPriceKey];
     }
 
     if (product && product.defaultPriceKey && prices[product.defaultPriceKey]) {
@@ -4507,6 +5558,11 @@
 
   function getPackQuantity(product) {
     var pack = Number(state.selections.pack_quantity || 0);
+    if (freeQuantityStep(product)) {
+      return Number.isInteger(pack) && pack >= minimumFreeQuantity(product) && pack <= maximumFreeQuantity(product)
+        ? pack
+        : 0;
+    }
     var allowed = allowedPackItems(product).map(function (item) {
       return Number(item.quantity);
     });
@@ -4774,7 +5830,13 @@
   }
 
   function cloneJson(value) {
-    return JSON.parse(JSON.stringify(value || {}));
+    // Não trocar valores predefinidos falsos (false, "", 0) por um objecto
+    // truthy. Isso fazia, por exemplo, "a Mia escolhe" ficar activo apesar de
+    // o fundo branco ter sido definido explicitamente.
+    if (value === undefined) {
+      return undefined;
+    }
+    return JSON.parse(JSON.stringify(value));
   }
 
   // SMART_QUANTITIES_V1: settings globais lidas de pricing.json. Quando
@@ -4888,7 +5950,7 @@
     var quantities = allPriceQuantities(product && product.prices ? product.prices : {});
     var existing = {};
 
-    if (!packStep || !Array.isArray(packStep.items) || !quantities.length) {
+    if (!packStep || packStep.freeQuantity === true || !Array.isArray(packStep.items) || !quantities.length) {
       return;
     }
 
@@ -4952,7 +6014,7 @@
 
   // DELIVERY_OPTIONS_3_V1: opções com feeCents === 0 e sem priceText
   // mostram "Grátis" em vez de "0,00 €". Mantém priceText explícito quando
-  // existir (para casos como "Valor mínimo\n8,50 €").
+  // existir (para casos como "Valor mínimo\n5,55 €").
   function deliveryPriceText(option) {
     var text = String(option && option.priceText ? option.priceText : "").trim();
 
@@ -5009,8 +6071,11 @@
 
   function priceForSize(product, size) {
     var packQuantity = getPackQuantity(product);
-    var table = product.prices && product.prices[size] ? product.prices[size] : null;
-    var cents = table && packQuantity ? Number(table[String(packQuantity)]) : 0;
+    var priceKey = priceKeyForSize(product, size);
+    var table = product.prices && product.prices[priceKey] ? product.prices[priceKey] : null;
+    var cents = table && packQuantity
+      ? (freeQuantityStep(product) ? tierPriceCents(table, packQuantity) : Number(table[String(packQuantity)]))
+      : 0;
     var unitCents = baselineUnitCents(table);
     var discount = 0;
 
@@ -5091,7 +6156,91 @@
     return "Preço base: " + info.baseTotal;
   }
 
+  function selectedQuadroPackaging(product) {
+    return selectedCadernosStepItem(product, "packaging");
+  }
+
+  function quadroPackagingExtraCents(product) {
+    var packaging = selectedQuadroPackaging(product);
+    return packaging ? Math.max(0, Number(packaging.extraPriceCents) || 0) : 0;
+  }
+
+  function quadroPriceEquation(info) {
+    if (!info || !info.baseTotal) {
+      return "";
+    }
+
+    if (info.packagingTotal) {
+      return "Preço base: " + info.baseTotal + " + Embrulho: " + info.packagingTotal + " = " + info.total;
+    }
+
+    return "Preço base: " + info.baseTotal;
+  }
+
+  function quadroPriceInfo(product) {
+    var option = selectedDesignItems(product)[0] || null;
+    var superStep = findStep(product, "super_details");
+    var selectedSuperExample = superStep && Array.isArray(superStep.exampleImages) ? superStep.exampleImages.filter(function (item) {
+      return item && item.value === state.selections.quadro_super_example;
+    })[0] || null : null;
+    var frameStep = findStep(product, "frame_size");
+    var frameSize = String((option && option.frameSize) || state.selections.frame_size || (selectedSuperExample && selectedSuperExample.frameSize) || "");
+    var frameOption = frameStep && Array.isArray(frameStep.items) ? frameStep.items.filter(function (item) {
+      return item && item.value === frameSize;
+    })[0] || null : null;
+    var pricesByDesign = frameOption && frameOption.priceByDesignCents && typeof frameOption.priceByDesignCents === "object"
+      ? frameOption.priceByDesignCents
+      : {};
+    var quantity = getPackQuantity(product) || (option ? 1 : 0);
+    var fixedPriceCents = option ? Math.max(0, Number(option.priceCents) || 0) : 0;
+    var baseCents = option && !option.quoteOnly ? (fixedPriceCents || Math.max(0, Number(pricesByDesign[option.value]) || 0)) : 0;
+    var packagingCents = quadroPackagingExtraCents(product);
+    var cents = option && !option.quoteOnly ? baseCents + packagingCents : 0;
+    var priceText = option && option.quoteOnly ? String(option.note || "").trim() : "";
+
+    return {
+      size: product.defaultPriceKey || "Moldura personalizada",
+      frameSize: frameSize,
+      quantity: quantity,
+      cents: cents,
+      total: cents ? formatCents(cents) : priceText,
+      baseCents: baseCents,
+      baseTotal: baseCents ? formatCents(baseCents) : "",
+      packagingCents: packagingCents,
+      packagingTotal: packagingCents ? formatCents(packagingCents) : "",
+      perPin: "",
+      discount: 0,
+      priceToConfirm: !!(option && option.quoteOnly),
+      priceMinCents: option ? Math.max(0, Number(option.priceMinCents) || 0) : 0,
+      priceMaxCents: option ? Math.max(0, Number(option.priceMaxCents) || 0) : 0
+    };
+  }
+
+  function quadroChoiceNote(product, step, item) {
+    var design = selectedDesignItems(product)[0] || null;
+    var pricesByDesign;
+    var cents;
+
+    if (isQuadrosProduct(product) && step && step.id === "designs" && item && item.priceCents) {
+      return formatCents(Math.max(0, Number(item.priceCents) || 0));
+    }
+
+    if (!isQuadrosProduct(product) || !step || step.id !== "frame_size" || !design) {
+      return item && item.note ? String(item.note) : "";
+    }
+
+    pricesByDesign = item && item.priceByDesignCents && typeof item.priceByDesignCents === "object"
+      ? item.priceByDesignCents
+      : {};
+    cents = Math.max(0, Number(pricesByDesign[design.value]) || 0);
+    return cents ? formatCents(cents) : "";
+  }
+
   function priceInfo(product) {
+    if (isQuadrosProduct(product)) {
+      return quadroPriceInfo(product);
+    }
+
     if (isCadernosProduct(product)) {
       return cadernoPriceInfo(product);
     }
@@ -5121,7 +6270,7 @@
   function defaultDeliveryOptions() {
     return [
       { id: "pickup", label: "Vou recolher na casa da Mia", text: "", feeCents: 0 },
-      { id: "shipping", label: "Envio CTT - até 2 Kg", text: "", feeCents: 850, priceText: "Valor mínimo:\n8,50 €" },
+      { id: "shipping", label: "Envio CTT - até 2 Kg", text: "", feeCents: 555, priceText: "Valor mínimo:\n5,55 €" },
       { id: "join_orders", label: "Junta as minhas encomendas", text: "", feeCents: 0 }
     ];
   }
@@ -5247,7 +6396,8 @@
   function defaultSideFrameHeight(item) { return 108; }
 
   function isUploadedSideImage(item) {
-    return !!(item && item.sideImage && (/^data:image\//.test(item.sideImage) || /^content\/(?:uploads|designs)\/[-a-zA-Z0-9_./]+$/.test(item.sideImage)));
+    return !!(item && item.sideImage && (/^data:image\//.test(item.sideImage)
+      || /^content\/(?:uploads|designs)\/[^"'<>?#]+$/.test(item.sideImage)));
   }
 
   function uploadedSideFrameStyle(item) {
@@ -5807,7 +6957,8 @@
     function renderItemCard(item) {
       var checked = selected.indexOf(item.value) !== -1 ? " checked" : "";
       var media = renderDesignCardMedia(product, step, item);
-      var note = item.note ? '<span class="choice-note">' + escapeHtml(item.note) + '</span>' : "";
+      var noteText = quadroChoiceNote(product, step, item);
+      var note = noteText ? '<span class="choice-note">' + escapeHtml(noteText) + '</span>' : "";
 
       return [
         '<label class="choice-card design-grid">',
@@ -5923,11 +7074,1692 @@
     return renderSectionedDesignChoiceItems(product, step);
   }
 
+  function safeSwatchColor(value) {
+    var color = String(value || "").trim();
+    return /^#[0-9a-f]{6}$/i.test(color) ? color : "#d8d1c2";
+  }
+
+  function renderChoiceSwatch(item) {
+    if (!item || !item.swatch) {
+      return "";
+    }
+
+    return '<span class="choice-swatch" style="--choice-swatch:' + escapeHtml(safeSwatchColor(item.swatch)) + '" aria-hidden="true"></span>';
+  }
+
+  function paletteSelectionLimit(step) {
+    var limit = Math.max(1, parseInt(step && step.colorCount, 10) || 3);
+    var mappings = step && step.colorCountByField && typeof step.colorCountByField === "object"
+      ? step.colorCountByField
+      : {};
+
+    Object.keys(mappings).some(function (fieldName) {
+      var fieldMap = mappings[fieldName] || {};
+      var selected = String(state.selections[fieldName] || "");
+      var mapped = parseInt(fieldMap[selected], 10);
+
+      if (mapped > 0) {
+        limit = mapped;
+        return true;
+      }
+      return false;
+    });
+
+    return limit;
+  }
+
+  function quadrosColorSelectionKeys(step) {
+    var configured = step && step.selectionKeys && typeof step.selectionKeys === "object"
+      ? step.selectionKeys
+      : {};
+
+    return {
+      colors: String(configured.colors || "colors"),
+      tones: String(configured.tones || "quadro_color_tones"),
+      palette: String(configured.palette || "color_palette"),
+      mia: String(configured.mia || "mia_choose_colors")
+    };
+  }
+
+  function quadrosColorUiFor(step, limit) {
+    var key = String(step && step.id || "colors");
+    var count = Math.max(1, parseInt(limit, 10) || paletteSelectionLimit(step));
+    var map = state.quadroColorUi && typeof state.quadroColorUi === "object"
+      ? state.quadroColorUi
+      : (state.quadroColorUi = {});
+    var ui = map[key];
+
+    if (!ui || typeof ui !== "object") {
+      ui = {
+        slots: [],
+        activeSlot: 0,
+        pinnedSlot: null,
+        pinnedChangeCount: 0,
+        hintSlot: null,
+        toneEdit: null
+      };
+      map[key] = ui;
+    }
+    if (!Number.isInteger(ui.activeSlot) || ui.activeSlot < 0 || ui.activeSlot >= count) {
+      ui.activeSlot = 0;
+    }
+    if (!Number.isInteger(ui.pinnedSlot) || ui.pinnedSlot < 0 || ui.pinnedSlot >= count) {
+      ui.pinnedSlot = null;
+    }
+    if (!Number.isInteger(ui.hintSlot) || ui.hintSlot < 0 || ui.hintSlot >= count) {
+      ui.hintSlot = null;
+    }
+    return ui;
+  }
+
+  function quadrosResetColorUi(step) {
+    if (state.quadroColorUi && step && step.id) {
+      delete state.quadroColorUi[String(step.id)];
+    }
+    state.paletteColorSlots = [];
+    state.quadroActiveColorSlot = 0;
+    state.quadroToneEdit = null;
+  }
+
+  function quadrosNextEmptySlot(slots, fromIndex) {
+    var count = Array.isArray(slots) ? slots.length : 0;
+    var offset;
+
+    for (offset = 1; offset < count; offset += 1) {
+      var index = (fromIndex + offset) % count;
+      if (!slots[index]) {
+        return index;
+      }
+    }
+    return null;
+  }
+
+  function paletteColors(item, requestedLimit) {
+    var colors = item && Array.isArray(item.palette) ? item.palette : [];
+    var limit = Math.max(1, parseInt(requestedLimit, 10) || 3);
+    return colors.slice(0, limit).map(safeSwatchColor);
+  }
+
+  // Descobre a que família pertence cada cor de uma combinação. Além do swatch
+  // (o tom principal), procura também nos tons claro e escuro configurados —
+  // sem isso, uma combinação que use um tom claro ficava por reconhecer e
+  // desaparecia da lista.
+  function paletteIndividualValues(step, item, requestedLimit) {
+    var colors = paletteColors(item, requestedLimit);
+    var individualColors = step && Array.isArray(step.individualColors) ? step.individualColors : [];
+    var values = colors.map(function (color) {
+      var match = individualColors.filter(function (candidate) {
+        return candidate && safeSwatchColor(candidate.swatch).toLowerCase() === color.toLowerCase();
+      })[0] || individualColors.filter(function (candidate) {
+        return candidate && Array.isArray(candidate.colorStops) && candidate.colorStops.some(function (stop) {
+          return validHex(stop) && String(stop).toLowerCase() === color.toLowerCase();
+        });
+      })[0];
+      return match ? match.value : "";
+    });
+
+    return values.every(Boolean) ? values : [];
+  }
+
+  function currentPaletteColorSlots(step, requestedLimit) {
+    var limit = Math.max(1, parseInt(requestedLimit, 10) || paletteSelectionLimit(step));
+    var keys = quadrosColorSelectionKeys(step);
+    var selected = Array.isArray(state.selections[keys.colors]) ? state.selections[keys.colors].slice(0, limit) : [];
+    var ui = step && step.tonePicker === true ? quadrosColorUiFor(step, limit) : null;
+    var previous = ui && Array.isArray(ui.slots)
+      ? ui.slots.slice(0, limit)
+      : (Array.isArray(state.paletteColorSlots) ? state.paletteColorSlots.slice(0, limit) : []);
+    var slots = Array.from({ length: limit }, function () { return ""; });
+
+    if (step && step.useConfiguredColors === true) {
+      if (previous.filter(Boolean).join("|") === selected.filter(Boolean).join("|")) {
+        slots = previous.concat(Array.from({ length: Math.max(0, limit - previous.length) }, function () { return ""; })).slice(0, limit);
+      } else {
+        selected.forEach(function (value, index) {
+          if (index < limit) { slots[index] = value; }
+        });
+      }
+      if (ui) { ui.slots = slots.slice(); }
+      state.paletteColorSlots = slots.slice();
+      return slots;
+    }
+
+    previous.forEach(function (value, index) {
+      if (value && selected.indexOf(value) !== -1 && slots.indexOf(value) === -1) {
+        slots[index] = value;
+      }
+    });
+
+    selected.forEach(function (value) {
+      var emptyIndex;
+      if (!value || slots.indexOf(value) !== -1) {
+        return;
+      }
+      emptyIndex = slots.indexOf("");
+      if (emptyIndex !== -1) {
+        slots[emptyIndex] = value;
+      }
+    });
+
+    if (ui) { ui.slots = slots.slice(); }
+    state.paletteColorSlots = slots.slice();
+    return slots;
+  }
+
+  function renderPaletteAdminControls(step, item) {
+    if (!state.admin) {
+      return "";
+    }
+
+    return [
+      '<div class="admin-card-tools palette-admin-tools">',
+      '<label>Nome<input type="text" value="' + escapeHtml(item.title || "") + '" data-admin-edit="title" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>',
+      paletteColors(item).map(function (color, index) {
+        return '<label>Cor ' + (index + 1) + '<input type="color" value="' + escapeHtml(color) + '" data-admin-palette-color="' + index + '" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>';
+      }).join(""),
+      '<button type="button" data-admin-delete-item data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '">Remover combinação</button>',
+      '</div>'
+    ].join("");
+  }
+
+  // A água de cada quadrado é desenhada num <canvas> com física real (MiaWater,
+  // mais abaixo). data-water-pour="1" faz o quadrado começar vazio e encher com
+  // jorro + salpico; "0" já aparece cheio (só reage à inclinação); "drain"
+  // aparece cheio e esvazia-se, para quando se retira a cor.
+  function liquidCanvasMarkup(mode, duration) {
+    return '<canvas class="pcs__canvas" data-water-pour="' + (mode === true ? "1" : (mode === "drain" ? "drain" : "0")) + '"'
+      + (duration ? ' data-water-duration="' + duration + '"' : "")
+      + '></canvas>';
+  }
+
+  // Ao desmarcar, o quadrado que reaparece por trás dos círculos ainda é o nó
+  // do render anterior — traz o certo e a cor sólida do tom. Limpamo-lo já, ou
+  // ele reaparecia marcado só para o re-render o desmarcar logo a seguir.
+  function quadrosUnmarkFamilySquare(step, value) {
+    var square = document.querySelector('[data-quadros-color-family="' + String(value).replace(/"/g, '\\"') + '"]');
+    var checks = square ? square.querySelector(".quadros-checks") : null;
+    var swatch = square ? square.querySelector("span") : null;
+    var item = quadrosColorItem(step, value);
+
+    if (!square) {
+      return;
+    }
+    if (checks) {
+      checks.parentNode.removeChild(checks);
+    }
+    square.classList.remove("is-toned");
+    if (item && swatch) {
+      swatch.style.setProperty("--individual-color", quadrosColorStops(item)[1]);
+    }
+  }
+
+  // A água tem de começar a mexer no instante do clique, não no re-render que
+  // só chega no fim da animação dos círculos. Por isso mexemos directamente no
+  // quadrado da composição e deixamos a memória de preenchimento já actualizada,
+  // para o re-render seguinte encontrar tudo no lugar e não reanimar nada.
+  function quadrosPrimeSlotWater(step, index, color, duration) {
+    var slot = document.querySelector('[data-quadros-color-slot="' + index + '"]');
+    var fillKey = step.id + "-slots";
+    var memory = paletteFillMemory[fillKey] || [];
+    var canvas;
+
+    memory[index] = color || "";
+    paletteFillMemory[fillKey] = memory;
+    if (!slot) {
+      return;
+    }
+    canvas = slot.querySelector("canvas.pcs__canvas");
+    if (canvas) {
+      canvas.parentNode.removeChild(canvas);
+    }
+    if (color) {
+      slot.classList.add("is-filled");
+      slot.style.setProperty("--palette-preview-color", color);
+      slot.insertAdjacentHTML("afterbegin", liquidCanvasMarkup(true, duration));
+    } else {
+      // A escoar: tira-se o "is-filled" para o fundo com o "?" ficar por baixo
+      // da água, a ser revelado à medida que ela desce. A cor fica na variável,
+      // que é de onde a canvas a lê.
+      slot.classList.remove("is-filled");
+      slot.insertAdjacentHTML("afterbegin", liquidCanvasMarkup("drain", duration));
+    }
+    miaWaterScan();
+  }
+
+  // Guarda as cores de cada slot do último render (por passo) para sabermos
+  // qual slot foi mesmo escolhido agora — só esse faz a animação de encher.
+  var paletteFillMemory = {};
+
+  function hexRgb(value) {
+    var hex = safeSwatchColor(value).slice(1);
+    return [
+      parseInt(hex.slice(0, 2), 16),
+      parseInt(hex.slice(2, 4), 16),
+      parseInt(hex.slice(4, 6), 16)
+    ];
+  }
+
+  function rgbHex(rgb) {
+    return "#" + rgb.map(function (value) {
+      return Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, "0");
+    }).join("");
+  }
+
+  function mixHex(value, target, amount) {
+    var from = hexRgb(value);
+    var to = hexRgb(target);
+    var ratio = Math.max(0, Math.min(1, Number(amount) || 0));
+
+    return rgbHex(from.map(function (channel, index) {
+      return channel + (to[index] - channel) * ratio;
+    }));
+  }
+
+  // --- Cor percetual (OKLab) -------------------------------------------------
+  // Distâncias em RGB não têm nada a ver com o que o olho vê: um bege e um
+  // verde-sálvia ficam "perto", dois azuis parecidos ficam "longe". O OKLab é
+  // aproximadamente uniforme, por isso é nele que se comparam cores, se
+  // escolhem os tons e se decide o que contrasta com o quê.
+
+  function srgbToLinear(value) {
+    var channel = Math.max(0, Math.min(1, value / 255));
+    return channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+  }
+
+  function linearToSrgb(value) {
+    var channel = value <= 0.0031308
+      ? value * 12.92
+      : 1.055 * Math.pow(Math.max(0, value), 1 / 2.4) - 0.055;
+    return Math.max(0, Math.min(255, Math.round(channel * 255)));
+  }
+
+  function rgbLab(rgb) {
+    var r = srgbToLinear(rgb[0]);
+    var g = srgbToLinear(rgb[1]);
+    var b = srgbToLinear(rgb[2]);
+    var l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+    var m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+    var s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+
+    return [
+      0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+      1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+      0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s
+    ];
+  }
+
+  function labRgb(lab) {
+    var l = Math.pow(lab[0] + 0.3963377774 * lab[1] + 0.2158037573 * lab[2], 3);
+    var m = Math.pow(lab[0] - 0.1055613458 * lab[1] - 0.0638541728 * lab[2], 3);
+    var s = Math.pow(lab[0] - 0.0894841775 * lab[1] - 1.2914855480 * lab[2], 3);
+
+    return [
+      linearToSrgb(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+      linearToSrgb(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+      linearToSrgb(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)
+    ];
+  }
+
+  function labChroma(lab) {
+    return Math.sqrt(lab[1] * lab[1] + lab[2] * lab[2]);
+  }
+
+  function labDistance(a, b) {
+    var dl = a[0] - b[0];
+    var da = a[1] - b[1];
+    var db = a[2] - b[2];
+    return Math.sqrt(dl * dl + da * da + db * db);
+  }
+
+  // Para decidir a que família uma cor pertence, a luminosidade quase não
+  // conta: cada família tem um tom claro, um principal e um escuro, por isso o
+  // claro/escuro resolve-se logo a seguir. Sem este desconto, um bege claro da
+  // fotografia agarra-se ao verde-sálvia (que é claro) em vez do castanho
+  // (que é a cor certa, e tem um tom claro à espera).
+  function labFamilyDistance(a, b) {
+    var dl = (a[0] - b[0]) * 0.35;
+    var da = a[1] - b[1];
+    var db = a[2] - b[2];
+    return Math.sqrt(dl * dl + da * da + db * db);
+  }
+
+  function quadrosTonePalette(value) {
+    var base = safeSwatchColor(value);
+    return [
+      mixHex(base, "#ffffff", 0.54),
+      base,
+      mixHex(base, "#241b10", 0.34)
+    ];
+  }
+
+  function quadrosColorStops(item) {
+    var base = safeSwatchColor(item && item.swatch);
+    var configured = item && Array.isArray(item.colorStops)
+      ? item.colorStops.slice(0, 3).map(function (color) {
+        return validHex(color) ? String(color).toLowerCase() : "";
+      })
+      : [];
+
+    if (configured.length === 3 && configured.every(Boolean)) {
+      return configured;
+    }
+
+    return quadrosTonePalette(base);
+  }
+
+  function quadrosColorItem(step, value) {
+    return (step && Array.isArray(step.individualColors) ? step.individualColors : []).filter(function (item) {
+      return item && item.value === value;
+    })[0] || null;
+  }
+
+  function quadrosColorModeInfo(step) {
+    var hasPhoto = orderUploadItems("quadro_uploads").length > 0;
+    var canUsePhoto = state.selections.designs === "Foto e Frase"
+      && hasPhoto
+      && !state.selections.photo_help;
+    delete state.selections.quadro_color_mode;
+    return { mode: canUsePhoto ? "photo" : "manual", canUsePhoto: canUsePhoto };
+  }
+
+  function quadrosToneSelections(step, limit) {
+    var keys = quadrosColorSelectionKeys(step);
+    var saved = Array.isArray(state.selections[keys.tones])
+      ? state.selections[keys.tones].slice(0, limit)
+      : [];
+    var tones = Array.from({ length: limit }, function (_, index) {
+      var tone = Number(saved[index]);
+      return tone >= 0 && tone <= 2 ? tone : 1;
+    });
+
+    state.selections[keys.tones] = tones;
+    return tones;
+  }
+
+  function quadrosToneLabel(tone) {
+    return tone === 0 ? "claro" : (tone === 2 ? "escuro" : "principal");
+  }
+
+  // O quadrado que a próxima cor escolhida vai preencher. Há sempre um activo.
+  function quadrosActiveColorSlot(step, limit) {
+    var ui = quadrosColorUiFor(step, limit);
+    var slot = Number(ui.activeSlot);
+    if (!Number.isInteger(slot) || slot < 0 || slot >= limit) {
+      slot = 0;
+    }
+    ui.activeSlot = slot;
+    state.quadroActiveColorSlot = slot;
+    return slot;
+  }
+
+  function quadrosPalettePreviewColors(step, limit) {
+    var slots = currentPaletteColorSlots(step, limit);
+    var tones = quadrosToneSelections(step, limit);
+
+    return slots.map(function (value, index) {
+      var item = quadrosColorItem(step, value);
+      return item ? quadrosColorStops(item)[tones[index]] : "";
+    }).slice(0, limit);
+  }
+
+  // Lugar de cada tom no triângulo: claro em cima, principal em baixo à
+  // esquerda, escuro em baixo à direita.
+  var QUADROS_TONE_SPOTS = ["top", "left", "right"];
+  // Elemento a sério (e não ::after) para poder ser animado a entrar e a sair.
+  var QUADROS_CHECK_MARKUP = '<i class="quadros-check" aria-hidden="true">✓</i>';
+
+  function quadrosChecksMarkup(count) {
+    if (count < 1) {
+      return "";
+    }
+    return '<b class="quadros-checks" aria-hidden="true">'
+      + Array.from({ length: count }, function () { return QUADROS_CHECK_MARKUP; }).join("")
+      + '</b>';
+  }
+
+  function renderQuadrosToneSwatch(item, color, toneIndex, slot, selected) {
+    var title = item.title || item.value;
+
+    return '<button type="button" class="individual-color-choice quadros-tone-swatch quadros-tone-swatch--' + QUADROS_TONE_SPOTS[toneIndex] + (selected ? ' is-selected' : '') + '" data-quadros-tone="' + toneIndex + '" data-quadros-tone-value="' + escapeHtml(item.value) + '" data-quadros-tone-slot="' + slot + '" data-flip-key="tone:' + escapeHtml(item.value) + ':' + toneIndex + '" aria-pressed="' + (selected ? 'true' : 'false') + '" aria-label="Tom ' + quadrosToneLabel(toneIndex) + ' de ' + escapeHtml(title) + '"><span style="--individual-color:' + escapeHtml(color) + '" aria-hidden="true"></span></button>';
+  }
+
+  // Os 3 tons nascem do próprio quadrado clicado, que desaparece: ficam em
+  // triângulo sobre a célula que vagou (claro em cima, principal em baixo à
+  // esquerda, escuro em baixo à direita). Ver quadrosPlaceToneStrip.
+  // "chosenTones" contém todos os tons desta família que já estão nos
+  // quadrados. A mesma família pode repetir-se; o tom exacto é que é único.
+  function renderQuadrosToneStrip(item, chosenTones, slot) {
+    var stops = quadrosColorStops(item);
+    var selected = Array.isArray(chosenTones) ? chosenTones : [];
+
+    return [
+      '<div class="quadros-tone-strip" data-quadros-tone-strip role="group" aria-label="Tom de ' + escapeHtml(item.title || item.value) + '">',
+      renderQuadrosToneSwatch(item, stops[0], 0, slot, selected.indexOf(0) !== -1),
+      renderQuadrosToneSwatch(item, stops[1], 1, slot, selected.indexOf(1) !== -1),
+      renderQuadrosToneSwatch(item, stops[2], 2, slot, selected.indexOf(2) !== -1),
+      '</div>'
+    ].join("");
+  }
+
+  function renderQuadrosColorFamilies(step, slots, tones, activeSlot, toneEdit) {
+    var editValue = toneEdit ? toneEdit.value : "";
+
+    return (step.individualColors || []).map(function (item) {
+      var expanded = item.value === editValue;
+      var chosenHere = item.value === (slots[activeSlot] || "");
+      var unavailable = item.availability === "unavailable";
+      var stops = quadrosColorStops(item);
+      var showName = step.showColorNames === true;
+      var title = item.title || item.value;
+      var selectedTones = slots.reduce(function (selected, value, index) {
+        if (value === item.value && selected.indexOf(tones[index]) === -1) {
+          selected.push(tones[index]);
+        }
+        return selected;
+      }, []);
+      // Escolhida: o quadrado passa a mostrar o tom exacto que ficou no
+      // quadrado da composição, em vez do degradê dos três tons.
+      var usedIndex = chosenHere ? activeSlot : slots.indexOf(item.value);
+      var tone = usedIndex !== -1 ? tones[usedIndex] : -1;
+      var label = title
+        + (selectedTones.length ? ", escolhida, " + (selectedTones.length === 1 ? "tom " : "tons ")
+          + selectedTones.map(quadrosToneLabel).join(", ") : "")
+        + (unavailable ? " — indisponível no momento" : "");
+
+      // Expandida, some: a célula fica livre para os 3 círculos. Continua no
+      // DOM (invisível) para a grelha não refluir e para o FLIP saber de onde
+      // os círculos devem nascer.
+      return [
+        '<button type="button" class="individual-color-choice quadros-color-family' + (showName ? ' has-color-name' : '') + (expanded ? ' is-expanded' : '') + (tone !== -1 ? ' is-toned' : '') + (unavailable ? ' is-disabled is-unavailable' : '') + '" data-quadros-color-family="' + escapeHtml(item.value) + '" data-color-id="' + escapeHtml(item.id || "") + '" data-flip-key="fam:' + escapeHtml(item.value) + '"' + (unavailable ? ' disabled' : '') + (expanded ? ' tabindex="-1" aria-hidden="true"' : '') + ' aria-pressed="' + (chosenHere ? 'true' : 'false') + '" aria-expanded="' + (expanded ? 'true' : 'false') + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '">',
+        '<span style="--individual-color-light:' + escapeHtml(stops[0]) + ';--individual-color:' + escapeHtml(tone !== -1 ? stops[tone] : stops[1]) + ';--individual-color-dark:' + escapeHtml(stops[2]) + '" aria-hidden="true"></span>',
+        showName ? '<strong>' + escapeHtml(title) + '</strong>' : "",
+        quadrosChecksMarkup(selectedTones.length),
+        '</button>'
+      ].join("");
+    }).join("");
+  }
+
+  // Fonte única das combinações mostradas: o render e o clique têm de ver a
+  // mesma lista pela mesma ordem, senão o índice do botão aponta para outra.
+  function quadrosSuggestedPaletteRecords(step, limit, mode) {
+    var analysis = state.quadroPhotoColorAnalysis || {};
+
+    var photo = mode === "photo" && analysis.status === "ready" && Array.isArray(analysis.palettes)
+      ? analysis.palettes.filter(function (record) {
+        return record && Array.isArray(record.values) && record.values.length === limit;
+      })
+      : [];
+
+    return photo.length ? photo : quadrosDefaultPaletteRecords(step, limit);
+  }
+
+  function renderQuadrosSuggestedPalettes(step, limit, mode) {
+    var keys = quadrosColorSelectionKeys(step);
+    var tones = quadrosToneSelections(step, limit);
+    var source = quadrosSuggestedPaletteRecords(step, limit, mode);
+
+    return source.map(function (item, index) {
+      // Mostra o tom exacto que vai ficar em cada quadrado. Antes mostrava o
+      // degradê dos três tons da família, o que não dizia nada sobre o
+      // resultado — e agora as sugestões já não são todas no tom principal.
+      var colors = item.values.map(function (value, position) {
+        var color = quadrosColorItem(step, value);
+        return color
+          ? quadrosColorStops(color)[item.tones ? item.tones[position] : 1]
+          : "#d8d1c2";
+      }).slice(0, limit);
+      var selected = Array.isArray(state.selections[keys.colors])
+        && item.values.join("|") === state.selections[keys.colors].slice(0, limit).join("|")
+        && (item.tones || []).join("|") === tones.join("|");
+
+      return [
+        '<button class="palette-choice quadros-suggested-palette' + (selected ? ' is-selected' : '') + '" type="button" data-quadros-palette-index="' + index + '">',
+        '<span class="palette-swatches" style="--palette-swatch-count:' + colors.length + '" aria-hidden="true">',
+        colors.map(function (color) { return '<span style="--palette-color:' + escapeHtml(color) + '"></span>'; }).join(""),
+        '</span>',
+        '<strong>' + escapeHtml(item.title || "Combinação sugerida") + '</strong>',
+        item.note ? '<small>' + escapeHtml(item.note) + '</small>' : "",
+        '</button>'
+      ].join("");
+    }).join("");
+  }
+
+  function renderQuadrosPhotoColorPanel(step) {
+    var upload = orderUploadItems("quadro_uploads")[0] || null;
+    var analysis = state.quadroPhotoColorAnalysis || {};
+    var showAnalysis = step && step.showPhotoColorAnalysis === true;
+    var detected = Array.isArray(analysis.detected) && analysis.detected.length
+      ? analysis.detected
+      : ["#eee3cf", "#d8bf94", "#ad7c58", "#7a5144", "#45342d"];
+    var status = analysis.status === "ready"
+      ? "Sugestões prontas"
+      : analysis.status === "error"
+        ? (analysis.error || "Não foi possível analisar a fotografia.")
+        : "A analisar a fotografia…";
+
+    return [
+      '<div class="quadros-photo-color-panel' + (showAnalysis ? '' : ' is-preview-only') + '">',
+      '<div class="quadros-photo-color-preview">',
+      upload ? '<img src="' + escapeHtml(orderUploadPreviewUrl(upload)) + '" alt="Fotografia enviada no passo anterior">' : "",
+      '</div>',
+      showAnalysis ? '<aside class="quadros-photo-color-analysis">' : "",
+      showAnalysis ? [
+      '<h3>Cores encontradas</h3>',
+      '<p>' + (analysis.status === "ready"
+        ? "Adaptámos as cores principais às opções disponíveis para as flores."
+        : "Estamos a procurar as cores principais da fotografia.") + '</p>',
+      '<div class="quadros-detected-colors" aria-label="Cores detectadas">',
+      detected.slice(0, 5).map(function (color) {
+        return '<span style="--detected-color:' + escapeHtml(safeSwatchColor(color)) + '"></span>';
+      }).join(""),
+      '</div>',
+      '<p class="quadros-analysis-status" role="status">' + escapeHtml(status) + '</p>',
+      '</aside>'
+      ].join("") : "",
+      '</div>'
+    ].join("");
+  }
+
+  function renderQuadrosColorPicker(product, step) {
+    var limit = paletteSelectionLimit(step);
+    var keys = quadrosColorSelectionKeys(step);
+    var ui = quadrosColorUiFor(step, limit);
+    var suggestionsLabel = limit === 1 ? "Cores sugeridas" : "Combinações sugeridas";
+    var miaChoiceLabel = limit === 1
+      ? "Quero que a Mia escolha a cor por mim"
+      : "Quero que a Mia escolha as cores por mim";
+    var allowMiaChoice = step.allowMiaChoice !== false;
+    var modeInfo = quadrosColorModeInfo(step);
+    var mode = modeInfo.mode;
+    var miaChooses = !!state.selections[keys.mia];
+    var slots = miaChooses ? [] : currentPaletteColorSlots(step, limit);
+    var tones = quadrosToneSelections(step, limit);
+    var activeSlot = quadrosActiveColorSlot(step, limit);
+    var previewColors = miaChooses ? [] : quadrosPalettePreviewColors(step, limit);
+    var previewCount = previewColors.filter(Boolean).length;
+    var fillKey = step.id + "-slots";
+    var previous = paletteFillMemory[fillKey] || [];
+    var suggestionsOpen = state.quadroColorSuggestionsOpen !== false;
+    var suggested = renderQuadrosSuggestedPalettes(step, limit, mode);
+    var toneItem;
+    var isGradient = step.compositionStyle === "gradient" || (step.compositionStyleByField && Object.keys(step.compositionStyleByField).some(function (fieldName) {
+      var mapping = step.compositionStyleByField[fieldName] || {};
+      return mapping[String(state.selections[fieldName] || "")] === "gradient";
+    }));
+    var isGlitter = step.colorEffect === "glitter" || (step.colorEffectByField && Object.keys(step.colorEffectByField).some(function (fieldName) {
+      var mapping = step.colorEffectByField[fieldName] || {};
+      return mapping[String(state.selections[fieldName] || "")] === "glitter";
+    }));
+
+    state.paletteColorSlots = ui.slots.slice();
+    state.quadroActiveColorSlot = ui.activeSlot;
+    state.quadroToneEdit = ui.toneEdit;
+    toneItem = ui.toneEdit && !miaChooses
+      ? quadrosColorItem(step, ui.toneEdit.value)
+      : null;
+
+    paletteFillMemory[fillKey] = previewColors.slice();
+
+    return [
+      '<section class="palette-picker quadros-color-picker' + (isGradient ? ' is-gradient' : '') + (isGlitter ? ' is-glitter' : '') + '" data-quadros-color-mode-current="' + escapeHtml(mode) + '">',
+      mode === "photo" ? renderQuadrosPhotoColorPanel(step) : "",
+      '<div class="quadros-color-composition' + (ui.hintSlot !== null ? ' has-next-hint' : '') + '">',
+      '<div class="palette-composition' + (isGradient ? ' is-gradient' : '') + '" style="--palette-slot-count:' + limit + '" aria-live="polite" aria-label="' + previewCount + ' de ' + limit + (limit === 1 ? ' cor escolhida' : ' cores escolhidas') + '">',
+      Array.from({ length: limit }, function (_, index) {
+        var color = previewColors[index] || "";
+        var item = slots[index] ? quadrosColorItem(step, slots[index]) : null;
+        var active = index === activeSlot;
+        var label = (item
+          ? (item.title || item.value) + ', tom ' + quadrosToneLabel(tones[index])
+          : 'Quadrado por preencher')
+          + (active ? '. Selecionado para alteração' : '. Clica para alterar esta cor');
+        var hint = ui.hintSlot === index
+          ? '<span class="quadros-next-color-hint" role="status">Toca aqui para escolheres a próxima cor</span>'
+          : '';
+        if (!color) {
+          return '<button type="button" class="palette-composition__slot quadros-color-slot' + (active ? ' is-active' : '') + (hint ? ' has-next-hint' : '') + '" data-quadros-color-slot="' + index + '" aria-pressed="' + (active ? 'true' : 'false') + '" aria-label="' + escapeHtml(label) + '">' + hint + '</button>' + (isGradient && index === 0 ? '<span class="quadros-gradient-arrow" aria-hidden="true">→</span>' : '');
+        }
+        return '<button type="button" class="palette-composition__slot quadros-color-slot is-filled' + (active ? ' is-active' : '') + (hint ? ' has-next-hint' : '') + '" data-quadros-color-slot="' + index + '" aria-pressed="' + (active ? 'true' : 'false') + '" style="--palette-preview-color:' + escapeHtml(color) + '" aria-label="' + escapeHtml(label) + '">' + liquidCanvasMarkup(previous[index] !== color) + hint + '</button>' + (isGradient && index === 0 ? '<span class="quadros-gradient-arrow" aria-hidden="true">→</span>' : '');
+      }).join(""),
+      '</div>',
+      // Setinha por baixo do quadrado activo, em vez de o cercar.
+      '<span class="quadros-active-marker" style="--marker-shift:' + (activeSlot - (limit - 1) / 2) + '" aria-hidden="true"></span>',
+      '</div>',
+      '<div class="individual-color-grid quadros-color-family-grid" data-quadros-color-grid>'
+        + renderQuadrosColorFamilies(step, slots, tones, activeSlot, ui.toneEdit)
+        + (toneItem ? renderQuadrosToneStrip(
+          toneItem,
+          slots.reduce(function (selectedTones, value, index) {
+            if (value === ui.toneEdit.value && selectedTones.indexOf(tones[index]) === -1) {
+              selectedTones.push(tones[index]);
+            }
+            return selectedTones;
+          }, []),
+          ui.toneEdit.slot
+        ) : "")
+        + '</div>',
+      '<button class="palette-suggestions-toggle" type="button" data-quadros-suggestions-toggle aria-expanded="' + (suggestionsOpen ? "true" : "false") + '"><span>' + suggestionsLabel + '</span><b aria-hidden="true">⌄</b></button>',
+      '<div class="palette-suggestions' + (suggestionsOpen ? ' is-open' : '') + '"' + (suggestionsOpen ? "" : " hidden") + '>',
+      '<div class="palette-grid">' + (suggested || '<p class="quadros-palette-empty">Ainda estamos a preparar as sugestões. Podes escolher as cores manualmente.</p>') + '</div>',
+      '</div>',
+      allowMiaChoice ? [
+        '<label class="palette-mia-choice' + (miaChooses ? ' is-selected' : '') + '">',
+        '<input type="checkbox" data-mia-color-choice' + (miaChooses ? ' checked' : '') + '>',
+        '<span>' + miaChoiceLabel + '</span>',
+        '</label>'
+      ].join("") : "",
+      '</section>'
+    ].join("");
+  }
+
+  function renderPaletteGrid(product, step) {
+    if (!state.admin && isQuadrosProduct(product) && step && step.tonePicker === true) {
+      return renderQuadrosColorPicker(product, step);
+    }
+
+    var selectionLimit = paletteSelectionLimit(step);
+    var miaChooses = !!state.selections.mia_choose_colors;
+    var selectedPalette = miaChooses ? "" : String(state.selections.color_palette || "");
+    var colorSlots = miaChooses
+      ? Array.from({ length: selectionLimit }, function () { return ""; })
+      : currentPaletteColorSlots(step, selectionLimit);
+    var selectedColors = colorSlots.filter(Boolean);
+    var limitReached = selectedColors.length >= selectionLimit;
+    var individualColors = step.individualColors || [];
+    var selectedPaletteItem = (step.items || []).filter(function (item) {
+      return item && item.value === selectedPalette;
+    })[0] || null;
+    var previewColors = selectedColors.length
+      ? colorSlots.map(function (value) {
+        var item = individualColors.filter(function (candidate) {
+          return candidate && candidate.value === value;
+        })[0];
+        return item ? safeSwatchColor(item.swatch) : "";
+      }).slice(0, selectionLimit)
+      : paletteColors(selectedPaletteItem, selectionLimit);
+    var previewColorCount = previewColors.filter(Boolean).length;
+    var colorChoiceText = selectionLimit === 1 ? "uma cor" : (selectionLimit === 2 ? "duas cores" : selectionLimit === 3 ? "três cores" : selectionLimit + " cores");
+    var miaChoiceLabel = selectionLimit === 1 ? "Quero que a Mia escolha a cor" : "Quero que a Mia escolha as cores";
+    var fillKey = step.id || "palette";
+    var prevFill = paletteFillMemory[fillKey] || [];
+    var previewSlots = Array.from({ length: selectionLimit }, function (_, index) {
+      var color = previewColors[index] || "";
+      if (!color) {
+        return '<span class="palette-composition__slot" aria-label="Cor ' + (index + 1) + ' por escolher"></span>';
+      }
+      // Só anima o encher se este slot mudou desde o último render (cor nova
+      // ou trocada); os que já estavam com a mesma cor ficam cheios e quietos.
+      var animate = prevFill[index] !== color;
+      return '<span class="palette-composition__slot is-filled" style="--palette-preview-color:' + escapeHtml(color) + '" aria-label="Cor ' + (index + 1) + ' escolhida">' + liquidCanvasMarkup(animate) + '</span>';
+    }).join("");
+    paletteFillMemory[fillKey] = Array.from({ length: selectionLimit }, function (_, index) {
+      return previewColors[index] || "";
+    });
+    var palettes = (step.items || []).map(function (item) {
+      var checked = selectedPalette === item.value;
+      var suggestedColors = paletteColors(item, selectionLimit);
+      var swatches = suggestedColors.map(function (color) {
+        return '<span style="--palette-color:' + escapeHtml(color) + '"></span>';
+      }).join("");
+
+      return [
+        '<div class="palette-choice-wrap">',
+        '<label class="palette-choice' + (checked ? ' is-selected' : '') + '">',
+        '<input type="radio" name="color_palette" value="' + escapeHtml(item.value) + '" data-palette-choice' + (checked ? ' checked' : '') + '>',
+        '<span class="palette-swatches" style="--palette-swatch-count:' + suggestedColors.length + '" aria-hidden="true">' + swatches + '</span>',
+        '<strong>' + escapeHtml(item.title || item.value) + '</strong>',
+        '</label>',
+        renderPaletteAdminControls(step, item),
+        '</div>'
+      ].join("");
+    }).join("");
+    var individual = individualColors.map(function (item, index) {
+      var checked = selectedColors.indexOf(item.value) !== -1;
+      var unavailable = item.availability === "unavailable";
+      // Cheio já não bloqueia: clicar numa cor nova substitui o último quadrado
+      // mexido (ver handler [data-individual-color]). Só as indisponíveis bloqueiam.
+      var disabled = unavailable;
+
+      return [
+        '<div class="individual-color-wrap">',
+        '<label class="individual-color-choice' + (checked ? ' is-selected' : '') + (disabled ? ' is-disabled' : '') + (unavailable ? ' is-unavailable' : '') + '" title="' + escapeHtml((item.title || item.value) + (unavailable ? ' — indisponível no momento' : '')) + '">',
+        '<input type="checkbox" value="' + escapeHtml(item.value) + '" data-individual-color="' + index + '"' + (checked ? ' checked' : '') + (disabled ? ' disabled' : '') + ' aria-label="' + escapeHtml((item.title || item.value) + (unavailable ? ' — indisponível no momento' : '')) + '">',
+        '<span style="--individual-color:' + escapeHtml(safeSwatchColor(item.swatch)) + '" aria-hidden="true"></span>',
+        '</label>',
+        '</div>'
+      ].join("");
+    }).join("");
+
+    return [
+      '<section class="palette-picker">',
+      '<div class="palette-composition" style="--palette-slot-count:' + selectionLimit + '" aria-live="polite" aria-label="' + previewColorCount + ' de ' + selectionLimit + (selectionLimit === 1 ? ' cor escolhida' : ' cores escolhidas') + '">' + previewSlots + '</div>',
+      '<div class="individual-color-heading"><h3>Escolhe ' + colorChoiceText + '</h3><span>' + previewColorCount + '/' + selectionLimit + '</span></div>',
+      '<div class="individual-color-grid">' + individual + '</div>',
+      state.admin ? '<a class="admin-add admin-colors-link" href="admin-colors.html" target="_blank" rel="noopener">Gerir cores e disponibilidade</a>' : '',
+      '<button class="palette-suggestions-toggle" type="button" data-palette-suggestions-toggle aria-expanded="' + (state.colorSuggestionsOpen ? 'true' : 'false') + '"><span>' + (selectionLimit === 1 ? 'Cores sugeridas' : 'Combinações sugeridas') + '</span><b aria-hidden="true">⌄</b></button>',
+      '<div class="palette-suggestions' + (state.colorSuggestionsOpen ? ' is-open' : '') + '"' + (state.colorSuggestionsOpen ? '' : ' hidden') + '>',
+      '<div class="palette-grid">' + palettes + '</div>',
+      state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar combinação</button>' : '',
+      '</div>',
+      '<label class="palette-mia-choice' + (miaChooses ? ' is-selected' : '') + '">',
+      '<input type="checkbox" data-mia-color-choice' + (miaChooses ? ' checked' : '') + '>',
+      '<span>' + miaChoiceLabel + '</span>',
+      '</label>',
+      '</section>'
+    ].join("");
+  }
+
+  function orderUploadItems(key) {
+    var items = state.selections[key];
+    return Array.isArray(items) ? items.filter(function (item) {
+      return item && item.token;
+    }) : [];
+  }
+
+  function formatUploadSize(bytes) {
+    var size = Math.max(0, Number(bytes) || 0);
+    return size >= 1048576
+      ? (size / 1048576).toFixed(size >= 10485760 ? 0 : 1).replace('.', ',') + ' MB'
+      : Math.max(1, Math.round(size / 1024)) + ' KB';
+  }
+
+  function formatUploadSpeed(bytesPerSecond) {
+    var speed = Math.max(0, Number(bytesPerSecond) || 0);
+    if (!speed) {
+      return "a calcular";
+    }
+    return formatUploadSize(speed) + "/s";
+  }
+
+  function formatUploadEta(seconds) {
+    var remaining = Math.max(0, Math.ceil(Number(seconds) || 0));
+    if (!remaining) {
+      return "quase pronto";
+    }
+    if (remaining < 60) {
+      return "cerca de " + remaining + " s";
+    }
+    return "cerca de " + Math.ceil(remaining / 60) + " min";
+  }
+
+  function renderOrderUploadProgress() {
+    var progress = state.orderUploadProgress;
+    var percent;
+    var width;
+    var detail;
+    var fileText;
+
+    if (!progress) {
+      return "";
+    }
+
+    percent = Math.max(0, Math.min(100, Math.round(Number(progress.percent) || 0)));
+    width = progress.phase === "upload" ? percent + "%" : "36%";
+    fileText = progress.fileCount > 1
+      ? "Ficheiro " + progress.fileIndex + " de " + progress.fileCount
+      : "A enviar";
+    detail = progress.phase === "upload"
+      ? percent + "% · " + formatUploadSpeed(progress.speed) + " · " + formatUploadEta(progress.eta)
+      : "A preparar o ficheiro…";
+
+    return [
+      '<div class="order-upload-progress' + (progress.phase === "upload" ? "" : " is-preparing") + '" data-order-upload-progress role="status" aria-live="polite">',
+      '<div class="order-upload-progress__heading"><span data-order-upload-progress-label>' + escapeHtml(fileText) + '</span><strong data-order-upload-progress-detail>' + escapeHtml(detail) + '</strong></div>',
+      '<div class="order-upload-progress__track" role="progressbar" aria-label="Progresso do envio" aria-valuemin="0" aria-valuemax="100"' + (progress.phase === "upload" ? ' aria-valuenow="' + percent + '"' : "") + '>',
+      '<span data-order-upload-progress-fill style="width:' + width + '"></span>',
+      '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function updateOrderUploadProgressDom() {
+    var progress = state.orderUploadProgress;
+    if (!progress) {
+      return;
+    }
+    document.querySelectorAll("[data-order-upload-progress]").forEach(function (box) {
+      var percent = Math.max(0, Math.min(100, Math.round(Number(progress.percent) || 0)));
+      var label = box.querySelector("[data-order-upload-progress-label]");
+      var detail = box.querySelector("[data-order-upload-progress-detail]");
+      var track = box.querySelector('[role="progressbar"]');
+      var fill = box.querySelector("[data-order-upload-progress-fill]");
+
+      box.classList.toggle("is-preparing", progress.phase !== "upload");
+      if (label) {
+        label.textContent = progress.fileCount > 1
+          ? "Ficheiro " + progress.fileIndex + " de " + progress.fileCount
+          : "A enviar";
+      }
+      if (detail) {
+        detail.textContent = progress.phase === "upload"
+          ? percent + "% · " + formatUploadSpeed(progress.speed) + " · " + formatUploadEta(progress.eta)
+          : "A preparar o ficheiro…";
+      }
+      if (track) {
+        if (progress.phase === "upload") {
+          track.setAttribute("aria-valuenow", String(percent));
+        } else {
+          track.removeAttribute("aria-valuenow");
+        }
+      }
+      if (fill) {
+        fill.style.width = progress.phase === "upload" ? percent + "%" : "36%";
+      }
+    });
+  }
+
+  function orderUploadPreviewUrl(item) {
+    if (!item || !item.token) {
+      return "";
+    }
+    return orderUploadPreviews[item.token] || ORDER_MEDIA_PREVIEW_API + "?token=" + encodeURIComponent(item.token);
+  }
+
+  function resetQuadrosPhotoColorAnalysis() {
+    state.quadroPhotoColorAnalysis = {
+      token: "",
+      status: "idle",
+      detected: [],
+      palettes: [],
+      error: ""
+    };
+  }
+
+  // Lado maior a que a fotografia é reduzida antes de se contarem as cores.
+  var QUADROS_PHOTO_SAMPLE_SIZE = 132;
+  // Quantos grupos de cor se procuram na fotografia (usam-se os melhores).
+  var QUADROS_PHOTO_CLUSTERS = 6;
+  // A mesma família pode entrar duas vezes com tons diferentes: castanho claro
+  // + castanho escuro fica melhor do que forçar uma terceira família que já não
+  // tem nada a ver com a fotografia. Repetir custa, mas não é proibido.
+  var QUADROS_FAMILY_REUSE_LIMIT = 2;
+  var QUADROS_FAMILY_REUSE_COST = 0.045;
+  // Distância mínima entre as cores de uma combinação, para os três quadrados
+  // não ficarem praticamente iguais. Baixo de propósito: separar demais afasta
+  // a combinação da fotografia sem que ninguém veja diferença nas flores.
+  var QUADROS_MIN_SEPARATION = 0.055;
+  // Abaixo deste croma no tom principal, a família conta como neutra
+  // (branco/creme, cinzento). É a família que é neutra, não o tom: o claro do
+  // verde-sálvia é pálido, mas continua a ser verde.
+  var QUADROS_NEUTRAL_CHROMA = 0.035;
+
+  // Todos os tons escolhíveis: três por família disponível. O algoritmo antigo
+  // só olhava para o swatch (o tom principal) e por isso nunca sugeria um claro
+  // ou um escuro, mesmo quando era esse o tom que a fotografia pedia.
+  function quadrosToneTargets(step) {
+    var targets = [];
+
+    (step && Array.isArray(step.individualColors) ? step.individualColors : []).forEach(function (item) {
+      if (!item || item.availability === "unavailable") {
+        return;
+      }
+      var neutral = labChroma(rgbLab(hexRgb(item.swatch))) < QUADROS_NEUTRAL_CHROMA;
+
+      quadrosColorStops(item).forEach(function (color, tone) {
+        var hex = safeSwatchColor(color);
+
+        targets.push({
+          value: item.value,
+          id: item.id || "",
+          tone: tone,
+          hex: hex,
+          neutral: neutral,
+          lab: rgbLab(hexRgb(hex))
+        });
+      });
+    });
+    return targets;
+  }
+
+  function quadrosPickIsUsed(chosen, target) {
+    return chosen.some(function (pick) {
+      return pick.value === target.value && pick.tone === target.tone;
+    });
+  }
+
+  // Escolhe o tom (família + claro/principal/escuro) que melhor representa uma
+  // cor, respeitando o que já foi escolhido. São duas decisões diferentes e é
+  // por isso que são feitas em separado: primeiro qual é a cor (a família, pelo
+  // matiz), só depois quão clara ela é (o tom, pela luminosidade). Juntar as
+  // duas numa só distância era o que fazia sair verde onde devia sair castanho.
+  // As restrições relaxam por camadas: mais vale repetir uma família do que
+  // devolver nada.
+  function quadrosPickTone(targets, lab, chosen, options) {
+    var settings = options || {};
+    var toneBias = settings.toneBias || [0, 0, 0];
+    // A fase do tom pode mirar noutra cor que não a da família — é assim que a
+    // combinação suave clareia sem trocar de família pelo caminho.
+    var toneLab = settings.toneLab || lab;
+    var relaxations = [
+      { separation: settings.separation === undefined ? QUADROS_MIN_SEPARATION : settings.separation,
+        lightGap: settings.lightGap || 0,
+        reuseLimit: settings.reuseLimit === undefined ? QUADROS_FAMILY_REUSE_LIMIT : settings.reuseLimit },
+      { separation: 0.05, lightGap: 0, reuseLimit: QUADROS_FAMILY_REUSE_LIMIT },
+      { separation: 0, lightGap: 0, reuseLimit: 3 }
+    ];
+    var best = null;
+
+    relaxations.some(function (rules) {
+      var allowed = targets.filter(function (target) {
+        var used = chosen.filter(function (pick) { return pick.value === target.value; }).length;
+
+        if (used >= rules.reuseLimit || quadrosPickIsUsed(chosen, target)) {
+          return false;
+        }
+        return !chosen.some(function (pick) {
+          return labDistance(pick.lab, target.lab) < rules.separation
+            || Math.abs(pick.lab[0] - target.lab[0]) < rules.lightGap;
+        });
+      });
+      var family = "";
+      var familyCost = Infinity;
+
+      allowed.forEach(function (target) {
+        var used = chosen.filter(function (pick) { return pick.value === target.value; }).length;
+        var cost = labFamilyDistance(lab, target.lab) + used * QUADROS_FAMILY_REUSE_COST;
+
+        if (cost < familyCost) {
+          familyCost = cost;
+          family = target.value;
+        }
+      });
+      if (!family) {
+        return false;
+      }
+
+      var toneCost = Infinity;
+      allowed.forEach(function (target) {
+        var cost = labDistance(toneLab, target.lab) + (toneBias[target.tone] || 0);
+
+        if (target.value === family && cost < toneCost) {
+          toneCost = cost;
+          best = target;
+        }
+      });
+      return !!best;
+    });
+
+    return best;
+  }
+
+  // Completa uma combinação a que faltam quadrados: entra a família ainda não
+  // usada que mais se afasta das já escolhidas, para não ficar tudo igual.
+  function quadrosCompletePalette(targets, picks, limit) {
+    while (picks.length < limit) {
+      var best = null;
+      var bestScore = -Infinity;
+
+      targets.forEach(function (target) {
+        var score;
+
+        if (target.tone !== 1 || quadrosPickIsUsed(picks, target)) {
+          return;
+        }
+        score = picks.length
+          ? Math.min.apply(null, picks.map(function (pick) { return labDistance(pick.lab, target.lab); }))
+          : 0;
+        if (picks.some(function (pick) { return pick.value === target.value; })) {
+          score -= QUADROS_FAMILY_REUSE_COST * 4;
+        }
+        if (score > bestScore) {
+          bestScore = score;
+          best = target;
+        }
+      });
+      if (!best) {
+        return picks;
+      }
+      picks.push(best);
+    }
+    return picks;
+  }
+
+  function quadrosPaletteRecord(title, note, picks, limit) {
+    var clean = picks.filter(Boolean).slice(0, limit);
+
+    return {
+      title: title,
+      note: note,
+      values: clean.map(function (pick) { return pick.value; }),
+      tones: clean.map(function (pick) { return pick.tone; }),
+      palette: clean.map(function (pick) { return pick.hex; })
+    };
+  }
+
+  // Clareia mantendo o matiz: sobe a luminosidade e baixa um pouco o croma,
+  // que é o que distingue uma cor pastel da mesma cor cheia.
+  function labSoften(lab, amount) {
+    var mix = Math.max(0, Math.min(1, amount));
+
+    return [
+      lab[0] + (0.95 - lab[0]) * mix,
+      lab[1] * (1 - mix * 0.55),
+      lab[2] * (1 - mix * 0.55)
+    ];
+  }
+
+  function buildQuadrosPhotoPalettes(step, detected, limit) {
+    var targets = quadrosToneTargets(step);
+    var records = [];
+    var accent = detected.slice().sort(function (a, b) {
+      return labChroma(b.lab) - labChroma(a.lab);
+    })[0] || detected[0];
+    var neutralTargets = targets.filter(function (target) {
+      return target.neutral;
+    });
+    var picks;
+
+    if (!targets.length || !detected.length) {
+      return [];
+    }
+
+    // 1. As cores da fotografia, cada uma no tom que mais se aproxima.
+    picks = [];
+    detected.forEach(function (color) {
+      var pick = picks.length < limit ? quadrosPickTone(targets, color.lab, picks, {}) : null;
+      if (pick) { picks.push(pick); }
+    });
+    records.push(quadrosPaletteRecord(
+      "Mais próxima da fotografia",
+      "as cores que encontrámos na foto",
+      quadrosCompletePalette(targets, picks, limit),
+      limit
+    ));
+
+    // 2. As mesmas cores em versão pastel: a família continua a ser escolhida
+    // pela cor original — só o tom é procurado a partir da versão clareada.
+    picks = [];
+    detected.forEach(function (color) {
+      var pick = picks.length < limit
+        ? quadrosPickTone(targets, color.lab, picks, {
+          toneLab: labSoften(color.lab, 0.6),
+          separation: 0.045,
+          toneBias: [0, 0.1, 0.3]
+        })
+        : null;
+      if (pick) { picks.push(pick); }
+    });
+    records.push(quadrosPaletteRecord(
+      "Mais suave",
+      "os mesmos tons, mais claros",
+      quadrosCompletePalette(targets, picks, limit),
+      limit
+    ));
+
+    // 3. Contraste: escuro, claro e principal, obrigando a uma diferença real de
+    // luminosidade entre os quadrados em vez de trocar de família ao acaso.
+    picks = [];
+    detected.forEach(function (color, index) {
+      var bias = index === 0 ? [0.16, 0.05, 0] : (index === 1 ? [0, 0.05, 0.16] : [0.06, 0, 0.06]);
+      var pick = picks.length < limit
+        ? quadrosPickTone(targets, color.lab, picks, { toneBias: bias, lightGap: 0.13 })
+        : null;
+      if (pick) { picks.push(pick); }
+    });
+    records.push(quadrosPaletteRecord(
+      "Com mais contraste",
+      "um tom escuro e um tom claro",
+      quadrosCompletePalette(targets, picks, limit),
+      limit
+    ));
+
+    // 4. Equilibrada: a cor dominante, um neutro do catálogo e a cor mais viva
+    // da fotografia como acento.
+    picks = [];
+    picks.push(quadrosPickTone(targets, detected[0].lab, picks, {}));
+    picks = picks.filter(Boolean);
+    if (limit > 1 && neutralTargets.length) {
+      var neutral = quadrosPickTone(neutralTargets, labSoften(detected[0].lab, 0.75), picks, { separation: 0.04 });
+      if (neutral) { picks.push(neutral); }
+    }
+    if (limit > 2 && accent) {
+      var vivid = quadrosPickTone(targets, accent.lab, picks, { toneBias: [0.06, 0, 0.04] });
+      if (vivid) { picks.push(vivid); }
+    }
+    records.push(quadrosPaletteRecord(
+      "Equilibrada",
+      "a cor principal com um neutro",
+      quadrosCompletePalette(targets, picks, limit),
+      limit
+    ));
+
+    return quadrosDedupePalettes(records, limit);
+  }
+
+  // Duas regras diferentes podem chegar à mesma combinação (fotos de uma só
+  // cor, por exemplo). Mostrar a mesma coisa duas vezes não ajuda ninguém.
+  function quadrosDedupePalettes(records, limit) {
+    var seen = [];
+
+    return records.filter(function (record) {
+      var key;
+      if (!record || record.values.length !== limit) {
+        return false;
+      }
+      key = record.values.map(function (value, index) {
+        return value + "/" + record.tones[index];
+      }).join("|");
+      if (seen.indexOf(key) !== -1) {
+        return false;
+      }
+      seen.push(key);
+      return true;
+    });
+  }
+
+  // As combinações fixas do catálogo, convertidas em famílias + tons. O hex de
+  // cada cor é procurado entre todos os tons, não só entre os principais; se
+  // não bater certo com nenhum, usa-se o tom perceptualmente mais próximo em
+  // vez de deitar fora a combinação inteira, como acontecia antes.
+  function quadrosDefaultPaletteRecords(step, limit) {
+    var targets = quadrosToneTargets(step);
+
+    if (!targets.length) {
+      return [];
+    }
+
+    return (step && Array.isArray(step.items) ? step.items : []).map(function (item) {
+      var picks = [];
+
+      paletteColors(item, limit).forEach(function (color) {
+        var exact = targets.filter(function (target) {
+          return target.hex.toLowerCase() === color.toLowerCase() && !quadrosPickIsUsed(picks, target);
+        })[0];
+        var pick = exact || quadrosPickTone(targets, rgbLab(hexRgb(color)), picks, {
+          separation: 0.02,
+          reuseLimit: 3
+        });
+
+        if (pick) { picks.push(pick); }
+      });
+      return quadrosPaletteRecord(item.title || item.value, "", picks, limit);
+    }).filter(function (record) {
+      return record.values.length === limit;
+    });
+  }
+
+  // Pele: num retrato ocupa metade da fotografia e nunca é uma boa cor de flor.
+  // Não se exclui (uma foto pode ser quase só pele), reduz-se muito o peso. O
+  // critério YCbCr apanha tons claros e escuros; o mínimo de vermelho sobre
+  // azul mantém de fora os cremes e os beges frios, que são cores a sério.
+  function quadrosIsSkinLike(r, g, b) {
+    var cb = -0.169 * r - 0.331 * g + 0.5 * b + 128;
+    var cr = 0.5 * r - 0.419 * g - 0.081 * b + 128;
+
+    return cb >= 77 && cb <= 130 && cr >= 137 && cr <= 175 && r > g && g > b && r - b >= 28;
+  }
+
+  // Lê a fotografia e devolve baldes de cor com peso. O peso já traz dentro
+  // tudo o que decide o que "conta" na foto: onde está o píxel, quão viva é a
+  // cor e se é pele.
+  function quadrosPhotoBuckets(img) {
+    var canvas = document.createElement("canvas");
+    var context = canvas.getContext("2d", { willReadFrequently: true });
+    var sourceWidth = Math.max(1, img.naturalWidth || img.width || 1);
+    var sourceHeight = Math.max(1, img.naturalHeight || img.height || 1);
+    var scale = Math.min(1, QUADROS_PHOTO_SAMPLE_SIZE / Math.max(sourceWidth, sourceHeight));
+    var width = Math.max(1, Math.round(sourceWidth * scale));
+    var height = Math.max(1, Math.round(sourceHeight * scale));
+    var buckets = {};
+    var pixels;
+    var index;
+    var x;
+    var y;
+
+    canvas.width = width;
+    canvas.height = height;
+    context.drawImage(img, 0, 0, width, height);
+    pixels = context.getImageData(0, 0, width, height).data;
+
+    for (index = 0; index < pixels.length; index += 4) {
+      var alpha = pixels[index + 3];
+      if (alpha < 180) { continue; }
+
+      var r = pixels[index];
+      var g = pixels[index + 1];
+      var b = pixels[index + 2];
+      var lab = rgbLab([r, g, b]);
+      // Fora o quase-branco e o quase-preto: são fundo, sombra ou papel, e não
+      // existem como cor de flor.
+      if (lab[0] < 0.2 || lab[0] > 0.955) { continue; }
+
+      x = (index / 4) % width;
+      y = Math.floor((index / 4) / width);
+      var dx = ((x + 0.5) / width) * 2 - 1;
+      var dy = ((y + 0.5) / height) * 2 - 1;
+      // O motivo está no meio da fotografia; as bordas são quase sempre fundo.
+      var radius = Math.min(1, Math.sqrt(dx * dx + dy * dy) / Math.SQRT2);
+      var focus = 0.32 + 0.68 * Math.pow(1 - radius, 1.6);
+      var weight = focus
+        * (1 + Math.min(labChroma(lab), 0.22) * 5.5)
+        * (quadrosIsSkinLike(r, g, b) ? 0.16 : 1);
+      // Agrupar antes de analisar: 32 níveis por canal chegam para o resultado
+      // e deixam o k-means a correr sobre uns milhares de baldes, não milhões.
+      var key = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+      var bucket = buckets[key];
+
+      if (bucket) {
+        bucket.lab[0] += lab[0] * weight;
+        bucket.lab[1] += lab[1] * weight;
+        bucket.lab[2] += lab[2] * weight;
+        bucket.weight += weight;
+      } else {
+        buckets[key] = {
+          lab: [lab[0] * weight, lab[1] * weight, lab[2] * weight],
+          weight: weight
+        };
+      }
+    }
+
+    return Object.keys(buckets).map(function (key) {
+      var bucket = buckets[key];
+      return {
+        lab: bucket.lab.map(function (sum) { return sum / bucket.weight; }),
+        weight: bucket.weight
+      };
+    });
+  }
+
+  // k-means em OKLab. Substitui o arredondamento em blocos de 24 do algoritmo
+  // antigo, que partia a mesma cor por vários baldes e depois escolhia as
+  // dominantes por ordem de contagem — daí saírem cinco variações do mesmo bege.
+  // A inicialização é determinística (k-means++ sem sorteio): a mesma fotografia
+  // dá sempre a mesma sugestão.
+  function quadrosClusterBuckets(buckets, count) {
+    var centroids = [];
+    var iteration;
+
+    if (!buckets.length) {
+      return [];
+    }
+
+    centroids.push(buckets.reduce(function (best, bucket) {
+      return bucket.weight > best.weight ? bucket : best;
+    }, buckets[0]).lab.slice());
+
+    while (centroids.length < count) {
+      var seed = null;
+      var seedScore = 0;
+
+      buckets.forEach(function (bucket) {
+        var nearest = Math.min.apply(null, centroids.map(function (centroid) {
+          return labDistance(bucket.lab, centroid);
+        }));
+        var score = bucket.weight * nearest * nearest;
+
+        if (score > seedScore) {
+          seedScore = score;
+          seed = bucket;
+        }
+      });
+      if (!seed) { break; }
+      centroids.push(seed.lab.slice());
+    }
+
+    for (iteration = 0; iteration < 14; iteration += 1) {
+      var sums = centroids.map(function () { return [0, 0, 0, 0]; });
+      var moved = 0;
+
+      buckets.forEach(function (bucket) {
+        var bestIndex = 0;
+        var bestDistance = Infinity;
+
+        centroids.forEach(function (centroid, centroidIndex) {
+          var distance = labDistance(bucket.lab, centroid);
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestIndex = centroidIndex;
+          }
+        });
+        sums[bestIndex][0] += bucket.lab[0] * bucket.weight;
+        sums[bestIndex][1] += bucket.lab[1] * bucket.weight;
+        sums[bestIndex][2] += bucket.lab[2] * bucket.weight;
+        sums[bestIndex][3] += bucket.weight;
+      });
+
+      sums.forEach(function (sum, centroidIndex) {
+        var next;
+        if (sum[3] <= 0) { return; }
+        next = [sum[0] / sum[3], sum[1] / sum[3], sum[2] / sum[3]];
+        moved = Math.max(moved, labDistance(next, centroids[centroidIndex]));
+        centroids[centroidIndex] = next;
+      });
+      if (moved < 0.002) { break; }
+    }
+
+    var weights = centroids.map(function () { return 0; });
+
+    buckets.forEach(function (bucket) {
+      var bestIndex = 0;
+      var bestDistance = Infinity;
+
+      centroids.forEach(function (centroid, centroidIndex) {
+        var distance = labDistance(bucket.lab, centroid);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestIndex = centroidIndex;
+        }
+      });
+      weights[bestIndex] += bucket.weight;
+    });
+
+    return centroids.map(function (centroid, centroidIndex) {
+      return { lab: centroid, weight: weights[centroidIndex] };
+    }).filter(function (cluster) {
+      return cluster.weight > 0;
+    });
+  }
+
+  // Junta grupos que ficaram perto demais e ordena pelo que mais se nota: área
+  // ocupada, com um empurrão para as cores vivas.
+  function quadrosRankClusters(clusters) {
+    var merged = [];
+
+    clusters.slice().sort(function (a, b) {
+      return b.weight - a.weight;
+    }).forEach(function (cluster) {
+      var near = merged.filter(function (other) {
+        return labDistance(other.lab, cluster.lab) < 0.055;
+      })[0];
+
+      if (near) {
+        near.weight += cluster.weight;
+        return;
+      }
+      merged.push({ lab: cluster.lab.slice(), weight: cluster.weight });
+    });
+
+    return merged.sort(function (a, b) {
+      return b.weight * (1 + Math.min(labChroma(b.lab), 0.2) * 2)
+        - a.weight * (1 + Math.min(labChroma(a.lab), 0.2) * 2);
+    });
+  }
+
+  function analyseQuadrosPhoto(img, step) {
+    var limit = paletteSelectionLimit(step);
+    var detected = quadrosRankClusters(
+      quadrosClusterBuckets(quadrosPhotoBuckets(img), QUADROS_PHOTO_CLUSTERS)
+    );
+
+    // Fotografia praticamente monocromática: em vez de inventar beges fixos,
+    // derivam-se variações da própria cor encontrada.
+    while (detected.length && detected.length < 3) {
+      detected.push({
+        lab: labSoften(detected[0].lab, 0.3 * detected.length),
+        weight: detected[0].weight / (detected.length + 1)
+      });
+    }
+
+    return {
+      detected: detected.slice(0, 5).map(function (cluster) { return rgbHex(labRgb(cluster.lab)); }),
+      palettes: buildQuadrosPhotoPalettes(step, detected, limit)
+    };
+  }
+
+  function applyQuadrosSuggestedPalette(step, record) {
+    var limit = paletteSelectionLimit(step);
+    var keys = quadrosColorSelectionKeys(step);
+    var ui = quadrosColorUiFor(step, limit);
+    var values = record && Array.isArray(record.values) ? record.values.slice(0, limit) : [];
+    var tones = record && Array.isArray(record.tones) ? record.tones.slice(0, limit) : [];
+    if (values.length !== limit) {
+      return false;
+    }
+
+    delete state.selections.quadro_color_mode;
+    state.selections[keys.palette] = record.title || "";
+    state.selections[keys.colors] = values;
+    // A sugestão traz o tom de cada cor. Antes forçava-se sempre o principal,
+    // o que deitava fora metade do trabalho de escolher a cor certa.
+    state.selections[keys.tones] = Array.from({ length: limit }, function (_, index) {
+      var tone = Number(tones[index]);
+      return tone >= 0 && tone <= 2 ? tone : 1;
+    });
+    state.selections[keys.mia] = false;
+    ui.slots = values.slice();
+    ui.activeSlot = 0;
+    ui.pinnedSlot = null;
+    ui.pinnedChangeCount = 0;
+    ui.hintSlot = null;
+    ui.toneEdit = null;
+    state.paletteColorSlots = values.slice();
+    state.paletteLastSlot = Math.max(0, values.length - 1);
+    state.quadroActiveColorSlot = 0;
+    state.quadroToneEdit = null;
+    return true;
+  }
+
+  function initQuadrosPhotoColorAnalysis(product, step) {
+    var upload;
+    var token;
+    var analysis;
+    var image;
+
+    if (!isQuadrosProduct(product) || !step || step.id !== "colors"
+        || quadrosColorModeInfo(step).mode !== "photo") {
+      return;
+    }
+
+    upload = orderUploadItems("quadro_uploads")[0] || null;
+    if (!upload) {
+      return;
+    }
+    token = String(upload.token || "");
+    analysis = state.quadroPhotoColorAnalysis || {};
+    if (analysis.token === token && (analysis.status === "loading" || analysis.status === "ready")) {
+      return;
+    }
+
+    state.quadroPhotoColorAnalysis = {
+      token: token,
+      status: "loading",
+      detected: [],
+      palettes: [],
+      error: ""
+    };
+    image = new Image();
+    image.onload = function () {
+      var result;
+      try {
+        result = analyseQuadrosPhoto(image, step);
+      } catch (error) {
+        state.quadroPhotoColorAnalysis.status = "error";
+        state.quadroPhotoColorAnalysis.error = "Não foi possível analisar a fotografia, mas podes escolher as cores manualmente.";
+        if (state.product === product) { rerenderProduct(product); }
+        return;
+      }
+
+      state.quadroPhotoColorAnalysis = {
+        token: token,
+        status: "ready",
+        detected: result.detected,
+        palettes: result.palettes,
+        error: ""
+      };
+      if (quadrosColorModeInfo(step).canUsePhoto && result.palettes[0]) {
+        applyQuadrosSuggestedPalette(step, result.palettes[0]);
+      }
+      if (state.product === product) { rerenderProduct(product); }
+    };
+    image.onerror = function () {
+      state.quadroPhotoColorAnalysis.status = "error";
+      state.quadroPhotoColorAnalysis.error = "Não foi possível abrir a fotografia, mas podes escolher as cores manualmente.";
+      if (state.product === product) { rerenderProduct(product); }
+    };
+    image.src = orderUploadPreviewUrl(upload);
+  }
+
+  function orderUploadMeta(item, kind) {
+    var text = formatUploadSize(item && item.size);
+    var dpi = Math.max(0, Math.round(Number(item && item.dpi) || 0));
+    if (kind === "photo" && dpi) {
+      text += " (" + dpi + " DPI estimados para 10 × 15 in)";
+    }
+    return text;
+  }
+
+  function orderUploadMaxFiles(config) {
+    var configured = Number(config && config.maxFiles);
+    if (configured === 0) {
+      return Infinity;
+    }
+    return Math.max(1, configured || ((config && config.multiple === true) ? 5 : 1));
+  }
+
+  function renderOrderUploadList(config, kind) {
+    var key = config.selectionKey || (kind === "audio" ? "quadro_audio_uploads" : "quadro_uploads");
+    return orderUploadItems(key).map(function (item) {
+      var preview = orderUploadPreviewUrl(item);
+      var media = kind === "audio"
+        ? '<audio controls preload="metadata" src="' + escapeHtml(preview) + '"></audio>'
+        : '<img src="' + escapeHtml(preview) + '" alt="">';
+      var fallbackName = kind === "audio" ? "Áudio" : "Foto";
+      var removeLabel = kind === "audio" ? "Remover áudio" : "Remover foto";
+
+      return [
+        '<li class="order-upload-item order-upload-item--' + escapeHtml(kind) + '">',
+        media,
+        '<span><strong>' + escapeHtml(item.name || fallbackName) + '</strong><small>' + escapeHtml(orderUploadMeta(item, kind)) + '</small></span>',
+        '<button type="button" data-order-upload-remove="' + escapeHtml(item.token) + '" data-order-upload-key="' + escapeHtml(key) + '" aria-label="' + escapeHtml(removeLabel) + '" title="' + escapeHtml(removeLabel) + '">×</button>',
+        '</li>'
+      ].join("");
+    }).join("");
+  }
+
+  function renderOrderUploadStatus(kind) {
+    if (kind && state.orderUploadFeedbackKind && state.orderUploadFeedbackKind !== kind) {
+      return "";
+    }
+    return [
+      state.orderUploadBusy && state.orderUploadProgress ? renderOrderUploadProgress() : '',
+      state.orderUploadBusy && !state.orderUploadProgress ? '<p class="order-upload-status" role="status">A processar…</p>' : '',
+      state.orderUploadError ? '<p class="form-error order-upload-error order-upload-popup" role="alert">' + escapeHtml(state.orderUploadError) + '</p>' : '',
+      state.orderUploadMessage ? '<p class="order-upload-status" role="status">' + escapeHtml(state.orderUploadMessage) + '</p>' : ''
+    ].join("");
+  }
+
+  function renderOrderPhotoAction(config, options) {
+    var settings = options || {};
+    var key = config.selectionKey || "quadro_uploads";
+    var items = orderUploadItems(key);
+    var multiple = config.multiple === true;
+    var maxFiles = orderUploadMaxFiles(config);
+    var helpDisabled = !!settings.helpDisabled;
+    var disabled = state.orderUploadBusy || helpDisabled || items.length >= maxFiles;
+    var maxAttribute = isFinite(maxFiles) ? maxFiles : 0;
+    var buttonLabel = String(config.buttonLabel || "Escolher foto");
+    if (buttonLabel === "Enviar foto") {
+      buttonLabel = "Escolher foto";
+    }
+    var helperText = items.length
+      ? items.length + (items.length === 1 ? " foto anexada" : " fotos anexadas")
+      : String(config.helperText || (multiple && isFinite(maxFiles) ? "Até " + maxFiles + " fotos" : "")).trim();
+
+    return [
+      '<label class="order-upload-button' + (settings.compact ? ' order-media-action' : '') + (disabled ? ' is-disabled' : '') + '">',
+      '<input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"' + (multiple ? ' multiple' : '') + ' data-order-upload data-order-upload-key="' + escapeHtml(key) + '" data-order-upload-max="' + maxAttribute + '"' + (disabled ? ' disabled' : '') + '>',
+      '<span class="order-upload-button-icon">' + (settings.compact ? ICON_PHOTO : ICON_UPLOAD) + '</span>',
+      '<strong>' + escapeHtml(buttonLabel) + '</strong>',
+      helperText ? '<small' + (items.length ? ' class="is-success"' : '') + '>' + escapeHtml(helperText) + '</small>' : '',
+      '</label>'
+    ].join("");
+  }
+
+  function renderOrderPhotoControl(config, options) {
+    var settings = options || {};
+    var uploadList = renderOrderUploadList(config, "photo");
+
+    return [
+      '<div class="order-photo-control">',
+      renderOrderPhotoAction(config, settings),
+      uploadList ? '<ul class="order-upload-list">' + uploadList + '</ul>' : '',
+      settings.showStatus ? renderOrderUploadStatus("photo") : '',
+      '</div>'
+    ].join("");
+  }
+
+  function renderOrderAudioAction(config, options) {
+    var settings = options || {};
+    var key = config.selectionKey || "quadro_audio_uploads";
+    var disabled = state.orderUploadBusy || !(window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    var title = state.orderAudioRecording ? "A gravar…" : String(config.buttonLabel || "Áudio");
+    var helperText = state.orderAudioRecording ? "Solta para anexar" : String(config.helperText || "Mantém premido para falar");
+
+    return [
+      '<button type="button" class="order-audio-record-button' + (settings.compact ? ' order-media-action' : '') + (state.orderAudioRecording ? ' is-recording' : '') + '" data-order-audio-record data-order-audio-key="' + escapeHtml(key) + '" aria-label="' + escapeHtml(title + ". " + helperText) + '"' + (disabled ? ' disabled' : '') + '>',
+      '<span class="order-audio-record-icon">' + ICON_MICROPHONE + '</span>',
+      '<span><strong>' + escapeHtml(title) + '</strong><small>' + escapeHtml(helperText) + '</small></span>',
+      '</button>'
+    ].join("");
+  }
+
+  function renderOrderAudioControl(config) {
+    var uploadList = renderOrderUploadList(config, "audio");
+
+    return [
+      '<div class="order-audio-control">',
+      renderOrderAudioAction(config),
+      uploadList ? '<ul class="order-upload-list order-audio-list">' + uploadList + '</ul>' : '',
+      renderOrderUploadStatus("audio"),
+      '</div>'
+    ].join("");
+  }
+
+  function renderOrderMediaAttachments(config) {
+    var photos = config && config.photos ? config.photos : null;
+    var audio = config && config.audio ? config.audio : null;
+    var photoList = photos ? renderOrderUploadList(photos, "photo") : "";
+    var audioList = audio ? renderOrderUploadList(audio, "audio") : "";
+
+    if (!photos && !audio) {
+      return "";
+    }
+
+    return [
+      '<div class="order-media-attachments">',
+      '<div class="order-media-action-bar">',
+      audio ? renderOrderAudioAction(audio, { compact: true }) : '',
+      photos ? renderOrderPhotoAction(photos, { compact: true }) : '',
+      '</div>',
+      audioList ? '<ul class="order-upload-list order-audio-list order-media-upload-list">' + audioList + '</ul>' : '',
+      photoList ? '<ul class="order-upload-list order-media-upload-list">' + photoList + '</ul>' : '',
+      renderOrderUploadStatus(),
+      '</div>'
+    ].join("");
+  }
+
+  function renderPhotoUploadStep(step) {
+    var config = step.upload || {};
+    var hasUploads = orderUploadItems(config.selectionKey || "quadro_uploads").length > 0;
+    // Com foto enviada o pedido de ajuda deixa de fazer sentido: escondemos a
+    // opção (e a mensagem) para não aparecerem os dois no passo nem no resumo.
+    var helpSelected = !!(config.helpKey && state.selections[config.helpKey] && !hasUploads);
+
+    return [
+      '<section class="order-photo-upload">',
+      renderOrderPhotoControl(config, { helpDisabled: helpSelected }),
+      renderOrderUploadStatus("photo"),
+      config.helpKey && !hasUploads ? [
+        '<label class="photo-help-choice">',
+        '<input type="checkbox" data-photo-help-key="' + escapeHtml(config.helpKey) + '"' + (state.selections[config.helpKey] ? ' checked' : '') + '>',
+        '<span>' + escapeHtml(config.helpLabel || "Preciso de ajuda para enviar a foto") + '</span>',
+        '</label>',
+        helpSelected ? '<p class="photo-help-message">Podes carregar em continuar, e depois ajudamos-te a enviar uma foto</p>' : ''
+      ].join("") : '',
+      '</section>'
+    ].join("");
+  }
+
   function renderChoiceItems(product, step, template) {
     var type = step.selection === "multi" ? "checkbox" : "radio";
     var selected = selectedValues(step);
     var gridClass = template === "media-list" ? "option-list" : template;
     var items = step.items || [];
+    var maxSelections = Math.max(0, parseInt(step.maxSelections, 10) || 0);
+    var limitReached = maxSelections > 0 && selected.length >= maxSelections;
+    var selectionCounter = maxSelections > 0
+      ? '<p class="choice-selection-counter" aria-live="polite">Escolhidas ' + selected.length + ' de ' + maxSelections + ' cores</p>'
+      : "";
     var html = "";
 
     if (template === "design-grid" && getStepSectionConfig(product, step)) {
@@ -5936,14 +8768,22 @@
 
     items.forEach(function (item) {
       var checked = selected.indexOf(item.value) !== -1 ? " checked" : "";
-      var image = template === "text-grid" || template === "price-pack-grid"
-        ? ""
-        : (template === "design-grid" ? renderDesignCardMedia(product, step, item) : renderVisual(item, template, step));
-      var note = item.note ? '<span class="choice-note">' + escapeHtml(item.note) + '</span>' : "";
-
-      html += [
+      var disabled = step.selection === "multi" && limitReached && !checked ? " disabled" : "";
+      var image;
+      if (item.swatch) {
+        image = renderChoiceSwatch(item);
+      } else if (template === "text-grid" && item.image && (step.id === "frame_size" || isQuadrosProduct(product))) {
+        image = renderVisual(item, "media-list", step);
+      } else if (template === "text-grid" || template === "price-pack-grid") {
+        image = "";
+      } else {
+        image = template === "design-grid" ? renderDesignCardMedia(product, step, item) : renderVisual(item, template, step);
+      }
+      var noteText = quadroChoiceNote(product, step, item);
+      var note = noteText ? '<span class="choice-note">' + escapeHtml(noteText) + '</span>' : "";
+      var card = [
         '<label class="choice-card ' + escapeHtml(template) + '">',
-        '<input type="' + type + '" name="' + escapeHtml(step.field) + '" value="' + escapeHtml(item.value) + '" data-choice-step="' + escapeHtml(step.id) + '"' + checked + '>',
+        '<input type="' + type + '" name="' + escapeHtml(step.field) + '" value="' + escapeHtml(item.value) + '" data-choice-step="' + escapeHtml(step.id) + '"' + checked + disabled + '>',
         image,
         '<span class="choice-copy">',
         '<strong>' + escapeHtml(item.title) + '</strong>',
@@ -5953,9 +8793,13 @@
         adminItemControls(step, item),
         '</label>'
       ].join("");
+
+      html += isQuadrosProduct(product) && checked && Array.isArray(item.drawerImages) && item.drawerImages.length
+        ? '<div class="quadros-design-choice quadros-option-drawer-choice">' + card + renderQuadroDesignDrawer(product, item) + '</div>'
+        : card;
     });
 
-    return renderDesignActionControls(product, step) + '<div class="' + escapeHtml(gridClass) + '">' + html + '</div>' + (state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : "");
+    return renderDesignActionControls(product, step) + selectionCounter + '<div class="' + escapeHtml(gridClass) + '" data-choice-grid-step="' + escapeHtml(step.id) + '">' + html + '</div>' + (state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : "");
   }
 
   function renderSizeChoiceItems(product, step) {
@@ -6044,7 +8888,7 @@
       item.quantity != null ? '<label>Quantidade<input type="number" min="1" step="1" value="' + escapeHtml(item.quantity) + '" data-admin-edit="quantity" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
       '<label>Nota<input type="text" value="' + escapeHtml(item.note || "") + '" data-admin-edit="note" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>',
       step.template !== "quantity-builder" ? '<label>Imagem<input type="file" accept="image/*" data-admin-upload data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
-      step.template !== "quantity-builder" ? '<label>Tamanho moldura (%)<input type="number" min="40" max="300" step="1" value="' + escapeHtml(frameScaleValue) + '" data-admin-edit="frameScale" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
+      step.template !== "quantity-builder" ? '<label>Tamanho da moldura (%)<input type="number" min="40" max="300" step="1" value="' + escapeHtml(frameScaleValue) + '" data-admin-edit="frameScale" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
       step.template !== "quantity-builder" ? '<label>Largura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameWidth", frameDefaultSize, 1, 2000)) + '" data-admin-edit="frameWidth" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
       step.template !== "quantity-builder" ? '<label>Altura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameHeight", frameDefaultSize, 1, 2000)) + '" data-admin-edit="frameHeight" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
       step.template !== "quantity-builder" ? '<label>Margem moldura X (px)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameMarginX", 0, -100, 100)) + '" data-admin-edit="frameMarginX" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
@@ -6079,7 +8923,7 @@
       '<p class="admin-card-tools-heading">Foto de comparação</p>',
       '<label>Imagem<input type="file" accept="image/*" data-admin-side-upload data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
       isUploadedSideImage(item) ? '<button type="button" data-admin-side-clear data-step-id="' + stepId + '" data-item-id="' + itemId + '">Limpar foto de comparação</button>' : "",
-      '<label>Tamanho moldura (%)<input type="number" min="40" max="300" step="1" value="' + escapeHtml(sideFrameScale) + '" data-admin-side-edit="sideFrameScale" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
+      '<label>Tamanho da moldura (%)<input type="number" min="40" max="300" step="1" value="' + escapeHtml(sideFrameScale) + '" data-admin-side-edit="sideFrameScale" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
       '<label>Largura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(frameEditNumber(item, step, true, "sideFrameWidth", defaultWidth, 1, 2000)) + '" data-admin-side-edit="sideFrameWidth" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
       '<label>Altura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(frameEditNumber(item, step, true, "sideFrameHeight", defaultHeight, 1, 2000)) + '" data-admin-side-edit="sideFrameHeight" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
       '<label>Margem moldura X (px)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(frameEditNumber(item, step, true, "sideFrameMarginX", 0, -100, 100)) + '" data-admin-side-edit="sideFrameMarginX" data-step-id="' + stepId + '" data-item-id="' + itemId + '"></label>',
@@ -6427,7 +9271,7 @@
   function renderPackPriceOverview(product) {
     var packQuantity = getPackQuantity(product);
     var prices = product.prices || {};
-    var priceKeys = state.selections.size && prices[state.selections.size] ? [state.selections.size] : Object.keys(prices);
+    var priceKeys = state.selections.size ? [state.selections.size] : Object.keys(prices);
     var unitSingular = (product && product.unitSingular) ? product.unitSingular : (product && product.unitShort ? product.unitShort : "unidade");
     var rows = "";
 
@@ -6525,6 +9369,75 @@
     ].join("");
   }
 
+  function renderFreeQuantityBuilder(product) {
+    var minimum = minimumFreeQuantity(product);
+    var maximum = maximumFreeQuantity(product);
+    var current = getPackQuantity(product) || minimum;
+    var hint = freeQuantityStep(product) && freeQuantityStep(product).adjustHint
+      ? freeQuantityStep(product).adjustHint
+      : "Indica a quantidade exata que pretendes.";
+
+    return [
+      '<section class="free-quantity-builder" aria-label="Quantidade">',
+      '<div class="free-quantity-control">',
+      '<button type="button" data-free-quantity-change="-1" aria-label="Retirar uma unidade"' + (current <= minimum ? ' disabled' : '') + '>−</button>',
+      '<label><span>Quantidade</span><input type="number" inputmode="numeric" min="' + minimum + '" max="' + maximum + '" step="1" value="' + current + '" data-free-quantity-input></label>',
+      '<button type="button" data-free-quantity-change="1" aria-label="Acrescentar uma unidade"' + (current >= maximum ? ' disabled' : '') + '>+</button>',
+      '</div>',
+      '<p>' + escapeHtml(hint) + (minimum > 1 ? ' Mínimo: ' + minimum + ' unidades.' : '') + '</p>',
+      '</section>',
+      renderPackPriceOverview(product)
+    ].join("");
+  }
+
+  function setFreeQuantity(product, value) {
+    var minimum = minimumFreeQuantity(product);
+    var maximum = maximumFreeQuantity(product);
+    var quantity = Math.round(Number(value) || 0);
+
+    quantity = Math.max(minimum, Math.min(maximum, quantity || minimum));
+    state.selections.pack_quantity = quantity;
+    state.quantitySignature = "";
+    state.quantitiesTouched = false;
+    state.quantityPackBaseline = 0;
+    state.errors = "";
+    try { trackOptionSelected(product, "quantity", quantity, productQuantityLabel(product, quantity)); } catch (e) {}
+    return quantity;
+  }
+
+  function refreshFreeQuantityDraft(product, input) {
+    var builder = input && input.closest ? input.closest(".free-quantity-builder") : null;
+    var overview = builder && builder.nextElementSibling && builder.nextElementSibling.matches(".pack-price-overview")
+      ? builder.nextElementSibling
+      : null;
+    var wrapper;
+    var nextOverview;
+    var quantity = getPackQuantity(product);
+    var minimum = minimumFreeQuantity(product);
+    var maximum = maximumFreeQuantity(product);
+    var minus = builder ? builder.querySelector('[data-free-quantity-change="-1"]') : null;
+    var plus = builder ? builder.querySelector('[data-free-quantity-change="1"]') : null;
+
+    if (minus) {
+      minus.disabled = !quantity || quantity <= minimum;
+    }
+    if (plus) {
+      plus.disabled = !quantity || quantity >= maximum;
+    }
+
+    wrapper = document.createElement("div");
+    wrapper.innerHTML = renderPackPriceOverview(product);
+    nextOverview = wrapper.firstElementChild;
+
+    if (overview && nextOverview) {
+      overview.replaceWith(nextOverview);
+    } else if (overview) {
+      overview.remove();
+    } else if (builder && nextOverview) {
+      builder.insertAdjacentElement("afterend", nextOverview);
+    }
+  }
+
   function renderQuantityBuilder(product) {
     var items = selectedDesignItems(product);
     var packStep = findStep(product, "pack");
@@ -6533,6 +9446,10 @@
     var total;
     var unassigned;
     var cards = "";
+
+    if (packStep && packStep.freeQuantity === true) {
+      return renderFreeQuantityBuilder(product);
+    }
 
     ensurePackAndQuantities(product);
 
@@ -6760,11 +9677,8 @@
     var images = cover && cover.laminationImages ? cover.laminationImages : {};
     var key = cadernoLaminationKey(item);
 
-    if (key === "matte" && cover && cover.image) {
-      return cover.image;
-    }
-
-    return images[key] || images.matte || (cover && cover.image) || (item && (item.exampleImage || item.image)) || "";
+    return images[key] || (key === "matte" && cover && cover.image) || images.matte
+      || (cover && cover.image) || (item && (item.exampleImage || item.image)) || "";
   }
 
   function cadernoSlotCoverId(cover) {
@@ -6890,42 +9804,30 @@
     }
 
     if (packStep && Array.isArray(packStep.items)) {
-      ["caderno", "pack"].forEach(function (group) {
-        var storeItem = null;
-        var legacySlot = null;
-
-        packStep.items.some(function (item) {
-          var legacyKey;
-
-          if (cadernoPurchaseImageGroup(item) !== group) {
-            return false;
-          }
-          legacyKey = cadernoLegacyImageEditKey(product, "pack", item.id, "main");
-          if (!storeItem) {
-            storeItem = item;
-          }
-          if (item.imageEdits && item.imageEdits[legacyKey]) {
-            legacySlot = item.imageEdits[legacyKey];
-            storeItem = item;
-            return true;
-          }
-          return false;
-        });
-
-        if (!storeItem) {
-          return;
-        }
+      packStep.items.forEach(function (item) {
+        var group = cadernoPurchaseImageGroup(item);
+        var groupStore = cadernoPurchaseGroupStoreItem(product, item);
+        var ownLegacyKey = cadernoLegacyImageEditKey(product, "pack", item.id, "main");
+        var ownLegacySlot = item.imageEdits && item.imageEdits[ownLegacyKey];
 
         covers.forEach(function (cover) {
+          var groupMainKey = cadernoScopedImageEditKey(product, "pack", cover, group, "main");
+          var groupSummaryKey = cadernoScopedImageEditKey(product, "pack", cover, group, "summary");
+          var groupMainSlot = groupStore && groupStore.imageEdits && groupStore.imageEdits[groupMainKey];
+          var groupSummarySlot = groupStore && groupStore.imageEdits && groupStore.imageEdits[groupSummaryKey];
+
+          // As quatro opções são quatro locais visuais. Copiamos os ajustes
+          // antigos partilhados por grupo, mas daqui em diante cada item tem
+          // as suas próprias chaves main/summary.
           ensureImageEditSlotCopied(
-            storeItem,
-            cadernoScopedImageEditKey(product, "pack", cover, group, "main"),
-            legacySlot
+            item,
+            cadernoScopedImageEditKey(product, "pack", cover, item.id, "main"),
+            ownLegacySlot || groupMainSlot
           );
           ensureImageEditSlotCopied(
-            storeItem,
-            cadernoScopedImageEditKey(product, "pack", cover, group, "summary"),
-            cadernoSummaryImageEditDefaults()
+            item,
+            cadernoScopedImageEditKey(product, "pack", cover, item.id, "summary"),
+            groupSummarySlot || cadernoSummaryImageEditDefaults()
           );
         });
       });
@@ -6977,10 +9879,8 @@
   function cadernoPurchasePreviewItem(product, item) {
     var cover = selectedCadernoCover(product) || {};
     var image = cadernoPurchaseOptionImage(product, item);
-    var storeItem = cadernoPurchaseGroupStoreItem(product, item);
-    var imageGroup = cadernoPurchaseImageGroup(item);
-    var editKey = cadernoScopedImageEditKey(product, "pack", cover, imageGroup, "main");
-    var fallbackKey = cadernoLegacyImageEditKey(product, "pack", storeItem && storeItem.id || item.id, "main");
+    var editKey = cadernoScopedImageEditKey(product, "pack", cover, item.id, "main");
+    var fallbackKey = cadernoLegacyImageEditKey(product, "pack", item.id, "main");
 
     return {
       id: item.id,
@@ -6992,10 +9892,10 @@
       image: image,
       exampleImage: image,
       imageFit: item.imageFit || cover.imageFit || "cover",
-      imageEdits: storeItem && storeItem.imageEdits ? storeItem.imageEdits : item.imageEdits,
+      imageEdits: item.imageEdits,
       _imageEditKey: editKey,
       _imageEditFallbackKey: fallbackKey,
-      _imageEditStoreItemId: storeItem && storeItem.id,
+      _imageEditStoreItemId: item.id,
       frameWidth: cadernoPreviewOwnSetting(item, "frameWidth", 86),
       frameHeight: cadernoPreviewOwnSetting(item, "frameHeight", 64),
       frameScale: cadernoPreviewOwnSetting(item, "frameScale"),
@@ -7035,7 +9935,7 @@
     var preview = cadernoPurchasePreviewItem(product, item);
 
     preview._imageEditFallbackKey = preview._imageEditKey;
-    preview._imageEditKey = cadernoScopedImageEditKey(product, "pack", cover, cadernoPurchaseImageGroup(item), "summary");
+    preview._imageEditKey = cadernoScopedImageEditKey(product, "pack", cover, item.id, "summary");
     return preview;
   }
 
@@ -7049,6 +9949,25 @@
     var settings = product && product.interiorPreview ? product.interiorPreview : {};
 
     return Array.isArray(settings.images) ? settings.images.filter(Boolean) : [];
+  }
+
+  function cadernoItemInteriorImages(product, item) {
+    var settings = product && product.interiorPreview ? product.interiorPreview : {};
+    var explicit = item && Array.isArray(item.interiorImages) ? item.interiorImages.filter(Boolean) : [];
+    var folder = String(item && item.interiorFolder || "").replace(/\/+$/, "");
+    var fileNames = Array.isArray(settings.drawerImageNames) ? settings.drawerImageNames.filter(Boolean) : [];
+
+    if (explicit.length) {
+      return explicit;
+    }
+
+    if (folder && fileNames.length) {
+      return fileNames.map(function (fileName) {
+        return folder + "/" + String(fileName).replace(/^\/+/, "");
+      });
+    }
+
+    return cadernoCommonInteriorImages(product);
   }
 
   function cadernoPreviewLabel(image, isCover) {
@@ -7103,16 +10022,10 @@
   function cadernoCoverPreviewFrames(product, item) {
     var frames = [];
     var cover = cadernoCoverImage(item);
-    var interior = cadernoCommonInteriorImages(product);
+    var interior = cadernoItemInteriorImages(product, item);
 
     if (cover) {
       frames.push({ image: cover, label: cadernoPreviewLabel(cover, true) });
-    }
-
-    if (!interior.length && item && Array.isArray(item.interiorImages)) {
-      interior = item.interiorImages.filter(function (image) {
-        return image && image !== cover;
-      });
     }
 
     interior.forEach(function (image) {
@@ -7288,7 +10201,10 @@
       '<div class="cadernos-cover-drawer">',
       '<div class="cadernos-cover-preview-frame" data-cadernos-preview data-cadernos-preview-cover-value="' + escapeHtml(item.value || "") + '" data-cadernos-preview-item-id="' + escapeHtml(item.id || "") + '" data-cadernos-preview-interval="' + (speed * 1000) + '">',
       frames.map(function (frame, index) {
-        return '<span class="cadernos-cover-preview-slide' + (index === 0 ? ' is-active' : '') + '" style="background-image:url(&quot;' + escapeHtml(frame.image) + '&quot;)"></span>';
+        return '<span class="cadernos-cover-preview-slide' + (index === 0 ? ' is-active' : '')
+          + '" data-mia-image="' + escapeHtml(frame.image) + '" data-mia-item-id="' + escapeHtml(item.id || "")
+          + '" data-mia-slot-name="drawer" data-mia-slide-index="' + index
+          + '" style="background-image:url(&quot;' + escapeHtml(frame.image) + '&quot;)"></span>';
       }).join(""),
       frames.length > 1 ? '<button type="button" class="cadernos-preview-arrow cadernos-preview-arrow--prev" data-cadernos-preview-step="-1" aria-label="Imagem anterior">‹</button>' : "",
       frames.length > 1 ? '<button type="button" class="cadernos-preview-arrow cadernos-preview-arrow--next" data-cadernos-preview-step="1" aria-label="Imagem seguinte">›</button>' : "",
@@ -7300,6 +10216,101 @@
       '</div>',
       '</div>'
     ].join("");
+  }
+
+  function quadroDesignPreviewFrames(item) {
+    var images = [];
+    var candidates = [item && item.image].concat(item && Array.isArray(item.drawerImages) ? item.drawerImages : []);
+
+    candidates.forEach(function (image) {
+      if (image && images.indexOf(image) === -1) {
+        images.push(image);
+      }
+    });
+
+    return images.map(function (image, index) {
+      return {
+        image: image,
+        label: "Exemplo " + (index + 1) + " de " + images.length
+      };
+    });
+  }
+
+  function renderQuadroDesignDrawer(product, item) {
+    var frames = quadroDesignPreviewFrames(item);
+    var speed = cadernoPreviewSpeedSeconds(product);
+
+    if (!frames.length) {
+      return "";
+    }
+
+    return [
+      '<div class="cadernos-cover-drawer quadros-design-drawer">',
+      '<div class="cadernos-cover-preview-frame quadros-design-preview-frame" data-cadernos-preview data-cadernos-preview-cover-value="' + escapeHtml(item.value || "") + '" data-cadernos-preview-item-id="' + escapeHtml(item.id || "") + '" data-cadernos-preview-interval="' + (speed * 1000) + '">',
+      frames.map(function (frame, index) {
+        return '<span class="cadernos-cover-preview-slide quadros-design-preview-slide' + (index === 0 ? ' is-active' : '')
+          + '" data-mia-image="' + escapeHtml(frame.image) + '" data-mia-item-id="' + escapeHtml(item.id || "")
+          + '" data-mia-slot-name="drawer" data-mia-slide-index="' + index
+          + '" style="background-image:url(&quot;' + escapeHtml(frame.image) + '&quot;)"></span>';
+      }).join(""),
+      frames.length > 1 ? '<button type="button" class="cadernos-preview-arrow cadernos-preview-arrow--prev" data-cadernos-preview-step="-1" aria-label="Imagem anterior">‹</button>' : "",
+      frames.length > 1 ? '<button type="button" class="cadernos-preview-arrow cadernos-preview-arrow--next" data-cadernos-preview-step="1" aria-label="Imagem seguinte">›</button>' : "",
+      '<span class="crachas-size-card-proof-note cadernos-preview-pill" aria-hidden="true">',
+      frames.map(function (frame, index) {
+        return '<span class="cadernos-preview-pill-label' + (index === 0 ? ' is-active' : '') + '">' + escapeHtml(frame.label) + '</span>';
+      }).join(""),
+      '</span>',
+      '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function quadroDesignCardPrice(item) {
+    var fixed = Math.max(0, Number(item && item.priceCents) || 0);
+    var minimum = Math.max(0, Number(item && item.priceMinCents) || 0);
+
+    if (fixed) {
+      return formatCents(fixed);
+    }
+    if (minimum) {
+      return "Desde " + formatCents(minimum);
+    }
+    return "";
+  }
+
+  function renderQuadrosDesignStep(product, step) {
+    var selected = selectedValues(step);
+    var html = (step.items || []).map(function (item) {
+      var checked = selected.indexOf(item.value) !== -1 ? " checked" : "";
+      var frameSize = String(item.frameSize || "Tamanho à escolha");
+      var price = quadroDesignCardPrice(item);
+      // A coluna da imagem tem de ter largura determinada: as regras globais de
+      // .design-image usam percentagens, que numa coluna "auto" seriam circulares.
+      var frameColWidth = Math.max(1, parseInt(item.frameWidth, 10) || 96);
+
+      return [
+        '<div class="quadros-design-choice">',
+        '<label class="choice-card design-grid" style="--frame-col-width:' + frameColWidth + 'px">',
+        '<input type="radio" name="' + escapeHtml(step.field) + '" value="' + escapeHtml(item.value) + '" data-choice-step="' + escapeHtml(step.id) + '"' + checked + '>',
+        renderDesignCardMedia(product, step, item),
+        '<span class="choice-copy">',
+        '<strong>' + escapeHtml(item.title || item.value) + '</strong>',
+        '<span>' + escapeHtml(item.subtitle || "") + '</span>',
+        '</span>',
+        // O tamanho e celula propria da grelha (nao vai dentro de .choice-copy) para
+        // poder ficar debaixo da imagem em ecras estreitos, onde ha espaco livre.
+        '<span class="choice-note quadros-design-size">' + escapeHtml(frameSize) + '</span>',
+        price ? '<span class="quadros-design-price">' + escapeHtml(price) + '</span>' : "",
+        adminItemControls(step, item),
+        '</label>',
+        checked ? renderQuadroDesignDrawer(product, item) : "",
+        '</div>'
+      ].join("");
+    }).join("");
+
+    return renderDesignActionControls(product, step)
+      + '<div class="design-grid" data-choice-grid-step="' + escapeHtml(step.id) + '">' + html + '</div>'
+      + (state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : "");
   }
 
   function renderCadernosCoverStep(product, step) {
@@ -7539,7 +10550,7 @@
     return [
       '<div class="admin-card-tools admin-card-tools-image-slot">',
       '<p class="admin-card-tools-heading">Imagem deste resumo</p>',
-      '<label>Tamanho moldura (%)<input type="number" min="40" max="300" step="1" value="' + escapeHtml(frameScaleValue) + '" data-admin-edit="frameScale" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
+      '<label>Tamanho da moldura (%)<input type="number" min="40" max="300" step="1" value="' + escapeHtml(frameScaleValue) + '" data-admin-edit="frameScale" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
       '<label>Largura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameWidth", frameDefaultSize, 1, 2000)) + '" data-admin-edit="frameWidth" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
       '<label>Altura moldura (px)<input type="number" min="1" max="2000" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameHeight", frameDefaultSize, 1, 2000)) + '" data-admin-edit="frameHeight" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
       '<label>Margem X (px)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(frameEditNumber(item, step, false, "frameMarginX", 0, -100, 100)) + '" data-admin-edit="frameMarginX" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>',
@@ -7663,6 +10674,373 @@
     ].join("");
   }
 
+  // MOLDURAS_SUMMARY_V1
+  // O "O que vais encomendar:" das molduras passa a usar o mesmo bloco visual
+  // do "Designs que vais encomendar:" dos crachas (.crachas-step2-summary) e
+  // cresce passo a passo: cada escolha entra logo como um tile com imagem — a
+  // foto enviada (ou o pedido de ajuda), a orientacao, a silhueta, os
+  // quadrados das cores, a frase, etc. Vale para todos os fluxos de moldura.
+  var QUADROS_SUMMARY_LABELS = {
+    designs: "Moldura",
+    frame_size: "Tamanho",
+    photo_orientation: "Orientação",
+    baby_gender: "Menino ou menina",
+    baby_animal: "Silhueta",
+    silhouette: "Silhueta",
+    heart_finish: "Acabamento",
+    packaging: "Proteção e embrulho"
+  };
+
+  function quadrosSummaryLabel(step) {
+    return QUADROS_SUMMARY_LABELS[step && step.id] || (step && (step.label || step.title)) || "";
+  }
+
+  function quadrosSummaryTile(visual, label, name) {
+    return [
+      '<article class="crachas-step2-summary-tile quadros-summary-tile">',
+      visual || "",
+      label ? '<span class="quadros-summary-tile-label">' + escapeHtml(label) + '</span>' : "",
+      name ? '<span class="crachas-step2-summary-tile-name">' + escapeHtml(name) + '</span>' : "",
+      '</article>'
+    ].join("");
+  }
+
+  // Imagens de substituição para as escolhas que não têm foto própria (tamanho,
+  // frase, dados do bebé, áudio…), definidas em `summaryPlaceholders` no JSON
+  // do produto para poderem ser trocadas por fotos reais sem mexer no código.
+  function quadrosSummaryPlaceholder(key) {
+    var map = state.product && state.product.summaryPlaceholders ? state.product.summaryPlaceholders : {};
+    return key && map[key] ? String(map[key]) : "";
+  }
+
+  function quadrosSummaryPlaceholderVisual(key) {
+    var image = quadrosSummaryPlaceholder(key);
+
+    if (!image) {
+      return "";
+    }
+
+    return '<span class="quadros-summary-photo"><img src="' + escapeHtml(image) + '" alt=""></span>';
+  }
+
+  function quadrosSummaryTextTile(label, text, placeholderKey) {
+    var value = String(text == null ? "" : text).trim();
+    var visual;
+
+    if (!value) {
+      return "";
+    }
+
+    if (value.length > 90) {
+      value = value.slice(0, 89).replace(/\s+\S*$/, "") + "…";
+    }
+
+    visual = quadrosSummaryPlaceholderVisual(placeholderKey);
+
+    return visual
+      ? quadrosSummaryTile(visual, label, value)
+      : quadrosSummaryTile('<span class="quadros-summary-text">' + escapeHtml(value) + '</span>', label, "");
+  }
+
+  function quadrosSummaryNoteTile(label, name, placeholderKey, icon) {
+    return quadrosSummaryTile(
+      quadrosSummaryPlaceholderVisual(placeholderKey)
+        || '<span class="quadros-summary-note" aria-hidden="true">' + (icon || ICON_PHOTO) + '</span>',
+      label,
+      name
+    );
+  }
+
+  function quadrosSummaryImageTile(item, step, label, name) {
+    var template = step && step.template === "media-list" ? "media-list" : "design-grid";
+
+    return quadrosSummaryTile(renderVisual(item, template, step), label, name);
+  }
+
+  function quadrosSummaryPhotoTiles(key, label, alt) {
+    return orderUploadItems(key).slice(0, 4).map(function (upload) {
+      return quadrosSummaryTile(
+        '<span class="quadros-summary-photo"><img src="' + escapeHtml(orderUploadPreviewUrl(upload)) + '" alt="' + escapeHtml(alt || label || "Foto enviada") + '"></span>',
+        label,
+        ""
+      );
+    }).join("");
+  }
+
+  function quadrosSummaryAudioTile(key) {
+    var count = orderUploadItems(key).length;
+
+    if (!count) {
+      return "";
+    }
+
+    return quadrosSummaryNoteTile("Áudio", count === 1 ? "1 gravação" : count + " gravações", "audio", ICON_MICROPHONE);
+  }
+
+  function quadrosSummaryAttachmentTiles(step) {
+    var media = step && step.mediaAttachments ? step.mediaAttachments : null;
+    var tiles = "";
+
+    if (!media) {
+      return "";
+    }
+
+    if (media.photos) {
+      tiles += quadrosSummaryPhotoTiles(
+        media.photos.selectionKey || "quadro_reference_uploads",
+        step.id === "silhouette_details" ? "Silhueta enviada" : "Referência",
+        "Foto enviada com o pedido"
+      );
+    }
+    if (media.audio) {
+      tiles += quadrosSummaryAudioTile(media.audio.selectionKey || "quadro_audio_uploads");
+    }
+
+    return tiles;
+  }
+
+  function quadrosSummaryUploadTiles(step) {
+    var config = step.upload || {};
+    var key = config.selectionKey || "quadro_uploads";
+    var tiles = quadrosSummaryPhotoTiles(key, "Foto", "Foto enviada para a moldura");
+
+    if (tiles) {
+      return tiles;
+    }
+
+    if (config.helpKey && state.selections[config.helpKey]) {
+      return quadrosSummaryNoteTile("Foto", "Vamos ajudar-te a enviar", "photo_help", ICON_PHOTO);
+    }
+
+    return "";
+  }
+
+  function quadrosSummaryColorsTile(step) {
+    var limit = paletteSelectionLimit(step);
+    var individualColors = Array.isArray(step.individualColors) ? step.individualColors : [];
+    var keys = quadrosColorSelectionKeys(step);
+    var label = step.summaryLabel || (limit === 1 ? "Cor" : "Cores");
+    var slots;
+    var tones;
+
+    if (state.selections[keys.mia]) {
+      return quadrosSummaryTile(
+        '<span class="quadros-summary-colors" aria-hidden="true">'
+        + Array.from({ length: limit }, function () { return '<span></span>'; }).join("")
+        + '</span>',
+        label,
+        "Escolha da Mia"
+      );
+    }
+
+    slots = currentPaletteColorSlots(step, limit);
+    tones = quadrosToneSelections(step, limit);
+    if (!slots.filter(Boolean).length) {
+      return "";
+    }
+
+    return quadrosSummaryTile(
+      '<span class="quadros-summary-colors" role="img" aria-label="' + escapeHtml(slots.map(function (value, index) {
+        var item = quadrosColorItem(step, value);
+        return item ? (item.title || item.value) + ", tom " + quadrosToneLabel(tones[index]) : "";
+      }).filter(Boolean).join("; ")) + '">'
+      + slots.map(function (value, index) {
+        var match = individualColors.filter(function (candidate) {
+          return candidate && candidate.value === value;
+        })[0];
+
+        if (!value || !match) {
+          return '<span></span>';
+        }
+
+        return '<span class="is-filled" style="--quadros-summary-swatch:' + safeSwatchColor(quadrosColorStops(match)[tones[index]]) + '" title="' + escapeHtml((match.title || value) + ", tom " + quadrosToneLabel(tones[index])) + '"></span>';
+      }).join("")
+      + '</span>',
+      label,
+      ""
+    );
+  }
+
+  function quadrosColorSelectionText(step) {
+    var limit;
+    var keys;
+    var slots;
+    var tones;
+
+    if (!step) {
+      return "";
+    }
+    limit = paletteSelectionLimit(step);
+    keys = quadrosColorSelectionKeys(step);
+    if (state.selections[keys.mia]) {
+      return "Escolha da Mia";
+    }
+    slots = currentPaletteColorSlots(step, limit);
+    tones = quadrosToneSelections(step, limit);
+    return slots.map(function (value, index) {
+      var item = quadrosColorItem(step, value);
+      return item ? (item.title || item.value) + " (tom " + quadrosToneLabel(tones[index]) + ")" : "";
+    }).filter(Boolean).join(", ");
+  }
+
+  function quadrosSummaryDetailsTiles(step) {
+    var tiles = "";
+    var exampleValue;
+    var record;
+
+    if (step.id === "baby_custom_animal") {
+      return quadrosSummaryTextTile("Animal", state.selections.baby_custom_animal, "baby_custom_animal");
+    }
+
+    if (step.id === "baby_details") {
+      tiles += quadrosSummaryTextTile("Nome", state.selections.baby_name, "baby_details");
+      tiles += quadrosSummaryTextTile("Nascimento", [state.selections.baby_birth_date, state.selections.baby_birth_time].filter(Boolean).join(" · "), "baby_details");
+      tiles += quadrosSummaryTextTile("Peso", state.selections.baby_birth_weight, "baby_details");
+      return tiles;
+    }
+
+    if (step.id === "phrase_details") {
+      if (state.selections.no_phrase) {
+        tiles += quadrosSummaryTextTile("Frase", "Sem frase", "phrase");
+      } else if (
+        String(state.selections.quadro_text || "").trim()
+        || orderUploadItems("quadro_reference_uploads").length
+        || orderUploadItems("quadro_audio_uploads").length
+      ) {
+        tiles += quadrosSummaryTextTile("Frase", "Com frase", "phrase");
+      }
+      return tiles + quadrosSummaryAttachmentTiles(step);
+    }
+
+    if (step.id === "love_dedication") {
+      if (state.selections.no_dedication) {
+        tiles += quadrosSummaryTextTile("Dedicatória", "Sem dedicatória", "phrase");
+      } else if (String(state.selections.quadro_dedication || "").trim()
+          || orderUploadItems("quadro_reference_uploads").length
+          || orderUploadItems("quadro_audio_uploads").length) {
+        tiles += quadrosSummaryTextTile("Dedicatória", "Com dedicatória", "phrase");
+      }
+      return tiles + quadrosSummaryAttachmentTiles(step);
+    }
+
+    if (step.id === "silhouette_details") {
+      if (state.selections.silhouette_contact_me) {
+        tiles += quadrosSummaryTextTile("Silhueta", "Contacto para explicar", "super_description");
+      } else {
+        tiles += quadrosSummaryTextTile("Silhueta", state.selections.quadro_silhouette_description, "super_description");
+      }
+      return tiles + quadrosSummaryAttachmentTiles(step);
+    }
+
+    if (step.id === "silhouette_text_details") {
+      if (state.selections.no_text) {
+        tiles += quadrosSummaryTextTile("Texto", "Sem texto", "phrase");
+      } else if (String(state.selections.quadro_text || "").trim()
+          || orderUploadItems("quadro_reference_uploads").length
+          || orderUploadItems("quadro_audio_uploads").length) {
+        tiles += quadrosSummaryTextTile("Texto", "Com texto", "phrase");
+      }
+      return tiles + quadrosSummaryAttachmentTiles(step);
+    }
+
+    if (step.id === "super_details") {
+      exampleValue = String(state.selections[step.exampleSelectionKey || "details_example"] || "");
+      record = exampleValue && Array.isArray(step.exampleImages) ? step.exampleImages.filter(function (entry) {
+        return entry && entry.value === exampleValue;
+      })[0] : null;
+
+      if (record && record.image) {
+        tiles += quadrosSummaryTile(
+          '<span class="quadros-summary-photo"><img src="' + escapeHtml(record.image) + '" alt="' + escapeHtml(record.title || exampleValue) + '"></span>',
+          "Estilo",
+          record.title || exampleValue
+        );
+      } else {
+        tiles += quadrosSummaryTextTile("Estilo", exampleValue, "super_description");
+      }
+
+      tiles += quadrosSummaryTextTile("A tua ideia", state.selections.quadro_description, "super_description");
+      return tiles + quadrosSummaryAttachmentTiles(step);
+    }
+
+    return "";
+  }
+
+  function quadrosSummaryStepTiles(step) {
+    var value;
+    var item;
+
+    if (!step || step.hidden || !stepConditionMatches(step)) {
+      return "";
+    }
+
+    if (step.template === "photo-upload") {
+      return quadrosSummaryUploadTiles(step);
+    }
+
+    if (step.template === "palette-grid") {
+      return quadrosSummaryColorsTile(step);
+    }
+
+    if (step.template === "details-form") {
+      return quadrosSummaryDetailsTiles(step);
+    }
+
+    value = step.field ? state.selections[step.field] : "";
+    value = Array.isArray(value) ? value[0] : value;
+    item = value ? (step.items || []).filter(function (candidate) {
+      return candidate && candidate.value === value;
+    })[0] : null;
+
+    if (!value) {
+      return quadrosSummaryAttachmentTiles(step);
+    }
+
+    return (item
+      ? quadrosSummaryImageTile(item, step, quadrosSummaryLabel(step), displayItemTitle(item))
+      : quadrosSummaryTextTile(quadrosSummaryLabel(step), String(value))
+    ) + quadrosSummaryAttachmentTiles(step);
+  }
+
+  function renderQuadrosBuildSummary(product, step) {
+    var design = selectedDesignItems(product)[0];
+    var frameStep;
+    var info;
+    var tiles = "";
+
+    if (!isQuadrosProduct(product) || !design || (step && step.template === "confirm")) {
+      return "";
+    }
+
+    info = priceInfo(product);
+    frameStep = findStep(product, "frame_size");
+
+    (product.steps || []).forEach(function (entry) {
+      if (!entry || entry.id === "pack" || entry.id === "delivery_contact" || entry.id === "confirm") {
+        return;
+      }
+
+      tiles += quadrosSummaryStepTiles(entry);
+
+      // Nos fluxos sem passo de tamanho, a medida vem do proprio tipo de
+      // moldura — mostramo-la logo a seguir para o resumo ficar completo.
+      if (entry.id === "designs" && info.frameSize && !(frameStep && !frameStep.hidden && stepConditionMatches(frameStep))) {
+        tiles += quadrosSummaryTextTile("Tamanho", info.frameSize, "frame_size");
+      }
+    });
+
+    if (!tiles) {
+      return "";
+    }
+
+    return [
+      '<section class="crachas-step2-summary quadros-summary" aria-label="O que vais encomendar">',
+      '<h3 class="crachas-step2-summary-title">O que vais encomendar:</h3>',
+      '<div class="crachas-step2-summary-grid quadros-summary-grid">' + tiles + '</div>',
+      '</section>'
+    ].join("");
+  }
+
   function refreshCadernosBuildSummary(product) {
     var current = document.querySelector(".cadernos-build-summary");
     var wrapper = document.createElement("div");
@@ -7673,6 +11051,29 @@
     }
 
     html = renderCadernosBuildSummaryV2(product, currentStep(product));
+    if (!html) {
+      return;
+    }
+
+    wrapper.innerHTML = html;
+    if (wrapper.firstChild) {
+      current.replaceWith(wrapper.firstChild);
+    }
+  }
+
+  // MOLDURAS_SUMMARY_V1: escrever num campo (frase, dados do bebé, ideia) não
+  // re-renderiza o passo — para não perder o cursor — por isso actualizamos o
+  // resumo no sítio, para a informação aparecer à medida que é escrita.
+  function refreshQuadrosBuildSummary(product) {
+    var current = document.querySelector(".quadros-summary");
+    var wrapper = document.createElement("div");
+    var html;
+
+    if (!isQuadrosProduct(product) || !current) {
+      return;
+    }
+
+    html = renderQuadrosBuildSummary(product, currentStep(product));
     if (!html) {
       return;
     }
@@ -7709,6 +11110,25 @@
         '<strong>' + escapeHtml(info.total) + '</strong>',
         '<p>' + escapeHtml(cadernoOption.title) + '</p>',
         cadernoPriceText ? '<small class="price-panel-shipping-note">' + escapeHtml(cadernoPriceText) + '</small>' : "",
+        delivery,
+        '</aside>'
+      ].join("");
+    }
+
+    if (isQuadrosProduct(product)) {
+      var quadroPriceText = quadroPriceEquation(info);
+
+      if (!info.quantity || !info.total) {
+        return delivery;
+      }
+
+      return [
+        '<aside class="price-panel">',
+        '<span>' + (info.priceToConfirm ? 'Preço previsto' : 'Preço da moldura') + '</span>',
+        '<strong>' + escapeHtml(info.total) + '</strong>',
+        info.priceToConfirm ? '<small class="price-panel-shipping-note">O preço final depende da complexidade e será confirmado pela Mia.</small>' : '',
+        quadroPriceText ? '<small class="price-panel-shipping-note">' + escapeHtml(quadroPriceText) + '</small>' : '',
+        info.priceToConfirm && info.packagingTotal ? '<small class="price-panel-shipping-note">Embrulho para oferecer: +' + escapeHtml(info.packagingTotal) + '.</small>' : '',
         delivery,
         '</aside>'
       ].join("");
@@ -7806,22 +11226,129 @@
   // diferido para depois dos campos (ordem global pretendida para
   // "Dados de Contacto" e qualquer outro bloco que adopte o mesmo padrão).
   // Comportamento por defeito (sem o flag) mantém-se: texto antes dos campos.
+  function renderDetailsFieldControl(field, isMissing) {
+    var value = state.selections[field.name] || "";
+    var maxLength = Math.max(0, parseInt(field.maxLength, 10) || 0);
+    var inputMode = field.inputmode ? ' inputmode="' + escapeHtml(field.inputmode) + '"' : "";
+    var attributes = ' class="' + (isMissing ? "is-missing" : "") + '" name="' + escapeHtml(field.name) + '" placeholder="' + escapeHtml(field.placeholder || "") + '"' + inputMode + (field.required ? " required" : "") + (isMissing ? ' aria-invalid="true"' : "") + (maxLength ? ' maxlength="' + maxLength + '"' : "") + ' data-detail-field';
+
+    if (field.type === "textarea") {
+      return '<textarea rows="3"' + attributes + '>' + escapeHtml(value) + '</textarea>';
+    }
+
+    return '<input type="text" value="' + escapeHtml(value) + '" autocomplete="' + escapeHtml(field.autocomplete || "off") + '"' + attributes + '>';
+  }
+
+  function isDetailsMediaComposer(step) {
+    var fields = step && Array.isArray(step.fields) ? step.fields : [];
+    return !!(
+      step &&
+      step.template === "details-form" &&
+      step.mediaAttachments &&
+      fields.length === 1 &&
+      fields[0] &&
+      fields[0].type === "textarea"
+    );
+  }
+
+  function normalizeStepExample(record, fallbackAlt) {
+    if (typeof record === "string") {
+      return record ? { image: record, alt: fallbackAlt || "Exemplo da personalização" } : null;
+    }
+    if (!record || !record.image) {
+      return null;
+    }
+    return {
+      id: String(record.id || record.value || ""),
+      image: String(record.image),
+      alt: String(record.alt || fallbackAlt || "Exemplo da personalização"),
+      value: String(record.value || ""),
+      title: String(record.title || record.value || ""),
+      text: String(record.text || ""),
+      frameSize: String(record.frameSize || ""),
+      drawerImages: Array.isArray(record.drawerImages) ? record.drawerImages.filter(Boolean).map(String) : []
+    };
+  }
+
+  function stepExampleRecords(step) {
+    var byField = step && step.exampleByField && typeof step.exampleByField === "object" ? step.exampleByField : {};
+    var fieldNames = Object.keys(byField);
+    var dynamicExample = null;
+
+    fieldNames.some(function (fieldName) {
+      var mapping = byField[fieldName] || {};
+      var selected = state.selections[fieldName];
+      var values = Array.isArray(selected) ? selected : [selected];
+
+      return values.some(function (value) {
+        if (value != null && Object.prototype.hasOwnProperty.call(mapping, String(value))) {
+          dynamicExample = normalizeStepExample(mapping[String(value)], step.exampleAlt);
+          return !!dynamicExample;
+        }
+        return false;
+      });
+    });
+
+    if (dynamicExample) {
+      return [dynamicExample];
+    }
+
+    if (step && Array.isArray(step.exampleImages)) {
+      return step.exampleImages.map(function (record) {
+        return normalizeStepExample(record, step.exampleAlt);
+      }).filter(Boolean);
+    }
+
+    var fallback = step && step.exampleImage;
+    var fallbackRecord = normalizeStepExample(fallback, step && step.exampleAlt);
+    return fallbackRecord ? [fallbackRecord] : [];
+  }
+
   function renderDetailsForm(step) {
     var currentSection = null;
     var pendingAfterText = "";
     var html = "";
-    var exampleVisible = state.selections.show_details_example !== false;
-    var example = [
+    var examplesAlwaysVisible = step.examplesAlwaysVisible === true;
+    var exampleVisible = examplesAlwaysVisible || state.selections.show_details_example !== false;
+    var exampleRecords = stepExampleRecords(step);
+    var hasMultipleExamples = exampleRecords.length > 1;
+    var exampleSelectionKey = String(step.exampleSelectionKey || "details_example");
+    var selectedExample = String(state.selections[exampleSelectionKey] || "");
+    var mediaComposer = isDetailsMediaComposer(step);
+    var example = exampleRecords.length ? [
       '<div class="details-example"' + (exampleVisible ? "" : " hidden") + '>',
-      '<img class="example-image" src="media_tiago/exemplo.jpg" alt="Exemplo de cartão de apresentação" loading="lazy">',
+      '<div class="details-example-grid' + (hasMultipleExamples ? ' is-multiple' : '') + '">',
+      exampleRecords.map(function (record) {
+        if (step.selectableExamples === true && record.value) {
+          var selected = selectedExample === record.value;
+          var choice = [
+            '<button type="button" class="details-example-choice' + (selected ? ' is-selected' : '') + '" data-details-example-value="' + escapeHtml(record.value) + '" data-details-example-key="' + escapeHtml(exampleSelectionKey) + '" aria-pressed="' + (selected ? 'true' : 'false') + '">',
+            '<img class="example-image" data-mia-image="' + escapeHtml(record.image) + '" src="' + escapeHtml(record.image) + '" alt="' + escapeHtml(record.alt) + '" loading="lazy">',
+            '<span class="details-example-choice-copy"><strong>' + escapeHtml(record.title || record.value) + '</strong>' + (record.text ? '<small>' + escapeHtml(record.text) + '</small>' : '') + '</span>',
+            '</button>'
+          ].join("");
+          return selected && record.drawerImages.length
+            ? '<div class="quadros-design-choice quadros-details-example-drawer">' + choice + renderQuadroDesignDrawer(state.product, record) + '</div>'
+            : choice;
+        }
+        return [
+          '<button type="button" class="details-example-image-button" data-image-viewer-src="' + escapeHtml(record.image) + '" data-image-viewer-alt="' + escapeHtml(record.alt) + '" aria-label="Ver exemplo maior">',
+          '<img class="example-image" data-mia-image="' + escapeHtml(record.image) + '" src="' + escapeHtml(record.image) + '" alt="' + escapeHtml(record.alt) + '" loading="lazy">',
+          '</button>'
+        ].join("");
+      }).join(""),
+      '</div>',
       '</div>'
-    ].join("");
+    ].join("") : "";
 
-    function closeSection() {
+    function closeSection(addon) {
       if (currentSection === null) {
         return;
       }
       html += '</div>';
+      if (addon) {
+        html += addon;
+      }
       if (pendingAfterText) {
         html += '<p class="details-section-note">' + escapeHtml(pendingAfterText) + '</p>';
         pendingAfterText = "";
@@ -7845,7 +11372,7 @@
         }
 
         html += [
-          '<section class="details-section">',
+          '<section class="details-section' + (field.sectionNoBorder ? ' details-section--no-rule' : '') + (mediaComposer ? ' details-section--media-composer' : '') + '">',
           section ? '<h3>' + escapeHtml(section) + '</h3>' : "",
           sectionTextHtml,
           '<div class="details-grid">'
@@ -7858,21 +11385,40 @@
 
       html += [
         '<label>',
-        '<span>' + escapeHtml(field.label) + (field.required ? "" : " <small>(opcional)</small>") + '</span>',
-        '<input class="' + (isMissing ? "is-missing" : "") + '" type="text" name="' + escapeHtml(field.name) + '" value="' + escapeHtml(state.selections[field.name] || "") + '" placeholder="' + escapeHtml(field.placeholder) + '" autocomplete="' + escapeHtml(field.autocomplete || "off") + '"' + (field.required ? " required" : "") + (isMissing ? ' aria-invalid="true"' : "") + ' data-detail-field>',
+        field.label ? '<span>' + escapeHtml(field.label) + (field.required || field.hideOptionalLabel ? "" : " <small>(opcional)</small>") + '</span>' : '',
+        renderDetailsFieldControl(field, isMissing),
+        field.type === "textarea" && field.maxLength ? '<small class="details-character-count" data-character-count-for="' + escapeHtml(field.name) + '">' + String(state.selections[field.name] || "").length + ' / ' + escapeHtml(field.maxLength) + '</small>' : "",
+        field.note ? '<small class="details-field-note">' + escapeHtml(field.note) + '</small>' : "",
         '</label>',
         adminFieldControls(step, field, index)
       ].join("");
     });
 
-    closeSection();
+    var skipOption = step.skipOption && step.skipOption.selectionKey ? [
+      '<label class="details-skip-choice">',
+      '<input type="checkbox" data-details-skip-key="' + escapeHtml(step.skipOption.selectionKey) + '"' + (state.selections[step.skipOption.selectionKey] ? ' checked' : '') + '>',
+      '<span>' + escapeHtml(step.skipOption.label || "Não quero preencher") + '</span>',
+      '</label>'
+    ].join("") : "";
+    var attachments = step.mediaAttachments ? renderOrderMediaAttachments(step.mediaAttachments) : "";
+    var formIntro = step.formHeading || step.formText ? [
+      '<div class="details-form-intro">',
+      step.formHeading ? '<h3>' + escapeHtml(step.formHeading) + '</h3>' : '',
+      step.formText ? '<p>' + escapeHtml(step.formText) + '</p>' : '',
+      '</div>'
+    ].join("") : "";
 
-    return [
-      '<button class="example-toggle" type="button" data-example-toggle>' + (exampleVisible ? "Ocultar exemplo" : "Ver exemplo") + '</button>',
-      example,
-      html,
-      '<p class="privacy-note">Ao partilhar os teus dados, aceitas que estes sejam usados de acordo com a nossa <a href="privacy.html" target="_blank" rel="noopener">política de privacidade</a>.</p>'
+    closeSection(mediaComposer ? attachments + skipOption : skipOption + attachments);
+
+    var exampleBlock = [
+      exampleRecords.length && !examplesAlwaysVisible ? '<button class="example-toggle" type="button" data-example-toggle>' + (exampleVisible ? (hasMultipleExamples ? "Ocultar exemplos" : "Ocultar exemplo") : (hasMultipleExamples ? "Ver exemplos" : "Ver exemplo")) + '</button>' : "",
+      example
     ].join("");
+    var privacy = isQuadrosProduct(state.product) ? "" : '<p class="privacy-note">Ao partilhar os teus dados, aceitas que estes sejam usados de acordo com a nossa <a href="privacy.html" target="_blank" rel="noopener">política de privacidade</a>.</p>';
+
+    return step.examplesAfterForm
+      ? html + exampleBlock + formIntro + privacy
+      : exampleBlock + formIntro + html + privacy;
   }
 
   // DELIVERY_CONTACT_STEP_V1: novo passo "Entrega e contacto" que vive antes
@@ -7985,6 +11531,31 @@
     var designsStep;
     var tilesHtml;
 
+    if (isCustomArtworkProduct(product)) {
+      var custom = customArtworkConfig(product);
+      var uploads = orderUploadItems(custom.uploadKey);
+      var visual = uploads.length
+        ? '<span class="quadros-summary-photo"><img src="' + escapeHtml(orderUploadPreviewUrl(uploads[0])) + '" alt="Imagem enviada para personalização"></span>'
+        : '<span class="quadros-summary-note" aria-hidden="true">' + ICON_PHOTO + '</span>';
+      tilesHtml = [
+        '<article class="crachas-step2-summary-tile">',
+        visual,
+        '<span class="crachas-step2-summary-tile-name">' + escapeHtml(uploads.length ? "Imagem enviada" : "Ajuda com a imagem") + '</span>',
+        '</article>',
+        '<article class="crachas-step2-summary-tile quadros-summary-tile">',
+        '<span class="quadros-summary-text">' + escapeHtml(String(getPackQuantity(product))) + '</span>',
+        '<span class="quadros-summary-tile-label">' + escapeHtml(productQuantityLabel(product, getPackQuantity(product))) + '</span>',
+        '<span class="crachas-step2-summary-tile-name">' + escapeHtml(selectedSizeLabel(product)) + '</span>',
+        '</article>'
+      ].join("");
+      return [
+        '<section class="crachas-step2-summary dc-designs" aria-label="O que vais encomendar">',
+        '<h3 class="crachas-step2-summary-title">O que vais encomendar:</h3>',
+        '<div class="crachas-step2-summary-grid">' + tilesHtml + '</div>',
+        '</section>'
+      ].join("");
+    }
+
     if (!items.length) {
       return "";
     }
@@ -8037,7 +11608,9 @@
       return "";
     }
 
-    return title ? title + " (" + selected + ")" : selected;
+    return title && title.toLocaleLowerCase("pt-PT") !== String(selected).toLocaleLowerCase("pt-PT")
+      ? title + " (" + selected + ")"
+      : selected;
   }
 
   // PRICE_SHIPPING_BREAKDOWN_V1: helper que devolve a estrutura de preços
@@ -8081,6 +11654,77 @@
     var deliveryOption = getDeliveryOption(product);
     var deliveryText = deliveryOption.label;
     var pb = priceBreakdown(product);
+
+    if (isQuadrosProduct(product)) {
+      var quadroType = selectedDesignItems(product)[0];
+      var quadroTypeValue = quadroType ? quadroType.value : "";
+      var quadroWithPhoto = quadroTypeValue === "Foto e Frase";
+      var quadroIsSuper = quadroTypeValue === "Super Personalizado";
+      var quadroIsBaby = quadroTypeValue === "Quadro para bebé";
+      var quadroUploads = orderUploadItems("quadro_uploads");
+      var quadroReferenceUploads = orderUploadItems("quadro_reference_uploads");
+      var quadroAudioUploads = orderUploadItems("quadro_audio_uploads");
+      var quadroSilhouetteUploads = orderUploadItems("quadro_silhouette_uploads");
+      var quadroSilhouetteAudioUploads = orderUploadItems("quadro_silhouette_audio_uploads");
+      var quadroColorStep = findStep(product, "colors");
+      var quadroBackgroundColorStep = findStep(product, "heart_background_colors");
+      var quadroColorText = quadroColorSelectionText(quadroColorStep);
+      var quadroBackgroundColorText = quadroTypeValue === "Coração e Frase"
+        ? quadrosColorSelectionText(quadroBackgroundColorStep)
+        : "";
+      var quadroTextLabel = quadroTypeValue === "O Amor Nunca Acaba"
+        ? "Dedicatória:"
+        : (quadroTypeValue === "Silhueta e Frase" ? "Texto em vinil:" : "Frase em vinil:");
+      var quadroTextValue = quadroTypeValue === "O Amor Nunca Acaba"
+        ? (state.selections.no_dedication ? "Sem dedicatória" : state.selections.quadro_dedication || "")
+        : (quadroTypeValue === "Silhueta e Frase"
+          ? (state.selections.no_text ? "Sem texto" : state.selections.quadro_text || "")
+          : (state.selections.no_phrase ? "Sem frase" : state.selections.quadro_text || ""));
+      var quadroOrderRows = [
+        ["Tipo:", quadroType ? displayItemTitle(quadroType) : ""],
+        ["Foto:", quadroWithPhoto ? (quadroUploads.length ? (quadroUploads.length === 1 ? "Enviada" : quadroUploads.length + " enviadas") : (state.selections.photo_help ? "Precisa de ajuda para enviar" : "")) : ""],
+        ["Orientação da moldura:", quadroWithPhoto ? state.selections.photo_orientation || "" : ""],
+        ["Silhueta:", state.selections.silhouette || ""],
+        ["Acabamento do coração:", quadroTypeValue === "Coração e Frase" ? state.selections.heart_finish || "" : ""],
+        ["Animal:", quadroIsBaby ? state.selections.baby_animal || "" : ""],
+        ["Menino ou menina:", quadroIsBaby ? state.selections.baby_gender || "" : ""],
+        ["Nome da criança:", quadroIsBaby ? state.selections.baby_name || "" : ""],
+        ["Data de nascimento:", quadroIsBaby ? state.selections.baby_birth_date || "" : ""],
+        ["Hora de nascimento:", quadroIsBaby ? state.selections.baby_birth_time || "" : ""],
+        ["Peso à nascença:", quadroIsBaby ? state.selections.baby_birth_weight || "" : ""],
+        ["Cores:", quadroIsSuper ? "" : quadroColorText],
+        ["Cor do fundo:", quadroBackgroundColorText],
+        [quadroTextLabel, quadroIsSuper || quadroIsBaby ? "" : quadroTextValue],
+        ["Descrição da silhueta:", state.selections.silhouette === "Outra silhueta" ? state.selections.quadro_silhouette_description || "" : ""],
+        ["Contacto para explicar a silhueta:", state.selections.silhouette === "Outra silhueta" && state.selections.silhouette_contact_me ? "Sim" : ""],
+        ["Sugestão escolhida:", quadroIsSuper ? state.selections.quadro_super_example || "" : ""],
+        ["Descrição:", quadroIsSuper ? state.selections.quadro_description || "" : ""],
+        ["Tamanho da moldura:", info.frameSize || ""],
+        ["Proteção e embrulho:", selectedQuadroPackaging(product) ? selectedQuadroPackaging(product).title || state.selections.packaging || "" : ""],
+        ["Fotos de referência:", quadroReferenceUploads.length ? String(quadroReferenceUploads.length) : ""],
+        ["Silhueta enviada:", quadroSilhouetteUploads.length ? "Sim" : ""],
+        ["Áudios sobre a silhueta:", quadroSilhouetteAudioUploads.length ? String(quadroSilhouetteAudioUploads.length) : ""],
+        ["Áudios:", quadroAudioUploads.length ? String(quadroAudioUploads.length) : ""],
+        [info.priceToConfirm ? "Preço previsto:" : "Preço do produto:", info.total || ""]
+      ];
+      var quadroDeliveryRows = [
+        [pb.shippingCents > 0 ? "Portes estimados:" : "Portes:", pb.shippingCents > 0 ? pb.shipping : (pb.subtotal ? "Grátis" : "")],
+        [pb.isEstimate ? "Total estimado:" : "Total:", pb.subtotal ? pb.total : ""],
+        ["Entrega:", deliveryText || ""]
+      ];
+      var quadroContactRows = [
+        ["Nome de contacto:", state.selections.customer_name || ""],
+        ["Contacto:", state.selections.customer_contact || ""],
+        ["NIF:", state.selections.customer_nif || "Não indicado"]
+      ];
+      var quadroKeep = function (row) { return row[1] !== ""; };
+
+      return [
+        quadroOrderRows.filter(quadroKeep),
+        quadroDeliveryRows.filter(quadroKeep),
+        quadroContactRows.filter(quadroKeep)
+      ].filter(function (section) { return section.length > 0; });
+    }
 
     if (isCadernosProduct(product)) {
       var cover = selectedCadernoCover(product);
@@ -8158,12 +11802,27 @@
       ["Entrega:", deliveryText]
     ];
 
-    var cardRows = [
-      ["Nome para o cartão de apresentação:", state.selections.recipient_name || ""],
-      ["Telemóvel ou Email:", state.selections.contact || "Não indicado"],
-      ["Congregação:", state.selections.congregation || "Não indicado"],
-      ["Oferta à congregação:", shouldShowGiftRequest(product) && state.selections.congregation_gift ? "Sim" : ""]
-    ];
+    var cardRows;
+    if (isCustomArtworkProduct(product)) {
+      var custom = customArtworkConfig(product);
+      var artworkUploads = orderUploadItems(custom.uploadKey);
+      var cardPhotoUploads = orderUploadItems(custom.cardPhotoKey);
+      var cardAudioUploads = orderUploadItems(custom.cardAudioKey);
+      cardRows = [
+        ["Imagem:", artworkUploads.length ? "Enviada" : (state.selections[custom.helpKey] ? "Precisa de ajuda" : "")],
+        ["Personalização do cartão:", state.selections[custom.cardField] || ""],
+        ["Referências para o cartão:", cardPhotoUploads.length ? String(cardPhotoUploads.length) : ""],
+        ["Áudios para o cartão:", cardAudioUploads.length ? String(cardAudioUploads.length) : ""],
+        ["Oferta à congregação:", shouldShowGiftRequest(product) && state.selections.congregation_gift ? "Sim" : ""]
+      ];
+    } else {
+      cardRows = [
+        ["Nome para o cartão de apresentação:", state.selections.recipient_name || ""],
+        ["Telemóvel ou Email:", state.selections.contact || "Não indicado"],
+        ["Congregação:", state.selections.congregation || "Não indicado"],
+        ["Oferta à congregação:", shouldShowGiftRequest(product) && state.selections.congregation_gift ? "Sim" : ""]
+      ];
+    }
 
     var contactRows = [
       ["Nome de contacto:", state.selections.customer_name || ""],
@@ -8197,7 +11856,7 @@
     var confirmTitle = product && product.slug === "crachas" ? '<h3 class="confirm-card-title">A tua encomenda:</h3>' : "";
     var designs;
 
-    if (isCadernosProduct(product)) {
+    if (isCadernosProduct(product) || isQuadrosProduct(product) || isCustomArtworkProduct(product)) {
       designs = "";
     } else {
       designs = isAssortedSelected(product)
@@ -8400,6 +12059,10 @@
   }
 
   function stepBody(product, step) {
+    if (isQuadrosProduct(product) && step.id === "designs") {
+      return renderQuadrosDesignStep(product, step);
+    }
+
     if (isCadernosProduct(product) && step.id === "designs") {
       return renderCadernosCoverStep(product, step);
     }
@@ -8418,6 +12081,14 @@
 
     if (step.template === "quantity-builder") {
       return renderInteriorSlideshow(product) + renderQuantityBuilder(product);
+    }
+
+    if (step.template === "palette-grid") {
+      return renderPaletteGrid(product, step);
+    }
+
+    if (step.template === "photo-upload") {
+      return renderPhotoUploadStep(step);
     }
 
     if (step.template === "details-form") {
@@ -8450,19 +12121,58 @@
       return renderSizeChoiceItems(product, step) + renderSelectedSummary(product);
     }
 
-    return renderChoiceItems(product, step, step.template);
+    return renderChoiceItems(product, step, step.template) + (step.mediaAttachments ? renderOrderMediaAttachments(step.mediaAttachments) : "");
+  }
+
+  function stepConditionMatches(step) {
+    var condition = step && step.when;
+    var value;
+
+    if (!condition || !condition.field) {
+      return true;
+    }
+
+    value = state.selections[condition.field];
+    if (Object.prototype.hasOwnProperty.call(condition, "equals")) {
+      return Array.isArray(value)
+        ? value.indexOf(condition.equals) !== -1
+        : value === condition.equals;
+    }
+
+    if (Array.isArray(condition.in)) {
+      return Array.isArray(value)
+        ? value.some(function (entry) { return condition.in.indexOf(entry) !== -1; })
+        : condition.in.indexOf(value) !== -1;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(condition, "notEquals")) {
+      return Array.isArray(value)
+        ? value.indexOf(condition.notEquals) === -1
+        : value !== condition.notEquals;
+    }
+
+    return true;
   }
 
   function visibleSteps(product) {
     var steps = product && Array.isArray(product.steps) ? product.steps : [];
 
     return state.admin ? steps : steps.filter(function (step) {
-      return !step.hidden;
+      return !step.hidden && stepConditionMatches(step);
     });
   }
 
   function progressSteps(product) {
     var steps = state.admin ? visibleSteps(product) : productCartSteps(product);
+    var placeholderCount = !state.admin && isQuadrosProduct(product) && !state.selections.designs
+      ? Math.max(0, Number(product.initialProgressSteps) || 0)
+      : 0;
+
+    if (placeholderCount > steps.length) {
+      steps = steps.concat(Array.from({ length: placeholderCount - steps.length }, function (_, index) {
+        return { id: "progress-placeholder-" + index, label: "Passo seguinte", progressPlaceholder: true };
+      }));
+    }
 
     return steps.length ? steps : visibleSteps(product);
   }
@@ -8474,10 +12184,17 @@
     return index >= 0 ? index + 1 : state.currentStep + 1;
   }
 
-  function renderProgress(product) {
+  function numberedProgressSteps(product) {
+    if (!state.admin && isQuadrosProduct(product) && !state.selections.designs) {
+      return visibleSteps(product).slice(0, 1);
+    }
+    return state.admin ? visibleSteps(product) : productCartSteps(product);
+  }
+
+  function renderStepNumbers(product) {
     var visibleNumber = 0;
     var visible = visibleSteps(product);
-    var steps = progressSteps(product);
+    var steps = numberedProgressSteps(product);
 
     return [
       '<ol class="step-list" aria-label="Progresso do pedido">',
@@ -8507,8 +12224,8 @@
         }
 
         return [
-          '<li class="' + classes.join(" ") + '">',
-          '<button type="button" data-jump-step="' + stepIndex + '" aria-label="Passo ' + visibleNumber + ': ' + escapeHtml(step.label) + '"' + (disabled ? " disabled" : "") + '>',
+          '<li class="' + classes.join(" ") + '" data-step-key="' + visibleNumber + '">',
+          '<button type="button" data-jump-step="' + stepIndex + '" aria-label="Passo ' + visibleNumber + ': ' + escapeHtml(step.label) + '"' + (isActive ? ' aria-current="step"' : '') + (disabled ? " disabled" : "") + '>',
           '<span aria-hidden="true">' + visibleNumber + '</span>',
           '</button>',
           '</li>'
@@ -8518,11 +12235,302 @@
     ].join("");
   }
 
+  // STEP_NUMBERS_FLIP_V1: nas molduras a lista de passos começa só com o "1" e
+  // só ganha os restantes quando se escolhe o design; trocar de design volta a
+  // mudar quantos são. Sem animação os números trocavam de sítio de um frame
+  // para o outro e parecia outra lista. Aqui os que já existiam deslizam para a
+  // nova posição e os que entram brotam de debaixo do último que já lá estava
+  // (na primeira abertura esse é o "1", ao centro, e por isso todos se abrem a
+  // partir do centro).
+  // Corre mesmo com prefers-reduced-motion — daí ser Web Animations e não CSS:
+  // é o movimento que explica que são os mesmos passos, sem ele a lista muda de
+  // conteúdo e de posição ao mesmo tempo e não se percebe o que aconteceu.
+  var stepNumbersFlip = null;
+  var STEP_NUMBERS_FLIP_EASING = "cubic-bezier(.34,1.28,.44,1)";
+  var STEP_NUMBERS_FLIP_DURATION = 460;
+  var STEP_NUMBERS_BIRTH_DELAY = 110;
+  var STEP_NUMBERS_EXIT_DURATION = 320;
+
+  // Medidas relativas à caixa da lista, nunca à janela: o resto da página muda
+  // de altura entre passos e um rect absoluto faria a fila inteira deslizar na
+  // vertical em cada render, quando o que interessa é só o rearranjo interno.
+  function stepNumbersRect(item, listRect) {
+    var rect = item.getBoundingClientRect();
+
+    return {
+      left: rect.left - listRect.left,
+      top: rect.top - listRect.top,
+      width: rect.width,
+      height: rect.height
+    };
+  }
+
+  function captureStepNumbersRects() {
+    var list = document.querySelector(".step-list");
+    var listRect;
+    var entries = [];
+
+    if (!list || !document.body.animate) {
+      stepNumbersFlip = null;
+      return;
+    }
+    listRect = list.getBoundingClientRect();
+    list.querySelectorAll("li[data-step-key]").forEach(function (item) {
+      entries.push({
+        key: item.dataset.stepKey,
+        rect: stepNumbersRect(item, listRect),
+        node: item.cloneNode(true)
+      });
+    });
+    stepNumbersFlip = entries.length ? entries : null;
+  }
+
+  function appendStepNumbersGhost(list, entry) {
+    // O círculo que sai já não existe na lista nova: devolvemos o clone à lista
+    // fora do fluxo (absolute) para recuar por baixo dos que ficaram sem mexer
+    // no layout deles.
+    var ghost = entry.node;
+    var button = ghost.querySelector("button");
+
+    ghost.removeAttribute("data-step-key");
+    ghost.setAttribute("data-step-ghost", "");
+    ghost.setAttribute("aria-hidden", "true");
+    ghost.style.position = "absolute";
+    ghost.style.margin = "0";
+    ghost.style.zIndex = "0";
+    ghost.style.left = entry.rect.left + "px";
+    ghost.style.top = entry.rect.top + "px";
+    if (button) {
+      button.setAttribute("tabindex", "-1");
+    }
+    list.appendChild(ghost);
+    return ghost;
+  }
+
+  function playStepNumbersFlip() {
+    var captured = stepNumbersFlip;
+    var list = document.querySelector(".step-list");
+    var previous = {};
+    var items = [];
+    var listRect;
+    var birthRect;
+    var survivorRect;
+
+    stepNumbersFlip = null;
+    if (!captured || !list || !document.body.animate) {
+      return;
+    }
+
+    captured.forEach(function (entry) {
+      previous[entry.key] = entry.rect;
+    });
+    listRect = list.getBoundingClientRect();
+    list.querySelectorAll("li[data-step-key]").forEach(function (item) {
+      items.push({ node: item, key: item.dataset.stepKey, rect: stepNumbersRect(item, listRect) });
+    });
+    if (!items.length || !items[0].rect.width) {
+      return;
+    }
+
+    // Onde nascem os novos: o último círculo do render anterior.
+    birthRect = captured[captured.length - 1].rect;
+    // Para onde recuam os que saem: o último que sobreviveu, já na posição nova.
+    survivorRect = items[items.length - 1].rect;
+
+    items.forEach(function (item) {
+      var from = previous[item.key];
+      var dx;
+      var dy;
+
+      if (from) {
+        dx = from.left - item.rect.left;
+        dy = from.top - item.rect.top;
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+          return;
+        }
+        // Acima dos que nascem, para estes saírem mesmo de debaixo deles.
+        item.node.style.zIndex = "1";
+        item.node.animate(
+          [
+            { transform: "translate(" + dx + "px," + dy + "px)" },
+            { transform: "translate(0,0)" }
+          ],
+          {
+            duration: STEP_NUMBERS_FLIP_DURATION,
+            easing: STEP_NUMBERS_FLIP_EASING,
+            fill: "backwards"
+          }
+        );
+        return;
+      }
+
+      dx = (birthRect.left + birthRect.width / 2) - (item.rect.left + item.rect.width / 2);
+      dy = (birthRect.top + birthRect.height / 2) - (item.rect.top + item.rect.height / 2);
+      item.node.style.zIndex = "0";
+      item.node.animate(
+        [
+          { transform: "translate(" + dx + "px," + dy + "px) scale(.42)", opacity: 0 },
+          { transform: "translate(" + (dx * 0.68).toFixed(2) + "px," + (dy * 0.68).toFixed(2) + "px) scale(.8)", opacity: 1, offset: 0.32 },
+          { transform: "translate(0,0) scale(1)", opacity: 1 }
+        ],
+        {
+          duration: STEP_NUMBERS_FLIP_DURATION,
+          // Esperam que os antigos comecem a abrir alas; os mais afastados
+          // saem por último, o que dá a leitura de leque a desdobrar-se.
+          delay: STEP_NUMBERS_BIRTH_DELAY + Math.min(120, Math.round(Math.hypot(dx, dy) / 2.5)),
+          easing: STEP_NUMBERS_FLIP_EASING,
+          fill: "backwards"
+        }
+      );
+    });
+
+    captured.forEach(function (entry) {
+      var stillHere = items.some(function (item) { return item.key === entry.key; });
+      var ghost;
+      var animation;
+      var remove;
+      var dx;
+      var dy;
+
+      if (stillHere) {
+        return;
+      }
+      ghost = appendStepNumbersGhost(list, entry);
+      dx = (survivorRect.left + survivorRect.width / 2) - (entry.rect.left + entry.rect.width / 2);
+      dy = (survivorRect.top + survivorRect.height / 2) - (entry.rect.top + entry.rect.height / 2);
+      remove = function () {
+        if (ghost.parentNode) {
+          ghost.parentNode.removeChild(ghost);
+        }
+      };
+      animation = ghost.animate(
+        [
+          { transform: "translate(0,0) scale(1)", opacity: 1 },
+          { transform: "translate(" + dx + "px," + dy + "px) scale(.42)", opacity: 0 }
+        ],
+        {
+          duration: STEP_NUMBERS_EXIT_DURATION,
+          easing: "cubic-bezier(.4,0,.3,1)",
+          fill: "forwards"
+        }
+      );
+      animation.addEventListener("finish", remove);
+      // Rede de segurança: em separador em segundo plano o "finish" não dispara
+      // e o fantasma ficava colado por cima da lista.
+      window.setTimeout(remove, STEP_NUMBERS_EXIT_DURATION + 400);
+    });
+  }
+
+  function progressVisualPercent(product, currentStepIndex) {
+    var visible = visibleSteps(product);
+    var steps = progressSteps(product);
+    var activeStep = visible[currentStepIndex] || null;
+    var activeIndex = steps.indexOf(activeStep);
+    var percent;
+
+    if (activeIndex < 0) {
+      activeIndex = steps.length - 1;
+    }
+    percent = steps.length <= 1 ? 0 : Math.round((activeIndex / (steps.length - 1)) * 100);
+    return activeIndex === 0 ? 5 : percent;
+  }
+
+  function renderProgress(product) {
+    var visible = visibleSteps(product);
+    var steps = progressSteps(product);
+    var activeStep = visible[state.currentStep] || null;
+    var activeIndex;
+    var percent;
+    var visualPercent;
+    var animationFrom;
+    var animateProgress;
+    var label;
+
+    if (!steps.length) {
+      return "";
+    }
+
+    activeIndex = steps.indexOf(activeStep);
+    if (activeIndex < 0) {
+      activeIndex = steps.length - 1;
+    }
+    percent = steps.length <= 1 ? 0 : Math.round((activeIndex / (steps.length - 1)) * 100);
+    visualPercent = progressVisualPercent(product, state.currentStep);
+    animationFrom = state.progressAnimationFromPercent;
+    animateProgress = typeof animationFrom === "number"
+      && isFinite(animationFrom)
+      && animationFrom >= 0
+      && animationFrom !== visualPercent;
+    state.progressAnimationFromPercent = null;
+    label = activeStep && activeStep.label ? activeStep.label : (steps[activeIndex] && steps[activeIndex].label) || "Pedido";
+
+    return [
+      '<nav class="wizard-progress' + (activeIndex === 0 ? ' is-empty' : '') + (animateProgress ? ' is-changing' : '') + '" aria-label="Passos do pedido">',
+      '<div class="wizard-progress__rail">',
+      '<div class="wizard-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + percent + '" aria-valuetext="Passo ' + (activeIndex + 1) + ' de ' + steps.length + ': ' + escapeHtml(label) + '">',
+      '<span class="wizard-progress__fill" style="--progress-from:' + (animateProgress ? animationFrom : visualPercent) + '%;--progress-to:' + visualPercent + '%;width:' + visualPercent + '%"></span>',
+      '</div>',
+      '<ol class="wizard-progress__ticks">',
+      steps.map(function (step, index) {
+        var stepIndex = visible.indexOf(step);
+        var position = steps.length <= 1 ? 100 : (index / (steps.length - 1)) * 100;
+        var classes = index < activeIndex ? "is-complete" : (index === activeIndex ? "is-active" : "is-future");
+        var disabled = index > activeIndex;
+        var stepLabel = "Passo " + (index + 1) + ": " + (step.label || "Pedido");
+
+        return [
+          '<li class="' + classes + '" style="left:' + position.toFixed(3) + '%">',
+          '<button type="button" data-jump-step="' + (stepIndex >= 0 ? stepIndex : index) + '" aria-label="' + escapeHtml(stepLabel) + '" title="' + escapeHtml(stepLabel) + '"' + (index === activeIndex ? ' aria-current="step"' : '') + (disabled ? ' disabled' : '') + '>',
+          '<span aria-hidden="true"></span>',
+          '</button>',
+          '</li>'
+        ].join("");
+      }).join(""),
+      '</ol>',
+      '</div>',
+      '</nav>'
+    ].join("");
+  }
+
+  function mappedStepCopy(step, property) {
+    var mappings = step && step[property] && typeof step[property] === "object" ? step[property] : {};
+    var result = "";
+
+    Object.keys(mappings).some(function (fieldName) {
+      var fieldMap = mappings[fieldName] || {};
+      var selected = String(state.selections[fieldName] || "");
+      if (Object.prototype.hasOwnProperty.call(fieldMap, selected)) {
+        result = String(fieldMap[selected] || "");
+        return true;
+      }
+      return false;
+    });
+    return result;
+  }
+
   function displayStepText(product, step) {
+    var mapped = mappedStepCopy(step, "textByField");
+    if (mapped) {
+      return mapped;
+    }
     if (step && step.id === "pack" && isAssortedSelected(product)) {
       return "Escolhe apenas quantas unidades queres, nós tratamos do resto.";
     }
+    if (step && step.template === "palette-grid" && paletteSelectionLimit(step) === 2) {
+      return "Escolhe duas cores para criar o degradê.";
+    }
     return step && step.text ? step.text : "";
+  }
+
+  function displayStepTitle(product, step) {
+    var mapped = mappedStepCopy(step, "titleByField");
+    if (mapped) {
+      return mapped;
+    }
+    if (step && step.template === "palette-grid" && paletteSelectionLimit(step) === 2) {
+      return "Escolhe as cores do degradê";
+    }
+    return step && step.title ? step.title : "";
   }
 
   function renderProductPreview(product) {
@@ -8543,6 +12551,34 @@
     ].join("");
   }
 
+  function renderProductGallery(product) {
+    var gallery = product && product.gallery ? product.gallery : null;
+    var items = gallery && Array.isArray(gallery.items) ? gallery.items.filter(function (item) {
+      return item && item.image;
+    }) : [];
+
+    if (!items.length) {
+      return "";
+    }
+
+    return [
+      '<aside class="product-example-gallery" aria-label="' + escapeHtml(gallery.title || "Exemplos") + '">',
+      '<div class="product-example-gallery-heading">',
+      '<strong>' + escapeHtml(gallery.title || "Exemplos") + '</strong>',
+      gallery.text ? '<p>' + escapeHtml(gallery.text) + '</p>' : "",
+      '</div>',
+      '<div class="product-example-gallery-track">',
+      items.map(function (item) {
+        return [
+          '<button type="button" class="product-example-gallery-item" data-image-viewer-src="' + escapeHtml(item.image) + '" data-image-viewer-alt="' + escapeHtml(item.alt || "Exemplo de moldura personalizada") + '" aria-label="Ver exemplo maior">',
+          '<img src="' + escapeHtml(item.image) + '" alt="' + escapeHtml(item.alt || "Exemplo de moldura personalizada") + '" loading="lazy">',
+          '</button>'
+        ].join("");
+      }).join(""),
+      '</div>',
+      '</aside>'
+    ].join("");
+  }
 
   function renderProduct(product, cadernoRenderState) {
     clearCadernoPreviewTimers();
@@ -8578,28 +12614,33 @@
     nextLabel = isLast ? "Enviar pedido" : state.currentStep === steps.length - 2 ? "Confirmar" : "Continuar";
     suspended = isLast && ordersAreSuspended();
 
+    // Última leitura da lista de passos antiga antes de o innerHTML a apagar.
+    captureStepNumbersRects();
+
     renderChrome([
       '<main class="product-shell ' + productSlugClass(product) + ' ' + productShapeClass(product) + ' ' + productOrientationClass(product) + '">',
-      renderBrand(product.brand, product.homeUrl, product.instagramUrl),
+      renderBrand(product.brand, "index.html", product.instagramUrl, state.siteMenuCategories),
       '<section class="wizard-shell" aria-labelledby="step-title">',
-      renderProgress(product),
+      renderStepNumbers(product),
       renderCartEditBar(),
       '<form id="order-form" action="' + escapeHtml(product.form.action) + '" method="post" novalidate>',
       '<input type="hidden" name="return_to" value="' + escapeHtml(product.form.returnTo) + '">',
       '<label class="hidden-field" aria-hidden="true"><span>Website</span><input type="text" name="website" tabindex="-1" autocomplete="off"></label>',
-      '<div class="step-card">',
+      '<div class="step-card' + (isDetailsMediaComposer(step) ? ' step-card--media-composer' : '') + '">',
       '<p class="eyebrow">Passo ' + stepNumber + (state.admin && step.hidden ? ' · oculto' : '') + '</p>',
-      '<h2 id="step-title">' + escapeHtml(step.title) + '</h2>',
-      '<p>' + escapeHtml(displayStepText(product, step)) + '</p>',
-      state.currentStep === 0 ? renderProductPreview(product) : "",
+      '<h2 id="step-title">' + escapeHtml(displayStepTitle(product, step)) + '</h2>',
+      renderProgress(product),
+      displayStepText(product, step) ? '<p class="step-help">' + escapeHtml(displayStepText(product, step)) + '</p>' : '',
+      state.currentStep === 0 ? renderProductPreview(product) + renderProductGallery(product) : "",
       stepBody(product, step),
+      renderQuadrosBuildSummary(product, step),
       '</div>',
       cartEntry ? renderCartEntryActions(product) : [
       '<div class="step-actions">',
       '<button class="button secondary" type="button" data-back data-track="true" data-track-action="back" data-track-id="back">Voltar</button>',
       '<div class="next-action-wrap">',
-      state.errors ? '<p class="form-error action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
-      '<button class="button primary' + (suspended ? ' is-disabled' : '') + '" type="' + (isLast && !suspended ? "submit" : "button") + '" data-next' + (suspended ? ' data-order-suspended-submit aria-disabled="true"' : '') + ' data-track="true" data-track-action="' + (isLast ? 'submit' : 'next') + '" data-track-id="' + (isLast ? 'submit' : 'next') + '">' + escapeHtml(nextLabel) + '</button>',
+      state.errors ? '<p class="form-error action-error" id="step-action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
+      '<button class="button primary' + (suspended ? ' is-disabled' : '') + '" type="' + (isLast && !suspended ? "submit" : "button") + '" data-next' + (state.errors ? ' aria-describedby="step-action-error"' : '') + (suspended ? ' data-order-suspended-submit aria-disabled="true"' : '') + ' data-track="true" data-track-action="' + (isLast ? 'submit' : 'next') + '" data-track-id="' + (isLast ? 'submit' : 'next') + '">' + escapeHtml(nextLabel) + '</button>',
       '</div>',
       '</div>'
       ].join(""),
@@ -8611,9 +12652,13 @@
       '</main>'
     ].join(""), product);
 
+    playStepNumbersFlip();
     bindProduct(product);
-    if (isCadernosProduct(product)) {
+    initQuadrosPhotoColorAnalysis(product, step);
+    if (isCadernosProduct(product) || isQuadrosProduct(product)) {
       initCadernoPreviewSlides();
+    }
+    if (isCadernosProduct(product)) {
       restoreCadernoRenderState(product, cadernoRenderState);
     }
 
@@ -8773,6 +12818,7 @@
     }
 
     state.errors = "";
+    syncOrderUploadBusy();
     setCurrentStep(product, step);
     rerenderProduct(product);
   }
@@ -8825,6 +12871,10 @@
     state.scrollStepOnRender = next !== state.currentStep;
     var prevStepObj = steps[previous] || null;
     var prevStepId = prevStepObj ? prevStepObj.id : '';
+    if (next !== previous) {
+      cancelOrderMediaActivityForStep(prevStepObj);
+      state.progressAnimationFromPercent = progressVisualPercent(product, previous);
+    }
     state.currentStep = next;
     state.maxVisitedStep = Math.max(state.maxVisitedStep, state.currentStep);
 
@@ -8897,7 +12947,127 @@
       return;
     }
 
+    if (step.id === "designs" && isQuadrosProduct(state.product) && state.selections.designs && state.selections.designs !== input.value) {
+      (state.product.steps || []).filter(function (candidate) {
+        return candidate && candidate.template === "palette-grid";
+      }).forEach(function (colorStep) {
+        var keys = quadrosColorSelectionKeys(colorStep);
+        delete state.selections[keys.colors];
+        delete state.selections[keys.palette];
+        delete state.selections[keys.mia];
+        delete state.selections[keys.tones];
+      });
+      delete state.selections.colors;
+      delete state.selections.color_palette;
+      delete state.selections.mia_choose_colors;
+      delete state.selections.quadro_color_mode;
+      delete state.selections.quadro_color_tones;
+      state.paletteColorSlots = [];
+      state.quadroActiveColorSlot = 0;
+      state.quadroToneEdit = null;
+      state.quadroColorUi = {};
+      resetQuadrosPhotoColorAnalysis();
+      delete state.selections.photo_orientation;
+      delete state.selections.photo_help;
+      delete state.selections.silhouette;
+      delete state.selections.quadro_text;
+      delete state.selections.quadro_description;
+      delete state.selections.no_phrase;
+      delete state.selections.quadro_super_example;
+      delete state.selections.heart_finish;
+      delete state.selections.frame_size;
+      delete state.selections.heart_background_colors;
+      delete state.selections.heart_background_color_tones;
+      delete state.selections.heart_background_palette;
+      delete state.selections.mia_choose_heart_background_colors;
+      delete state.selections.quadro_dedication;
+      delete state.selections.no_dedication;
+      delete state.selections.quadro_silhouette_description;
+      delete state.selections.silhouette_contact_me;
+      delete state.selections.quadro_silhouette_text;
+      delete state.selections.no_silhouette_text;
+      delete state.selections.no_text;
+      delete state.selections.baby_animal;
+      delete state.selections.baby_custom_animal;
+      delete state.selections.baby_gender;
+      delete state.selections.baby_name;
+      delete state.selections.baby_birth_date;
+      delete state.selections.baby_birth_time;
+      delete state.selections.baby_birth_weight;
+      state.orderUploadMessage = "";
+      state.orderUploadError = "";
+      state.invalidFields = [];
+    }
+
     state.selections[step.id] = input.value;
+    if (Array.isArray(step.resetSelectionKeys)) {
+      step.resetSelectionKeys.forEach(function (key) {
+        delete state.selections[String(key)];
+      });
+    }
+    if (Array.isArray(step.resetColorSteps)) {
+      step.resetColorSteps.forEach(function (stepId) {
+        var colorStep = findStep(state.product, String(stepId));
+        if (colorStep) {
+          quadrosResetColorUi(colorStep);
+        }
+      });
+    }
+    if (step.selection === "single") {
+      var selectedDesign = (step.items || []).filter(function (item) {
+        return item && item.value === input.value;
+      })[0] || null;
+      var defaults = selectedDesign && selectedDesign.defaultSelections && typeof selectedDesign.defaultSelections === "object"
+        ? selectedDesign.defaultSelections
+        : {};
+
+      Object.keys(defaults).forEach(function (key) {
+        state.selections[key] = cloneJson(defaults[key]);
+      });
+    }
+    if (step.id === "size" && freeQuantityStep(state.product)) {
+      state.selections.pack_quantity = minimumFreeQuantity(state.product);
+      state.quantitySignature = "";
+      state.quantitiesTouched = false;
+      state.quantityPackBaseline = 0;
+    }
+    if (step.id === "baby_animal" && input.value !== "Outro animal") {
+      delete state.selections.baby_custom_animal;
+    }
+  }
+
+  function detailsStepHasAnyInput(step) {
+    var fields = step && Array.isArray(step.fields) ? step.fields : [];
+    var attachments = step && step.mediaAttachments ? step.mediaAttachments : {};
+    var configs = [attachments.photos, attachments.audio].filter(Boolean);
+    var hasFieldValue = fields.some(function (field) {
+      return field && String(state.selections[field.name] || "").trim();
+    });
+
+    if (step && step.skipOption && step.skipOption.selectionKey && state.selections[step.skipOption.selectionKey]) {
+      return true;
+    }
+
+    if (step && step.selectableExamples === true && String(state.selections[step.exampleSelectionKey || "details_example"] || "").trim()) {
+      return true;
+    }
+
+    if (hasFieldValue) {
+      return true;
+    }
+
+    return configs.some(function (config) {
+      var key = config.selectionKey || (config === attachments.audio ? "quadro_audio_uploads" : "quadro_reference_uploads");
+      return orderUploadItems(key).length > 0;
+    });
+  }
+
+  function orderStepHasMediaControls(step) {
+    var attachments = step && step.mediaAttachments ? step.mediaAttachments : null;
+    return !!(step && (
+      step.template === "photo-upload" ||
+      (attachments && (attachments.photos || attachments.audio))
+    ));
   }
 
   function validateStep(product, step) {
@@ -8909,7 +13079,14 @@
 
     state.invalidFields = [];
 
+    if (orderStepHasMediaControls(step) && (state.orderUploadBusy || orderAudioPendingStart || state.orderAudioRecording)) {
+      return state.orderAudioRecording ? "Solta o botão do áudio para terminar a gravação." : "Espera até o anexo terminar de enviar.";
+    }
+
     if (step.id === "designs" && selectedDesignItems(product).length === 0 && !isAssortedSelected(product)) {
+      if (isQuadrosProduct(product)) {
+        return "Escolhe o tipo de moldura que queres criar.";
+      }
       if (isCadernosProduct(product)) {
         return "Escolhe uma capa.";
       }
@@ -8951,6 +13128,13 @@
     }
 
     if (step.id === "pack") {
+      if (step.freeQuantity === true) {
+        packQuantity = getPackQuantity(product);
+        if (!packQuantity) {
+          return "Indica uma quantidade válida (mínimo " + minimumFreeQuantity(product) + ").";
+        }
+        return "";
+      }
       ensurePackAndQuantities(product);
       total = quantityTotal(product);
       packQuantity = getPackQuantity(product);
@@ -8972,21 +13156,89 @@
       }
     }
 
+    if (step.template === "palette-grid") {
+      var colorKeys = quadrosColorSelectionKeys(step);
+      if (state.selections[colorKeys.mia]) {
+        return "";
+      }
+      var selectionLimit = paletteSelectionLimit(step);
+      var selectedPalette = String(state.selections[colorKeys.palette] || "");
+      var validPalette = (step.items || []).some(function (item) {
+        return item && item.value === selectedPalette && paletteColors(item, selectionLimit).length === selectionLimit;
+      });
+      var individualValues = Array.isArray(state.selections[colorKeys.colors]) ? state.selections[colorKeys.colors] : [];
+      var individualTones = Array.isArray(state.selections[colorKeys.tones]) ? state.selections[colorKeys.tones] : [];
+      var allowedIndividualValues = (step.individualColors || []).map(function (item) { return item.value; });
+      var validIndividuals = individualValues.length === selectionLimit && individualValues.every(function (value) {
+        return allowedIndividualValues.indexOf(value) !== -1;
+      });
+
+      if (step.tonePicker === true && validIndividuals) {
+        var exactPairs = {};
+        validIndividuals = individualTones.length >= selectionLimit && individualValues.every(function (value, index) {
+          var tone = Number(individualTones[index]);
+          var pair = value + "\u0000" + tone;
+          if (!Number.isInteger(tone) || tone < 0 || tone > 2 || exactPairs[pair]) {
+            return false;
+          }
+          exactPairs[pair] = true;
+          return true;
+        });
+      }
+
+      if (!validPalette && !validIndividuals) {
+        return step.selectionError || "Escolhe uma combinação ou exatamente " + (selectionLimit === 1 ? "uma cor" : selectionLimit === 2 ? "duas cores" : selectionLimit === 3 ? "três cores" : selectionLimit + " cores") + ".";
+      }
+      return "";
+    }
+
+    if (step.selection === "multi" && step.minSelections != null && selectedValues(step).length < Number(step.minSelections)) {
+      return step.selectionError || "Escolhe mais opções para continuar.";
+    }
+
+    if (step.selection === "multi" && step.maxSelections != null && selectedValues(step).length > Number(step.maxSelections)) {
+      return step.selectionError || "Escolheste opções a mais.";
+    }
+
     if (step.selection === "single" && !state.selections[step.id]) {
       return "Escolhe uma opção.";
     }
 
-    if (step.template === "details-form") {
-      for (i = 0; i < step.fields.length; i += 1) {
-        field = step.fields[i];
+    if (step.template === "details-form" || step.template === "photo-upload") {
+      var stepFields = Array.isArray(step.fields) ? step.fields : [];
+      for (i = 0; i < stepFields.length; i += 1) {
+        field = stepFields[i];
         if (field.required && !String(state.selections[field.name] || "").trim()) {
           missing.push(field.name);
+        }
+        if (field.maxLength && String(state.selections[field.name] || "").length > Number(field.maxLength)) {
+          state.invalidFields = [field.name];
+          return field.maxLengthError || "O texto é demasiado longo.";
         }
       }
 
       if (missing.length) {
         state.invalidFields = missing;
         return "Preenche os campos obrigatórios.";
+      }
+
+      if (step.requireAnyInput && !detailsStepHasAnyInput(step)) {
+        state.invalidFields = stepFields.length && stepFields[0].name ? [stepFields[0].name] : [];
+        return step.requireAnyInputError || "Escreve uma mensagem, grava um áudio ou envia uma foto.";
+      }
+    }
+
+    if (step.template === "photo-upload") {
+      var uploadConfig = step.upload || {};
+      var uploadKey = uploadConfig.selectionKey || "quadro_uploads";
+      var uploadedItems = orderUploadItems(uploadKey);
+
+      if (state.orderUploadBusy) {
+        return "Espera até a foto terminar de enviar.";
+      }
+      if (uploadConfig.requiredUnlessHelp && uploadedItems.length === 0 && !state.selections[uploadConfig.helpKey || "photo_help"]) {
+        state.invalidFields = [uploadKey];
+        return "Escolhe uma foto ou assinala que precisas de ajuda para a enviar.";
       }
     }
 
@@ -9071,9 +13323,1120 @@
 
     state.errors = "";
     state.packDisabledMessage = "";
+    state.orderUploadMessage = "";
+    state.orderUploadFeedbackKind = "";
     setCurrentStep(product, state.currentStep + 1);
     pushWizardHistory(product);
     rerenderProduct(product);
+  }
+
+  function orderPhotoFileIsSupported(file) {
+    var type = String(file && file.type || "").toLowerCase();
+    var name = String(file && file.name || "").toLowerCase();
+    return /^image\/(?:jpeg|png|webp|heic|heif)$/.test(type) || /\.(?:jpe?g|png|webp|heic|heif)$/.test(name);
+  }
+
+  function orderMediaConfigForStep(step, key, kind) {
+    var direct = step && step.upload ? step.upload : null;
+    var attachments = step && step.mediaAttachments ? step.mediaAttachments : {};
+    var candidate = kind === "audio" ? attachments.audio : attachments.photos;
+    if (direct && (direct.selectionKey || "quadro_uploads") === key) {
+      return direct;
+    }
+    return candidate || {};
+  }
+
+  function loadOrderPhotoImage(file) {
+    return new Promise(function (resolve, reject) {
+      var image = new Image();
+      var url = URL.createObjectURL(file);
+      image.onload = function () {
+        resolve({ image: image, url: url, width: image.naturalWidth, height: image.naturalHeight });
+      };
+      image.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error("decode"));
+      };
+      image.src = url;
+    });
+  }
+
+  function orderCanvasBlob(canvas, quality) {
+    return new Promise(function (resolve, reject) {
+      canvas.toBlob(function (blob) {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error("encode"));
+        }
+      }, "image/webp", quality);
+    });
+  }
+
+  function compressOrderPhotoCanvas(canvas, targetBytes) {
+    var qualities = [0.78, 0.62, 0.48];
+
+    function tryQuality(index) {
+      return orderCanvasBlob(canvas, qualities[index]).then(function (blob) {
+        if (blob.size <= targetBytes) {
+          return { blob: blob, width: canvas.width, height: canvas.height };
+        }
+        if (index < qualities.length - 1) {
+          return tryQuality(index + 1);
+        }
+
+        var width = Math.max(1, Math.round(canvas.width * 0.75));
+        var height = Math.max(1, Math.round(canvas.height * 0.75));
+        if (Math.max(width, height) < 900) {
+          throw new Error("encode");
+        }
+        var smaller = document.createElement("canvas");
+        var smallerContext;
+        smaller.width = width;
+        smaller.height = height;
+        smallerContext = smaller.getContext("2d", { alpha: false });
+        smallerContext.fillStyle = "#ffffff";
+        smallerContext.fillRect(0, 0, width, height);
+        smallerContext.drawImage(canvas, 0, 0, width, height);
+        canvas.width = 1;
+        canvas.height = 1;
+        canvas = smaller;
+        return tryQuality(0);
+      });
+    }
+
+    return tryQuality(0);
+  }
+
+  function prepareOrderPhoto(file) {
+    var targetBytes = Math.floor(1.5 * 1024 * 1024);
+    var maxDimension = 3200;
+
+    return loadOrderPhotoImage(file).then(function (loaded) {
+      var longest = Math.max(loaded.width, loaded.height);
+      if (file.size <= targetBytes && longest <= 4096) {
+        URL.revokeObjectURL(loaded.url);
+        return { file: file, width: loaded.width, height: loaded.height };
+      }
+
+      var scale = Math.min(1, maxDimension / Math.max(1, longest));
+      var width = Math.max(1, Math.round(loaded.width * scale));
+      var height = Math.max(1, Math.round(loaded.height * scale));
+      var canvas = document.createElement("canvas");
+      var context;
+      var stem = String(file.name || "foto").replace(/\.[^.]+$/, "");
+
+      canvas.width = width;
+      canvas.height = height;
+      context = canvas.getContext("2d", { alpha: false });
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, width, height);
+      context.drawImage(loaded.image, 0, 0, width, height);
+      URL.revokeObjectURL(loaded.url);
+
+      return compressOrderPhotoCanvas(canvas, targetBytes).then(function (result) {
+        var prepared = new File([result.blob], stem + "-web.webp", { type: "image/webp", lastModified: Date.now() });
+        return { file: prepared, width: result.width, height: result.height };
+      });
+    }).catch(function () {
+      if (file.size <= targetBytes) {
+        return { file: file, width: 0, height: 0 };
+      }
+      throw new Error("Não foi possível preparar esta foto. Tenta escolhê-la novamente.");
+    });
+  }
+
+  function uploadOrderMediaFile(prepared, kind, operation) {
+    var formData = new FormData();
+    var file = prepared.file;
+    formData.append("media[]", file, file.name || (kind === "audio" ? "audio.webm" : "foto"));
+    formData.append("kind", kind);
+    if (prepared.width) {
+      formData.append("width", prepared.width);
+      formData.append("height", prepared.height);
+    }
+
+    return new Promise(function (resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      var startedAt = Date.now();
+      var settled = false;
+
+      function finish(callback, value) {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        if (operation && operation.xhr === xhr) {
+          operation.xhr = null;
+        }
+        callback(value);
+      }
+
+      xhr.open("POST", ORDER_UPLOAD_API, true);
+      xhr.withCredentials = true;
+      xhr.setRequestHeader("Accept", "application/json");
+      if (operation) {
+        operation.xhr = xhr;
+      }
+
+      xhr.upload.addEventListener("progress", function (event) {
+        if (!event.lengthComputable || !operation || !orderUploadOperationIsActive(operation)) {
+          return;
+        }
+        var elapsed = Math.max(0.25, (Date.now() - startedAt) / 1000);
+        var speed = event.loaded / elapsed;
+        state.orderUploadProgress = {
+          operationId: operation.id,
+          phase: "upload",
+          percent: event.total ? event.loaded / event.total * 100 : 0,
+          speed: speed,
+          eta: speed > 0 ? Math.max(0, event.total - event.loaded) / speed : 0,
+          fileIndex: operation.fileIndex || 1,
+          fileCount: operation.fileCount || 1
+        };
+        updateOrderUploadProgressDom();
+      });
+
+      xhr.addEventListener("load", function () {
+        var payload = {};
+        try {
+          payload = JSON.parse(xhr.responseText || "{}");
+        } catch (error) {}
+        if (xhr.status < 200 || xhr.status >= 300 || !payload.ok
+            || !Array.isArray(payload.uploads) || !payload.uploads[0]) {
+          finish(reject, new Error(payload.message || "Não foi possível enviar o ficheiro."));
+          return;
+        }
+        finish(resolve, payload.uploads[0]);
+      });
+      xhr.addEventListener("error", function () {
+        finish(reject, new Error("Não foi possível enviar o ficheiro."));
+      });
+      xhr.addEventListener("abort", function () {
+        finish(reject, orderUploadCanceledError());
+      });
+      xhr.send(formData);
+    });
+  }
+
+  function syncOrderUploadBusy() {
+    state.orderUploadBusy = orderUploadOperations.length > 0;
+  }
+
+  function orderUploadOperationIsActive(operation) {
+    return !!operation && !operation.finished && orderUploadOperations.indexOf(operation) !== -1;
+  }
+
+  function beginOrderUploadOperation(type, stepId) {
+    var operation = {
+      id: orderUploadNextOperationId,
+      type: type || "request",
+      stepId: String(stepId || ""),
+      controller: typeof window.AbortController === "function" ? new window.AbortController() : null,
+      xhr: null,
+      timeoutId: 0,
+      rejectPending: null,
+      canceled: false,
+      finished: false
+    };
+
+    orderUploadNextOperationId += 1;
+    orderUploadOperations.push(operation);
+    syncOrderUploadBusy();
+    return operation;
+  }
+
+  function endOrderUploadOperation(operation) {
+    if (!operation || operation.finished) {
+      return;
+    }
+
+    operation.finished = true;
+    if (operation.timeoutId) {
+      window.clearTimeout(operation.timeoutId);
+      operation.timeoutId = 0;
+    }
+    operation.rejectPending = null;
+    orderUploadOperations = orderUploadOperations.filter(function (candidate) {
+      return candidate !== operation;
+    });
+    syncOrderUploadBusy();
+    if (state.orderUploadProgress && state.orderUploadProgress.operationId === operation.id
+        && !orderUploadOperations.some(function (candidate) { return candidate.type === "upload"; })) {
+      state.orderUploadProgress = null;
+    }
+  }
+
+  function orderUploadCanceledError() {
+    var error = new Error("Operação cancelada.");
+    error.name = "AbortError";
+    return error;
+  }
+
+  function cancelOrderUploadOperation(operation) {
+    var rejectPending;
+
+    if (!orderUploadOperationIsActive(operation)) {
+      return;
+    }
+
+    operation.canceled = true;
+    rejectPending = operation.rejectPending;
+    if (operation.controller) {
+      try {
+        operation.controller.abort();
+      } catch (error) {}
+    }
+    if (operation.xhr) {
+      try {
+        operation.xhr.abort();
+      } catch (error) {}
+      operation.xhr = null;
+    }
+    if (rejectPending) {
+      rejectPending(orderUploadCanceledError());
+    }
+    endOrderUploadOperation(operation);
+  }
+
+  function cancelOrderUploadOperations(predicate) {
+    orderUploadOperations.slice().forEach(function (operation) {
+      if (!predicate || predicate(operation)) {
+        cancelOrderUploadOperation(operation);
+      }
+    });
+  }
+
+  function withOrderUploadTimeout(promise, operation, timeoutMs, message) {
+    if (!orderUploadOperationIsActive(operation)) {
+      return Promise.reject(orderUploadCanceledError());
+    }
+
+    return new Promise(function (resolve, reject) {
+      var settled = false;
+
+      function settle(callback, value) {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        if (operation.timeoutId) {
+          window.clearTimeout(operation.timeoutId);
+          operation.timeoutId = 0;
+        }
+        operation.rejectPending = null;
+        callback(value);
+      }
+
+      operation.rejectPending = function (error) {
+        settle(reject, error || orderUploadCanceledError());
+      };
+      operation.timeoutId = window.setTimeout(function () {
+        if (!orderUploadOperationIsActive(operation)) {
+          return;
+        }
+        if (operation.controller) {
+          try {
+            operation.controller.abort();
+          } catch (error) {}
+        }
+        if (operation.xhr) {
+          try {
+            operation.xhr.abort();
+          } catch (error) {}
+          operation.xhr = null;
+        }
+        settle(reject, new Error(message));
+      }, timeoutMs);
+
+      Promise.resolve(promise).then(function (value) {
+        settle(resolve, value);
+      }, function (error) {
+        settle(reject, error);
+      });
+    });
+  }
+
+  function beginOrderFilePickerSession(input, step) {
+    if (orderActiveFilePicker && orderActiveFilePicker.input && orderActiveFilePicker.input !== input) {
+      orderActiveFilePicker.input.value = "";
+    }
+
+    orderFilePickerRevision += 1;
+    if (input) {
+      input.value = "";
+    }
+    orderActiveFilePicker = {
+      input: input,
+      stepId: String(step && step.id || ""),
+      revision: orderFilePickerRevision
+    };
+    return orderActiveFilePicker;
+  }
+
+  function invalidateOrderFilePickerSession(input) {
+    orderFilePickerRevision += 1;
+    if (orderActiveFilePicker && orderActiveFilePicker.input) {
+      orderActiveFilePicker.input.value = "";
+    }
+    if (input && (!orderActiveFilePicker || orderActiveFilePicker.input !== input)) {
+      input.value = "";
+    }
+    orderActiveFilePicker = null;
+  }
+
+  function cancelOrderAudioActivity() {
+    var recorder = orderAudioRecorder;
+
+    orderAudioPointerHeld = false;
+    orderAudioPendingStart = false;
+    orderAudioContext = null;
+    state.orderAudioRecording = false;
+    orderAudioRecorder = null;
+    orderAudioChunks = [];
+    if (recorder && recorder.state !== "inactive") {
+      recorder.ondataavailable = null;
+      recorder.onstop = null;
+      try {
+        recorder.stop();
+      } catch (error) {}
+    }
+    stopOrderAudioTracks();
+  }
+
+  function cancelOrderMediaActivityForStep(step) {
+    var stepId = String(step && step.id || "");
+
+    invalidateOrderFilePickerSession();
+    cancelOrderUploadOperations(function (operation) {
+      return operation.type === "upload" && (!operation.stepId || !stepId || operation.stepId === stepId);
+    });
+    if (orderStepHasMediaControls(step)) {
+      cancelOrderAudioActivity();
+    }
+  }
+
+  function startOrderMediaUpload(product, config, files, kind, stepId) {
+    var key = config.selectionKey || (kind === "audio" ? "quadro_audio_uploads" : "quadro_uploads");
+    var maxFiles = orderUploadMaxFiles(config);
+    var existing = orderUploadItems(key);
+    var candidates = Array.prototype.slice.call(files || []).filter(function (file) {
+      return file && Number(file.size) > 0;
+    });
+    var remaining = isFinite(maxFiles) ? Math.max(0, maxFiles - (config.multiple === true ? existing.length : 0)) : candidates.length;
+    var selected = candidates.slice(0, remaining || (config.multiple === true ? 0 : 1));
+    var uploads = [];
+    var chain = Promise.resolve();
+    var operation;
+
+    if (!selected.length) {
+      return;
+    }
+    state.orderUploadError = "";
+    state.orderUploadMessage = "";
+    state.orderUploadFeedbackKind = kind;
+    if (kind === "photo" && selected.some(function (file) { return !orderPhotoFileIsSupported(file); })) {
+      state.orderUploadError = "Escolhe fotos JPG, PNG, WebP ou HEIC.";
+      rerenderProduct(product);
+      return;
+    }
+
+    operation = beginOrderUploadOperation("upload", stepId);
+    operation.fileCount = selected.length;
+    operation.fileIndex = 1;
+    state.orderUploadProgress = {
+      operationId: operation.id,
+      phase: "preparing",
+      percent: 0,
+      speed: 0,
+      eta: 0,
+      fileIndex: 1,
+      fileCount: selected.length
+    };
+    state.errors = "";
+    rerenderProduct(product);
+
+    selected.forEach(function (file, fileIndex) {
+      chain = chain.then(function () {
+        var preparation;
+        if (!orderUploadOperationIsActive(operation)) {
+          throw orderUploadCanceledError();
+        }
+        operation.fileIndex = fileIndex + 1;
+        state.orderUploadProgress = {
+          operationId: operation.id,
+          phase: "preparing",
+          percent: 0,
+          speed: 0,
+          eta: 0,
+          fileIndex: operation.fileIndex,
+          fileCount: operation.fileCount
+        };
+        updateOrderUploadProgressDom();
+        preparation = kind === "photo"
+          ? prepareOrderPhoto(file)
+          : Promise.resolve({ file: file, width: 0, height: 0 });
+        return withOrderUploadTimeout(
+          preparation,
+          operation,
+          45000,
+          "A preparação do ficheiro demorou demasiado. Tenta escolhê-lo novamente."
+        );
+      }).then(function (prepared) {
+        if (!orderUploadOperationIsActive(operation)) {
+          throw orderUploadCanceledError();
+        }
+        return withOrderUploadTimeout(
+          uploadOrderMediaFile(prepared, kind, operation),
+          operation,
+          90000,
+          "O envio demorou demasiado. Confirma a ligação e tenta novamente."
+        ).then(function (upload) {
+          if (!orderUploadOperationIsActive(operation)) {
+            throw orderUploadCanceledError();
+          }
+          uploads.push(upload);
+          orderUploadPreviews[upload.token] = URL.createObjectURL(prepared.file);
+        });
+      });
+    });
+
+    chain.then(function () {
+      if (!orderUploadOperationIsActive(operation)) {
+        throw orderUploadCanceledError();
+      }
+      state.selections[key] = config.multiple === true
+        ? existing.concat(uploads).slice(0, isFinite(maxFiles) ? maxFiles : existing.length + uploads.length)
+        : uploads.slice(0, 1);
+      if (config.helpKey) {
+        state.selections[config.helpKey] = false;
+      }
+      if (kind === "photo" && key === "quadro_uploads") {
+        resetQuadrosPhotoColorAnalysis();
+      }
+      state.invalidFields = state.invalidFields.filter(function (fieldName) { return fieldName !== key; });
+      if (kind === "audio") {
+        state.orderUploadMessage = uploads.length === 1 ? "Áudio enviado." : uploads.length + " áudios enviados.";
+      } else {
+        state.orderUploadMessage = uploads.length === 1 ? "Foto enviada." : uploads.length + " fotos enviadas.";
+      }
+    }).catch(function (error) {
+      uploads.forEach(function (upload) {
+        if (upload && orderUploadPreviews[upload.token]) {
+          URL.revokeObjectURL(orderUploadPreviews[upload.token]);
+          delete orderUploadPreviews[upload.token];
+        }
+      });
+      if (!orderUploadOperationIsActive(operation) || operation.canceled) {
+        return;
+      }
+      state.orderUploadError = error && error.message ? error.message : "Não foi possível enviar o ficheiro.";
+    }).then(function () {
+      var shouldRender = orderUploadOperationIsActive(operation);
+      endOrderUploadOperation(operation);
+      if (shouldRender && state.product === product) {
+        rerenderProduct(product);
+      }
+    });
+  }
+
+  function startOrderPhotoUpload(product, step, input, files) {
+    var key = input.dataset.orderUploadKey || "quadro_uploads";
+    var config = orderMediaConfigForStep(step, key, "photo");
+    startOrderMediaUpload(product, config, files || [], "photo", step && step.id);
+  }
+
+  function stopOrderAudioTracks() {
+    if (orderAudioStream) {
+      orderAudioStream.getTracks().forEach(function (track) { track.stop(); });
+    }
+    orderAudioStream = null;
+  }
+
+  function stopOrderAudioRecording() {
+    orderAudioPointerHeld = false;
+    if (orderAudioRecorder && orderAudioRecorder.state !== "inactive") {
+      orderAudioRecorder.stop();
+    }
+  }
+
+  function startOrderAudioRecording(product, step, button) {
+    var key = button.dataset.orderAudioKey || "quadro_audio_uploads";
+    var config = orderMediaConfigForStep(step, key, "audio");
+
+    if (state.orderUploadBusy || orderAudioPendingStart || state.orderAudioRecording) {
+      return;
+    }
+    orderAudioPointerHeld = true;
+    orderAudioPendingStart = true;
+    orderAudioContext = { product: product, config: config, stepId: String(step && step.id || "") };
+    state.orderUploadError = "";
+    state.orderUploadMessage = "";
+    state.orderUploadFeedbackKind = "audio";
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      var mimeTypes = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"];
+      var mimeType = mimeTypes.filter(function (type) {
+        return !MediaRecorder.isTypeSupported || MediaRecorder.isTypeSupported(type);
+      })[0] || "";
+
+      orderAudioPendingStart = false;
+      if (!orderAudioPointerHeld) {
+        stream.getTracks().forEach(function (track) { track.stop(); });
+        orderAudioContext = null;
+        state.orderUploadMessage = "Microfone pronto. Agora mantém o botão premido enquanto falas.";
+        state.orderUploadFeedbackKind = "audio";
+        rerenderProduct(product);
+        return;
+      }
+
+      orderAudioStream = stream;
+      orderAudioChunks = [];
+      orderAudioRecorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType }) : new MediaRecorder(stream);
+      orderAudioRecorder.ondataavailable = function (event) {
+        if (event.data && event.data.size) {
+          orderAudioChunks.push(event.data);
+        }
+      };
+      orderAudioRecorder.onstop = function () {
+        var recorderType = orderAudioRecorder && orderAudioRecorder.mimeType ? orderAudioRecorder.mimeType : "audio/webm";
+        var extension = recorderType.indexOf("mp4") !== -1 ? "m4a" : (recorderType.indexOf("ogg") !== -1 ? "ogg" : "webm");
+        var blob = new Blob(orderAudioChunks, { type: recorderType });
+        var file = new File([blob], "audio-" + Date.now() + "." + extension, { type: recorderType, lastModified: Date.now() });
+
+        state.orderAudioRecording = false;
+        orderAudioRecorder = null;
+        orderAudioChunks = [];
+        stopOrderAudioTracks();
+        if (blob.size && orderAudioContext) {
+          startOrderMediaUpload(orderAudioContext.product, orderAudioContext.config, [file], "audio", orderAudioContext.stepId);
+        } else if (orderAudioContext) {
+          rerenderProduct(orderAudioContext.product);
+        }
+      };
+      orderAudioRecorder.start(250);
+      state.orderAudioRecording = true;
+      button.classList.add("is-recording");
+      button.querySelector("strong").textContent = "A gravar…";
+      button.querySelector("small").textContent = "Solta para anexar";
+      button.setAttribute("aria-label", "A gravar. Solta para anexar");
+    }).catch(function () {
+      orderAudioPendingStart = false;
+      orderAudioPointerHeld = false;
+      stopOrderAudioTracks();
+      state.orderUploadError = "Não foi possível usar o microfone. Confirma a permissão e tenta novamente.";
+      rerenderProduct(product);
+    });
+  }
+
+  function removeOrderMediaUpload(product, key, token) {
+    var formData = new FormData();
+    var operation;
+    var requestOptions;
+    var request;
+    formData.append("action", "delete");
+    formData.append("token", token);
+    operation = beginOrderUploadOperation("delete", currentStep(product) && currentStep(product).id);
+    state.orderUploadError = "";
+    state.orderUploadMessage = "";
+    state.orderUploadFeedbackKind = key === "quadro_audio_uploads" ? "audio" : "photo";
+    rerenderProduct(product);
+
+    requestOptions = {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" },
+      body: formData
+    };
+    if (operation.controller) {
+      requestOptions.signal = operation.controller.signal;
+    }
+
+    request = fetch(ORDER_UPLOAD_API, requestOptions).then(function (response) {
+      return response.json().catch(function () { return {}; }).then(function (payload) {
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.message || "Não foi possível remover o ficheiro.");
+        }
+      });
+    });
+
+    withOrderUploadTimeout(request, operation, 45000, "A remoção demorou demasiado. Tenta novamente.").then(function () {
+      if (!orderUploadOperationIsActive(operation)) {
+        throw orderUploadCanceledError();
+      }
+      state.selections[key] = orderUploadItems(key).filter(function (item) { return item.token !== token; });
+      if (key === "quadro_uploads" && !state.selections[key].length) {
+        resetQuadrosPhotoColorAnalysis();
+      }
+      if (state.editingCartItemId) {
+        var cart = loadCart();
+        var cartItem = cart.items.filter(function (item) { return item.id === state.editingCartItemId; })[0];
+        if (cartItem && cartItem.selections) {
+          cartItem.selections[key] = Array.isArray(cartItem.selections[key])
+            ? cartItem.selections[key].filter(function (item) { return item && item.token !== token; })
+            : [];
+          saveCart(cart);
+        }
+        if (state.editingCartOriginalItem && state.editingCartOriginalItem.selections) {
+          state.editingCartOriginalItem.selections[key] = Array.isArray(state.editingCartOriginalItem.selections[key])
+            ? state.editingCartOriginalItem.selections[key].filter(function (item) { return item && item.token !== token; })
+            : [];
+        }
+      }
+      if (orderUploadPreviews[token]) {
+        URL.revokeObjectURL(orderUploadPreviews[token]);
+        delete orderUploadPreviews[token];
+      }
+    }).catch(function (error) {
+      if (!orderUploadOperationIsActive(operation) || operation.canceled) {
+        return;
+      }
+      state.orderUploadError = error && error.message ? error.message : "Não foi possível remover o ficheiro.";
+    }).then(function () {
+      var shouldRender = orderUploadOperationIsActive(operation);
+      endOrderUploadOperation(operation);
+      if (shouldRender && state.product === product) {
+        rerenderProduct(product);
+      }
+    });
+  }
+
+  // ---- Fluído da grelha de cores (FLIP) ----------------------------------
+  // Abrir/fechar os tons muda o número de quadrados, por isso a grelha reflui.
+  // Guardamos as posições antes do render e animamos cada quadrado da posição
+  // antiga para a nova: as vizinhas parecem ser empurradas em vez de saltar.
+  var quadrosFlipRects = null;
+  var QUADROS_FLIP_EASING = "cubic-bezier(.34,1.28,.44,1)";
+  // Entrada e saída dos círculos duram o mesmo — a saída parecia mais lenta.
+  var QUADROS_TONE_TRAVEL = 420;
+  var QUADROS_TONE_LEAD = 320;      // crescer + pausa, antes de recolher
+  var QUADROS_MARKER_DELAY = 50;    // respiro antes de a setinha arrancar
+  var quadrosMarkerShift = null;
+  var quadrosMarkerImmediate = false;
+
+  // Faz a setinha deslizar da posição antiga para a que já está no CSS.
+  function quadrosAnimateMarkerFrom(marker, from, shift, delay) {
+    // Mede a distância real entre centros. Nos degradês existe uma seta e um
+    // intervalo entre os quadrados, portanto já não coincide com a largura.
+    var slots = document.querySelectorAll("[data-quadros-color-slot]");
+    var first = slots[0] ? slots[0].getBoundingClientRect() : null;
+    var second = slots[1] ? slots[1].getBoundingClientRect() : null;
+    var pitch = first && second
+      ? (second.left + second.width / 2) - (first.left + first.width / 2)
+      : (first ? first.width : 0);
+
+    if (from === null || from === shift || !pitch || !marker.animate) {
+      return;
+    }
+    marker.animate(
+      [
+        { transform: "translateX(calc(-50% + " + ((from - shift) * pitch) + "px))" },
+        { transform: "translateX(-50%)" }
+      ],
+      {
+        duration: 180,
+        delay: delay || 0,
+        easing: "cubic-bezier(.3,0,.2,1)",
+        // Sem isto ficaria no destino durante o atraso e só depois recuava.
+        fill: "backwards"
+      }
+    );
+  }
+
+  // A setinha do quadrado activo desliza para o novo lugar em vez de saltar.
+  function quadrosSlideActiveMarker() {
+    var marker = document.querySelector(".quadros-active-marker");
+    var shift = marker ? parseFloat(marker.style.getPropertyValue("--marker-shift")) : null;
+    // Clique directo num quadrado da composição: arranca já, sem respiro.
+    var delay = quadrosMarkerImmediate ? 0 : QUADROS_MARKER_DELAY;
+    var from;
+
+    quadrosMarkerImmediate = false;
+    if (!marker || shift === null || isNaN(shift)) {
+      quadrosMarkerShift = null;
+      return;
+    }
+    from = quadrosMarkerShift;
+    quadrosMarkerShift = shift;
+    quadrosAnimateMarkerFrom(marker, from, shift, delay);
+  }
+
+  // Move a setinha já no clique, sem esperar pelo re-render — que só chega no
+  // fim da animação dos círculos.
+  function quadrosMoveActiveMarker(index, limit) {
+    var marker = document.querySelector(".quadros-active-marker");
+    var shift = index - (limit - 1) / 2;
+    var from = quadrosMarkerShift;
+
+    if (!marker || from === shift) {
+      return;
+    }
+    marker.style.setProperty("--marker-shift", shift);
+    quadrosMarkerShift = shift;
+    quadrosAnimateMarkerFrom(marker, from, shift, QUADROS_MARKER_DELAY);
+  }
+
+  // Os 3 círculos formam um triângulo centrado na célula que o quadrado
+  // clicado deixou livre: principal em cima, claro em baixo à esquerda, escuro
+  // em baixo à direita. Se o triângulo sair da grelha (colunas das pontas),
+  // desloca-se inteiro para dentro, mantendo a forma.
+  function quadrosPlaceToneStrip() {
+    var grid = document.querySelector("[data-quadros-color-grid]");
+    var strip = grid ? grid.querySelector("[data-quadros-tone-strip]") : null;
+    var expanded = grid ? grid.querySelector(".quadros-color-family.is-expanded") : null;
+    var size;
+    var pitch;
+    var cx;
+    var cy;
+    var halfW;
+    var halfH;
+    var shift = 0;
+    var gridRect;
+    var minX;
+    var maxX;
+    var place;
+
+    if (!grid || !strip || !expanded) {
+      return;
+    }
+    size = parseFloat(getComputedStyle(grid).getPropertyValue("--quadros-tone-size")) || 40;
+    pitch = size + Math.max(3, size * 0.1);       // distância entre centros
+    cx = expanded.offsetLeft + expanded.offsetWidth / 2;
+    cy = expanded.offsetTop + expanded.offsetHeight / 2;
+    halfW = pitch / 2;
+    halfH = pitch * 0.433;                        // metade da altura equilátera
+
+    // O triângulo fica centrado no quadrado clicado, mesmo nas colunas das
+    // pontas — nesses casos entra pela margem da página, encostando ao canto.
+    // Só se desloca se ameaçar sair do ecrã.
+    gridRect = grid.getBoundingClientRect();
+    minX = -Math.max(0, gridRect.left - 6);
+    maxX = grid.clientWidth + Math.max(0, window.innerWidth - gridRect.right - 6);
+    if (cx - halfW - size / 2 < minX) {
+      shift = minX - (cx - halfW - size / 2);
+    } else if (cx + halfW + size / 2 > maxX) {
+      shift = maxX - (cx + halfW + size / 2);
+    }
+
+    place = function (name, dx, dy) {
+      strip.style.setProperty("--quadros-tone-" + name + "-x", (cx + shift + dx - size / 2) + "px");
+      strip.style.setProperty("--quadros-tone-" + name + "-y", (cy + dy - size / 2) + "px");
+    };
+
+    strip.style.setProperty("--quadros-tone-origin-x", (cx + shift) + "px");
+    strip.style.setProperty("--quadros-tone-origin-y", cy + "px");
+    place("top", 0, -halfH);
+    place("left", -halfW, halfH);
+    place("right", halfW, halfH);
+  }
+
+  // Percurso em espiral entre o centro do quadrado clicado e o vértice final do
+  // círculo: o raio abre enquanto o ângulo roda, por isso o círculo descreve
+  // uma curva em vez de uma linha recta. (dx0, dy0) é a translação no ponto de
+  // partida, ou seja o centro do quadrado visto a partir do lugar final.
+  var QUADROS_TONE_SWIRL = 150;      // graus de rotação ao longo do percurso
+  var QUADROS_TONE_STEPS = 12;
+
+  function quadrosSpiralFrames(dx0, dy0) {
+    var radius = Math.hypot(dx0, dy0);
+    var endAngle = Math.atan2(-dy0, -dx0);
+    var swirl = QUADROS_TONE_SWIRL * Math.PI / 180;
+    var frames = [];
+    var i;
+    var t;
+    var angle;
+
+    for (i = 0; i <= QUADROS_TONE_STEPS; i++) {
+      t = i / QUADROS_TONE_STEPS;
+      angle = endAngle - swirl * (1 - t);
+      frames.push({
+        transform: "translate("
+          + (dx0 + t * radius * Math.cos(angle)).toFixed(2) + "px,"
+          + (dy0 + t * radius * Math.sin(angle)).toFixed(2) + "px) rotate("
+          + (-QUADROS_TONE_SWIRL * (1 - t)).toFixed(1) + "deg) scale("
+          + (0.18 + 0.82 * t).toFixed(3) + ")",
+        opacity: Math.min(1, t * 4)
+      });
+    }
+    return frames;
+  }
+
+  function quadrosToneOriginDelta(element, expanded) {
+    var from = expanded.getBoundingClientRect();
+    var to = element.getBoundingClientRect();
+
+    return [
+      (from.left + from.width / 2) - (to.left + to.width / 2),
+      (from.top + from.height / 2) - (to.top + to.height / 2)
+    ];
+  }
+
+  // Fecho: os círculos recolhem-se em espiral para dentro do quadrado, que
+  // reaparece. O que foi clicado dá primeiro um salto, como confirmação.
+  var quadrosToneClosing = false;
+  var quadrosToneSettle = null;
+
+  // Se o utilizador clicar noutra cor a meio da recolha, o clique dele ganha:
+  // liquidamos o fecho sem re-render (quem chamou vai renderizar a seguir).
+  function quadrosSettleToneClose() {
+    if (quadrosToneSettle) {
+      quadrosToneSettle(true);
+    }
+  }
+
+  function quadrosDismissToneStrip(product, clicked) {
+    var grid = document.querySelector("[data-quadros-color-grid]");
+    var strip = grid ? grid.querySelector("[data-quadros-tone-strip]") : null;
+    var expanded = grid ? grid.querySelector(".quadros-color-family.is-expanded") : null;
+    var pending = 0;
+    var settled = false;
+    var done;
+
+    done = function (skipRender) {
+      var activeStep;
+      var activeUi;
+      if (settled) {
+        return;
+      }
+      settled = true;
+      quadrosToneClosing = false;
+      quadrosToneSettle = null;
+      state.quadroToneEdit = null;
+      activeStep = currentStep(product);
+      if (activeStep && activeStep.tonePicker === true) {
+        activeUi = quadrosColorUiFor(activeStep, paletteSelectionLimit(activeStep));
+        activeUi.toneEdit = null;
+      }
+      if (skipRender !== true) {
+        rerenderProduct(product);
+      }
+    };
+
+    if (quadrosToneClosing) {
+      return;
+    }
+    if (!strip || !expanded || !document.body.animate) {
+      done();
+      return;
+    }
+    quadrosToneClosing = true;
+    quadrosToneSettle = done;
+    strip.style.pointerEvents = "none";
+
+    // O quadrado reaparece atrás dos círculos, ao mesmo tempo que eles recolhem
+    // e ao mesmo ritmo — o inverso exacto da entrada.
+    expanded.animate(
+      [
+        { transform: "scale(.45) rotate(-40deg)", opacity: 0 },
+        { transform: "scale(1) rotate(0deg)", opacity: 1 }
+      ],
+      {
+        duration: QUADROS_TONE_TRAVEL,
+        delay: QUADROS_TONE_LEAD,
+        easing: QUADROS_FLIP_EASING,
+        fill: "both"
+      }
+    );
+
+    Array.prototype.forEach.call(strip.children, function (circle) {
+      var delta = quadrosToneOriginDelta(circle, expanded);
+      var frames = quadrosSpiralFrames(delta[0], delta[1]).reverse();
+      var isClicked = circle === clicked;
+      var animation;
+      var total;
+
+      if (isClicked) {
+        // Cresce, e fica um instante parado no tamanho grande — é essa pausa
+        // que faz ler qual foi o círculo escolhido — antes de recolher. Só a
+        // parte da recolha conta para o tempo de viagem.
+        total = QUADROS_TONE_LEAD + QUADROS_TONE_TRAVEL;
+        frames = [
+          { transform: "translate(0,0) rotate(0deg) scale(1)", opacity: 1, offset: 0 },
+          { transform: "translate(0,0) rotate(0deg) scale(1.26)", opacity: 1, offset: 130 / total },
+          { transform: "translate(0,0) rotate(0deg) scale(1.26)", opacity: 1, offset: QUADROS_TONE_LEAD / total }
+        ].concat(frames.slice(1).map(function (frame, index, list) {
+          frame.offset = (QUADROS_TONE_LEAD + (QUADROS_TONE_TRAVEL * (index + 1)) / list.length) / total;
+          return frame;
+        }));
+      }
+      pending += 1;
+      animation = circle.animate(frames, {
+        duration: isClicked ? QUADROS_TONE_LEAD + QUADROS_TONE_TRAVEL : QUADROS_TONE_TRAVEL,
+        // Os que não foram escolhidos esperam pela pausa antes de sair.
+        delay: isClicked ? 0 : QUADROS_TONE_LEAD,
+        easing: isClicked ? "cubic-bezier(.4,0,.3,1)" : QUADROS_FLIP_EASING,
+        fill: "forwards"
+      });
+      animation.addEventListener("finish", function () {
+        pending -= 1;
+        if (pending === 0) { done(); }
+      });
+    });
+
+    if (!pending) {
+      done();
+      return;
+    }
+    // Rede de segurança: se a timeline não correr (separador em segundo plano),
+    // o "finish" nunca dispara e a grelha ficaria presa no estado aberto.
+    // Tem de ser maior que a animação mais longa para não a cortar.
+    window.setTimeout(done, QUADROS_TONE_LEAD + QUADROS_TONE_TRAVEL + 260);
+  }
+
+  function quadrosCaptureGridRects(origin) {
+    var grid = document.querySelector("[data-quadros-color-grid]");
+    var rects = {};
+
+    // Corre mesmo com prefers-reduced-motion: sem o movimento os quadrados
+    // saltam de sítio e não se percebe o que aconteceu à grelha.
+    if (!grid || !document.body.animate) {
+      quadrosFlipRects = null;
+      return;
+    }
+    grid.querySelectorAll("[data-flip-key]").forEach(function (element) {
+      rects[element.dataset.flipKey] = element.getBoundingClientRect();
+    });
+    quadrosFlipRects = { rects: rects, origin: origin || "" };
+  }
+
+  function quadrosPlayGridFlip() {
+    var captured = quadrosFlipRects;
+    var grid = document.querySelector("[data-quadros-color-grid]");
+    var originRect;
+
+    quadrosFlipRects = null;
+    if (!captured || !grid) {
+      return;
+    }
+    originRect = captured.rects["fam:" + captured.origin];
+
+    grid.querySelectorAll("[data-flip-key]").forEach(function (element) {
+      var key = element.dataset.flipKey;
+      var from = captured.rects[key] || originRect;
+      var to = element.getBoundingClientRect();
+      var dx;
+      var dy;
+      var isNew = !captured.rects[key];
+      var scale;
+
+      if (!from || !to.width) {
+        return;
+      }
+      if (isNew) {
+        // Os círculos brotam do centro do quadrado clicado e abrem em espiral
+        // até ao seu vértice do triângulo.
+        dx = (from.left + from.width / 2) - (to.left + to.width / 2);
+        dy = (from.top + from.height / 2) - (to.top + to.height / 2);
+        element.animate(quadrosSpiralFrames(dx, dy), {
+          duration: QUADROS_TONE_TRAVEL,
+          easing: QUADROS_FLIP_EASING
+        });
+        return;
+      }
+      dx = from.left - to.left;
+      dy = from.top - to.top;
+      scale = 1;
+      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+        return;
+      }
+      element.animate(
+        [
+          { transform: "translate(" + dx + "px," + dy + "px) scale(" + scale + ")" },
+          { transform: "translate(0,0) scale(1)" }
+        ],
+        {
+          duration: 420,
+          easing: QUADROS_FLIP_EASING,
+          // Escalona pela distância: as mais próximas da cor clicada arrancam
+          // primeiro, o que dá a leitura de empurrão a propagar-se.
+          delay: Math.min(90, Math.round(Math.hypot(dx, dy) / 14)),
+          fill: "backwards"
+        }
+      );
+    });
+  }
+
+
+
+  // O certo salta a aparecer no quadrado que passou a ter cor, e salta a
+  // desvanecer no que a perdeu. Guardamos as cores marcadas do render anterior
+  // para saber quais mudaram.
+  var quadrosCheckedValues = null;
+
+  function quadrosAnimateChecks() {
+    var grid = document.querySelector("[data-quadros-color-grid]");
+    var previous = quadrosCheckedValues;
+    var current = [];
+    var squares;
+
+    if (!grid) {
+      quadrosCheckedValues = null;
+      return;
+    }
+    squares = Array.prototype.slice.call(grid.querySelectorAll("[data-quadros-color-family]"));
+    squares.forEach(function (square) {
+      if (square.querySelector(".quadros-check")) {
+        current.push(square.dataset.quadrosColorFamily);
+      }
+    });
+    quadrosCheckedValues = current;
+    if (!previous || !grid.animate) {
+      return;
+    }
+
+    // Entra: salta e aparece.
+    current.forEach(function (value) {
+      var check;
+      if (previous.indexOf(value) !== -1) {
+        return;
+      }
+      check = grid.querySelector('[data-quadros-color-family="' + value.replace(/"/g, '\\"') + '"] .quadros-check');
+      if (check) {
+        check.animate(
+          [
+            { transform: "scale(.2)", opacity: 0 },
+            { transform: "scale(1.3)", opacity: 1, offset: 0.6 },
+            { transform: "scale(1)", opacity: 1 }
+          ],
+          { duration: 200, easing: "cubic-bezier(.3,0,.2,1)" }
+        );
+      }
+    });
+
+    // A sair não há animação: fazer o certo reaparecer só para o desvanecer
+    // dava mais nas vistas do que simplesmente deixá-lo ir.
+  }
+
+  // Ligado uma única vez: o bindProduct corre a cada render e duplicaria
+  // listeners no document.
+  var quadrosColorPanelDismissBound = false;
+
+  function bindQuadrosColorPanelDismiss() {
+    if (quadrosColorPanelDismissBound) {
+      return;
+    }
+    quadrosColorPanelDismissBound = true;
+
+    var close = function () {
+      if (!state.quadroToneEdit || !state.product) {
+        return;
+      }
+      quadrosDismissToneStrip(state.product, null);
+    };
+
+    document.addEventListener("click", function (event) {
+      var target = event.target;
+      if (target && target.closest && target.closest("[data-quadros-color-grid], [data-quadros-color-slot]")) {
+        return;
+      }
+      close();
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        close();
+      }
+    });
   }
 
   function bindProduct(product) {
@@ -9081,6 +14444,337 @@
     var back = document.querySelector("[data-back]");
     var next = document.querySelector("[data-next]");
     var step = currentStep(product);
+
+    bindQuadrosColorPanelDismiss();
+    // Sincronamente, antes de o browser pintar: o MutationObserver do MiaWater
+    // só corre no rAF seguinte, o que deixava um frame com as canvases em
+    // branco — era o pisca-pisca dos quadrados a cada re-render.
+    miaWaterScan();
+    quadrosPlaceToneStrip();   // antes do FLIP: as posições finais têm de ser estas
+    quadrosPlayGridFlip();
+    quadrosSlideActiveMarker();
+    quadrosAnimateChecks();
+
+    document.querySelectorAll("[data-quadros-color-slot]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var limit = paletteSelectionLimit(step);
+        var slot = Math.max(0, Math.min(limit - 1, Number(button.dataset.quadrosColorSlot) || 0));
+        var ui = quadrosColorUiFor(step, limit);
+
+        quadrosSettleToneClose();
+        quadrosCaptureGridRects(state.quadroToneEdit ? state.quadroToneEdit.value : "");
+        if (ui.pinnedSlot !== slot) {
+          ui.pinnedChangeCount = 0;
+          ui.hintSlot = null;
+        }
+        ui.activeSlot = slot;
+        ui.pinnedSlot = slot;
+        ui.toneEdit = null;
+        state.quadroActiveColorSlot = slot;
+        state.quadroToneEdit = null;
+        state.errors = "";
+        // Clique directo no quadrado: a setinha acompanha sem atraso nenhum.
+        quadrosMarkerImmediate = true;
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-quadros-color-family]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var limit = paletteSelectionLimit(step);
+        var ui = quadrosColorUiFor(step, limit);
+        var slot = quadrosActiveColorSlot(step, limit);
+        var value = button.dataset.quadrosColorFamily;
+
+        quadrosSettleToneClose();
+        quadrosCaptureGridRects(value);
+        // Clicar numa cor só abre os três tons — nada fica escolhido até se
+        // clicar num círculo. A família pode repetir-se; só a combinação exacta
+        // de cor + tom é única, e essa verificação é feita ao escolher o tom.
+        ui.toneEdit = { value: value, slot: slot };
+        state.quadroToneEdit = ui.toneEdit;
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-quadros-tone]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var limit = paletteSelectionLimit(step);
+        var keys = quadrosColorSelectionKeys(step);
+        var ui = quadrosColorUiFor(step, limit);
+        var requestedSlot = Math.max(0, Math.min(limit - 1, Number(button.dataset.quadrosToneSlot) || 0));
+        var slot = ui.pinnedSlot !== null ? ui.pinnedSlot : requestedSlot;
+        var tone = Math.max(0, Math.min(2, Number(button.dataset.quadrosTone) || 0));
+        var slots = currentPaletteColorSlots(step, limit);
+        var tones = quadrosToneSelections(step, limit);
+        var value = button.dataset.quadrosToneValue;
+        var existingSlot = slots.findIndex(function (slotValue, index) {
+          return slotValue === value && tones[index] === tone;
+        });
+        var wasChosen = existingSlot !== -1;
+        var sameTarget = wasChosen && existingSlot === slot;
+        var newColor = quadrosColorStops(quadrosColorItem(step, value))[tone];
+        var nextEmpty;
+
+        if (sameTarget) {
+          // Voltar a tocar no tom que já ocupa o próprio quadrado continua a
+          // funcionar como alternância: o quadrado fica vazio, mas permanece
+          // fixado quando foi escolhido expressamente.
+          slots[existingSlot] = "";
+          tones[existingSlot] = 1;
+          ui.activeSlot = existingSlot;
+          if (slots.indexOf(value) === -1) {
+            quadrosUnmarkFamilySquare(step, value);
+          }
+          quadrosPrimeSlotWater(step, existingSlot, "");
+        } else if (wasChosen && ui.pinnedSlot !== null) {
+          // Com um quadrado fixado, o tom é transferido para esse alvo: sai do
+          // quadrado antigo, substitui o que estiver no alvo e o triângulo não
+          // muda de lugar.
+          slots[existingSlot] = "";
+          tones[existingSlot] = 1;
+          slots[slot] = value;
+          tones[slot] = tone;
+          ui.activeSlot = slot;
+          quadrosPrimeSlotWater(step, existingSlot, "");
+          quadrosPrimeSlotWater(step, slot, newColor);
+        } else if (wasChosen) {
+          // Sem fixação explícita mantém-se o comportamento habitual: retirar
+          // o tom duplicado e levar o foco para o quadrado que ficou vazio.
+          slots[existingSlot] = "";
+          tones[existingSlot] = 1;
+          ui.activeSlot = existingSlot;
+          if (slots.indexOf(value) === -1) {
+            quadrosUnmarkFamilySquare(step, value);
+          }
+          quadrosPrimeSlotWater(step, existingSlot, "");
+        } else {
+          slots[slot] = value;
+          tones[slot] = tone;
+          state.selections[keys.mia] = false;
+          // O activo salta para o quadrado seguinte por preencher, para a cor
+          // seguinte não substituir esta. Um clique explícito fixa a posição.
+          nextEmpty = slots.indexOf("");
+          ui.activeSlot = ui.pinnedSlot !== null ? ui.pinnedSlot : (nextEmpty !== -1 ? nextEmpty : slot);
+          quadrosPrimeSlotWater(step, slot, newColor);
+        }
+
+        if (ui.pinnedSlot !== null) {
+          ui.pinnedChangeCount += 1;
+          if (ui.pinnedChangeCount % 3 === 0) {
+            ui.hintSlot = quadrosNextEmptySlot(slots, ui.pinnedSlot);
+          } else if (ui.hintSlot !== null && slots[ui.hintSlot]) {
+            ui.hintSlot = null;
+          }
+        } else {
+          ui.pinnedChangeCount = 0;
+          ui.hintSlot = null;
+        }
+        ui.slots = slots.slice();
+        ui.toneEdit = null;
+        state.quadroActiveColorSlot = ui.activeSlot;
+        state.quadroToneEdit = null;
+        // A água e a setinha arrancam no instante do clique — o re-render só
+        // chega no fim da animação dos círculos.
+        quadrosMoveActiveMarker(ui.activeSlot, limit);
+        state.selections[keys.palette] = "";
+        state.selections[keys.colors] = slots.filter(Boolean);
+        state.selections[keys.tones] = tones;
+        state.paletteColorSlots = slots.slice();
+        state.paletteLastSlot = slot;
+        state.errors = "";
+        // O re-render vem no fim da animação de recolha (o círculo clicado dá
+        // um salto e os três voltam para dentro do quadrado).
+        quadrosDismissToneStrip(product, button);
+      });
+    });
+
+    document.querySelectorAll("[data-quadros-suggestions-toggle]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.quadroColorSuggestionsOpen = !state.quadroColorSuggestionsOpen;
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-quadros-palette-index]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var limit = paletteSelectionLimit(step);
+        var index = Math.max(0, Number(button.dataset.quadrosPaletteIndex) || 0);
+        var records = quadrosSuggestedPaletteRecords(step, limit, quadrosColorModeInfo(step).mode);
+
+        if (applyQuadrosSuggestedPalette(step, records[index])) {
+          state.errors = "";
+          rerenderProduct(product);
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-palette-suggestions-toggle]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.colorSuggestionsOpen = !state.colorSuggestionsOpen;
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-palette-choice]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        var selectedItem = (step.items || []).filter(function (item) {
+          return item && item.value === input.value;
+        })[0] || null;
+        var selectionLimit = paletteSelectionLimit(step);
+        var individualValues = paletteIndividualValues(step, selectedItem, selectionLimit);
+
+        state.selections.color_palette = input.value;
+        state.selections.colors = individualValues.slice();
+        state.selections.mia_choose_colors = false;
+        state.paletteColorSlots = individualValues.concat(Array.from({ length: Math.max(0, selectionLimit - individualValues.length) }, function () { return ""; }));
+        state.paletteLastSlot = Math.max(0, individualValues.length - 1);   // próximo clique substitui o último
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-individual-color]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        var selectionLimit = paletteSelectionLimit(step);
+        var slots = currentPaletteColorSlots(step, selectionLimit);
+        var slotIndex = slots.indexOf(input.value);
+        var lastSlot = (typeof state.paletteLastSlot === "number") ? state.paletteLastSlot : -1;
+        var emptyIndex, replaceIndex;
+        state.selections.color_palette = "";
+        state.selections.mia_choose_colors = false;
+        if (input.checked && slotIndex === -1) {
+          emptyIndex = slots.indexOf("");
+          if (emptyIndex !== -1) {
+            slots[emptyIndex] = input.value;          // ainda há espaço -> preenche
+            lastSlot = emptyIndex;
+          } else {
+            // já está cheio -> substitui o último quadrado que foi mexido
+            // (com 1 cor é sempre o único; com 3 é o mais recente)
+            replaceIndex = (lastSlot >= 0 && lastSlot < slots.length) ? lastSlot : slots.length - 1;
+            slots[replaceIndex] = input.value;
+            lastSlot = replaceIndex;
+          }
+        } else if (!input.checked && slotIndex !== -1) {
+          slots[slotIndex] = "";                        // desmarca -> esvazia esse
+          lastSlot = slotIndex;
+        } else if (input.checked && slotIndex !== -1) {
+          lastSlot = slotIndex;                          // re-clique -> passa a ser o último mexido
+        }
+        state.paletteLastSlot = lastSlot;
+        state.paletteColorSlots = slots;
+        state.selections.colors = slots.filter(Boolean);
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-mia-color-choice]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        var keys = quadrosColorSelectionKeys(step);
+        var limit = paletteSelectionLimit(step);
+        var ui = quadrosColorUiFor(step, limit);
+        state.selections[keys.mia] = input.checked;
+        if (input.checked) {
+          state.selections[keys.palette] = "";
+          state.selections[keys.colors] = [];
+          delete state.selections[keys.tones];
+          ui.slots = Array.from({ length: limit }, function () { return ""; });
+          ui.activeSlot = 0;
+          ui.pinnedSlot = null;
+          ui.pinnedChangeCount = 0;
+          ui.hintSlot = null;
+          ui.toneEdit = null;
+          state.paletteColorSlots = ui.slots.slice();
+          state.paletteLastSlot = -1;
+          state.quadroActiveColorSlot = 0;
+          state.quadroToneEdit = null;
+        }
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-order-upload]").forEach(function (input) {
+      input.addEventListener("click", function () {
+        beginOrderFilePickerSession(input, step);
+      });
+      input.addEventListener("cancel", function () {
+        invalidateOrderFilePickerSession(input);
+      });
+      input.addEventListener("change", function () {
+        var picker = orderActiveFilePicker;
+        var files = Array.prototype.slice.call(input.files || []).filter(function (file) {
+          return file && Number(file.size) > 0;
+        });
+        var revision;
+
+        if (!picker || picker.input !== input) {
+          input.value = "";
+          return;
+        }
+
+        revision = picker.revision;
+        orderActiveFilePicker = null;
+        input.value = "";
+        window.setTimeout(function () {
+          var activeStep = currentStep(product);
+          input.value = "";
+          if (
+            revision !== orderFilePickerRevision ||
+            !document.documentElement.contains(input) ||
+            !activeStep ||
+            activeStep.id !== step.id
+          ) {
+            return;
+          }
+
+          orderFilePickerRevision += 1;
+          if (files.length > 0) {
+            startOrderPhotoUpload(product, step, input, files);
+          }
+        }, 0);
+      });
+    });
+
+    document.querySelectorAll("[data-order-upload-remove]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var key = button.dataset.orderUploadKey || "quadro_uploads";
+        var token = button.dataset.orderUploadRemove;
+        removeOrderMediaUpload(product, key, token);
+      });
+    });
+
+    document.querySelectorAll("[data-order-audio-record]").forEach(function (button) {
+      var release = function () {
+        window.removeEventListener("pointerup", release);
+        window.removeEventListener("pointercancel", release);
+        stopOrderAudioRecording();
+      };
+      button.addEventListener("pointerdown", function (event) {
+        event.preventDefault();
+        startOrderAudioRecording(product, step, button);
+        window.addEventListener("pointerup", release, { once: true });
+        window.addEventListener("pointercancel", release, { once: true });
+      });
+      button.addEventListener("contextmenu", function (event) {
+        event.preventDefault();
+      });
+    });
+
+    document.querySelectorAll("[data-photo-help-key]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        state.selections[input.dataset.photoHelpKey] = input.checked;
+        if (input.checked) {
+          resetQuadrosPhotoColorAnalysis();
+        }
+        state.errors = "";
+        state.orderUploadError = "";
+        state.orderUploadFeedbackKind = "photo";
+        rerenderProduct(product);
+      });
+    });
 
     document.querySelectorAll("[data-select-all-designs]").forEach(function (button) {
       button.addEventListener("click", function () {
@@ -9153,6 +14847,11 @@
         }
         state.errors = "";
         state.packDisabledMessage = "";
+        if (step && step.autoAdvance === true && step.selection === "single" && input.checked) {
+          funnelNextTransitionReason = "option_auto_advance";
+          goNext(product);
+          return;
+        }
         rerenderProduct(product);
       });
     });
@@ -9210,6 +14909,35 @@
       });
     });
 
+    document.querySelectorAll("[data-free-quantity-change]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var current = getPackQuantity(product) || minimumFreeQuantity(product);
+        setFreeQuantity(product, current + Number(button.dataset.freeQuantityChange || 0));
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-free-quantity-input]").forEach(function (input) {
+      input.addEventListener("input", function () {
+        var quantity = Number(input.value);
+        var minimum = minimumFreeQuantity(product);
+        var maximum = maximumFreeQuantity(product);
+
+        state.selections.pack_quantity = Number.isInteger(quantity) && quantity >= minimum && quantity <= maximum
+          ? quantity
+          : 0;
+        state.quantitySignature = "";
+        state.quantitiesTouched = false;
+        state.quantityPackBaseline = 0;
+        state.errors = "";
+        refreshFreeQuantityDraft(product, input);
+      });
+      input.addEventListener("change", function () {
+        input.value = setFreeQuantity(product, input.value);
+        refreshFreeQuantityDraft(product, input);
+      });
+    });
+
     document.querySelectorAll("[data-quantity-plus]").forEach(function (button) {
       button.addEventListener("click", function () {
         var value = button.dataset.quantityPlus;
@@ -9251,10 +14979,30 @@
 
     document.querySelectorAll("[data-detail-field]").forEach(function (input) {
       input.addEventListener("input", function () {
+        var characterCount = document.querySelector('[data-character-count-for="' + input.name + '"]');
         state.selections[input.name] = input.value;
+        if (characterCount && input.maxLength > 0) {
+          characterCount.textContent = input.value.length + " / " + input.maxLength;
+        }
+        if (input.name === "quadro_text" && String(input.value || "").trim()) {
+          state.selections.no_phrase = false;
+          var noPhraseInput = document.querySelector('[data-details-skip-key="no_phrase"]');
+          if (noPhraseInput) {
+            noPhraseInput.checked = false;
+          }
+        }
+        if (step && step.skipOption && step.skipOption.selectionKey && String(input.value || "").trim()) {
+          var detailsSkipKey = String(step.skipOption.selectionKey);
+          state.selections[detailsSkipKey] = false;
+          var detailsSkipInput = document.querySelector('[data-details-skip-key="' + detailsSkipKey.replace(/"/g, '\\"') + '"]');
+          if (detailsSkipInput) {
+            detailsSkipInput.checked = false;
+          }
+        }
         if (step && step.template === "details-form") {
           saveCardDetailsSessionField(input.name, input.value);
         }
+        refreshQuadrosBuildSummary(product);
         if (input.name === "customer_contact" && state.selections.send_copy && !state.selections.copy_email && isValidEmail(input.value)) {
           state.selections.copy_email = String(input.value).trim();
         }
@@ -9264,6 +15012,17 @@
           state.invalidFields = state.invalidFields.filter(function (name) {
             return name !== input.name;
           });
+          if (!state.invalidFields.length) {
+            state.errors = "";
+            var actionError = document.querySelector(".wizard-shell .action-error");
+            var nextButton = document.querySelector(".wizard-shell [data-next]");
+            if (actionError) {
+              actionError.remove();
+            }
+            if (nextButton) {
+              nextButton.removeAttribute("aria-describedby");
+            }
+          }
         }
         // FUNNEL_TRACKING_V1: contact_started uma única vez por sessão,
         // disparado quando o utilizador começa a escrever em qualquer
@@ -9336,6 +15095,40 @@
     document.querySelectorAll("[data-example-toggle]").forEach(function (button) {
       button.addEventListener("click", function () {
         state.selections.show_details_example = !(state.selections.show_details_example !== false);
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-details-skip-key]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        var skipKey = input.dataset.detailsSkipKey;
+        var knownClearFields = {
+          no_phrase: "quadro_text",
+          no_dedication: "quadro_dedication",
+          no_text: "quadro_text",
+          no_silhouette_text: "quadro_silhouette_text",
+          silhouette_contact_me: "quadro_silhouette_description"
+        };
+        var clearField = step && step.skipOption && step.skipOption.clearField
+          ? String(step.skipOption.clearField)
+          : knownClearFields[skipKey];
+        state.selections[skipKey] = input.checked;
+        if (clearField && input.checked) {
+          state.selections[clearField] = "";
+        }
+        state.errors = "";
+        state.invalidFields = [];
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-details-example-value]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var key = button.dataset.detailsExampleKey || "details_example";
+        var value = button.dataset.detailsExampleValue || "";
+        state.selections[key] = state.selections[key] === value ? "" : value;
+        state.errors = "";
+        state.invalidFields = [];
         rerenderProduct(product);
       });
     });
@@ -9428,7 +15221,7 @@
 
     document.querySelectorAll("[data-cart-add-another]").forEach(function (button) {
       button.addEventListener("click", function () {
-        addCurrentProductToCart(product, "adicionar-produto.html");
+        addCurrentProductToCart(product, "index.html");
       });
     });
 
@@ -9589,7 +15382,7 @@
   }
 
   function cartProductCategories(home) {
-    var allowed = { crachas: true, imanes: true, caderninhos: true, cadernos: true };
+    var allowed = { quadros: true, crachas: true, imanes: true, caderninhos: true, cadernos: true };
     return (home.categories || []).filter(function (category) {
       return category && allowed[category.id] && homeCategoryIsVisible(category);
     });
@@ -9641,17 +15434,24 @@
     }).join("");
 
     renderChrome([
-      '<main class="home-shell add-product-shell">',
-      renderBrand(home.brand || "Mia & Paper", "index.html", home.instagramUrl),
-      '<section class="home-intro add-product-intro" aria-labelledby="add-product-title">',
+      '<main class="home-shell home-shell--hub add-product-shell">',
+      renderBrand(home.brand || "Mia & Paper", "index.html", home.instagramUrl, home.categories),
+      '<section class="home-section home-hub-section home-products-section" aria-labelledby="add-product-title">',
+      '<div class="home-section-inner">',
+      '<header class="home-section-heading">',
       '<p class="eyebrow">Carrinho</p>',
       '<h1 id="add-product-title">O que queres acrescentar ao teu pedido?</h1>',
+      '<p>Escolhe outro produto para o juntares ao mesmo pedido.</p>',
+      '</header>',
+      '<div class="home-hub-summary">',
       count ? renderCheckoutCartItems({ allowRemove: false, allowEdit: false }) : '<p class="cart-panel-note">Ainda não adicionaste nenhum produto ao pedido.</p>',
       count ? '<a class="button primary add-product-checkout-link" href="' + escapeHtml(checkoutHref) + '" data-add-product-checkout>Finalizar pedido</a>' : "",
-      '</section>',
-      '<nav class="category-grid category-grid-count-' + Math.max(1, Math.min(4, categories.length)) + '" aria-label="Produtos para adicionar ao pedido">',
+      '</div>',
+      '<nav class="category-grid category-grid-count-' + Math.max(1, Math.min(5, categories.length)) + '" aria-label="Produtos para adicionar ao pedido">',
       cards,
       '</nav>',
+      '</div>',
+      '</section>',
       renderFooter(home.brand),
       '</main>'
     ].join(""));
@@ -10011,6 +15811,11 @@
     var subtotal = checkoutSubtotalCents();
     var total = checkoutTotalCents();
     var suspended = ordersAreSuspended();
+    var hasPriceToConfirm = cartHasPriceToConfirm();
+    var productTotalText = hasPriceToConfirm
+      ? (subtotal > 0 ? formatCents(subtotal) + " + preço a confirmar" : "Preço a confirmar")
+      : formatCents(subtotal);
+    var orderTotalText = hasPriceToConfirm ? "A confirmar pela Mia" : formatCents(total);
 
     return [
       '<form id="cart-checkout-form" action="send-order.php" method="post" novalidate>',
@@ -10029,9 +15834,9 @@
       '</dl>',
       '<hr class="confirm-divider" aria-hidden="true">',
       '<dl class="confirm-list">',
-      '<div><dt>Total dos produtos:</dt><dd>' + escapeHtml(formatCents(subtotal)) + '</dd></div>',
+      '<div><dt>Total dos produtos:</dt><dd>' + escapeHtml(productTotalText) + '</dd></div>',
       '<div><dt>Portes:</dt><dd>' + escapeHtml(shipping > 0 ? deliveryPriceText(delivery) : "Grátis") + '</dd></div>',
-      '<div><dt>Total estimado:</dt><dd>' + escapeHtml(formatCents(total)) + '</dd></div>',
+      '<div><dt>' + (hasPriceToConfirm ? 'Total:' : 'Total estimado:') + '</dt><dd>' + escapeHtml(orderTotalText) + '</dd></div>',
       '</dl>',
       '</section>',
       renderPaymentNotice(),
@@ -10078,7 +15883,7 @@
 
     renderChrome([
       '<main class="product-shell checkout-shell">',
-      renderBrand(home.brand || "Mia & Paper", "index.html", home.instagramUrl),
+      renderBrand(home.brand || "Mia & Paper", "index.html", home.instagramUrl, home.categories),
       '<section class="wizard-shell checkout-wizard" aria-labelledby="checkout-title">',
       renderCheckoutProgress(),
       '<div class="step-card">',
@@ -10090,12 +15895,12 @@
         '<strong>O carrinho está vazio.</strong>',
         '<p>Adiciona um produto antes de finalizar o pedido.</p>',
         '</div>',
-        '<a class="button primary" href="adicionar-produto.html">Escolher produto</a>'
+        '<a class="button primary" href="index.html">Escolher produto</a>'
       ].join("") : (state.checkoutStep === 0 ? renderCheckoutContactStep() : renderCheckoutConfirmStep()),
       '</div>',
       getCartCount() > 0 && state.checkoutStep === 0 ? [
         '<div class="step-actions checkout-actions">',
-        '<a class="button secondary" href="adicionar-produto.html" data-checkout-add-product>Adicionar outro produto</a>',
+        '<a class="button secondary" href="index.html" data-checkout-add-product>Adicionar outro produto</a>',
         '<button class="button primary" type="button" data-checkout-next>Continuar</button>',
         '</div>'
       ].join("") : "",
@@ -10273,7 +16078,7 @@
   }
 
   function initAddProduct() {
-    loadJson("content/home.json").then(function (home) {
+    loadJson(ORDER_HOME_CONTENT).then(function (home) {
       applySiteSettings(home);
       if (window.MiaButterflies && window.MiaButterflies.refresh) {
         window.MiaButterflies.refresh();
@@ -10286,7 +16091,7 @@
 
   function initCheckout() {
     restoreCheckoutSession();
-    loadJson("content/home.json").then(function (home) {
+    loadJson(ORDER_HOME_CONTENT).then(function (home) {
       applySiteSettings(home);
       if (window.MiaButterflies && window.MiaButterflies.refresh) {
         window.MiaButterflies.refresh();
@@ -10659,7 +16464,14 @@
         subtitle = "Editar texto";
 
         pushUndo(product);
-        if (step.template === "quantity-builder") {
+        if (step.template === "palette-grid") {
+          step.items.push({
+            id: "paleta-" + Date.now(),
+            value: "Nova combinação " + count,
+            title: "Nova combinação " + count,
+            palette: ["#173a63", "#e8d6b7", "#f5f1e7"]
+          });
+        } else if (step.template === "quantity-builder") {
           step.items.push({
             id: "pack-" + Date.now(),
             quantity: count,
@@ -10675,6 +16487,75 @@
             visual: "neutral"
           });
         }
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-admin-palette-color]").forEach(function (input) {
+      input.addEventListener("click", function (event) { event.stopPropagation(); });
+      input.addEventListener("change", function () {
+        var step = product.steps.filter(function (candidate) { return candidate.id === input.dataset.stepId; })[0];
+        var item = stepItemById(step, input.dataset.itemId);
+        var index = Math.max(0, Math.min(2, parseInt(input.dataset.adminPaletteColor, 10) || 0));
+        if (!item) {
+          return;
+        }
+        pushUndo(product);
+        if (!Array.isArray(item.palette)) {
+          item.palette = ["#173a63", "#e8d6b7", "#f5f1e7"];
+        }
+        item.palette[index] = safeSwatchColor(input.value);
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-admin-individual-color]").forEach(function (input) {
+      input.addEventListener("click", function (event) { event.stopPropagation(); });
+      input.addEventListener("change", function () {
+        var step = product.steps.filter(function (candidate) { return candidate.id === input.dataset.stepId; })[0];
+        var index = parseInt(input.dataset.adminIndividualColor, 10);
+        if (!step) {
+          step = currentStep(product);
+        }
+        if (!step || !Array.isArray(step.individualColors) || !step.individualColors[index]) {
+          return;
+        }
+        pushUndo(product);
+        step.individualColors[index].swatch = safeSwatchColor(input.value);
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-admin-add-individual-color]").forEach(function (button) {
+      button.addEventListener("click", function (event) {
+        var step = product.steps.filter(function (candidate) { return candidate.id === button.dataset.stepId; })[0];
+        var count;
+        event.preventDefault();
+        event.stopPropagation();
+        if (!step) {
+          return;
+        }
+        if (!Array.isArray(step.individualColors)) {
+          step.individualColors = [];
+        }
+        count = step.individualColors.length + 1;
+        pushUndo(product);
+        step.individualColors.push({ id: "cor-" + Date.now(), value: "Cor " + count, title: "Cor " + count, swatch: "#d8d1c2" });
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-admin-delete-individual-color]").forEach(function (button) {
+      button.addEventListener("click", function (event) {
+        var step = product.steps.filter(function (candidate) { return candidate.id === button.dataset.stepId; })[0];
+        var index = parseInt(button.dataset.adminDeleteIndividualColor, 10);
+        event.preventDefault();
+        event.stopPropagation();
+        if (!step || !Array.isArray(step.individualColors) || !step.individualColors[index]) {
+          return;
+        }
+        pushUndo(product);
+        step.individualColors.splice(index, 1);
         rerenderProduct(product);
       });
     });
@@ -11040,7 +16921,14 @@
   }
 
   function initHome() {
-    loadJson("content/home.json").then(function (home) {
+    Promise.all([
+      loadJson(homeContentPath),
+      homeContentPath === "content/home.json" ? Promise.resolve(null) : loadJson("content/home.json").catch(function () { return null; })
+    ]).then(function (results) {
+      var home = results[0];
+      var menuHome = results[1] || home;
+
+      state.siteMenuCategories = Array.isArray(menuHome.categories) ? menuHome.categories : [];
       applySiteSettings(home);
       if (window.MiaButterflies && window.MiaButterflies.refresh) {
         window.MiaButterflies.refresh();
@@ -11049,6 +16937,33 @@
     }).then(renderHome).catch(function (error) {
       app.innerHTML = '<main class="fallback"><h1>Mia &amp; Paper</h1><p>' + escapeHtml(error.message) + '</p></main>';
     });
+  }
+
+  function applyContactProductContext() {
+    var params;
+    var productName;
+    var form;
+    var subject;
+    var message;
+
+    if (page !== "contact") {
+      return;
+    }
+    params = new URLSearchParams(window.location.search);
+    productName = String(params.get("produto") || "").trim().slice(0, 60);
+    if (!productName) {
+      return;
+    }
+
+    form = document.querySelector(".contact-form");
+    subject = form ? form.querySelector("[name='subject_type']") : null;
+    message = form ? form.querySelector("[name='message']") : null;
+    if (subject) {
+      subject.value = "Encomendas";
+    }
+    if (message && !String(message.value || "").trim()) {
+      message.value = "Quero pedir " + productName + ".";
+    }
   }
 
   function initProduct() {
@@ -11070,14 +16985,22 @@
     Promise.all([
       loadJson("content/products/" + productSlug + ".json"),
       loadJson("content/pricing.json").catch(function () { return null; }),
-      loadJson("content/home.json").catch(function () { return null; })
+      loadJson(ORDER_HOME_CONTENT).catch(function () { return null; }),
+      loadJson("content/home.json").catch(function () { return null; }),
+      loadJson(COLORS_API).catch(function () { return null; })
     ]).then(function (results) {
       var product;
-      applySiteSettings(results[2]);
+      var productSiteSettings = Object.assign({}, results[2] || {});
+      var menuHome = results[3] || results[2] || {};
+      if (results[0] && results[0].ordersSuspended === true) {
+        productSiteSettings.ordersSuspended = true;
+      }
+      applySiteSettings(productSiteSettings);
+      state.siteMenuCategories = Array.isArray(menuHome.categories) ? menuHome.categories : [];
       if (window.MiaButterflies && window.MiaButterflies.refresh) {
         window.MiaButterflies.refresh();
       }
-      product = applyPricingToProduct(results[0], results[1]);
+      product = applyPricingToProduct(applyColorCatalog(results[0], results[4]), results[1]);
       state.product = product;
       loadCartEditMode(product);
       applySessionCardDetails(product);
@@ -11091,17 +17014,21 @@
       // FUNNEL_TRACKING_V1: dispara wizard_started uma vez por sessão por
       // produto + step_view do passo inicial (porque setCurrentStep só
       // dispara em transições, e o passo 0 não é uma transição).
+      var initialStep = currentStep(product);
       var startedKey = "mp_funnel_wizard_started_" + (product.slug || "");
       var alreadyStarted = false;
       try { alreadyStarted = window.sessionStorage.getItem(startedKey) === "1"; } catch (err) {}
       if (!alreadyStarted) {
         try { window.sessionStorage.setItem(startedKey, "1"); } catch (err) {}
         trackProductEvent(product, 'wizard_started', {
-          step_id: (product.steps && product.steps[0] && product.steps[0].id) || '',
-          step_index: 0
+          // Usa o primeiro passo realmente visível. Crachás e ímanes mantêm
+          // o antigo passo `designs` no JSON apenas como configuração oculta;
+          // registá-lo aqui faria o funil começar numa etapa que a pessoa
+          // nunca viu.
+          step_id: initialStep ? initialStep.id : '',
+          step_index: state.currentStep
         });
       }
-      var initialStep = currentStep(product);
       trackProductEvent(product, 'step_view', {
         step_id: initialStep ? initialStep.id : '',
         step_index: state.currentStep,
@@ -11126,6 +17053,243 @@
       refresh: function () {},
       clear: function () {}
     };
+  }
+
+  var paletteLiquidEffectsReady = false;
+  var paletteOrientationPermissionAsked = false;
+
+  // ==== MiaWater: água com física real nos quadrados da paleta ==============
+  // Modelo shallow-water 1D por colunas: cada coluna tem altura h[] e entre
+  // colunas vizinhas há um fluxo f[]. A pressão (diferença de alturas) e a
+  // gravidade ao longo da inclinação empurram o fluxo; mover o fluxo transporta
+  // altura conservando a massa -> ondas e slosh reais. O jorro adiciona volume
+  // no centro; o salpico são partículas balísticas (gravidade a sério) que ao
+  // cair de volta fazem ondinhas na superfície.
+  var miaWaterTilt = 0;            // -1..1, partilhado (dedo/rato/telemóvel)
+  var miaWaterSims = [];
+
+  function miaWaterClamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+
+  function miaWaterWakeAll() {
+    for (var i = 0; i < miaWaterSims.length; i++) { miaWaterSims[i].wake(); }
+  }
+
+  function miaWaterFindSim(slot) {
+    for (var i = 0; i < miaWaterSims.length; i++) {
+      if (miaWaterSims[i].slot === slot) { return miaWaterSims[i]; }
+    }
+    return null;
+  }
+
+  function miaWaterScan() {
+    for (var i = miaWaterSims.length - 1; i >= 0; i--) {
+      if (!miaWaterSims[i].canvas.isConnected) { miaWaterSims[i].destroy(); }
+    }
+    var list = document.querySelectorAll("canvas.pcs__canvas");
+    for (var j = 0; j < list.length; j++) {
+      if (!list[j].__miaWater) { list[j].__miaWater = true; miaWaterCreate(list[j]); }
+    }
+  }
+
+  function miaWaterCreate(canvas) {
+    var slot = canvas.parentNode;
+    if (!slot) { return; }
+    var ctx = canvas.getContext("2d");
+    if (!ctx) { return; }
+
+    var TARGET = 0.96;                     // nível cheio (deixa um fio no topo)
+    var mode = canvas.getAttribute("data-water-pour");
+    var pouring = mode === "1";
+    var draining = mode === "drain";
+    var level = pouring ? 0 : TARGET;      // altura da água (0..1)
+    // data-water-duration dá o tempo (ms) que a água leva a subir ou a descer,
+    // para casar com a animação dos círculos. Sem ele, mantém o ritmo antigo.
+    var span = Number(canvas.getAttribute("data-water-duration")) || 0;
+    var rate = span > 0 ? TARGET / (span / (1000 / 60)) : 0.065;
+    var amp = 0;                            // amplitude da ondinha da superfície
+    var phase = 0;                          // fase da onda
+    var tiltCur = 0;                        // inclinação suavizada
+    var W = 1, H = 1, SAMP = 16;
+    var dpr = miaWaterClamp(window.devicePixelRatio || 1, 1, 2);
+    var running = false, rafId = 0, lastT = 0, acc = 0, restFrames = 0, tSec = 0;
+    var rgb, colTop, colBottom, colStream;
+
+    function toRgb(c) {
+      ctx.fillStyle = "#000";
+      ctx.fillStyle = c;                   // normaliza para #rrggbb ou rgb()/rgba()
+      var s = ctx.fillStyle;
+      if (s.charAt(0) === "#") {
+        return [parseInt(s.substr(1, 2), 16), parseInt(s.substr(3, 2), 16), parseInt(s.substr(5, 2), 16)];
+      }
+      var m = s.match(/[\d.]+/g) || [79, 122, 58];
+      return [Number(m[0]), Number(m[1]), Number(m[2])];
+    }
+    function mix(a, b, t) {
+      return [Math.round(a[0] + (b[0] - a[0]) * t), Math.round(a[1] + (b[1] - a[1]) * t), Math.round(a[2] + (b[2] - a[2]) * t)];
+    }
+    function css(c, alpha) { return "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + (alpha == null ? 1 : alpha) + ")"; }
+    function readColor() {
+      var raw = getComputedStyle(slot).getPropertyValue("--palette-preview-color").trim() || "#4f7a3a";
+      rgb = toRgb(raw);
+      colTop = css(mix(rgb, [255, 255, 255], 0.14));   // topo da água mais claro
+      colBottom = css(mix(rgb, [15, 10, 4], 0.22));    // fundo mais escuro
+      colStream = css(mix(rgb, [255, 255, 255], 0.10), 0.95);
+    }
+    function resize() {
+      var r = slot.getBoundingClientRect();
+      W = Math.max(1, r.width); H = Math.max(1, r.height);
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    // Altura da água (fração 0..1) na posição x (0..1): nível + ondinha + inclinação.
+    function levelAt(xf) {
+      return level
+        + amp * Math.sin(xf * 9.4 + phase)
+        + tiltCur * 0.18 * (xf - 0.5);
+    }
+
+    function physics() {
+      tSec += 1 / 60;
+      phase += 0.11;                                 // a ondinha anda devagar
+      tiltCur += (miaWaterTilt - tiltCur) * 0.18;    // segue a inclinação (responsivo)
+      if (pouring) {
+        level += rate;                               // sobe até encher
+        amp = Math.min(0.03, amp + 0.0022);          // ondula ao encher
+        if (level >= TARGET) { level = TARGET; pouring = false; }
+      } else if (draining) {
+        level -= rate;                               // desce ao mesmo ritmo
+        amp = Math.min(0.03, amp + 0.0022);
+        if (level <= 0) {
+          level = 0;
+          draining = false;
+        }
+      } else {
+        amp *= 0.94;                                 // assenta e fica calma
+      }
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, W, H);
+      var i, xf, x, y, minY = H;
+      ctx.beginPath();                               // corpo de água
+      ctx.moveTo(0, H + 2);
+      for (i = 0; i <= SAMP; i++) {
+        xf = i / SAMP; x = xf * W; y = H - miaWaterClamp(levelAt(xf), 0, 1.05) * H;
+        if (y < minY) { minY = y; }
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(W, H + 2);
+      ctx.closePath();
+      var g = ctx.createLinearGradient(0, miaWaterClamp(minY, 0, H - 1), 0, H);
+      g.addColorStop(0, colTop); g.addColorStop(1, colBottom);
+      ctx.fillStyle = g; ctx.fill();
+      ctx.beginPath();                               // linha de superfície (brilho)
+      for (i = 0; i <= SAMP; i++) { xf = i / SAMP; x = xf * W; y = H - miaWaterClamp(levelAt(xf), 0, 1.05) * H; if (i === 0) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); } }
+      ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 1.1; ctx.lineJoin = "round"; ctx.stroke();
+    }
+
+    function frame(t) {
+      if (!running) { return; }
+      if (!canvas.isConnected) { destroy(); return; }
+      if (!lastT) { lastT = t; }
+      var dt = t - lastT; lastT = t;
+      if (dt > 60) { dt = 60; }
+      acc += dt;
+      var steps = 0;
+      while (acc >= 16.6667 && steps < 5) { physics(); acc -= 16.6667; steps++; }
+      render();
+      var active = pouring || draining || amp > 0.002 || Math.abs(miaWaterTilt) > 0.01 || Math.abs(tiltCur) > 0.01;
+      restFrames = active ? 0 : restFrames + 1;
+      if (restFrames > 45) { running = false; rafId = 0; return; }   // dorme parado
+      rafId = window.requestAnimationFrame(frame);
+    }
+
+    function wake() {
+      if (running || !canvas.isConnected) { return; }
+      running = true; lastT = 0; restFrames = 0;
+      rafId = window.requestAnimationFrame(frame);
+    }
+    function destroy() {
+      running = false;
+      if (rafId) { window.cancelAnimationFrame(rafId); rafId = 0; }
+      var idx = miaWaterSims.indexOf(sim);
+      if (idx >= 0) { miaWaterSims.splice(idx, 1); }
+    }
+    function poke() {
+      amp = Math.max(amp, 0.02);   // toque/clique -> uma ondinha
+      wake();
+    }
+
+    var sim = { canvas: canvas, slot: slot, wake: wake, destroy: destroy, poke: poke, resize: function () { resize(); wake(); } };
+
+    readColor();
+    resize();
+    // Pinta já, no mesmo frame: sem isto o canvas fica um frame em branco a
+    // seguir a cada re-render e vê-se o fundo pálido do quadrado a piscar.
+    render();
+    miaWaterSims.push(sim);
+    wake();
+  }
+
+  // A água acabou de escoar: o quadrado pode passar a vazio de vez.
+
+
+  function initPaletteLiquidEffects() {
+    if (paletteLiquidEffectsReady) { return; }
+    paletteLiquidEffectsReady = true;
+
+    function requestOrientationPermission() {
+      if (paletteOrientationPermissionAsked || typeof window.DeviceOrientationEvent === "undefined" || typeof window.DeviceOrientationEvent.requestPermission !== "function") { return; }
+      paletteOrientationPermissionAsked = true;
+      window.DeviceOrientationEvent.requestPermission().catch(function () {});
+    }
+
+    document.addEventListener("pointermove", function (event) {
+      var comp = event.target && event.target.closest ? event.target.closest(".palette-composition") : null;
+      if (!comp) { return; }
+      var rect = comp.getBoundingClientRect();
+      miaWaterTilt = miaWaterClamp(((event.clientX - rect.left) / rect.width - 0.5) * 2, -1, 1);
+      miaWaterWakeAll();
+    });
+
+    document.addEventListener("pointerleave", function (event) {
+      var t = event.target;
+      if (t && t.classList && t.classList.contains("palette-composition")) {
+        miaWaterTilt = 0; miaWaterWakeAll();
+      }
+    }, true);
+
+    document.addEventListener("pointerdown", function (event) {
+      var slot = event.target && event.target.closest ? event.target.closest(".palette-composition__slot.is-filled") : null;
+      requestOrientationPermission();
+      if (!slot) { return; }
+      var sim = miaWaterFindSim(slot);
+      if (sim) {
+        var rect = slot.getBoundingClientRect();
+        sim.poke(miaWaterClamp((event.clientX - rect.left) / rect.width, 0, 1));
+      }
+    });
+
+    window.addEventListener("deviceorientation", function (event) {
+      if (event == null || event.gamma == null) { return; }
+      miaWaterTilt = miaWaterClamp(Number(event.gamma) / 40, -1, 1);
+      miaWaterWakeAll();
+    }, true);
+
+    var scanQueued = false;
+    function queueScan() {
+      if (scanQueued) { return; }
+      scanQueued = true;
+      window.requestAnimationFrame(function () { scanQueued = false; miaWaterScan(); });
+    }
+    if (typeof window.MutationObserver === "function" && document.body) {
+      new window.MutationObserver(queueScan).observe(document.body, { childList: true, subtree: true });
+    }
+    window.addEventListener("resize", function () {
+      for (var i = 0; i < miaWaterSims.length; i++) { miaWaterSims[i].resize(); }
+    });
+    miaWaterScan();
   }
 
   // COOKIE_BANNER_V1: banner discreto com aceitação obrigatória e estado em
@@ -11202,6 +17366,9 @@
 
   applyTheme(currentTheme());
   bindThemeToggle();
+  if (page !== "preview") {
+    initPaletteLiquidEffects();
+  }
 
   // SITE_LANDED_V1 (Phase 3): primeira página da sessão (qualquer página).
   // Para o caso de produto, fireSiteLandedOnce é chamado dentro do initProduct
@@ -11220,17 +17387,67 @@
   } else if (page === "product") {
     initProduct();
   } else if (page === "contact" || page === "static") {
+    applyContactProductContext();
     bindThemeToggle();
     refreshCartUi();
     applyTheme(currentTheme());
     loadJson("content/home.json").then(function (home) {
       applySiteSettings(home);
+      installStaticSiteNavigation(home);
       refreshCartUi();
       if (window.MiaButterflies && window.MiaButterflies.refresh) {
         window.MiaButterflies.refresh();
       }
     }).catch(function () {});
   }
+
+  // GALERIA_PREVIEW_V1
+  // A galeria (galeria-preview.html) desenha os cartões com as MESMAS funções
+  // que o site usa, para a pré-visualização ser um fac-símile e não uma cópia
+  // que se desactualiza. Só é usada quando data-page="preview".
+  window.MiaPreview = {
+    renderHome: function (home) {
+      var previewHome = cloneJson(home || {});
+
+      state.admin = false;
+      (previewHome.categories || []).forEach(function (category) {
+        category.carouselRandomizeOnLoad = false;
+        category.carouselImages = Array.isArray(category.carouselSourceImages)
+          ? category.carouselSourceImages.filter(Boolean)
+          : [];
+      });
+      renderHome(previewHome);
+    },
+    shellClass: function (product) {
+      return [
+        "product-shell",
+        productSlugClass(product),
+        productShapeClass(product),
+        productOrientationClass(product)
+      ].join(" ");
+    },
+    stepCardClass: function (step) {
+      return "step-card" + (isDetailsMediaComposer(step) ? " step-card--media-composer" : "");
+    },
+    // Devolve o HTML do corpo do passo tal como aparece no site.
+    renderStep: function (product, stepIndex, selections) {
+      var step = product && product.steps ? product.steps[stepIndex] : null;
+
+      if (!step) {
+        return "";
+      }
+
+      state.admin = false;
+      state.product = product;
+      state.selections = selections || {};
+      state.currentStep = stepIndex;
+      state.itemDisplayLabels = {};
+      ensureCadernoScopedImageSlots(product);
+      rebuildProductDisplayLabels(product);
+
+      return stepBody(product, step) + renderQuadrosBuildSummary(product, step);
+    }
+  };
 
   installCartDebugTools();
 
@@ -11250,9 +17467,39 @@
     document.addEventListener("DOMContentLoaded", initCookieBanner);
   }
 
+  window.addEventListener("pagehide", function () {
+    if (page !== "product") {
+      return;
+    }
+    invalidateOrderFilePickerSession();
+    cancelOrderUploadOperations(function (operation) {
+      return operation.type === "upload";
+    });
+    cancelOrderAudioActivity();
+  });
+
   window.addEventListener("pageshow", function (event) {
-    if (page === "product" && event.persisted && window.sessionStorage.getItem("miaandpaper-reset-" + productSlug) === "1") {
+    if (page !== "product" || !event.persisted) {
+      return;
+    }
+    if (window.sessionStorage.getItem("miaandpaper-reset-" + productSlug) === "1") {
       window.location.reload();
+      return;
+    }
+    state.errors = "";
+    state.invalidFields = [];
+    state.orderUploadError = "";
+    state.orderUploadMessage = "";
+    state.orderUploadFeedbackKind = "";
+    state.orderUploadProgress = null;
+    invalidateOrderFilePickerSession();
+    cancelOrderUploadOperations(function (operation) {
+      return operation.type === "upload";
+    });
+    cancelOrderAudioActivity();
+    syncOrderUploadBusy();
+    if (state.product) {
+      rerenderProduct(state.product);
     }
   });
 }());

@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "settings": {
+    "enabled": true,
+    "intervalMs": 5500,
+    "position": "left",
+    "size": "normal",
+    "theme": "paper",
+    "imageShape": "rounded",
+    "showImage": true,
+    "showName": true,
+    "showText": true,
+    "defaultRatingMode": "stars",
+    "defaultStars": 5,
+    "defaultIcon": "heart",
+    "defaultCustomIcon": "✦"
+  },
+  "reviews": [
+    {
+      "id": "review-exemplo-1",
+      "enabled": true,
+      "order": 1,
+      "name": "Cliente exemplo 1",
+      "text": "Review de exemplo — substitui este texto por um testemunho real de uma cliente.",
+      "image": "content/designs/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.webp",
+      "linkEnabled": true,
+      "link": "cadernos.html",
+      "ratingMode": "default",
+      "stars": 5,
+      "icon": "default",
+      "customIcon": ""
+    },
+    {
+      "id": "review-exemplo-2",
+      "enabled": true,
+      "order": 2,
+      "name": "Cliente exemplo 2",
+      "text": "Segundo exemplo — aqui pode entrar uma frase curta sobre a encomenda recebida.",
+      "image": "content/designs/quadros/fotos-reais/silhueta-bodas-frontal.webp",
+      "linkEnabled": true,
+      "link": "molduras.html",
+      "ratingMode": "default",
+      "stars": 5,
+      "icon": "default",
+      "customIcon": ""
+    },
+    {
+      "id": "review-exemplo-3",
+      "enabled": true,
+      "order": 3,
+      "name": "Cliente exemplo 3",
+      "text": "Terceiro exemplo — adiciona tantas reviews quantas quiseres usando o mesmo formato.",
+      "image": "content/designs/crachas/novidades/braille-01.webp",
+      "linkEnabled": true,
+      "link": "crachas.html",
+      "ratingMode": "default",
+      "stars": 5,
+      "icon": "default",
+      "customIcon": ""
+    }
+  ]
+}

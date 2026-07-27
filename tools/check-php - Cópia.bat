@@ -1,0 +1,1 @@
+php generate-fake-funnel-day.php --preset=replay-test --sqlite --overwrite

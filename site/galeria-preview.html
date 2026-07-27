@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Pré-visualização · galeria</title>
+  <link rel="stylesheet" href="styles.css?v=2026072708">
+  <style>
+    /* GALERIA_PREVIEW_V1 — página carregada dentro de cada <iframe> da galeria.
+       Desenha o passo real com as funções do app.js e devolve à galeria a
+       posição/tamanho exactos do cartão pedido, para ela recortar o iframe. */
+    html, body { margin: 0; padding: 0; background: var(--paper); }
+    .app-shell { padding: 0; }
+    /* Nada de cromo do site: só interessa o cartão. */
+    .cookie-banner, .butterfly-layer, .site-header, .orders-suspended-banner { display: none !important; }
+    .preview-shell { padding: 0; }
+    .preview-shell .wizard-shell { margin: 0; }
+    .is-preview-target { outline: 2px dashed rgba(114, 85, 30, .55); outline-offset: 3px; }
+  </style>
+</head>
+<body data-page="preview">
+  <div id="app" class="app-shell"></div>
+  <script src="app.js?v=2026072705"></script>
+  <script>
+  (function () {
+    "use strict";
+
+    var app = document.getElementById("app");
+    var current = null;
+    var lastPosted = "";
+
+    function postRaw(message) {
+      if (window.parent !== window) {
+        window.parent.postMessage(message, window.location.origin);
+      }
+    }
+
+    function post(message) {
+      var encoded = JSON.stringify(message);
+      // A galeria ajusta a altura do iframe a partir desta medição; sem o
+      // filtro, o resize resultante voltava a medir e entrava em ciclo.
+      if (encoded === lastPosted) { return; }
+      lastPosted = encoded;
+      postRaw(message);
+    }
+
+    // O cartão está dentro de um iframe: sem reencaminhar, clicar nele nunca
+    // seleccionava a linha e as setas do teclado não chegavam à galeria.
+    document.addEventListener("click", function () {
+      postRaw({ type: "mia-preview-clicked", key: current && current.key });
+    });
+
+    document.addEventListener("keydown", function (event) {
+      var isArrow = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].indexOf(event.key) !== -1;
+      var isUndo = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z";
+
+      if (!isArrow && !isUndo) { return; }
+      event.preventDefault();
+      postRaw({
+        type: "mia-preview-key",
+        key: current && current.key,
+        eventKey: event.key,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        shiftKey: event.shiftKey
+      });
+    });
+
+    // Encontra o elemento que representa esta imagem. As molduras editáveis
+    // trazem data-mia-image/data-mia-item-id/data-mia-slot-name; as restantes
+    // (gavetas, slides) são encontradas pelo caminho da imagem.
+    function findVisual(request) {
+      var tagged = Array.prototype.slice.call(app.querySelectorAll("[data-mia-image]"));
+      var node = tagged.filter(function (candidate) {
+        if (request.image && candidate.dataset.miaImage !== request.image) { return false; }
+        if (request.itemId && candidate.dataset.miaItemId !== request.itemId) { return false; }
+        if (request.slotName && candidate.dataset.miaSlotName !== request.slotName) { return false; }
+        if (request.expectedEditKey && candidate.dataset.miaEditKey !== request.expectedEditKey) { return false; }
+        if (request.slideIndex != null
+            && Number(candidate.dataset.miaSlideIndex) !== Number(request.slideIndex)) { return false; }
+        return true;
+      })[0] || null;
+
+      // Um pedido com identidade visual explícita nunca pode cair para outro
+      // item/contexto. Esse fallback permissivo fazia glossy mostrar matte e a
+      // foto lateral dos crachás devolver a chave da imagem principal.
+      if (!node && (request.expectedEditKey || request.itemId || request.slotName)) {
+        return null;
+      }
+
+      // Imagens simples antigas (placeholders de resumo) ainda não têm data-*.
+      // Nesses casos, e só nesses, procuramos exactamente o caminho no src/style.
+      if (!node && request.image) {
+        node = Array.prototype.slice.call(app.querySelectorAll("*:not([data-mia-image])")).filter(function (candidate) {
+          var style = candidate.getAttribute("style") || "";
+          var src = candidate.tagName === "IMG" ? candidate.getAttribute("src") || "" : "";
+          return style.indexOf(request.image) !== -1 || src === request.image;
+        })[0] || null;
+      }
+
+      return node;
+    }
+
+    function activateVisual(node) {
+      var frame;
+      var slides;
+      var labels;
+      var index;
+
+      if (!node || !node.classList.contains("cadernos-cover-preview-slide")) { return; }
+      frame = node.closest("[data-cadernos-preview]");
+      if (!frame) { return; }
+      slides = Array.prototype.slice.call(frame.querySelectorAll(".cadernos-cover-preview-slide"));
+      labels = Array.prototype.slice.call(frame.querySelectorAll(".cadernos-preview-pill-label"));
+      index = slides.indexOf(node);
+      slides.forEach(function (slide, slideIndex) { slide.classList.toggle("is-active", slideIndex === index); });
+      labels.forEach(function (label, labelIndex) { label.classList.toggle("is-active", labelIndex === index); });
+      frame.dataset.cadernosPreviewCurrent = String(index);
+    }
+
+    // Os valores que o site está mesmo a aplicar. A galeria mostra estes, em
+    // vez de recalcular defaults por sua conta e arriscar divergir.
+    function effectiveValues(visual) {
+      if (!visual || !visual.dataset || !visual.dataset.miaEditKey) { return null; }
+
+      var css = getComputedStyle(visual);
+      function prop(name, fallback) {
+        var raw = parseFloat(css.getPropertyValue(name));
+        return isFinite(raw) ? raw : fallback;
+      }
+
+      return {
+        editKey: visual.dataset.miaEditKey,
+        slotName: visual.dataset.miaSlotName || "main",
+        imageZoom: Math.round(prop("--image-zoom-scale", 1) * 100),
+        imagePositionX: prop("--image-position-x", 0),
+        imagePositionY: prop("--image-position-y", 0),
+        imageRotation: prop("--image-rotation", 0),
+        frameWidth: prop("--frame-width-px", 0),
+        frameHeight: prop("--frame-height-px", 0),
+        imageFit: (css.getPropertyValue("--image-fit") || "cover").trim()
+      };
+    }
+
+    function cardFor(node) {
+      if (!node) { return null; }
+      if (node.classList.contains("cadernos-cover-preview-slide")) {
+        return node.closest("[data-cadernos-preview]") || node;
+      }
+      return node.closest(
+        ".choice-card, .crachas-step2-summary-tile, .cadernos-build-part, .details-example-choice, .details-example-image-button,"
+        + " .quantity-card, .cadernos-cover-drawer, .crachas-size-choice, .home-brand-hero, .home-news-card, .category-card, article, li"
+      ) || node;
+    }
+
+    function measure(request) {
+      var visual = findVisual(request);
+      var card = cardFor(visual);
+      var rect;
+
+      activateVisual(visual);
+
+      document.querySelectorAll(".is-preview-target").forEach(function (n) {
+        n.classList.remove("is-preview-target");
+      });
+
+      if (!card) {
+        post({ type: "mia-preview-measured", key: request.key, found: false,
+          documentHeight: document.documentElement.scrollHeight });
+        return;
+      }
+
+      if (request.highlight) { card.classList.add("is-preview-target"); }
+      rect = card.getBoundingClientRect();
+
+      post({
+        type: "mia-preview-measured",
+        key: request.key,
+        found: true,
+        effective: effectiveValues(visual),
+        rect: {
+          left: Math.max(0, Math.floor(rect.left + window.scrollX) - 6),
+          top: Math.max(0, Math.floor(rect.top + window.scrollY) - 6),
+          width: Math.ceil(rect.width) + 12,
+          height: Math.ceil(rect.height) + 12
+        },
+        documentHeight: document.documentElement.scrollHeight
+      });
+    }
+
+    function render(request) {
+      var product = request.product;
+      var html;
+
+      current = request;
+      lastPosted = "";
+      if (request.kind === "home") {
+        window.MiaPreview.renderHome(product);
+        measure(request);
+        window.setTimeout(function () { measure(request); }, 60);
+        window.setTimeout(function () { measure(request); }, 400);
+        return;
+      }
+      html = window.MiaPreview.renderStep(product, request.stepIndex, request.selections || {});
+
+      app.innerHTML = '<main class="' + window.MiaPreview.shellClass(product) + ' preview-shell">'
+        + '<section class="wizard-shell">'
+        + '<div class="' + window.MiaPreview.stepCardClass(product.steps[request.stepIndex]) + '">'
+        + html
+        + '</div></section></main>';
+
+      // Duas medições: uma imediata e outra depois das imagens carregarem,
+      // porque a altura do cartão pode mudar.
+      measure(request);
+      window.setTimeout(function () { measure(request); }, 60);
+      window.setTimeout(function () { measure(request); }, 400);
+    }
+
+    window.addEventListener("message", function (event) {
+      if (event.origin !== window.location.origin) { return; }
+      var data = event.data || {};
+      if (data.type === "mia-preview-render") { render(data); }
+      if (data.type === "mia-preview-measure" && current) { measure(current); }
+    });
+
+    post({ type: "mia-preview-ready" });
+  }());
+  </script>
+</body>
+</html>

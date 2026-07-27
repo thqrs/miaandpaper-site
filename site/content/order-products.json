@@ -1,0 +1,115 @@
+{
+  "brand": "Mia & Paper",
+  "instagramUrl": "https://www.instagram.com/miaandpaper/",
+  "intro": {
+    "eyebrow": "Produtos personalizados",
+    "title": "Escolhe outro produto",
+    "text": "Junta mais produtos à mesma encomenda."
+  },
+  "showCategoryNumbers": false,
+  "brandButterflyEnabled": false,
+  "catalogFooterLinkVisible": true,
+  "ordersSuspended": false,
+  "categories": [
+    {
+      "id": "quadros",
+      "title": "Molduras",
+      "subtitle": "Com ou sem foto",
+      "href": "molduras.html",
+      "image": "content/designs/quadros/fotos-reais/foto-flores-azul-amarelo-frontal.webp",
+      "accent": "rose",
+      "available": true,
+      "carouselEnabled": false,
+      "clickable": true
+    },
+    {
+      "id": "crachas",
+      "title": "Crachás",
+      "subtitle": "Uma lembrança especial",
+      "href": "crachas.html",
+      "accent": "blue",
+      "available": true,
+      "carouselEnabled": true,
+      "carouselIntervalMs": 5000,
+      "carouselRandomizeOnLoad": true,
+      "clickable": true,
+      "carouselPanPercent": 0
+    },
+    {
+      "id": "imanes",
+      "title": "Ímanes",
+      "subtitle": "Para o teu frigorífico",
+      "href": "imanes.html",
+      "accent": "sage",
+      "available": true,
+      "carouselEnabled": true,
+      "carouselIntervalMs": 5000,
+      "carouselRandomizeOnLoad": true,
+      "clickable": true,
+      "carouselPanPercent": 0,
+      "carouselZoomPercent": 140
+    },
+    {
+      "id": "caderninhos",
+      "title": "Mini-Cadernos",
+      "subtitle": "Para pequenas anotações",
+      "href": "caderninhos.html",
+      "accent": "rose",
+      "available": true,
+      "carouselEnabled": true,
+      "carouselIntervalMs": 5000,
+      "carouselRandomizeOnLoad": true,
+      "clickable": true,
+      "carouselPanPercent": 0
+    },
+    {
+      "id": "cadernos",
+      "title": "Cadernos Anuais",
+      "subtitle": "Para te acompanharem durante todo o ano",
+      "href": "cadernos.html",
+      "accent": "gold",
+      "available": true,
+      "carouselEnabled": true,
+      "carouselIntervalMs": 5000,
+      "carouselRandomizeOnLoad": true,
+      "clickable": true,
+      "carouselPanPercent": 0
+    }
+  ],
+  "theme": {
+    "paper": "#fff8df",
+    "card": "#fffdf5",
+    "linen": "#f6e7bf",
+    "sage": "#d6bf77",
+    "moss": "#72551e",
+    "ink": "#2e2413",
+    "muted": "#7f6b42",
+    "gold": "#d7aa36",
+    "goldSoft": "#f4dd91",
+    "rose": "#c58a72",
+    "blue": "#9a8656",
+    "buttonBg": "#72551e",
+    "buttonText": "#fffdf8"
+  },
+  "carousel": {
+    "enabled": true,
+    "speedSeconds": 8,
+    "zoomPercent": 120,
+    "panPercent": 6,
+    "overlayOpacity": 20
+  },
+  "butterfly": {
+    "src": "borboleta/borboleta.html",
+    "enabled": false,
+    "scale": 1.62,
+    "anchorX": 0.62,
+    "anchorY": -1.54,
+    "rotation": -10,
+    "frameWidth": 42,
+    "frameHeight": 34,
+    "wingColor": "#f5df84",
+    "bodyColor": "#8a7058"
+  },
+  "showThemeToggle": false,
+  "deadlineNoticeEnabled": false
+}

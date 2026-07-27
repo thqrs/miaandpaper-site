@@ -116,6 +116,19 @@
                 }
             }
         },
+        "quadros": {
+            "id": "quadros",
+            "label": "Molduras personalizadas",
+            "unitLabel": "molduras",
+            "unitSingular": "moldura",
+            "unitShort": "moldura",
+            "defaultPriceKey": "Moldura personalizada",
+            "prices": {
+                "Moldura personalizada": {
+                    "1": 4500
+                }
+            }
+        },
         "lembrancas": {
             "id": "lembrancas",
             "label": "Lembrancas",

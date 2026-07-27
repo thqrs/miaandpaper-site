@@ -48,10 +48,133 @@ function admin_orders_h($value)
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
+function admin_orders_moldura_text($value)
+{
+    return strtr((string)$value, array(
+        'QUADROS PERSONALIZADOS' => 'MOLDURAS PERSONALIZADAS',
+        'Quadros personalizados' => 'Molduras personalizadas',
+        'quadros personalizados' => 'molduras personalizadas',
+        'QUADRO PERSONALIZADO' => 'MOLDURA PERSONALIZADA',
+        'Quadro personalizado' => 'Moldura personalizada',
+        'quadro personalizado' => 'moldura personalizada',
+        'DOS QUADROS' => 'DAS MOLDURAS',
+        'Dos quadros' => 'Das molduras',
+        'dos quadros' => 'das molduras',
+        'DO QUADRO' => 'DA MOLDURA',
+        'Do quadro' => 'Da moldura',
+        'do quadro' => 'da moldura',
+        'NOS QUADROS' => 'NAS MOLDURAS',
+        'Nos quadros' => 'Nas molduras',
+        'nos quadros' => 'nas molduras',
+        'NO QUADRO' => 'NA MOLDURA',
+        'No quadro' => 'Na moldura',
+        'no quadro' => 'na moldura',
+        'OS QUADROS' => 'AS MOLDURAS',
+        'Os quadros' => 'As molduras',
+        'os quadros' => 'as molduras',
+        'O QUADRO' => 'A MOLDURA',
+        'O quadro' => 'A moldura',
+        'o quadro' => 'a moldura',
+        'UNS QUADROS' => 'UMAS MOLDURAS',
+        'Uns quadros' => 'Umas molduras',
+        'uns quadros' => 'umas molduras',
+        'UM QUADRO' => 'UMA MOLDURA',
+        'Um quadro' => 'Uma moldura',
+        'um quadro' => 'uma moldura',
+        'QUADROS' => 'MOLDURAS',
+        'Quadros' => 'Molduras',
+        'quadros' => 'molduras',
+        'QUADRO' => 'MOLDURA',
+        'Quadro' => 'Moldura',
+        'quadro' => 'moldura',
+    ));
+}
+
 function admin_orders_cents_to_eur($cents)
 {
     $cents = (int)$cents;
     return number_format($cents / 100, 2, ',', ' ') . ' €';
+}
+
+/**
+ * Lê primeiro um campo normalizado do item e, para encomendas históricas ou
+ * criadas durante uma migração do funil, tenta depois o valor equivalente nas
+ * seleções originais. O fallback fica confinado à ficha individual.
+ */
+function admin_orders_item_value($item, $itemKeys, $selectionKeys = array(), $default = '')
+{
+    foreach ((array)$itemKeys as $key) {
+        if (is_array($item) && array_key_exists($key, $item)) {
+            return $item[$key];
+        }
+    }
+
+    $selections = array();
+    if (is_array($item) && isset($item['raw_selections']) && is_array($item['raw_selections'])) {
+        $selections = $item['raw_selections'];
+    } elseif (is_array($item) && isset($item['selections']) && is_array($item['selections'])) {
+        $selections = $item['selections'];
+    }
+
+    foreach ((array)$selectionKeys as $key) {
+        if (array_key_exists($key, $selections)) {
+            return $selections[$key];
+        }
+    }
+
+    return $default;
+}
+
+function admin_orders_value_list($value)
+{
+    if (is_array($value)) {
+        return array_values(array_filter($value, function ($entry) {
+            return is_scalar($entry) && trim((string)$entry) !== '';
+        }));
+    }
+    if (is_scalar($value) && trim((string)$value) !== '') {
+        return array(trim((string)$value));
+    }
+    return array();
+}
+
+function admin_orders_text_value($value)
+{
+    return is_scalar($value) ? trim((string)$value) : '';
+}
+
+function admin_orders_bool_value($value)
+{
+    if ($value === true || $value === 1) return true;
+    if (!is_scalar($value)) return false;
+    return in_array(strtolower(trim((string)$value)), array('1', 'true', 'yes', 'sim'), true);
+}
+
+function admin_orders_color_parts($labels, $values = array(), $tones = array())
+{
+    $labels = admin_orders_value_list($labels);
+    if (!empty($labels)) {
+        return array_map('strval', $labels);
+    }
+
+    $values = admin_orders_value_list($values);
+    $tones = admin_orders_value_list($tones);
+    $parts = array();
+    foreach ($values as $index => $value) {
+        $part = (string)$value;
+        if (isset($tones[$index]) && is_numeric($tones[$index])) {
+            $toneIndex = max(0, min(2, (int)$tones[$index]));
+            $toneLabels = array('claro', 'principal', 'escuro');
+            $part .= ' — tom ' . $toneLabels[$toneIndex];
+        }
+        $parts[] = $part;
+    }
+    return $parts;
+}
+
+function admin_orders_color_summary($labels, $values = array(), $tones = array())
+{
+    return implode(', ', admin_orders_color_parts($labels, $values, $tones));
 }
 
 function admin_orders_friendly_status($payment, $fulfillment)
@@ -677,11 +800,261 @@ if ($view === 'list') :
         <dt>Cartão (nome)</dt><dd><?= admin_orders_h($order['card_name']) ?></dd>
         <?php if (!empty($order['congregation'])): ?><dt>Congregação</dt><dd><?= admin_orders_h($order['congregation']) ?></dd><?php endif; ?>
         <dt>Entrega</dt><dd><?= admin_orders_h($order['delivery_label']) ?> (<?= admin_orders_h($order['delivery_option']) ?>)</dd>
-        <dt>Subtotal</dt><dd><?= admin_orders_cents_to_eur($order['subtotal_cents']) ?></dd>
+        <dt>Subtotal</dt><dd><?= !empty($raw['has_price_to_confirm']) ? admin_orders_h(admin_orders_cents_to_eur($order['subtotal_cents']) . ' + preço a confirmar') : admin_orders_cents_to_eur($order['subtotal_cents']) ?></dd>
         <dt>Portes (estimativa)</dt><dd><?= admin_orders_cents_to_eur($order['shipping_estimate_cents']) ?></dd>
-        <dt>Total estimado</dt><dd><strong><?= admin_orders_cents_to_eur($order['total_estimate_cents']) ?></strong></dd>
+        <dt>Total estimado</dt><dd><strong><?= !empty($raw['has_price_to_confirm']) ? 'A confirmar pela Mia' : admin_orders_cents_to_eur($order['total_estimate_cents']) ?></strong></dd>
         <?php if (!empty($order['ip_number'])): ?><dt>IP</dt><dd><code><?= admin_orders_h($order['ip_number']) ?></code></dd><?php endif; ?>
       </dl>
+
+      <?php if (isset($raw['items']) && is_array($raw['items']) && !empty($raw['items'])): ?>
+        <h3>Produtos da encomenda</h3>
+        <?php foreach ($raw['items'] as $item):
+          $quadroColors = admin_orders_color_parts(
+              admin_orders_item_value($item, array('quadro_colors'), array('colors'), array()),
+              admin_orders_item_value($item, array('quadro_color_values'), array('colors'), array()),
+              admin_orders_item_value($item, array('quadro_color_tones'), array('quadro_color_tones'), array())
+          );
+          $quadroColorsText = implode(', ', $quadroColors);
+          $quadroBackgroundColorsText = admin_orders_color_summary(
+              admin_orders_item_value($item, array('quadro_background_colors'), array('heart_background_colors'), array()),
+              admin_orders_item_value($item, array('quadro_background_color_values'), array('heart_background_colors'), array()),
+              admin_orders_item_value($item, array('quadro_background_color_tones'), array('heart_background_color_tones'), array())
+          );
+          $quadroBackgroundPaletteLabel = admin_orders_text_value(admin_orders_item_value(
+              $item,
+              array('quadro_background_palette_label', 'quadro_background_palette'),
+              array('heart_background_palette'),
+              ''
+          ));
+          $quadroMiaColors = admin_orders_bool_value(admin_orders_item_value($item, array('quadro_mia_colors'), array('mia_choose_colors'), false));
+          $quadroBackgroundMia = admin_orders_bool_value(admin_orders_item_value($item, array('quadro_background_mia'), array('mia_choose_heart_background_colors'), false));
+          $quadroHeartFinish = admin_orders_text_value(admin_orders_item_value($item, array('quadro_heart_finish'), array('heart_finish'), ''));
+          $quadroTypeValue = admin_orders_text_value(admin_orders_item_value($item, array('quadro_type'), array('designs'), ''));
+          $quadroSilhouette = admin_orders_text_value(admin_orders_item_value($item, array('quadro_silhouette'), array('silhouette'), ''));
+          $quadroText = admin_orders_text_value(admin_orders_item_value($item, array('quadro_text'), array('quadro_text'), ''));
+          $quadroDedication = admin_orders_text_value(admin_orders_item_value($item, array('quadro_dedication'), array('quadro_dedication'), ''));
+          $quadroNoDedication = admin_orders_bool_value(admin_orders_item_value($item, array('quadro_no_dedication'), array('no_dedication'), false));
+          $quadroSilhouetteDescription = admin_orders_text_value(admin_orders_item_value(
+              $item,
+              array('quadro_silhouette_description'),
+              array('quadro_silhouette_description'),
+              ''
+          ));
+          $quadroSilhouetteContactMe = admin_orders_bool_value(admin_orders_item_value(
+              $item,
+              array('quadro_silhouette_contact_me'),
+              array('silhouette_contact_me', 'quadro_silhouette_contact_me'),
+              false
+          ));
+          $quadroNoText = admin_orders_bool_value(admin_orders_item_value($item, array('quadro_no_text'), array('no_text', 'no_phrase'), false));
+          $quadroSilhouetteAudioUploads = admin_orders_item_value(
+              $item,
+              array('quadro_silhouette_audio_uploads'),
+              array('quadro_silhouette_audio_uploads'),
+              array()
+          );
+          $isCustomArtwork = admin_orders_bool_value(admin_orders_item_value($item, array('is_custom_artwork'), array(), false));
+          $customArtworkUploads = admin_orders_item_value(
+              $item,
+              array('artwork_uploads'),
+              array('cracha_artwork_uploads', 'iman_artwork_uploads'),
+              array()
+          );
+          $customArtworkHelp = admin_orders_bool_value(admin_orders_item_value(
+              $item,
+              array('artwork_help'),
+              array('cracha_artwork_help', 'iman_artwork_help'),
+              false
+          ));
+          $customCardDescription = admin_orders_text_value(admin_orders_item_value(
+              $item,
+              array('card_description'),
+              array('cracha_card_description', 'iman_card_description'),
+              ''
+          ));
+          $customCardReferenceUploads = admin_orders_item_value(
+              $item,
+              array('card_reference_uploads'),
+              array('cracha_card_reference_uploads', 'iman_card_reference_uploads'),
+              array()
+          );
+          $customCardAudioUploads = admin_orders_item_value(
+              $item,
+              array('card_audio_uploads'),
+              array('cracha_card_audio_uploads', 'iman_card_audio_uploads'),
+              array()
+          );
+          if (!$isCustomArtwork && (!empty($customArtworkUploads) || $customArtworkHelp || $customCardDescription !== '' || !empty($customCardReferenceUploads) || !empty($customCardAudioUploads))) {
+              $isCustomArtwork = true;
+          }
+        ?>
+          <div style="margin:0 0 14px;padding:12px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,0.35);">
+            <dl class="kv" style="margin:0;">
+              <dt>Produto</dt><dd><?= admin_orders_h(!empty($item['is_quadros']) ? admin_orders_moldura_text(isset($item['product_name']) ? $item['product_name'] : '') : (isset($item['product_name']) ? $item['product_name'] : '')) ?></dd>
+              <?php if (!empty($item['is_quadros'])): ?>
+                <dt>Tipo</dt><dd><?= admin_orders_h(admin_orders_moldura_text(isset($item['quadro_type_label']) && $item['quadro_type_label'] !== '' ? $item['quadro_type_label'] : (isset($item['quadro_type']) ? $item['quadro_type'] : ''))) ?></dd>
+                <?php if (!empty($item['quadro_palette_label'])): ?>
+                  <dt>Combinação de cores</dt><dd><?= admin_orders_h($item['quadro_palette_label']) ?></dd>
+                <?php endif; ?>
+                <?php if ($quadroMiaColors): ?>
+                  <dt>Cores principais</dt><dd>A Mia escolhe as cores.</dd>
+                <?php elseif (count($quadroColors) === 2 && in_array($quadroTypeValue, array('Coração e Frase', 'O Amor Nunca Acaba'), true)): ?>
+                  <dt>Cor inicial do degradê</dt><dd><?= admin_orders_h($quadroColors[0]) ?></dd>
+                  <dt>Cor final do degradê</dt><dd><?= admin_orders_h($quadroColors[1]) ?></dd>
+                <?php elseif ($quadroColorsText !== ''): ?>
+                  <dt>Cores principais</dt><dd><?= admin_orders_h($quadroColorsText) ?></dd>
+                <?php endif; ?>
+                <?php if (!empty($item['quadro_photo_orientation'])): ?>
+                  <dt>Orientação da moldura</dt><dd><?= admin_orders_h(isset($item['quadro_photo_orientation']) ? $item['quadro_photo_orientation'] : '') ?></dd>
+                <?php endif; ?>
+                <?php if ($quadroHeartFinish !== ''): ?><dt>Acabamento do coração</dt><dd><?= admin_orders_h($quadroHeartFinish) ?></dd><?php endif; ?>
+                <?php if ($quadroBackgroundPaletteLabel !== ''): ?>
+                  <dt>Combinação do fundo</dt><dd><?= admin_orders_h($quadroBackgroundPaletteLabel) ?></dd>
+                <?php endif; ?>
+                <?php if ($quadroBackgroundMia): ?>
+                  <dt>Cor do fundo do coração</dt><dd>A Mia escolhe a cor.</dd>
+                <?php elseif ($quadroBackgroundColorsText !== ''): ?>
+                  <dt>Cor do fundo do coração</dt><dd><?= admin_orders_h($quadroBackgroundColorsText) ?></dd>
+                <?php endif; ?>
+                <?php if ($quadroSilhouette !== ''): ?><dt>Silhueta</dt><dd><?= admin_orders_h($quadroSilhouette) ?></dd><?php endif; ?>
+                <?php if (!empty($item['quadro_baby_animal'])): ?><dt>Animal</dt><dd><?= admin_orders_h($item['quadro_baby_animal']) ?></dd><?php endif; ?>
+                <?php if (!empty($item['quadro_baby_gender'])): ?><dt>Menino ou menina</dt><dd><?= admin_orders_h($item['quadro_baby_gender']) ?></dd><?php endif; ?>
+                <?php if (!empty($item['quadro_baby_name'])): ?><dt>Nome da criança</dt><dd><?= admin_orders_h($item['quadro_baby_name']) ?></dd><?php endif; ?>
+                <?php if (!empty($item['quadro_baby_birth_date'])): ?><dt>Data de nascimento</dt><dd><?= admin_orders_h($item['quadro_baby_birth_date']) ?></dd><?php endif; ?>
+                <?php if (!empty($item['quadro_baby_birth_time'])): ?><dt>Hora de nascimento</dt><dd><?= admin_orders_h($item['quadro_baby_birth_time']) ?></dd><?php endif; ?>
+                <?php if (!empty($item['quadro_baby_birth_weight'])): ?><dt>Peso à nascença</dt><dd><?= admin_orders_h($item['quadro_baby_birth_weight']) ?></dd><?php endif; ?>
+                <?php if ($quadroNoDedication): ?>
+                  <dt>Dedicatória</dt><dd>Sem dedicatória</dd>
+                <?php elseif ($quadroDedication !== ''): ?>
+                  <dt>Dedicatória</dt><dd><?= nl2br(admin_orders_h($quadroDedication)) ?></dd>
+                <?php endif; ?>
+                <?php if ($quadroNoText): ?>
+                  <dt>Texto em vinil</dt><dd>Sem texto</dd>
+                <?php elseif (!empty($item['quadro_no_phrase'])): ?>
+                  <dt>Frase em vinil</dt><dd>Sem frase</dd>
+                <?php elseif ($quadroText !== ''): ?>
+                  <dt>Texto em vinil</dt><dd><?= nl2br(admin_orders_h($quadroText)) ?></dd>
+                <?php endif; ?>
+                <?php if ($quadroSilhouetteDescription !== ''): ?>
+                  <dt>Silhueta imaginada</dt><dd><?= nl2br(admin_orders_h($quadroSilhouetteDescription)) ?></dd>
+                <?php endif; ?>
+                <?php if ($quadroSilhouetteContactMe): ?>
+                  <dt>Silhueta imaginada</dt><dd>O cliente prefere explicar por contacto direto.</dd>
+                <?php endif; ?>
+                <?php if (!empty($item['quadro_super_example'])): ?><dt>Sugestão escolhida</dt><dd><?= admin_orders_h($item['quadro_super_example']) ?></dd><?php endif; ?>
+                <?php if (!empty($item['quadro_description'])): ?><dt>Descrição</dt><dd><?= nl2br(admin_orders_h($item['quadro_description'])) ?></dd><?php endif; ?>
+                <?php if (!empty($item['quadro_frame_size'])): ?><dt>Tamanho da moldura</dt><dd><?= admin_orders_h($item['quadro_frame_size']) ?></dd><?php endif; ?>
+                <?php if (!empty($item['quadro_photo_help'])): ?><dt>Foto</dt><dd>O cliente pediu ajuda para a enviar.</dd><?php endif; ?>
+                <?php if (!empty($item['quadro_uploads']) && is_array($item['quadro_uploads'])): ?>
+                  <dt>Foto principal</dt>
+                  <dd>
+                    <?php foreach ($item['quadro_uploads'] as $upload): ?>
+                      <?php if (!empty($upload['id'])): ?>
+                        <a href="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>"><?= admin_orders_h(isset($upload['name']) ? $upload['name'] : 'Descarregar foto') ?></a><br>
+                      <?php endif; ?>
+                    <?php endforeach; ?>
+                  </dd>
+                <?php endif; ?>
+                <?php if (!empty($item['quadro_reference_uploads']) && is_array($item['quadro_reference_uploads'])): ?>
+                  <dt>Fotos de referência</dt>
+                  <dd>
+                    <?php foreach ($item['quadro_reference_uploads'] as $upload): ?>
+                      <?php if (!empty($upload['id'])): ?>
+                        <a href="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>"><?= admin_orders_h(isset($upload['name']) ? $upload['name'] : 'Descarregar foto') ?></a><br>
+                      <?php endif; ?>
+                    <?php endforeach; ?>
+                  </dd>
+                <?php endif; ?>
+                <?php if (!empty($item['quadro_silhouette_uploads']) && is_array($item['quadro_silhouette_uploads'])): ?>
+                  <dt>Silhueta enviada</dt>
+                  <dd>
+                    <?php foreach ($item['quadro_silhouette_uploads'] as $upload): ?>
+                      <?php if (!empty($upload['id'])): ?>
+                        <a href="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>"><?= admin_orders_h(isset($upload['name']) ? $upload['name'] : 'Descarregar silhueta') ?></a><br>
+                      <?php endif; ?>
+                    <?php endforeach; ?>
+                  </dd>
+                <?php endif; ?>
+                <?php if (!empty($item['quadro_audio_uploads']) && is_array($item['quadro_audio_uploads'])): ?>
+                  <dt>Áudios</dt>
+                  <dd>
+                    <?php foreach ($item['quadro_audio_uploads'] as $upload): ?>
+                      <?php if (!empty($upload['id'])): ?>
+                        <audio controls preload="metadata" style="display:block;width:min(100%,420px);margin:0 0 6px;" src="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>&amp;inline=1"></audio>
+                        <a href="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>"><?= admin_orders_h(isset($upload['name']) ? $upload['name'] : 'Descarregar áudio') ?></a><br>
+                      <?php endif; ?>
+                    <?php endforeach; ?>
+                  </dd>
+                <?php endif; ?>
+                <?php if (!empty($quadroSilhouetteAudioUploads) && is_array($quadroSilhouetteAudioUploads)): ?>
+                  <dt>Áudio sobre a silhueta</dt>
+                  <dd>
+                    <?php foreach ($quadroSilhouetteAudioUploads as $upload): ?>
+                      <?php if (is_array($upload) && !empty($upload['id'])): ?>
+                        <audio controls preload="metadata" style="display:block;width:min(100%,420px);margin:0 0 6px;" src="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>&amp;inline=1"></audio>
+                        <a href="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>"><?= admin_orders_h(isset($upload['name']) ? $upload['name'] : 'Descarregar áudio') ?></a><br>
+                      <?php endif; ?>
+                    <?php endforeach; ?>
+                  </dd>
+                <?php endif; ?>
+              <?php endif; ?>
+              <?php if ($isCustomArtwork): ?>
+                <?php
+                  $customSizeLabel = admin_orders_text_value(admin_orders_item_value($item, array('size_label', 'size'), array('size'), ''));
+                  $customPriceKey = admin_orders_text_value(admin_orders_item_value($item, array('price_key'), array(), ''));
+                  $customQuantity = admin_orders_text_value(admin_orders_item_value($item, array('pack_quantity', 'quantity'), array('pack_quantity'), ''));
+                ?>
+                <?php if ($customSizeLabel !== ''): ?>
+                  <dt>Tipo / tamanho</dt><dd><?= admin_orders_h($customSizeLabel) ?><?php if ($customPriceKey !== '' && $customPriceKey !== $customSizeLabel): ?> <small style="color:var(--muted);">(tabela: <?= admin_orders_h($customPriceKey) ?>)</small><?php endif; ?></dd>
+                <?php endif; ?>
+                <?php if ($customQuantity !== ''): ?><dt>Quantidade</dt><dd><?= admin_orders_h($customQuantity) ?></dd><?php endif; ?>
+                <?php if ($customArtworkHelp): ?>
+                  <dt>Imagem principal</dt><dd>O cliente pediu ajuda para preparar ou enviar a imagem.</dd>
+                <?php endif; ?>
+                <?php if (!empty($customArtworkUploads) && is_array($customArtworkUploads)): ?>
+                  <dt>Imagem principal</dt>
+                  <dd>
+                    <?php foreach ($customArtworkUploads as $upload): ?>
+                      <?php if (is_array($upload) && !empty($upload['id'])): ?>
+                        <a href="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>"><?= admin_orders_h(isset($upload['name']) ? $upload['name'] : 'Descarregar imagem') ?></a><br>
+                      <?php endif; ?>
+                    <?php endforeach; ?>
+                  </dd>
+                <?php endif; ?>
+                <?php if ($customCardDescription !== ''): ?>
+                  <dt>Cartão — fundo e texto</dt><dd><?= nl2br(admin_orders_h($customCardDescription)) ?></dd>
+                <?php endif; ?>
+                <?php if (!empty($customCardReferenceUploads) && is_array($customCardReferenceUploads)): ?>
+                  <dt>Referências para o cartão</dt>
+                  <dd>
+                    <?php foreach ($customCardReferenceUploads as $upload): ?>
+                      <?php if (is_array($upload) && !empty($upload['id'])): ?>
+                        <a href="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>"><?= admin_orders_h(isset($upload['name']) ? $upload['name'] : 'Descarregar referência') ?></a><br>
+                      <?php endif; ?>
+                    <?php endforeach; ?>
+                  </dd>
+                <?php endif; ?>
+                <?php if (!empty($customCardAudioUploads) && is_array($customCardAudioUploads)): ?>
+                  <dt>Áudios sobre o cartão</dt>
+                  <dd>
+                    <?php foreach ($customCardAudioUploads as $upload): ?>
+                      <?php if (is_array($upload) && !empty($upload['id'])): ?>
+                        <audio controls preload="metadata" style="display:block;width:min(100%,420px);margin:0 0 6px;" src="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>&amp;inline=1"></audio>
+                        <a href="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>"><?= admin_orders_h(isset($upload['name']) ? $upload['name'] : 'Descarregar áudio') ?></a><br>
+                      <?php endif; ?>
+                    <?php endforeach; ?>
+                  </dd>
+                <?php endif; ?>
+              <?php endif; ?>
+              <?php if (!empty($item['price_quote_only'])): ?>
+                <dt>Preço</dt><dd><?= admin_orders_h(isset($item['price_range_line']) ? $item['price_range_line'] . ' (a confirmar)' : 'A confirmar') ?></dd>
+              <?php elseif (isset($item['price_cents'])): ?>
+                <dt>Preço</dt><dd><?= admin_orders_cents_to_eur($item['price_cents']) ?></dd>
+              <?php endif; ?>
+            </dl>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
 
       <?php if (!empty($raw['assorted_designs'])): ?>
         <h3>Designs encomendados</h3>

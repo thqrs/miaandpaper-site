@@ -4,12 +4,16 @@
 
 # --- Pastas locais que nao devem ir para o repo ---
 private/
+private-local/
 imagens/
 .claude/
+local-test-data/
+audios/
 
 # --- Backups e arquivos pessoais (defensivo, ja foram movidos) ---
 _deploy_backups/
 _manual_backups/
+*.mhtml
 *.7z
 *.zip
 
@@ -47,3 +51,20 @@ Thumbs.db
 *.sqlite
 *.sqlite-journal
 *.db
+
+site/novos_designs/
+novos_designs/
+*.exe
+
+# Cópias de segurança criadas pela galeria ao gravar um produto
+*.galeria-bak
+
+# Cache de dimensões das imagens (gerado pela galeria)
+site/content/.galeria-dimensoes.json
+
+# --- Ficheiros de trabalho local (backups manuais, folhas de calculo, mockups) ---
+*.xlsx
+/cadernos - backup.json
+/cadernos - super backup sem glossy.json
+/catalogo-tracking-corrigido.txt
+/metro_live_visitors_mockup.html
