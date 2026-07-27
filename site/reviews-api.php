@@ -108,6 +108,7 @@ function reviews_normalize($input)
         'defaultStars' => max(1, min(5, (int)(isset($settingsIn['defaultStars']) ? $settingsIn['defaultStars'] : 5))),
         'defaultIcon' => reviews_choice(isset($settingsIn['defaultIcon']) ? $settingsIn['defaultIcon'] : '', array('heart', 'flower', 'sparkle', 'check', 'quote', 'custom'), 'heart'),
         'defaultCustomIcon' => reviews_text(isset($settingsIn['defaultCustomIcon']) ? $settingsIn['defaultCustomIcon'] : '✦', 8),
+        'eggPumps' => max(0, min(20, (int)(isset($settingsIn['eggPumps']) ? $settingsIn['eggPumps'] : 7))),
     );
 
     $rows = isset($input['reviews']) && is_array($input['reviews']) ? $input['reviews'] : array();

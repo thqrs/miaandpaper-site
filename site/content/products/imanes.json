@@ -1,5 +1,6 @@
 {
     "slug": "imanes",
+    "orderFlow": "custom-artwork",
     "name": "Ímanes",
     "brand": "Mia & Paper",
     "ordersSuspended": false,
@@ -453,11 +454,11 @@
             "label": "Pack",
             "title": "Diz-me quantos ímanes queres",
             "text": "Quanto mais ímanes encomendares maior o desconto",
-            "adjustHint": "Se quiseres também podes ajustar a quantidade de cada íman individualmente",
             "template": "quantity-builder",
             "field": "pack_quantity",
             "selection": "pack",
             "freeQuantity": true,
+            "pricingMode": "linear-discount-interpolation",
             "items": [
                 {
                     "id": "pack-1",

@@ -13,7 +13,8 @@
         "defaultRatingMode": "stars",
         "defaultStars": 5,
         "defaultIcon": "heart",
-        "defaultCustomIcon": "?"
+        "defaultCustomIcon": "?",
+        "eggPumps": 7
     },
     "reviews": [
         {

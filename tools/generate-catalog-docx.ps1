@@ -7,6 +7,7 @@ $ErrorActionPreference = 'Stop'
 $siteDirectory = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\site'))
 $outputFile = [System.IO.Path]::GetFullPath($OutputFile)
 $catalogPages = @(
+    (Join-Path $siteDirectory 'catalogo\molduras\index.html'),
     (Join-Path $siteDirectory 'catalogo\crachas\index.html'),
     (Join-Path $siteDirectory 'catalogo\imanes\index.html'),
     (Join-Path $siteDirectory 'catalogo\caderninhos\index.html'),

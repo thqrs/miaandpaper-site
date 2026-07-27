@@ -80,8 +80,10 @@ body[data-catalog-page^="oferta-"] .catalog-product-card {
 
 body[data-catalog-page="ofertas"] .offer-card-image-frame {
   display: block;
-  width: 112px;
-  height: 112px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  min-width: 0;
   overflow: hidden;
   border: 1px solid rgba(114, 85, 30, 0.16);
   border-radius: var(--radius);
@@ -98,14 +100,16 @@ body[data-catalog-page="ofertas"] .offer-card-image-frame > img {
 }
 
 .offer-product-section .catalog-product-copy strong {
-  font-size: clamp(1.25rem, 5vw, 1.72rem);
+  font-size: clamp(1.2rem, 4.2vw, 1.72rem);
 }
 
 .offer-pdf-thumb {
   display: grid;
   place-items: center;
-  width: 112px;
-  height: 112px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  min-width: 0;
   border: 1px solid rgba(114, 85, 30, 0.16);
   border-radius: var(--radius);
   background:
@@ -365,11 +369,6 @@ body[data-catalog-page="ofertas"] .offer-card-image-frame > img {
 }
 
 @media (max-width: 640px) {
-  .offer-pdf-thumb {
-    width: 92px;
-    height: 92px;
-  }
-
   .offer-pdf-frame {
     min-height: 420px;
   }

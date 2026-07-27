@@ -52,6 +52,8 @@
   var orderUploadNextOperationId = 1;
   var orderFilePickerRevision = 0;
   var orderActiveFilePicker = null;
+  var freeQuantityChartCleanup = function () {};
+  var freeQuantityChartRefresh = function () {};
 
   function installFavicon() {
     var link = document.querySelector('link[rel~="icon"]') || document.createElement("link");
@@ -3073,6 +3075,11 @@
     selections.assorted_designs = isAssortedSelected(product) ? "1" : "";
     selections.pack_quantity = getPackQuantity(product);
     selections.size = priceInfo(product).size || selections.size || "";
+    if (product && product.orderFlow) {
+      selections.order_flow = String(product.orderFlow);
+    } else {
+      delete selections.order_flow;
+    }
 
     if (isQuadrosProduct(product)) {
       selections.frame_size = priceInfo(product).frameSize || selections.frame_size || "";
@@ -5453,6 +5460,49 @@
     return step && step.freeQuantity === true ? step : null;
   }
 
+  function usesLinearDiscountPricing(product) {
+    var step = freeQuantityStep(product);
+    return !!(step && step.pricingMode === "linear-discount-interpolation");
+  }
+
+  function freeQuantitySelectionMode(product) {
+    var explicit = String(state.selections.free_quantity_mode || "");
+    var current = getPackQuantity(product);
+    var table = activePriceTableForPackFilter(product);
+
+    if (explicit === "pack" || explicit === "custom") {
+      return explicit;
+    }
+    return current && table && table[String(current)] != null ? "pack" : "custom";
+  }
+
+  var FREE_QUANTITY_RANGE_MAXIMUM = 100;
+
+  function freeQuantityRangeMaximum(product) {
+    return Math.max(
+      minimumFreeQuantity(product),
+      Math.min(maximumFreeQuantity(product), FREE_QUANTITY_RANGE_MAXIMUM)
+    );
+  }
+
+  function freeQuantityRangePosition(product, quantity) {
+    var minimum = minimumFreeQuantity(product);
+    var maximum = freeQuantityRangeMaximum(product);
+    return Math.max(minimum, Math.min(maximum, Math.round(Number(quantity) || minimum)));
+  }
+
+  function freeQuantityFromRangePosition(product, position) {
+    var minimum = minimumFreeQuantity(product);
+    var maximum = freeQuantityRangeMaximum(product);
+    return Math.max(minimum, Math.min(maximum, Math.round(Number(position) || minimum)));
+  }
+
+  function freeQuantityModeForValue(product, quantity) {
+    var table = activePriceTableForPackFilter(product);
+    var count = Math.max(0, Math.round(Number(quantity) || 0));
+    return count && table && table[String(count)] != null ? "pack" : "custom";
+  }
+
   function isCustomArtworkProduct(product) {
     return !!(product && findStep(product, "artwork_upload") && freeQuantityStep(product));
   }
@@ -5519,6 +5569,76 @@
       }
     });
     return Math.max(0, Math.round(count * (Number(priceTable[String(tier)]) || 0) / tier));
+  }
+
+  // LINEAR_DISCOUNT_PRICING_V1: cada pack define um ponto de desconto.
+  // Entre dois packs, a percentagem de desconto evolui em linha reta; assim,
+  // chegar a um pack maior nunca provoca uma queda brusca do preco total.
+  // Antes do primeiro e depois do ultimo pack mantem-se o desconto do extremo.
+  function linearDiscountPriceCents(priceTable, quantity) {
+    var count = Math.max(0, parseInt(quantity, 10) || 0);
+    var baseline = baselineUnitCents(priceTable);
+    var points;
+    var lower;
+    var upper;
+    var discount;
+
+    if (!count || !baseline) {
+      return 0;
+    }
+    if (priceTable && priceTable[String(count)] != null) {
+      return Math.max(0, Math.round(Number(priceTable[String(count)]) || 0));
+    }
+
+    points = Object.keys(priceTable || {}).map(function (key) {
+      var packQuantity = parseInt(key, 10) || 0;
+      var packCents = Math.max(0, Number(priceTable[key]) || 0);
+      return {
+        quantity: packQuantity,
+        discount: packQuantity && packCents
+          ? Math.max(0, 1 - packCents / (baseline * packQuantity))
+          : 0
+      };
+    }).filter(function (point) {
+      return point.quantity > 0;
+    }).sort(function (a, b) {
+      return a.quantity - b.quantity;
+    });
+
+    if (!points.length) {
+      return 0;
+    }
+    lower = points[0];
+    upper = points[points.length - 1];
+    points.forEach(function (point) {
+      if (point.quantity < count) {
+        lower = point;
+      } else if (point.quantity > count && upper.quantity === points[points.length - 1].quantity) {
+        upper = point;
+      }
+    });
+
+    if (count <= points[0].quantity) {
+      discount = points[0].discount;
+    } else if (count >= points[points.length - 1].quantity) {
+      discount = points[points.length - 1].discount;
+    } else {
+      discount = lower.discount + (upper.discount - lower.discount)
+        * (count - lower.quantity) / (upper.quantity - lower.quantity);
+    }
+    return Math.max(0, Math.round(count * baseline * (1 - discount)));
+  }
+
+  function linearDiscountPriceSeries(priceTable, maximumQuantity) {
+    var limit = Math.max(0, parseInt(maximumQuantity, 10) || 0);
+    var prices = new Array(limit + 1);
+    var quantity;
+
+    prices[0] = 0;
+    for (quantity = 1; quantity <= limit; quantity += 1) {
+      prices[quantity] = linearDiscountPriceCents(priceTable, quantity);
+    }
+    return prices;
   }
 
   function activePriceTableForPackFilter(product) {
@@ -6074,7 +6194,11 @@
     var priceKey = priceKeyForSize(product, size);
     var table = product.prices && product.prices[priceKey] ? product.prices[priceKey] : null;
     var cents = table && packQuantity
-      ? (freeQuantityStep(product) ? tierPriceCents(table, packQuantity) : Number(table[String(packQuantity)]))
+      ? (freeQuantityStep(product)
+        ? (usesLinearDiscountPricing(product)
+          ? linearDiscountPriceCents(table, packQuantity)
+          : tierPriceCents(table, packQuantity))
+        : Number(table[String(packQuantity)]))
       : 0;
     var unitCents = baselineUnitCents(table);
     var discount = 0;
@@ -9166,6 +9290,7 @@
   function renderPackSelector(product) {
     var packStep = findStep(product, "pack");
     var current = getPackQuantity(product);
+    var packModeSelected = !freeQuantityStep(product) || freeQuantitySelectionMode(product) === "pack";
     var selectedCount = selectedDesignItems(product).length;
     var priceTable = activePriceTableForPackFilter(product);
     var visibleItems = packStep && Array.isArray(packStep.items)
@@ -9182,7 +9307,7 @@
       var quantity = Number(item.quantity);
       var disabled = quantity < selectedCount;
       var classes = "pack-option";
-      if (quantity === current) {
+      if (quantity === current && packModeSelected) {
         classes += " is-selected";
       }
       if (disabled) {
@@ -9191,7 +9316,7 @@
       // CLICK_TRACKING_V1: data-track-* permite agregar quais packs são
       // mais escolhidos / quantos cliques falham (pack disabled).
       cards += [
-        '<button class="' + classes + '" type="button" data-pack-quantity="' + quantity + '" data-track="true" data-track-action="select_pack" data-track-id="pack_' + quantity + '" data-track-label="' + escapeHtml(item.title + ' ' + item.subtitle) + '"' + (disabled ? ' data-pack-disabled="1" aria-disabled="true"' : '') + '>',
+        '<button class="' + classes + '" type="button" data-pack-quantity="' + quantity + '" data-track="true" data-track-action="select_pack" data-track-id="pack_' + quantity + '" data-track-label="' + escapeHtml(item.title + ' ' + item.subtitle) + '" aria-pressed="' + (quantity === current && packModeSelected ? 'true' : 'false') + '"' + (disabled ? ' data-pack-disabled="1" aria-disabled="true"' : '') + '>',
         '<strong>' + escapeHtml(item.title) + '</strong>',
         '<span>' + escapeHtml(item.subtitle) + '</span>',
         '</button>'
@@ -9369,39 +9494,367 @@
     ].join("");
   }
 
-  function renderFreeQuantityBuilder(product) {
-    var minimum = minimumFreeQuantity(product);
-    var maximum = maximumFreeQuantity(product);
-    var current = getPackQuantity(product) || minimum;
-    var hint = freeQuantityStep(product) && freeQuantityStep(product).adjustHint
-      ? freeQuantityStep(product).adjustHint
-      : "Indica a quantidade exata que pretendes.";
+  function renderFreeQuantityPriceChart(product) {
+    var table = activePriceTableForPackFilter(product);
+
+    if (!usesLinearDiscountPricing(product) || !table) {
+      return "";
+    }
 
     return [
-      '<section class="free-quantity-builder" aria-label="Quantidade">',
-      '<div class="free-quantity-control">',
-      '<button type="button" data-free-quantity-change="-1" aria-label="Retirar uma unidade"' + (current <= minimum ? ' disabled' : '') + '>−</button>',
-      '<label><span>Quantidade</span><input type="number" inputmode="numeric" min="' + minimum + '" max="' + maximum + '" step="1" value="' + current + '" data-free-quantity-input></label>',
-      '<button type="button" data-free-quantity-change="1" aria-label="Acrescentar uma unidade"' + (current >= maximum ? ' disabled' : '') + '>+</button>',
+      '<section class="free-price-chart" aria-labelledby="free-price-chart-title">',
+      '<header class="free-price-chart-heading">',
+      '<div><span>Vê antes de escolher</span><h3 id="free-price-chart-title">Como o preço total varia</h3></div>',
+      '<p id="free-price-chart-help">Clica ou toca na linha para consultar outra quantidade.</p>',
+      '</header>',
+      '<div class="free-price-chart-stage" data-free-price-chart tabindex="0" role="group" aria-describedby="free-price-chart-help free-price-chart-tooltip">',
+      '<canvas data-free-price-chart-canvas aria-hidden="true"></canvas>',
+      '<span class="free-price-chart-current" data-free-price-chart-current hidden>A tua quantidade</span>',
       '</div>',
-      '<p>' + escapeHtml(hint) + (minimum > 1 ? ' Mínimo: ' + minimum + ' unidades.' : '') + '</p>',
-      '</section>',
-      renderPackPriceOverview(product)
+      '<div class="free-price-chart-tooltip" id="free-price-chart-tooltip" data-free-price-chart-tooltip aria-live="polite"></div>',
+      '<div class="free-price-chart-axis-labels" aria-hidden="true"><span>Preço total</span><span>Quantidade</span></div>',
+      '</section>'
     ].join("");
   }
 
-  function setFreeQuantity(product, value) {
+  function freePriceChartMaximum(product, priceTable, current) {
+    var minimum = minimumFreeQuantity(product);
+    var maximum = maximumFreeQuantity(product);
+    var largestPack = Object.keys(priceTable || {}).reduce(function (largest, key) {
+      return Math.max(largest, parseInt(key, 10) || 0);
+    }, minimum);
+    var target = Math.max(minimum + 20, Math.ceil(largestPack * 1.25), Math.ceil(current * 1.15));
+
+    target = Math.ceil(target / 5) * 5;
+    return Math.max(minimum, Math.min(maximum, target));
+  }
+
+  function initFreeQuantityPriceCharts(product) {
+    var stage;
+    var canvas;
+    var tooltip;
+    var currentLabel;
+    var priceTable;
+    var context;
+    var observer = null;
+    var inspectedQuantity;
+    var hasInteracted = false;
+    var series = [];
+    var chartMinimum = 1;
+    var chartMaximum = 1;
+    var plot = null;
+
+    freeQuantityChartCleanup();
+    freeQuantityChartCleanup = function () {};
+    freeQuantityChartRefresh = function () {};
+
+    stage = document.querySelector("[data-free-price-chart]");
+    if (!stage || !usesLinearDiscountPricing(product)) {
+      return;
+    }
+
+    canvas = stage.querySelector("[data-free-price-chart-canvas]");
+    tooltip = document.querySelector("[data-free-price-chart-tooltip]");
+    currentLabel = stage.querySelector("[data-free-price-chart-current]");
+    priceTable = activePriceTableForPackFilter(product);
+    context = canvas && canvas.getContext ? canvas.getContext("2d") : null;
+
+    if (!canvas || !tooltip || !priceTable || !context) {
+      return;
+    }
+
+    function cssColor(name, fallback) {
+      var value = window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return value || fallback;
+    }
+
+    function currentQuantity() {
+      return getPackQuantity(product) || minimumFreeQuantity(product);
+    }
+
+    function prepareSeries(resetInspection) {
+      var current = currentQuantity();
+      chartMinimum = minimumFreeQuantity(product);
+      chartMaximum = freePriceChartMaximum(product, priceTable, current);
+      series = linearDiscountPriceSeries(priceTable, chartMaximum);
+      if (resetInspection || !inspectedQuantity || inspectedQuantity < chartMinimum || inspectedQuantity > chartMaximum) {
+        inspectedQuantity = current;
+      }
+      stage.setAttribute(
+        "aria-label",
+        "Gráfico do preço total entre " + chartMinimum + " e " + chartMaximum + " unidades. Usa as setas para consultar quantidades."
+      );
+    }
+
+    function detailsFor(quantity) {
+      var cents = series[quantity] || linearDiscountPriceCents(priceTable, quantity);
+      var baseline = baselineUnitCents(priceTable);
+      var discount = baseline && cents < baseline * quantity
+        ? Math.round((1 - cents / (baseline * quantity)) * 100)
+        : 0;
+
+      return {
+        total: formatCents(cents),
+        each: formatUnitPrice(cents, quantity, productUnitShort(product)).replace(/\s*\/.*$/, ""),
+        discount: discount
+      };
+    }
+
+    function updateTooltip() {
+      var details = detailsFor(inspectedQuantity);
+      var isCurrent = inspectedQuantity === currentQuantity();
+
+      tooltip.innerHTML = [
+        '<strong>' + escapeHtml(productQuantityLabel(product, inspectedQuantity)) + (hasInteracted && isCurrent ? ' <em>A tua quantidade</em>' : '') + '</strong>',
+        '<span><b>' + escapeHtml(details.each) + '</b> cada</span>',
+        '<span><b>' + details.discount + '%</b> desconto</span>',
+        '<span><b>' + escapeHtml(details.total) + '</b> total</span>'
+      ].join("");
+    }
+
+    function draw() {
+      var rect = canvas.getBoundingClientRect();
+      var width = Math.max(280, Math.round(rect.width));
+      var height = Math.max(230, Math.round(rect.height));
+      var ratio = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      var left = width < 430 ? 48 : 58;
+      var right = 18;
+      var top = 20;
+      var bottom = 38;
+      var graphWidth = Math.max(1, width - left - right);
+      var graphHeight = Math.max(1, height - top - bottom);
+      var values = [];
+      var maximumCents;
+      var yMaximum;
+      var ink = cssColor("--ink", "#2e2413");
+      var muted = cssColor("--muted", "#7f6b42");
+      var line = cssColor("--line", "#dfcfaa");
+      var moss = cssColor("--moss", "#72551e");
+      var gold = cssColor("--gold", "#d7aa36");
+      var quantity;
+      var tick;
+      var current = currentQuantity();
+
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.clearRect(0, 0, width, height);
+      context.font = (width < 430 ? "11px" : "12px") + " system-ui, -apple-system, sans-serif";
+      context.lineCap = "round";
+      context.lineJoin = "round";
+
+      for (quantity = chartMinimum; quantity <= chartMaximum; quantity += 1) {
+        values.push(series[quantity] || 0);
+      }
+      maximumCents = values.reduce(function (maximum, cents) { return Math.max(maximum, cents); }, 0);
+      yMaximum = Math.max(100, Math.ceil(maximumCents * 1.08 / 100) * 100);
+
+      function xFor(value) {
+        return left + ((value - chartMinimum) / Math.max(1, chartMaximum - chartMinimum)) * graphWidth;
+      }
+
+      function yFor(cents) {
+        return top + graphHeight - (cents / yMaximum) * graphHeight;
+      }
+
+      plot = { left: left, right: left + graphWidth, top: top, bottom: top + graphHeight, width: graphWidth };
+
+      context.strokeStyle = line;
+      context.fillStyle = muted;
+      context.lineWidth = 1;
+      for (tick = 0; tick <= 4; tick += 1) {
+        var yValue = Math.round(yMaximum * tick / 4);
+        var y = yFor(yValue);
+        context.globalAlpha = tick === 0 ? 0.8 : 0.48;
+        context.beginPath();
+        context.moveTo(left, y);
+        context.lineTo(left + graphWidth, y);
+        context.stroke();
+        context.globalAlpha = 1;
+        context.textAlign = "right";
+        context.textBaseline = "middle";
+        context.fillText((yValue / 100).toLocaleString("pt-PT", { maximumFractionDigits: 0 }) + " €", left - 8, y);
+      }
+
+      context.textBaseline = "top";
+      for (tick = 0; tick <= 4; tick += 1) {
+        var xQuantity = Math.round(chartMinimum + (chartMaximum - chartMinimum) * tick / 4);
+        var x = xFor(xQuantity);
+        context.textAlign = tick === 0 ? "left" : (tick === 4 ? "right" : "center");
+        context.fillStyle = muted;
+        context.fillText(String(xQuantity), x, top + graphHeight + 10);
+      }
+
+      context.beginPath();
+      for (quantity = chartMinimum; quantity <= chartMaximum; quantity += 1) {
+        var pointX = xFor(quantity);
+        var pointY = yFor(series[quantity] || 0);
+        if (quantity === chartMinimum) {
+          context.moveTo(pointX, pointY);
+        } else {
+          context.lineTo(pointX, pointY);
+        }
+      }
+      context.strokeStyle = moss;
+      context.lineWidth = 2.6;
+      context.globalAlpha = 0.94;
+      context.stroke();
+      context.globalAlpha = 1;
+
+      function drawMarker(value, fill, radius, hollow) {
+        var markerX = xFor(value);
+        var markerY = yFor(series[value] || 0);
+        context.beginPath();
+        context.arc(markerX, markerY, radius, 0, Math.PI * 2);
+        context.fillStyle = hollow ? cssColor("--card", "#fffdf5") : fill;
+        context.fill();
+        context.strokeStyle = fill;
+        context.lineWidth = hollow ? 2.5 : 2;
+        context.stroke();
+        return { x: markerX, y: markerY };
+      }
+
+      context.save();
+      context.setLineDash([4, 5]);
+      context.strokeStyle = gold;
+      context.lineWidth = 1.5;
+      context.beginPath();
+      context.moveTo(xFor(current), top);
+      context.lineTo(xFor(current), top + graphHeight);
+      context.stroke();
+      context.restore();
+
+      var currentPoint = drawMarker(current, gold, 5, false);
+      if (inspectedQuantity !== current) {
+        drawMarker(inspectedQuantity, moss, 5, true);
+      }
+
+      if (currentLabel) {
+        currentLabel.hidden = !(hasInteracted && inspectedQuantity === current);
+        currentLabel.style.left = Math.max(72, Math.min(width - 72, currentPoint.x)) + "px";
+        currentLabel.style.top = Math.max(2, Math.min(height - 32, currentPoint.y - 34)) + "px";
+      }
+
+      context.fillStyle = ink;
+      updateTooltip();
+    }
+
+    function quantityFromPointer(event) {
+      var rect = stage.getBoundingClientRect();
+      var localX;
+      var ratio;
+
+      if (!plot || !rect.width) {
+        return currentQuantity();
+      }
+      localX = Math.max(plot.left, Math.min(plot.right, event.clientX - rect.left));
+      ratio = (localX - plot.left) / Math.max(1, plot.width);
+      return Math.max(chartMinimum, Math.min(chartMaximum, Math.round(chartMinimum + ratio * (chartMaximum - chartMinimum))));
+    }
+
+    function handleClick(event) {
+      inspectedQuantity = quantityFromPointer(event);
+      hasInteracted = true;
+      draw();
+    }
+
+    function handleKeydown(event) {
+      var next = inspectedQuantity;
+
+      if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+        next -= 1;
+      } else if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+        next += 1;
+      } else if (event.key === "Home") {
+        next = chartMinimum;
+      } else if (event.key === "End") {
+        next = chartMaximum;
+      } else {
+        return;
+      }
+
+      event.preventDefault();
+      inspectedQuantity = Math.max(chartMinimum, Math.min(chartMaximum, next));
+      hasInteracted = true;
+      draw();
+    }
+
+    function handleResize() {
+      window.requestAnimationFrame(draw);
+    }
+
+    prepareSeries(true);
+    stage.addEventListener("click", handleClick);
+    stage.addEventListener("keydown", handleKeydown);
+
+    if (typeof window.ResizeObserver === "function") {
+      observer = new window.ResizeObserver(handleResize);
+      observer.observe(stage);
+    } else {
+      window.addEventListener("resize", handleResize);
+    }
+
+    freeQuantityChartRefresh = function () {
+      hasInteracted = false;
+      prepareSeries(true);
+      draw();
+    };
+    freeQuantityChartCleanup = function () {
+      stage.removeEventListener("click", handleClick);
+      stage.removeEventListener("keydown", handleKeydown);
+      if (observer) {
+        observer.disconnect();
+      } else {
+        window.removeEventListener("resize", handleResize);
+      }
+      freeQuantityChartRefresh = function () {};
+    };
+
+    draw();
+  }
+
+  function renderFreeQuantityBuilder(product) {
+    var minimum = minimumFreeQuantity(product);
+    var rangeMaximum = freeQuantityRangeMaximum(product);
+    var current = getPackQuantity(product) || minimum;
+    var rangePosition = freeQuantityRangePosition(product, current);
+    var rangeProgress = rangeMaximum > minimum
+      ? ((rangePosition - minimum) / (rangeMaximum - minimum) * 100).toFixed(2)
+      : "0";
+
+    return [
+      renderPackSelector(product),
+      '<section class="free-quantity-builder" aria-label="Quantidade">',
+      '<p class="free-quantity-mode-label"><span>Ou define outra quantidade</span></p>',
+      '<div class="free-quantity-readout"><strong data-free-quantity-value>' + current + '</strong><small data-free-quantity-unit>' + escapeHtml(current === 1 ? productUnitSingular(product) : productUnit(product)) + '</small></div>',
+      '<div class="free-quantity-control">',
+      '<button type="button" data-free-quantity-change="-1" aria-label="Retirar uma unidade"' + (current <= minimum ? ' disabled' : '') + '>−</button>',
+      '<label class="free-quantity-slider"><span>Quantidade: ' + current + '</span><input type="range" min="' + minimum + '" max="' + rangeMaximum + '" step="1" value="' + rangePosition + '" style="--range-progress:' + rangeProgress + '%" data-free-quantity-range aria-valuetext="' + escapeHtml(productQuantityLabel(product, current)) + '"></label>',
+      '<button type="button" data-free-quantity-change="1" aria-label="Acrescentar uma unidade"' + (current >= rangeMaximum ? ' disabled' : '') + '>+</button>',
+      '</div>',
+      '</section>',
+      renderPackPriceOverview(product),
+      renderFreeQuantityPriceChart(product)
+    ].join("");
+  }
+
+  function setFreeQuantity(product, value, mode, trackSelection) {
     var minimum = minimumFreeQuantity(product);
     var maximum = maximumFreeQuantity(product);
     var quantity = Math.round(Number(value) || 0);
 
     quantity = Math.max(minimum, Math.min(maximum, quantity || minimum));
     state.selections.pack_quantity = quantity;
+    state.selections.free_quantity_mode = mode === "pack"
+      ? "pack"
+      : freeQuantityModeForValue(product, quantity);
     state.quantitySignature = "";
     state.quantitiesTouched = false;
     state.quantityPackBaseline = 0;
     state.errors = "";
-    try { trackOptionSelected(product, "quantity", quantity, productQuantityLabel(product, quantity)); } catch (e) {}
+    if (trackSelection !== false) {
+      try { trackOptionSelected(product, "quantity", quantity, productQuantityLabel(product, quantity)); } catch (e) {}
+    }
     return quantity;
   }
 
@@ -9414,15 +9867,47 @@
     var nextOverview;
     var quantity = getPackQuantity(product);
     var minimum = minimumFreeQuantity(product);
-    var maximum = maximumFreeQuantity(product);
+    var rangeMaximum = freeQuantityRangeMaximum(product);
     var minus = builder ? builder.querySelector('[data-free-quantity-change="-1"]') : null;
     var plus = builder ? builder.querySelector('[data-free-quantity-change="1"]') : null;
+    var range = builder ? builder.querySelector("[data-free-quantity-range]") : null;
+    var rangeLabel = builder ? builder.querySelector(".free-quantity-slider > span") : null;
+    var value = builder ? builder.querySelector("[data-free-quantity-value]") : null;
+    var unit = builder ? builder.querySelector("[data-free-quantity-unit]") : null;
+    var packControl = builder && builder.previousElementSibling && builder.previousElementSibling.matches(".pack-control")
+      ? builder.previousElementSibling
+      : null;
 
     if (minus) {
       minus.disabled = !quantity || quantity <= minimum;
     }
     if (plus) {
-      plus.disabled = !quantity || quantity >= maximum;
+      plus.disabled = !quantity || quantity >= rangeMaximum;
+    }
+    if (value) {
+      value.textContent = quantity || minimum;
+    }
+    if (unit) {
+      unit.textContent = (quantity || minimum) === 1 ? productUnitSingular(product) : productUnit(product);
+    }
+    if (rangeLabel) {
+      rangeLabel.textContent = "Quantidade: " + (quantity || minimum);
+    }
+    if (range && quantity) {
+      var rangePosition = freeQuantityRangePosition(product, quantity);
+      range.value = rangePosition;
+      range.style.setProperty("--range-progress", (rangeMaximum > minimum
+        ? ((rangePosition - minimum) / (rangeMaximum - minimum) * 100).toFixed(2)
+        : "0") + "%");
+      range.setAttribute("aria-valuetext", productQuantityLabel(product, quantity));
+    }
+    if (packControl) {
+      packControl.querySelectorAll(".pack-option").forEach(function (button) {
+        var selected = freeQuantitySelectionMode(product) === "pack"
+          && Number(button.dataset.packQuantity) === quantity;
+        button.classList.toggle("is-selected", selected);
+        button.setAttribute("aria-pressed", selected ? "true" : "false");
+      });
     }
 
     wrapper = document.createElement("div");
@@ -9436,6 +9921,8 @@
     } else if (builder && nextOverview) {
       builder.insertAdjacentElement("afterend", nextOverview);
     }
+
+    freeQuantityChartRefresh();
   }
 
   function renderQuantityBuilder(product) {
@@ -13027,6 +13514,7 @@
     }
     if (step.id === "size" && freeQuantityStep(state.product)) {
       state.selections.pack_quantity = minimumFreeQuantity(state.product);
+      delete state.selections.free_quantity_mode;
       state.quantitySignature = "";
       state.quantitiesTouched = false;
       state.quantityPackBaseline = 0;
@@ -14454,6 +14942,7 @@
     quadrosPlayGridFlip();
     quadrosSlideActiveMarker();
     quadrosAnimateChecks();
+    initFreeQuantityPriceCharts(product);
 
     document.querySelectorAll("[data-quadros-color-slot]").forEach(function (button) {
       button.addEventListener("click", function () {
@@ -14873,7 +15362,11 @@
         // (proporcional) e distributeQuantities (reset) consoante a
         // configuração admin "Quantidades inteligentes".
         state.packDisabledMessage = "";
-        state.selections.pack_quantity = newPackQuantity;
+        if (freeQuantityStep(product)) {
+          setFreeQuantity(product, newPackQuantity, "pack", false);
+        } else {
+          state.selections.pack_quantity = newPackQuantity;
+        }
         // SEMANTIC_EVENTS_V1: pack option chosen.
         try {
           var packLabel = '';
@@ -14892,7 +15385,9 @@
           trackOptionSelected(product, optType, optValue, packLabel);
         } catch (e) {}
 
-        ensurePackAndQuantities(product);
+        if (!freeQuantityStep(product)) {
+          ensurePackAndQuantities(product);
+        }
         state.errors = "";
         rerenderProduct(product);
       });
@@ -14912,20 +15407,20 @@
     document.querySelectorAll("[data-free-quantity-change]").forEach(function (button) {
       button.addEventListener("click", function () {
         var current = getPackQuantity(product) || minimumFreeQuantity(product);
-        setFreeQuantity(product, current + Number(button.dataset.freeQuantityChange || 0));
+        var change = Number(button.dataset.freeQuantityChange || 0);
+        var rangeMaximum = freeQuantityRangeMaximum(product);
+        var next = current > rangeMaximum && change < 0 ? rangeMaximum : current + change;
+        setFreeQuantity(product, next, "auto");
         rerenderProduct(product);
       });
     });
 
-    document.querySelectorAll("[data-free-quantity-input]").forEach(function (input) {
+    document.querySelectorAll("[data-free-quantity-range]").forEach(function (input) {
       input.addEventListener("input", function () {
-        var quantity = Number(input.value);
-        var minimum = minimumFreeQuantity(product);
-        var maximum = maximumFreeQuantity(product);
+        var quantity = freeQuantityFromRangePosition(product, input.value);
 
-        state.selections.pack_quantity = Number.isInteger(quantity) && quantity >= minimum && quantity <= maximum
-          ? quantity
-          : 0;
+        state.selections.pack_quantity = quantity;
+        state.selections.free_quantity_mode = freeQuantityModeForValue(product, quantity);
         state.quantitySignature = "";
         state.quantitiesTouched = false;
         state.quantityPackBaseline = 0;
@@ -14933,7 +15428,7 @@
         refreshFreeQuantityDraft(product, input);
       });
       input.addEventListener("change", function () {
-        input.value = setFreeQuantity(product, input.value);
+        setFreeQuantity(product, freeQuantityFromRangePosition(product, input.value), "auto");
         refreshFreeQuantityDraft(product, input);
       });
     });

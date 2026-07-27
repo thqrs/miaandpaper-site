@@ -35,7 +35,7 @@
   function defaults() {
     return {
       schemaVersion: 1,
-      settings: { enabled: true, intervalMs: 5500, position: "left", size: "normal", theme: "paper", imageShape: "rounded", showImage: true, showName: true, showText: true, defaultRatingMode: "stars", defaultStars: 5, defaultIcon: "heart", defaultCustomIcon: "✦" },
+      settings: { enabled: true, intervalMs: 5500, position: "left", size: "normal", theme: "paper", imageShape: "rounded", showImage: true, showName: true, showText: true, defaultRatingMode: "stars", defaultStars: 5, defaultIcon: "heart", defaultCustomIcon: "✦", eggPumps: 7 },
       reviews: []
     };
   }
@@ -202,6 +202,7 @@
       var value = setting.type === "checkbox" ? setting.checked : setting.value;
       if (key === "intervalSeconds") state.data.settings.intervalMs = Math.round(Number(value || 5.5) * 1000);
       else if (key === "defaultStars") state.data.settings[key] = Number(value) || 5;
+      else if (key === "eggPumps") state.data.settings[key] = Math.max(0, Math.min(20, Math.round(Number(value) || 0)));
       else state.data.settings[key] = value;
       markDirty();
       renderList();

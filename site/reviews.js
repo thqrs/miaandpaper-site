@@ -195,8 +195,10 @@
       return response.json();
     })
     .then(function (data) {
-      settings = Object.assign({ enabled: true, intervalMs: 5500, position: "left", size: "normal", theme: "paper", imageShape: "rounded", showImage: true, showName: true, showText: true, defaultRatingMode: "stars", defaultStars: 5, defaultIcon: "heart", defaultCustomIcon: "✦" }, data.settings || {});
+      settings = Object.assign({ enabled: true, intervalMs: 5500, position: "left", size: "normal", theme: "paper", imageShape: "rounded", showImage: true, showName: true, showText: true, defaultRatingMode: "stars", defaultStars: 5, defaultIcon: "heart", defaultCustomIcon: "✦", eggPumps: 7 }, data.settings || {});
       if (settings.enabled === false) return;
+      // Lido pelo reviews-egg.js: movimentos necessários até o balão saltar.
+      host.setAttribute("data-egg-pumps", String(Math.max(0, Math.min(20, Number(settings.eggPumps) >= 0 ? Number(settings.eggPumps) : 7))));
       intervalMs = Math.max(2000, Math.min(60000, Number(settings.intervalMs) || 5500));
       reviews = (Array.isArray(data.reviews) ? data.reviews : []).filter(function (review) { return review && review.enabled !== false && review.text; }).sort(function (a, b) { return (Number(a.order) || 0) - (Number(b.order) || 0); });
       if (!reviews.length) return;

@@ -21,6 +21,7 @@ if (-not $browser) {
 
 $pages = [ordered]@{
     'catalogo'     = (Join-Path $catalogDirectory 'index.html')
+    'molduras'     = (Join-Path $catalogDirectory 'molduras\index.html')
     'crachas'      = (Join-Path $catalogDirectory 'crachas\index.html')
     'imanes'       = (Join-Path $catalogDirectory 'imanes\index.html')
     'caderninhos'  = (Join-Path $catalogDirectory 'caderninhos\index.html')

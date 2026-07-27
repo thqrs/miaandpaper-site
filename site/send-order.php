@@ -624,6 +624,72 @@ function product_tier_price_cents($table, $quantity)
         : 0;
 }
 
+// LINEAR_DISCOUNT_PRICING_V1: cada pack define um ponto de desconto. Entre
+// dois packs, a percentagem evolui em linha reta; antes do primeiro e depois
+// do ultimo mantem-se o desconto do extremo. Os totais dos packs continuam
+// exatamente iguais aos configurados no produto.
+function product_linear_discount_price_cents($table, $quantity)
+{
+    if (!is_array($table) || empty($table) || (int)$quantity <= 0) {
+        return 0;
+    }
+
+    $quantity = (int)$quantity;
+    $points = array();
+    $baselineUnitCents = isset($table[1]) ? (float)$table[1] : 0.0;
+    $hasConfiguredUnit = $baselineUnitCents > 0;
+
+    foreach ($table as $packQuantity => $totalCents) {
+        $packQuantity = (int)$packQuantity;
+        $totalCents = (float)$totalCents;
+        if ($packQuantity <= 0 || $totalCents <= 0) {
+            continue;
+        }
+        if (!$hasConfiguredUnit) {
+            $baselineUnitCents = max($baselineUnitCents, $totalCents / $packQuantity);
+        }
+        $points[$packQuantity] = $totalCents;
+    }
+
+    if (empty($points) || $baselineUnitCents <= 0) {
+        return 0;
+    }
+    ksort($points, SORT_NUMERIC);
+    if (isset($points[$quantity])) {
+        return (int)round($points[$quantity]);
+    }
+
+    $quantities = array_keys($points);
+    $firstQuantity = (int)$quantities[0];
+    $lastQuantity = (int)$quantities[count($quantities) - 1];
+    $lowerQuantity = $firstQuantity;
+    $upperQuantity = $lastQuantity;
+    foreach ($quantities as $packQuantity) {
+        $packQuantity = (int)$packQuantity;
+        if ($packQuantity < $quantity) {
+            $lowerQuantity = $packQuantity;
+        } elseif ($packQuantity > $quantity) {
+            $upperQuantity = $packQuantity;
+            break;
+        }
+    }
+
+    $firstDiscount = max(0.0, 1.0 - $points[$firstQuantity] / ($baselineUnitCents * $firstQuantity));
+    $lastDiscount = max(0.0, 1.0 - $points[$lastQuantity] / ($baselineUnitCents * $lastQuantity));
+    if ($quantity <= $firstQuantity) {
+        $discount = $firstDiscount;
+    } elseif ($quantity >= $lastQuantity) {
+        $discount = $lastDiscount;
+    } else {
+        $lowerDiscount = max(0.0, 1.0 - $points[$lowerQuantity] / ($baselineUnitCents * $lowerQuantity));
+        $upperDiscount = max(0.0, 1.0 - $points[$upperQuantity] / ($baselineUnitCents * $upperQuantity));
+        $discount = $lowerDiscount + ($upperDiscount - $lowerDiscount)
+            * (($quantity - $lowerQuantity) / ($upperQuantity - $lowerQuantity));
+    }
+
+    return max(0, (int)round($quantity * $baselineUnitCents * (1.0 - $discount)));
+}
+
 function cart_assoc_int_selection($selections, $name)
 {
     $value = cart_selection($selections, $name, array());
@@ -890,9 +956,20 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $packStep = product_step($productConfig, 'pack');
     $hasPackStep = !empty($packStep);
     $hasPrices = !empty($packPrices);
+    $orderFlow = cart_string_selection($selections, 'order_flow');
+    $artworkUploadKey = $slug === 'crachas' ? 'cracha_artwork_uploads' : 'iman_artwork_uploads';
+    $artworkHelpKey = $slug === 'crachas' ? 'cracha_artwork_help' : 'iman_artwork_help';
+    $hasLegacyCustomArtworkSignal = $orderFlow === '' && (
+        !empty($selections[$artworkUploadKey])
+        || !empty($selections[$artworkHelpKey])
+    );
     $isCustomArtwork = in_array($slug, array('crachas', 'imanes'), true)
         && !empty(product_step($productConfig, 'artwork_upload'))
-        && !empty($packStep['freeQuantity']);
+        && !empty($packStep['freeQuantity'])
+        && ($orderFlow === 'custom-artwork' || $hasLegacyCustomArtworkSignal);
+    $usesLinearDiscountPricing = $isCustomArtwork
+        && isset($packStep['pricingMode'])
+        && $packStep['pricingMode'] === 'linear-discount-interpolation';
 
     $size = cart_string_selection($selections, 'size');
     $packQuantity = (int)cart_selection($selections, 'pack_quantity', 0);
@@ -918,8 +995,6 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         ? max(1, (int)$selectedSizeItem['minQuantity'])
         : 1;
 
-    $artworkUploadKey = $slug === 'crachas' ? 'cracha_artwork_uploads' : 'iman_artwork_uploads';
-    $artworkHelpKey = $slug === 'crachas' ? 'cracha_artwork_help' : 'iman_artwork_help';
     $cardDescriptionKey = $slug === 'crachas' ? 'cracha_card_description' : 'iman_card_description';
     $cardReferenceKey = $slug === 'crachas' ? 'cracha_card_reference_uploads' : 'iman_card_reference_uploads';
     $cardAudioKey = $slug === 'crachas' ? 'cracha_card_audio_uploads' : 'iman_card_audio_uploads';
@@ -1415,7 +1490,11 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $unitLabel = isset($productConfig['unitLabel']) && trim((string)$productConfig['unitLabel']) !== '' ? trim((string)$productConfig['unitLabel']) : (($slug === 'crachas' || $slug === 'pins') ? 'crachás' : 'unidades');
     $unitShort = isset($productConfig['unitShort']) && trim((string)$productConfig['unitShort']) !== '' ? trim((string)$productConfig['unitShort']) : (($slug === 'crachas' || $slug === 'pins') ? 'crachá' : 'unid.');
     $basePriceCents = $isCustomArtwork
-        ? (isset($packPrices[$priceKey]) ? product_tier_price_cents($packPrices[$priceKey], $packQuantity) : 0)
+        ? (isset($packPrices[$priceKey])
+            ? ($usesLinearDiscountPricing
+                ? product_linear_discount_price_cents($packPrices[$priceKey], $packQuantity)
+                : product_tier_price_cents($packPrices[$priceKey], $packQuantity))
+            : 0)
         : (($hasPrices && isset($packPrices[$priceKey][$packQuantity])) ? $packPrices[$priceKey][$packQuantity] : 0);
     if ($isCadernos && !empty($purchaseItem) && isset($purchaseItem['priceCents'])) {
         $basePriceCents = (int)$purchaseItem['priceCents'];

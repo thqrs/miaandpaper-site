@@ -347,14 +347,16 @@ a.catalog-brand:focus-visible,
 .catalog-product-copy strong {
   color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1.45rem, 6vw, 2rem);
+  font-size: clamp(1.3rem, 4.6vw, 2rem);
   font-weight: 500;
-  line-height: 1;
+  line-height: 1.06;
+  overflow-wrap: break-word;
 }
 
 .catalog-product-copy span {
   color: var(--muted);
   line-height: 1.42;
+  overflow-wrap: break-word;
 }
 
 .catalog-product-action {
@@ -792,6 +794,42 @@ a.catalog-brand:focus-visible,
     #f5ead7;
 }
 
+.catalog-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.catalog-palette-card {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 245, 0.94);
+  box-shadow: 0 10px 24px rgba(97, 70, 20, 0.07);
+}
+
+.catalog-palette-swatch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  aspect-ratio: 3 / 2;
+  border: 1px solid rgba(114, 85, 30, 0.18);
+  border-radius: var(--radius);
+}
+
+.catalog-palette-swatch > span {
+  display: block;
+}
+
+.catalog-palette-card strong {
+  color: var(--ink);
+  font-size: 0.98rem;
+  line-height: 1.2;
+}
+
 .design-card figcaption {
   display: grid;
   gap: 7px;
@@ -990,7 +1028,8 @@ a.catalog-brand:focus-visible,
 
 @media (max-width: 880px) {
   .quick-guide,
-  .design-grid {
+  .design-grid,
+  .catalog-palette-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1040,6 +1079,20 @@ a.catalog-brand:focus-visible,
   .size-card img {
     width: 78px;
     height: 78px;
+  }
+}
+
+@media (max-width: 360px) {
+  .catalog-product-card {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 11px;
+    min-height: 0;
+  }
+
+  .catalog-product-card img,
+  .catalog-product-thumb {
+    width: 76px;
+    height: 76px;
   }
 }
 
