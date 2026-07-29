@@ -25,8 +25,8 @@
             "id": "shipping",
             "label": "Envio CTT - até 2 Kg",
             "text": "",
-            "feeCents": 555,
-            "priceText": "Valor mínimo:\n5,55 €"
+            "feeCents": 540,
+            "priceText": "Valor mínimo:\n5,40 €"
         },
         {
             "id": "join_orders",

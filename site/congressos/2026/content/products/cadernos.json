@@ -24,8 +24,8 @@
             "id": "shipping",
             "label": "Envio CTT - até 2 Kg",
             "text": "",
-            "feeCents": 850,
-            "priceText": "Valor mínimo:\n8,50 €"
+            "feeCents": 540,
+            "priceText": "Valor mínimo:\n5,40 €"
         },
         {
             "id": "join_orders",
@@ -613,7 +613,7 @@
                         "matte": "content/designs/cadernos/process/cadernos (5)/img (26).webp",
                         "glossy": "content/designs/cadernos/process/cadernos (5)/img (38).webp",
                         "glitter": "content/designs/cadernos/process/cadernos (5)/img (29).webp",
-                        "hologrofico": "content/designs/cadernos/process/cadernos (5)/img (15).webp"
+                        "holografico": "content/designs/cadernos/process/cadernos (5)/img (15).webp"
                     },
                     "interiorImages": [
                         "content/designs/cadernos/process/cadernos (5)/img (26).webp"
@@ -655,7 +655,7 @@
                         "matte": "content/designs/cadernos/process/cadernos (6)/1778703273549_reduced_q95.webp",
                         "glossy": "content/designs/cadernos/process/cadernos (6)/img (32).webp",
                         "glitter": "content/designs/cadernos/process/cadernos (6)/img (23).webp",
-                        "hologrofico": "content/designs/cadernos/process/cadernos (6)/img (39).webp"
+                        "holografico": "content/designs/cadernos/process/cadernos (6)/img (39).webp"
                     },
                     "interiorImages": [
                         "content/designs/cadernos/process/cadernos (6)/1778703273549_reduced_q95.webp"

@@ -4376,6 +4376,27 @@ html[data-theme="dark"] .order-success-code code {
   color: #8c3028;
 }
 
+.admin-toolbar.is-collapsed {
+  left: auto;
+  width: auto;
+  max-height: none;
+  padding: 6px;
+  overflow: visible;
+}
+
+.admin-toolbar.is-collapsed > :not(.admin-toolbar-head),
+.admin-toolbar.is-collapsed .admin-toolbar-head > :not(strong):not(.admin-panel-toggle) {
+  display: none;
+}
+
+.admin-toolbar.is-collapsed .admin-toolbar-head {
+  grid-template-columns: auto auto;
+}
+
+.admin-panel-toggle {
+  white-space: nowrap;
+}
+
 .admin-message {
   grid-column: 1 / -1;
   margin: 0;
@@ -9595,23 +9616,93 @@ body:has(.home-shell--brand) .cart-floating-button {
   background-position: var(--home-hero-position, center);
   background-size: cover;
   color: var(--hero-foreground);
+  touch-action: pan-y;
 }
 
 .home-brand-hero::before {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 1;
   background: var(--hero-overlay);
+  pointer-events: none;
+}
+
+.home-hero-carousel,
+.home-hero-carousel__track,
+.home-hero-carousel__frame {
+  position: absolute;
+  inset: 0;
+}
+
+.home-hero-carousel {
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.home-hero-carousel__track {
+  display: flex;
+  width: 100%;
+  transition: transform .72s cubic-bezier(.22, .72, .24, 1);
+  will-change: transform;
+}
+
+.home-hero-carousel__frame {
+  position: relative;
+  flex: 0 0 100%;
+  background-position: var(--home-hero-position, center);
+  background-size: cover;
+}
+
+.home-hero-carousel__dots {
+  position: absolute;
+  z-index: 3;
+  bottom: 18px;
+  left: 50%;
+  display: flex;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 999px;
+  background: rgba(20, 17, 12, .3);
+  backdrop-filter: blur(7px);
+  pointer-events: auto;
+  transform: translateX(-50%);
+}
+
+.home-hero-carousel__dots button {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, .88);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .34);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.home-hero-carousel__dots button[aria-current="true"] {
+  background: #fff;
+  transform: scale(1.25);
+}
+
+.home-hero-carousel__dots button:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, .65);
+  outline-offset: 3px;
 }
 
 .home-brand-hero__inner {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: flex-end;
   width: min(100%, 1180px);
   height: 100%;
   margin: 0 auto;
   padding: 54px 32px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-carousel__track { transition: none; }
 }
 
 .home-brand-hero__copy {

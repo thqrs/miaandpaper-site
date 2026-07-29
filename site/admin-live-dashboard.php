@@ -15,6 +15,7 @@
  */
 
 session_start();
+require_once __DIR__ . '/admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 
 if (empty($_SESSION['miaandpaper_admin'])) {
     http_response_code(403);
@@ -35,6 +36,8 @@ function lr_h($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 // Date range / period selection
 // ------------------------------------------------------------------
 $period = isset($_GET['period']) ? (string)$_GET['period'] : 'today';
+$dashboardView = isset($_GET['view']) ? (string)$_GET['view'] : 'metro';
+if (!in_array($dashboardView, array('metro', 'teia'), true)) $dashboardView = 'metro';
 $periodLabels = array(
     'today'  => 'hoje',
     'yesterday' => 'ontem',
@@ -220,7 +223,7 @@ function lr_thumb($path, $alt = '', $size = 64) {
 $catalog = lr_build_catalog(__DIR__ . '/content/products');
 
 function lr_product_friendly_name($slug) {
-    static $m = array('crachas'=>'Crachás','imanes'=>'Ímanes','caderninhos'=>'Mini-Cadernos','cadernos'=>'Cadernos','lembrancas'=>'Lembranças','pins'=>'Pins','ofertas'=>'Ofertas','oferta-pdf'=>'PDF de oferta','oferta-convite-congresso'=>'Envelopes do Congresso');
+    static $m = array('crachas'=>'Crachás','imanes'=>'Ímanes','caderninhos'=>'Mini-Cadernos','cadernos'=>'Cadernos','quadros'=>'Molduras','lembrancas'=>'Lembranças','pins'=>'Pins','ofertas'=>'Ofertas','oferta-pdf'=>'PDF de oferta','oferta-convite-congresso'=>'Envelopes do Congresso');
     return isset($m[$slug]) ? $m[$slug] : ($slug ?: '—');
 }
 function lr_offer_download_from_event($event)
@@ -759,42 +762,186 @@ function lr_attribution_chip($attribution) {
 // METRO REPLAY — station mapping + JSON payload for client JS
 // ------------------------------------------------------------------
 /**
- * Maps a single funnel event onto the metro mockup station vocabulary.
- * Returns one of: home, split, crachas-*, imanes-*, caderninhos-*,
- * cadernos-*, contacto, envio  — or null if untrackable.
+ * FUNNEL_LINES_V2 — uma linha por wizard publicado, com as estações pela
+ * ordem real dos passos de `content/products/<slug>.json`. Os passos finais
+ * partilhados (`delivery_contact`, `confirm`) não entram aqui: convergem
+ * para as estações "contacto" e "envio".
+ *
+ * Esta tabela é a única fonte do mapa: a geometria, o SVG, a legenda, as
+ * cores e o mapeamento evento→estação são todos derivados dela. Ao mudar um
+ * wizard (passo novo, passo removido, produto novo), actualizar só aqui.
+ *
+ * `steps` lista os ids de passo que caem na estação. As molduras têm passos
+ * condicionais a mais para caber um a um no mapa: os passos de
+ * personalização estão agrupados numa estação só.
+ */
+function lr_funnel_lines() {
+    static $lines = null;
+    if ($lines !== null) return $lines;
+    $lines = array(
+        'crachas' => array('label' => 'Crachás', 'color' => '#ef767a', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Design', 'steps' => array('designs')),
+            array('id' => 'imagem', 'label' => 'Imagem', 'steps' => array('artwork_upload')),
+            array('id' => 'tamanho', 'label' => 'Tamanho', 'steps' => array('size')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+            array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
+        )),
+        'imanes' => array('label' => 'Ímanes', 'color' => '#6cb4a8', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Design', 'steps' => array('designs')),
+            array('id' => 'imagem', 'label' => 'Imagem', 'steps' => array('artwork_upload')),
+            array('id' => 'tipo', 'label' => 'Tipo', 'steps' => array('size')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+            array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
+        )),
+        'caderninhos' => array('label' => 'Mini-Cadernos', 'color' => '#7aa7e8', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Design', 'steps' => array('designs')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+            array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
+        )),
+        'cadernos' => array('label' => 'Cadernos', 'color' => '#b68be8', 'stations' => array(
+            array('id' => 'capa', 'label' => 'Capa', 'steps' => array('designs')),
+            array('id' => 'laminacao', 'label' => 'Laminação', 'steps' => array('lamination')),
+            array('id' => 'compra', 'label' => 'Opção de compra', 'steps' => array('pack')),
+            array('id' => 'personalizacao', 'label' => 'Personalização', 'steps' => array('cover_personalization')),
+        )),
+        'quadros' => array('label' => 'Molduras', 'color' => '#e08bb0', 'stations' => array(
+            array('id' => 'tipo', 'label' => 'Tipo', 'steps' => array('designs')),
+            array('id' => 'foto', 'label' => 'Foto', 'steps' => array('photo_upload')),
+            array('id' => 'personalizacao', 'label' => 'Personalização', 'steps' => array(
+                'baby_gender', 'baby_animal', 'baby_custom_animal', 'baby_color', 'baby_details',
+                'silhouette', 'silhouette_details', 'silhouette_text_details',
+                'heart_finish', 'heart_background_colors', 'colors',
+                'photo_orientation', 'phrase_details', 'love_dedication', 'super_details',
+            )),
+            array('id' => 'embalagem', 'label' => 'Embalagem', 'steps' => array('packaging')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+        )),
+    );
+    return $lines;
+}
+
+// Passos partilhados no fim de todos os wizards.
+function lr_funnel_shared_steps() {
+    return array('delivery_contact' => 'contacto', 'confirm' => 'contacto');
+}
+
+// stepId → id de estação, por slug (derivado de lr_funnel_lines()).
+function lr_funnel_step_map() {
+    static $map = null;
+    if ($map !== null) return $map;
+    $map = array();
+    foreach (lr_funnel_lines() as $slug => $line) {
+        $map[$slug] = array();
+        foreach ($line['stations'] as $station) {
+            foreach ($station['steps'] as $stepId) {
+                $map[$slug][$stepId] = $slug . '-' . $station['id'];
+            }
+        }
+    }
+    return $map;
+}
+
+/**
+ * Geometria do mapa. As linhas espalham-se entre LR_MAP_LEFT e LR_MAP_RIGHT,
+ * as estações distribuem-se pela mesma faixa vertical em todas as linhas
+ * (independentemente do número de passos) e todas convergem para a barra
+ * final. Devolve estações + paths SVG prontos a desenhar.
+ */
+function lr_funnel_geometry() {
+    static $geo = null;
+    if ($geo !== null) return $geo;
+
+    $topY = 70; $splitY = 125; $bandTop = 190; $bandBottom = 650;
+    $joinY = 760; $contactY = 805; $finalY = 860;
+    $left = 150; $right = 850; $corner = 65; $joinGap = 75;
+
+    $lines = lr_funnel_lines();
+    $slugs = array_keys($lines);
+    $count = count($slugs);
+
+    $stations = array(
+        array('id'=>'home','label'=>'Homepage','sub'=>'entrada','x'=>500,'y'=>$topY,'line'=>'home','kind'=>'home-station'),
+        array('id'=>'split','label'=>'Escolha de produto','sub'=>'ramificação','x'=>500,'y'=>$splitY,'line'=>'home','major'=>true),
+    );
+    $paths = array();
+    $joins = array();
+
+    foreach ($slugs as $i => $slug) {
+        $line = $lines[$slug];
+        $x = $count > 1 ? round($left + $i * (($right - $left) / ($count - 1)), 1) : 500;
+        $jx = round(500 + ($i - ($count - 1) / 2) * $joinGap, 1);
+        $joins[] = $jx;
+
+        $total = count($line['stations']);
+        foreach ($line['stations'] as $index => $station) {
+            $y = $total > 1
+                ? round($bandTop + $index * (($bandBottom - $bandTop) / ($total - 1)), 1)
+                : round(($bandTop + $bandBottom) / 2, 1);
+            $stations[] = array(
+                'id' => $slug . '-' . $station['id'],
+                'label' => $station['label'],
+                'sub' => $line['label'],
+                'x' => $x, 'y' => $y, 'line' => $slug,
+                'major' => $index === 0,
+                'statType' => $station['steps'][0],
+            );
+        }
+
+        $d = 'M500 ' . $splitY . ' ';
+        if (abs($x - 500) > 1) {
+            $sign = $x < 500 ? 1 : -1;
+            $d .= 'L' . ($x + $sign * $corner) . ' ' . $splitY . ' Q' . $x . ' ' . $splitY . ' ' . $x . ' ' . $bandTop . ' ';
+        }
+        $d .= 'L' . $x . ' ' . $bandBottom . ' Q' . $x . ' ' . ($bandBottom + 70) . ' ' . $jx . ' ' . $joinY;
+        $paths[] = array('line' => $slug, 'd' => $d);
+    }
+
+    $stations[] = array('id'=>'contacto','label'=>'Contacto','sub'=>'dados/envio','x'=>500,'y'=>$contactY,'line'=>'final','major'=>true,'statType'=>'delivery_contact');
+    $stations[] = array('id'=>'envio','label'=>'Pedido enviado','sub'=>'entrega','x'=>500,'y'=>$finalY,'line'=>'final','kind'=>'final-station','statType'=>'confirm');
+
+    $geo = array(
+        'stations' => $stations,
+        'paths' => $paths,
+        'homePath' => 'M500 ' . $topY . ' L500 ' . $splitY,
+        'joinPath' => 'M' . $joins[0] . ' ' . $joinY . ' L455 ' . $joinY . ' Q500 ' . $joinY . ' 500 ' . $contactY
+            . ' Q500 ' . $joinY . ' 545 ' . $joinY . ' L' . $joins[$count - 1] . ' ' . $joinY,
+        'finalPath' => 'M500 ' . $contactY . ' L500 ' . $finalY,
+    );
+    return $geo;
+}
+
+/**
+ * Maps a single funnel event onto the metro station vocabulary.
+ * Returns one of: home, split, <slug>-<station>, contacto, envio.
  */
 function lr_event_to_station($name, $stepId, $slug, $landing = '', $submitted = false) {
     $name = (string)$name; $stepId = (string)$stepId; $slug = (string)$slug;
+    $map = lr_funnel_step_map();
+    $shared = lr_funnel_shared_steps();
+
     if ($submitted || $name === 'order_submitted' || $name === 'cart_order_submitted') return 'envio';
-    if ($name === 'wizard_started' || $name === 'product_view') {
-        if (isset(array('crachas'=>1,'imanes'=>1,'caderninhos'=>1,'cadernos'=>1)[$slug])) return 'split';
-        return 'split';
-    }
+    if ($name === 'wizard_started' || $name === 'product_view') return 'split';
     if ($name === 'site_landed') {
         $lc = strtolower((string)$landing);
-        if (preg_match('/(cadernos|crachas|imanes|caderninhos)/', $lc)) return 'split';
+        $pages = array_merge(array_keys($map), array('molduras'));
+        foreach ($pages as $page) {
+            if (strpos($lc, $page) !== false) return 'split';
+        }
         return 'home';
     }
     if ($stepId === '' && $slug === '') return 'home';
     if ($stepId === '') return 'split';
-    if ($stepId === 'details' || $stepId === 'delivery_contact' || $stepId === 'confirm') return 'contacto';
-    $map = array(
-        'crachas' => array('designs'=>'crachas-designs','size'=>'crachas-size','pack'=>'crachas-quantity','business_card'=>'crachas-business-card'),
-        'imanes' => array('designs'=>'imanes-designs','size'=>'imanes-size','pack'=>'imanes-quantity'),
-        'caderninhos' => array('designs'=>'caderninhos-designs','size'=>'caderninhos-size','pack'=>'caderninhos-quantity'),
-        'cadernos' => array('designs'=>'cadernos-cover','lamination'=>'cadernos-lamination','pack'=>'cadernos-quantity','cover_personalization'=>'cadernos-personalization'),
-    );
+    if (isset($shared[$stepId])) return $shared[$stepId];
     if (isset($map[$slug][$stepId])) return $map[$slug][$stepId];
-    if (isset($map[$slug])) return reset($map[$slug]);
+    // Passo desconhecido de um produto conhecido: fica na entrada da linha.
+    if (isset($map[$slug]) && $map[$slug]) return reset($map[$slug]);
     return 'split';
 }
 
 function lr_pin_color($slug) {
+    $lines = lr_funnel_lines();
+    if (isset($lines[$slug]['color'])) return $lines[$slug]['color'];
     static $c = array(
-        'crachas' => '#ef767a',
-        'imanes' => '#6cb4a8',
-        'caderninhos' => '#7aa7e8',
-        'cadernos' => '#b68be8',
         'lembrancas' => '#d49a55',
         'pins' => '#ef767a',
         'ofertas' => '#b7925a',
@@ -804,29 +951,8 @@ function lr_pin_color($slug) {
     return isset($c[$slug]) ? $c[$slug] : '#b7925a';
 }
 
-// Mockup station definitions (coords/lines mirror metro_live_visitors_mockup.html)
-$mockupStations = array(
-    array('id'=>'home','label'=>'Homepage','sub'=>'entrada','x'=>500,'y'=>70,'line'=>'home','kind'=>'home-station'),
-    array('id'=>'split','label'=>'Escolha de produto','sub'=>'ramificação','x'=>500,'y'=>125,'line'=>'home','major'=>true),
-    array('id'=>'crachas-designs','label'=>'Design','sub'=>'crachás','x'=>190,'y'=>170,'line'=>'crachas','major'=>true,'statType'=>'designs'),
-    array('id'=>'crachas-size','label'=>'Tamanho','sub'=>'crachás','x'=>190,'y'=>330,'line'=>'crachas','statType'=>'size'),
-    array('id'=>'crachas-quantity','label'=>'Quantidade','sub'=>'crachás','x'=>190,'y'=>490,'line'=>'crachas','statType'=>'pack'),
-    array('id'=>'crachas-business-card','label'=>'Cartão','sub'=>'apresentação','x'=>190,'y'=>650,'line'=>'crachas','statType'=>'business_card'),
-    array('id'=>'imanes-designs','label'=>'Design','sub'=>'ímanes','x'=>395,'y'=>170,'line'=>'imanes','major'=>true,'statType'=>'designs'),
-    array('id'=>'imanes-size','label'=>'Tamanho','sub'=>'ímanes','x'=>395,'y'=>330,'line'=>'imanes','statType'=>'size'),
-    array('id'=>'imanes-quantity','label'=>'Quantidade','sub'=>'ímanes','x'=>395,'y'=>490,'line'=>'imanes','statType'=>'pack'),
-    array('id'=>'imanes-review','label'=>'Resumo','sub'=>'confirmação','x'=>395,'y'=>650,'line'=>'imanes','statType'=>'review'),
-    array('id'=>'caderninhos-designs','label'=>'Design','sub'=>'caderninhos','x'=>605,'y'=>170,'line'=>'caderninhos','major'=>true,'statType'=>'designs'),
-    array('id'=>'caderninhos-size','label'=>'Tipo','sub'=>'caderninhos','x'=>605,'y'=>330,'line'=>'caderninhos','statType'=>'size'),
-    array('id'=>'caderninhos-quantity','label'=>'Quantidade','sub'=>'caderninhos','x'=>605,'y'=>490,'line'=>'caderninhos','statType'=>'pack'),
-    array('id'=>'caderninhos-review','label'=>'Resumo','sub'=>'confirmação','x'=>605,'y'=>650,'line'=>'caderninhos','statType'=>'review'),
-    array('id'=>'cadernos-cover','label'=>'Capa','sub'=>'cadernos','x'=>810,'y'=>170,'line'=>'cadernos','major'=>true,'statType'=>'cover'),
-    array('id'=>'cadernos-lamination','label'=>'Laminação','sub'=>'cadernos','x'=>810,'y'=>330,'line'=>'cadernos','statType'=>'lamination'),
-    array('id'=>'cadernos-quantity','label'=>'Quantidade','sub'=>'cadernos','x'=>810,'y'=>490,'line'=>'cadernos','statType'=>'pack'),
-    array('id'=>'cadernos-personalization','label'=>'Personalização','sub'=>'cadernos','x'=>810,'y'=>650,'line'=>'cadernos','statType'=>'cover_personalization'),
-    array('id'=>'contacto','label'=>'Contacto','sub'=>'dados/envio','x'=>500,'y'=>805,'line'=>'final','major'=>true,'statType'=>'contact'),
-    array('id'=>'envio','label'=>'Pedido enviado','sub'=>'entrega','x'=>500,'y'=>860,'line'=>'final','kind'=>'final-station','statType'=>'delivery'),
-);
+$funnelGeometry = lr_funnel_geometry();
+$mockupStations = $funnelGeometry['stations'];
 
 // Build replay payload
 $replayVisitors = array();
@@ -955,6 +1081,8 @@ header('Content-Type: text/html; charset=utf-8');
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Live Dashboard · Mia &amp; Paper admin</title>
+<link rel="stylesheet" href="admin-nav.css?v=2026072801">
+<script src="admin-nav.js?v=2026072801" defer></script>
 <style>
 :root {
   --ink: #30251f;
@@ -967,10 +1095,9 @@ header('Content-Type: text/html; charset=utf-8');
   --gold: #b88616;
   --moss: #4f7a3a;
   --line-home: #b7925a;
-  --line-crachas: #ef767a;
-  --line-imanes: #6cb4a8;
-  --line-caderninhos: #7aa7e8;
-  --line-cadernos: #b68be8;
+<?php foreach (lr_funnel_lines() as $lineSlug => $lineDef): ?>
+  --line-<?= lr_h($lineSlug) ?>: <?= lr_h($lineDef['color']) ?>;
+<?php endforeach; ?>
   --line-final: #3d8b6f;
   --grid: rgba(84,66,49,0.07);
   --shadow: 0 24px 70px rgba(91,70,49,0.16);
@@ -1011,6 +1138,36 @@ nav.period-tabs a.back-link { background: rgba(118,85,28,0.08); color: var(--mut
   padding: 5px 7px; border: 1px solid var(--line-faint); border-radius: 8px;
   background: rgba(255,253,248,0.7); font: inherit; font-size: 0.82rem;
 }
+
+.lr-visual-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--line-faint);
+  border-radius: 14px;
+  background: rgba(255,253,248,.82);
+  width: max-content;
+}
+.lr-visual-tabs a {
+  min-height: 36px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+.lr-visual-tabs a.is-active { background: var(--ink); color: #fff; }
+.lr-teia-shell {
+  height: min(82vh, 980px);
+  min-height: 620px;
+  overflow: hidden;
+  border: 1px solid var(--line-faint);
+  border-radius: 20px;
+  background: #f4f7fb;
+  box-shadow: var(--shadow);
+}
+.lr-teia-shell iframe { display: block; width: 100%; height: 100%; border: 0; }
 
 main.lr-dash {
   padding: 20px 28px 80px; display: grid; gap: 22px;
@@ -1056,10 +1213,9 @@ svg.lr-metro { position: absolute; inset: 0; width: 100%; height: 100%; overflow
 svg.lr-metro .line { fill: none; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; opacity: 0.95; }
 svg.lr-metro .line.ghost { stroke: rgba(80,60,45,0.09); stroke-width: 38; opacity: 1; }
 svg.lr-metro .home-line { stroke: var(--line-home); }
-svg.lr-metro .crachas-line { stroke: var(--line-crachas); }
-svg.lr-metro .imanes-line { stroke: var(--line-imanes); }
-svg.lr-metro .caderninhos-line { stroke: var(--line-caderninhos); }
-svg.lr-metro .cadernos-line { stroke: var(--line-cadernos); }
+<?php foreach (array_keys(lr_funnel_lines()) as $lineSlug): ?>
+svg.lr-metro .<?= lr_h($lineSlug) ?>-line { stroke: var(--line-<?= lr_h($lineSlug) ?>); }
+<?php endforeach; ?>
 svg.lr-metro .final-line { stroke: var(--line-final); }
 @media (max-width: 720px) {
   svg.lr-metro .line { stroke-width: 14; }
@@ -1313,15 +1469,16 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
   </div>
   <nav class="period-tabs">
     <?php foreach (array('today','yesterday','7d','30d','90d') as $opt): ?>
-      <a href="?period=<?= $opt ?>" class="<?= $opt === $period ? 'is-active' : '' ?>"><?= lr_h($periodLabels[$opt]) ?></a>
+      <a href="?period=<?= $opt ?>&amp;view=<?= lr_h($dashboardView) ?>" class="<?= $opt === $period ? 'is-active' : '' ?>"><?= lr_h($periodLabels[$opt]) ?></a>
     <?php endforeach; ?>
     <form method="get" class="lr-form-inline">
       <input type="hidden" name="period" value="custom">
+      <input type="hidden" name="view" value="<?= lr_h($dashboardView) ?>">
       <input type="date" name="start" value="<?= lr_h($customStart) ?>">
       <input type="date" name="end" value="<?= lr_h($customEnd) ?>">
       <button type="submit" class="<?= $period === 'custom' ? 'is-active' : '' ?>">Intervalo</button>
     </form>
-    <a href="?period=<?= lr_h($period) ?>#" class="back-link">↻ Refresh</a>
+    <a href="?period=<?= lr_h($period) ?>&amp;view=<?= lr_h($dashboardView) ?>#" class="back-link">↻ Refresh</a>
     <a href="admin-funnel.php?period=<?= lr_h($period === 'today' || $period === 'yesterday' ? '7d' : $period) ?>" class="back-link">← Funil detalhado</a>
   </nav>
 </header>
@@ -1412,6 +1569,17 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
     <?php endif; ?>
   </section>
 
+  <nav class="lr-visual-tabs" aria-label="Visualização do funil">
+    <a href="?period=<?= lr_h($period) ?>&amp;view=metro<?= $period === 'custom' ? '&amp;start=' . lr_h($customStart) . '&amp;end=' . lr_h($customEnd) : '' ?>" class="<?= $dashboardView === 'metro' ? 'is-active' : '' ?>">Funil</a>
+    <a href="?period=<?= lr_h($period) ?>&amp;view=teia<?= $period === 'custom' ? '&amp;start=' . lr_h($customStart) . '&amp;end=' . lr_h($customEnd) : '' ?>" class="<?= $dashboardView === 'teia' ? 'is-active' : '' ?>">Teia + visitantes</a>
+  </nav>
+
+  <?php if ($dashboardView === 'teia'): ?>
+  <section class="lr-teia-shell">
+    <iframe id="lrVisitorGraph" src="produtos.html?view=graph&amp;visitors=1&amp;v=2026072820" title="Teia dos produtos com visitantes"></iframe>
+  </section>
+  <?php endif; ?>
+
   <?php if (empty($sessions)): ?>
     <section class="lr-section">
       <div class="lr-empty"><strong>Sem sessões neste período.</strong>Escolhe outro período ou abre o site para gerar eventos.</div>
@@ -1419,29 +1587,22 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
   <?php else: ?>
 
   <!-- Metro replay -->
-  <section class="lr-replay-shell" id="replay">
+  <section class="lr-replay-shell" id="replay"<?= $dashboardView === 'metro' ? '' : ' hidden' ?>>
     <div class="lr-map-card">
       <div class="lr-map-wrap" id="lrMap">
         <svg class="lr-metro" viewBox="0 0 1000 900" preserveAspectRatio="none" aria-hidden="true">
-          <path class="line ghost" d="M500 70 L500 125" />
-          <path class="line home-line" d="M500 70 L500 125" />
+          <path class="line ghost" d="<?= lr_h($funnelGeometry['homePath']) ?>" />
+          <path class="line home-line" d="<?= lr_h($funnelGeometry['homePath']) ?>" />
+<?php foreach ($funnelGeometry['paths'] as $funnelPath): ?>
 
-          <path class="line ghost" d="M500 125 L255 125 Q190 125 190 190 L190 650 Q190 705 245 725 L365 760" />
-          <path class="line crachas-line" d="M500 125 L255 125 Q190 125 190 190 L190 650 Q190 705 245 725 L365 760" />
+          <path class="line ghost" d="<?= lr_h($funnelPath['d']) ?>" />
+          <path class="line <?= lr_h($funnelPath['line']) ?>-line" d="<?= lr_h($funnelPath['d']) ?>" />
+<?php endforeach; ?>
 
-          <path class="line ghost" d="M500 125 L430 125 Q395 125 395 160 L395 650 Q395 710 435 735 L465 760" />
-          <path class="line imanes-line" d="M500 125 L430 125 Q395 125 395 160 L395 650 Q395 710 435 735 L465 760" />
-
-          <path class="line ghost" d="M500 125 L570 125 Q605 125 605 160 L605 650 Q605 710 565 735 L535 760" />
-          <path class="line caderninhos-line" d="M500 125 L570 125 Q605 125 605 160 L605 650 Q605 710 565 735 L535 760" />
-
-          <path class="line ghost" d="M500 125 L745 125 Q810 125 810 190 L810 650 Q810 705 755 725 L635 760" />
-          <path class="line cadernos-line" d="M500 125 L745 125 Q810 125 810 190 L810 650 Q810 705 755 725 L635 760" />
-
-          <path class="line ghost" d="M365 760 L455 760 Q500 760 500 805 Q500 760 545 760 L635 760" />
-          <path class="line final-line" d="M365 760 L455 760 Q500 760 500 805 Q500 760 545 760 L635 760" />
-          <path class="line ghost" d="M500 805 L500 860" />
-          <path class="line final-line" d="M500 805 L500 860" />
+          <path class="line ghost" d="<?= lr_h($funnelGeometry['joinPath']) ?>" />
+          <path class="line final-line" d="<?= lr_h($funnelGeometry['joinPath']) ?>" />
+          <path class="line ghost" d="<?= lr_h($funnelGeometry['finalPath']) ?>" />
+          <path class="line final-line" d="<?= lr_h($funnelGeometry['finalPath']) ?>" />
         </svg>
 
         <div class="lr-info-card" id="lrInfoCard" aria-live="polite"></div>
@@ -1497,10 +1658,9 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
         <h2>Linhas</h2>
         <div class="lr-legend" id="lrLegend">
           <div class="lr-legend-item"><i class="swatch" style="background: var(--line-home)"></i><span>Página inicial</span><span class="count" data-line-count="home">0</span></div>
-          <div class="lr-legend-item"><i class="swatch" style="background: var(--line-crachas)"></i><span>Crachás</span><span class="count" data-line-count="crachas">0</span></div>
-          <div class="lr-legend-item"><i class="swatch" style="background: var(--line-imanes)"></i><span>Ímanes</span><span class="count" data-line-count="imanes">0</span></div>
-          <div class="lr-legend-item"><i class="swatch" style="background: var(--line-caderninhos)"></i><span>Caderninhos</span><span class="count" data-line-count="caderninhos">0</span></div>
-          <div class="lr-legend-item"><i class="swatch" style="background: var(--line-cadernos)"></i><span>Cadernos</span><span class="count" data-line-count="cadernos">0</span></div>
+<?php foreach (lr_funnel_lines() as $lineSlug => $lineDef): ?>
+          <div class="lr-legend-item"><i class="swatch" style="background: var(--line-<?= lr_h($lineSlug) ?>)"></i><span><?= lr_h($lineDef['label']) ?></span><span class="count" data-line-count="<?= lr_h($lineSlug) ?>">0</span></div>
+<?php endforeach; ?>
           <div class="lr-legend-item"><i class="swatch" style="background: var(--line-final)"></i><span>Contacto / envio</span><span class="count" data-line-count="final">0</span></div>
         </div>
       </section>
@@ -1621,6 +1781,28 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
 
 <script type="application/json" id="lrReplayData"><?= json_encode($replayPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?></script>
 
+<script>
+(function () {
+  'use strict';
+  var frame = document.getElementById('lrVisitorGraph');
+  var raw = document.getElementById('lrReplayData');
+  var payload = { visitors: [], events: [], meta: {} };
+  try { payload = JSON.parse((raw && raw.textContent) || '{}') || payload; } catch (error) {}
+
+  function send() {
+    if (frame && frame.contentWindow) {
+      frame.contentWindow.postMessage({ type: 'mia-visitor-graph-data', payload: payload }, window.location.origin);
+    }
+  }
+
+  window.addEventListener('message', function (event) {
+    if (event.origin !== window.location.origin || !frame || event.source !== frame.contentWindow) return;
+    if (event.data && event.data.type === 'mia-visitor-graph-ready') send();
+  });
+  if (frame) frame.addEventListener('load', function () { window.setTimeout(send, 60); });
+}());
+</script>
+
 <?php if (!empty($mapPoints)): ?>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="" defer></script>
@@ -1634,6 +1816,9 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
   var rawNode = document.getElementById('lrReplayData');
   var data = { visitors: [], events: [], stations: [], meta: {} };
   try { data = JSON.parse((rawNode && rawNode.textContent) || '{}') || data; } catch (e) { console.warn('lr replay payload', e); }
+
+  // Linhas do funil, na mesma ordem que lr_funnel_lines() em PHP.
+  var LINE_KEYS = ['home'].concat(<?= json_encode(array_keys(lr_funnel_lines()), JSON_UNESCAPED_UNICODE) ?>).concat(['final']);
 
   var mapEl = document.getElementById('lrMap');
   if (!mapEl) { initLeaflet(); return; }
@@ -1708,8 +1893,7 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
       btn.className = 'lr-station' + (st.major ? ' major' : '') + (st.kind ? ' ' + st.kind : '');
       btn.style.left = percentX(st.x);
       btn.style.top = percentY(st.y);
-      var lineToVar = { home: '--line-home', crachas: '--line-crachas', imanes: '--line-imanes', caderninhos: '--line-caderninhos', cadernos: '--line-cadernos', final: '--line-final' };
-      btn.style.color = 'var(' + (lineToVar[st.line] || '--line-home') + ')';
+      btn.style.color = 'var(--line-' + (LINE_KEYS.indexOf(st.line) === -1 ? 'home' : st.line) + ')';
       btn.title = st.label + ' · ' + st.sub;
       btn.setAttribute('aria-label', 'Estação ' + st.label);
       btn.addEventListener('click', function (e) {
@@ -1973,7 +2157,8 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
     }
   }
   function updateLegend() {
-    var counts = { home:0, crachas:0, imanes:0, caderninhos:0, cadernos:0, final:0 };
+    var counts = {};
+    LINE_KEYS.forEach(function (k) { counts[k] = 0; });
     pins.forEach(function (p) {
       var st = stationMap.get(p.stationId);
       if (!st) return;

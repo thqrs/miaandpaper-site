@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cores dos flows · Mia &amp; Paper</title>
+  <title>Cores dos produtos · Mia &amp; Paper</title>
   <link rel="icon" href="content/brand/logo.webp" type="image/webp">
+  <link rel="stylesheet" href="admin-nav.css?v=2026072801">
+  <script src="admin-nav.js?v=2026072801" defer></script>
   <style>
     :root { color-scheme: light; --paper:#f7f1e3; --card:#fffdf8; --ink:#30291e; --muted:#746a59; --line:#d9ccb2; --moss:#4f7a3a; --red:#b9342b; --gold:#b88616; }
     * { box-sizing:border-box; }
@@ -27,11 +29,14 @@
     th:last-child, td:last-child { border-right:0; }
     tbody tr:last-child td { border-bottom:0; }
     th { position:sticky; top:0; z-index:2; background:#f3ead7; color:var(--muted); font-size:.78rem; letter-spacing:.025em; }
-    th:first-child, td:first-child { position:sticky; left:0; z-index:1; min-width:270px; text-align:left; background:var(--card); }
+    th:first-child, td:first-child { position:sticky; left:0; z-index:1; min-width:540px; text-align:left; background:var(--card); }
     th:first-child { z-index:3; background:#f3ead7; }
-    .color-edit { display:grid; grid-template-columns:42px minmax(120px,1fr) 94px 36px; align-items:center; gap:8px; }
-    .color-edit input[type="color"] { width:42px; height:42px; padding:2px; border:1px solid var(--line); border-radius:9px; background:#fff; }
+    .color-edit { display:grid; grid-template-columns:minmax(120px,1fr) repeat(3,106px) 36px; align-items:end; gap:8px; }
+    .tone-edit { display:grid; grid-template-columns:38px 1fr; gap:5px; align-items:center; color:var(--muted); font-size:.7rem; font-weight:700; }
+    .tone-edit span { grid-column:1 / -1; }
+    .color-edit input[type="color"] { width:38px; height:38px; padding:2px; border:1px solid var(--line); border-radius:9px; background:#fff; }
     .color-edit input[type="text"] { width:100%; min-height:42px; padding:8px 10px; border:1px solid var(--line); border-radius:9px; font:inherit; }
+    .tone-edit input[type="text"] { min-height:38px; padding:6px; font:700 .72rem/1.1 ui-monospace, SFMono-Regular, Consolas, monospace; }
     .delete { padding:0; color:var(--red); font-size:1.25rem; }
     .state { width:46px; min-height:46px; padding:0; border-radius:12px; font-size:1.15rem; }
     .state[data-status="available"] { border-color:rgba(79,122,58,.45); background:rgba(79,122,58,.13); color:var(--moss); }
@@ -45,7 +50,7 @@
 <body>
   <main>
     <header>
-      <div><h1>Cores disponíveis</h1><p>Edita a cor uma vez e define em que flow aparece.</p></div>
+      <div><h1>Cores dos produtos</h1><p>Edita cada cor uma vez e escolhe em que etapas fica disponível.</p></div>
       <a href="index.html">Voltar ao site</a>
     </header>
     <section class="panel">
@@ -55,7 +60,7 @@
         <span class="message" data-message role="status">A carregar…</span>
       </div>
       <div class="table-wrap" data-grid></div>
-      <div class="legend"><span><b>✓</b> disponível</span><span><b>×</b> aparece riscada a vermelho</span><span><b>vazio</b> não aparece</span><span>Clica numa célula para mudar o estado.</span></div>
+      <div class="legend"><span><b>✓</b> disponível</span><span><b>×</b> visível, mas indisponível</span><span><b>vazio</b> não aparece</span><span>Clica numa célula para mudar o estado.</span></div>
     </section>
   </main>
   <script>
@@ -71,27 +76,29 @@
     function statusFor(colorId, flowKey) { return catalog.statuses[flowKey] && catalog.statuses[flowKey][colorId] || "hidden"; }
     function stateLabel(status) { return status === "available" ? "✓" : status === "unavailable" ? "×" : ""; }
     function stateTitle(status) { return status === "available" ? "Disponível" : status === "unavailable" ? "Indisponível no momento" : "Não mostrar"; }
+    function toneEdit(key,label,value) { return '<label class="tone-edit"><span>' + label + '</span><input type="color" value="' + esc(value) + '" data-tone="' + key + '" aria-label="Tom ' + label.toLowerCase() + '"><input type="text" value="' + esc(value) + '" data-tone-text="' + key + '" aria-label="Código do tom ' + label.toLowerCase() + '"></label>'; }
     function render() {
-      if (!catalog.flows.length) { grid.innerHTML = '<p class="empty">Ainda não há flows com escolha de cores.</p>'; return; }
+      if (!catalog.flows.length) { grid.innerHTML = '<p class="empty">Ainda não há etapas com escolha de cores.</p>'; return; }
       grid.innerHTML = '<table><thead><tr><th>Cor</th>' + catalog.flows.map(function(flow){ return '<th>' + esc(flow.label) + '</th>'; }).join("") + '</tr></thead><tbody>' + catalog.colors.map(function(color,index){
-        return '<tr data-row="' + index + '"><td><div class="color-edit"><input type="color" value="' + esc(color.hex) + '" data-hex aria-label="Cor"><input type="text" value="' + esc(color.name) + '" data-name aria-label="Nome da cor"><input type="text" value="' + esc(color.hex) + '" data-hex-text aria-label="Código hexadecimal"><button type="button" class="delete" data-delete aria-label="Remover cor">×</button></div></td>' + catalog.flows.map(function(flow){ var status=statusFor(color.id,flow.key); return '<td><button type="button" class="state" data-flow="' + esc(flow.key) + '" data-status="' + status + '" aria-label="' + esc(color.name + ': ' + stateTitle(status)) + '" title="' + stateTitle(status) + '">' + stateLabel(status) + '</button></td>'; }).join("") + '</tr>';
+        var light=color.light_hex||color.hex, dark=color.dark_hex||color.hex;
+        return '<tr data-row="' + index + '"><td><div class="color-edit"><input type="text" value="' + esc(color.name) + '" data-name aria-label="Nome da cor">' + toneEdit('light','Claro',light) + toneEdit('main','Intermédio',color.hex) + toneEdit('dark','Escuro',dark) + '<button type="button" class="delete" data-delete aria-label="Remover cor">×</button></div></td>' + catalog.flows.map(function(flow){ var status=statusFor(color.id,flow.key); return '<td><button type="button" class="state" data-flow="' + esc(flow.key) + '" data-status="' + status + '" aria-label="' + esc(color.name + ': ' + stateTitle(status)) + '" title="' + stateTitle(status) + '">' + stateLabel(status) + '</button></td>'; }).join("") + '</tr>';
       }).join("") + '</tbody></table>';
     }
     function setMessage(text,isError){ message.textContent=text; message.classList.toggle("error",!!isError); }
     function syncFromDom(){
-      grid.querySelectorAll("[data-row]").forEach(function(row){ var color=catalog.colors[Number(row.dataset.row)]; if(!color)return; color.name=row.querySelector("[data-name]").value.trim(); color.hex=row.querySelector("[data-hex-text]").value.trim().toLowerCase(); catalog.flows.forEach(function(flow){ catalog.statuses[flow.key]=catalog.statuses[flow.key]||{}; catalog.statuses[flow.key][color.id]=row.querySelector('[data-flow="'+flow.key+'"]').dataset.status; }); });
+      grid.querySelectorAll("[data-row]").forEach(function(row){ var color=catalog.colors[Number(row.dataset.row)]; if(!color)return; color.name=row.querySelector("[data-name]").value.trim(); color.light_hex=row.querySelector('[data-tone-text="light"]').value.trim().toLowerCase(); color.hex=row.querySelector('[data-tone-text="main"]').value.trim().toLowerCase(); color.dark_hex=row.querySelector('[data-tone-text="dark"]').value.trim().toLowerCase(); catalog.flows.forEach(function(flow){ catalog.statuses[flow.key]=catalog.statuses[flow.key]||{}; catalog.statuses[flow.key][color.id]=row.querySelector('[data-flow="'+flow.key+'"]').dataset.status; }); });
     }
-    grid.addEventListener("input",function(event){ var row=event.target.closest("[data-row]"); if(!row)return; if(event.target.matches("[data-hex]")){ row.querySelector("[data-hex-text]").value=event.target.value; } if(event.target.matches("[data-hex-text]") && /^#[0-9a-fA-F]{6}$/.test(event.target.value)){ row.querySelector("[data-hex]").value=event.target.value; } });
+    grid.addEventListener("input",function(event){ var row=event.target.closest("[data-row]"); if(!row)return; var key=event.target.dataset.tone||event.target.dataset.toneText; if(!key)return; if(event.target.matches("[data-tone]")){ row.querySelector('[data-tone-text="'+key+'"]').value=event.target.value; } if(event.target.matches("[data-tone-text]") && /^#[0-9a-fA-F]{6}$/.test(event.target.value)){ row.querySelector('[data-tone="'+key+'"]').value=event.target.value; } });
     grid.addEventListener("click",function(event){
       var button=event.target.closest("button"); if(!button)return;
       var row=button.closest("[data-row]"); var index=row?Number(row.dataset.row):-1;
       if(button.matches("[data-delete]")){ syncFromDom(); catalog.colors.splice(index,1); render(); return; }
       if(button.matches("[data-flow]")){ var next=button.dataset.status === "hidden" ? "available" : button.dataset.status === "available" ? "unavailable" : "hidden"; button.dataset.status=next; catalog.statuses[button.dataset.flow]=catalog.statuses[button.dataset.flow]||{}; catalog.statuses[button.dataset.flow][catalog.colors[index].id]=next; button.textContent=stateLabel(next); button.title=stateTitle(next); button.setAttribute("aria-label",catalog.colors[index].name+": "+stateTitle(next)); }
     });
-    document.querySelector("[data-add]").addEventListener("click",function(){ syncFromDom(); var id=slug("nova-cor-"+Date.now()); catalog.colors.push({id:id,name:"Nova cor",hex:"#d7aa36"}); catalog.flows.forEach(function(flow){ catalog.statuses[flow.key]=catalog.statuses[flow.key]||{}; catalog.statuses[flow.key][id]="hidden"; }); render(); });
+    document.querySelector("[data-add]").addEventListener("click",function(){ syncFromDom(); var id=slug("nova-cor-"+Date.now()); catalog.colors.push({id:id,name:"Nova cor",light_hex:"#f0d98a",hex:"#d7aa36",dark_hex:"#8e6818"}); catalog.flows.forEach(function(flow){ catalog.statuses[flow.key]=catalog.statuses[flow.key]||{}; catalog.statuses[flow.key][id]="hidden"; }); render(); });
     save.addEventListener("click",function(){
       syncFromDom(); save.disabled=true; setMessage("A guardar…",false);
-      var colors=catalog.colors.map(function(color){ var statuses={}; catalog.flows.forEach(function(flow){ statuses[flow.key]=statusFor(color.id,flow.key); }); return {id:color.id,name:color.name,hex:color.hex,statuses:statuses}; });
+      var colors=catalog.colors.map(function(color){ var statuses={}; catalog.flows.forEach(function(flow){ statuses[flow.key]=statusFor(color.id,flow.key); }); return {id:color.id,name:color.name,lightHex:color.light_hex,hex:color.hex,darkHex:color.dark_hex,statuses:statuses}; });
       fetch("admin-api.php?action=save-colors",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json","X-Admin-CSRF":csrf},body:JSON.stringify({colors:colors})}).then(function(response){ return response.json().then(function(data){ if(!response.ok)throw new Error(data.message||"Não foi possível guardar."); return data; }); }).then(function(data){ catalog=data.catalog; save.disabled=false; setMessage("Alterações guardadas.",false); render(); }).catch(function(error){ save.disabled=false; setMessage(error.message,true); });
     });
     fetch("admin-api.php?action=get-colors",{credentials:"same-origin"}).then(function(response){ return response.json().then(function(data){ if(!response.ok)throw new Error(data.message||"Inicia sessão de administradora no site."); return data; }); }).then(function(data){ catalog=data.catalog; csrf=data.csrf||""; setMessage("",false); render(); }).catch(function(error){ setMessage(error.message,true); grid.innerHTML='<p class="empty">Acesso restrito. <a href="index.html">Inicia sessão no site</a> e volta a esta página.</p>'; });

@@ -2,6 +2,7 @@
 // TOOLS_INDEX_V1: página interna de ferramentas. Mesmo guard de sessão que
 // admin-funnel.php / admin-orders.php — só acessível em modo admin.
 session_start();
+require_once __DIR__ . '/../admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 
 if (empty($_SESSION['miaandpaper_admin'])) {
     http_response_code(403);
@@ -23,6 +24,8 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="../catalogo/catalogo.css?v=2026072601">
   <link rel="stylesheet" href="../ofertas/ofertas.css?v=2026062809">
+  <link rel="stylesheet" href="../admin-nav.css?v=2026072801">
+  <script src="../admin-nav.js?v=2026072801" data-prefix="../" defer></script>
 </head>
 <body data-catalog-page="tools">
   <main class="catalog-shell">
@@ -61,6 +64,10 @@ if (empty($_SESSION['miaandpaper_admin'])) {
         <a class="catalog-product-card" href="../reviews.html">
           <span class="catalog-product-thumb" aria-hidden="true">★</span>
           <span class="catalog-product-copy"><strong>Reviews</strong><span>Editar testemunhos, imagens, links, ordem e apresentação.</span><span class="catalog-product-action">Abrir editor</span></span>
+        </a>
+        <a class="catalog-product-card" href="../produtos.html">
+          <span class="catalog-product-thumb" aria-hidden="true">P</span>
+          <span class="catalog-product-copy"><strong>Produtos</strong><span>Consultar produtos, registos configuráveis e os percursos que terminam no carrinho.</span><span class="catalog-product-action">Abrir base de dados</span></span>
         </a>
         <a class="catalog-product-card" href="../admin-funnel.php">
           <span class="catalog-product-thumb" aria-hidden="true">F</span>

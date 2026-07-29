@@ -4351,6 +4351,27 @@ html[data-theme="dark"] .order-success-code code {
   color: #8c3028;
 }
 
+.admin-toolbar.is-collapsed {
+  left: auto;
+  width: auto;
+  max-height: none;
+  padding: 6px;
+  overflow: visible;
+}
+
+.admin-toolbar.is-collapsed > :not(.admin-toolbar-head),
+.admin-toolbar.is-collapsed .admin-toolbar-head > :not(strong):not(.admin-panel-toggle) {
+  display: none;
+}
+
+.admin-toolbar.is-collapsed .admin-toolbar-head {
+  grid-template-columns: auto auto;
+}
+
+.admin-panel-toggle {
+  white-space: nowrap;
+}
+
 .admin-message {
   grid-column: 1 / -1;
   margin: 0;

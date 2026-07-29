@@ -1,0 +1,78 @@
+.admin-global-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 46px;
+  padding: 6px clamp(12px, 2.6vw, 34px);
+  border-bottom: 1px solid rgba(255, 255, 255, .14);
+  background: #243f3b;
+  color: #fffdf8;
+  font: 700 13px/1.2 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-shadow: 0 5px 18px rgba(38, 49, 44, .13);
+}
+
+.admin-global-nav * { box-sizing: border-box; }
+
+.admin-global-nav-brand {
+  flex: 0 0 auto;
+  color: inherit;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.admin-global-nav-brand span {
+  margin-left: 5px;
+  color: #f2c963;
+  font: 800 10px/1 system-ui, sans-serif;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.admin-global-nav-links {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.admin-global-nav-links a {
+  flex: 0 0 auto;
+  padding: 7px 9px;
+  border-radius: 7px;
+  color: rgba(255, 253, 248, .78);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.admin-global-nav-links a:hover,
+.admin-global-nav-links a:focus-visible {
+  background: rgba(255, 255, 255, .1);
+  color: #fff;
+  outline: none;
+}
+
+.admin-global-nav-links a.is-active {
+  background: #f2c963;
+  color: #243f3b;
+}
+
+/* As duas ferramentas com barras próprias continuam fixas imediatamente por
+   baixo da navegação administrativa. */
+.admin-global-nav + .products-header,
+.admin-global-nav + .bar {
+  top: 46px;
+}
+
+@media (max-width: 680px) {
+  .admin-global-nav { gap: 9px; padding-inline: 10px; }
+  .admin-global-nav-brand { font-size: 0; }
+  .admin-global-nav-brand span { margin: 0; font-size: 10px; }
+}

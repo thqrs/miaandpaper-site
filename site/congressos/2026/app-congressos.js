@@ -20,6 +20,7 @@
     return ASSET_BASE + path;
   }
   var ADMIN_KEY = "miaandpaper-admin-session-v1";
+  var ADMIN_PANEL_HIDDEN_KEY = "miaandpaper-admin-panel-hidden-v1";
   var ADMIN_API = "admin-api.php";
   var COLORS_API = "colors-api.php";
   var ORDER_UPLOAD_API = "upload-order-photo.php";
@@ -162,6 +163,7 @@
 
   var state = {
     admin: safeStorageGetItem(ADMIN_KEY) === "1",
+    adminPanelHidden: safeStorageGetItem(ADMIN_PANEL_HIDDEN_KEY) === "1",
     loginOpen: false,
     adminMessage: "",
     cartPanelOpen: false,
@@ -2159,6 +2161,34 @@
       }
     }).catch(function () {
       state.adminIpLoading = false;
+    });
+  }
+
+  function openAdminSurface() {
+    state.adminMessage = "";
+
+    fetch(ADMIN_API + "?action=status", {
+      method: "GET",
+      credentials: "same-origin"
+    }).then(function (response) {
+      return response.json().catch(function () { return {}; });
+    }).then(function (data) {
+      if (data && data.csrf) {
+        adminCsrfToken = String(data.csrf);
+      }
+      if (data && data.loggedIn === true) {
+        state.admin = true;
+        state.loginOpen = false;
+        state.adminIpLoaded = false;
+        state.adminIpLoading = false;
+        safeStorageSetItem(ADMIN_KEY, "1");
+      } else {
+        state.loginOpen = true;
+      }
+      rerender();
+    }).catch(function () {
+      state.loginOpen = true;
+      rerender();
     });
   }
 
@@ -4302,9 +4332,10 @@
     });
 
     return [
-      '<aside class="admin-toolbar" aria-label="Admin mockup">',
+      '<aside class="admin-toolbar' + (state.adminPanelHidden ? ' is-collapsed' : '') + '" aria-label="Painel de administração">',
       '<div class="admin-toolbar-head">',
       '<strong>Admin</strong>',
+      '<button type="button" class="admin-panel-toggle" data-admin-panel-toggle aria-expanded="' + (state.adminPanelHidden ? 'false' : 'true') + '">' + (state.adminPanelHidden ? 'Mostrar painel' : 'Esconder painel') + '</button>',
       content ? '<button type="button" data-admin-undo' + (state.undoStack.length ? "" : " disabled") + '>UNDO</button>' : "",
       content ? '<button type="button" data-admin-save>SAVE</button>' : "",
       content ? '<button type="button" data-admin-reset>JSON</button>' : "",
@@ -4352,6 +4383,8 @@
     var content = currentProduct || currentHome;
     var open = document.querySelector("[data-admin-open]");
     var close = document.querySelector("[data-admin-close]");
+    var toolbar = document.querySelector(".admin-toolbar");
+    var panelToggle = document.querySelector("[data-admin-panel-toggle]");
     var loginForm = document.querySelector("[data-admin-login-form]");
     var exit = document.querySelector("[data-admin-exit]");
     var template = document.querySelector("[data-admin-template]");
@@ -4364,10 +4397,19 @@
       refreshBasicAdminInfo(false);
     }
 
+    if (toolbar && panelToggle) {
+      panelToggle.addEventListener("click", function () {
+        state.adminPanelHidden = !state.adminPanelHidden;
+        safeStorageSetItem(ADMIN_PANEL_HIDDEN_KEY, state.adminPanelHidden ? "1" : "0");
+        toolbar.classList.toggle("is-collapsed", state.adminPanelHidden);
+        panelToggle.setAttribute("aria-expanded", state.adminPanelHidden ? "false" : "true");
+        panelToggle.textContent = state.adminPanelHidden ? "Mostrar painel" : "Esconder painel";
+      });
+    }
+
     if (open) {
       open.addEventListener("click", function () {
-        state.loginOpen = true;
-        rerender();
+        openAdminSurface();
       });
     }
 
@@ -6285,7 +6327,7 @@
   function defaultDeliveryOptions() {
     return [
       { id: "pickup", label: "Vou recolher na casa da Mia", text: "", feeCents: 0 },
-      { id: "shipping", label: "Envio CTT - até 2 Kg", text: "", feeCents: 555, priceText: "Valor mínimo:\n5,55 €" },
+      { id: "shipping", label: "Envio CTT - até 2 Kg", text: "", feeCents: 540, priceText: "Valor mínimo:\n5,40 €" },
       { id: "join_orders", label: "Junta as minhas encomendas", text: "", feeCents: 0 }
     ];
   }

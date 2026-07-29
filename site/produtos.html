@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Produtos · Administração | Mia &amp; Paper</title>
+  <link rel="icon" href="content/brand/logo.webp" type="image/webp">
+  <link rel="stylesheet" href="produtos-admin.css?v=2026072813">
+  <link rel="stylesheet" href="admin-nav.css?v=2026072801">
+  <script src="admin-nav.js?v=2026072801" defer></script>
+</head>
+<body>
+  <header class="products-header">
+    <a class="products-brand" href="index.html" aria-label="Voltar à Mia &amp; Paper">
+      <img src="content/brand/logo.webp" alt="" width="48" height="48">
+      <span><small>Administração</small><strong>Mia &amp; Paper</strong></span>
+    </a>
+  </header>
+
+  <main class="products-shell">
+    <section class="products-intro" aria-labelledby="products-title">
+      <div>
+        <p class="eyebrow">Base de dados de trabalho</p>
+        <h1 id="products-title">Produtos e percursos</h1>
+        <p>Uma visão única do que pode chegar ao carrinho e do caminho que o cliente faz até lá.</p>
+      </div>
+      <div class="intro-actions">
+        <button class="button secondary" type="button" data-export>Exportar rascunho</button>
+        <button class="button primary" type="button" data-add-product>Adicionar produto</button>
+      </div>
+    </section>
+
+    <aside class="mockup-notice" role="note">
+      <strong>Mockup inicial</strong>
+      <span>Os produtos são lidos dos ficheiros actuais. As edições ficam como rascunho apenas neste browser e ainda não alteram o site. O acesso permanece sem password até ao deploy.</span>
+      <button type="button" class="text-button" data-clear-draft hidden>Limpar rascunho</button>
+    </aside>
+
+    <div class="products-status" data-status role="status">A carregar produtos…</div>
+
+    <section class="stats-grid" aria-label="Resumo dos produtos" data-stats hidden>
+      <article><span>Registos</span><strong data-stat="total">—</strong><small>produtos identificados</small></article>
+      <article><span>Produtos reais</span><strong data-stat="real">—</strong><small>design ou peça definida</small></article>
+      <article><span>Configuráveis</span><strong data-stat="configurable">—</strong><small>criados a partir do pedido</small></article>
+      <article><span>Sem percurso</span><strong data-stat="orphan">—</strong><small>ficheiros sem página activa</small></article>
+    </section>
+
+    <div class="view-switcher" role="tablist" aria-label="Vista da página" data-view-switcher hidden>
+      <button type="button" role="tab" aria-selected="true" data-view="database">Base de dados</button>
+      <button type="button" role="tab" aria-selected="false" data-view="sitemap">Mapa do site</button>
+      <button type="button" role="tab" aria-selected="false" data-view="graph">Teia</button>
+      <button type="button" role="tab" aria-selected="false" data-view="llm">Para LLM</button>
+      <button type="button" role="tab" aria-selected="false" data-view="graph-llm">Alterações LLM</button>
+    </div>
+
+    <div class="workspace" data-workspace hidden>
+      <aside class="site-tree" aria-labelledby="site-tree-title">
+        <div class="sidebar-heading">
+          <p class="eyebrow">Navegação</p>
+          <h2 id="site-tree-title">Mapa do site</h2>
+        </div>
+        <nav data-site-tree aria-label="Filtrar por percurso"></nav>
+        <div class="tree-legend">
+          <span><i class="legend-dot real"></i> Produto real</span>
+          <span><i class="legend-dot configurable"></i> Configurável</span>
+          <span><i class="legend-dot orphan"></i> Sem percurso</span>
+        </div>
+      </aside>
+
+      <section class="database-view" data-view-panel="database">
+        <div class="database-toolbar">
+          <label class="search-field">
+            <span class="sr-only">Procurar produtos</span>
+            <input type="search" placeholder="Procurar por nome, código ou percurso…" data-search>
+          </label>
+          <label>
+            <span>Tipo</span>
+            <select data-kind-filter>
+              <option value="all">Todos</option>
+              <option value="real">Produtos reais</option>
+              <option value="configurable">Configuráveis</option>
+            </select>
+          </label>
+          <label>
+            <span>Estado</span>
+            <select data-state-filter>
+              <option value="all">Todos</option>
+              <option value="active">Activo</option>
+              <option value="draft">Rascunho</option>
+              <option value="hidden">Oculto</option>
+              <option value="orphan">Sem percurso</option>
+            </select>
+          </label>
+          <p class="results-count" data-results-count></p>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Tipo</th>
+                <th>Onde está</th>
+                <th>Preço</th>
+                <th>Estado</th>
+                <th><span class="sr-only">Acções</span></th>
+              </tr>
+            </thead>
+            <tbody data-products-list></tbody>
+          </table>
+        </div>
+        <div class="empty-state" data-empty hidden>
+          <strong>Não há produtos com estes filtros.</strong>
+          <button type="button" class="text-button" data-reset-filters>Limpar filtros</button>
+        </div>
+      </section>
+
+      <section class="sitemap-view" data-view-panel="sitemap" hidden>
+        <header class="sitemap-heading">
+          <div><p class="eyebrow">Percursos de compra</p><h2>Como se chega ao carrinho</h2></div>
+          <p>Os passos condicionais aparecem como ramificações. Clica num produto para ver o seu registo.</p>
+        </header>
+        <div class="sitemap-cards" data-sitemap></div>
+      </section>
+
+      <section class="graph-view" data-view-panel="graph" hidden>
+        <div class="graph-stage" data-graph-stage>
+          <div class="graph-viewport" data-graph-viewport tabindex="0" aria-label="Teia interactiva de produtos e passos">
+            <div class="graph-world" data-graph-world>
+              <canvas data-graph-canvas aria-hidden="true"></canvas>
+              <div class="graph-nodes" data-graph-nodes></div>
+            </div>
+          </div>
+
+          <p class="graph-empty" data-graph-empty hidden>Não existem nodes nesta família.</p>
+
+          <div class="graph-toolbar" role="toolbar" aria-label="Controlos da teia">
+            <details class="graph-family-menu" data-graph-family-menu>
+              <summary class="graph-family-summary" data-graph-family-summary>Todas as famílias</summary>
+              <div class="graph-family-options" data-graph-family-options aria-label="Famílias visíveis"></div>
+            </details>
+            <span class="graph-tool-divider" aria-hidden="true"></span>
+            <button type="button" class="graph-tool" data-graph-zoom-out aria-label="Diminuir zoom" data-tooltip="Diminuir o zoom da teia">−</button>
+            <button type="button" class="graph-tool is-label" data-graph-zoom-label aria-label="Repor zoom" data-tooltip="Voltar ao zoom de 100%">100%</button>
+            <button type="button" class="graph-tool" data-graph-zoom-in aria-label="Aumentar zoom" data-tooltip="Aumentar o zoom da teia">+</button>
+            <button type="button" class="graph-tool" data-graph-fit aria-label="Ajustar tudo à janela" data-tooltip="Mostrar toda a teia na janela">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7.5V3h4.5M16.5 7.5V3H12M3 12.5V17h4.5M16.5 12.5V17H12"/><rect x="7" y="7" width="6" height="6" rx="1.4"/></svg>
+            </button>
+            <button type="button" class="graph-tool" data-graph-reset-layout aria-label="Repor posições dos nodes" data-tooltip="Apagar as posições guardadas e repor o esquema automático">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.2 7.1A6.3 6.3 0 1 1 3.8 13"/><path d="M4.2 3.8v3.3h3.3"/></svg>
+            </button>
+            <span class="graph-tool-divider" aria-hidden="true"></span>
+            <button type="button" class="graph-tool" data-graph-tidy aria-pressed="false" aria-label="Ligações em ângulo recto, sem se sobreporem" data-tooltip="Alternar entre ligações curvas e ligações organizadas">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.5 5h5a2 2 0 0 1 2 2v6a2 2 0 0 0 2 2h5"/><path d="M2.5 11h3.2a2 2 0 0 1 2 2v1.5"/><path d="M15 12.6l2.5 2.4-2.5 2.4"/></svg>
+            </button>
+            <button type="button" class="graph-tool" data-graph-collapse aria-pressed="true" aria-label="Alternar modo compactado" data-tooltip="Expandir produtos e passos finais">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3.5" y="3" width="13" height="4" rx="1.4"/><rect x="3.5" y="13" width="13" height="4" rx="1.4"/><path d="M10 8.4v3.2M8.2 10.2 10 11.9l1.8-1.7"/></svg>
+            </button>
+            <button type="button" class="graph-tool" data-graph-playground aria-pressed="false" aria-label="Editar ligações" data-tooltip="Entrar no playground para experimentar ligações">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8.4 11.6a3.2 3.2 0 0 0 4.6 0l2.6-2.6a3.25 3.25 0 0 0-4.6-4.6l-1.1 1.1"/><path d="M11.6 8.4a3.2 3.2 0 0 0-4.6 0l-2.6 2.6a3.25 3.25 0 0 0 4.6 4.6l1.1-1.1"/></svg>
+            </button>
+            <button type="button" class="graph-tool is-danger" data-graph-reset aria-label="Limpar alterações do playground" data-tooltip="Eliminar todas as ligações experimentais" hidden>
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h12M8 6V4h4v2M6.5 6l.7 10h5.6l.7-10M8.6 8.8v4.6M11.4 8.8v4.6"/></svg>
+            </button>
+          </div>
+
+          <div class="graph-corner-tools">
+            <button type="button" class="graph-tool" data-graph-legend-toggle aria-expanded="false" aria-label="Legenda" data-tooltip="Mostrar ou esconder a legenda" data-tooltip-align="right">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="5" height="4" rx="1.2"/><rect x="3" y="12" width="5" height="4" rx="1.2"/><path d="M11 6h6M11 14h6"/></svg>
+            </button>
+            <button type="button" class="graph-tool" data-graph-fullscreen aria-pressed="false" aria-label="Ecrã inteiro" data-tooltip="Usar a teia em ecrã inteiro" data-tooltip-align="right">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7.5V3h4.5M16.5 7.5V3H12M3 12.5V17h4.5M16.5 12.5V17H12"/></svg>
+            </button>
+          </div>
+
+          <div class="graph-legend" data-graph-legend hidden aria-label="Legenda da teia">
+            <span><i class="graph-legend-node family"></i> Família</span>
+            <span><i class="graph-legend-node step"></i> Passo</span>
+            <span><i class="graph-legend-node page"></i> Ligação da homepage</span>
+            <span><i class="graph-legend-node conditional"></i> Passo condicional</span>
+            <span><i class="graph-legend-node hidden-step"></i> Passo oculto ao cliente</span>
+            <span><i class="graph-legend-node product"></i> Produto real</span>
+            <span><i class="graph-legend-node configurable"></i> Configurável</span>
+            <span><i class="graph-legend-node image"></i> Tem imagens para editar</span>
+            <span><i class="graph-legend-node pending"></i> Tem imagens por finalizar</span>
+            <span><i class="graph-legend-node visitors"></i> Visitantes no percurso</span>
+            <span><i class="graph-legend-line current"></i> Ligação actual</span>
+            <span><i class="graph-legend-line changed"></i> Ligação do playground</span>
+          </div>
+
+          <aside class="graph-inspector" data-graph-inspector hidden></aside>
+        </div>
+      </section>
+
+      <section class="llm-view" data-view-panel="llm" hidden>
+        <header class="llm-heading">
+          <div>
+            <p class="eyebrow">Contexto reutilizável</p>
+            <h2>Estrutura para ChatGPT</h2>
+            <p>Gera um retrato consistente dos produtos, fontes, estados e percursos. Está pronto para copiar e colar no início de outra conversa.</p>
+          </div>
+          <div class="llm-heading-actions">
+            <button class="button secondary" type="button" data-llm-download>Descarregar</button>
+            <button class="button primary" type="button" data-llm-copy>Copiar para o ChatGPT</button>
+          </div>
+        </header>
+
+        <div class="llm-toolbar">
+          <label>
+            <span>Formato</span>
+            <select data-llm-format>
+              <option value="markdown">Markdown estruturado</option>
+              <option value="json">JSON</option>
+            </select>
+          </label>
+          <label>
+            <span>Detalhe</span>
+            <select data-llm-detail>
+              <option value="compact">Compacto</option>
+              <option value="complete">Completo</option>
+            </select>
+          </label>
+          <label>
+            <span>Âmbito</span>
+            <select data-llm-scope>
+              <option value="all">Todos os produtos</option>
+              <option value="filtered">Filtros actuais</option>
+            </select>
+          </label>
+          <div class="llm-size" data-llm-size></div>
+        </div>
+
+        <div class="llm-copy-status" data-llm-status role="status" aria-live="polite"></div>
+        <textarea class="llm-output" data-llm-output readonly spellcheck="false" aria-label="Estrutura de produtos para copiar"></textarea>
+
+        <aside class="llm-guide">
+          <strong>Como usar</strong>
+          <p>Copia o bloco, cola-o numa nova conversa e escreve a seguir o que queres alterar. No modo compacto seguem apenas os campos essenciais; o modo completo inclui fontes, páginas, imagens, notas e passos condicionais.</p>
+        </aside>
+      </section>
+
+      <section class="graph-llm-view" data-view-panel="graph-llm" hidden>
+        <header class="llm-heading">
+          <div>
+            <p class="eyebrow">Diferenças do playground</p>
+            <h2>Alterações em texto para LLM</h2>
+            <p>Descreve apenas as ligações acrescentadas ou removidas na teia. Este texto não altera o site e pode ser usado como instrução noutra conversa.</p>
+          </div>
+          <div class="llm-heading-actions">
+            <button class="button secondary" type="button" data-graph-llm-download>Descarregar</button>
+            <button class="button primary" type="button" data-graph-llm-copy>Copiar alterações</button>
+          </div>
+        </header>
+
+        <div class="graph-llm-summary">
+          <article><span>Acrescentadas</span><strong data-graph-stat="added">0</strong></article>
+          <article><span>Removidas</span><strong data-graph-stat="removed">0</strong></article>
+          <article><span>Estado</span><strong data-graph-stat="status">Sem alterações</strong></article>
+        </div>
+
+        <div class="llm-toolbar graph-llm-toolbar">
+          <label><span>Formato</span><select data-graph-llm-format><option value="markdown">Markdown estruturado</option><option value="json">JSON</option></select></label>
+          <div class="llm-size" data-graph-llm-size></div>
+        </div>
+        <div class="llm-copy-status" data-graph-llm-status role="status" aria-live="polite"></div>
+        <textarea class="llm-output graph-llm-output" data-graph-llm-output readonly spellcheck="false" aria-label="Alterações do playground para copiar"></textarea>
+        <aside class="llm-guide">
+          <strong>Isolado do site</strong>
+          <p>As diferenças vivem apenas neste browser. Para as transformar numa alteração real, copia este bloco para uma conversa e pede explicitamente para analisar e implementar as ligações propostas.</p>
+        </aside>
+      </section>
+    </div>
+  </main>
+
+  <dialog class="product-editor" data-editor aria-labelledby="editor-title">
+    <form method="dialog" data-editor-form>
+      <header class="editor-header">
+        <div><p class="eyebrow">Rascunho local</p><h2 id="editor-title" data-editor-title>Editar produto</h2></div>
+        <button type="button" class="icon-button" data-editor-close aria-label="Fechar">×</button>
+      </header>
+
+      <div class="editor-body">
+        <div class="editor-preview" data-editor-preview></div>
+
+        <div class="editor-fields">
+          <label class="field wide">Nome do produto<input type="text" name="name" maxlength="160" required></label>
+          <label class="field">Tipo
+            <select name="kind">
+              <option value="real">Produto real</option>
+              <option value="configurable">Configurável / não real</option>
+            </select>
+          </label>
+          <label class="field">Estado
+            <select name="state">
+              <option value="active">Activo</option>
+              <option value="draft">Rascunho</option>
+              <option value="hidden">Oculto</option>
+            </select>
+          </label>
+          <label class="field">Categoria<input type="text" name="category" maxlength="100"></label>
+          <label class="field">Código interno<input type="text" name="sourceId" maxlength="120"></label>
+          <label class="field wide">Página de encomenda<input type="text" name="page" maxlength="240" placeholder="crachas.html"></label>
+          <label class="field wide">Nota interna<textarea name="notes" rows="4" maxlength="1000" placeholder="Decisões, dúvidas ou trabalho em falta…"></textarea></label>
+        </div>
+
+        <section class="editor-source" data-editor-source></section>
+      </div>
+
+      <footer class="editor-footer">
+        <button type="button" class="text-button danger" data-delete-local hidden>Apagar registo local</button>
+        <span class="editor-spacer"></span>
+        <button type="button" class="button secondary" data-reset-record>Repor dados actuais</button>
+        <button type="submit" class="button primary">Guardar rascunho</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <template id="product-row-template">
+    <tr>
+      <td class="product-cell">
+        <div class="product-thumb" data-thumb></div>
+        <div><strong data-name></strong><small data-id></small><span class="edited-label" data-edited hidden>Editado</span></div>
+      </td>
+      <td><span class="kind-badge" data-kind></span></td>
+      <td class="route-cell"><div data-route></div><small data-route-more></small></td>
+      <td class="price-cell" data-price></td>
+      <td><span class="state-badge" data-state></span></td>
+      <td class="actions-cell"><button type="button" class="row-action" data-edit>Editar</button></td>
+    </tr>
+  </template>
+
+  <script src="galeria-slots.js?v=2026072803" defer></script>
+  <script src="produtos-admin.js?v=2026072820" defer></script>
+</body>
+</html>

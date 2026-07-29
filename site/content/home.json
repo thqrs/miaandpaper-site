@@ -10,8 +10,17 @@
     },
     "hero": {
         "image": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_6.webp",
+        "carouselSourceImages": [
+            "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_6.webp",
+            "content/designs/quadros/fotos-reais/foto-flores-azul-amarelo-frontal.webp",
+            "content/designs/crachas/novidades/braille-01.webp",
+            "content/designs/Fotos_dos_Imans/esperanca/esperanca-01.webp",
+            "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_5.webp"
+        ],
+        "carouselEnabled": true,
         "imagePosition": "center",
         "rotationSeconds": 5,
+        "resumeSeconds": 10,
         "primaryKicker": "Novidades",
         "primaryLabel": "Ver novidades",
         "primaryHref": "#novidades",

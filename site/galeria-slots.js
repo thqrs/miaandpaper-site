@@ -52,6 +52,14 @@
     return (node && (node.title || node.value || node.label || node.id)) || "";
   }
 
+  // A mesma família pode existir em mais de um contexto (por exemplo,
+  // imanes no site principal e no Congresso 2026). A chave da entrada mantém
+  // esses JSON separados; o slug continua a ser o slug real do produto, usado
+  // pelo renderer e pelas imageEdits.
+  function entryKey(entry) {
+    return String(entry && (entry.key || entry.slug) || "");
+  }
+
   // --- identificadores legíveis ---------------------------------------------
   // Cada localização única de imagem ganha um código estável e fácil de ler,
   // do tipo MOLDURA-P4-HORIZONTAL-CHOICE, para se poder dizer "usa esta foto
@@ -61,6 +69,25 @@
     quadros: "MOLDURA", cadernos: "CADERNO", caderninhos: "MINICADERNO",
     crachas: "CRACHA", imanes: "IMAN", lembrancas: "LEMBRANCA", pins: "PINS",
     postais: "POSTAL", home: "HOMEPAGE"
+  };
+
+  // Coordenadas compactas para conversa e pesquisa. O prefixo identifica o
+  // contexto/família e os quatro algarismos identificam o local dentro dela.
+  // A identificação longa continua a ser a chave canónica e descritiva.
+  var SHORT_ENTRY_CODES = {
+    home: "HP",
+    caderninhos: "MN",
+    cadernos: "CA",
+    crachas: "CR",
+    imanes: "IM",
+    quadros: "MO",
+    lembrancas: "LE",
+    postais: "PO",
+    pins: "PI",
+    "congresso-2026|caderninhos": "QN",
+    "congresso-2026|cadernos": "QA",
+    "congresso-2026|crachas": "QR",
+    "congresso-2026|imanes": "QI"
   };
 
   // Campos da caixa "O que vais encomendar" (imagens de substituição próprias).
@@ -80,8 +107,36 @@
 
   function pad3(n) { return ("00" + n).slice(-3); }
 
+  function pad4(n) { return ("000" + n).slice(-4); }
+
   function productCode(slug) {
     return PRODUCT_CODES[slug] || seg(slug);
+  }
+
+  function shortEntryCode(entry) {
+    var key = entryKey(entry);
+    var normalized = seg(key || (entry && entry.slug));
+    var hash = 0;
+    var i;
+    if (SHORT_ENTRY_CODES[key]) { return SHORT_ENTRY_CODES[key]; }
+    if (entry && key === String(entry.slug || "") && SHORT_ENTRY_CODES[entry.slug]) {
+      return SHORT_ENTRY_CODES[entry.slug];
+    }
+    for (i = 0; i < normalized.length; i += 1) {
+      hash = ((hash * 31) + normalized.charCodeAt(i)) % 676;
+    }
+    return String.fromCharCode(65 + Math.floor(hash / 26)) + String.fromCharCode(65 + (hash % 26));
+  }
+
+  function assignShortIdentifiers(entry, slots) {
+    var prefix = shortEntryCode(entry);
+    slots.slice().sort(function (a, b) {
+      var aKey = String(a.id || "") + "|" + String(a.sourceKey || a.key || "");
+      var bKey = String(b.id || "") + "|" + String(b.sourceKey || b.key || "");
+      return aKey < bKey ? -1 : (aKey > bKey ? 1 : 0);
+    }).forEach(function (slot, index) {
+      slot.shortId = prefix + "-" + pad4(index + 1);
+    });
   }
 
   function roleFor(slot) {
@@ -216,7 +271,7 @@
       detail = friendly;
     }
 
-    var sourceKey = entry.slug + ":" + trail.join(".");
+    var sourceKey = entryKey(entry) + ":" + trail.join(".");
     var directItemProperty = typeof last !== "number" && context.itemTrail
       && trail.length === context.itemTrail.length + 1;
     var item = context.itemTrail ? resolveTrail(entry.product, context.itemTrail) : null;
@@ -238,9 +293,10 @@
       // Chave estável para guardar estado: não usa índices de array do passo,
       // por isso sobrevive a reordenações dos itens.
       doneKey: itemId
-        ? entry.slug + "|" + itemId + "|" + propName + (typeof last === "number" ? "|" + last : "")
-        : entry.slug + "|" + trail.join("."),
-      slug: entry.slug,
+        ? entryKey(entry) + "|" + itemId + "|" + propName + (typeof last === "number" ? "|" + last : "")
+        : entryKey(entry) + "|" + trail.join("."),
+      slug: entryKey(entry),
+      productSlug: entry.slug,
       trail: trail,
       itemTrail: context.itemTrail || null,
       section: context.section,
@@ -256,6 +312,7 @@
       editItemTrail: adjustable ? context.itemTrail : null,
       fitItemTrail: adjustable ? context.itemTrail : null,
       itemId: adjustable && item && item.id ? String(item.id) : "",
+      ownerItemId: item && item.id ? String(item.id) : "",
       slotName: slotName,
       expectedEditKey: adjustable && item && item.id && step && step.id
         ? [entry.slug, step.id, item.id, slotName].join(":")
@@ -373,7 +430,7 @@
         targetTrail = ["steps", laminationIndex, "items", target.index];
         if (String(trail[collectionAt + 1]) === "holografico") {
           slot.doneAliases = (slot.doneAliases || []).concat([
-            entry.slug + "|" + cover.id + "|hologrofico"
+            entryKey(entry) + "|" + cover.id + "|hologrofico"
           ]);
         }
         selections = { designs: cover.value, lamination: target.item.value };
@@ -467,6 +524,13 @@
         slotName = "home-hero";
         section = "Topo da homepage";
         label = "Imagem principal";
+      } else if (trail[0] === "hero" && trail[1] === "carouselSourceImages" && typeof trail[2] === "number") {
+        carouselIndex = Number(trail[2]);
+        role = "HERO-CARROSSEL-" + pad3(carouselIndex + 1);
+        slotName = "home-hero-carousel";
+        slideIndex = carouselIndex;
+        section = "Topo da homepage";
+        label = "Imagem do hero " + (carouselIndex + 1);
       } else if (category) {
         section = "Produto — " + labelFor(category);
         label = labelFor(category);
@@ -499,10 +563,11 @@
       usedIds[baseId] = duplicate + 1;
 
       return {
-        key: entry.slug + ":" + trail.join("."),
-        sourceKey: entry.slug + ":" + trail.join("."),
-        doneKey: entry.slug + "|" + trail.join("."),
-        slug: entry.slug,
+        key: entryKey(entry) + ":" + trail.join("."),
+        sourceKey: entryKey(entry) + ":" + trail.join("."),
+        doneKey: entryKey(entry) + "|" + trail.join("."),
+        slug: entryKey(entry),
+        productSlug: entry.slug,
         kind: "home",
         trail: trail,
         itemTrail: category ? ["categories", categoryIndex] : null,
@@ -518,7 +583,7 @@
         renderItemTrail: null,
         editItemTrail: null,
         fitItemTrail: null,
-        itemId: category ? String(category.id || "") : "",
+        itemId: category ? String(category.id || "") : (trail[0] === "hero" ? "hero" : ""),
         slotName: slotName,
         expectedEditKey: "",
         allowedFields: [],
@@ -544,6 +609,15 @@
       if (!node || typeof node !== "object") { return; }
       Object.keys(node).forEach(function (key) {
         var categoryHasCarousel;
+        var heroHasCarousel;
+        if (trail[0] === "hero" && trail.length === 1 && key === "image") {
+          heroHasCarousel = node.carouselEnabled !== false
+            && Array.isArray(node.carouselSourceImages)
+            && node.carouselSourceImages.some(Boolean);
+          // A imagem simples é o fallback do hero; com carrossel, cada slide
+          // tem o seu próprio slot e não criamos uma linha duplicada.
+          if (heroHasCarousel) { return; }
+        }
         if (trail[0] === "categories" && trail.length === 2 && key === "image") {
           categoryHasCarousel = (!home.carousel || home.carousel.enabled !== false)
             && node.carouselEnabled !== false
@@ -560,6 +634,7 @@
     }
 
     walk(home, []);
+    assignShortIdentifiers(entry, slots);
     return slots;
   }
 
@@ -621,10 +696,11 @@
       drawerNames.forEach(function (name, index) {
         var trail = itemTrail.concat(["interiorImages", index]);
         slots.push({
-          key: entry.slug + ":" + trail.join("."),
-          sourceKey: entry.slug + ":" + trail.join("."),
-          doneKey: entry.slug + "|" + (item.id || "?") + "|gaveta|" + name,
-          slug: entry.slug,
+          key: entryKey(entry) + ":" + trail.join("."),
+          sourceKey: entryKey(entry) + ":" + trail.join("."),
+          doneKey: entryKey(entry) + "|" + (item.id || "?") + "|gaveta|" + name,
+          slug: entryKey(entry),
+          productSlug: entry.slug,
           trail: trail,
           itemTrail: itemTrail,
           section: "Gaveta — " + coverLabel,
@@ -645,6 +721,7 @@
           editItemTrail: null,
           fitItemTrail: null,
           itemId: String(item.id || ""),
+          ownerItemId: String(item.id || ""),
           slotName: "drawer",
           expectedEditKey: "",
           slideIndex: index + 1,
@@ -704,6 +781,7 @@
 
     slots = expandCadernoVisualContexts(entry, slots);
     assignIdentifiers(entry, slots);
+    assignShortIdentifiers(entry, slots);
 
     return slots;
   }
@@ -713,6 +791,7 @@
     resolveTrail: resolveTrail,
     isImagePath: isImagePath,
     productCode: productCode,
+    shortEntryCode: shortEntryCode,
     PROP_LABELS: PROP_LABELS
   };
 }());

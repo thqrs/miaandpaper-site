@@ -2,6 +2,20 @@
 
 This repo can run the Mia & Paper admin locally without the production cPanel private folder.
 
+## ⚠️ Admin sem password (até ao deploy)
+
+`site/admin-open.php` tem `MIA_ADMIN_OPEN = true`: **todas** as páginas e APIs de
+admin estão abertas a quem alcançar o servidor, sem login. É deliberado enquanto
+o site não está publicado.
+
+**Antes do deploy**, pôr esse valor a `false` em `site/admin-open.php`. Os guards
+originais (`$_SESSION['miaandpaper_admin']`) continuam todos no sítio e voltam a
+exigir a password abaixo. Os interruptores próprios de `galeria-api.php`,
+`produtos-api.php` e `reviews-api.php` (`*_REQUIRE_ADMIN`) são independentes e
+também têm de passar a `true`.
+
+Enquanto estiver aberto, evita expor o servidor na LAN (`start-lan.bat`).
+
 ## Requirements
 
 - PHP CLI installed and available as `php`.
@@ -54,7 +68,9 @@ Open:
 http://127.0.0.1:8000
 ```
 
-Log into admin with the password used to generate `private-local/admin.php`.
+Carrega em **Login de Administrador** para entrar diretamente enquanto
+`MIA_ADMIN_OPEN` estiver ativo. Depois de o desativar, usa a password definida
+em `private-local/admin.php`.
 
 ## Path behaviour
 

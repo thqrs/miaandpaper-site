@@ -6,6 +6,8 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Galeria de imagens · Mia &amp; Paper</title>
   <link rel="icon" href="content/brand/logo.webp" type="image/webp">
+  <link rel="stylesheet" href="admin-nav.css?v=2026072801">
+  <script src="admin-nav.js?v=2026072801" defer></script>
   <style>
     /* GALERIA_V2 — página de trabalho para desktop: o objectivo é ser
        funcional. Cada linha mostra UMA imagem, com a pré-visualização
@@ -88,10 +90,11 @@
     .stage { position: relative; min-width: 0; overflow: auto; }
     .stage .page-link { display: inline-block; margin-bottom: 4px; color: var(--moss);
       font-size: .76rem; }
-    .slot-id { margin-bottom: 4px; }
+    .slot-id { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
     .slot-id code { display: inline-block; padding: 2px 7px; border: 1px solid var(--moss);
       border-radius: 5px; background: #f3ead2; color: #4a3814; cursor: pointer;
       font: 700 .78rem/1.3 ui-monospace, monospace; user-select: all; word-break: break-all; }
+    .slot-id code[data-short-id] { background: #176b66; border-color: #176b66; color: #fff; font-size: .86rem; }
     .slot-id code.is-copied { background: var(--moss); color: #fffdf8; }
     .crop { position: relative; overflow: hidden; overflow: clip; border: 1px dashed var(--line);
       background: var(--linen); }
@@ -114,6 +117,103 @@
       background: #fff; text-align: left; font-weight: 400; }
     .lib img { width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: var(--linen); }
     .lib span { font: 400 .66rem/1.2 ui-monospace, monospace; word-break: break-all; color: var(--muted); }
+
+    /* Modo incorporado no inspector da Teia. É a mesma Galeria e mantém as
+       mesmas operações; apenas reorganiza cada localização para a largura do
+       painel lateral. */
+    body.is-embedded { background: #f3eee3; }
+    body.is-embedded [hidden] { display: none !important; }
+    body.is-embedded .bar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 7px;
+      padding: 9px 11px;
+    }
+    body.is-embedded .bar .grow { min-width: 0; }
+    body.is-embedded .bar h1 { display: none; }
+    body.is-embedded #summary { margin: 0; font-size: .75rem; }
+    body.is-embedded .embedded-options { position: relative; }
+    body.is-embedded .embedded-options > summary {
+      min-height: 30px;
+      padding: 5px 10px;
+      border: 1px solid var(--moss);
+      border-radius: 6px;
+      background: var(--card);
+      color: var(--moss);
+      font-size: .76rem;
+      font-weight: 700;
+      cursor: pointer;
+      list-style: none;
+    }
+    body.is-embedded .embedded-options > summary::-webkit-details-marker { display: none; }
+    body.is-embedded .embedded-options > summary::before { content: "⚙ "; }
+    body.is-embedded .embedded-options-panel {
+      position: absolute;
+      z-index: 45;
+      top: calc(100% + 6px);
+      right: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 8px;
+      width: min(520px, calc(100vw - 22px));
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+      box-shadow: 0 12px 28px rgba(60, 44, 12, .2);
+    }
+    body.is-embedded .embedded-options-intro {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 5px 12px;
+      padding-bottom: 9px;
+      border-bottom: 1px solid var(--line);
+    }
+    body.is-embedded .embedded-options-intro strong { font: 700 .95rem/1.2 Georgia, serif; }
+    body.is-embedded .embedded-options-intro a { color: var(--moss); font-size: .76rem; font-weight: 700; }
+    body.is-embedded .embedded-options-intro p { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: .75rem; }
+    body.is-embedded .embedded-summary-detail { grid-column: 1 / -1; margin: 0; }
+    body.is-embedded .embedded-control { display: flex; align-items: center; gap: 6px; min-width: 0; margin: 0; }
+    body.is-embedded .embedded-control-wide { grid-column: 1 / -1; }
+    body.is-embedded .embedded-control-check { grid-column: 1 / -1; }
+    body.is-embedded .screen-width-control { justify-content: flex-start; }
+    body.is-embedded .screen-width-control select { width: min(220px, 100%); }
+    body.is-embedded #undo,
+    body.is-embedded #redo,
+    body.is-embedded #save { min-height: 30px; padding-inline: 9px; font-size: .76rem; white-space: nowrap; }
+    body.is-embedded #status { grid-column: 1 / -1; }
+    body.is-embedded main { padding: 10px 11px 80px; }
+    body.is-embedded main > .hint,
+    body.is-embedded main > .warn,
+    body.is-embedded .index,
+    body.is-embedded #menu-toggle { display: none; }
+    body.is-embedded h2 { margin: 10px 0 7px; font-size: 1rem; }
+    body.is-embedded h3 { margin: 13px 0 6px; font-size: .9rem; }
+    body.is-embedded .slot { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 11px; }
+    body.is-embedded .slot .stage { grid-row: 1; }
+    body.is-embedded .slot .ctl { grid-row: 2; }
+    body.is-embedded [data-replace] { width: 100%; background: var(--moss); color: #fffdf8; }
+    body.is-embedded .image-options { overflow: hidden; border: 1px solid var(--line); border-radius: 6px; }
+    body.is-embedded .image-options > summary {
+      padding: 7px 9px;
+      background: #f8f3e8;
+      color: var(--moss);
+      font-size: .74rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    body.is-embedded .image-options-body { display: grid; gap: 7px; padding: 8px; }
+    body.is-embedded .ctl .row { align-items: flex-end; }
+    body.is-embedded .stage { padding-top: 2px; }
+    body.is-embedded .crop { max-width: 100%; }
+    body.is-embedded dialog { width: min(720px, 96vw); }
+
+    @media (min-width: 540px) {
+      body.is-embedded .slot { grid-template-columns: minmax(270px, 1.2fr) minmax(220px, .8fr); align-items: start; }
+      body.is-embedded .slot .stage { grid-column: 1; grid-row: 1; }
+      body.is-embedded .slot .ctl { grid-column: 2; grid-row: 1; }
+    }
   </style>
 </head>
 <body>
@@ -174,7 +274,7 @@
     <div id="content"></div>
   </main>
 
-  <script src="galeria-slots.js?v=2026072602"></script>
+  <script src="galeria-slots.js?v=2026072803"></script>
 
   <dialog id="picker">
     <div class="dlg-head">
@@ -203,6 +303,28 @@
   "use strict";
 
   var MAX_UNDO = 60;
+  var DONE_SYNC_KEY = "miaandpaper_gallery_done_sync_v1";
+  var DONE_CHANNEL_NAME = "miaandpaper-gallery-done-v1";
+  var doneChannel = typeof window.BroadcastChannel === "function"
+    ? new window.BroadcastChannel(DONE_CHANNEL_NAME)
+    : null;
+  var doneRefreshPending = false;
+  var PAGE_PARAMS = new URLSearchParams(window.location.search || "");
+  var EMBEDDED = PAGE_PARAMS.get("embed") === "1";
+  var EMBED_FILTER = {
+    entry: PAGE_PARAMS.get("entry") || "",
+    step: PAGE_PARAMS.get("step") || "",
+    section: PAGE_PARAMS.get("section") || "",
+    sectionPrefix: PAGE_PARAMS.get("section-prefix") || "",
+    slot: PAGE_PARAMS.get("slot") || "",
+    items: (PAGE_PARAMS.get("item") || "").split(",").filter(Boolean),
+    summary: PAGE_PARAMS.get("summary") === "1",
+    pending: PAGE_PARAMS.get("pending") === "1"
+  };
+
+  if (EMBEDDED) {
+    document.body.classList.add("is-embedded");
+  }
 
   // Selecções que fazem aparecer cada placeholder da caixa "O que vais
   // encomendar" — assim a pré-visualização usa o mesmo tile do site.
@@ -267,8 +389,11 @@
       return data;
     });
   }
+  function productEntryKey(entry) {
+    return String(entry && (entry.key || entry.slug) || "");
+  }
   function productEntryBySlug(slug) {
-    return state.products.filter(function (p) { return p.slug === slug; })[0] || null;
+    return state.products.filter(function (p) { return productEntryKey(p) === slug; })[0] || null;
   }
   function productBySlug(slug) {
     var found = productEntryBySlug(slug);
@@ -306,8 +431,9 @@
 
   function restore(entry) {
     state.products.forEach(function (p) {
-      if (Object.prototype.hasOwnProperty.call(entry.products, p.slug)) {
-        p.product = JSON.parse(entry.products[p.slug]);
+      var key = productEntryKey(p);
+      if (Object.prototype.hasOwnProperty.call(entry.products, key)) {
+        p.product = JSON.parse(entry.products[key]);
       }
     });
     state.dirty = entry.dirty;
@@ -418,6 +544,76 @@
     });
   }
 
+  function doneSignature() {
+    return Object.keys(state.done).filter(function (key) { return !!state.done[key]; }).sort().join("\n");
+  }
+
+  function syncAllDoneUi() {
+    document.querySelectorAll(".slot[data-key]").forEach(function (node) {
+      var slot = slotByKey(node.dataset.key);
+      var input = node.querySelector("[data-done]");
+      if (!slot) { return; }
+      if (input) { input.checked = slotIsDone(slot); }
+      node.classList.toggle("is-done", slotIsDone(slot));
+    });
+  }
+
+  function redrawDoneState() {
+    if (el("hide-done").checked) { render(); }
+    else { syncAllDoneUi(); updateSummary(); }
+  }
+
+  function replaceDoneState(doneKeys) {
+    var previous = doneSignature();
+    state.done = {};
+    (doneKeys || []).forEach(function (key) { state.done[String(key)] = true; });
+    migrateDoneKeys();
+    if (doneSignature() !== previous) { redrawDoneState(); }
+  }
+
+  function applyExternalDone(change) {
+    var key = String(change && change.key || "");
+    var wanted = !!(change && change.done);
+    var previous = doneSignature();
+    var matched = false;
+    if (!key) { return; }
+
+    state.slots.forEach(function (slot) {
+      if (slot.doneKey !== key && (slot.doneAliases || []).indexOf(key) === -1) { return; }
+      matched = true;
+      (slot.doneAliases || []).forEach(function (alias) { delete state.done[alias]; });
+      if (wanted) { state.done[slot.doneKey] = true; }
+      else { delete state.done[slot.doneKey]; }
+    });
+    if (!matched) {
+      if (wanted) { state.done[key] = true; }
+      else { delete state.done[key]; }
+    }
+    if (doneSignature() !== previous) { redrawDoneState(); }
+  }
+
+  function broadcastDone(change) {
+    var message = {
+      type: "mia-gallery-done",
+      key: String(change.key || ""),
+      done: !!change.done,
+      nonce: Date.now() + "-" + Math.random().toString(36).slice(2)
+    };
+    if (doneChannel) { doneChannel.postMessage(message); }
+    try { window.localStorage.setItem(DONE_SYNC_KEY, JSON.stringify(message)); }
+    catch (error) { /* a gravação no servidor continua a ser a fonte de verdade */ }
+  }
+
+  function refreshDoneState() {
+    if (!state.slots.length || doneRefreshPending) { return; }
+    doneRefreshPending = true;
+    fetch("galeria-api.php?action=done", { cache: "no-store", credentials: "same-origin" })
+      .then(responseJson)
+      .then(function (data) { replaceDoneState(data.done || []); })
+      .catch(function () { /* mantém o último estado visível se a rede falhar */ })
+      .then(function () { doneRefreshPending = false; });
+  }
+
   // --- ajustes (mesmas chaves e defaults do app.js) --------------------------
   var ADJUST_FIELDS = [
     { key: "imageZoom", label: "zoom %", fallback: null, min: 20, max: 500 },
@@ -516,6 +712,13 @@
       controls = '<span class="note">Esta imagem não tem ajustes próprios — só substituição.</span>';
     }
 
+    var secondaryControls = '<input type="text" class="path" data-path value="' + esc(slotValue(slot)) + '" placeholder="content/…">'
+      + controls;
+    if (EMBEDDED) {
+      secondaryControls = '<details class="image-options"><summary>Ajustes da imagem</summary><div class="image-options-body">'
+        + secondaryControls + '</div></details>';
+    }
+
     return '<article class="slot' + (state.activeKey === slot.key ? " is-active" : "")
       + (state.dirty[slot.slug] ? " is-dirty" : "")
       + (slotIsDone(slot) ? " is-done" : "") + '" data-key="' + esc(slot.key) + '">'
@@ -525,12 +728,13 @@
       + '<span class="where">' + esc(slot.detail) + '</span></label>'
       + '<label class="done-choice"><input type="checkbox" data-done'
       + (slotIsDone(slot) ? " checked" : "") + '> Já terminei esta imagem</label>'
-      + '<input type="text" class="path" data-path value="' + esc(slotValue(slot)) + '" placeholder="content/…">'
-      + '<div class="row"><button type="button" data-replace>Trocar imagem</button></div>'
-      + controls
+      + '<div class="row"><button type="button" data-replace>Trocar esta imagem</button></div>'
+      + secondaryControls
       + '</div>'
       + '<div class="stage">'
-      + '<div class="slot-id"><code data-id title="Identificador desta localização — clica para copiar">' + esc(slot.id) + '</code></div>'
+      + '<div class="slot-id">'
+      + '<code data-short-id title="Código curto desta localização — clica para copiar">' + esc(slot.shortId || slot.id) + '</code>'
+      + '<code data-id title="Identificador descritivo desta localização — clica para copiar">' + esc(slot.id) + '</code></div>'
       + pageLinkMarkup(slot) + stageMarkup(slot, size)
       + '</div>'
       + '</article>';
@@ -561,6 +765,26 @@
     var hideDone = el("hide-done").checked;
 
     return state.slots.filter(function (slot) {
+      var entry;
+      var step;
+      var visibleStepIndex;
+      if (EMBED_FILTER.entry && slot.slug !== EMBED_FILTER.entry) { return false; }
+      if (EMBED_FILTER.section && String(slot.section || "") !== EMBED_FILTER.section) { return false; }
+      if (EMBED_FILTER.sectionPrefix && String(slot.section || "").indexOf(EMBED_FILTER.sectionPrefix) !== 0) { return false; }
+      if (EMBED_FILTER.slot && String(slot.slotName || "") !== EMBED_FILTER.slot) { return false; }
+      if (EMBED_FILTER.step) {
+        entry = productEntryBySlug(slot.slug);
+        // Certas imagens vivem no JSON do design, mas são apresentadas noutro
+        // passo real do site (por exemplo, plastificação e opção de compra dos
+        // cadernos). A Galeria já regista esse contexto em previewStepIndex.
+        visibleStepIndex = slot.previewStepIndex != null ? slot.previewStepIndex : slot.stepIndex;
+        step = entry && entry.product && entry.product.steps && entry.product.steps[visibleStepIndex];
+        if (!step || String(step.id) !== EMBED_FILTER.step) { return false; }
+      }
+      if (EMBED_FILTER.items.length
+          && EMBED_FILTER.items.indexOf(String(slot.ownerItemId || slot.itemId || "")) === -1
+          && EMBED_FILTER.items.indexOf(String(slot.itemId || "")) === -1) { return false; }
+      if (EMBED_FILTER.summary && !slot.summaryKey) { return false; }
       if (hideUnused && !state.pages[slot.slug]) { return false; }
       if (hideDone && slotIsDone(slot)) { return false; }
       return true;
@@ -606,31 +830,37 @@
 
     resetFrames();
     el("content").innerHTML = state.products.map(function (entry) {
-      var slots = shown.filter(function (slot) { return slot.slug === entry.slug; });
+      var key = productEntryKey(entry);
+      var slots = shown.filter(function (slot) { return slot.slug === key; });
       if (!slots.length) { return ""; }
 
       var sections = groupSections(slots);
-      var page = state.pages[entry.slug];
+      var page = state.pages[key];
       var name = entry.name || entry.product.name || entry.slug;
+      var context = entry.contextLabel ? " · " + entry.contextLabel : "";
 
-      indexHtml += '<div class="product-row"><a href="#p-' + esc(entry.slug) + '">' + esc(name)
-        + ' (' + esc(entry.slug) + ') · ' + slots.length + '</a>'
+      indexHtml += '<div class="product-row"><a href="#p-' + esc(key) + '">' + esc(name)
+        + ' (' + esc(entry.slug) + esc(context) + ') · ' + slots.length + '</a>'
         + (page ? "" : ' <span class="orphan">sem página</span>') + '</div>'
         + sections.map(function (section) {
-          return '<a class="sub" href="#' + esc(anchorId(entry.slug, section.name)) + '">'
+          return '<a class="sub" href="#' + esc(anchorId(key, section.name)) + '">'
             + esc(section.name) + ' · ' + section.slots.length + '</a>';
         }).join("");
 
-      return '<section id="p-' + esc(entry.slug) + '"><h2>' + esc(name)
-        + ' <small>(' + esc(entry.slug) + ')</small>'
+      return '<section id="p-' + esc(key) + '"><h2>' + esc(name)
+        + ' <small>(' + esc(entry.slug) + esc(context) + ')</small>'
         + (page ? ' <small><a href="' + esc(page) + '" target="_blank" rel="noopener">' + esc(page) + ' ↗</a></small>'
                 : ' <span class="orphan">— nenhuma página usa este conteúdo</span>')
-        + '</h2>'
-        + sections.map(function (section) {
-          return '<h3 id="' + esc(anchorId(entry.slug, section.name)) + '">' + esc(section.name) + '</h3>'
+      + '</h2>'
+      + sections.map(function (section) {
+          return '<h3 id="' + esc(anchorId(key, section.name)) + '">' + esc(section.name) + '</h3>'
             + section.slots.map(slotMarkup).join("");
         }).join("") + '</section>';
     }).join("");
+
+    if (!el("content").innerHTML) {
+      el("content").innerHTML = '<p class="hint">Este node não tem imagens editáveis associadas.</p>';
+    }
 
     el("page-index").innerHTML = indexHtml;
     el("menu-index").innerHTML = indexHtml;
@@ -643,9 +873,15 @@
     var shown = visibleSlots().length;
     var doneCount = state.slots.filter(slotIsDone).length;
 
-    el("summary").textContent = shown + " de " + state.slots.length + " sítios com imagem · "
+    var fullSummary = shown + " de " + state.slots.length + " sítios com imagem · "
       + doneCount + " finalizadas · " + state.library.length + " imagens na biblioteca"
       + (dirty.length ? " · por guardar: " + dirty.join(", ") : "");
+    el("summary").textContent = EMBEDDED
+      ? shown + " imagem" + (shown === 1 ? " relacionada" : "s relacionadas") + (dirty.length ? " · alterações por guardar" : "")
+      : fullSummary;
+    if (EMBEDDED && el("embedded-summary-detail")) {
+      el("embedded-summary-detail").textContent = fullSummary;
+    }
     el("save").disabled = dirty.length === 0;
     el("undo").disabled = state.undo.length === 0;
   }
@@ -1047,6 +1283,9 @@
 
     if (event.target.closest("[data-replace]")) { openPicker(slot); return; }
 
+    var shortCode = event.target.closest("[data-short-id]");
+    if (shortCode) { copyIdentifier(slot.shortId || slot.id, shortCode); return; }
+
     var idCode = event.target.closest("[data-id]");
     if (idCode) { copyIdentifier(slot.id, idCode); return; }
 
@@ -1059,6 +1298,10 @@
       checkbox.disabled = true;
       syncDonePeers(slot);
       saveDone(slot, wanted).then(function () {
+        broadcastDone({ key: slot.doneKey, done: wanted });
+        if (EMBEDDED && window.parent !== window) {
+          window.parent.postMessage({ type: "mia-gallery-done", key: slot.doneKey, done: wanted }, window.location.origin);
+        }
         // Com o filtro ligado, marcar como terminada faz a linha sair da lista.
         if (wanted && el("hide-done").checked) { render(); }
         else { checkbox.disabled = false; updateSummary(); }
@@ -1296,7 +1539,8 @@
           method: "POST",
           headers: apiHeaders(true),
           body: JSON.stringify({
-            slug: slug,
+            key: slug,
+            slug: entry && entry.slug,
             product: productBySlug(slug),
             revision: entry && entry.revision
           })
@@ -1321,7 +1565,72 @@
   });
 
   // --- arranque -------------------------------------------------------------
-  fetch("galeria-api.php?action=data")
+  if (EMBEDDED) {
+    function moveEmbeddedControl(id, classes) {
+      var control = el(id);
+      var wrapper = control && (control.closest("label") || control);
+      if (!wrapper) { return; }
+      wrapper.hidden = false;
+      wrapper.style.display = "";
+      (classes || "").split(" ").filter(Boolean).forEach(function (name) { wrapper.classList.add(name); });
+      embeddedPanel.appendChild(wrapper);
+    }
+
+    var embeddedOptions = document.createElement("details");
+    var embeddedPanel = document.createElement("div");
+    var embeddedIntro = document.createElement("div");
+    var embeddedSummaryDetail = document.createElement("p");
+    var galleryParams = new URLSearchParams(PAGE_PARAMS.toString());
+    galleryParams.delete("embed");
+    var fullGalleryUrl = "galeria.html" + (galleryParams.toString() ? "?" + galleryParams.toString() : "");
+    embeddedOptions.className = "embedded-options";
+    embeddedOptions.innerHTML = "<summary>Opções</summary>";
+    embeddedPanel.className = "embedded-options-panel";
+    embeddedIntro.className = "embedded-options-intro";
+    embeddedIntro.innerHTML = '<strong>Imagens relacionadas</strong>'
+      + '<a href="' + esc(fullGalleryUrl) + '" target="_blank" rel="noopener">Abrir na Galeria ↗</a>'
+      + '<p>Pré-visualização e edição reais. As alterações só são aplicadas ao JSON quando carregas em <strong>Guardar alterações</strong> dentro deste painel.</p>';
+    embeddedSummaryDetail.id = "embedded-summary-detail";
+    embeddedSummaryDetail.className = "hint embedded-summary-detail";
+    embeddedPanel.appendChild(embeddedIntro);
+    embeddedPanel.appendChild(embeddedSummaryDetail);
+
+    el("screen-width").value = "390";
+    state.screenWidth = 390;
+    el("max-frames").value = "16";
+    el("hide-unused").checked = false;
+    el("hide-done").checked = EMBED_FILTER.pending;
+    moveEmbeddedControl("screen-width", "embedded-control embedded-control-wide screen-width-control");
+    moveEmbeddedControl("max-frames", "embedded-control embedded-control-wide");
+    moveEmbeddedControl("hide-unused", "embedded-control embedded-control-check");
+    moveEmbeddedControl("hide-done", "embedded-control embedded-control-check");
+    moveEmbeddedControl("bulk-upload", "embedded-control");
+    moveEmbeddedControl("undo");
+    moveEmbeddedControl("redo");
+    moveEmbeddedControl("clear-picks");
+    embeddedOptions.appendChild(embeddedPanel);
+    el("save").parentNode.insertBefore(embeddedOptions, el("save"));
+    document.querySelector(".bar h1").textContent = "Imagens deste node";
+    document.title = "Imagens do node · Mia & Paper";
+  }
+
+  if (doneChannel) {
+    doneChannel.addEventListener("message", function (event) {
+      if (event.data && event.data.type === "mia-gallery-done") { applyExternalDone(event.data); }
+    });
+  }
+  window.addEventListener("storage", function (event) {
+    var data;
+    if (event.key !== DONE_SYNC_KEY || !event.newValue) { return; }
+    try { data = JSON.parse(event.newValue); } catch (error) { return; }
+    if (data && data.type === "mia-gallery-done") { applyExternalDone(data); }
+  });
+  window.addEventListener("focus", refreshDoneState);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) { refreshDoneState(); }
+  });
+
+  fetch("galeria-api.php?action=data" + (EMBED_FILTER.entry ? "&entry=" + encodeURIComponent(EMBED_FILTER.entry) : ""))
     .then(responseJson)
     .then(function (data) {
       state.csrf = data.csrf || "";

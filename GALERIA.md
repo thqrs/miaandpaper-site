@@ -17,8 +17,11 @@ imagens de todo o site num sítio só**, vendo exactamente o que o cliente vê.
 | `site/galeria-slots.js` | Descoberta das localizações de imagem + identificadores. **Partilhado** pela galeria e pelo multimedia. |
 | `site/multimedia.html` | Inventário em tabela de todas as imagens do disco, com dimensões, tamanho e onde são usadas. |
 | `site/galeria-api.php` | Backend: lista produtos/imagens, recebe uploads, grava JSON de produto e o estado "finalizadas". |
+| `site/produtos.html` | A Teia incorpora a própria Galeria no inspector, filtrada pelo contexto e pelo node seleccionado. |
 | `site/content/galeria-estado.json` | Lista das imagens marcadas como terminadas. |
 | `site/content/.galeria-dimensoes.json` | Cache das dimensões das imagens (gerada; está no `.gitignore`). |
+| `tools/generate-image-prompts.js` | Gera prompts de imagem para cada slot ainda não finalizado, usando os mesmos identificadores e aliases da Galeria. |
+| `prompts-geracao-imagens.json` | Snapshot dos prompts pendentes, com código curto, código longo, contexto e imagem de referência. Fica fora de `site/` e não é publicado. |
 
 Todas são páginas de trabalho: **funcionais, não bonitas**, e pensadas para
 desktop.
@@ -37,6 +40,21 @@ espaços e exemplos em `media_tiago/` — mas rejeita URLs, caminhos absolutos,
 Isto é deliberadamente genérico: **não há uma lista de campos conhecidos**. Um
 campo novo com um caminho de imagem aparece sozinho, sem alterar código.
 
+A Galeria lê actualmente dois contextos de produto: `content/products/`
+(site principal) e `congressos/2026/content/products/`. Slugs repetidos não são
+fundidos: a entrada principal mantém a chave histórica (`imanes`) e a do
+Congresso usa uma chave composta (`congresso-2026|imanes`). O `slug` real do
+produto continua a ser `imanes`, para os renderers e `imageEdits` manterem as
+mesmas chaves. A Teia usa este contexto para abrir no inspector apenas os slots
+do node certo; nodes agrupados passam vários `itemId` ao mesmo filtro e mostram
+todos os contextos visuais relacionados, em linhas separadas.
+
+No modo incorporado, a imagem e a troca de imagem ficam em primeiro plano. Os
+controlos gerais — largura da preview, número de iframes, filtros, uploads em
+lote e histórico — ficam dentro de **Opções**, juntamente com o link para abrir
+a vista filtrada na Galeria completa. O botão **Expandir Galeria** ocupa 90% da
+janela da Teia sem mudar o filtro nem criar uma segunda implementação.
+
 O formato ativo do site é **WebP**. As extensões antigas continuam a ser
 reconhecidas para não esconder referências históricas, mas os ficheiros
 publicados e todos os uploads novos devem ficar em `.webp`.
@@ -44,8 +62,9 @@ publicados e todos os uploads novos devem ficar em `.webp`.
 Excepções tratadas à mão:
 
 - `content/home.json` — aparece como a entrada **Homepage**. São descobertas a
-  imagem do hero, as imagens dos cartões/destaques e todas as imagens indicadas
-  em `carouselSourceImages`. Quando um cartão usa um carrossel, a sua imagem
+  imagem simples ou os slides do carrossel do hero, as imagens dos
+  cartões/destaques e todas as imagens indicadas em `carouselSourceImages`.
+  Quando o hero ou um cartão usa um carrossel, a sua imagem
   estática de fallback não cria uma linha duplicada; continua a aparecer se
   também for a imagem de um destaque.
 - `individualColors` — ignorado (são cores, não imagens).
@@ -91,8 +110,22 @@ CADERNO-P1-CADERNO_10-LAMINACAO-MATTE
 CADERNO-P1-CADERNO_10-COMPRA-CADERNO_NORMAL
 CRACHA-P2-PEQUENO-COMPARACAO
 HOMEPAGE-HERO
+HOMEPAGE-HERO-CARROSSEL-001
 HOMEPAGE-CADERNOS-CARROSSEL-001
 ```
+
+Cada localização mostra também uma **coordenada curta**, pensada para copiar
+para uma conversa com um agente, por exemplo `MO-0001`. As duas letras
+identificam a família e o contexto (`MO` molduras, `CA` cadernos, `HP`
+homepage; os produtos do Congresso usam prefixos próprios) e os quatro
+algarismos identificam o slot dentro dessa entrada. A numeração é calculada
+pela ordem alfabética dos identificadores longos, para não depender da ordem
+visual da página.
+
+O código longo continua a ser o identificador canónico e descritivo. Ao criar
+uma nova família/contexto, acrescenta um prefixo de duas letras único a
+`SHORT_ENTRY_CODES` em `galeria-slots.js`; o fallback existe apenas para a
+ferramenta não deixar slots sem coordenada.
 
 **Papéis** (`roleFor` em `galeria-slots.js`): `CHOICE`, `GAVETA-NNN`,
 `LAMINACAO-{tipo}`, `COMPRA-{opção}`, `EXEMPLO…`, `COMPARACAO`,
@@ -132,6 +165,12 @@ Para a Homepage, a preview carrega a própria `renderHome()` do `app.js` e
 recorta o hero, cartão, destaque ou slide de carrossel exacto. Os carrosséis não
 são baralhados dentro da ferramenta, para cada identificador continuar ligado
 à imagem certa.
+
+Na Teia, o contador de imagens de cada node cruza os slots com
+`content/galeria-estado.json`. Um ponto vermelho assinala que ainda há imagens
+por finalizar. Ao abrir a Galeria a partir de um node, o filtro inicial mostra
+apenas essas imagens; **Esconder finalizadas** pode ser desligado nas Opções
+para voltar a ver todas.
 
 Consequências a conhecer:
 
@@ -285,6 +324,11 @@ que qualquer estrutura nova tem descoberta, preview e contexto de edição.
 - Cada produto leva uma revisão SHA-256. Se outro separador ou processo tiver
   alterado o ficheiro entretanto, a API devolve conflito e não sobrescreve o
   trabalho mais recente.
+- A gravação usa a chave da entrada, não apenas o slug. Assim,
+  `imanes` grava `content/products/imanes.json`, enquanto
+  `congresso-2026|imanes` grava exclusivamente
+  `congressos/2026/content/products/imanes.json`. Ambos recebem a sua própria
+  cópia `*.galeria-bak`.
 - Undo/redo: pilha de 60 passos, guarda o produto inteiro em JSON antes de cada
   alteração. Ctrl+Z / Ctrl+Shift+Z (ou Ctrl+Y).
 - O estado "finalizadas" usa chaves estáveis (`produto|item|campo`), sem índices

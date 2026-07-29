@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Pré-visualização · galeria</title>
-  <link rel="stylesheet" href="styles.css?v=2026072708">
+  <link rel="stylesheet" href="styles.css?v=2026072815">
   <style>
     /* GALERIA_PREVIEW_V1 — página carregada dentro de cada <iframe> da galeria.
        Desenha o passo real com as funções do app.js e devolve à galeria a
@@ -21,7 +21,7 @@
 </head>
 <body data-page="preview">
   <div id="app" class="app-shell"></div>
-  <script src="app.js?v=2026072705"></script>
+  <script src="app.js?v=2026072819"></script>
   <script>
   (function () {
     "use strict";
@@ -108,7 +108,23 @@
       var labels;
       var index;
 
-      if (!node || !node.classList.contains("cadernos-cover-preview-slide")) { return; }
+      if (!node) { return; }
+      if (node.classList.contains("home-hero-carousel__frame")) {
+        frame = node.closest("[data-home-hero-carousel]");
+        slides = frame ? Array.prototype.slice.call(frame.querySelectorAll(".home-hero-carousel__frame")) : [];
+        index = slides.indexOf(node);
+        if (frame && index >= 0) {
+          frame.dataset.index = String(index);
+          var track = frame.querySelector("[data-home-hero-track]");
+          if (track) { track.style.transform = "translate3d(" + (-index * 100) + "%,0,0)"; }
+          frame.querySelectorAll("[data-home-hero-dot]").forEach(function (dot, dotIndex) {
+            dot.setAttribute("aria-current", dotIndex === index ? "true" : "false");
+          });
+        }
+        return;
+      }
+
+      if (!node.classList.contains("cadernos-cover-preview-slide")) { return; }
       frame = node.closest("[data-cadernos-preview]");
       if (!frame) { return; }
       slides = Array.prototype.slice.call(frame.querySelectorAll(".cadernos-cover-preview-slide"));

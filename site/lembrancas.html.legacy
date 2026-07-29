@@ -15,6 +15,6 @@
 </head>
 <body data-page="product" data-product="lembrancas">
   <div id="app" class="app-shell"></div>
-  <script src="app.js?v=2026072705"></script>
+  <script src="app.js?v=2026072714"></script>
 </body>
 </html>

@@ -5,6 +5,7 @@
   var homeContentPath = document.body.dataset.homeContent || "content/home.json";
   var ORDER_HOME_CONTENT = "content/order-products.json";
   var ADMIN_KEY = "miaandpaper-admin-session-v1";
+  var ADMIN_PANEL_HIDDEN_KEY = "miaandpaper-admin-panel-hidden-v1";
   var ADMIN_API = "admin-api.php";
   var COLORS_API = "colors-api.php";
   var ORDER_UPLOAD_API = "upload-order-photo.php";
@@ -149,6 +150,7 @@
 
   var state = {
     admin: safeStorageGetItem(ADMIN_KEY) === "1",
+    adminPanelHidden: safeStorageGetItem(ADMIN_PANEL_HIDDEN_KEY) === "1",
     loginOpen: false,
     adminMessage: "",
     cartPanelOpen: false,
@@ -694,7 +696,10 @@
       resolvedColors = sourceColors.map(function (color) {
         var status = String(flowStatuses[color.id] || "hidden");
         var configured = configuredById[String(color.id)] || {};
-        var swatch = safeSwatchColor(configured.swatch || color.hex);
+        var swatch = safeSwatchColor(color.hex || configured.swatch);
+        var catalogStops = validHex(color.light_hex) && validHex(color.dark_hex)
+          ? [String(color.light_hex).toLowerCase(), swatch, String(color.dark_hex).toLowerCase()]
+          : null;
         if (status === "available") {
           availableHex[swatch.toLowerCase()] = true;
         } else {
@@ -708,7 +713,7 @@
           value: String(configured.value || configured.title || color.name),
           title: String(configured.title || configured.value || color.name),
           swatch: swatch,
-          colorStops: Array.isArray(configured.colorStops) ? configured.colorStops.slice(0, 3) : null,
+          colorStops: catalogStops || (Array.isArray(configured.colorStops) ? configured.colorStops.slice(0, 3) : null),
           availability: status
         };
       }).filter(Boolean);
@@ -807,6 +812,10 @@
       home.carousel = {};
     }
 
+    if (!home.hero || typeof home.hero !== "object") {
+      home.hero = {};
+    }
+
     if (!home.butterfly || typeof home.butterfly !== "object") {
       home.butterfly = {};
     }
@@ -854,6 +863,10 @@
     home.carousel.zoomPercent = clampNumber(home.carousel.zoomPercent, 108, 100, 140);
     home.carousel.panPercent = clampNumber(home.carousel.panPercent, 6, 0, 18);
     home.carousel.overlayOpacity = clampNumber(home.carousel.overlayOpacity, 36, 0, 80);
+
+    home.hero.carouselEnabled = home.hero.carouselEnabled !== false;
+    home.hero.rotationSeconds = clampNumber(home.hero.rotationSeconds, 5, 3, 30);
+    home.hero.resumeSeconds = clampNumber(home.hero.resumeSeconds, 10, 3, 60);
 
     home.butterfly.enabled = home.butterfly.enabled !== false;
     home.butterfly.idleSeconds = clampNumber(home.butterfly.idleSeconds, 10, 3, 60);
@@ -1014,6 +1027,8 @@
 
     clearHomeCarousels();
 
+    startHomeHeroCarousel(home);
+
     var carouselElements = Array.prototype.slice.call(document.querySelectorAll("[data-home-carousel]"));
 
     carouselElements.forEach(function (element, carouselIndex) {
@@ -1069,6 +1084,119 @@
       }, phaseDelay);
       state.homeCarouselTimers.push(timer);
     });
+  }
+
+  function homeHeroImages(hero) {
+    var images = Array.isArray(hero && hero.carouselSourceImages)
+      ? hero.carouselSourceImages.filter(Boolean).slice(0, 12)
+      : [];
+
+    if (!images.length && hero && hero.image) {
+      images.push(hero.image);
+    }
+    return images.filter(function (image, index, all) {
+      return all.indexOf(image) === index;
+    });
+  }
+
+  function renderHomeHeroCarousel(hero) {
+    var images = homeHeroImages(hero);
+    var showControls = hero.carouselEnabled !== false && images.length > 1;
+
+    if (!images.length) { return ""; }
+
+    return [
+      '<div class="home-hero-carousel" data-home-hero-carousel data-index="0">',
+      '<div class="home-hero-carousel__track" data-home-hero-track>',
+      images.map(function (image, index) {
+        return '<span class="home-hero-carousel__frame" data-mia-image="' + escapeHtml(image)
+          + '" data-mia-item-id="hero" data-mia-slot-name="home-hero-carousel" data-mia-slide-index="' + index
+          + '" style="background-image:url(&quot;' + escapeHtml(image) + '&quot;)" aria-hidden="true"></span>';
+      }).join(""),
+      '</div>',
+      showControls ? '<div class="home-hero-carousel__dots" aria-label="Escolher imagem do destaque">'
+        + images.map(function (_image, index) {
+          return '<button type="button" data-home-hero-dot="' + index + '" aria-label="Mostrar imagem '
+            + (index + 1) + ' de ' + images.length + '" aria-current="' + (index === 0 ? "true" : "false") + '"></button>';
+        }).join("") + '</div>' : "",
+      '</div>'
+    ].join("");
+  }
+
+  function startHomeHeroCarousel(home) {
+    var hero = home && home.hero ? home.hero : {};
+    var section = document.querySelector("[data-home-hero]");
+    var carousel = section && section.querySelector("[data-home-hero-carousel]");
+    var track = carousel && carousel.querySelector("[data-home-hero-track]");
+    var frames = track ? Array.prototype.slice.call(track.children) : [];
+    var dots = carousel ? Array.prototype.slice.call(carousel.querySelectorAll("[data-home-hero-dot]")) : [];
+    var speed = Math.max(3, Math.min(30, Number(hero.rotationSeconds) || 5)) * 1000;
+    var resumeDelay = Math.max(3, Math.min(60, Number(hero.resumeSeconds) || 10)) * 1000;
+    var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var interval = null;
+    var resumeTimer = null;
+    var pointer = null;
+    var index = 0;
+
+    if (!section || !carousel || !track || frames.length <= 1) { return; }
+
+    function show(next) {
+      index = (Number(next) + frames.length) % frames.length;
+      carousel.dataset.index = String(index);
+      track.style.transform = "translate3d(" + (-index * 100) + "%,0,0)";
+      dots.forEach(function (dot, dotIndex) {
+        dot.setAttribute("aria-current", dotIndex === index ? "true" : "false");
+      });
+    }
+
+    function begin() {
+      if (reduceMotion || hero.carouselEnabled === false || interval) { return; }
+      interval = window.setInterval(function () { show(index + 1); }, speed);
+      state.homeCarouselTimers.push(interval);
+    }
+
+    function pauseTemporarily() {
+      if (interval) { window.clearInterval(interval); interval = null; }
+      if (resumeTimer) { window.clearTimeout(resumeTimer); }
+      if (reduceMotion || hero.carouselEnabled === false) { return; }
+      resumeTimer = window.setTimeout(function () {
+        resumeTimer = null;
+        show(index + 1);
+        begin();
+      }, resumeDelay);
+      state.homeCarouselTimers.push(resumeTimer);
+    }
+
+    dots.forEach(function (dot) {
+      dot.addEventListener("click", function (event) {
+        event.stopPropagation();
+        show(Number(dot.dataset.homeHeroDot));
+        pauseTemporarily();
+      });
+    });
+
+    section.addEventListener("pointerdown", function (event) {
+      if (event.button !== 0 || event.target.closest("a,button,input,select,textarea")) { return; }
+      pointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      if (section.setPointerCapture) { section.setPointerCapture(event.pointerId); }
+    });
+    section.addEventListener("pointerup", function (event) {
+      var current = pointer;
+      pointer = null;
+      if (!current || current.id !== event.pointerId) { return; }
+      if (section.hasPointerCapture && section.hasPointerCapture(event.pointerId)) {
+        section.releasePointerCapture(event.pointerId);
+      }
+      var deltaX = event.clientX - current.x;
+      var deltaY = event.clientY - current.y;
+      if (Math.abs(deltaX) < 42 || Math.abs(deltaX) <= Math.abs(deltaY)) { return; }
+      show(index + (deltaX < 0 ? 1 : -1));
+      pauseTemporarily();
+    });
+    section.addEventListener("pointercancel", function () { pointer = null; });
+
+    show(0);
+    begin();
   }
 
   function clearHomeDeadlineCountdown() {
@@ -2146,6 +2274,36 @@
       }
     }).catch(function () {
       state.adminIpLoading = false;
+    });
+  }
+
+  function openAdminSurface() {
+    state.adminMessage = "";
+
+    fetch(ADMIN_API + "?action=status", {
+      method: "GET",
+      credentials: "same-origin"
+    }).then(function (response) {
+      return response.json().catch(function () { return {}; });
+    }).then(function (data) {
+      if (data && data.csrf) {
+        adminCsrfToken = String(data.csrf);
+      }
+      if (data && data.loggedIn === true) {
+        state.admin = true;
+        state.loginOpen = false;
+        state.adminIpLoaded = false;
+        state.adminIpLoading = false;
+        safeStorageSetItem(ADMIN_KEY, "1");
+      } else {
+        state.loginOpen = true;
+      }
+      rerender();
+    }).catch(function () {
+      // Se o servidor não conseguir confirmar a sessão, mantém disponível o
+      // login normal para o modo protegido usado depois do deploy.
+      state.loginOpen = true;
+      rerender();
     });
   }
 
@@ -4294,9 +4452,10 @@
     });
 
     return [
-      '<aside class="admin-toolbar" aria-label="Admin mockup">',
+      '<aside class="admin-toolbar' + (state.adminPanelHidden ? ' is-collapsed' : '') + '" aria-label="Painel de administração">',
       '<div class="admin-toolbar-head">',
       '<strong>Admin</strong>',
+      '<button type="button" class="admin-panel-toggle" data-admin-panel-toggle aria-expanded="' + (state.adminPanelHidden ? 'false' : 'true') + '">' + (state.adminPanelHidden ? 'Mostrar painel' : 'Esconder painel') + '</button>',
       content ? '<button type="button" data-admin-undo' + (state.undoStack.length ? "" : " disabled") + '>UNDO</button>' : "",
       content ? '<button type="button" data-admin-save>SAVE</button>' : "",
       content ? '<button type="button" data-admin-reset>JSON</button>' : "",
@@ -4310,6 +4469,7 @@
       '<a class="admin-funnel-link" href="galeria.html" target="_blank" rel="noopener">Galeria</a>',
       '<a class="admin-funnel-link" href="multimedia.html" target="_blank" rel="noopener">Multimédia</a>',
       '<a class="admin-funnel-link" href="reviews.html" target="_blank" rel="noopener">Reviews</a>',
+      '<a class="admin-funnel-link" href="produtos.html" target="_blank" rel="noopener">Produtos</a>',
       // TOOLS_INDEX_V1: link para as ferramentas internas (só admin; a página
       // valida a sessão no servidor, como admin-funnel.php).
       '<a class="admin-funnel-link" href="tools/index.php" target="_blank" rel="noopener">Ferramentas</a>',
@@ -4344,6 +4504,8 @@
     var content = currentProduct || currentHome;
     var open = document.querySelector("[data-admin-open]");
     var close = document.querySelector("[data-admin-close]");
+    var toolbar = document.querySelector(".admin-toolbar");
+    var panelToggle = document.querySelector("[data-admin-panel-toggle]");
     var loginForm = document.querySelector("[data-admin-login-form]");
     var exit = document.querySelector("[data-admin-exit]");
     var template = document.querySelector("[data-admin-template]");
@@ -4356,10 +4518,19 @@
       refreshBasicAdminInfo(false);
     }
 
+    if (toolbar && panelToggle) {
+      panelToggle.addEventListener("click", function () {
+        state.adminPanelHidden = !state.adminPanelHidden;
+        safeStorageSetItem(ADMIN_PANEL_HIDDEN_KEY, state.adminPanelHidden ? "1" : "0");
+        toolbar.classList.toggle("is-collapsed", state.adminPanelHidden);
+        panelToggle.setAttribute("aria-expanded", state.adminPanelHidden ? "false" : "true");
+        panelToggle.textContent = state.adminPanelHidden ? "Mostrar painel" : "Esconder painel";
+      });
+    }
+
     if (open) {
       open.addEventListener("click", function () {
-        state.loginOpen = true;
-        rerender();
+        openAdminSurface();
       });
     }
 
@@ -5192,6 +5363,8 @@
       var news = home.news || {};
       var productsIntro = home.productsIntro || {};
       var heroImage = hero.image || (menuCategories[0] && menuCategories[0].image) || "";
+      var heroImages = homeHeroImages(hero);
+      var heroCarouselHtml = renderHomeHeroCarousel(hero);
       var heroPosition = String(hero.imagePosition || "center").trim();
       var heroStyle;
       var newsCards;
@@ -5200,8 +5373,9 @@
       if (!/^[a-z0-9.%\s-]+$/i.test(heroPosition)) {
         heroPosition = "center";
       }
-      heroStyle = heroImage
-        ? ' style="--home-hero-image:url(&quot;' + escapeHtml(heroImage) + '&quot;);--home-hero-position:' + escapeHtml(heroPosition) + '"'
+      heroStyle = (heroImage || heroImages.length)
+        ? ' style="' + (!heroImages.length && heroImage ? '--home-hero-image:url(&quot;' + escapeHtml(heroImage) + '&quot;);' : '')
+          + '--home-hero-position:' + escapeHtml(heroPosition) + '"'
         : "";
 
       if (!featuredCategories.length) {
@@ -5222,7 +5396,10 @@
       renderChrome([
         '<main class="home-shell home-shell--brand">',
         renderBrand(home.brand, "index.html", home.instagramUrl, menuCategories),
-        '<section class="home-brand-hero" aria-labelledby="home-title"' + (heroImage ? ' data-mia-image="' + escapeHtml(heroImage) + '" data-mia-slot-name="home-hero"' : "") + heroStyle + '>',
+        '<section class="home-brand-hero" data-home-hero aria-labelledby="home-title"'
+          + (!heroImages.length && heroImage ? ' data-mia-image="' + escapeHtml(heroImage) + '" data-mia-item-id="hero" data-mia-slot-name="home-hero"' : "")
+          + heroStyle + '>',
+        heroCarouselHtml,
         '<div class="home-brand-hero__inner">',
         '<div class="home-brand-hero__copy">',
         '<p class="eyebrow">' + escapeHtml(home.intro.eyebrow) + '</p>',
@@ -6394,7 +6571,7 @@
   function defaultDeliveryOptions() {
     return [
       { id: "pickup", label: "Vou recolher na casa da Mia", text: "", feeCents: 0 },
-      { id: "shipping", label: "Envio CTT - até 2 Kg", text: "", feeCents: 555, priceText: "Valor mínimo:\n5,55 €" },
+      { id: "shipping", label: "Envio CTT - até 2 Kg", text: "", feeCents: 540, priceText: "Valor mínimo:\n5,40 €" },
       { id: "join_orders", label: "Junta as minhas encomendas", text: "", feeCents: 0 }
     ];
   }
@@ -17905,6 +18082,9 @@
       var previewHome = cloneJson(home || {});
 
       state.admin = false;
+      if (previewHome.hero && typeof previewHome.hero === "object") {
+        previewHome.hero.carouselEnabled = false;
+      }
       (previewHome.categories || []).forEach(function (category) {
         category.carouselRandomizeOnLoad = false;
         category.carouselImages = Array.isArray(category.carouselSourceImages)

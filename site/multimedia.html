@@ -6,6 +6,8 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Multimédia · Mia &amp; Paper</title>
   <link rel="icon" href="content/brand/logo.webp" type="image/webp">
+  <link rel="stylesheet" href="admin-nav.css?v=2026072801">
+  <script src="admin-nav.js?v=2026072801" defer></script>
   <style>
     /* MULTIMEDIA_V1 — inventário de todas as imagens do site em forma de
        tabela. Página de trabalho: interessa ser consultável, não bonita. */
@@ -87,7 +89,7 @@
     </table>
   </main>
 
-  <script src="galeria-slots.js?v=2026072602"></script>
+  <script src="galeria-slots.js?v=2026072803"></script>
   <script>
   (function () {
     "use strict";
@@ -128,6 +130,7 @@
       var usage = {};   // caminho da imagem -> [{slug, section, label, detail}]
 
       data.products.forEach(function (entry) {
+        var entryKey = entry.key || entry.slug;
         window.MiaGaleriaSlots.collect(entry).forEach(function (slot) {
           var image = window.MiaGaleriaSlots.resolveTrail(entry.product, slot.trail);
           // Gavetas: o caminho é composto (pasta + nome), não está no JSON.
@@ -137,9 +140,11 @@
           if (typeof image !== "string" || !image) { return; }
           if (!usage[image]) { usage[image] = []; }
           usage[image].push({
-            slug: entry.slug,
-            name: entry.name || entry.product.name || entry.slug,
+            slug: entryKey,
+            name: (entry.name || entry.product.name || entry.slug)
+              + (entry.contextLabel ? " · " + entry.contextLabel : ""),
             id: slot.id,
+            shortId: slot.shortId,
             section: slot.section,
             label: slot.itemLabel || slot.detail,
             detail: slot.detail
@@ -204,7 +209,8 @@
         if (!needle) { return true; }
         if (row.path.toLowerCase().indexOf(needle) !== -1) { return true; }
         return row.uses.some(function (use) {
-          return (use.name + " " + use.section + " " + use.label + " " + use.detail + " " + (use.id || ""))
+          return (use.name + " " + use.section + " " + use.label + " " + use.detail + " "
+            + (use.shortId || "") + " " + (use.id || ""))
             .toLowerCase().indexOf(needle) !== -1;
         });
       }).sort(compare);
@@ -219,7 +225,8 @@
             + esc(use.label) + '</span></div>';
         }
         var page = state.pages[use.slug];
-        return '<div><code>' + esc(use.id || "sem identificador") + '</code> · '
+        return '<div><code>' + esc(use.shortId || "—") + '</code> '
+          + '<code>' + esc(use.id || "sem identificador") + '</code> · '
           + esc(use.name) + " · " + esc(use.section) + " · " + esc(use.detail || use.label)
           + (page ? ' <a href="' + esc(page) + '" target="_blank" rel="noopener">↗</a>'
                   : ' <span class="tag-orphan">(sem página)</span>')

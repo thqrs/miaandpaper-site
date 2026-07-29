@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 if (empty($_SESSION['miaandpaper_admin'])) {
     http_response_code(403);
     exit('Acesso restrito.');

@@ -18,6 +18,7 @@
  */
 
 session_start();
+require_once __DIR__ . '/admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 
 if (empty($_SESSION['miaandpaper_admin'])) {
     http_response_code(403);
@@ -1969,6 +1970,8 @@ header('Content-Type: text/html; charset=utf-8');
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Funil de encomendas · Mia &amp; Paper admin</title>
+<link rel="stylesheet" href="admin-nav.css?v=2026072801">
+<script src="admin-nav.js?v=2026072801" defer></script>
 <style>
 :root { --ink:#3b2f1f; --muted:#76551c; --line:rgba(118,85,28,0.22); --gold:#b88616; --moss:#4f7a3a; --bg:#fffbe9; --card:#fff8df; }
 * { box-sizing: border-box; }
@@ -2123,6 +2126,7 @@ details.report-collapse > summary:hover { color: var(--ink); }
       <a href="?period=<?= $opt ?>" class="<?= $opt === $period ? 'is-active' : '' ?>"><?= htmlspecialchars($periodLabels[$opt]) ?></a>
     <?php endforeach; ?>
     <a href="admin-live-dashboard.php?period=<?= admin_funnel_h($period) ?>" style="margin-left:8px;background:var(--moss);border-color:var(--moss);color:#fff;">▶ Abrir Live Dashboard</a>
+    <a href="admin-live-dashboard.php?period=<?= admin_funnel_h($period) ?>&amp;view=teia" style="background:rgba(69,107,123,.14);border-color:rgba(69,107,123,.35);">Teia + visitantes</a>
     <a href="admin-orders.php" style="margin-left:8px;background:rgba(79,122,58,0.12);">Encomendas</a>
   </nav>
 </header>

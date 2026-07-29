@@ -299,6 +299,8 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
             )",
             '2026-07-20_idx_color_flows_scope' => "CREATE INDEX IF NOT EXISTS idx_color_flows_scope
                 ON color_flows (product_slug, step_id, status)",
+            '2026-07-29_add_colors_light_hex' => "ALTER TABLE colors ADD COLUMN light_hex TEXT",
+            '2026-07-29_add_colors_dark_hex' => "ALTER TABLE colors ADD COLUMN dark_hex TEXT",
             '2026-07-20_init_assisted_uploads' => "CREATE TABLE IF NOT EXISTS assisted_uploads (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 reference_code TEXT UNIQUE NOT NULL,

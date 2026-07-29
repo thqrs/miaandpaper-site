@@ -11,6 +11,7 @@ define('GALERIA_REQUIRE_ADMIN', false);
 
 define('GALERIA_ROOT', __DIR__);
 define('GALERIA_PRODUCT_DIR', __DIR__ . '/content/products');
+define('GALERIA_CONGRESS_PRODUCT_DIR', __DIR__ . '/congressos/2026/content/products');
 define('GALERIA_HOME_FILE', __DIR__ . '/content/home.json');
 define('GALERIA_UPLOAD_DIR', __DIR__ . '/content/uploads/galeria');
 define('GALERIA_UPLOAD_PREFIX', 'content/uploads/galeria/');
@@ -233,11 +234,66 @@ function galeria_list_images($relativeDir)
     return $found;
 }
 
-function galeria_product_slugs()
+function galeria_contexts()
+{
+    return array(
+        'principal' => array(
+            'id' => 'principal',
+            'label' => 'Site principal',
+            'productDir' => GALERIA_PRODUCT_DIR,
+            'pageDir' => GALERIA_ROOT,
+            'pagePrefix' => '',
+        ),
+        'congresso-2026' => array(
+            'id' => 'congresso-2026',
+            'label' => 'Congresso 2026',
+            'productDir' => GALERIA_CONGRESS_PRODUCT_DIR,
+            'pageDir' => GALERIA_ROOT . '/congressos/2026',
+            'pagePrefix' => 'congressos/2026/',
+        ),
+    );
+}
+
+function galeria_context($id)
+{
+    $contexts = galeria_contexts();
+    return isset($contexts[$id]) ? $contexts[$id] : null;
+}
+
+// Mantém as chaves antigas no contexto principal ("imanes") e prefixa os
+// contextos adicionais ("congresso-2026|imanes"). Assim não se perdem os
+// vistos já guardados na Galeria e as entradas continuam inequivocamente
+// separadas.
+function galeria_entry_key($context, $slug)
+{
+    return $context === 'principal' ? (string)$slug : (string)$context . '|' . (string)$slug;
+}
+
+function galeria_parse_entry_key($key, $fallbackSlug = '')
+{
+    $key = (string)$key;
+    if ($key === '' && $fallbackSlug !== '') {
+        $key = (string)$fallbackSlug;
+    }
+    if (preg_match('/^(principal|congresso-2026)\|([a-z0-9-]+)$/', $key, $matches)) {
+        return array('context' => $matches[1], 'slug' => $matches[2]);
+    }
+    if (preg_match('/^[a-z0-9-]+$/', $key)) {
+        return array('context' => 'principal', 'slug' => $key);
+    }
+    return null;
+}
+
+function galeria_product_slugs($contextId = 'principal')
 {
     $slugs = array();
+    $context = galeria_context($contextId);
 
-    foreach (glob(GALERIA_PRODUCT_DIR . '/*.json') as $file) {
+    if (!$context || !is_dir($context['productDir'])) {
+        return $slugs;
+    }
+
+    foreach (glob($context['productDir'] . '/*.json') as $file) {
         $name = basename($file, '.json');
         // Ignora cópias de segurança ("cadernos - backup.json") e afins.
         if (preg_match('/^[a-z0-9-]+$/', $name)) {
@@ -250,23 +306,28 @@ function galeria_product_slugs()
     return $slugs;
 }
 
-function galeria_product_path($slug)
+function galeria_product_path($slug, $contextId = 'principal')
 {
+    $context = galeria_context($contextId);
     if (!preg_match('/^[a-z0-9-]+$/', (string)$slug)) {
         return '';
     }
-    $path = GALERIA_PRODUCT_DIR . '/' . $slug . '.json';
+    if (!$context) {
+        return '';
+    }
+    $path = $context['productDir'] . '/' . $slug . '.json';
 
     return is_file($path) ? $path : '';
 }
 
-function galeria_entry_path($slug)
+function galeria_entry_path($key, $fallbackSlug = '')
 {
-    if ((string)$slug === 'home') {
+    if ((string)$key === 'home' || ((string)$key === '' && (string)$fallbackSlug === 'home')) {
         return is_file(GALERIA_HOME_FILE) ? GALERIA_HOME_FILE : '';
     }
 
-    return galeria_product_path($slug);
+    $parsed = galeria_parse_entry_key($key, $fallbackSlug);
+    return $parsed ? galeria_product_path($parsed['slug'], $parsed['context']) : '';
 }
 
 // Descobre que página HTML carrega cada produto (data-product="slug"). Serve
@@ -277,15 +338,18 @@ function galeria_product_pages()
 {
     $pages = array();
 
-    foreach (glob(GALERIA_ROOT . '/*.html') as $file) {
-        $html = (string)file_get_contents($file);
-        if (!preg_match('/<body\b[^>]*\bdata-product\s*=\s*["\']([a-z0-9-]+)["\']/i', $html, $matches)) {
-            continue;
+    foreach (galeria_contexts() as $context) {
+        foreach (glob($context['pageDir'] . '/*.html') as $file) {
+            $html = (string)file_get_contents($file);
+            if (!preg_match('/<body\b[^>]*\bdata-product\s*=\s*["\']([a-z0-9-]+)["\']/i', $html, $matches)) {
+                continue;
+            }
+            if (preg_match('/<meta\b[^>]*\bhttp-equiv\s*=\s*["\']refresh["\']/i', $html)) {
+                continue;   // é um redirect, não uma página real
+            }
+            $key = galeria_entry_key($context['id'], $matches[1]);
+            $pages[$key] = $context['pagePrefix'] . basename($file);
         }
-        if (preg_match('/<meta\b[^>]*\bhttp-equiv\s*=\s*["\']refresh["\']/i', $html)) {
-            continue;   // é um redirect, não uma página real
-        }
-        $pages[$matches[1]] = basename($file);
     }
 
     if (is_file(GALERIA_ROOT . '/index.html')) {
@@ -580,51 +644,75 @@ function galeria_payload()
 
 $action = isset($_GET['action']) ? (string)$_GET['action'] : '';
 
+if ($action === 'done') {
+    galeria_guard();
+    galeria_respond(200, array('ok' => true, 'done' => galeria_read_done()));
+}
+
 if ($action === 'data') {
     galeria_guard();
 
     $products = array();
-    foreach (galeria_product_slugs() as $slug) {
-        $path = galeria_product_path($slug);
-        if (!$path) {
-            continue;
+    $wantedEntry = isset($_GET['entry']) ? (string)$_GET['entry'] : '';
+    if ($wantedEntry !== '' && $wantedEntry !== 'home' && !galeria_parse_entry_key($wantedEntry)) {
+        galeria_respond(400, array('ok' => false, 'message' => 'Contexto de produto inválido.'));
+    }
+    foreach (galeria_contexts() as $context) {
+        foreach (galeria_product_slugs($context['id']) as $slug) {
+            $entryKey = galeria_entry_key($context['id'], $slug);
+            if ($wantedEntry !== '' && $wantedEntry !== $entryKey) {
+                continue;
+            }
+            $path = galeria_product_path($slug, $context['id']);
+            if (!$path) {
+                continue;
+            }
+            $raw = @file_get_contents($path);
+            $decoded = json_decode((string)$raw, true);
+            if ($raw === false || !is_array($decoded)) {
+                galeria_respond(500, array(
+                    'ok' => false,
+                    'message' => 'O produto ' . $context['label'] . ' / ' . $slug . '.json não contém JSON válido. Não o omiti silenciosamente.',
+                ));
+            }
+            if (!isset($decoded['slug']) || (string)$decoded['slug'] !== $slug) {
+                galeria_respond(500, array(
+                    'ok' => false,
+                    'message' => 'O slug dentro de ' . $context['label'] . ' / ' . $slug . '.json não corresponde ao nome do ficheiro.',
+                ));
+            }
+            $products[] = array(
+                'key' => $entryKey,
+                'slug' => $slug,
+                'context' => $context['id'],
+                'contextLabel' => $context['label'],
+                'sourceFile' => str_replace('\\', '/', substr($path, strlen(GALERIA_ROOT) + 1)),
+                'product' => $decoded,
+                'revision' => hash('sha256', (string)$raw),
+            );
         }
-        $raw = @file_get_contents($path);
-        $decoded = json_decode((string)$raw, true);
-        if ($raw === false || !is_array($decoded)) {
+    }
+
+    if ($wantedEntry === '' || $wantedEntry === 'home') {
+        $homeRaw = @file_get_contents(GALERIA_HOME_FILE);
+        $home = json_decode((string)$homeRaw, true);
+        if ($homeRaw === false || !is_array($home)) {
             galeria_respond(500, array(
                 'ok' => false,
-                'message' => 'O produto ' . $slug . '.json não contém JSON válido. Não o omiti silenciosamente.',
-            ));
-        }
-        if (!isset($decoded['slug']) || (string)$decoded['slug'] !== $slug) {
-            galeria_respond(500, array(
-                'ok' => false,
-                'message' => 'O slug dentro de ' . $slug . '.json não corresponde ao nome do ficheiro.',
+                'message' => 'O ficheiro home.json não contém JSON válido.',
             ));
         }
         $products[] = array(
-            'slug' => $slug,
-            'product' => $decoded,
-            'revision' => hash('sha256', (string)$raw),
+            'key' => 'home',
+            'slug' => 'home',
+            'context' => 'principal',
+            'contextLabel' => 'Site principal',
+            'kind' => 'home',
+            'name' => 'Homepage',
+            'product' => $home,
+            'revision' => hash('sha256', (string)$homeRaw),
         );
     }
-
-    $homeRaw = @file_get_contents(GALERIA_HOME_FILE);
-    $home = json_decode((string)$homeRaw, true);
-    if ($homeRaw === false || !is_array($home)) {
-        galeria_respond(500, array(
-            'ok' => false,
-            'message' => 'O ficheiro home.json não contém JSON válido.',
-        ));
-    }
-    $products[] = array(
-        'slug' => 'home',
-        'kind' => 'home',
-        'name' => 'Homepage',
-        'product' => $home,
-        'revision' => hash('sha256', (string)$homeRaw),
-    );
 
     // O selector continua limitado às pastas de produto; o inventário da
     // página Multimédia recebe, separadamente, todos os ficheiros sob site/.
@@ -746,16 +834,19 @@ if ($action === 'save') {
     galeria_guard(true);
 
     $payload = galeria_payload();
+    $key = isset($payload['key']) ? (string)$payload['key'] : '';
     $slug = isset($payload['slug']) ? (string)$payload['slug'] : '';
     $product = isset($payload['product']) && is_array($payload['product']) ? $payload['product'] : null;
     $revision = isset($payload['revision']) ? strtolower((string)$payload['revision']) : '';
-    $isHome = $slug === 'home';
-    $path = galeria_entry_path($slug);
+    $isHome = $key === 'home' || ($key === '' && $slug === 'home');
+    $parsed = $isHome ? array('context' => 'principal', 'slug' => 'home') : galeria_parse_entry_key($key, $slug);
+    $actualSlug = $parsed ? $parsed['slug'] : '';
+    $path = galeria_entry_path($key, $slug);
 
     if (!$path || !$product) {
         galeria_respond(400, array('ok' => false, 'message' => 'Conteúdo desconhecido.'));
     }
-    if (!$isHome && (!isset($product['slug']) || (string)$product['slug'] !== $slug)) {
+    if (!$isHome && (!isset($product['slug']) || (string)$product['slug'] !== $actualSlug)) {
         galeria_respond(400, array('ok' => false, 'message' => 'O slug do produto não corresponde ao ficheiro.'));
     }
     if (!$isHome && (empty($product['steps']) || !is_array($product['steps']))) {
@@ -806,7 +897,12 @@ if ($action === 'save') {
     @flock($handle, LOCK_UN);
     fclose($handle);
 
-    galeria_respond(200, array('ok' => true, 'slug' => $slug, 'revision' => hash('sha256', $next)));
+    galeria_respond(200, array(
+        'ok' => true,
+        'key' => $isHome ? 'home' : galeria_entry_key($parsed['context'], $actualSlug),
+        'slug' => $actualSlug,
+        'revision' => hash('sha256', $next),
+    ));
 }
 
 if ($action === 'save-done') {

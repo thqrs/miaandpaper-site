@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 
 require_once __DIR__ . '/lib/private-paths.php';
 
@@ -1074,6 +1075,20 @@ if ($action === 'login') {
     $password = isset($payload['password']) ? (string)$payload['password'] : '';
     $passwordTrimmed = trim($password);
     $isEmpty = $passwordTrimmed === '';
+
+    // ADMIN_OPEN_DEV_V2: enquanto o interruptor temporário estiver ativo, o
+    // clique em "Login de Administrador" entra diretamente, sem password.
+    // Ao mudar MIA_ADMIN_OPEN para false, o fluxo seguro abaixo volta a ser o
+    // único caminho de autenticação.
+    if (defined('MIA_ADMIN_OPEN') && MIA_ADMIN_OPEN) {
+        $_SESSION['miaandpaper_admin'] = true;
+        $_SESSION['miaandpaper_admin_csrf'] = bin2hex(random_bytes(16));
+        admin_respond(200, array(
+            'ok' => true,
+            'loggedIn' => true,
+            'csrf' => admin_csrf_token(),
+        ));
+    }
 
     // ADMIN_LOGIN_PT_LOG_V1: validar tentativa antes de responder. Apenas
     // logamos se a password não corresponder (ou estiver vazia). NUNCA

@@ -2380,7 +2380,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="styles.css?v=2026072604">
+  <link rel="stylesheet" href="styles.css?v=2026072814">
 </head>
 <body class="result-body">
   <main class="result-card <?php echo h($kind); ?>">
@@ -2962,8 +2962,8 @@ $defaultDeliveryOptions = array(
     ),
     'shipping' => array(
         'label' => 'Envio CTT - até 2 Kg',
-        'fee_cents' => 555,
-        'price_text' => "Valor mínimo:\n5,55 €",
+        'fee_cents' => 540,
+        'price_text' => "Valor mínimo:\n5,40 €",
     ),
     'join_orders' => array(
         'label' => 'Junta as minhas encomendas',
