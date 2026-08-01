@@ -274,7 +274,7 @@
     <div id="content"></div>
   </main>
 
-  <script src="galeria-slots.js?v=2026072803"></script>
+  <script src="galeria-slots.js?v=2026073101"></script>
 
   <dialog id="picker">
     <div class="dlg-head">
@@ -930,6 +930,7 @@
       type: "mia-preview-render",
       key: slot.key,
       kind: slot.kind || (entry && entry.kind) || "product",
+      context: entry && entry.context || "principal",
       product: product,
       stepIndex: slot.previewStepIndex == null ? slot.stepIndex : slot.previewStepIndex,
       itemId: slot.itemId || "",
@@ -972,13 +973,15 @@
   function mountFrame(key) {
     var node = document.querySelector(sel(key));
     var slot = slotByKey(key);
+    var entry = slot && productEntryBySlug(slot.slug);
+    var context = entry && entry.context === "congresso-2026" ? "congresso-2026" : "principal";
     if (!node || !slot || frames[key]) { return; }
 
     var crop = node.querySelector("[data-crop]");
     var iframe = document.createElement("iframe");
     if (!crop) { return; }
 
-    iframe.src = "galeria-preview.html?v=2026072304";
+    iframe.src = "galeria-preview.html?v=2026072901&context=" + encodeURIComponent(context);
     iframe.setAttribute("scrolling", "no");
     iframe.style.width = state.screenWidth + "px";
     iframe.style.height = "1600px";
@@ -986,7 +989,7 @@
     crop.appendChild(iframe);
 
     framesLoading++;
-    frames[key] = { iframe: iframe, ready: false, pending: renderRequest(slot), timeout: null };
+    frames[key] = { iframe: iframe, context: context, ready: false, pending: renderRequest(slot), timeout: null };
     frames[key].timeout = window.setTimeout(function () {
       failFrame(key, "A pré-visualização demorou demasiado a carregar.");
     }, 12000);
@@ -1082,6 +1085,10 @@
       Object.keys(frames).forEach(function (key) {
         var frame = frames[key];
         if (frame.iframe.contentWindow === event.source && !frame.ready) {
+          if ((data.context || "principal") !== frame.context) {
+            failFrame(key, "A pré-visualização carregou o renderer de outro contexto.");
+            return;
+          }
           frame.ready = true;
           if (frame.timeout) { window.clearTimeout(frame.timeout); frame.timeout = null; }
           framesLoading = Math.max(0, framesLoading - 1);

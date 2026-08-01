@@ -9,7 +9,13 @@ DirectoryIndex index.html
 # log/backup mesmo que cheguem por engano à document root. As acções de
 # backup do admin servem o ficheiro via PHP (Content-Disposition) e não
 # dependem de acesso directo.
-<FilesMatch "\.(zip|7z|tar|gz|tgz|bz2|rar|sqlite|sqlite-journal|sqlite-wal|sqlite-shm|sql|db|bak|backup|log|jsonl|tmp|swp)$">
+<FilesMatch "\.(zip|7z|tar|gz|tgz|bz2|rar|sqlite|sqlite-journal|sqlite-wal|sqlite-shm|sql|db|bak|backup|log|jsonl|tmp|swp|legacy)$">
+    Require all denied
+</FilesMatch>
+
+# As copias de seguranca da galeria chamam-se "<produto>.json.galeria-bak".
+# O sufixo tem um hifen antes de "bak", por isso a regra acima nao as apanha.
+<FilesMatch "-(bak|backup)$">
     Require all denied
 </FilesMatch>
 

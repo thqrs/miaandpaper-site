@@ -265,6 +265,11 @@
   var wizardHistoryEntries = [];
   var wizardHistoryIndex = -1;
   var wizardHistoryNextId = 1;
+  // STEP_JUMP_CONFIRM_V1: passo pedido por um salto entregue ao histórico do
+  // browser. `history.go()` é assíncrono e pode não ir a lado nenhum quando a
+  // entrada já foi truncada, por isso guardamos o pedido e confirmamos.
+  var wizardPendingJumpStep = null;
+  var wizardPendingJumpTimer = null;
 
   function escapeHtml(value) {
     return String(value == null ? "" : value)
@@ -889,6 +894,7 @@
       state.brandButterflyEnabled = false;
       state.catalogFooterLinkVisible = true;
       state.ordersSuspended = false;
+      state.customPromoEnabled = true;
       return;
     }
 
@@ -930,6 +936,10 @@
     state.brandButterflyEnabled = home.brandButterflyEnabled === true;
     state.catalogFooterLinkVisible = home.catalogFooterLinkVisible !== false;
     state.ordersSuspended = home.ordersSuspended === true;
+    // PERSONALIZACAO_PROMO_V1: interruptor geral do convite ao flow de artwork
+    // proprio. Fica ligado por omissao; `"customPromoEnabled": false` no
+    // content/order-products.json apaga-o de todos os produtos de uma vez.
+    state.customPromoEnabled = home.customPromoEnabled !== false;
     document.body.classList.toggle("is-brand-butterfly-enabled", state.brandButterflyEnabled);
     document.body.classList.toggle("is-catalog-footer-hidden", !state.catalogFooterLinkVisible);
     document.body.classList.toggle("has-orders-suspended", state.ordersSuspended);
@@ -963,7 +973,7 @@
   function homeCarouselImagesFromProduct(product) {
     var step = product && product.steps && product.steps[0] ? product.steps[0] : null;
     var images = [];
-    var onlyPrimaryImages = product && product.slug === "cadernos";
+    var onlyPrimaryImages = product && productFamily(product) === "cadernos";
 
     (step && step.items ? step.items : []).forEach(function (item) {
       if (item && item.image && images.indexOf(item.image) === -1) {
@@ -1574,6 +1584,8 @@
     var data = {
       product_slug: product.slug || '',
       product_type: product.slug || '',
+      product_context: String(product.catalogContext || "main"),
+      flow_mode: isMainCatalogProduct(product) ? (isCustomArtworkSelected(product) ? "custom" : "catalog") : String(product.orderFlow || ""),
       selected_pack: state.selections.pack_quantity || undefined,
       selected_size: state.selections.size || '',
       selected_delivery: state.selections.delivery_option || ''
@@ -1609,6 +1621,10 @@
       if (sel.pack_quantity) snap.selected_pack = Number(sel.pack_quantity) || 0;
       if (sel.size) snap.selected_size = String(sel.size).slice(0, 60);
       if (sel.delivery_option) snap.selected_delivery = String(sel.delivery_option).slice(0, 60);
+      if (isMainCatalogProduct(product)) {
+        snap.flow_mode = isCustomArtworkSelected(product) ? "custom" : "catalog";
+        snap.product_context = String(product.catalogContext || "main-v2");
+      }
 
       // Cores e variantes sem conteúdo pessoal. Mantém a posição dos tons —
       // num degradê, 0 é a cor inicial e 1 a final.
@@ -1655,7 +1671,7 @@
 
       // Novo fluxo de crachás/ímanes: só presença e contagens, nunca texto,
       // áudio, nomes de ficheiro ou outros dados enviados pela pessoa.
-      if (isCustomArtworkProduct(product)) {
+      if (isCustomArtworkSelected(product)) {
         var custom = customArtworkConfig(product);
         var artworkItems = Array.isArray(sel[custom.uploadKey]) ? sel[custom.uploadKey] : [];
         var cardPhotos = Array.isArray(sel[custom.cardPhotoKey]) ? sel[custom.cardPhotoKey] : [];
@@ -1663,6 +1679,8 @@
         if (artworkItems.length) {
           snap.artwork_attached = 1;
           snap.artwork_count = artworkItems.length;
+          snap.artwork_total_quantity = customArtworkTotalQuantity(product);
+          snap.customization_fee_cents = customArtworkFeeCents(product);
         }
         if (sel[custom.helpKey]) snap.artwork_help = 1;
         if (String(sel[custom.cardField] || "").trim()) snap.card_has_text = 1;
@@ -2456,6 +2474,27 @@
     var summary = source.summary && typeof source.summary === "object" ? source.summary : {};
     var id = String(source.id || "").trim();
     var priceCents = summary.priceCents == null ? 0 : parseInt(summary.priceCents, 10);
+    var productSlugValue = String(source.productSlug || "").trim();
+    var selections = source.selections && typeof source.selections === "object" && !Array.isArray(source.selections)
+      ? cloneJson(source.selections)
+      : {};
+    var legacyUploadKey;
+
+    if ((productSlugValue === "crachas" || productSlugValue === "imanes")
+        && String(selections.order_flow || "") === "custom-artwork") {
+      legacyUploadKey = productSlugValue === "crachas" ? "cracha_artwork_uploads" : "iman_artwork_uploads";
+      selections.custom_artwork_uploads = (Array.isArray(selections[legacyUploadKey]) ? selections[legacyUploadKey] : []).map(function (upload) {
+        var normalizedUpload = Object.assign({}, upload);
+        normalizedUpload.quantity = Math.max(1, parseInt(upload && upload.quantity, 10) || parseInt(selections.pack_quantity, 10) || 1);
+        normalizedUpload.feeCents = 500;
+        return normalizedUpload;
+      });
+      delete selections[legacyUploadKey];
+      selections.order_flow = "custom";
+      selections.design_source = "custom";
+      selections.catalog_context = "main-v2";
+      productSlugValue = productSlugValue === "crachas" ? "crachas-loja" : "imanes-loja";
+    }
 
     if (!id) {
       id = "ci_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
@@ -2463,7 +2502,7 @@
 
     return {
       id: id,
-      productSlug: String(source.productSlug || "").trim(),
+      productSlug: productSlugValue,
       productName: String(source.productName || "Produto").trim() || "Produto",
       summary: {
         title: String(summary.title || source.productName || "Produto").trim() || "Produto",
@@ -2473,9 +2512,7 @@
         priceToConfirm: summary.priceToConfirm === true,
         image: summary.image ? String(summary.image).trim() : null
       },
-      selections: source.selections && typeof source.selections === "object" && !Array.isArray(source.selections)
-        ? source.selections
-        : {}
+      selections: selections
     };
   }
 
@@ -2689,10 +2726,28 @@
     };
   }
 
-  function cartProductPage(productSlugValue) {
+  function cartCustomizationFeeText(item) {
+    var selections = item && item.selections && typeof item.selections === "object" ? item.selections : {};
+    var count = Math.max(0, parseInt(selections.customization_file_count, 10) || 0);
+    var cents = Math.max(0, parseInt(selections.customization_fee_cents, 10) || 0);
+    if (!count || !cents) {
+      return "";
+    }
+    return "Preparação e testes: " + count + (count === 1 ? " imagem × 5,00 € = " : " imagens × 5,00 € = ") + formatCents(cents);
+  }
+
+  function cartProductPage(productSlugValue, selections) {
     var slug = String(productSlugValue || "").trim().replace(/[^a-z0-9_-]/gi, "");
+    var context = selections && typeof selections === "object" ? String(selections.catalog_context || "") : "";
     if (slug === "quadros") {
       return "molduras.html";
+    }
+    if (slug === "crachas-loja") return "crachas.html";
+    if (slug === "imanes-loja") return "imanes.html";
+    if (slug === "mini-cadernos") return "mini-cadernos.html";
+    if (slug === "cadernos-anuais") return "cadernos-anuais.html";
+    if (!context && ["crachas", "imanes", "caderninhos", "cadernos"].indexOf(slug) !== -1) {
+      return "congressos/2026/" + slug + ".html";
     }
     return slug ? slug + ".html" : "adicionar-produto.html";
   }
@@ -2723,8 +2778,16 @@
 
   function cartEditUrl(item, returnTo) {
     var id = item && item.id ? String(item.id) : "";
-    var href = cartProductPage(item && item.productSlug);
+    var href = cartProductPage(item && item.productSlug, item && item.selections);
     return href + "?mode=edit&cartItem=" + encodeURIComponent(id) + "&returnTo=" + encodeURIComponent(safeCartReturnTo(returnTo));
+  }
+
+  // PERSONALIZACAO_BUILDER_V1: as linhas com artwork proprio sao montadas em
+  // personalizacao.html e o wizard do catalogo ja nao sabe editá-las (perdeu o
+  // passo de upload). Podem ser removidas e refeitas, mas nao editadas.
+  function cartItemIsEditable(item) {
+    var selections = item && item.selections && typeof item.selections === "object" ? item.selections : {};
+    return String(selections.design_source || "") !== "custom";
   }
 
   function findCartItemById(itemId) {
@@ -2849,6 +2912,7 @@
 
   function renderCartItem(item, index) {
     var summary = formatCartItemSummary(item);
+    var customizationFee = cartCustomizationFeeText(item);
     var returnTo = page === "checkout" ? checkoutUrlForStep(state.checkoutStep) : "index.html";
     var thumb = summary.image
       ? '<img src="' + escapeHtml(summary.image) + '" alt="" loading="lazy">'
@@ -2861,11 +2925,12 @@
       '<strong>' + escapeHtml(index + 1) + '. ' + escapeHtml(summary.productName) + '</strong>',
       '<span>' + escapeHtml(summary.title) + '</span>',
       summary.subtitle ? '<em>' + escapeHtml(summary.subtitle) + '</em>' : "",
+      customizationFee ? '<em class="cart-item-customization-fee">' + escapeHtml(customizationFee) + '</em>' : "",
       '</div>',
       '<div class="cart-item-side">',
       '<span class="cart-item-price">' + escapeHtml(summary.priceText) + '</span>',
       '<div class="cart-item-actions">',
-      '<button type="button" class="cart-edit-button" data-cart-edit="' + escapeHtml(item.id) + '" data-cart-edit-return="' + escapeHtml(returnTo) + '">Editar</button>',
+      cartItemIsEditable(item) ? '<button type="button" class="cart-edit-button" data-cart-edit="' + escapeHtml(item.id) + '" data-cart-edit-return="' + escapeHtml(returnTo) + '">Editar</button>' : "",
       '<button type="button" class="cart-remove-button" data-cart-remove="' + escapeHtml(item.id) + '">Remover</button>',
       '</div>',
       '</div>',
@@ -3227,13 +3292,27 @@
     delete selections.send_copy_touched;
     delete selections.copy_email;
 
-    selections.designs = isAssortedSelected(product) ? ["__sortido__"] : selectedDesignValues();
-    selections.design_quantities = cartDesignQuantities(product);
-    selections.design_labels = cartDesignLabels(product);
-    selections.assorted_designs = isAssortedSelected(product) ? "1" : "";
+    selections.designs = isCustomArtworkSelected(product) ? [] : (isAssortedSelected(product) ? ["__sortido__"] : selectedDesignValues());
+    selections.design_quantities = isCustomArtworkSelected(product) ? {} : cartDesignQuantities(product);
+    selections.design_labels = isCustomArtworkSelected(product) ? {} : cartDesignLabels(product);
+    selections.assorted_designs = !isCustomArtworkSelected(product) && isAssortedSelected(product) ? "1" : "";
     selections.pack_quantity = getPackQuantity(product);
     selections.size = priceInfo(product).size || selections.size || "";
-    if (product && product.orderFlow) {
+    if (isMainCatalogProduct(product)) {
+      selections.catalog_context = String(product.catalogContext || "main-v2");
+      selections.order_flow = isCustomArtworkSelected(product) ? "custom" : "catalog";
+      selections.design_source = selections.order_flow;
+      if (!isCustomArtworkSelected(product)) {
+        delete selections[customArtworkConfig(product).uploadKey];
+        delete selections.customization_fee_cents;
+        delete selections.customization_file_count;
+        delete selections.artwork_total_quantity;
+      } else {
+        selections.customization_fee_cents = customArtworkFeeCents(product);
+        selections.customization_file_count = customArtworkItems(product).length;
+        selections.artwork_total_quantity = customArtworkTotalQuantity(product);
+      }
+    } else if (product && product.orderFlow) {
       selections.order_flow = String(product.orderFlow);
     } else {
       delete selections.order_flow;
@@ -3268,10 +3347,13 @@
     var custom;
     var uploads;
 
-    if (isCustomArtworkProduct(product)) {
+    if (isCustomArtworkSelected(product)) {
       custom = customArtworkConfig(product);
       uploads = orderUploadItems(custom.uploadKey);
-      return uploads.length ? orderUploadPreviewUrl(uploads[0]) : null;
+      if (!uploads.length || String(uploads[0].mime || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(String(uploads[0].name || ""))) {
+        return null;
+      }
+      return orderUploadPreviewUrl(uploads[0]);
     }
 
     if (item && laminationKey && item.laminationImages && item.laminationImages[laminationKey]) {
@@ -3288,9 +3370,16 @@
     var option;
     var parts;
 
-    if (isCustomArtworkProduct(product)) {
+    if (isCustomArtworkSelected(product)) {
       var custom = customArtworkConfig(product);
-      parts = [selectedSizeLabel(product), productQuantityLabel(product, getPackQuantity(product))].filter(Boolean);
+      var customQuantity = isCadernosProduct(product) ? cadernoOrderQuantity(product) : getPackQuantity(product);
+      var customCount = customArtworkItems(product).length;
+      parts = [
+        selectedSizeLabel(product),
+        productQuantityLabel(product, customQuantity),
+        customCount + (customCount === 1 ? " design personalizado" : " designs personalizados"),
+        customArtworkFeeCents(product) ? "preparação " + formatCents(customArtworkFeeCents(product)) : ""
+      ].filter(Boolean);
       if (String(state.selections[custom.cardField] || "").trim()
           || orderUploadItems(custom.cardPhotoKey).length
           || orderUploadItems(custom.cardAudioKey).length) {
@@ -3430,6 +3519,13 @@
     var item;
     var cart;
 
+    // O construtor nao e um produto: cada linha do passo 2 entra no carrinho
+    // como uma linha do seu proprio slug.
+    if (isArtworkBuilderProduct(product)) {
+      addBuilderLinesToCart(product, destination);
+      return;
+    }
+
     if (!validateProductForCart(product)) {
       return;
     }
@@ -3549,7 +3645,7 @@
       }
     });
 
-    if (product && product.slug === "cadernos" && Array.isArray(normalized.designs)) {
+    if (isCadernosProduct(product) && Array.isArray(normalized.designs)) {
       normalized.designs = normalized.designs[0] || "";
     }
 
@@ -3679,7 +3775,7 @@
       categoryLinks,
       '</nav>',
       '<div class="site-menu-secondary">',
-      '<a href="catalogo/index.html" data-site-menu-link>Encomendar por Catálogo</a>',
+      '<a href="index.html#produtos" data-site-menu-link>Produtos</a>',
       '<a href="contacto.html" data-site-menu-link>Contacto</a>',
       '<a href="' + escapeHtml(instagramUrl || "https://www.instagram.com/miaandpaper/") + '" target="_blank" rel="noopener" data-site-menu-link>Instagram</a>',
       '</div>',
@@ -3947,7 +4043,7 @@
   function renderFooter(brand, showAdminLogin) {
     return [
       '<footer class="site-footer">',
-      '<a class="catalog-footer-link" href="catalogo/index.html">Encomendar por Catálogo</a>',
+      '<a class="catalog-footer-link" href="index.html#produtos">Ver produtos</a>',
       '<a href="privacy.html">Política de Privacidade</a>',
       showAdminLogin === false ? "" : '<button type="button" data-admin-open>Login de Administrador</button>',
       '<span>© ' + escapeHtml(brand || "Mia & Paper") + ' 2026 Todos os Direitos Reservados</span>',
@@ -4122,7 +4218,7 @@
   }
 
   function productShapeClass(product) {
-    return (product && product.imageShape === "round") || (product && product.slug === "crachas") || (product && product.slug === "pins")
+    return (product && product.imageShape === "round") || (product && productFamily(product) === "crachas")
       ? "product-shape-round"
       : "product-shape-rect";
   }
@@ -4184,7 +4280,7 @@
     var summaryLabel;
     var helpText;
     if (config.mode === "visible") {
-      summaryLabel = product.slug === "crachas" ? "Separadores dos crachás" : (product.slug === "imanes" ? "Separadores dos ímanes" : "Separadores deste passo");
+      summaryLabel = productFamily(product) === "crachas" ? "Separadores dos crachás" : (productFamily(product) === "imanes" ? "Separadores dos ímanes" : "Separadores deste passo");
       helpText = "Os " + sections.length + " títulos abaixo aparecem como secções no Passo 1. Cada item tem o seu separador, prefixo de nome e ordem.";
     } else {
       summaryLabel = "Grupos invisíveis (Passo 1)";
@@ -4350,7 +4446,7 @@
   function renderAdminProductPreviewPanel(product) {
     var preview = product && product.preview ? product.preview : {};
 
-    if (!product || (product.slug !== "cadernos" && !product.preview)) {
+    if (!product || (productFamily(product) !== "cadernos" && !product.preview)) {
       return "";
     }
 
@@ -4403,7 +4499,7 @@
   function renderAdminInteriorPanel(product) {
     var interior = product && product.interiorPreview ? product.interiorPreview : {};
 
-    if (!product || product.slug !== "cadernos") {
+    if (!isCadernosProduct(product)) {
       return "";
     }
 
@@ -4473,7 +4569,7 @@
       // TOOLS_INDEX_V1: link para as ferramentas internas (só admin; a página
       // valida a sessão no servidor, como admin-funnel.php).
       '<a class="admin-funnel-link" href="tools/index.php" target="_blank" rel="noopener">Ferramentas</a>',
-      '<a class="admin-funnel-link" href="cadernos.html">Cadernos</a>',
+      '<a class="admin-funnel-link" href="cadernos-anuais.html">Cadernos</a>',
       '<button type="button" data-admin-exit>Sair</button>',
       '</div>',
       message,
@@ -4650,7 +4746,7 @@
       input.addEventListener("change", function () {
         var step = currentProduct && visibleSteps(currentProduct)[state.currentStep];
 
-        if (!step || step.id !== "size" || currentProduct.slug !== "crachas") {
+        if (!step || step.id !== "size" || productFamily(currentProduct) !== "crachas") {
           return;
         }
 
@@ -5458,8 +5554,36 @@
     return state.selections.designs ? [state.selections.designs] : [];
   }
 
+  function productFamily(product) {
+    var slug = String(product && product.slug || "");
+    var explicit = String(product && product.family || "");
+
+    if (explicit) {
+      return explicit;
+    }
+    if (slug === "crachas-loja" || slug === "crachas" || slug === "pins") {
+      return "crachas";
+    }
+    if (slug === "imanes-loja" || slug === "imanes") {
+      return "imanes";
+    }
+    if (slug === "mini-cadernos" || slug === "caderninhos") {
+      return "caderninhos";
+    }
+    if (slug === "cadernos-anuais" || slug === "cadernos") {
+      return "cadernos";
+    }
+    return slug;
+  }
+
+  function isMainCatalogProduct(product) {
+    return !!(product
+      && String(product.catalogContext || "") === "main-v2"
+      && String(product.orderFlow || "") === "catalog-or-custom");
+  }
+
   function supportsAssortedDesigns(product) {
-    return !!(product && ["crachas", "imanes", "caderninhos"].indexOf(product.slug) !== -1);
+    return !!(product && ["crachas", "imanes", "imanes-recortados", "caderninhos", "bloquinhos", "stickers", "marcadores"].indexOf(productFamily(product)) !== -1);
   }
 
   function isAssortedSelected(product) {
@@ -5467,7 +5591,7 @@
   }
 
   function isCadernosProduct(product) {
-    return !!(product && product.slug === "cadernos");
+    return !!(product && productFamily(product) === "cadernos");
   }
 
   function isQuadrosProduct(product) {
@@ -5530,6 +5654,19 @@
   }
 
   function selectedCadernoCover(product) {
+    if (isCustomArtworkSelected(product)) {
+      var upload = customArtworkItems(product)[0] || null;
+      var isPdf = upload && (String(upload.mime || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(String(upload.name || "")));
+      return upload ? {
+        id: "custom-cover",
+        value: "custom-cover",
+        title: "Capa personalizada",
+        subtitle: isPdf ? "PDF enviado" : "Imagem enviada",
+        image: isPdf ? "" : orderUploadPreviewUrl(upload),
+        visual: "neutral",
+        imageFit: "cover"
+      } : null;
+    }
     return selectedDesignItems(product)[0] || null;
   }
 
@@ -5610,11 +5747,17 @@
   }
 
   function cadernoOrderQuantity(product) {
+    if (isCustomArtworkSelected(product)) {
+      return customArtworkTotalQuantity(product);
+    }
     var options = cadernoOrderQuantityOptions(product);
-    var fallback = Math.max(1, parseInt(cadernoOrderQuantityConfig(product).default, 10) || options[0] || 1);
-    var selected = Math.max(1, parseInt(state.selections.caderno_order_quantity, 10) || fallback);
+    var config = cadernoOrderQuantityConfig(product);
+    var minimum = Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1);
+    var maximum = Math.max(minimum, parseInt(config.maximum, 10) || 9999);
+    var fallback = Math.max(minimum, parseInt(config.default, 10) || options[0] || minimum);
+    var selected = Math.max(minimum, Math.min(maximum, parseInt(state.selections.caderno_order_quantity, 10) || fallback));
 
-    return options.indexOf(selected) !== -1 ? selected : fallback;
+    return isMainCatalogProduct(product) ? selected : (options.indexOf(selected) !== -1 ? selected : fallback);
   }
 
   function multipliedPriceText(unitCents, quantity) {
@@ -5637,9 +5780,233 @@
     return step && step.freeQuantity === true ? step : null;
   }
 
+  // PRICING_MODE_BY_PRICE_KEY_V1: o modo de preço é do produto, mas cada tabela
+  // de preços pode ter o seu. Nos ímanes, os finos vendem-se ao escalão (o
+  // mínimo é 15, mas depois vale qualquer quantidade) enquanto os de 3 mm
+  // continuam a somar packs exactos. Tem de dar sempre o mesmo modo que
+  // `main_v2_effective_pricing_mode` no send-order.php.
+  function effectivePricingMode(product) {
+    var step = freeQuantityStep(product);
+    var byKey = (product && product.pricingModeByPriceKey)
+      || (step && step.pricingModeByPriceKey)
+      || null;
+    var priceKey = priceKeyForSize(product, state.selections.size);
+
+    if (byKey && priceKey && byKey[priceKey]) {
+      return String(byKey[priceKey]);
+    }
+    return String((product && product.pricingMode) || (step && step.pricingMode) || "");
+  }
+
   function usesLinearDiscountPricing(product) {
     var step = freeQuantityStep(product);
-    return !!(step && step.pricingMode === "linear-discount-interpolation");
+    return !!(step && effectivePricingMode(product) === "linear-discount-interpolation");
+  }
+
+  // TIER_UNIT_PRICING_V1: cada escalão fixa uma percentagem de desconto sobre o
+  // preço unitário do escalão mínimo. A partir do mínimo vale qualquer
+  // quantidade, e cada unidade extra é vendida com o desconto do escalão em
+  // vigor — 16 ímanes finos são 16 x o unitário do escalão de 15.
+  function usesTierUnitPricing(product) {
+    return effectivePricingMode(product) === "tier-unit";
+  }
+
+  // Preço por unidade do escalão em vigor, sem passar pelo total arredondado.
+  function tierUnitPriceCents(table, quantity) {
+    var tier = 0;
+
+    priceTiers(table).forEach(function (candidate) {
+      if (candidate <= quantity) {
+        tier = candidate;
+      }
+    });
+
+    return tier ? (Number(table[String(tier)]) || 0) / tier : 0;
+  }
+
+  function priceTiers(table) {
+    return Object.keys(table || {})
+      .map(function (key) { return parseInt(key, 10) || 0; })
+      .filter(function (quantity) { return quantity > 0 && Number(table[String(quantity)]) > 0; })
+      .sort(function (a, b) { return a - b; });
+  }
+
+  // PACK_COMBINATION_V1: sem descontos intermédios. O preço de N unidades é o da
+  // combinação de packs mais barata que dá exactamente N. Tem de dar sempre o
+  // mesmo cêntimo que `product_pack_combination_plan` no send-order.php, por
+  // isso o algoritmo e o desempate são iguais: troco por programação dinâmica.
+  // Por defeito ganha o pack mais pequeno; tabelas com `fewer-packs` usam menos
+  // packs quando o custo empata, sem alterar o comportamento dos outros produtos.
+  function usesPackCombinationPricing(product) {
+    return effectivePricingMode(product) === "pack-combination";
+  }
+
+  var packCombinationCache = {};
+
+  function packCombinationTablePacks(table) {
+    return Object.keys(table || {})
+      .map(function (key) { return { quantity: parseInt(key, 10), cents: parseInt(table[key], 10) }; })
+      .filter(function (pack) { return pack.quantity > 0 && pack.cents > 0; })
+      .sort(function (a, b) { return a.quantity - b.quantity; });
+  }
+
+  function packCombinationPrefersFewerPacks(product, priceKey) {
+    var step = freeQuantityStep(product);
+    var mapping = (product && product.combinationTieBreakByPriceKey)
+      || (step && step.combinationTieBreakByPriceKey)
+      || {};
+    var key = priceKey || priceKeyForSize(product, state.selections.size);
+
+    return String(mapping[key] || "") === "fewer-packs";
+  }
+
+  function packCombinationUsesNextPackUpgrade(product) {
+    var step = freeQuantityStep(product);
+    var mapping = (product && product.upgradeToNextPackByPriceKey)
+      || (step && step.upgradeToNextPackByPriceKey)
+      || {};
+    var key = priceKeyForSize(product, state.selections.size);
+
+    return mapping[key] === true;
+  }
+
+  // Devolve { cents, parts: [{quantity, count}] } ou null se os packs não
+  // conseguirem somar exactamente esta quantidade.
+  function packCombinationPlan(table, quantity, preferFewerPacks) {
+    var target = Math.max(0, parseInt(quantity, 10) || 0);
+    var packs = packCombinationTablePacks(table);
+    var chave;
+    var cost;
+    var packCount;
+    var pick;
+    var n;
+    var i;
+    var rest;
+    var candidate;
+    var candidateCount;
+    var parts;
+    var order;
+
+    if (!packs.length || target <= 0) {
+      return null;
+    }
+
+    chave = packs.map(function (p) { return p.quantity + ":" + p.cents; }).join(",") + "|" + target + "|" + (preferFewerPacks ? "few" : "small");
+    if (Object.prototype.hasOwnProperty.call(packCombinationCache, chave)) {
+      return packCombinationCache[chave];
+    }
+
+    cost = new Array(target + 1);
+    packCount = new Array(target + 1);
+    pick = new Array(target + 1);
+    cost[0] = 0;
+    packCount[0] = 0;
+    pick[0] = 0;
+
+    for (n = 1; n <= target; n += 1) {
+      cost[n] = null;
+      packCount[n] = null;
+      pick[n] = 0;
+      for (i = 0; i < packs.length; i += 1) {
+        if (packs[i].quantity > n) {
+          break;
+        }
+        rest = cost[n - packs[i].quantity];
+        if (rest === null) {
+          continue;
+        }
+        candidate = rest + packs[i].cents;
+        candidateCount = packCount[n - packs[i].quantity] + 1;
+        if (cost[n] === null
+          || candidate < cost[n]
+          || (preferFewerPacks && candidate === cost[n] && candidateCount < packCount[n])) {
+          cost[n] = candidate;
+          packCount[n] = candidateCount;
+          pick[n] = packs[i].quantity;
+        }
+      }
+    }
+
+    if (cost[target] === null) {
+      packCombinationCache[chave] = null;
+      return null;
+    }
+
+    parts = {};
+    n = target;
+    while (n > 0 && pick[n] > 0) {
+      parts[pick[n]] = (parts[pick[n]] || 0) + 1;
+      n -= pick[n];
+    }
+    order = Object.keys(parts).map(Number).sort(function (a, b) { return b - a; });
+
+    packCombinationCache[chave] = {
+      cents: cost[target],
+      parts: order.map(function (q) {
+        var pack = packs.filter(function (p) { return p.quantity === q; })[0];
+        return {
+          quantity: q,
+          count: parts[q],
+          unitCents: pack ? pack.cents : 0,
+          cents: pack ? pack.cents * parts[q] : 0
+        };
+      })
+    };
+    return packCombinationCache[chave];
+  }
+
+  function packCombinationCents(table, quantity, preferFewerPacks) {
+    var plan = packCombinationPlan(table, quantity, preferFewerPacks);
+    return plan ? plan.cents : 0;
+  }
+
+  // Quantidades que os packs conseguem somar. Nos crachás e mini-cadernos é
+  // tudo a partir de 1 (há preço de unidade); nos ímanes achatados, cujos packs
+  // são todos múltiplos de 15, é só 15, 30, 45...
+  function packCombinationReachable(table, quantity) {
+    return packCombinationPlan(table, quantity) !== null;
+  }
+
+  function packCombinationNextReachable(table, quantity, direction, limit) {
+    var step = direction < 0 ? -1 : 1;
+    var q = Math.max(1, parseInt(quantity, 10) || 1);
+    var ceiling = Math.max(1, parseInt(limit, 10) || 9999);
+    var guard = 0;
+
+    while (q >= 1 && q <= ceiling && guard < 10000) {
+      if (packCombinationReachable(table, q)) {
+        return q;
+      }
+      q += step;
+      guard += 1;
+    }
+    return 0;
+  }
+
+  function usesFlatUnitPricing(product) {
+    return effectivePricingMode(product) === "flat-unit";
+  }
+
+  // Packs visíveis no passo da quantidade: são os itens do passo que também
+  // têm entrada na tabela de preços ativa. Serve para decidir se vale a pena
+  // mostrar a grelha de packs num produto de preço unitário fixo — com um
+  // único pack de referência ("1+") não vale, e os produtos antigos ficam
+  // exatamente como estavam.
+  function packSelectorItemCount(product) {
+    var packStep = findStep(product, "pack");
+    var priceTable = activePriceTableForPackFilter(product);
+
+    if (!packStep || !Array.isArray(packStep.items)) {
+      return 0;
+    }
+
+    return packStep.items.filter(function (item) {
+      return !priceTable || priceTable[String(Number(item.quantity))] != null;
+    }).length;
+  }
+
+  function showsPackOptions(product) {
+    return !usesFlatUnitPricing(product) || packSelectorItemCount(product) > 1;
   }
 
   function freeQuantitySelectionMode(product) {
@@ -5657,19 +6024,19 @@
 
   function freeQuantityRangeMaximum(product) {
     return Math.max(
-      minimumFreeQuantity(product),
+      effectiveMinimumFreeQuantity(product),
       Math.min(maximumFreeQuantity(product), FREE_QUANTITY_RANGE_MAXIMUM)
     );
   }
 
   function freeQuantityRangePosition(product, quantity) {
-    var minimum = minimumFreeQuantity(product);
+    var minimum = effectiveMinimumFreeQuantity(product);
     var maximum = freeQuantityRangeMaximum(product);
     return Math.max(minimum, Math.min(maximum, Math.round(Number(quantity) || minimum)));
   }
 
   function freeQuantityFromRangePosition(product, position) {
-    var minimum = minimumFreeQuantity(product);
+    var minimum = effectiveMinimumFreeQuantity(product);
     var maximum = freeQuantityRangeMaximum(product);
     return Math.max(minimum, Math.min(maximum, Math.round(Number(position) || minimum)));
   }
@@ -5681,7 +6048,11 @@
   }
 
   function isCustomArtworkProduct(product) {
-    return !!(product && findStep(product, "artwork_upload") && freeQuantityStep(product));
+    return !!(product && findStep(product, "artwork_upload"));
+  }
+
+  function isCustomArtworkSelected(product) {
+    return isCustomArtworkProduct(product) && String(state.selections.order_flow || "") === "custom";
   }
 
   function customArtworkConfig(product) {
@@ -5696,8 +6067,37 @@
       helpKey: String(upload.helpKey || "artwork_help"),
       cardField: String(field && field.name || "card_description"),
       cardPhotoKey: String(media.photos && media.photos.selectionKey || "card_reference_uploads"),
-      cardAudioKey: String(media.audio && media.audio.selectionKey || "card_audio_uploads")
+      cardAudioKey: String(media.audio && media.audio.selectionKey || "card_audio_uploads"),
+      feePerFileCents: Math.max(0, parseInt(product && product.customArtwork && product.customArtwork.feePerFileCents, 10) || parseInt(upload.feePerFileCents, 10) || 0),
+      feeTitle: String(product && product.customArtwork && (product.customArtwork.feeTitle || product.customArtwork.feeLabel) || upload.feeTitle || upload.feeLabel || "Preparação do design e testes"),
+      feeText: String(product && product.customArtwork && (product.customArtwork.feeText || product.customArtwork.feeDescription) || upload.feeText || upload.feeDescription || "Inclui a preparação do ficheiro e os testes necessários antes da produção."),
+      preserveOriginal: upload.preserveOriginal === true || !!(product && product.customArtwork && product.customArtwork.preserveOriginal === true),
+      allowPdf: upload.allowPdf === true || !!(product && product.customArtwork && Array.isArray(product.customArtwork.acceptedMimeTypes) && product.customArtwork.acceptedMimeTypes.indexOf("application/pdf") !== -1),
+      showQuantity: upload.showQuantity === true || upload.quantityPerFile === true,
+      purpose: String(upload.purpose || "custom-artwork")
     };
+  }
+
+  function customArtworkItems(product) {
+    if (!isCustomArtworkProduct(product)) {
+      return [];
+    }
+    return orderUploadItems(customArtworkConfig(product).uploadKey);
+  }
+
+  function customArtworkItemQuantity(item) {
+    return Math.max(1, Math.min(9999, parseInt(item && item.quantity, 10) || 1));
+  }
+
+  function customArtworkTotalQuantity(product) {
+    return customArtworkItems(product).reduce(function (total, item) {
+      return total + customArtworkItemQuantity(item);
+    }, 0);
+  }
+
+  function customArtworkFeeCents(product) {
+    var config = customArtworkConfig(product);
+    return isCustomArtworkSelected(product) ? config.feePerFileCents * customArtworkItems(product).length : 0;
   }
 
   function selectedSizeItem(product, size) {
@@ -5721,6 +6121,76 @@
   function maximumFreeQuantity(product) {
     var step = freeQuantityStep(product);
     return Math.max(minimumFreeQuantity(product), parseInt(step && step.maxQuantity, 10) || 9999);
+  }
+
+  function effectiveMinimumFreeQuantity(product) {
+    var minimum = minimumFreeQuantity(product);
+    var table;
+    var alcancavel;
+
+    if (isMainCatalogProduct(product)
+        && !isCustomArtworkSelected(product)
+        && !isAssortedSelected(product)) {
+      minimum = Math.max(minimum, selectedDesignItems(product).length);
+    }
+
+    // No modo escalão não há quantidades proibidas acima do mínimo, mas abaixo
+    // do primeiro escalão não há preço: os finos começam nos 15.
+    if (usesTierUnitPricing(product)) {
+      var tiers = priceTiers(activePriceTableForPackFilter(product));
+      return tiers.length ? Math.max(minimum, tiers[0]) : minimum;
+    }
+
+    // Com packs combinados o mínimo tem de ser uma quantidade que os packs
+    // consigam somar: nos ímanes achatados o primeiro é 15, não 1.
+    table = packCombinationTableFor(product);
+    if (table) {
+      alcancavel = packCombinationNextReachable(table, minimum, 1, maximumFreeQuantity(product));
+      if (alcancavel) {
+        minimum = alcancavel;
+      }
+    }
+    return minimum;
+  }
+
+  function packCombinationTableFor(product) {
+    if (!usesPackCombinationPricing(product)) {
+      return null;
+    }
+    var table = activePriceTableForPackFilter(product);
+    return table && Object.keys(table).length ? table : null;
+  }
+
+  // Encosta uma quantidade à quantidade alcançável mais próxima, preferindo a
+  // direcção em que o utilizador estava a andar.
+  function snapQuantityToPacks(product, quantity, direction) {
+    var table = packCombinationTableFor(product);
+    var minimum = effectiveMinimumFreeQuantity(product);
+    var maximum = freeQuantityRangeMaximum(product);
+    var pedido = Math.max(minimum, Math.min(maximum, Math.round(Number(quantity) || minimum)));
+    var acima;
+    var abaixo;
+
+    if (!table || packCombinationReachable(table, pedido)) {
+      return pedido;
+    }
+
+    acima = packCombinationNextReachable(table, pedido, 1, maximum);
+    abaixo = packCombinationNextReachable(table, pedido, -1, maximum);
+    if (abaixo && abaixo < minimum) {
+      abaixo = 0;
+    }
+
+    if (direction < 0) {
+      return abaixo || acima || pedido;
+    }
+    if (direction > 0) {
+      return acima || abaixo || pedido;
+    }
+    if (acima && abaixo) {
+      return (pedido - abaixo) <= (acima - pedido) ? abaixo : acima;
+    }
+    return acima || abaixo || pedido;
   }
 
   function tierPriceCents(priceTable, quantity) {
@@ -5843,6 +6313,14 @@
       return [];
     }
 
+    // Nos fluxos de quantidade livre, os itens do JSON servem apenas de
+    // referência visual/preço-base. A quantidade efetiva pode ser qualquer
+    // inteiro válido e, ao escolher vários designs, começa em uma unidade por
+    // design. Não escondas por isso a referência "1+".
+    if (packStep.freeQuantity === true) {
+      return packStep.items || [];
+    }
+
     return (packStep.items || []).filter(function (item) {
       var quantity = Number(item.quantity);
       if (quantity < selectedCount) {
@@ -5855,8 +6333,11 @@
 
   function getPackQuantity(product) {
     var pack = Number(state.selections.pack_quantity || 0);
+    if (isCustomArtworkSelected(product) && !isCadernosProduct(product)) {
+      return customArtworkTotalQuantity(product);
+    }
     if (freeQuantityStep(product)) {
-      return Number.isInteger(pack) && pack >= minimumFreeQuantity(product) && pack <= maximumFreeQuantity(product)
+      return Number.isInteger(pack) && pack >= effectiveMinimumFreeQuantity(product) && pack <= maximumFreeQuantity(product)
         ? pack
         : 0;
     }
@@ -5991,6 +6472,17 @@
     var existing;
     var total;
 
+    if (isCustomArtworkSelected(product)) {
+      if (!isCadernosProduct(product)) {
+        state.selections.pack_quantity = customArtworkTotalQuantity(product);
+      }
+      state.selections.design_quantities = {};
+      state.quantitySignature = "__custom_artwork__";
+      state.quantitiesTouched = false;
+      state.quantityPackBaseline = customArtworkTotalQuantity(product);
+      return;
+    }
+
     if (!findStep(product, "pack")) {
       state.selections.design_quantities = {};
       state.quantitySignature = selectedItemsSignature(items);
@@ -6011,11 +6503,17 @@
     }
 
     if (isAssortedSelected(product)) {
-      if (!current || allowedQuantities.indexOf(current) === -1) {
-        current = allowed[0] ? Number(allowed[0].quantity) : 0;
-        if (current) {
-          state.selections.pack_quantity = current;
+      if (freeQuantityStep(product)) {
+        if (!Number.isInteger(current)
+            || current < effectiveMinimumFreeQuantity(product)
+            || current > maximumFreeQuantity(product)) {
+          current = effectiveMinimumFreeQuantity(product);
         }
+      } else if (!current || allowedQuantities.indexOf(current) === -1) {
+        current = allowed[0] ? Number(allowed[0].quantity) : 0;
+      }
+      if (current) {
+        state.selections.pack_quantity = current;
       }
       state.selections.design_quantities = {};
       state.quantitySignature = "__assorted__";
@@ -6033,8 +6531,17 @@
       return;
     }
 
-    if (!current || allowedQuantities.indexOf(current) === -1) {
-      current = Number(allowed[0].quantity);
+    if (freeQuantityStep(product)) {
+      var minimumForSelectedDesigns = effectiveMinimumFreeQuantity(product);
+      var maximumForSelectedDesigns = maximumFreeQuantity(product);
+      if (!Number.isInteger(current)
+          || current < minimumForSelectedDesigns
+          || current > maximumForSelectedDesigns) {
+        current = Math.min(maximumForSelectedDesigns, minimumForSelectedDesigns);
+        state.selections.pack_quantity = current;
+      }
+    } else if (!current || allowedQuantities.indexOf(current) === -1) {
+      current = allowed[0] ? Number(allowed[0].quantity) : 0;
       state.selections.pack_quantity = current;
     }
 
@@ -6193,6 +6700,12 @@
       return;
     }
 
+    // O construtor nao tem tabela de precos propria: escreve-la aqui poluiria
+    // o content/pricing.json com um produto que nao existe.
+    if (isArtworkBuilderProduct(product)) {
+      return;
+    }
+
     if (!state.pricing) {
       state.pricing = { currency: "EUR", products: {} };
     }
@@ -6278,11 +6791,11 @@
   }
 
   function productUnit(product) {
-    return product.unitLabel || ((product.slug === "crachas" || product.slug === "pins") ? "crachás" : "unidades");
+    return product.unitLabel || (productFamily(product) === "crachas" ? "crachás" : "unidades");
   }
 
   function productUnitSingular(product) {
-    return product.unitSingular || ((product.slug === "crachas" || product.slug === "pins") ? "crachá" : "unidade");
+    return product.unitSingular || (productFamily(product) === "crachas" ? "crachá" : "unidade");
   }
 
   function productQuantityLabel(product, quantity) {
@@ -6290,7 +6803,7 @@
   }
 
   function productUnitShort(product) {
-    return product.unitShort || ((product.slug === "crachas" || product.slug === "pins") ? "crachá" : "unid.");
+    return product.unitShort || (productFamily(product) === "crachas" ? "crachá" : "unid.");
   }
 
   function formatUnitPrice(cents, quantity, unit) {
@@ -6372,30 +6885,47 @@
     var table = product.prices && product.prices[priceKey] ? product.prices[priceKey] : null;
     var cents = table && packQuantity
       ? (freeQuantityStep(product)
-        ? (usesLinearDiscountPricing(product)
-          ? linearDiscountPriceCents(table, packQuantity)
-          : tierPriceCents(table, packQuantity))
+        ? (usesPackCombinationPricing(product)
+          ? packCombinationCents(table, packQuantity, packCombinationPrefersFewerPacks(product, priceKey))
+          : (usesFlatUnitPricing(product)
+            ? Math.round(baselineUnitCents(table) * packQuantity)
+            : (usesLinearDiscountPricing(product)
+              ? linearDiscountPriceCents(table, packQuantity)
+              : tierPriceCents(table, packQuantity))))
         : Number(table[String(packQuantity)]))
       : 0;
     var unitCents = baselineUnitCents(table);
     var discount = 0;
+    var tierUnitCents = 0;
 
     if (unitCents && cents && packQuantity && cents < unitCents * packQuantity) {
-      discount = Math.round((1 - (cents / (unitCents * packQuantity))) * 100);
+      // No modo escalão o desconto é o do escalão, e é constante dentro dele.
+      // Tirá-lo do total arredondado fazia a percentagem saltar entre 7% e 8%
+      // de quantidade para quantidade, quando o desconto real não muda.
+      tierUnitCents = usesTierUnitPricing(product) ? tierUnitPriceCents(table, packQuantity) : 0;
+      discount = tierUnitCents
+        ? Math.round((1 - (tierUnitCents / unitCents)) * 100)
+        : Math.round((1 - (cents / (unitCents * packQuantity))) * 100);
     }
+
+    var basePriceCents = cents;
+    var artworkFeeCents = customArtworkFeeCents(product);
+    cents = basePriceCents + artworkFeeCents;
 
     return {
       size: size,
       quantity: packQuantity,
       cents: cents,
+      baseCents: Math.max(0, basePriceCents),
+      customizationFeeCents: artworkFeeCents,
       total: cents ? formatCents(cents) : "",
-      perPin: cents ? formatUnitPrice(cents, packQuantity, productUnitShort(product)) : "",
+      perPin: basePriceCents ? formatUnitPrice(basePriceCents, packQuantity, productUnitShort(product)) : "",
       discount: discount
     };
   }
 
   function priceDisplayName(product, size) {
-    if (product && (product.slug === "crachas" || product.slug === "pins")) {
+    if (product && productFamily(product) === "crachas") {
       if (size === "25 mm") {
         return "Crachás Pequenos";
       }
@@ -6405,7 +6935,7 @@
       }
     }
 
-    if (product && product.slug === "imanes") {
+    if (product && productFamily(product) === "imanes") {
       if (size === "Achatados") {
         return "Ímanes finos";
       }
@@ -6424,7 +6954,8 @@
     var extraCents = cadernoPersonalizationExtraCents(product);
     var orderQuantity = cadernoOrderQuantity(product);
     var unitCents = baseCents + extraCents;
-    var totalCents = unitCents * orderQuantity;
+    var customizationFeeCents = customArtworkFeeCents(product);
+    var totalCents = unitCents * orderQuantity + customizationFeeCents;
 
     return {
       size: option ? option.title : "",
@@ -6433,6 +6964,7 @@
       cents: totalCents,
       baseCents: baseCents,
       personalizationCents: extraCents,
+      customizationFeeCents: customizationFeeCents,
       unitCents: unitCents,
       total: totalCents ? formatCents(totalCents) : "",
       baseTotal: baseCents ? formatCents(baseCents) : "",
@@ -6448,6 +6980,10 @@
   function cadernoPriceEquation(info) {
     if (!info || !info.baseTotal) {
       return "";
+    }
+
+    if (info.customizationFeeCents) {
+      return "Produtos: " + (info.baseSubtotal || info.baseTotal) + " + Preparação dos designs: " + formatCents(info.customizationFeeCents) + " = " + info.total;
     }
 
     if (info.personalizationTotal) {
@@ -6974,7 +7510,7 @@
   function shouldShowDesignZoom(product, step, item) {
     return !state.admin
       && product
-      && ["crachas", "imanes", "caderninhos", "cadernos"].indexOf(product.slug) !== -1
+      && ["crachas", "imanes", "caderninhos", "cadernos"].indexOf(productFamily(product)) !== -1
       && step
       && step.id === "designs"
       && item
@@ -7071,13 +7607,13 @@
     if (!product || !step || step.id !== "designs") {
       return null;
     }
-    if (product.slug === "crachas") {
+    if (productFamily(product) === "crachas") {
       return { mode: "visible", defaults: CRACHAS_DEFAULT_SECTIONS };
     }
-    if (product.slug === "imanes") {
+    if (productFamily(product) === "imanes") {
       return { mode: "visible", defaults: IMANES_DEFAULT_SECTIONS };
     }
-    if (product.slug === "cadernos" || product.slug === "caderninhos") {
+    if (productFamily(product) === "cadernos" || productFamily(product) === "caderninhos") {
       return { mode: "mixed", defaults: CADERNOS_DEFAULT_SECTIONS };
     }
     if (product.slug === "lembrancas") {
@@ -7202,6 +7738,32 @@
     return byId;
   }
 
+  // PERSONALIZACAO_PROMO_V1: convite discreto ao flow de artwork proprio, no
+  // topo do passo dos designs. Vive no bloco `customPromo` do passo `designs`
+  // de cada produto: apagar o bloco tira o convite desse produto, e
+  // `"customPromoEnabled": false` no content/order-products.json tira-o de
+  // todos. Nao ha nada codificado por slug.
+  function renderCustomPromo(product, step) {
+    var promo = step && step.customPromo ? step.customPromo : null;
+
+    if (!promo || promo.enabled === false || state.customPromoEnabled === false) {
+      return "";
+    }
+
+    return [
+      '<a class="custom-promo" href="' + escapeHtml(promo.href || "personalizacao.html") + '" data-track="true" data-track-action="custom_promo_click" data-track-id="' + escapeHtml((product && product.slug) || "") + '">',
+      promo.image
+        ? '<span class="custom-promo-media" style="background-image:url(&quot;' + escapeHtml(promo.image) + '&quot;)" aria-hidden="true"></span>'
+        : '<span class="custom-promo-media is-icon" aria-hidden="true">' + ICON_UPLOAD + '</span>',
+      '<span class="custom-promo-copy">',
+      '<strong>' + escapeHtml(promo.title || "Queres um com uma imagem tua?") + '</strong>',
+      promo.text ? '<span>' + escapeHtml(promo.text) + '</span>' : "",
+      '</span>',
+      '<span class="custom-promo-action">' + escapeHtml(promo.actionLabel || "Personalizar") + ' <b aria-hidden="true">→</b></span>',
+      '</a>'
+    ].join("");
+  }
+
   function renderDesignActionControls(product, step) {
     var supported = supportsAssortedDesigns(product) && step && step.id === "designs" && step.selection === "multi";
     var items = step && Array.isArray(step.items) ? step.items : [];
@@ -7210,11 +7772,31 @@
     var assorted = isAssortedSelected(product);
     var selectAllLabel = !assorted && allSelected ? "Limpar Seleção" : "Selecionar tudo";
 
+    var uploadChoice = "";
+    // PERSONALIZACAO_BUILDER_V1: os wizards do catalogo deixaram de aceitar
+    // artwork proprio — quem traz o seu ficheiro vai por personalizacao.html.
+    // O cartao so aparece a quem ainda declara customUploadOption no JSON do
+    // passo, que hoje e apenas a capsula do Congresso 2026.
+    var uploadOption = step && step.customUploadOption ? step.customUploadOption : null;
+
+    if (uploadOption && isMainCatalogProduct(product) && step && step.id === "designs" && !state.admin) {
+      uploadChoice = [
+        '<button class="choice-card design-upload-choice' + (isCustomArtworkSelected(product) ? ' is-selected' : '') + '" type="button" data-custom-design-upload data-track="true" data-track-action="select_design_source" data-track-id="custom">',
+        '<span class="design-upload-choice-icon" aria-hidden="true">' + ICON_UPLOAD + '</span>',
+        '<span class="choice-copy">',
+        '<strong>' + escapeHtml(uploadOption.title || "Carregar o meu design") + '</strong>',
+        uploadOption.text ? '<span>' + escapeHtml(uploadOption.text) + '</span>' : '',
+        '</span>',
+        '</button>'
+      ].join("");
+    }
+
     if (!supported || state.admin) {
-      return "";
+      return uploadChoice + renderCustomPromo(product, step);
     }
 
     return [
+      uploadChoice,
       '<div class="design-action-grid" aria-label="Ações rápidas de seleção">',
       '<button class="choice-card design-action-card' + (!assorted && allSelected ? ' is-selected' : '') + '" type="button" data-select-all-designs data-track="true" data-track-action="select_all_designs" data-track-id="select_all_designs">',
       '<span class="design-action-icon" aria-hidden="true">✓</span>',
@@ -7229,7 +7811,8 @@
       '</span>',
       '</button>',
       '</div>',
-      assorted ? '<p class="open-order-hint design-action-message" role="status">Podes passar para o próximo passo. Nota: se escolheres algum design, a opção "Sortido" vai ser automaticamente desmarcada.</p>' : ""
+      assorted ? '<p class="open-order-hint design-action-message" role="status">Podes passar para o próximo passo. Nota: se escolheres algum design, a opção "Sortido" vai ser automaticamente desmarcada.</p>' : "",
+      renderCustomPromo(product, step)
     ].join("");
   }
 
@@ -8911,16 +9494,29 @@
     var key = config.selectionKey || (kind === "audio" ? "quadro_audio_uploads" : "quadro_uploads");
     return orderUploadItems(key).map(function (item) {
       var preview = orderUploadPreviewUrl(item);
+      var isPdf = String(item && item.mime || "").toLowerCase() === "application/pdf"
+        || /\.pdf$/i.test(String(item && item.name || ""));
       var media = kind === "audio"
         ? '<audio controls preload="metadata" src="' + escapeHtml(preview) + '"></audio>'
-        : '<img src="' + escapeHtml(preview) + '" alt="">';
-      var fallbackName = kind === "audio" ? "Áudio" : "Foto";
-      var removeLabel = kind === "audio" ? "Remover áudio" : "Remover foto";
+        : (isPdf ? '<span class="order-upload-pdf" aria-hidden="true">PDF</span>' : '<img src="' + escapeHtml(preview) + '" alt="">');
+      var fallbackName = kind === "audio" ? "Áudio" : (kind === "artwork" ? "Design" : "Foto");
+      var removeLabel = kind === "audio" ? "Remover áudio" : (kind === "artwork" ? "Remover design" : "Remover foto");
+      var quantity = customArtworkItemQuantity(item);
+      var feeCents = Math.max(0, parseInt(config.feePerFileCents, 10) || parseInt(item && item.feeCents, 10) || 0);
+      var quantityControl = "";
+      var feeText = "";
+
+      if (config.showQuantity === true) {
+        quantityControl = '<label class="artwork-upload-quantity"><span>Quantidade com este design</span><input type="number" min="1" max="9999" step="1" value="' + quantity + '" data-artwork-upload-quantity data-order-upload-key="' + escapeHtml(key) + '" data-order-upload-token="' + escapeHtml(item.token) + '"></label>';
+      }
+      if (feeCents) {
+        feeText = '<small class="artwork-upload-fee"><strong>+' + escapeHtml(formatCents(feeCents)) + '</strong> — ' + escapeHtml(config.feeText || "Preparação do ficheiro e testes antes da produção.") + '</small>';
+      }
 
       return [
-        '<li class="order-upload-item order-upload-item--' + escapeHtml(kind) + '">',
+        '<li class="order-upload-item order-upload-item--' + escapeHtml(kind) + (isPdf ? ' is-pdf' : '') + '">',
         media,
-        '<span><strong>' + escapeHtml(item.name || fallbackName) + '</strong><small>' + escapeHtml(orderUploadMeta(item, kind)) + '</small></span>',
+        '<span><strong>' + escapeHtml(item.name || fallbackName) + '</strong><small>' + escapeHtml(orderUploadMeta(item, kind)) + '</small>' + feeText + quantityControl + '</span>',
         '<button type="button" data-order-upload-remove="' + escapeHtml(item.token) + '" data-order-upload-key="' + escapeHtml(key) + '" aria-label="' + escapeHtml(removeLabel) + '" title="' + escapeHtml(removeLabel) + '">×</button>',
         '</li>'
       ].join("");
@@ -8949,16 +9545,20 @@
     var disabled = state.orderUploadBusy || helpDisabled || items.length >= maxFiles;
     var maxAttribute = isFinite(maxFiles) ? maxFiles : 0;
     var buttonLabel = String(config.buttonLabel || "Escolher foto");
+    var artworkMode = String(config.purpose || "") === "custom-artwork" || config.allowPdf === true;
+    var accept = artworkMode
+      ? "image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.pdf"
+      : "image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif";
     if (buttonLabel === "Enviar foto") {
       buttonLabel = "Escolher foto";
     }
     var helperText = items.length
-      ? items.length + (items.length === 1 ? " foto anexada" : " fotos anexadas")
-      : String(config.helperText || (multiple && isFinite(maxFiles) ? "Até " + maxFiles + " fotos" : "")).trim();
+      ? items.length + (artworkMode ? (items.length === 1 ? " design anexado" : " designs anexados") : (items.length === 1 ? " foto anexada" : " fotos anexadas"))
+      : String(config.helperText || (multiple && isFinite(maxFiles) ? "Até " + maxFiles + (artworkMode ? " designs" : " fotos") : "")).trim();
 
     return [
       '<label class="order-upload-button' + (settings.compact ? ' order-media-action' : '') + (disabled ? ' is-disabled' : '') + '">',
-      '<input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"' + (multiple ? ' multiple' : '') + ' data-order-upload data-order-upload-key="' + escapeHtml(key) + '" data-order-upload-max="' + maxAttribute + '"' + (disabled ? ' disabled' : '') + '>',
+      '<input type="file" accept="' + accept + '"' + (multiple ? ' multiple' : '') + ' data-order-upload data-order-upload-key="' + escapeHtml(key) + '" data-order-upload-max="' + maxAttribute + '"' + (disabled ? ' disabled' : '') + '>',
       '<span class="order-upload-button-icon">' + (settings.compact ? ICON_PHOTO : ICON_UPLOAD) + '</span>',
       '<strong>' + escapeHtml(buttonLabel) + '</strong>',
       helperText ? '<small' + (items.length ? ' class="is-success"' : '') + '>' + escapeHtml(helperText) + '</small>' : '',
@@ -8968,13 +9568,14 @@
 
   function renderOrderPhotoControl(config, options) {
     var settings = options || {};
-    var uploadList = renderOrderUploadList(config, "photo");
+    var kind = String(config.purpose || "") === "custom-artwork" ? "artwork" : "photo";
+    var uploadList = renderOrderUploadList(config, kind);
 
     return [
       '<div class="order-photo-control">',
       renderOrderPhotoAction(config, settings),
       uploadList ? '<ul class="order-upload-list">' + uploadList + '</ul>' : '',
-      settings.showStatus ? renderOrderUploadStatus("photo") : '',
+      settings.showStatus ? renderOrderUploadStatus(kind) : '',
       '</div>'
     ].join("");
   }
@@ -9051,6 +9652,831 @@
     ].join("");
   }
 
+  function renderOriginalArtworkUploadStep(product, step) {
+    var config = Object.assign({}, step && step.upload || {}, customArtworkConfig(product));
+    var items = orderUploadItems(config.uploadKey || config.selectionKey);
+    var feeTotal = config.feePerFileCents * items.length;
+    // No construtor a quantidade e a taxa pertencem a cada linha do passo 2
+    // (uma imagem pode ir para varios produtos), por isso aqui so se enviam
+    // os ficheiros.
+    var builder = isArtworkBuilderProduct(product);
+
+    config.selectionKey = config.uploadKey || config.selectionKey;
+    config.multiple = true;
+    config.maxFiles = Math.min(10, Math.max(1, parseInt(config.maxFiles, 10) || 10));
+    config.allowPdf = true;
+    config.preserveOriginal = true;
+    config.showQuantity = !builder;
+    config.purpose = "custom-artwork";
+    if (builder) {
+      config.feePerFileCents = 0;
+    }
+
+    return [
+      '<section class="order-photo-upload original-artwork-upload">',
+      '<div class="original-artwork-note"><strong>O ficheiro segue tal como o envias.</strong><p>Aceitamos imagens e PDF até 30 MB por ficheiro, sem compressão nem conversão.' + (builder ? '' : ' Podes carregar vários designs e indicar uma quantidade diferente para cada um.') + '</p></div>',
+      renderOrderPhotoControl(config, { showStatus: true }),
+      !builder && items.length ? '<p class="original-artwork-fee-total"><strong>Preparação e testes:</strong> ' + items.length + (items.length === 1 ? ' imagem × ' : ' imagens × ') + escapeHtml(formatCents(config.feePerFileCents)) + ' = <strong>' + escapeHtml(formatCents(feeTotal)) + '</strong></p>' : '',
+      '</section>'
+    ].join("");
+  }
+
+  // ==== PERSONALIZACAO_BUILDER_V1 ==========================================
+  // personalizacao.html e o flow de quem traz o seu proprio artwork. O passo 1
+  // envia os ficheiros; o passo 2 monta linhas (design x produto x opcoes x
+  // quantidade). Cada linha entra no carrinho como uma linha normal do slug de
+  // destino com order_flow=custom, por isso quem manda no preco continua a ser
+  // o send-order.php — aqui so se repete o mesmo calculo para o cliente ver.
+  // Consequencia: qualquer alteracao a pack-combination / tier-unit / flat-unit
+  // tem de ser feita nos dois sitios, tal como ja acontece nos outros produtos.
+
+  function isArtworkBuilderProduct(product) {
+    return !!(product && product.artworkBuilder === true);
+  }
+
+  function builderStep(product) {
+    return product ? findStep(product, "custom_products") : null;
+  }
+
+  function builderCatalog(product) {
+    var step = builderStep(product);
+    return step && Array.isArray(step.products) ? step.products : [];
+  }
+
+  function builderFinishOptions(product) {
+    var step = builderStep(product);
+    return step && Array.isArray(step.finishes) ? step.finishes : [];
+  }
+
+  function builderFinishOption(product, value) {
+    return builderFinishOptions(product).filter(function (finish) {
+      return finish && String(finish.value) === String(value);
+    })[0] || null;
+  }
+
+  function builderEntry(product, id) {
+    return builderCatalog(product).filter(function (entry) {
+      return entry && String(entry.id) === String(id || "");
+    })[0] || null;
+  }
+
+  function builderEntryChoices(entry) {
+    return entry && Array.isArray(entry.choices) ? entry.choices : [];
+  }
+
+  function builderPriceKeyChoice(entry) {
+    return builderEntryChoices(entry).filter(function (choice) {
+      return choice && choice.isPriceKey === true;
+    })[0] || null;
+  }
+
+  function builderUploads(product) {
+    return orderUploadItems(customArtworkConfig(product).uploadKey);
+  }
+
+  function builderUpload(product, token) {
+    return builderUploads(product).filter(function (item) {
+      return String(item.token) === String(token || "");
+    })[0] || null;
+  }
+
+  function builderUploadIsPdf(upload) {
+    return String(upload && upload.mime || "").toLowerCase() === "application/pdf"
+      || /\.pdf$/i.test(String(upload && upload.name || ""));
+  }
+
+  function builderLines(product) {
+    if (!Array.isArray(state.selections.builder_lines)) {
+      state.selections.builder_lines = [];
+    }
+    return state.selections.builder_lines;
+  }
+
+  function builderLine(product, id) {
+    return builderLines(product).filter(function (line) {
+      return line && String(line.id) === String(id || "");
+    })[0] || null;
+  }
+
+  function builderPricing(entry) {
+    var products = state.pricing && state.pricing.products ? state.pricing.products : {};
+    return entry && entry.slug && products[entry.slug] ? products[entry.slug] : null;
+  }
+
+  function builderPriceKey(product, line) {
+    var entry = builderEntry(product, line && line.productId);
+    var choice = builderPriceKeyChoice(entry);
+    var record;
+
+    if (!entry) {
+      return "";
+    }
+    if (entry.size) {
+      return String(entry.size);
+    }
+    if (choice) {
+      return String((line && line.choices && line.choices[choice.field]) || "");
+    }
+    record = builderPricing(entry);
+    return record && record.defaultPriceKey ? String(record.defaultPriceKey) : "";
+  }
+
+  function builderPricingMode(entry, priceKey) {
+    var record = builderPricing(entry);
+    var byKey = record && record.pricingModeByPriceKey ? record.pricingModeByPriceKey : null;
+
+    if (byKey && priceKey && byKey[priceKey]) {
+      return String(byKey[priceKey]);
+    }
+    return record && record.pricingMode ? String(record.pricingMode) : "";
+  }
+
+  function builderPriceTable(entry, priceKey) {
+    var record = builderPricing(entry);
+    return record && record.prices && record.prices[priceKey] ? record.prices[priceKey] : null;
+  }
+
+  // Espelha product_flat_unit_price_cents(): primeiro a tabela de unitarios,
+  // so depois o preco de 1 unidade da tabela de packs.
+  function builderFlatUnitCents(entry, priceKey) {
+    var record = builderPricing(entry);
+    var flat = record && record.flatUnitPricesCents ? record.flatUnitPricesCents : null;
+    var table;
+
+    if (flat && flat[priceKey] != null) {
+      return Math.max(0, parseInt(flat[priceKey], 10) || 0);
+    }
+    table = builderPriceTable(entry, priceKey);
+    return table && table["1"] != null ? Math.max(0, parseInt(table["1"], 10) || 0) : 0;
+  }
+
+  function builderQuantity(line) {
+    return Math.max(0, Math.min(9999, parseInt(line && line.quantity, 10) || 0));
+  }
+
+  function builderMinimumQuantity(product, line) {
+    var entry = builderEntry(product, line && line.productId);
+    var priceKey = builderPriceKey(product, line);
+    var record = builderPricing(entry);
+    var mode = builderPricingMode(entry, priceKey);
+    var table = builderPriceTable(entry, priceKey) || {};
+    var minimum = Math.max(1, parseInt(record && record.minimumQuantity, 10) || 1);
+    var tiers;
+    var packs;
+
+    if (mode === "tier-unit") {
+      tiers = priceTiers(table);
+      return tiers.length ? Math.max(minimum, tiers[0]) : minimum;
+    }
+    if (mode === "pack-combination") {
+      packs = packCombinationTablePacks(table);
+      return packs.length ? packs[0].quantity : minimum;
+    }
+    return minimum;
+  }
+
+  function builderQuantityOptions(product, line) {
+    var entry = builderEntry(product, line && line.productId);
+    var table = builderPriceTable(entry, builderPriceKey(product, line)) || {};
+
+    return Object.keys(table).map(function (key) {
+      return parseInt(key, 10) || 0;
+    }).filter(function (quantity) {
+      return quantity > 0;
+    }).sort(function (a, b) {
+      return a - b;
+    });
+  }
+
+  function builderQuantityIsValid(product, line) {
+    var entry = builderEntry(product, line && line.productId);
+    var priceKey = builderPriceKey(product, line);
+    var quantity = builderQuantity(line);
+
+    if (!entry || quantity < builderMinimumQuantity(product, line) || quantity > 9999) {
+      return false;
+    }
+    if (entry.quoteOnly === true) {
+      return true;
+    }
+    if (builderPricingMode(entry, priceKey) === "pack-combination") {
+      return packCombinationPlan(builderPriceTable(entry, priceKey), quantity) !== null;
+    }
+    return true;
+  }
+
+  function builderLineBaseCents(product, line) {
+    var entry = builderEntry(product, line && line.productId);
+    var priceKey = builderPriceKey(product, line);
+    var mode = builderPricingMode(entry, priceKey);
+    var table = builderPriceTable(entry, priceKey);
+    var quantity = builderQuantity(line);
+    var plan;
+
+    if (!entry || entry.quoteOnly === true || !quantity || !priceKey) {
+      return 0;
+    }
+    if (mode === "pack-combination") {
+      plan = packCombinationPlan(table, quantity);
+      return plan ? plan.cents : 0;
+    }
+    if (mode === "tier-unit") {
+      return tierPriceCents(table, quantity);
+    }
+    return builderFlatUnitCents(entry, priceKey) * quantity;
+  }
+
+  function builderLineFinishes(product, line) {
+    var entry = builderEntry(product, line && line.productId);
+    var allowed = entry && Array.isArray(entry.finishes) ? entry.finishes : [];
+
+    return (line && Array.isArray(line.finishes) ? line.finishes : []).filter(function (value) {
+      return allowed.indexOf(value) !== -1;
+    });
+  }
+
+  function builderFinishExtraPerUnitCents(product, line) {
+    return builderLineFinishes(product, line).reduce(function (total, value) {
+      var finish = builderFinishOption(product, value);
+      return total + (finish ? Math.max(0, parseInt(finish.extraPriceCentsPerUnit, 10) || 0) : 0);
+    }, 0);
+  }
+
+  function builderFeeCents(product) {
+    return Math.max(0, parseInt(customArtworkConfig(product).feePerFileCents, 10) || 0);
+  }
+
+  function builderLineTotalCents(product, line) {
+    var entry = builderEntry(product, line && line.productId);
+
+    if (!entry || entry.quoteOnly === true || !builderQuantityIsValid(product, line)) {
+      return 0;
+    }
+    return builderLineBaseCents(product, line)
+      + builderFinishExtraPerUnitCents(product, line) * builderQuantity(line)
+      + builderFeeCents(product);
+  }
+
+  function builderTotalCents(product) {
+    return builderLines(product).reduce(function (total, line) {
+      return total + builderLineTotalCents(product, line);
+    }, 0);
+  }
+
+  function builderHasQuoteOnly(product) {
+    return builderLines(product).some(function (line) {
+      var entry = builderEntry(product, line && line.productId);
+      return !!(entry && entry.quoteOnly === true);
+    });
+  }
+
+  function builderUnitLabel(product, line, quantity) {
+    var entry = builderEntry(product, line && line.productId);
+    var record = builderPricing(entry);
+    var count = Math.max(0, parseInt(quantity, 10) || 0);
+    var singular = record && record.unitSingular ? String(record.unitSingular) : "unidade";
+    var plural = record && record.unitLabel ? String(record.unitLabel) : "unidades";
+
+    return count + " " + (count === 1 ? singular : plural);
+  }
+
+  // Devolve o marcador de pack quando a escolha que define a tabela de precos
+  // traz um `quantity` proprio (opcoes de compra dos cadernos). 0 quando nao ha.
+  function builderPackQuantityMarker(product, line) {
+    var entry = builderEntry(product, line && line.productId);
+    var choice = builderPriceKeyChoice(entry);
+    var value = choice ? String((line.choices && line.choices[choice.field]) || "") : "";
+    var item = choice && Array.isArray(choice.items) ? choice.items.filter(function (candidate) {
+      return String(candidate.value) === value;
+    })[0] : null;
+
+    return item ? Math.max(0, parseInt(item.quantity, 10) || 0) : 0;
+  }
+
+  function builderApplyProduct(product, line, productId) {
+    var entry = builderEntry(product, productId);
+
+    line.productId = entry ? String(entry.id) : "";
+    line.choices = {};
+    line.finishes = [];
+    builderEntryChoices(entry).forEach(function (choice) {
+      var first = choice && Array.isArray(choice.items) ? choice.items[0] : null;
+      if (choice && choice.required === true && first) {
+        line.choices[choice.field] = String(first.value);
+      }
+    });
+    line.quantity = builderMinimumQuantity(product, line);
+  }
+
+  function builderCreateLine(product) {
+    var uploads = builderUploads(product);
+
+    return {
+      id: "bl_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 7),
+      designToken: uploads.length === 1 ? String(uploads[0].token) : "",
+      productId: "",
+      choices: {},
+      finishes: [],
+      quantity: 0
+    };
+  }
+
+  function builderRenderDesignField(product, line) {
+    var uploads = builderUploads(product);
+
+    return [
+      '<div class="builder-field">',
+      '<span class="builder-field-label">Design</span>',
+      '<div class="builder-design-grid">',
+      uploads.map(function (upload) {
+        var checked = String(line.designToken || "") === String(upload.token);
+        var media = builderUploadIsPdf(upload)
+          ? '<span class="builder-design-pdf" aria-hidden="true">PDF</span>'
+          : '<img src="' + escapeHtml(orderUploadPreviewUrl(upload)) + '" alt="">';
+
+        return [
+          '<label class="builder-design-choice' + (checked ? ' is-selected' : '') + '">',
+          '<input type="radio" name="builder-design-' + escapeHtml(line.id) + '" value="' + escapeHtml(upload.token) + '" data-builder-design data-builder-line="' + escapeHtml(line.id) + '"' + (checked ? ' checked' : '') + '>',
+          media,
+          '<small>' + escapeHtml(upload.name || "Design") + '</small>',
+          '</label>'
+        ].join("");
+      }).join(""),
+      '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function builderRenderProductField(product, line) {
+    var order = [];
+    var byGroup = {};
+
+    builderCatalog(product).forEach(function (entry) {
+      var name = String(entry.group || "Produtos");
+      if (!byGroup[name]) {
+        byGroup[name] = [];
+        order.push(name);
+      }
+      byGroup[name].push(entry);
+    });
+
+    return [
+      '<div class="builder-field">',
+      '<span class="builder-field-label">Produto</span>',
+      order.map(function (name) {
+        return [
+          '<p class="builder-group-title">' + escapeHtml(name) + '</p>',
+          '<div class="builder-product-grid">',
+          byGroup[name].map(function (entry) {
+            var checked = String(line.productId || "") === String(entry.id);
+            var media = entry.image
+              ? '<span class="builder-product-media' + (entry.imageShape === "round" ? " is-round" : "") + '" style="background-image:url(&quot;' + escapeHtml(entry.image) + '&quot;)"></span>'
+              : '<span class="builder-product-media is-blank" aria-hidden="true"></span>';
+
+            return [
+              '<label class="builder-product-choice' + (checked ? ' is-selected' : '') + '">',
+              '<input type="radio" name="builder-product-' + escapeHtml(line.id) + '" value="' + escapeHtml(entry.id) + '" data-builder-product data-builder-line="' + escapeHtml(line.id) + '"' + (checked ? ' checked' : '') + '>',
+              media,
+              '<span class="builder-product-copy"><strong>' + escapeHtml(entry.title) + '</strong>' + (entry.subtitle ? '<small>' + escapeHtml(entry.subtitle) + '</small>' : "") + '</span>',
+              '</label>'
+            ].join("");
+          }).join(""),
+          '</div>'
+        ].join("");
+      }).join(""),
+      '</div>'
+    ].join("");
+  }
+
+  function builderRenderChoiceFields(product, line) {
+    var entry = builderEntry(product, line.productId);
+
+    return builderEntryChoices(entry).map(function (choice) {
+      var selected = String((line.choices && line.choices[choice.field]) || "");
+
+      return [
+        '<div class="builder-field">',
+        '<span class="builder-field-label">' + escapeHtml(choice.label || choice.field) + '</span>',
+        '<div class="builder-option-grid">',
+        (Array.isArray(choice.items) ? choice.items : []).map(function (item) {
+          var checked = selected === String(item.value);
+          return [
+            '<label class="builder-option-choice' + (checked ? ' is-selected' : '') + '">',
+            '<input type="radio" name="builder-choice-' + escapeHtml(line.id) + '-' + escapeHtml(choice.field) + '" value="' + escapeHtml(item.value) + '" data-builder-choice="' + escapeHtml(choice.field) + '" data-builder-line="' + escapeHtml(line.id) + '"' + (checked ? ' checked' : '') + '>',
+            '<span><strong>' + escapeHtml(item.title) + '</strong>' + (item.subtitle ? '<small>' + escapeHtml(item.subtitle) + '</small>' : "") + '</span>',
+            '</label>'
+          ].join("");
+        }).join(""),
+        '</div>',
+        '</div>'
+      ].join("");
+    }).join("");
+  }
+
+  function builderRenderFinishField(product, line) {
+    var entry = builderEntry(product, line.productId);
+    var allowed = entry && Array.isArray(entry.finishes) ? entry.finishes : [];
+    var chosen = builderLineFinishes(product, line);
+
+    if (!allowed.length) {
+      return "";
+    }
+
+    return [
+      '<div class="builder-field">',
+      '<span class="builder-field-label">Acabamento</span>',
+      '<div class="builder-finish-list">',
+      allowed.map(function (value) {
+        var finish = builderFinishOption(product, value);
+        var extra = finish ? Math.max(0, parseInt(finish.extraPriceCentsPerUnit, 10) || 0) : 0;
+        var checked = chosen.indexOf(value) !== -1;
+
+        if (!finish) {
+          return "";
+        }
+        return [
+          '<label class="builder-finish-choice' + (checked ? ' is-selected' : '') + '">',
+          '<input type="checkbox" value="' + escapeHtml(value) + '" data-builder-finish data-builder-line="' + escapeHtml(line.id) + '"' + (checked ? ' checked' : '') + '>',
+          '<span><strong>' + escapeHtml(finish.title || value) + '</strong>' + (extra ? '<small>+' + escapeHtml(formatCents(extra)) + ' por unidade</small>' : "") + '</span>',
+          '</label>'
+        ].join("");
+      }).join(""),
+      '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function builderRenderQuantityField(product, line) {
+    var options = builderQuantityOptions(product, line);
+    var minimum = builderMinimumQuantity(product, line);
+    var quantity = builderQuantity(line);
+
+    return [
+      '<div class="builder-field">',
+      '<span class="builder-field-label">Quantidade</span>',
+      options.length ? '<div class="builder-quantity-grid">' + options.map(function (value) {
+        return '<button type="button" class="builder-quantity-tile' + (value === quantity ? ' is-selected' : '') + '" data-builder-quantity="' + value + '" data-builder-line="' + escapeHtml(line.id) + '">' + value + '</button>';
+      }).join("") + '</div>' : "",
+      '<div class="builder-quantity-input">',
+      '<button type="button" data-builder-quantity-step="-1" data-builder-line="' + escapeHtml(line.id) + '" aria-label="Menos">−</button>',
+      '<input type="number" min="' + minimum + '" max="9999" step="1" value="' + quantity + '" inputmode="numeric" data-builder-quantity-input data-builder-line="' + escapeHtml(line.id) + '">',
+      '<button type="button" data-builder-quantity-step="1" data-builder-line="' + escapeHtml(line.id) + '" aria-label="Mais">+</button>',
+      '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function builderRenderLinePrice(product, line) {
+    var entry = builderEntry(product, line.productId);
+    var quantity = builderQuantity(line);
+    var base;
+    var extra;
+    var fee;
+
+    if (!entry) {
+      return "";
+    }
+    if (entry.quoteOnly === true) {
+      return '<p class="builder-line-price is-quote">' + escapeHtml(entry.quoteNote || "Preço a confirmar") + '</p>';
+    }
+    if (!builderQuantityIsValid(product, line)) {
+      return '<p class="builder-line-price is-invalid">' + escapeHtml("A partir de " + builderMinimumQuantity(product, line) + " unidades.") + '</p>';
+    }
+
+    base = builderLineBaseCents(product, line);
+    extra = builderFinishExtraPerUnitCents(product, line) * quantity;
+    fee = builderFeeCents(product);
+
+    return [
+      '<p class="builder-line-price">',
+      '<span>' + escapeHtml(formatCents(base)) + '</span>',
+      extra ? '<span>+ ' + escapeHtml(formatCents(extra)) + ' acabamento</span>' : "",
+      fee ? '<span>+ ' + escapeHtml(formatCents(fee)) + ' preparação</span>' : "",
+      '<strong>' + escapeHtml(formatCents(base + extra + fee)) + '</strong>',
+      '</p>'
+    ].join("");
+  }
+
+  function builderRenderCard(product, line, index) {
+    var entry = builderEntry(product, line.productId);
+    var upload = builderUpload(product, line.designToken);
+    var title = entry
+      ? (entry.quoteOnly === true ? entry.title : builderUnitLabel(product, line, builderQuantity(line)) + " · " + entry.title)
+      : "Produto " + (index + 1);
+
+    return [
+      '<article class="builder-card" data-builder-card="' + escapeHtml(line.id) + '">',
+      '<header class="builder-card-header">',
+      '<strong>' + escapeHtml(title) + '</strong>',
+      '<button type="button" class="builder-card-remove" data-builder-remove="' + escapeHtml(line.id) + '" aria-label="Remover produto">×</button>',
+      '</header>',
+      builderRenderDesignField(product, line),
+      builderRenderProductField(product, line),
+      entry ? builderRenderChoiceFields(product, line) : "",
+      entry ? builderRenderFinishField(product, line) : "",
+      entry ? builderRenderQuantityField(product, line) : "",
+      entry && upload ? builderRenderLinePrice(product, line) : "",
+      '</article>'
+    ].join("");
+  }
+
+  function builderRenderTotals(product) {
+    var total = builderTotalCents(product);
+
+    return [
+      '<p class="builder-total">',
+      '<span>Total</span>',
+      '<strong>' + escapeHtml(formatCents(total)) + '</strong>',
+      builderHasQuoteOnly(product) ? '<small>Há produtos com preço a confirmar.</small>' : "",
+      '</p>'
+    ].join("");
+  }
+
+  function renderCustomProductBuilderStep(product, step) {
+    var lines = builderLines(product);
+    var addLabel = String((step && step.addLabel) || "Adicionar produto");
+
+    // Um design apagado no passo 1 deixa de existir: limpa a referencia para a
+    // linha nao ficar a apontar para um ficheiro que ja nao segue no pedido.
+    lines.forEach(function (line) {
+      if (line.designToken && !builderUpload(product, line.designToken)) {
+        line.designToken = "";
+      }
+    });
+
+    return [
+      '<section class="custom-product-builder">',
+      lines.map(function (line, index) {
+        return builderRenderCard(product, line, index);
+      }).join(""),
+      '<button type="button" class="builder-add" data-builder-add>+ ' + escapeHtml(addLabel) + '</button>',
+      lines.length ? builderRenderTotals(product) : "",
+      '</section>'
+    ].join("");
+  }
+
+  function validateBuilderStep(product) {
+    var lines = builderLines(product);
+    var error = "";
+
+    if (state.orderUploadBusy) {
+      return "Espera até todos os ficheiros terminarem de enviar.";
+    }
+    if (!builderUploads(product).length) {
+      return "Carrega pelo menos uma imagem ou um PDF no passo anterior.";
+    }
+    if (!lines.length) {
+      return "Adiciona pelo menos um produto.";
+    }
+
+    lines.some(function (line, index) {
+      var entry = builderEntry(product, line.productId);
+      var position = "no produto " + (index + 1);
+
+      if (!line.designToken || !builderUpload(product, line.designToken)) {
+        error = "Escolhe o design " + position + ".";
+        return true;
+      }
+      if (!entry) {
+        error = "Escolhe o que queres fazer " + position + ".";
+        return true;
+      }
+      if (builderEntryChoices(entry).some(function (choice) {
+        return choice && choice.required === true && !(line.choices && line.choices[choice.field]);
+      })) {
+        error = "Preenche as opções " + position + ".";
+        return true;
+      }
+      if (!builderQuantityIsValid(product, line)) {
+        error = "Escolhe uma quantidade válida " + position + " (a partir de " + builderMinimumQuantity(product, line) + ").";
+        return true;
+      }
+      return false;
+    });
+
+    return error;
+  }
+
+  function builderCartItem(product, line) {
+    var entry = builderEntry(product, line && line.productId);
+    var upload = builderUpload(product, line && line.designToken);
+    var record = builderPricing(entry);
+    var quantity = builderQuantity(line);
+    var fee = builderFeeCents(product);
+    var finishes = builderLineFinishes(product, line);
+    var quoteOnly = !!(entry && entry.quoteOnly === true);
+    var selections = {};
+    var subtitle = [];
+
+    if (!entry || !upload || !quantity) {
+      return null;
+    }
+
+    selections.catalog_context = "main-v2";
+    selections.order_flow = "custom";
+    selections.design_source = "custom";
+    selections.designs = [];
+    selections.design_quantities = {};
+    selections.design_labels = {};
+    selections.assorted_designs = "";
+    selections.size = entry.size ? String(entry.size) : "";
+    // Nos cadernos o `pack_quantity` nao e a quantidade encomendada: e o
+    // marcador que identifica a opcao de compra (product_step_item_by_quantity
+    // no send-order.php). A quantidade real vai no ficheiro e o servidor
+    // copia-a para caderno_order_quantity.
+    selections.pack_quantity = builderPackQuantityMarker(product, line) || quantity;
+    selections.custom_artwork_uploads = [Object.assign({}, upload, { quantity: quantity, feeCents: fee })];
+    selections.customization_file_count = 1;
+    selections.customization_fee_cents = fee;
+    selections.artwork_total_quantity = quantity;
+    selections.finishes = finishes;
+
+    Object.keys((entry.fixedSelections && typeof entry.fixedSelections === "object") ? entry.fixedSelections : {}).forEach(function (key) {
+      selections[key] = entry.fixedSelections[key];
+    });
+
+    builderEntryChoices(entry).forEach(function (choice) {
+      var value = String((line.choices && line.choices[choice.field]) || "");
+      var item = (Array.isArray(choice.items) ? choice.items : []).filter(function (candidate) {
+        return String(candidate.value) === value;
+      })[0] || null;
+
+      selections[choice.field] = value;
+      if (item) {
+        selections[choice.field + "_label"] = String(item.title || value);
+        subtitle.push(String(item.title || value));
+      }
+    });
+
+    if (finishes.length) {
+      subtitle.push(finishes.map(function (value) {
+        var finish = builderFinishOption(product, value);
+        return finish ? String(finish.title || value) : value;
+      }).join(", "));
+    }
+    subtitle.push(String(upload.name || "design"));
+
+    return {
+      id: createCartItemId({ slug: entry.slug }),
+      productSlug: String(entry.slug),
+      productName: entry.title || (record && record.label) || entry.slug,
+      selections: selections,
+      summary: {
+        title: quoteOnly
+          ? entry.title + " · " + quantity
+          : builderUnitLabel(product, line, quantity) + (entry.subtitle ? " · " + entry.subtitle : ""),
+        subtitle: subtitle.filter(Boolean).join(" · "),
+        priceCents: quoteOnly ? 0 : builderLineTotalCents(product, line),
+        priceText: quoteOnly ? String(entry.quoteNote || "Preço a confirmar") : "",
+        priceToConfirm: quoteOnly,
+        image: builderUploadIsPdf(upload) ? null : ORDER_MEDIA_PREVIEW_API + "?token=" + encodeURIComponent(upload.token)
+      }
+    };
+  }
+
+  function addBuilderLinesToCart(product, destination) {
+    var items;
+    var cart = null;
+    var total = 0;
+
+    if (!validateProductForCart(product)) {
+      return;
+    }
+
+    items = builderLines(product).map(function (line) {
+      return builderCartItem(product, line);
+    }).filter(Boolean);
+
+    if (!items.length) {
+      state.errors = "Adiciona pelo menos um produto.";
+      rerenderProduct(product);
+      return;
+    }
+
+    items.forEach(function (item) {
+      total += item.summary.priceCents || 0;
+      cart = addOrUpdateCartItem(item);
+    });
+
+    trackProductEvent(product, "cart_item_added", {
+      cart_id: cart ? cart.cartId : "",
+      item_count: cart ? cart.items.length : items.length,
+      item_price_cents: total
+    });
+
+    // Sem isto, voltar atras no browser reenviaria as mesmas linhas.
+    state.selections.builder_lines = [];
+    window.location.href = destination;
+  }
+
+  function bindCustomProductBuilder(product) {
+    function withLine(element, handler) {
+      var line = builderLine(product, element.dataset.builderLine);
+      if (!line) {
+        return;
+      }
+      handler(line);
+      state.errors = "";
+      rerenderProduct(product);
+    }
+
+    document.querySelectorAll("[data-builder-add]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        builderLines(product).push(builderCreateLine(product));
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-builder-remove]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = String(button.dataset.builderRemove || "");
+        state.selections.builder_lines = builderLines(product).filter(function (line) {
+          return String(line.id) !== id;
+        });
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-builder-design]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        withLine(input, function (line) {
+          line.designToken = String(input.value || "");
+        });
+      });
+    });
+
+    document.querySelectorAll("[data-builder-product]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        withLine(input, function (line) {
+          builderApplyProduct(product, line, input.value);
+        });
+      });
+    });
+
+    document.querySelectorAll("[data-builder-choice]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        withLine(input, function (line) {
+          var field = String(input.dataset.builderChoice || "");
+          if (!line.choices || typeof line.choices !== "object") {
+            line.choices = {};
+          }
+          line.choices[field] = String(input.value || "");
+          // A opcao de compra dos cadernos e tambem a tabela de precos: se a
+          // quantidade deixar de servir, volta ao minimo desta tabela.
+          if (!builderQuantityIsValid(product, line)) {
+            line.quantity = builderMinimumQuantity(product, line);
+          }
+        });
+      });
+    });
+
+    document.querySelectorAll("[data-builder-finish]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        withLine(input, function (line) {
+          var value = String(input.value || "");
+          var current = Array.isArray(line.finishes) ? line.finishes.slice() : [];
+          var index = current.indexOf(value);
+
+          if (input.checked && index === -1) {
+            current.push(value);
+          } else if (!input.checked && index !== -1) {
+            current.splice(index, 1);
+          }
+          line.finishes = current;
+        });
+      });
+    });
+
+    document.querySelectorAll("[data-builder-quantity]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        withLine(button, function (line) {
+          line.quantity = Math.max(1, parseInt(button.dataset.builderQuantity, 10) || 1);
+        });
+      });
+    });
+
+    document.querySelectorAll("[data-builder-quantity-step]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        withLine(button, function (line) {
+          var delta = parseInt(button.dataset.builderQuantityStep, 10) || 0;
+          var minimum = builderMinimumQuantity(product, line);
+          line.quantity = Math.max(minimum, Math.min(9999, builderQuantity(line) + delta));
+        });
+      });
+    });
+
+    document.querySelectorAll("[data-builder-quantity-input]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        withLine(input, function (line) {
+          var minimum = builderMinimumQuantity(product, line);
+          line.quantity = Math.max(minimum, Math.min(9999, parseInt(input.value, 10) || minimum));
+        });
+      });
+    });
+  }
+
   function renderChoiceItems(product, step, template) {
     var type = step.selection === "multi" ? "checkbox" : "radio";
     var selected = selectedValues(step);
@@ -9109,7 +10535,7 @@
     // IMANES_SIZE_CARD_NOTE_RESTORE_V1: nos imanes continuamos a esconder
     // apenas a coluna direita de preco/placeholder, mas voltamos a mostrar o
     // texto do campo "Nota" do JSON dentro do cartao.
-    var hidePricePreview = product && product.slug === "imanes";
+    var hidePricePreview = product && productFamily(product) === "imanes";
 
     (step.items || []).forEach(function (item) {
       var checked = selected.indexOf(item.value) !== -1 ? " checked" : "";
@@ -9120,7 +10546,7 @@
       // o preco" deixava de fazer sentido. Para crachas mostramos um aviso
       // que aponta para o passo seguinte; outros produtos mantem a frase
       // antiga, que continua valida no fluxo deles.
-      var noPriceText = product && product.slug === "crachas"
+      var noPriceText = product && productFamily(product) === "crachas"
         ? "No próximo passo escolhes a quantidade e vês o preço final."
         : "Escolhe um pack para ver o preço.";
       var price = info.cents
@@ -9185,7 +10611,7 @@
       '<label>Título<input type="text" value="' + escapeHtml(item.title) + '" data-admin-edit="title" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>',
       '<label>Linha 2<input type="text" value="' + escapeHtml(item.subtitle || "") + '" data-admin-edit="subtitle" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>',
       '<label>Valor<input type="text" value="' + escapeHtml(item.value || "") + '" data-admin-edit="value" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>',
-      state.product && (state.product.slug === "imanes" || state.product.slug === "caderninhos") && step.id === "designs" ? '<label>Formato<select data-admin-edit="rectOrientation" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"><option value="portrait"' + (itemRectOrientation(item) === "portrait" ? " selected" : "") + '>Em pé</option><option value="landscape"' + (itemRectOrientation(item) === "landscape" ? " selected" : "") + '>Deitado</option></select></label>' : "",
+      state.product && ["imanes", "caderninhos", "bloquinhos", "stickers", "marcadores"].indexOf(productFamily(state.product)) !== -1 && step.id === "designs" ? '<label>Formato<select data-admin-edit="rectOrientation" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"><option value="portrait"' + (itemRectOrientation(item) === "portrait" ? " selected" : "") + '>Em pé</option><option value="landscape"' + (itemRectOrientation(item) === "landscape" ? " selected" : "") + '>Deitado</option></select></label>' : "",
       item.quantity != null ? '<label>Quantidade<input type="number" min="1" step="1" value="' + escapeHtml(item.quantity) + '" data-admin-edit="quantity" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
       '<label>Nota<input type="text" value="' + escapeHtml(item.note || "") + '" data-admin-edit="note" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>',
       step.template !== "quantity-builder" ? '<label>Imagem<input type="file" accept="image/*" data-admin-upload data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
@@ -9198,15 +10624,15 @@
       step.template !== "quantity-builder" ? '<label>Imagem X (%)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(imageEditNumber(item, step, false, "imagePositionX", 0, -100, 100)) + '" data-admin-edit="imagePositionX" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
       step.template !== "quantity-builder" ? '<label>Imagem Y (%)<input type="number" min="-100" max="100" step="1" value="' + escapeHtml(imageEditNumber(item, step, false, "imagePositionY", 0, -100, 100)) + '" data-admin-edit="imagePositionY" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
       step.template !== "quantity-builder" ? '<label>Rotação imagem (°)<input type="number" min="-180" max="180" step="1" value="' + escapeHtml(imageEditNumber(item, step, false, "imageRotation", 0, -180, 180)) + '" data-admin-edit="imageRotation" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"' + imageSlotAttrs + '></label>' : "",
-      state.product && state.product.slug === "cadernos" && step.id === "designs" ? '<label>Imagens do interior (' + escapeHtml((item.interiorImages || []).length) + ')<input type="file" accept="image/*" multiple data-admin-interior-upload data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
-      state.product && state.product.slug === "cadernos" && step.id === "designs" && (item.interiorImages || []).length ? '<button type="button" data-admin-interior-clear data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '">Limpar interiores</button>' : "",
+      state.product && isCadernosProduct(state.product) && step.id === "designs" ? '<label>Imagens do interior (' + escapeHtml((item.interiorImages || []).length) + ')<input type="file" accept="image/*" multiple data-admin-interior-upload data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
+      state.product && isCadernosProduct(state.product) && step.id === "designs" && (item.interiorImages || []).length ? '<button type="button" data-admin-interior-clear data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '">Limpar interiores</button>' : "",
       getStepSectionConfig(state.product, step) ? renderSectionItemControls(step, item) : "",
       // CRACHAS_STEP2_SIDE_PHOTO_ADMIN_V4: bloco extra para a foto direita
       // que fica visivel so nos cartoes de tamanho dos crachas. Gravado em
       // sideImage / sideFrameWidth / sideFrameHeight / sideFrameScale /
       // sideFrameMarginX|Y / sideImageZoom / sideImagePositionX|Y /
       // sideImageRotation. Nunca toca em image / frameWidth / frameHeight.
-      state.product && state.product.slug === "crachas" && step.id === "size" ? renderCrachasSidePhotoAdminControls(step, item) : "",
+      state.product && productFamily(state.product) === "crachas" && step.id === "size" ? renderCrachasSidePhotoAdminControls(step, item) : "",
       '<button type="button" data-admin-delete-item data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '">Del</button>',
       '</div>'
     ].join("");
@@ -9464,9 +10890,48 @@
     return quantity + " " + unit + " " + verb + " para todos os designs que escolheste. Escolhe um número maior.";
   }
 
+  // Quantas vezes cada pack entra no melhor conjunto para o total escolhido.
+  // Serve para pôr o visto nos packs que compõem o total: 27 = 24 + 3 leva um
+  // visto em cada, 10 = 5 + 5 leva dois vistos no pack de 5.
+  function packCombinationCounts(product) {
+    var table = packCombinationTableFor(product);
+    var plan = table ? packCombinationPlan(
+      table,
+      getPackQuantity(product),
+      packCombinationPrefersFewerPacks(product)
+    ) : null;
+    var counts = {};
+    var tier;
+
+    if (isCustomArtworkSelected(product) || isAssortedSelected(product)) {
+      return counts;
+    }
+
+    // No modo escalão o visto vai para o pack que fixa o preço, o mesmo que a
+    // caixa lista como "1 pack de 36".
+    if (usesTierUnitPricing(product)) {
+      tier = tierPlan(activePriceTableForPackFilter(product), getPackQuantity(product));
+      if (tier) {
+        counts[tier.tier] = 1;
+      }
+      return counts;
+    }
+
+    if (!plan) {
+      return counts;
+    }
+
+    plan.parts.forEach(function (part) {
+      counts[part.quantity] = part.count;
+    });
+
+    return counts;
+  }
+
   function renderPackSelector(product) {
     var packStep = findStep(product, "pack");
     var current = getPackQuantity(product);
+    var combinationCounts = packCombinationCounts(product);
     var packModeSelected = !freeQuantityStep(product) || freeQuantitySelectionMode(product) === "pack";
     var selectedCount = selectedDesignItems(product).length;
     var priceTable = activePriceTableForPackFilter(product);
@@ -9483,12 +10948,21 @@
     visibleItems.forEach(function (item) {
       var quantity = Number(item.quantity);
       var disabled = quantity < selectedCount;
+      var marks = combinationCounts[quantity] || 0;
       var classes = "pack-option";
+      var vistos = "";
+      var i;
       if (quantity === current && packModeSelected) {
         classes += " is-selected";
       }
       if (disabled) {
         classes += " is-disabled";
+      }
+      if (marks) {
+        classes += " is-in-combination";
+        for (i = 0; i < marks; i += 1) {
+          vistos += "<i>✓</i>";
+        }
       }
       // CLICK_TRACKING_V1: data-track-* permite agregar quais packs são
       // mais escolhidos / quantos cliques falham (pack disabled).
@@ -9496,6 +10970,7 @@
         '<button class="' + classes + '" type="button" data-pack-quantity="' + quantity + '" data-track="true" data-track-action="select_pack" data-track-id="pack_' + quantity + '" data-track-label="' + escapeHtml(item.title + ' ' + item.subtitle) + '" aria-pressed="' + (quantity === current && packModeSelected ? 'true' : 'false') + '"' + (disabled ? ' data-pack-disabled="1" aria-disabled="true"' : '') + '>',
         '<strong>' + escapeHtml(item.title) + '</strong>',
         '<span>' + escapeHtml(item.subtitle) + '</span>',
+        vistos ? '<span class="pack-option-marks" aria-hidden="true">' + vistos + '</span>' : "",
         '</button>'
       ].join("");
     });
@@ -9990,19 +11465,45 @@
     draw();
   }
 
+  // Nos produtos com packs combinados a quantidade livre é sempre convertida no
+  // melhor conjunto de packs, e a etiqueta diz isso. Nos de preço unitário fixo
+  // não há conjunto nenhum a calcular, por isso fica só o convite.
+  function freeQuantityModeLabel(product, showPacks) {
+    if (!showPacks) {
+      return "Define a quantidade";
+    }
+    if (usesPackCombinationPricing(product)) {
+      return "...ou escolhe a tua quantidade e calculamos o melhor conjunto de packs automaticamente";
+    }
+    return "Ou define outra quantidade";
+  }
+
   function renderFreeQuantityBuilder(product) {
-    var minimum = minimumFreeQuantity(product);
+    ensurePackAndQuantities(product);
+    var minimum = effectiveMinimumFreeQuantity(product);
     var rangeMaximum = freeQuantityRangeMaximum(product);
     var current = getPackQuantity(product) || minimum;
     var rangePosition = freeQuantityRangePosition(product, current);
     var rangeProgress = rangeMaximum > minimum
       ? ((rangePosition - minimum) / (rangeMaximum - minimum) * 100).toFixed(2)
       : "0";
+    var showPacks = showsPackOptions(product);
+
+    if (isCustomArtworkSelected(product)) {
+      return [
+        '<section class="free-quantity-builder free-quantity-builder--locked" aria-label="Quantidade total">',
+        '<p class="free-quantity-mode-label"><span>Quantidade definida por imagem</span></p>',
+        '<div class="free-quantity-readout"><strong>' + current + '</strong><small>' + escapeHtml(current === 1 ? productUnitSingular(product) : productUnit(product)) + '</small></div>',
+        '<p class="step-helper">Para alterar este total, volta ao passo dos ficheiros e ajusta a quantidade junto de cada imagem.</p>',
+        '</section>',
+        renderPackPriceOverview(product)
+      ].join("");
+    }
 
     return [
-      renderPackSelector(product),
+      showPacks ? renderPackSelector(product) : "",
       '<section class="free-quantity-builder" aria-label="Quantidade">',
-      '<p class="free-quantity-mode-label"><span>Ou define outra quantidade</span></p>',
+      '<p class="free-quantity-mode-label"><span>' + escapeHtml(freeQuantityModeLabel(product, showPacks)) + '</span></p>',
       '<div class="free-quantity-readout"><strong data-free-quantity-value>' + current + '</strong><small data-free-quantity-unit>' + escapeHtml(current === 1 ? productUnitSingular(product) : productUnit(product)) + '</small></div>',
       '<div class="free-quantity-control">',
       '<button type="button" data-free-quantity-change="-1" aria-label="Retirar uma unidade"' + (current <= minimum ? ' disabled' : '') + '>−</button>',
@@ -10011,16 +11512,202 @@
       '</div>',
       '</section>',
       renderPackPriceOverview(product),
+      renderPackCombinationSummary(product),
+      renderQuantityDistribution(product),
       renderFreeQuantityPriceChart(product)
     ].join("");
   }
 
-  function setFreeQuantity(product, value, mode, trackSelection) {
-    var minimum = minimumFreeQuantity(product);
+  // Mostra de que packs é feito o total, e se compensa subir para o próximo
+  // pack. Sem descontos intermédios, subir de 47 para 48 pode ficar mais barato
+  // e é isso que esta caixa diz — em números, não em conselhos.
+  function packCombinationSummaryParts(plan, product) {
+    return plan.parts.map(function (part) {
+      if (part.quantity === 1) {
+        return part.count + " " + (part.count === 1 ? productUnitSingular(product) : productUnit(product));
+      }
+      return part.count + (part.count === 1 ? " pack de " : " packs de ") + part.quantity;
+    });
+  }
+
+  function packCombinationQuantityLabel(product, quantity) {
+    return quantity + " " + (quantity === 1 ? productUnitSingular(product) : productUnit(product));
+  }
+
+  function packCombinationUpgrade(product, table, quantity, currentCents) {
+    var maximum = maximumFreeQuantity(product);
+    var melhor = null;
+    var preferFewerPacks = packCombinationPrefersFewerPacks(product);
+    var quantities = Object.keys(table).map(Number).sort(function (a, b) { return a - b; }).filter(function (packQuantity) {
+      return packQuantity > quantity && packQuantity <= maximum;
+    });
+
+    if (packCombinationUsesNextPackUpgrade(product)) {
+      quantities = quantities.slice(0, 1);
+    }
+
+    quantities.forEach(function (packQuantity) {
+      var cents = packCombinationCents(table, packQuantity, preferFewerPacks);
+      if (!cents || cents >= currentCents) {
+        return;
+      }
+      if (!melhor || cents < melhor.cents) {
+        melhor = {
+          quantity: packQuantity,
+          cents: cents,
+          saving: currentCents - cents,
+          plan: packCombinationPlan(table, packQuantity, preferFewerPacks)
+        };
+      }
+    });
+
+    return melhor;
+  }
+
+  // No modo escalão não há conjunto de packs a listar, mas continua a haver
+  // poupanças por subir de escalão — 35 ímanes recortados custam mais do que 36.
+  // É o mesmo aviso, com os mesmos números.
+  function tierUpgrade(product, table, quantity, currentCents) {
+    var maximum = maximumFreeQuantity(product);
+    var melhor = null;
+
+    priceTiers(table).forEach(function (tier) {
+      var cents;
+
+      if (tier <= quantity || tier > maximum) {
+        return;
+      }
+      cents = tierPriceCents(table, tier);
+      if (!cents || cents >= currentCents) {
+        return;
+      }
+      if (!melhor || cents < melhor.cents) {
+        melhor = { quantity: tier, cents: cents, saving: currentCents - cents };
+      }
+    });
+
+    return melhor;
+  }
+
+  // O total do escalão é o pack em vigor mais as unidades soltas ao preço desse
+  // pack: 47 recortados são 1 pack de 36 + 11 ímanes ao mesmo preço por unidade.
+  function tierPlan(table, quantity) {
+    var tier = 0;
+    var total = tierPriceCents(table, quantity);
+    var tierCents;
+
+    priceTiers(table).forEach(function (candidate) {
+      if (candidate <= quantity) {
+        tier = candidate;
+      }
+    });
+
+    if (!tier || !total) {
+      return null;
+    }
+
+    tierCents = Math.round(Number(table[String(tier)]) || 0);
+
+    return {
+      tier: tier,
+      cents: total,
+      tierCents: tierCents,
+      extra: quantity - tier,
+      extraCents: total - tierCents
+    };
+  }
+
+  function renderTierUpgradeSummary(product) {
+    var table = activePriceTableForPackFilter(product);
+    var quantity = getPackQuantity(product);
+    var atual = table && quantity ? tierPriceCents(table, quantity) : 0;
+    var plan = atual ? tierPlan(table, quantity) : null;
+    var upgrade;
+
+    if (!plan || isCustomArtworkSelected(product) || isAssortedSelected(product)) {
+      return "";
+    }
+
+    upgrade = tierUpgrade(product, table, quantity, atual);
+
+    return [
+      '<section class="pack-combination" aria-label="Como o total é composto">',
+      '<p class="pack-combination-title">Para ' + escapeHtml(packCombinationQuantityLabel(product, quantity)) + ', o preço é este:</p>',
+      '<ul class="pack-combination-list">',
+      '<li><span>1 pack de ' + plan.tier + '</span><strong>' + escapeHtml(formatCents(plan.tierCents)) + '</strong></li>',
+      plan.extra > 0
+        ? '<li><span>' + escapeHtml(packCombinationQuantityLabel(product, plan.extra))
+          + ' ao preço do pack</span><strong>' + escapeHtml(formatCents(plan.extraCents)) + '</strong></li>'
+        : "",
+      '</ul>',
+      '<p class="pack-combination-total"><span>Total</span><strong>' + escapeHtml(formatCents(plan.cents)) + '</strong></p>',
+      upgrade
+        ? '<p class="pack-combination-upgrade">No entanto, se comprares 1 pack de ' + upgrade.quantity
+        + ', consegues ' + escapeHtml(packCombinationQuantityLabel(product, upgrade.quantity))
+        + ' por <strong>' + escapeHtml(formatCents(upgrade.cents)) + '</strong>'
+        + ' — poupas ' + escapeHtml(formatCents(upgrade.saving))
+        + ', e consegues ' + escapeHtml(packCombinationQuantityLabel(product, upgrade.quantity - quantity))
+        + ' extra.</p>'
+        : "",
+      '</section>'
+    ].join("");
+  }
+
+  function renderPackCombinationSummary(product) {
+    if (usesTierUnitPricing(product)) {
+      return renderTierUpgradeSummary(product);
+    }
+
+    var table = packCombinationTableFor(product);
+    var quantity = getPackQuantity(product);
+    var plan = table ? packCombinationPlan(
+      table,
+      quantity,
+      packCombinationPrefersFewerPacks(product)
+    ) : null;
+    var upgrade;
+
+    if (!plan || isCustomArtworkSelected(product) || isAssortedSelected(product)) {
+      return "";
+    }
+
+    upgrade = packCombinationUpgrade(product, table, quantity, plan.cents);
+
+    return [
+      '<section class="pack-combination" aria-label="Como o total é composto">',
+      '<p class="pack-combination-title">Para ' + escapeHtml(packCombinationQuantityLabel(product, quantity)) + ', o melhor conjunto de packs é este:</p>',
+      '<ul class="pack-combination-list">',
+      plan.parts.map(function (part) {
+        var etiqueta = part.quantity === 1
+          ? part.count + " " + (part.count === 1 ? productUnitSingular(product) : productUnit(product))
+          : part.count + (part.count === 1 ? " pack de " : " packs de ") + part.quantity;
+        return '<li><span>' + escapeHtml(etiqueta) + '</span><strong>' + escapeHtml(formatCents(part.cents)) + '</strong></li>';
+      }).join(""),
+      '</ul>',
+      '<p class="pack-combination-total"><span>Total</span><strong>' + escapeHtml(formatCents(plan.cents)) + '</strong></p>',
+      upgrade && upgrade.plan
+        ? '<p class="pack-combination-upgrade">No entanto, se comprares '
+          + escapeHtml(packCombinationSummaryParts(upgrade.plan, product).join(" + "))
+          + ', consegues ' + escapeHtml(packCombinationQuantityLabel(product, upgrade.quantity))
+          + ' por <strong>' + escapeHtml(formatCents(upgrade.cents)) + '</strong>'
+          + ' — poupas ' + escapeHtml(formatCents(upgrade.saving))
+          + (packCombinationUsesNextPackUpgrade(product) ? ' e consegues ' : ', e consegues ')
+          + escapeHtml(packCombinationQuantityLabel(product, upgrade.quantity - quantity))
+          + ' extra.</p>'
+        : "",
+      '</section>'
+    ].join("");
+  }
+
+  function setFreeQuantity(product, value, mode, trackSelection, direction) {
+    var minimum = effectiveMinimumFreeQuantity(product);
     var maximum = maximumFreeQuantity(product);
     var quantity = Math.round(Number(value) || 0);
 
     quantity = Math.max(minimum, Math.min(maximum, quantity || minimum));
+    // Com packs combinados só existem certas quantidades; encosta-se à mais
+    // próxima em vez de aceitar uma que não tem preço.
+    quantity = snapQuantityToPacks(product, quantity, direction || 0);
     state.selections.pack_quantity = quantity;
     state.selections.free_quantity_mode = mode === "pack"
       ? "pack"
@@ -10029,10 +11716,39 @@
     state.quantitiesTouched = false;
     state.quantityPackBaseline = 0;
     state.errors = "";
+    ensurePackAndQuantities(product);
     if (trackSelection !== false) {
       try { trackOptionSelected(product, "quantity", quantity, productQuantityLabel(product, quantity)); } catch (e) {}
     }
     return quantity;
+  }
+
+  // O refresh parcial do slider não volta a desenhar a grelha de packs, por isso
+  // os vistos do conjunto são acertados à mão, do mesmo modo que a selecção.
+  function applyPackCombinationMarks(button, marks) {
+    var alvo = button.querySelector(".pack-option-marks");
+    var vistos = "";
+    var i;
+
+    button.classList.toggle("is-in-combination", marks > 0);
+
+    if (!marks) {
+      if (alvo) {
+        alvo.remove();
+      }
+      return;
+    }
+
+    for (i = 0; i < marks; i += 1) {
+      vistos += "<i>✓</i>";
+    }
+    if (!alvo) {
+      alvo = document.createElement("span");
+      alvo.className = "pack-option-marks";
+      alvo.setAttribute("aria-hidden", "true");
+      button.appendChild(alvo);
+    }
+    alvo.innerHTML = vistos;
   }
 
   function refreshFreeQuantityDraft(product, input) {
@@ -10043,7 +11759,7 @@
     var wrapper;
     var nextOverview;
     var quantity = getPackQuantity(product);
-    var minimum = minimumFreeQuantity(product);
+    var minimum = effectiveMinimumFreeQuantity(product);
     var rangeMaximum = freeQuantityRangeMaximum(product);
     var minus = builder ? builder.querySelector('[data-free-quantity-change="-1"]') : null;
     var plus = builder ? builder.querySelector('[data-free-quantity-change="1"]') : null;
@@ -10079,11 +11795,13 @@
       range.setAttribute("aria-valuetext", productQuantityLabel(product, quantity));
     }
     if (packControl) {
+      var combinationCounts = packCombinationCounts(product);
       packControl.querySelectorAll(".pack-option").forEach(function (button) {
         var selected = freeQuantitySelectionMode(product) === "pack"
           && Number(button.dataset.packQuantity) === quantity;
         button.classList.toggle("is-selected", selected);
         button.setAttribute("aria-pressed", selected ? "true" : "false");
+        applyPackCombinationMarks(button, combinationCounts[Number(button.dataset.packQuantity)] || 0);
       });
     }
 
@@ -10099,7 +11817,200 @@
       builder.insertAdjacentElement("afterend", nextOverview);
     }
 
+    refreshPackCombinationSummary(product);
+    refreshQuantityDistribution(product);
     freeQuantityChartRefresh();
+  }
+
+  // Também fica de fora do refresh parcial do slider, e é onde está o total.
+  function refreshPackCombinationSummary(product) {
+    var atual = document.querySelector(".pack-combination");
+    var markup = renderPackCombinationSummary(product);
+    var ancora = document.querySelector(".pack-price-overview")
+      || document.querySelector(".free-quantity-builder");
+    var wrapper;
+    var proximo;
+
+    if (!markup) {
+      if (atual) {
+        atual.remove();
+      }
+      return;
+    }
+
+    wrapper = document.createElement("div");
+    wrapper.innerHTML = markup;
+    proximo = wrapper.firstElementChild;
+    if (!proximo) {
+      return;
+    }
+
+    // No modo escalão a caixa só existe quando há poupança a apontar, por isso
+    // pode ser preciso criá-la a meio do arrastar do slider.
+    if (atual) {
+      atual.replaceWith(proximo);
+    } else if (ancora) {
+      ancora.insertAdjacentElement("afterend", proximo);
+    }
+  }
+
+  // Arrastar o slider do total só faz refresh parcial, por isso o bloco de
+  // ajuste por design tem de ser redesenhado à parte (as quantidades voltam à
+  // divisão automática sempre que o total muda).
+  function refreshQuantityDistribution(product) {
+    var current = document.querySelector("[data-quantity-distribution]");
+    var markup = renderQuantityDistribution(product);
+    var wrapper;
+    var next;
+
+    if (!current) {
+      return;
+    }
+
+    if (!markup) {
+      current.remove();
+      return;
+    }
+
+    wrapper = document.createElement("div");
+    wrapper.innerHTML = markup;
+    next = wrapper.firstElementChild;
+
+    if (next) {
+      current.replaceWith(next);
+      bindQuantityDistributionEvents(product);
+    }
+  }
+
+  function bindQuantityDistributionEvents(product) {
+    document.querySelectorAll("[data-quantity-plus]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var value = button.dataset.quantityPlus;
+        var donor = donorFor(product, value);
+        var changed = selectedDesignItems(product).length >= 3
+          ? assignOnePin(product, value)
+          : moveOnePin(product, donor, value);
+
+        if (changed) {
+          state.errors = "";
+          rerenderProduct(product);
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-quantity-minus]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var value = button.dataset.quantityMinus;
+        var receiver = nextDesignValue(product, value);
+        var changed = selectedDesignItems(product).length >= 3
+          ? removeOnePin(product, value)
+          : moveOnePin(product, value, receiver);
+
+        if (changed) {
+          state.errors = "";
+          rerenderProduct(product);
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-auto-distribute]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.selections.design_quantities = distributeQuantities(selectedDesignItems(product), getPackQuantity(product));
+        state.quantitiesTouched = false;
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+  }
+
+  function renderDesignQuantityCards(product, items) {
+    var designsStep = findStep(product, "designs");
+    var cards = "";
+
+    items.forEach(function (item) {
+      var quantity = quantityFor(item.value);
+      var controls = "";
+
+      if (items.length > 1) {
+        controls = [
+          '<div class="quantity-controls">',
+          '<button type="button" data-quantity-minus="' + escapeHtml(item.value) + '"' + (!canAdjustQuantity(product, item.value, -1) ? " disabled" : "") + '>−</button>',
+          '<span>' + quantity + '</span>',
+          '<button type="button" data-quantity-plus="' + escapeHtml(item.value) + '"' + (!canAdjustQuantity(product, item.value, 1) ? " disabled" : "") + '>+</button>',
+          '</div>'
+        ].join("");
+      }
+
+      cards += [
+        '<article class="quantity-card" data-quantity-card="' + escapeHtml(item.value) + '">',
+        '<div class="quantity-hero">',
+        '<div class="quantity-visual-wrap">',
+        renderVisual(item, "design-grid", designsStep),
+        '<span class="quantity-badge">x' + quantity + '</span>',
+        '</div>',
+        '</div>',
+        '<div class="quantity-main">',
+        '<div>',
+        '<strong>' + escapeHtml(displayItemTitle(item)) + '</strong>',
+        '<span>' + escapeHtml(item.subtitle) + '</span>',
+        '</div>',
+        renderPinStack(item, quantity, designsStep),
+        controls,
+        '</div>',
+        '</article>'
+      ].join("");
+    });
+
+    return cards;
+  }
+
+  // Ajuste opcional por design dentro do total livre: o total manda, e cada
+  // design começa com a divisão automática. Só aparece quando o passo do pack
+  // pede `adjustPerDesign` e há mais do que um design escolhido, para os
+  // produtos antigos (crachás, ímanes, mini-cadernos) ficarem como estavam.
+  function packAdjustsPerDesign(product) {
+    var packStep = findStep(product, "pack");
+
+    return !!(packStep && packStep.adjustPerDesign === true);
+  }
+
+  // A dica vem do passo do pack quando o produto a define (produtos antigos);
+  // nos novos é montada com o nome da unidade, para não haver produto sem ela.
+  function packAdjustHint(product) {
+    var packStep = findStep(product, "pack");
+
+    if (packStep && packStep.adjustHint) {
+      return packStep.adjustHint;
+    }
+    return "Se quiseres também podes ajustar a quantidade de cada "
+      + productUnitSingular(product) + " individualmente";
+  }
+
+  function renderQuantityDistribution(product) {
+    var items = selectedDesignItems(product);
+
+    // Os cartões dos designs aparecem sempre que há designs escolhidos, como no
+    // fluxo antigo: com um só design mostram a quantidade, sem controlos, porque
+    // não há para onde mover. A dica e o "Distribuir por igual" só fazem sentido
+    // a partir de dois.
+    if (!packAdjustsPerDesign(product)
+      || !items.length
+      || isAssortedSelected(product)
+      || isCustomArtworkSelected(product)) {
+      return "";
+    }
+
+    return [
+      '<div class="quantity-distribution" data-quantity-distribution>',
+      items.length > 1 ? '<p class="quantity-adjust-hint">' + escapeHtml(packAdjustHint(product)) + '</p>' : "",
+      '<div class="quantity-grid">',
+      renderDesignQuantityCards(product, items),
+      '</div>',
+      renderQuantityStatus(product),
+      renderUnassignedPins(product),
+      items.length >= 2 ? '<button class="auto-distribute" type="button" data-auto-distribute>Distribuir por igual</button>' : "",
+      '</div>'
+    ].join("");
   }
 
   function renderQuantityBuilder(product) {
@@ -10132,39 +12043,7 @@
     total = quantityTotal(product);
     unassigned = unassignedCount(product);
 
-    items.forEach(function (item) {
-      var quantity = quantityFor(item.value);
-      var controls = "";
-
-      if (items.length > 1) {
-        controls = [
-          '<div class="quantity-controls">',
-          '<button type="button" data-quantity-minus="' + escapeHtml(item.value) + '"' + (!canAdjustQuantity(product, item.value, -1) ? " disabled" : "") + '>−</button>',
-          '<span>' + quantity + '</span>',
-          '<button type="button" data-quantity-plus="' + escapeHtml(item.value) + '"' + (!canAdjustQuantity(product, item.value, 1) ? " disabled" : "") + '>+</button>',
-          '</div>'
-        ].join("");
-      }
-
-      cards += [
-        '<article class="quantity-card" data-quantity-card="' + escapeHtml(item.value) + '">',
-        '<div class="quantity-hero">',
-        '<div class="quantity-visual-wrap">',
-        renderVisual(item, "design-grid", findStep(product, "designs")),
-        '<span class="quantity-badge">x' + quantity + '</span>',
-        '</div>',
-        '</div>',
-        '<div class="quantity-main">',
-        '<div>',
-        '<strong>' + escapeHtml(displayItemTitle(item)) + '</strong>',
-        '<span>' + escapeHtml(item.subtitle) + '</span>',
-        '</div>',
-        renderPinStack(item, quantity, findStep(product, "designs")),
-        controls,
-        '</div>',
-        '</article>'
-      ].join("");
-    });
+    cards = renderDesignQuantityCards(product, items);
 
     return [
       renderPackSelector(product),
@@ -10175,7 +12054,7 @@
       '</div>',
       renderQuantityStatus(product),
       renderUnassignedPins(product),
-      items.length >= 3 ? '<button class="auto-distribute" type="button" data-auto-distribute>Distribuir por igual</button>' : ""
+      items.length >= 2 ? '<button class="auto-distribute" type="button" data-auto-distribute>Distribuir por igual</button>' : ""
     ].join("");
   }
 
@@ -11050,7 +12929,8 @@
       html = '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list">' + html + '</div>';
     }
 
-    return html
+    return renderDesignActionControls(product, step)
+      + html
       + (state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : "")
       + renderCadernosBuildSummaryV2(product, step);
   }
@@ -11089,6 +12969,7 @@
   function renderCadernosPurchaseOptions(product, step) {
     var current = getPackQuantity(product);
     var promo = step && step.promoNote ? String(step.promoNote) : "";
+    var selectedOption;
     var html = "";
 
     (step.items || []).forEach(function (item) {
@@ -11114,8 +12995,11 @@
       ].join("");
     });
 
+    selectedOption = selectedCadernoPurchaseOption(product);
+
     return [
       '<div class="option-list size-choice-list crachas-size-card-list cadernos-purchase-list">' + html + '</div>',
+      selectedOption && !isCustomArtworkSelected(product) ? renderCadernoOrderQuantitySelector(product, step, cadernoOrderQuantity(product)) : "",
       promo ? '<p class="cadernos-info-note cadernos-info-note--promo" role="note">' + renderInlineText(promo) + '</p>' : "",
       state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : ""
     ].join("");
@@ -11123,6 +13007,35 @@
 
   function renderCadernoOrderQuantitySelector(product, step, selectedQuantity) {
     var config = cadernoOrderQuantityConfig(product);
+    var minimum;
+    var maximum;
+    var selectedOption;
+    var selectedLabel;
+
+    if (isMainCatalogProduct(product)) {
+      minimum = Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1);
+      maximum = Math.max(minimum, parseInt(config.maximum, 10) || 9999);
+      selectedOption = selectedCadernoPurchaseOption(product);
+      selectedLabel = selectedOption && selectedOption.isPack
+        ? (selectedQuantity === 1 ? "pack" : "packs")
+        : (selectedQuantity === 1 ? productUnitSingular(product) : productUnit(product));
+
+      return [
+        '<section class="cadernos-order-quantity" aria-label="' + escapeHtml(config.title || "Quantidade") + '">',
+        '<div class="cadernos-order-quantity-copy">',
+        '<strong>' + escapeHtml(config.title || "Quantidade") + '</strong>',
+        config.text ? '<span>' + escapeHtml(config.text) + '</span>' : "",
+        '</div>',
+        '<div class="cadernos-order-quantity-control">',
+        '<button type="button" data-caderno-order-quantity-change="-1" aria-label="Retirar uma unidade"' + (selectedQuantity <= minimum ? ' disabled' : '') + '>&minus;</button>',
+        '<label><span>Quantidade</span><input type="number" min="' + minimum + '" max="' + maximum + '" step="1" value="' + selectedQuantity + '" data-caderno-order-quantity-input></label>',
+        '<button type="button" data-caderno-order-quantity-change="1" aria-label="Acrescentar uma unidade"' + (selectedQuantity >= maximum ? ' disabled' : '') + '>+</button>',
+        '<small>' + escapeHtml(selectedLabel) + '</small>',
+        '</div>',
+        '</section>'
+      ].join("");
+    }
+
     var options = cadernoOrderQuantityOptions(product);
     var option = selectedCadernoPurchaseOption(product);
     var html = options.map(function (quantity) {
@@ -11832,6 +13745,7 @@
       '<span>Preço do pedido</span>',
       priceLineHtml,
       '<p>' + escapeHtml(productQuantityLabel(product, info.quantity) + ' · ' + info.size + ' · ' + info.perPin) + '</p>',
+      info.customizationFeeCents ? '<small class="price-panel-shipping-note">Preparação e testes dos designs: +' + escapeHtml(formatCents(info.customizationFeeCents)) + '.</small>' : '',
       info.discount > 0 ? '<em>Poupas ' + info.discount + '%</em>' : "",
       delivery,
       '</aside>'
@@ -12191,11 +14105,11 @@
     // Reaproveita o componente "Designs que vais encomendar" — mas com o
     // título adaptado ao novo contexto ("Designs que vais receber").
     var items = selectedDesignItems(product);
-    var showQuantityBadges = product && product.slug === "crachas";
+    var showQuantityBadges = product && productFamily(product) === "crachas";
     var designsStep;
     var tilesHtml;
 
-    if (isCustomArtworkProduct(product)) {
+    if (isCustomArtworkSelected(product)) {
       var custom = customArtworkConfig(product);
       var uploads = orderUploadItems(custom.uploadKey);
       var visual = uploads.length
@@ -12467,7 +14381,7 @@
     ];
 
     var cardRows;
-    if (isCustomArtworkProduct(product)) {
+    if (isCustomArtworkSelected(product)) {
       var custom = customArtworkConfig(product);
       var artworkUploads = orderUploadItems(custom.uploadKey);
       var cardPhotoUploads = orderUploadItems(custom.cardPhotoKey);
@@ -12517,10 +14431,10 @@
 
   function renderConfirmCard(product) {
     var hasPack = !!findStep(product, "pack");
-    var confirmTitle = product && product.slug === "crachas" ? '<h3 class="confirm-card-title">A tua encomenda:</h3>' : "";
+    var confirmTitle = product && productFamily(product) === "crachas" ? '<h3 class="confirm-card-title">A tua encomenda:</h3>' : "";
     var designs;
 
-    if (isCadernosProduct(product) || isQuadrosProduct(product) || isCustomArtworkProduct(product)) {
+    if (isCadernosProduct(product) || isQuadrosProduct(product) || isCustomArtworkSelected(product)) {
       designs = "";
     } else {
       designs = isAssortedSelected(product)
@@ -12703,7 +14617,7 @@
     var images = selectedInteriorImages(product);
     var speed = cadernoPreviewSpeedSeconds(product);
 
-    if (!product || product.slug !== "cadernos" || settings.enabled === false || !images.length) {
+    if (!isCadernosProduct(product) || settings.enabled === false || !images.length) {
       return "";
     }
 
@@ -12711,7 +14625,7 @@
       '<aside class="interior-slideshow" style="--interior-slide-count:' + images.length + ';--interior-slide-speed:' + speed + 's" aria-label="' + escapeHtml(settings.title || "Pré-visualização do interior") + '">',
       '<div class="interior-slideshow-frame">',
       images.map(function (image, index) {
-        return '<span class="interior-slide" style="background-image:url(&quot;' + escapeHtml(image) + '&quot;);--interior-slide-index:' + index + '"></span>';
+        return '<span class="interior-slide" data-mia-image="' + escapeHtml(image) + '" data-mia-item-id="interior-preview-' + index + '" data-mia-slot-name="interior-slide" style="background-image:url(&quot;' + escapeHtml(image) + '&quot;);--interior-slide-index:' + index + '"></span>';
       }).join(""),
       '</div>',
       '<div class="interior-slideshow-copy">',
@@ -12735,8 +14649,16 @@
       return renderCadernosLaminationStep(product, step) + renderCadernosBuildSummaryV2(product, step);
     }
 
+    if (step.template === "original-artwork-upload") {
+      return renderOriginalArtworkUploadStep(product, step);
+    }
+
+    if (step.template === "custom-product-builder") {
+      return renderCustomProductBuilderStep(product, step);
+    }
+
     if (isCadernosProduct(product) && step.id === "pack") {
-      return renderCadernosPurchaseOptions(product, step) + renderCadernosBuildSummaryV2(product, step);
+      return renderCadernosPurchaseOptions(product, step) + renderInteriorSlideshow(product) + renderCadernosBuildSummaryV2(product, step);
     }
 
     if (isCadernosProduct(product) && step.template === "cover-personalization") {
@@ -12776,10 +14698,10 @@
       // mas reaproveita o sumario "Designs que vais encomendar" dos crachas
       // (tiles em grelha 1-5 colunas conforme largura). Outros produtos
       // mantem o sumario antigo de pilulas.
-      if (product && product.slug === "crachas") {
+      if (product && productFamily(product) === "crachas") {
         return renderCrachasSizeStep(product, step);
       }
-      if (product && product.slug === "imanes") {
+      if (product && productFamily(product) === "imanes") {
         return renderSizeChoiceItems(product, step) + renderCrachasSelectedDesigns(product);
       }
       return renderSizeChoiceItems(product, step) + renderSelectedSummary(product);
@@ -12822,6 +14744,9 @@
     var steps = product && Array.isArray(product.steps) ? product.steps : [];
 
     return state.admin ? steps : steps.filter(function (step) {
+      if (isCustomArtworkSelected(product) && !isCadernosProduct(product) && step && step.id === "pack" && step.freeQuantity === true) {
+        return false;
+      }
       return !step.hidden && stepConditionMatches(step);
     });
   }
@@ -12959,6 +14884,9 @@
     ghost.removeAttribute("data-step-key");
     ghost.setAttribute("data-step-ghost", "");
     ghost.setAttribute("aria-hidden", "true");
+    // É um clone (`cloneNode` não copia listeners), portanto se apanhar o rato
+    // o clique morre ali. Fica sempre transparente ao ponteiro.
+    ghost.style.pointerEvents = "none";
     ghost.style.position = "absolute";
     ghost.style.margin = "0";
     ghost.style.zIndex = "0";
@@ -13460,6 +15388,28 @@
     funnelNextTransitionReason = 'browser_back';
 
     step = wizardHistoryStepFromState(event.state, product);
+
+    // STEP_JUMP_CONFIRM_V1: quando isto vem de um salto pedido nos números dos
+    // passos, o pedido do utilizador manda. O histórico do browser pode
+    // levar-nos para outro sítio — para uma entrada de outra página (sem estado
+    // de wizard) ou para uma entrada válida mas de outro passo, porque o
+    // espelho `wizardHistoryEntries` desalinha-se do stack real. Antes disso
+    // descartava o pedido em silêncio: o utilizador clicava e não acontecia
+    // nada.
+    if (wizardPendingJumpStep != null) {
+      var pedido = wizardPendingJumpStep;
+      wizardPendingJumpStep = null;
+
+      if (step !== pedido) {
+        state.errors = "";
+        syncOrderUploadBusy();
+        setCurrentStep(product, pedido);
+        replaceWizardHistory(product);
+        rerenderProduct(product);
+        return;
+      }
+    }
+
     if (step == null) {
       if (state.currentStep > 0) {
         // Old browsers or restored entries may not carry wizard state; keep the user inside the wizard until step 1.
@@ -13509,13 +15459,41 @@
     }
 
     state.errors = "";
-    historyDelta = wizardHistorySupported() ? wizardHistoryDeltaToStep(next) : 0;
+    // STEP_JUMP_CONFIRM_V1: só se entrega o salto ao histórico quando é para
+    // trás. `wizardHistoryEntries` é um espelho do stack do browser e um salto
+    // para a frente aponta para entradas que qualquer `pushState` entretanto
+    // truncou — `history.go(+n)` sobre uma entrada que já não existe não faz
+    // nada e, como isto retornava logo, o passo nunca mudava e o utilizador não
+    // via nada acontecer. Para a frente aplicamos o passo à mão, como quem
+    // carrega em "Continuar".
+    historyDelta = wizardHistorySupported() && next < previous ? wizardHistoryDeltaToStep(next) : 0;
 
-    if (historyDelta) {
+    if (historyDelta < 0) {
+      // Mesmo para trás a entrada pode não ser deste wizard (o carrinho e as
+      // outras páginas também empilham histórico). Guardamos o pedido e, se o
+      // `popstate` não o resolver, aplicamos o salto directamente.
+      wizardPendingJumpStep = next;
+      if (wizardPendingJumpTimer) {
+        window.clearTimeout(wizardPendingJumpTimer);
+      }
+      wizardPendingJumpTimer = window.setTimeout(function () {
+        wizardPendingJumpTimer = null;
+        if (wizardPendingJumpStep !== next) {
+          return;
+        }
+        wizardPendingJumpStep = null;
+        if (state.currentStep !== next) {
+          applyWizardStep(product, next, state.currentStep);
+        }
+      }, 150);
       window.history.go(historyDelta);
       return;
     }
 
+    applyWizardStep(product, next, previous);
+  }
+
+  function applyWizardStep(product, next, previous) {
     setCurrentStep(product, next);
 
     // Forward steps get new browser history entries; backward jumps replace the current one to avoid duplicates.
@@ -13690,11 +15668,15 @@
       });
     }
     if (step.id === "size" && freeQuantityStep(state.product)) {
-      state.selections.pack_quantity = minimumFreeQuantity(state.product);
+      var currentFreeQuantity = parseInt(state.selections.pack_quantity, 10) || 0;
+      state.selections.pack_quantity = isMainCatalogProduct(state.product) && usesFlatUnitPricing(state.product)
+        ? Math.max(effectiveMinimumFreeQuantity(state.product), currentFreeQuantity)
+        : minimumFreeQuantity(state.product);
       delete state.selections.free_quantity_mode;
       state.quantitySignature = "";
       state.quantitiesTouched = false;
       state.quantityPackBaseline = 0;
+      ensurePackAndQuantities(state.product);
     }
     if (step.id === "baby_animal" && input.value !== "Outro animal") {
       delete state.selections.baby_custom_animal;
@@ -13731,6 +15713,7 @@
     var attachments = step && step.mediaAttachments ? step.mediaAttachments : null;
     return !!(step && (
       step.template === "photo-upload" ||
+      step.template === "original-artwork-upload" ||
       (attachments && (attachments.photos || attachments.audio))
     ));
   }
@@ -13748,7 +15731,7 @@
       return state.orderAudioRecording ? "Solta o botão do áudio para terminar a gravação." : "Espera até o anexo terminar de enviar.";
     }
 
-    if (step.id === "designs" && selectedDesignItems(product).length === 0 && !isAssortedSelected(product)) {
+    if (step.id === "designs" && selectedDesignItems(product).length === 0 && !isAssortedSelected(product) && !isCustomArtworkSelected(product)) {
       if (isQuadrosProduct(product)) {
         return "Escolhe o tipo de moldura que queres criar.";
       }
@@ -13758,11 +15741,48 @@
       return "Escolhe pelo menos um design ou a opção Sortido";
     }
 
+    if (step.template === "custom-product-builder") {
+      return validateBuilderStep(product);
+    }
+
+    if (step.template === "original-artwork-upload") {
+      var customConfig = customArtworkConfig(product);
+      var customItems = orderUploadItems(customConfig.uploadKey);
+      if (state.orderUploadBusy) {
+        return "Espera até todos os ficheiros terminarem de enviar.";
+      }
+      if (!customItems.length) {
+        state.invalidFields = [customConfig.uploadKey];
+        return "Carrega pelo menos uma imagem ou um PDF para continuar.";
+      }
+      // No construtor a quantidade e o minimo pertencem a cada linha do passo
+      // seguinte, que sabe qual e a tabela de precos de cada produto.
+      if (isArtworkBuilderProduct(product)) {
+        return "";
+      }
+      if (customItems.some(function (item) { return customArtworkItemQuantity(item) < 1; })) {
+        state.invalidFields = [customConfig.uploadKey];
+        return "Indica uma quantidade válida para cada design.";
+      }
+      if (!isCadernosProduct(product)) {
+        // O total vem dos ficheiros, mas o mínimo do produto continua a valer:
+        // abaixo do primeiro escalão não há preço, e o servidor recusaria.
+        var minimoCustom = effectiveMinimumFreeQuantity(product);
+        if (customArtworkTotalQuantity(product) < minimoCustom) {
+          state.invalidFields = [customConfig.uploadKey];
+          return "A encomenda mínima é de " + productQuantityLabel(product, minimoCustom) + ".";
+        }
+        state.selections.pack_quantity = customArtworkTotalQuantity(product);
+      }
+      return "";
+    }
+
     if (isCadernosProduct(product) && step.id === "pack") {
       if (!selectedCadernoPurchaseOption(product)) {
         return "Escolhe uma opção de compra.";
       }
-      if (cadernoOrderQuantityOptions(product).indexOf(cadernoOrderQuantity(product)) === -1) {
+      if ((isMainCatalogProduct(product) && cadernoOrderQuantity(product) < 1)
+          || (!isMainCatalogProduct(product) && cadernoOrderQuantityOptions(product).indexOf(cadernoOrderQuantity(product)) === -1)) {
         return "Escolhe uma quantidade válida.";
       }
       ensurePackAndQuantities(product);
@@ -13794,9 +15814,16 @@
 
     if (step.id === "pack") {
       if (step.freeQuantity === true) {
+        ensurePackAndQuantities(product);
         packQuantity = getPackQuantity(product);
         if (!packQuantity) {
-          return "Indica uma quantidade válida (mínimo " + minimumFreeQuantity(product) + ").";
+          return "Indica uma quantidade válida (mínimo " + effectiveMinimumFreeQuantity(product) + ").";
+        }
+        if (!isCustomArtworkSelected(product)
+            && !isAssortedSelected(product)
+            && selectedDesignItems(product).length
+            && quantityTotal(product) !== packQuantity) {
+          return "Confirma a quantidade atribuída a cada design.";
         }
         return "";
       }
@@ -13995,9 +16022,12 @@
     rerenderProduct(product);
   }
 
-  function orderPhotoFileIsSupported(file) {
+  function orderPhotoFileIsSupported(file, allowPdf) {
     var type = String(file && file.type || "").toLowerCase();
     var name = String(file && file.name || "").toLowerCase();
+    if (allowPdf && (type === "application/pdf" || /\.pdf$/.test(name))) {
+      return true;
+    }
     return /^image\/(?:jpeg|png|webp|heic|heif)$/.test(type) || /\.(?:jpe?g|png|webp|heic|heif)$/.test(name);
   }
 
@@ -14111,11 +16141,14 @@
     });
   }
 
-  function uploadOrderMediaFile(prepared, kind, operation) {
+  function uploadOrderMediaFile(prepared, kind, operation, config) {
     var formData = new FormData();
     var file = prepared.file;
     formData.append("media[]", file, file.name || (kind === "audio" ? "audio.webm" : "foto"));
     formData.append("kind", kind);
+    if (config && config.purpose) {
+      formData.append("purpose", String(config.purpose));
+    }
     if (prepared.width) {
       formData.append("width", prepared.width);
       formData.append("height", prepared.height);
@@ -14400,13 +16433,23 @@
     state.orderUploadError = "";
     state.orderUploadMessage = "";
     state.orderUploadFeedbackKind = kind;
-    if (kind === "photo" && selected.some(function (file) { return !orderPhotoFileIsSupported(file); })) {
-      state.orderUploadError = "Escolhe fotos JPG, PNG, WebP ou HEIC.";
+    if ((kind === "photo" || kind === "artwork") && selected.some(function (file) { return !orderPhotoFileIsSupported(file, config.allowPdf === true); })) {
+      state.orderUploadError = config.allowPdf === true
+        ? "Escolhe imagens JPG, PNG, WebP ou HEIC, ou ficheiros PDF."
+        : "Escolhe fotos JPG, PNG, WebP ou HEIC.";
       rerenderProduct(product);
       return;
     }
 
     operation = beginOrderUploadOperation("upload", stepId);
+    if (kind === "artwork") {
+      try {
+        trackProductEvent(product, "artwork_upload_started", {
+          file_count: selected.length,
+          file_kind: selected.some(function (file) { return String(file.type || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(String(file.name || "")); }) ? "pdf-or-image" : "image"
+        });
+      } catch (e) {}
+    }
     operation.fileCount = selected.length;
     operation.fileIndex = 1;
     state.orderUploadProgress = {
@@ -14438,7 +16481,7 @@
           fileCount: operation.fileCount
         };
         updateOrderUploadProgressDom();
-        preparation = kind === "photo"
+        preparation = kind === "photo" && config.preserveOriginal !== true
           ? prepareOrderPhoto(file)
           : Promise.resolve({ file: file, width: 0, height: 0 });
         return withOrderUploadTimeout(
@@ -14452,13 +16495,17 @@
           throw orderUploadCanceledError();
         }
         return withOrderUploadTimeout(
-          uploadOrderMediaFile(prepared, kind, operation),
+          uploadOrderMediaFile(prepared, kind, operation, config),
           operation,
           90000,
           "O envio demorou demasiado. Confirma a ligação e tenta novamente."
         ).then(function (upload) {
           if (!orderUploadOperationIsActive(operation)) {
             throw orderUploadCanceledError();
+          }
+          if (kind === "artwork") {
+            upload.quantity = 1;
+            upload.feeCents = Math.max(0, parseInt(config.feePerFileCents, 10) || 0);
           }
           uploads.push(upload);
           orderUploadPreviews[upload.token] = URL.createObjectURL(prepared.file);
@@ -14479,9 +16526,22 @@
       if (kind === "photo" && key === "quadro_uploads") {
         resetQuadrosPhotoColorAnalysis();
       }
+      if (kind === "artwork" && !isCadernosProduct(product)) {
+        state.selections.pack_quantity = customArtworkTotalQuantity(product);
+      }
       state.invalidFields = state.invalidFields.filter(function (fieldName) { return fieldName !== key; });
       if (kind === "audio") {
         state.orderUploadMessage = uploads.length === 1 ? "Áudio enviado." : uploads.length + " áudios enviados.";
+      } else if (kind === "artwork") {
+        state.orderUploadMessage = uploads.length === 1 ? "Design enviado sem alterações." : uploads.length + " designs enviados sem alterações.";
+        try {
+          trackProductEvent(product, "artwork_upload_completed", {
+            file_count: uploads.length,
+            artwork_count: customArtworkItems(product).length,
+            artwork_total_quantity: customArtworkTotalQuantity(product),
+            customization_fee_cents: customArtworkFeeCents(product)
+          });
+        } catch (e) {}
       } else {
         state.orderUploadMessage = uploads.length === 1 ? "Foto enviada." : uploads.length + " fotos enviadas.";
       }
@@ -14496,6 +16556,9 @@
         return;
       }
       state.orderUploadError = error && error.message ? error.message : "Não foi possível enviar o ficheiro.";
+      if (kind === "artwork") {
+        try { trackProductEvent(product, "artwork_upload_failed", { error_code: "upload_failed" }); } catch (e) {}
+      }
     }).then(function () {
       var shouldRender = orderUploadOperationIsActive(operation);
       endOrderUploadOperation(operation);
@@ -14508,7 +16571,21 @@
   function startOrderPhotoUpload(product, step, input, files) {
     var key = input.dataset.orderUploadKey || "quadro_uploads";
     var config = orderMediaConfigForStep(step, key, "photo");
-    startOrderMediaUpload(product, config, files || [], "photo", step && step.id);
+    var kind = String(config.purpose || "") === "custom-artwork" || step && step.template === "original-artwork-upload"
+      ? "artwork"
+      : "photo";
+    if (kind === "artwork") {
+      config = Object.assign({}, config, customArtworkConfig(product), {
+        selectionKey: key,
+        multiple: true,
+        maxFiles: 10,
+        allowPdf: true,
+        preserveOriginal: true,
+        showQuantity: true,
+        purpose: "custom-artwork"
+      });
+    }
+    startOrderMediaUpload(product, config, files || [], kind, step && step.id);
   }
 
   function stopOrderAudioTracks() {
@@ -14594,17 +16671,61 @@
     });
   }
 
+  function applyOrderMediaUploadRemoval(product, key, token) {
+    state.selections[key] = orderUploadItems(key).filter(function (item) { return item.token !== token; });
+    if (key === customArtworkConfig(product).uploadKey) {
+      if (!isCadernosProduct(product)) {
+        state.selections.pack_quantity = customArtworkTotalQuantity(product);
+      }
+      try {
+        trackProductEvent(product, "artwork_upload_removed", {
+          artwork_count: customArtworkItems(product).length,
+          artwork_total_quantity: customArtworkTotalQuantity(product),
+          customization_fee_cents: customArtworkFeeCents(product)
+        });
+      } catch (e) {}
+    }
+    if (key === "quadro_uploads" && !state.selections[key].length) {
+      resetQuadrosPhotoColorAnalysis();
+    }
+    if (orderUploadPreviews[token]) {
+      URL.revokeObjectURL(orderUploadPreviews[token]);
+      delete orderUploadPreviews[token];
+    }
+  }
+
+  function editingCartOriginalHasUpload(key, token) {
+    var selections = state.editingCartOriginalItem && state.editingCartOriginalItem.selections;
+    var items = selections && Array.isArray(selections[key]) ? selections[key] : [];
+    return !!state.editingCartItemId && items.some(function (item) {
+      return item && item.token === token;
+    });
+  }
+
   function removeOrderMediaUpload(product, key, token) {
     var formData = new FormData();
     var operation;
     var requestOptions;
     var request;
+
+    // Um ficheiro já guardado no item do carrinho tem de continuar disponível
+    // caso a pessoa cancele a edição. Retiramo-lo apenas do estado de edição;
+    // se guardar, o temporário órfão será removido pela limpeza automática.
+    if (editingCartOriginalHasUpload(key, token)) {
+      state.orderUploadError = "";
+      state.orderUploadMessage = "Ficheiro retirado desta edição. Guarda as alterações para confirmar.";
+      state.orderUploadFeedbackKind = key === "quadro_audio_uploads" ? "audio" : (key === customArtworkConfig(product).uploadKey ? "artwork" : "photo");
+      applyOrderMediaUploadRemoval(product, key, token);
+      rerenderProduct(product);
+      return;
+    }
+
     formData.append("action", "delete");
     formData.append("token", token);
     operation = beginOrderUploadOperation("delete", currentStep(product) && currentStep(product).id);
     state.orderUploadError = "";
     state.orderUploadMessage = "";
-    state.orderUploadFeedbackKind = key === "quadro_audio_uploads" ? "audio" : "photo";
+    state.orderUploadFeedbackKind = key === "quadro_audio_uploads" ? "audio" : (key === customArtworkConfig(product).uploadKey ? "artwork" : "photo");
     rerenderProduct(product);
 
     requestOptions = {
@@ -14629,29 +16750,7 @@
       if (!orderUploadOperationIsActive(operation)) {
         throw orderUploadCanceledError();
       }
-      state.selections[key] = orderUploadItems(key).filter(function (item) { return item.token !== token; });
-      if (key === "quadro_uploads" && !state.selections[key].length) {
-        resetQuadrosPhotoColorAnalysis();
-      }
-      if (state.editingCartItemId) {
-        var cart = loadCart();
-        var cartItem = cart.items.filter(function (item) { return item.id === state.editingCartItemId; })[0];
-        if (cartItem && cartItem.selections) {
-          cartItem.selections[key] = Array.isArray(cartItem.selections[key])
-            ? cartItem.selections[key].filter(function (item) { return item && item.token !== token; })
-            : [];
-          saveCart(cart);
-        }
-        if (state.editingCartOriginalItem && state.editingCartOriginalItem.selections) {
-          state.editingCartOriginalItem.selections[key] = Array.isArray(state.editingCartOriginalItem.selections[key])
-            ? state.editingCartOriginalItem.selections[key].filter(function (item) { return item && item.token !== token; })
-            : [];
-        }
-      }
-      if (orderUploadPreviews[token]) {
-        URL.revokeObjectURL(orderUploadPreviews[token]);
-        delete orderUploadPreviews[token];
-      }
+      applyOrderMediaUploadRemoval(product, key, token);
     }).catch(function (error) {
       if (!orderUploadOperationIsActive(operation) || operation.canceled) {
         return;
@@ -15412,6 +17511,47 @@
       });
     });
 
+    document.querySelectorAll("[data-artwork-upload-quantity]").forEach(function (input) {
+      function syncArtworkQuantity(commit) {
+        var key = input.dataset.orderUploadKey || customArtworkConfig(product).uploadKey;
+        var token = input.dataset.orderUploadToken || "";
+        var parsed = parseInt(input.value, 10);
+        var quantity;
+        var item = orderUploadItems(key).filter(function (candidate) {
+          return String(candidate.token || "") === token;
+        })[0] || null;
+        if (!item || (!commit && (!isFinite(parsed) || parsed < 1))) {
+          return;
+        }
+        quantity = Math.max(1, Math.min(9999, parsed || 1));
+        item.quantity = quantity;
+        if (commit) {
+          input.value = quantity;
+        }
+        if (!isCadernosProduct(product)) {
+          state.selections.pack_quantity = customArtworkTotalQuantity(product);
+        }
+        state.errors = "";
+        if (commit) {
+          try {
+            trackProductEvent(product, "artwork_quantity_changed", {
+              quantity: quantity,
+              artwork_count: customArtworkItems(product).length,
+              artwork_total_quantity: customArtworkTotalQuantity(product)
+            });
+          } catch (e) {}
+          rerenderProduct(product);
+        }
+      }
+
+      input.addEventListener("input", function () {
+        syncArtworkQuantity(false);
+      });
+      input.addEventListener("change", function () {
+        syncArtworkQuantity(true);
+      });
+    });
+
     document.querySelectorAll("[data-order-audio-record]").forEach(function (button) {
       var release = function () {
         window.removeEventListener("pointerup", release);
@@ -15442,6 +17582,20 @@
       });
     });
 
+    document.querySelectorAll("[data-custom-design-upload]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.selections.order_flow = "custom";
+        state.selections.design_source = "custom";
+        state.selections.designs = [];
+        state.selections.assorted_designs = "";
+        state.selections.congregation_gift = false;
+        resetQuantityState();
+        state.errors = "";
+        try { trackOptionSelected(product, "design_source", "custom", "Carregar o meu design"); } catch (e) {}
+        goNext(product);
+      });
+    });
+
     document.querySelectorAll("[data-select-all-designs]").forEach(function (button) {
       button.addEventListener("click", function () {
         var designStep = findStep(product, "designs");
@@ -15450,6 +17604,8 @@
         var allSelected = allValues.length > 0 && currentValues.length === allValues.length;
 
         state.selections.assorted_designs = "";
+        state.selections.order_flow = "catalog";
+        state.selections.design_source = "catalog";
         state.selections.designs = allSelected ? [] : allValues;
         if (!allSelected) {
           state.selections.congregation_gift = false;
@@ -15468,6 +17624,8 @@
 
         state.selections.assorted_designs = active ? "" : "1";
         if (!active) {
+          state.selections.order_flow = "catalog";
+          state.selections.design_source = "catalog";
           state.selections.designs = [];
           state.selections.congregation_gift = false;
         }
@@ -15508,6 +17666,10 @@
         } catch (e) {}
 
         setSelection(step, input);
+        if (step && step.id === "designs" && input.checked) {
+          state.selections.order_flow = "catalog";
+          state.selections.design_source = "catalog";
+        }
         if (step && step.id === "cover_personalization" && input.value === "no") {
           state.selections.cover_personalization_text = "";
         }
@@ -15581,13 +17743,55 @@
       });
     });
 
+    document.querySelectorAll("[data-caderno-order-quantity-change]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var config = cadernoOrderQuantityConfig(product);
+        var minimum = Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1);
+        var maximum = Math.max(minimum, parseInt(config.maximum, 10) || 9999);
+        var change = parseInt(button.dataset.cadernoOrderQuantityChange, 10) || 0;
+        var quantity = Math.max(minimum, Math.min(maximum, cadernoOrderQuantity(product) + change));
+        state.selections.caderno_order_quantity = quantity;
+        try { trackOptionSelected(product, "caderno_qty", quantity, ""); } catch (e) {}
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-caderno-order-quantity-input]").forEach(function (input) {
+      function syncCadernoOrderQuantity(commit) {
+        var config = cadernoOrderQuantityConfig(product);
+        var minimum = Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1);
+        var maximum = Math.max(minimum, parseInt(config.maximum, 10) || 9999);
+        var parsed = parseInt(input.value, 10);
+        var quantity;
+        if (!commit && (!isFinite(parsed) || parsed < minimum)) {
+          return;
+        }
+        quantity = Math.max(minimum, Math.min(maximum, parsed || minimum));
+        state.selections.caderno_order_quantity = quantity;
+        state.errors = "";
+        if (commit) {
+          input.value = quantity;
+          try { trackOptionSelected(product, "caderno_qty", quantity, ""); } catch (e) {}
+          rerenderProduct(product);
+        }
+      }
+
+      input.addEventListener("input", function () {
+        syncCadernoOrderQuantity(false);
+      });
+      input.addEventListener("change", function () {
+        syncCadernoOrderQuantity(true);
+      });
+    });
+
     document.querySelectorAll("[data-free-quantity-change]").forEach(function (button) {
       button.addEventListener("click", function () {
-        var current = getPackQuantity(product) || minimumFreeQuantity(product);
+        var current = getPackQuantity(product) || effectiveMinimumFreeQuantity(product);
         var change = Number(button.dataset.freeQuantityChange || 0);
         var rangeMaximum = freeQuantityRangeMaximum(product);
         var next = current > rangeMaximum && change < 0 ? rangeMaximum : current + change;
-        setFreeQuantity(product, next, "auto");
+        setFreeQuantity(product, next, "auto", true, change);
         rerenderProduct(product);
       });
     });
@@ -15596,12 +17800,7 @@
       input.addEventListener("input", function () {
         var quantity = freeQuantityFromRangePosition(product, input.value);
 
-        state.selections.pack_quantity = quantity;
-        state.selections.free_quantity_mode = freeQuantityModeForValue(product, quantity);
-        state.quantitySignature = "";
-        state.quantitiesTouched = false;
-        state.quantityPackBaseline = 0;
-        state.errors = "";
+        setFreeQuantity(product, quantity, "auto", false);
         refreshFreeQuantityDraft(product, input);
       });
       input.addEventListener("change", function () {
@@ -15610,44 +17809,7 @@
       });
     });
 
-    document.querySelectorAll("[data-quantity-plus]").forEach(function (button) {
-      button.addEventListener("click", function () {
-        var value = button.dataset.quantityPlus;
-        var donor = donorFor(product, value);
-        var changed = selectedDesignItems(product).length >= 3
-          ? assignOnePin(product, value)
-          : moveOnePin(product, donor, value);
-
-        if (changed) {
-          state.errors = "";
-          rerenderProduct(product);
-        }
-      });
-    });
-
-    document.querySelectorAll("[data-quantity-minus]").forEach(function (button) {
-      button.addEventListener("click", function () {
-        var value = button.dataset.quantityMinus;
-        var receiver = nextDesignValue(product, value);
-        var changed = selectedDesignItems(product).length >= 3
-          ? removeOnePin(product, value)
-          : moveOnePin(product, value, receiver);
-
-        if (changed) {
-          state.errors = "";
-          rerenderProduct(product);
-        }
-      });
-    });
-
-    document.querySelectorAll("[data-auto-distribute]").forEach(function (button) {
-      button.addEventListener("click", function () {
-        state.selections.design_quantities = distributeQuantities(selectedDesignItems(product), getPackQuantity(product));
-        state.quantitiesTouched = false;
-        state.errors = "";
-        rerenderProduct(product);
-      });
-    });
+    bindQuantityDistributionEvents(product);
 
     document.querySelectorAll("[data-detail-field]").forEach(function (input) {
       input.addEventListener("input", function () {
@@ -15890,6 +18052,8 @@
         rerenderProduct(product);
       });
     });
+
+    bindCustomProductBuilder(product);
 
     document.querySelectorAll("[data-cart-add-another]").forEach(function (button) {
       button.addEventListener("click", function () {
@@ -16145,8 +18309,30 @@
     return item ? item.productSlug : "";
   }
 
+  function cartItemCatalogContext(item) {
+    var selections = item && item.selections && typeof item.selections === "object" ? item.selections : {};
+    var explicit = String(selections.catalog_context || "");
+    var slug = String(item && item.productSlug || "");
+    if (explicit) {
+      return explicit;
+    }
+    return ["crachas", "imanes", "caderninhos", "cadernos"].indexOf(slug) !== -1 ? "congress-2026" : "main";
+  }
+
+  function cartCatalogContext(cart) {
+    var contexts = [];
+    ((cart && cart.items) || []).forEach(function (item) {
+      var context = cartItemCatalogContext(item);
+      if (contexts.indexOf(context) === -1) contexts.push(context);
+    });
+    return contexts.length > 1 ? "mixed" : (contexts[0] || "main");
+  }
+
   function loadCheckoutDeliveryOptions() {
-    var slug = firstCartProductSlug();
+    var cart = loadCart();
+    var firstItem = cart.items[0] || null;
+    var slug = firstItem ? firstItem.productSlug : "";
+    var context = firstItem ? cartItemCatalogContext(firstItem) : "main";
 
     state.checkoutDeliveryOptions = defaultDeliveryOptions();
 
@@ -16154,7 +18340,7 @@
       return Promise.resolve(state.checkoutDeliveryOptions);
     }
 
-    return loadJson("content/products/" + slug + ".json").then(function (product) {
+    return loadJson((context === "congress-2026" ? "congressos/2026/content/products/" : "content/products/") + slug + ".json").then(function (product) {
       state.checkoutDeliveryOptions = deliveryOptions(product);
       return state.checkoutDeliveryOptions;
     }).catch(function () {
@@ -16410,6 +18596,7 @@
       '<ol class="cart-panel-list">',
       items.map(function (item, index) {
         var summary = formatCartItemSummary(item);
+        var customizationFee = cartCustomizationFeeText(item);
         var thumb = summary.image
           ? '<img src="' + escapeHtml(summary.image) + '" alt="" loading="lazy">'
           : '<span aria-hidden="true">' + escapeHtml(summary.productName.slice(0, 1).toUpperCase()) + '</span>';
@@ -16420,11 +18607,12 @@
           '<strong>' + escapeHtml(index + 1) + '. ' + escapeHtml(summary.productName) + '</strong>',
           '<span>' + escapeHtml(summary.title) + '</span>',
           summary.subtitle ? '<em>' + escapeHtml(summary.subtitle) + '</em>' : "",
+          customizationFee ? '<em class="cart-item-customization-fee">' + escapeHtml(customizationFee) + '</em>' : "",
           '</div>',
           '<div class="cart-item-side">',
           '<span class="cart-item-price">' + escapeHtml(summary.priceText) + '</span>',
           '<div class="cart-item-actions">',
-          opts.allowEdit ? '<button type="button" class="cart-edit-button" data-checkout-edit="' + escapeHtml(item.id) + '">Editar</button>' : "",
+          opts.allowEdit && cartItemIsEditable(item) ? '<button type="button" class="cart-edit-button" data-checkout-edit="' + escapeHtml(item.id) + '">Editar</button>' : "",
           opts.allowRemove ? '<button type="button" class="cart-remove-button" data-checkout-remove="' + escapeHtml(item.id) + '">Remover</button>' : "",
           '</div>',
           '</div>',
@@ -16528,10 +18716,13 @@
 
   function cartSubmissionPayload() {
     var cart = loadCart();
+    var session = funnelSession();
     return {
       order_mode: "cart",
       schemaVersion: cart.schemaVersion,
       cartId: cart.cartId,
+      funnel_session_id: session && session.id ? session.id : "",
+      cart_context: cartCatalogContext(cart),
       items: cart.items,
       checkout: {
         customer_name: String(state.checkout.customer_name || "").trim(),
@@ -16742,6 +18933,7 @@
         appendHidden(form, "cart_json", JSON.stringify(payload));
         trackOrderEvent("cart_order_submitted", {
           cart_id: payload.cartId,
+          cart_context: payload.cart_context,
           item_count: payload.items.length,
           subtotal_cents: checkoutSubtotalCents()
         });
@@ -17687,7 +19879,7 @@
       // produto + step_view do passo inicial (porque setCurrentStep só
       // dispara em transições, e o passo 0 não é uma transição).
       var initialStep = currentStep(product);
-      var startedKey = "mp_funnel_wizard_started_" + (product.slug || "");
+      var startedKey = "mp_funnel_wizard_started_" + String(product.catalogContext || "main") + "_" + (product.slug || "");
       var alreadyStarted = false;
       try { alreadyStarted = window.sessionStorage.getItem(startedKey) === "1"; } catch (err) {}
       if (!alreadyStarted) {

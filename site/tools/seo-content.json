@@ -1,0 +1,203 @@
+{
+  "site": "https://miaandpaper.com",
+  "brand": "Mia & Paper",
+  "pages": [
+    {
+      "file": "index.html",
+      "url": "/",
+      "priority": "1.0",
+      "changefreq": "weekly",
+      "schema": "organization",
+      "homeContent": "content/home.json",
+      "title": "Lembranças personalizadas para congressos e assembleias | Mia & Paper",
+      "description": "Lembranças personalizadas para congressos e assembleias das Testemunhas de Jeová: crachás, ímanes, mini-cadernos, cadernos anuais, marcadores e molduras com flores 3D. Feitos à mão em Portugal, por encomenda.",
+      "ogDescription": "Crachás, ímanes, cadernos e molduras personalizadas, feitos à mão por encomenda.",
+      "h1": "Lembranças e papelaria personalizada, feitas à mão",
+      "lead": "A Mia & Paper prepara por encomenda lembranças personalizadas para congressos e assembleias das Testemunhas de Jeová — crachás, ímanes, mini-cadernos e cadernos anuais — e também molduras com flores de papel 3D, marcadores, postais, agendas e stickers."
+    },
+    {
+      "file": "congressos.html",
+      "url": "/congressos.html",
+      "priority": "0.9",
+      "changefreq": "weekly",
+      "homeContent": "content/congressos.json",
+      "title": "Lembranças para congressos e assembleias | Mia & Paper",
+      "description": "Crachás, ímanes, mini-cadernos e cadernos anuais para o congresso. Lembranças personalizadas para congressos e assembleias das Testemunhas de Jeová, preparadas por encomenda.",
+      "ogDescription": "Crachás, ímanes, mini-cadernos e cadernos anuais para o congresso.",
+      "h1": "Lembranças para o congresso",
+      "lead": "Escolhe as lembranças do congresso: crachás, ímanes, mini-cadernos para apontamentos e cadernos anuais. Cada artigo tem um formulário simples para nos dizeres tudo o que precisamos de saber."
+    },
+    {
+      "file": "imanes.html",
+      "url": "/imanes.html",
+      "priority": "0.8",
+      "changefreq": "monthly",
+      "product": "imanes-loja",
+      "title": "Ímanes personalizados para congressos e lembranças | Mia & Paper",
+      "description": "Ímanes personalizados para lembranças de congresso e assembleia. Escolhe um dos designs Mia & Paper ou envia o teu, em packs a partir de 15 unidades.",
+      "ogDescription": "Ímanes personalizados, em designs Mia & Paper ou com o teu desenho.",
+      "h1": "Ímanes personalizados",
+      "lead": "Ímanes personalizados para oferecer como lembrança de congresso ou assembleia, ou simplesmente para o frigorífico. Escolhe entre os designs Mia & Paper ou envia o teu próprio desenho."
+    },
+    {
+      "file": "imanes-recortados.html",
+      "url": "/imanes-recortados.html",
+      "priority": "0.7",
+      "changefreq": "monthly",
+      "product": "imanes-recortados",
+      "title": "Ímanes recortados personalizados | Mia & Paper",
+      "description": "Ímanes recortados à volta do desenho, personalizados a partir do teu ficheiro ou de um design Mia & Paper. Ideais como lembrança de congresso.",
+      "ogDescription": "Ímanes cortados à volta do desenho, feitos por encomenda.",
+      "h1": "Ímanes recortados",
+      "lead": "Ímanes cortados à volta do próprio desenho, sem margem retangular. Personalizados a partir do teu ficheiro ou de um design Mia & Paper."
+    },
+    {
+      "file": "crachas.html",
+      "url": "/crachas.html",
+      "priority": "0.8",
+      "changefreq": "monthly",
+      "product": "crachas-loja",
+      "title": "Crachás personalizados para congressos e assembleias | Mia & Paper",
+      "description": "Crachás personalizados para congressos e assembleias das Testemunhas de Jeová. Escolhe um design Mia & Paper ou envia o teu, com nome e detalhes a teu gosto.",
+      "ogDescription": "Crachás personalizados para congressos e assembleias.",
+      "h1": "Crachás personalizados",
+      "lead": "Crachás personalizados para congressos e assembleias, com o design que escolheres e os detalhes que quiseres. Também podes enviar o teu próprio desenho."
+    },
+    {
+      "file": "molduras.html",
+      "url": "/molduras.html",
+      "priority": "0.8",
+      "changefreq": "monthly",
+      "product": "quadros",
+      "title": "Molduras personalizadas com flores 3D | Mia & Paper",
+      "description": "Molduras personalizadas com flores de papel 3D, fotografia, silhueta e texto em vinil. Peças únicas feitas à mão para oferecer ou decorar.",
+      "ogDescription": "Molduras personalizadas com flores de papel 3D, foto e texto em vinil.",
+      "h1": "Molduras personalizadas",
+      "lead": "Molduras personalizadas feitas à mão: jardins de flores de papel 3D, fotografia, silhuetas e texto em vinil. Cada moldura é montada de raiz a partir da tua ideia."
+    },
+    {
+      "file": "mini-cadernos.html",
+      "url": "/mini-cadernos.html",
+      "priority": "0.8",
+      "changefreq": "monthly",
+      "product": "mini-cadernos",
+      "title": "Mini-cadernos personalizados para congressos | Mia & Paper",
+      "description": "Mini-cadernos personalizados para apontamentos do congresso e da assembleia. Capa à tua escolha, tamanho de bolso, feitos por encomenda.",
+      "ogDescription": "Mini-cadernos personalizados, de bolso, com a capa à tua escolha.",
+      "h1": "Mini-cadernos personalizados",
+      "lead": "Mini-cadernos de bolso para levares contigo e tomares apontamentos no congresso ou na assembleia. Escolhes a capa e nós preparamos o caderno por encomenda."
+    },
+    {
+      "file": "cadernos-anuais.html",
+      "url": "/cadernos-anuais.html",
+      "priority": "0.8",
+      "changefreq": "monthly",
+      "product": "cadernos-anuais",
+      "title": "Cadernos anuais personalizados para apontamentos | Mia & Paper",
+      "description": "Cadernos anuais personalizados para te acompanharem o ano inteiro, com a capa à tua escolha. Feitos à mão por encomenda.",
+      "ogDescription": "Cadernos anuais personalizados, com a capa à tua escolha.",
+      "h1": "Cadernos anuais personalizados",
+      "lead": "Cadernos anuais para apontamentos, feitos para durar o ano inteiro. Escolhes a capa entre os designs Mia & Paper ou envias o teu."
+    },
+    {
+      "file": "bloquinhos.html",
+      "url": "/bloquinhos.html",
+      "priority": "0.7",
+      "changefreq": "monthly",
+      "product": "bloquinhos",
+      "title": "Bloquinhos e blocos de notas personalizados | Mia & Paper",
+      "description": "Bloquinhos de notas personalizados para o dia a dia, com a capa à tua escolha. Feitos à mão por encomenda.",
+      "ogDescription": "Bloquinhos de notas personalizados para o dia a dia.",
+      "h1": "Bloquinhos personalizados",
+      "lead": "Blocos de notas pequenos para o dia a dia, personalizados com o design que escolheres."
+    },
+    {
+      "file": "marcadores.html",
+      "url": "/marcadores.html",
+      "priority": "0.7",
+      "changefreq": "monthly",
+      "product": "marcadores",
+      "title": "Marcadores de livros personalizados | Mia & Paper",
+      "description": "Marcadores de livros personalizados, em designs Mia & Paper ou com o teu próprio desenho. Ótimos como lembrança para oferecer.",
+      "ogDescription": "Marcadores de livros personalizados, feitos por encomenda.",
+      "h1": "Marcadores personalizados",
+      "lead": "Marcadores de livros personalizados para não perderes a página — em designs Mia & Paper ou com o teu próprio desenho."
+    },
+    {
+      "file": "stickers.html",
+      "url": "/stickers.html",
+      "priority": "0.7",
+      "changefreq": "monthly",
+      "product": "stickers",
+      "title": "Stickers e autocolantes personalizados | Mia & Paper",
+      "description": "Stickers e autocolantes personalizados a partir dos teus desenhos ou dos designs Mia & Paper.",
+      "ogDescription": "Stickers e autocolantes personalizados.",
+      "h1": "Stickers personalizados",
+      "lead": "Autocolantes personalizados para colares onde quiseres, a partir dos designs Mia & Paper ou do teu próprio ficheiro."
+    },
+    {
+      "file": "personalizacao.html",
+      "url": "/personalizacao.html",
+      "priority": "0.8",
+      "changefreq": "monthly",
+      "product": "personalizacao",
+      "title": "Os teus desenhos em crachás, ímanes e cadernos | Mia & Paper",
+      "description": "Envia os teus desenhos ou fotografias e escolhe em que produtos os queres: crachás, ímanes, marcadores e cadernos personalizados.",
+      "ogDescription": "Crachás, ímanes, marcadores e cadernos feitos a partir dos teus ficheiros.",
+      "h1": "Personalização com os teus ficheiros",
+      "lead": "Envia os teus desenhos, fotografias ou ficheiros e escolhe em que produtos os queres: crachás, ímanes, marcadores, cadernos e mais."
+    },
+    {
+      "file": "agendas.html",
+      "url": "/agendas.html",
+      "priority": "0.6",
+      "changefreq": "monthly",
+      "headOnly": true,
+      "title": "Agendas personalizadas | Mia & Paper",
+      "description": "Agendas personalizadas com a capa escolhida por ti, preparadas à mão por encomenda.",
+      "ogDescription": "Agendas personalizadas para organizar os teus dias.",
+      "h1": "Agendas personalizadas"
+    },
+    {
+      "file": "postais.html",
+      "url": "/postais.html",
+      "priority": "0.6",
+      "changefreq": "monthly",
+      "headOnly": true,
+      "title": "Postais personalizados | Mia & Paper",
+      "description": "Postais personalizados para uma ocasião ou mensagem especial, preparados à mão por encomenda.",
+      "ogDescription": "Postais personalizados para mensagens que merecem ser guardadas.",
+      "h1": "Postais personalizados"
+    },
+    {
+      "file": "contacto.html",
+      "url": "/contacto.html",
+      "priority": "0.5",
+      "changefreq": "yearly",
+      "headOnly": true,
+      "title": "Contacto e encomendas | Mia & Paper",
+      "description": "Fala com a Mia & Paper sobre encomendas, pedidos especiais e lembranças personalizadas para congressos.",
+      "ogDescription": "Formulário simples para falar com a Mia & Paper.",
+      "h1": "Falar com a Mia"
+    },
+    {
+      "file": "privacy.html",
+      "url": "/privacy.html",
+      "priority": "0.2",
+      "changefreq": "yearly",
+      "headOnly": true,
+      "excludeFromSitemap": true,
+      "title": "Política de Privacidade | Mia & Paper",
+      "description": "Política de privacidade do site Mia & Paper.",
+      "ogDescription": "Política de privacidade do site Mia & Paper.",
+      "h1": "Política de Privacidade"
+    }
+  ],
+  "extraSitemapUrls": [
+    { "url": "/ofertas/index.html", "priority": "0.6", "changefreq": "monthly" }
+  ],
+  "organization": {
+    "description": "Lembranças personalizadas para congressos e assembleias, papelaria e peças feitas à mão por encomenda.",
+    "sameAs": ["https://www.instagram.com/miaandpaper/"]
+  }
+}

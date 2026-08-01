@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Módulo · pré-visualização</title>
+<script>
+// MODULOS_PREVIEW_V1 — página carregada dentro de cada <iframe> do
+// modulos.php. Desenha um módulo real do site com as funções do app.js.
+//
+// O tema tem de estar posto ANTES do CSS entrar, senão vê-se o claro a
+// piscar antes do escuro. As regras de modo escuro do site estão presas a
+// `html[data-theme="dark"]`, por isso dentro de um iframe funcionam tal e
+// qual como no site — sem reescrita nenhuma.
+(function () {
+  var p = new URLSearchParams(window.location.search);
+  if (p.get("theme") === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+  }
+}());
+
+/**
+ * TRACKING_OFF_NA_PREVIEW_V1
+ *
+ * O `app.js` regista eventos de funil mal arranca — e aqui arranca uma vez
+ * por iframe. Sem isto, abrir a página de módulos enchia o funil de sessões
+ * falsas: dezenas de "site_landed" e "step_view" que nunca foram visitas de
+ * ninguém, a poluir precisamente os números que o painel serve para ler.
+ *
+ * Bloqueia-se só o transporte, e só para este endpoint. Não se toca no
+ * app.js, que é partilhado com o site a sério.
+ */
+(function () {
+  var ENDPOINT = "track-order-event.php";
+
+  function ehTracking(url) {
+    return typeof url === "string" && url.indexOf(ENDPOINT) !== -1;
+  }
+
+  if (navigator && typeof navigator.sendBeacon === "function") {
+    var beaconOriginal = navigator.sendBeacon.bind(navigator);
+    navigator.sendBeacon = function (url) {
+      if (ehTracking(url)) { return true; }   // finge que foi, e não vai
+      return beaconOriginal.apply(null, arguments);
+    };
+  }
+
+  if (window.fetch) {
+    var fetchOriginal = window.fetch.bind(window);
+    window.fetch = function (url) {
+      if (ehTracking(url && url.url ? url.url : url)) {
+        return Promise.resolve(new Response("", { status: 204 }));
+      }
+      return fetchOriginal.apply(null, arguments);
+    };
+  }
+}());
+</script>
+<link rel="stylesheet" href="styles.css?v=2026073101">
+<style>
+  html, body { margin: 0; padding: 0; background: var(--paper); }
+
+  /* O site põe `min-height: 100vh` no body e no .app-shell, para o rodapé
+     assentar no fundo do ecrã. Dentro deste iframe isso é veneno: a altura do
+     conteúdo passaria a ser sempre pelo menos a altura do iframe, e como o
+     pai dimensiona o iframe pela altura relatada, os dois empurravam-se um ao
+     outro até tapar a página. Aqui a altura tem de vir só do conteúdo. */
+  html, body, .app-shell, .mp-shell { min-height: 0 !important; height: auto !important; }
+  .app-shell { padding: 0; }
+  /* Fora o módulo pedido, nada de cromo: o iframe é para mostrar uma peça. */
+  .butterfly-layer, .orders-suspended-banner, .cookie-banner { display: none !important; }
+  .mp-shell { padding: 14px 12px; }
+  .mp-shell .wizard-shell { margin: 0; }
+  .mp-erro { font: 13px/1.5 system-ui, sans-serif; color: #9a4a2c; padding: 16px; }
+</style>
+</head>
+<body data-page="preview">
+<div id="app" class="app-shell"></div>
+<script src="app.js?v=2026080101"></script>
+<script>
+(function () {
+  "use strict";
+
+  var params = new URLSearchParams(window.location.search);
+  var slug = (params.get("product") || "").replace(/[^a-z0-9-]/gi, "");
+  var stepIndex = parseInt(params.get("step"), 10);
+  var tipo = params.get("kind") || "step";
+  var temaPedido = params.get("theme") === "dark" ? "dark" : "light";
+  var app = document.getElementById("app");
+
+  /**
+   * O tema desta pré-visualização vem do URL, não do localStorage.
+   *
+   * O `app.js` tem o seu próprio arranque de tema, que lê
+   * `localStorage.miaandpaperTheme` — e o localStorage é partilhado entre a
+   * página e os iframes da mesma origem. Sem isto, o app.js punha todos os
+   * iframes no tema da página de módulos e a coluna escura ficava clara.
+   *
+   * O observador mantém o atributo fixo caso o app.js volte a mexer-lhe.
+   */
+  function fixarTema() {
+    if (document.documentElement.getAttribute("data-theme") !== temaPedido) {
+      document.documentElement.setAttribute("data-theme", temaPedido);
+    }
+  }
+  fixarTema();
+  if (window.MutationObserver) {
+    new MutationObserver(fixarTema).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"]
+    });
+  }
+
+  /**
+   * Mede o CONTEÚDO, nunca o documento.
+   *
+   * `document.body.scrollHeight` inclui o que o viewport impõe. Como o pai
+   * define a altura do iframe a partir do que recebemos, medir o documento
+   * cria um ciclo: cada medição devolvia a altura que o pai acabara de
+   * aplicar, o pai voltava a aplicá-la um pouco maior, e assim
+   * indefinidamente até o módulo tapar a página.
+   *
+   * O `<main>` desenhado pelo app.js tem a altura do conteúdo e mais nada,
+   * por isso é estável. Só se avisa o pai quando o valor muda mesmo.
+   */
+  var ultimaAltura = -1;
+  var primeiraMedicao = true;
+
+  function alturaParaFora() {
+    if (window.parent === window) { return; }
+
+    var alvo = app.firstElementChild || app;
+    var altura = Math.ceil(alvo.getBoundingClientRect().height);
+    if (altura <= 0) { return; }
+
+    if (Math.abs(altura - ultimaAltura) < 2) { return; }
+    ultimaAltura = altura;
+
+    var mensagem = {
+      type: "mia-modulo-altura",
+      id: params.get("id") || "",
+      altura: altura
+    };
+    if (primeiraMedicao) {
+      primeiraMedicao = false;
+      mensagem.primeira = true;
+      mensagem.tokens = tokensUsados();
+    }
+
+    window.parent.postMessage(mensagem, window.location.origin);
+  }
+
+  /**
+   * Que cores da paleta é que este módulo usa mesmo.
+   *
+   * Não se adivinha pelo nome das classes: resolve-se cada token para o seu
+   * valor computado e percorrem-se os elementos desenhados a comparar as
+   * cores que o browser está mesmo a aplicar — texto, fundo, bordas, e o
+   * preenchimento/traço dos SVG.
+   *
+   * As cores vêm em formatos diferentes (`#fff8df` no token, `rgb(255,248,223)`
+   * no computado), por isso passam todas pelo mesmo normalizador.
+   */
+  /**
+   * A lista de tokens sai do próprio CSS, não de uma cópia escrita aqui.
+   *
+   * Há duas camadas que interessam: a paleta da marca (`--paper`, `--ink`…)
+   * e a camada `--ui-*`, que é a que os componentes usam mesmo. Ler as regras
+   * de `:root` apanha as duas e mantém-se certa quando alguém acrescentar um
+   * token novo.
+   */
+  function tokensDaPaleta() {
+    var vistos = {};
+    var lista = [];
+
+    for (var s = 0; s < document.styleSheets.length; s++) {
+      var regras;
+      try { regras = document.styleSheets[s].cssRules; } catch (e) { continue; }
+      if (!regras) { continue; }
+
+      for (var r = 0; r < regras.length; r++) {
+        var regra = regras[r];
+        if (!regra.selectorText || !regra.style) { continue; }
+        if (regra.selectorText.indexOf(":root") === -1
+            && regra.selectorText.indexOf('html[data-theme') === -1) { continue; }
+
+        for (var p = 0; p < regra.style.length; p++) {
+          var nome = regra.style[p];
+          if (nome.indexOf("--") !== 0 || vistos[nome]) { continue; }
+          var valor = regra.style.getPropertyValue(nome).trim();
+          if (/^#[0-9a-f]{3,8}$/i.test(valor) || /^rgba?\(/i.test(valor)) {
+            vistos[nome] = true;
+            lista.push(nome);
+          }
+        }
+      }
+    }
+    return lista;
+  }
+
+  var PALETA = null;
+
+  function normalizar(cor) {
+    if (!cor || cor === "none" || cor === "transparent") { return ""; }
+    var sonda = document.createElement("span");
+    sonda.style.color = "";
+    sonda.style.color = cor;
+    if (!sonda.style.color) { return ""; }
+    document.body.appendChild(sonda);
+    var lido = getComputedStyle(sonda).color;
+    document.body.removeChild(sonda);
+    return lido;
+  }
+
+  function tokensUsados() {
+    if (PALETA === null) { PALETA = tokensDaPaleta(); }
+
+    var estiloRaiz = getComputedStyle(document.documentElement);
+    var porCor = {};
+
+    PALETA.forEach(function (token) {
+      var valor = normalizar(estiloRaiz.getPropertyValue(token).trim());
+      if (valor && !porCor[valor]) { porCor[valor] = token; }
+    });
+
+    var encontrados = {};
+    var elementos = app.querySelectorAll("*");
+    var propriedades = [
+      "color", "backgroundColor", "borderTopColor", "borderRightColor",
+      "borderBottomColor", "borderLeftColor", "fill", "stroke", "outlineColor"
+    ];
+
+    for (var i = 0; i < elementos.length && i < 800; i++) {
+      var cs = getComputedStyle(elementos[i]);
+      for (var p = 0; p < propriedades.length; p++) {
+        var token = porCor[cs[propriedades[p]]];
+        if (token) { encontrados[token] = true; }
+      }
+    }
+
+    // A ordem da paleta é mais legível do que a de descoberta.
+    return PALETA.filter(function (t) { return encontrados[t]; });
+  }
+
+  function erro(texto) {
+    app.innerHTML = '<p class="mp-erro">' + texto + "</p>";
+    alturaParaFora();
+  }
+
+  /**
+   * Escolhas mínimas para o passo ter alguma coisa que mostrar. Um passo de
+   * confirmação sem nada escolhido desenha uma caixa vazia; com um design e
+   * um pack, desenha o resumo a sério.
+   *
+   * É tudo derivado do próprio JSON do produto — não há valores escritos
+   * à mão para produto nenhum.
+   */
+  function seleccoesRazoaveis(produto) {
+    var sel = { order_flow: "catalog", catalog_context: produto.catalogContext || "main-v2" };
+
+    (produto.steps || []).forEach(function (passo) {
+      var itens = passo.items || [];
+      if (!itens.length) { return; }
+
+      if (passo.template === "design-grid") {
+        sel["designs[]"] = [itens[0].value || itens[0].id];
+        sel.designs = sel["designs[]"];
+        return;
+      }
+      if (passo.template === "quantity-builder" || passo.selection === "pack") {
+        // Um pack do meio da escada mostra melhor a caixa de preços do que
+        // o primeiro ou o último.
+        var meio = itens[Math.min(2, itens.length - 1)];
+        var quantidade = meio.quantity || 1;
+        sel.pack_quantity = String(quantidade);
+        // Sem isto o resumo desenha "x0" ao lado do design: o total está
+        // escolhido, mas ninguém disse quantos são deste design.
+        var escolhidos = sel["designs[]"] || [];
+        if (escolhidos.length) {
+          sel.design_quantities = {};
+          sel.design_quantities[escolhidos[0]] = quantidade;
+        }
+        return;
+      }
+      if (passo.field && passo.selection !== "multi") {
+        sel[passo.field] = itens[0].value || itens[0].id || "";
+      }
+    });
+
+    // Campos soltos que alguns passos usam para decidir o que desenhar.
+    if (produto.defaultPriceKey) { sel.size = produto.defaultPriceKey; }
+    return sel;
+  }
+
+  function desenhar(produto) {
+    if (tipo === "home") {
+      window.MiaPreview.renderHome(produto);
+      window.setTimeout(alturaParaFora, 60);
+      window.setTimeout(alturaParaFora, 500);
+      return;
+    }
+
+    var passo = produto.steps && produto.steps[stepIndex];
+    if (!passo) { return erro("Passo " + stepIndex + " não existe em " + slug + "."); }
+
+    var html = window.MiaPreview.renderStep(produto, stepIndex, seleccoesRazoaveis(produto));
+    app.innerHTML =
+      '<main class="' + window.MiaPreview.shellClass(produto) + ' mp-shell">'
+      + '<section class="wizard-shell">'
+      + '<div class="' + window.MiaPreview.stepCardClass(passo) + '">'
+      + html
+      + "</div></section></main>";
+
+    // A altura muda quando as imagens acabam de carregar.
+    alturaParaFora();
+    window.setTimeout(alturaParaFora, 80);
+    window.setTimeout(alturaParaFora, 600);
+    window.addEventListener("load", alturaParaFora);
+
+    // Um ResizeObserver no CONTEÚDO reage a mudanças reais (imagens que
+    // carregam, tipos de letra que trocam) sem reagir ao pai a redimensionar
+    // o iframe — que era o outro lado do ciclo.
+    if (window.ResizeObserver && app.firstElementChild) {
+      new ResizeObserver(alturaParaFora).observe(app.firstElementChild);
+    }
+  }
+
+  if (!slug) { return erro("Falta o produto."); }
+
+  var base = tipo === "home" ? "content/home.json" : "content/products/" + slug + ".json";
+  fetch(base, { cache: "no-store" })
+    .then(function (r) {
+      if (!r.ok) { throw new Error("HTTP " + r.status); }
+      return r.json();
+    })
+    .then(function (dados) {
+      if (!window.MiaPreview) { return erro("O app.js não expôs o MiaPreview."); }
+      desenhar(dados);
+      fixarTema();
+    })
+    ["catch"](function (e) { erro("Não consegui carregar " + base + ": " + e.message); });
+
+  /**
+   * Reagir ao `resize` é seguro agora, e antes não era.
+   *
+   * O ciclo antigo existia porque se media o documento, cuja altura vinha do
+   * próprio iframe: medir → o pai cresce → medir maior → o pai cresce mais.
+   * Medindo o conteúdo, a altura só depende da LARGURA disponível. Mudar a
+   * largura tem de provocar nova medição — é assim que o módulo encolhe
+   * quando a coluna alarga — e mudar a altura não muda nada.
+   *
+   * O ResizeObserver acima cobre o caso normal; isto cobre os casos em que
+   * ele não corre (separador em segundo plano, motores antigos).
+   */
+  var temporizador = null;
+  window.addEventListener("resize", function () {
+    window.clearTimeout(temporizador);
+    temporizador = window.setTimeout(alturaParaFora, 120);
+  });
+
+  /**
+   * Cores enviadas pelo painel de módulos.
+   *
+   * O `important` é obrigatório: o bloco `html[data-theme="dark"]` do site
+   * declara os tokens com `!important`, e uma custom property inline sem
+   * prioridade perderia para ele — os iframes escuros ficavam por mudar.
+   * Inline + important ganha a tudo.
+   *
+   * Isto vive só na memória deste iframe. Nada é gravado.
+   */
+  window.addEventListener("message", function (evento) {
+    if (evento.origin !== window.location.origin) { return; }
+    var dados = evento.data || {};
+    if (dados.type !== "mia-modulo-paleta" || !dados.valores) { return; }
+
+    Object.keys(dados.valores).forEach(function (token) {
+      if (!/^--[a-z0-9-]+$/.test(token)) { return; }
+      document.documentElement.style.setProperty(token, dados.valores[token], "important");
+    });
+
+    // Mudar cores pode mudar a altura (sombras, bordas). Volta a medir.
+    window.clearTimeout(temporizador);
+    temporizador = window.setTimeout(alturaParaFora, 120);
+  });
+}());
+</script>
+</body>
+</html>

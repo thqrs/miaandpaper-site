@@ -105,6 +105,24 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
     // O flash é renderizado abaixo.
 }
 
+$period = isset($_GET['period']) ? (string)$_GET['period'] : '30d';
+$periodLabels = array(
+    '7d'  => 'últimos 7 dias',
+    '30d' => 'últimos 30 dias',
+    '90d' => 'últimos 90 dias',
+    'all' => 'todos os eventos',
+);
+if (!isset($periodLabels[$period])) {
+    $period = '30d';
+}
+
+// SNAPSHOT_V1: tão cedo quanto possível — antes de qualquer ida à base de
+// dados. Se houver snapshot para este período, o pedido termina aqui e nem
+// chega a abrir a ligação SQLite (que sozinha custa ~300 ms, por causa da
+// verificação de migrações). Ver lib/snapshot.php.
+require_once __DIR__ . '/lib/snapshot.php';
+mp_snapshot_start('funil', array('period' => $period));
+
 // TRACKING_CLIENT_IP_V1: usa o mesmo IP efectivo que o endpoint público.
 // Sob proxy/Cloudflare, REMOTE_ADDR é o IP do proxy e a ignore list deixa
 // de funcionar como esperado; mp_tracking_client_ip() compensa isso.
@@ -117,16 +135,112 @@ function admin_funnel_h($value)
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
-$period = isset($_GET['period']) ? (string)$_GET['period'] : '30d';
-$periodLabels = array(
-    '7d'  => 'últimos 7 dias',
-    '30d' => 'últimos 30 dias',
-    '90d' => 'últimos 90 dias',
-    'all' => 'todos os eventos',
-);
-if (!isset($periodLabels[$period])) {
-    $period = '30d';
+// PRODUCT_CONTEXT_V2: separa os catálogos/percursos da loja principal dos
+// quatro wizards congelados do Congresso 2026. A chave composta existe apenas
+// no admin; product_slug continua intacto na base de dados.
+function af_json_array($raw) {
+    if (is_array($raw)) return $raw;
+    $decoded = json_decode((string)$raw, true);
+    return is_array($decoded) ? $decoded : array();
 }
+function af_main_v2_slugs() { return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'personalizacao'); }
+function af_congress_slugs() { return array('crachas', 'imanes', 'caderninhos', 'cadernos'); }
+function af_is_main_v2_slug($slug) { return in_array((string)$slug, af_main_v2_slugs(), true); }
+function af_is_congress_slug($slug) { return in_array((string)$slug, af_congress_slugs(), true); }
+function af_normalize_context_value($value, $slug = '') {
+    $value = strtolower(trim(str_replace('\\', '/', (string)$value)));
+    if ($value === '') return '';
+    if (strpos($value, 'congress') !== false && strpos($value, '2026') !== false) return 'congresso-2026';
+    if ($value === 'congresso' || $value === 'congressos') return 'congresso-2026';
+    if ($value === 'main-v2' || $value === 'main_v2' || $value === 'loja-v2') return 'main-v2';
+    if ($value === 'main-legacy' || $value === 'main_legacy' || $value === 'historico') return 'main-legacy';
+    if ($value === 'main' || $value === 'root' || $value === 'loja') return af_is_congress_slug($slug) ? 'main-legacy' : 'main';
+    return '';
+}
+function af_event_landing_page($event) {
+    foreach (array('landing_page', 'first_landing_page') as $field) {
+        if (!empty($event[$field])) return (string)$event[$field];
+    }
+    $extra = af_json_array(isset($event['event_json']) ? $event['event_json'] : '');
+    foreach (array('landing_page', 'first_landing_page', 'page_url', 'page_path') as $field) {
+        if (!empty($extra[$field])) return (string)$extra[$field];
+    }
+    return '';
+}
+function af_event_context_evidence($event) {
+    $slug = isset($event['product_slug']) ? (string)$event['product_slug'] : '';
+    $extra = af_json_array(isset($event['event_json']) ? $event['event_json'] : '');
+    $selection = af_json_array(isset($event['selection_json']) ? $event['selection_json'] : '');
+    $candidates = array(
+        isset($event['product_context']) ? $event['product_context'] : '',
+        isset($selection['product_context']) ? $selection['product_context'] : '',
+        isset($selection['catalog_context']) ? $selection['catalog_context'] : '',
+        isset($extra['product_context']) ? $extra['product_context'] : '',
+        isset($extra['catalog_context']) ? $extra['catalog_context'] : '',
+    );
+    foreach ($candidates as $candidate) {
+        $context = af_normalize_context_value($candidate, $slug);
+        if ($context !== '') return array($context, 100);
+    }
+    $landing = strtolower(str_replace('\\', '/', af_event_landing_page($event)));
+    if ($landing !== '' && preg_match('#/congressos/2026(?:/|$)#', $landing)) return array('congresso-2026', 90);
+    if (af_is_main_v2_slug($slug)) return array('main-v2', 80);
+    if (af_is_congress_slug($slug)) return $landing !== '' ? array('main-legacy', 60) : array('congresso-2026', 20);
+    return array('main', 10);
+}
+function af_product_key($context, $slug) {
+    $slug = (string)$slug;
+    if ($slug === '') return '';
+    if ($context === 'congresso-2026') return 'congresso-2026|' . $slug;
+    if ($context === 'main-legacy') return 'main-legacy|' . $slug;
+    return $slug;
+}
+function af_product_base_slug($productKey) {
+    $parts = explode('|', (string)$productKey, 2);
+    return count($parts) === 2 ? $parts[1] : $parts[0];
+}
+function af_product_context($productKey) {
+    $parts = explode('|', (string)$productKey, 2);
+    if (count($parts) === 2 && in_array($parts[0], array('congresso-2026', 'main-legacy'), true)) return $parts[0];
+    return af_is_main_v2_slug($parts[0]) ? 'main-v2' : 'main';
+}
+function af_normalize_events_product_context(&$events) {
+    $best = array();
+    $sessionLanding = array();
+    foreach ($events as $event) {
+        $sid = isset($event['session_id']) ? (string)$event['session_id'] : '';
+        $landing = af_event_landing_page($event);
+        if ($sid !== '' && $landing !== '' && empty($sessionLanding[$sid])) $sessionLanding[$sid] = $landing;
+    }
+    foreach ($events as $event) {
+        $slug = isset($event['product_slug']) ? (string)$event['product_slug'] : '';
+        if ($slug === '') continue;
+        $sid = isset($event['session_id']) ? (string)$event['session_id'] : '';
+        list($context, $priority) = af_event_context_evidence($event);
+        if (af_is_congress_slug($slug) && !empty($sessionLanding[$sid]) && $priority < 90) {
+            $sessionLandingLc = strtolower(str_replace('\\', '/', $sessionLanding[$sid]));
+            if (preg_match('#/congressos/2026(?:/|$)#', $sessionLandingLc)) { $context = 'congresso-2026'; $priority = 90; }
+            else { $context = 'main-legacy'; $priority = 60; }
+        }
+        $pair = $sid . '|' . $slug;
+        if (!isset($best[$pair]) || $priority > $best[$pair]['priority']) $best[$pair] = array('context'=>$context, 'priority'=>$priority);
+    }
+    foreach ($events as &$event) {
+        $slug = isset($event['product_slug']) ? (string)$event['product_slug'] : '';
+        $sid = isset($event['session_id']) ? (string)$event['session_id'] : '';
+        $pair = $sid . '|' . $slug;
+        list($fallbackContext) = af_event_context_evidence($event);
+        $context = isset($best[$pair]) ? $best[$pair]['context'] : $fallbackContext;
+        $event['_product_context'] = $context;
+        $event['_product_key'] = af_product_key($context, $slug);
+        $event['_landing_page'] = af_event_landing_page($event);
+        if ($event['_landing_page'] === '' && !empty($sessionLanding[$sid])) $event['_landing_page'] = $sessionLanding[$sid];
+    }
+    unset($event);
+}
+
+// O período e o snapshot já foram resolvidos lá em cima, antes da primeira
+// ida à base de dados.
 switch ($period) {
     case '7d':  $cutoff = gmdate('Y-m-d\TH:i:s\Z', strtotime('-7 days')); break;
     case '30d': $cutoff = gmdate('Y-m-d\TH:i:s\Z', strtotime('-30 days')); break;
@@ -150,6 +264,7 @@ $sql .= ' ORDER BY created_at ASC LIMIT 200000';
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $events = $stmt->fetchAll();
+af_normalize_events_product_context($events);
 
 // OFFER_DOWNLOAD_VISIBILITY_V1: downloads de PDFs de oferta em secção própria.
 // Estes eventos já eram guardados como event_json; aqui ficam agregados e
@@ -285,7 +400,7 @@ try {
                 MIN(created_at) AS first_seen,
                 MAX(created_at) AS last_seen,
                 COUNT(*) AS event_count,
-                MAX(CASE WHEN event_name IN ('order_submitted','cart_order_submitted') THEN 1 ELSE 0 END) AS submitted
+                MAX(CASE WHEN event_name IN ('order_submitted','cart_order_submitted','order_created') THEN 1 ELSE 0 END) AS submitted
          FROM funnel_events
          WHERE created_at >= ?
            AND session_id IS NOT NULL AND session_id <> ''
@@ -306,6 +421,7 @@ try {
             $stmtRecent->execute();
             $eventsRecent = $stmtRecent->fetchAll();
             if (empty($eventsRecent)) continue;
+            af_normalize_events_product_context($eventsRecent);
             // Eventos vêm em DESC; vamos lê-los em ordem cronológica para a reconstrução.
             $eventsRecentAsc = array_reverse($eventsRecent);
             $last = $eventsRecent[0];
@@ -323,7 +439,7 @@ try {
                 // Step path: só step_view, dedup consecutivos. Nos funis novos
                 // de crachás/ímanes, agrupa também os IDs do fluxo antigo para
                 // que o histórico continue comparável.
-                $eventProductSlug = isset($ev['product_slug']) ? (string)$ev['product_slug'] : '';
+                $eventProductSlug = isset($ev['_product_key']) ? (string)$ev['_product_key'] : (isset($ev['product_slug']) ? (string)$ev['product_slug'] : '');
                 $eventStepId = funnel_step_group(isset($ev['step_id']) ? (string)$ev['step_id'] : '', $eventProductSlug);
                 if ($nm === 'step_view' && $eventStepId !== '') {
                     if (empty($stepPath) || end($stepPath) !== $eventStepId) {
@@ -331,7 +447,7 @@ try {
                     }
                 }
                 if ($nm === 'heartbeat') $heartbeatLatestAt = $ev['created_at'];
-                if ($nm === 'selection_updated' || $nm === 'step_selection_snapshot' || $nm === 'order_submitted') {
+                if ($nm === 'selection_updated' || $nm === 'step_selection_snapshot' || $nm === 'order_submitted' || $nm === 'order_created') {
                     $sj = mp_safe_json_decode(isset($ev['selection_json']) ? $ev['selection_json'] : '');
                     if (!empty($sj)) $selectionLatest = $sj;
                 }
@@ -340,7 +456,7 @@ try {
                         'at' => $ev['created_at'],
                         'design_id' => isset($exJ['design_id']) ? (string)$exJ['design_id'] : '',
                         'image_slot' => isset($exJ['image_slot']) ? (string)$exJ['image_slot'] : '',
-                        'product_slug' => isset($ev['product_slug']) ? (string)$ev['product_slug'] : '',
+                        'product_slug' => $eventProductSlug,
                     );
                 }
                 if (!empty($ev['first_referrer']) && $firstReferrer === '') $firstReferrer = $ev['first_referrer'];
@@ -350,7 +466,7 @@ try {
                         'at' => $ev['created_at'],
                         'event_name' => $nm,
                         'step_id' => $eventStepId,
-                        'product_slug' => isset($ev['product_slug']) ? (string)$ev['product_slug'] : '',
+                        'product_slug' => $eventProductSlug,
                         'action_name' => isset($exJ['action_name']) ? (string)$exJ['action_name'] : '',
                         'target_label' => isset($exJ['target_label']) ? (string)$exJ['target_label'] : '',
                         'selected_pack' => isset($exJ['selected_pack']) ? (int)$exJ['selected_pack'] : null,
@@ -359,20 +475,27 @@ try {
                         'to_step' => funnel_step_group(isset($exJ['to_step']) ? (string)$exJ['to_step'] : '', $eventProductSlug),
                         'image_slot' => isset($exJ['image_slot']) ? (string)$exJ['image_slot'] : '',
                         'design_id' => isset($exJ['design_id']) ? (string)$exJ['design_id'] : '',
+                        'option_type' => isset($exJ['option_type']) ? (string)$exJ['option_type'] : '',
+                        'option_value' => isset($exJ['option_value']) ? (string)$exJ['option_value'] : '',
+                        'option_label' => isset($exJ['option_label']) ? (string)$exJ['option_label'] : '',
+                        'flow_mode' => isset($exJ['flow_mode']) ? (string)$exJ['flow_mode'] : '',
+                        'artwork_count' => isset($exJ['artwork_count']) ? max(0, (int)$exJ['artwork_count']) : (isset($exJ['file_count']) ? max(0, (int)$exJ['file_count']) : 0),
+                        'artwork_total_quantity' => isset($exJ['artwork_total_quantity']) ? max(0, (int)$exJ['artwork_total_quantity']) : (isset($exJ['quantity']) ? max(0, (int)$exJ['quantity']) : 0),
+                        'customization_fee_cents' => isset($exJ['customization_fee_cents']) ? max(0, (int)$exJ['customization_fee_cents']) : 0,
                     );
                 }
             }
             $row['last_event']     = $last;
             $row['last_event_name']= isset($last['event_name']) ? (string)$last['event_name'] : '';
-            $row['product_slug']   = isset($last['product_slug']) ? (string)$last['product_slug'] : '';
+            $row['product_slug']   = isset($last['_product_key']) ? (string)$last['_product_key'] : (isset($last['product_slug']) ? (string)$last['product_slug'] : '');
             $row['step_id']        = funnel_step_group(
                 isset($last['step_id']) ? (string)$last['step_id'] : '',
-                isset($last['product_slug']) ? (string)$last['product_slug'] : ''
+                $row['product_slug']
             );
             $row['device_type']    = isset($last['device_type']) ? (string)$last['device_type'] : '';
             $row['viewport_width'] = isset($last['viewport_width']) ? $last['viewport_width'] : null;
             $row['ip_number']      = isset($last['ip_number']) ? (string)$last['ip_number'] : '';
-            $row['landing_page']   = isset($extra['landing_page']) ? (string)$extra['landing_page'] : '';
+            $row['landing_page']   = isset($last['_landing_page']) ? (string)$last['_landing_page'] : (isset($extra['landing_page']) ? (string)$extra['landing_page'] : '');
             $row['referrer']       = isset($extra['referrer']) ? (string)$extra['referrer'] : '';
             $row['first_referrer'] = $firstReferrer;
             $row['utm_source']     = $utmSource;
@@ -436,6 +559,22 @@ try {
                 $msg = 'tentou continuar em ' . step_label($t['step_id'], $vs['product_slug']) . ' (faltava algo)';
             } elseif ($nm === 'order_submitted') {
                 $msg = 'enviou pedido' . ($productLabel ? ' (' . $productLabel . ')' : '');
+            } elseif ($nm === 'order_created') {
+                $msg = 'pedido criado' . ($productLabel ? ' (' . $productLabel . ')' : '');
+            } elseif ($nm === 'option_selected' && $t['option_type'] === 'design_source') {
+                $msg = $t['option_value'] === 'custom' ? 'escolheu imagens personalizadas' : 'escolheu designs do catálogo';
+            } elseif ($nm === 'artwork_upload_started') {
+                $msg = 'começou a enviar imagens personalizadas';
+            } elseif ($nm === 'artwork_upload_completed') {
+                $count = max(0, (int)$t['artwork_count']);
+                $msg = 'enviou ' . $count . ($count === 1 ? ' imagem personalizada' : ' imagens personalizadas');
+            } elseif ($nm === 'artwork_upload_failed') {
+                $msg = 'não conseguiu enviar uma imagem personalizada';
+            } elseif ($nm === 'artwork_upload_removed') {
+                $msg = 'removeu uma imagem personalizada';
+            } elseif ($nm === 'artwork_quantity_changed') {
+                $qty = max(0, (int)$t['artwork_total_quantity']);
+                $msg = 'alterou a quantidade por imagem' . ($qty > 0 ? ' (total ' . $qty . ')' : '');
             } elseif ($nm === 'image_magnified') {
                 $msg = 'ampliou ' . ($t['design_id'] ?: 'imagem') . ($t['image_slot'] ? ' · ' . $t['image_slot'] : '');
             } elseif ($nm === 'selection_updated' && $t['selected_pack']) {
@@ -474,7 +613,7 @@ try {
                      MIN(created_at) AS first_seen,
                      MAX(created_at) AS last_seen,
                      MAX(viewport_width) AS last_vw,
-                     SUM(CASE WHEN event_name IN ('order_submitted','cart_order_submitted') THEN 1 ELSE 0 END) AS submitted_count
+                     SUM(CASE WHEN event_name IN ('order_submitted','cart_order_submitted','order_created') THEN 1 ELSE 0 END) AS submitted_count
               FROM funnel_events
               WHERE ip_number IS NOT NULL AND ip_number <> ''";
     $paramsIp = array();
@@ -494,7 +633,7 @@ try {
                     MIN(created_at) AS started_at,
                     MAX(created_at) AS last_at,
                     COUNT(*) AS events_count,
-                    MAX(CASE WHEN event_name IN ('order_submitted','cart_order_submitted') THEN 1 ELSE 0 END) AS submitted,
+                    MAX(CASE WHEN event_name IN ('order_submitted','cart_order_submitted','order_created') THEN 1 ELSE 0 END) AS submitted,
                     (SELECT product_slug FROM funnel_events WHERE session_id = fe.session_id AND product_slug <> '' ORDER BY created_at DESC LIMIT 1) AS last_product,
                     (SELECT step_id FROM funnel_events WHERE session_id = fe.session_id AND step_id <> '' ORDER BY created_at DESC LIMIT 1) AS last_step
              FROM funnel_events fe
@@ -520,9 +659,18 @@ try {
 $productOrders = array();
 $productNames = array();
 $productDir = __DIR__ . '/content/products';
-if (is_dir($productDir)) {
-    foreach (glob($productDir . '/*.json') as $jsonPath) {
+$productSources = array(
+    array('dir' => $productDir, 'context' => 'main'),
+    array('dir' => __DIR__ . '/congressos/2026/content/products', 'context' => 'congresso-2026'),
+);
+foreach ($productSources as $productSource) {
+    if (!is_dir($productSource['dir'])) continue;
+    foreach (glob($productSource['dir'] . '/*.json') as $jsonPath) {
         $slug = basename($jsonPath, '.json');
+        $context = $productSource['context'] === 'congresso-2026'
+            ? 'congresso-2026'
+            : (af_is_main_v2_slug($slug) ? 'main-v2' : 'main');
+        $productKey = af_product_key($context, $slug);
         $raw = @file_get_contents($jsonPath);
         if ($raw === false) continue;
         $config = json_decode($raw, true);
@@ -532,11 +680,22 @@ if (is_dir($productDir)) {
             // Passos escondidos existem para ferramentas internas/galeria e
             // não pertencem ao percurso que o cliente vê.
             if (empty($step['id']) || !empty($step['hidden'])) continue;
-            $stepId = funnel_step_group((string)$step['id'], $slug);
+            $stepId = funnel_step_group((string)$step['id'], $productKey);
             if ($stepId !== '' && !in_array($stepId, $order, true)) $order[] = $stepId;
         }
-        $productOrders[$slug] = $order;
-        $productNames[$slug] = isset($config['name']) ? (string)$config['name'] : $slug;
+        $productOrders[$productKey] = $order;
+        $productNames[$productKey] = isset($config['name']) ? (string)$config['name'] : $slug;
+        if ($context === 'congresso-2026') {
+            $legacyKey = af_product_key('main-legacy', $slug);
+            $legacyOrder = array();
+            foreach ($config['steps'] as $step) {
+                if (empty($step['id']) || !empty($step['hidden'])) continue;
+                $legacyStep = funnel_step_group((string)$step['id'], $legacyKey);
+                if ($legacyStep !== '' && !in_array($legacyStep, $legacyOrder, true)) $legacyOrder[] = $legacyStep;
+            }
+            $productOrders[$legacyKey] = $legacyOrder;
+            $productNames[$legacyKey] = isset($config['name']) ? (string)$config['name'] : $slug;
+        }
     }
 }
 
@@ -544,7 +703,7 @@ if (is_dir($productDir)) {
 $bySession = array();
 foreach ($events as $e) {
     $sid = $e['session_id'] ?: '';
-    $product = $e['product_slug'] ?: '';
+    $product = isset($e['_product_key']) ? (string)$e['_product_key'] : ($e['product_slug'] ?: '');
     if ($sid === '' || $product === '') continue;
     $key = $sid . '|' . $product;
     if (!isset($bySession[$key])) {
@@ -559,6 +718,11 @@ function new_product_bucket()
         'sessions' => 0,
         'steps' => array(),
         'submitted' => 0,
+        'orders_created' => 0,
+        'design_source_sessions' => array('catalog' => 0, 'custom' => 0),
+        'artwork_uploaded_files' => 0,
+        'artwork_total_quantity' => 0,
+        'customization_fee_cents' => 0,
         'devices' => array('mobile' => 0, 'tablet' => 0, 'desktop' => 0),
         'viewport_buckets' => array('<=360' => 0, '361-390' => 0, '391-430' => 0, '431-767' => 0, '>=768' => 0),
         'validation_errors' => array(),
@@ -621,6 +785,11 @@ foreach ($bySession as $session) {
     $sessionViewport = null;
     $sessionOrientation = null;
     $sessionIp = null;
+    $sessionOrderCreated = false;
+    $sessionDesignSources = array();
+    $sessionArtworkCount = 0;
+    $sessionArtworkTotalQuantity = 0;
+    $sessionCustomizationFeeCents = 0;
 
     foreach ($session['events'] as $e) {
         $time = isset($e['created_at']) ? strtotime($e['created_at']) : null;
@@ -629,6 +798,19 @@ foreach ($bySession as $session) {
         $lastEvent = $time;
         $name = $e['event_name'] ?: '';
         $eventStepId = funnel_step_group(isset($e['step_id']) ? (string)$e['step_id'] : '', $slug);
+        $eventExtra = af_json_array(isset($e['event_json']) ? $e['event_json'] : '');
+        $eventSelection = af_json_array(isset($e['selection_json']) ? $e['selection_json'] : '');
+        $source = '';
+        if (!empty($eventExtra['flow_mode'])) $source = strtolower((string)$eventExtra['flow_mode']);
+        if (!empty($eventSelection['flow_mode'])) $source = strtolower((string)$eventSelection['flow_mode']);
+        if (!empty($eventSelection['design_source'])) $source = strtolower((string)$eventSelection['design_source']);
+        if ($name === 'option_selected' && isset($eventExtra['option_type']) && $eventExtra['option_type'] === 'design_source') {
+            $source = strtolower((string)($eventExtra['option_value'] ?? ''));
+        }
+        if (in_array($source, array('catalog', 'custom'), true)) $sessionDesignSources[$source] = true;
+        $sessionArtworkCount = max($sessionArtworkCount, max(0, (int)($eventSelection['artwork_count'] ?? ($eventExtra['artwork_count'] ?? ($eventExtra['file_count'] ?? 0)))));
+        $sessionArtworkTotalQuantity = max($sessionArtworkTotalQuantity, max(0, (int)($eventSelection['artwork_total_quantity'] ?? ($eventExtra['artwork_total_quantity'] ?? ($eventExtra['quantity'] ?? 0)))));
+        $sessionCustomizationFeeCents = max($sessionCustomizationFeeCents, max(0, (int)($eventSelection['customization_fee_cents'] ?? ($eventExtra['customization_fee_cents'] ?? 0))));
 
         if (!$deviceLogged) {
             $dev = $e['device_type'] ?: 'desktop';
@@ -663,11 +845,12 @@ foreach ($bySession as $session) {
                     }
                 }
             }
-        } elseif ($name === 'order_submitted') {
-            $orderSubmitted = true;
-            if ($sessionStart !== null) {
+        } elseif ($name === 'order_submitted' || $name === 'cart_order_submitted' || $name === 'order_created') {
+            if ($name === 'order_created') $sessionOrderCreated = true;
+            if (!$orderSubmitted && $sessionStart !== null) {
                 $products[$slug]['submit_durations'][] = $time - $sessionStart;
             }
+            $orderSubmitted = true;
         } elseif ($name === 'validation_error' && $eventStepId !== '') {
             $stepId = $eventStepId;
             if (!isset($products[$slug]['validation_errors'][$stepId])) $products[$slug]['validation_errors'][$stepId] = 0;
@@ -718,7 +901,7 @@ foreach ($bySession as $session) {
             }
             if (!isset($products[$slug]['magnifier_by_slot'][$slot])) $products[$slug]['magnifier_by_slot'][$slot] = 0;
             $products[$slug]['magnifier_by_slot'][$slot]++;
-        } elseif ($name === 'selection_updated' || $name === 'step_selection_snapshot') {
+        } elseif ($name === 'selection_updated' || $name === 'step_selection_snapshot' || $name === 'order_created') {
             // SELECTION_AGGREGATION_V1 (Phase 4)
             $sel = isset($e['selection_json']) ? json_decode($e['selection_json'], true) : null;
             if (is_array($sel)) {
@@ -737,7 +920,8 @@ foreach ($bySession as $session) {
                 $optionKeys = array(
                     'selected_pack', 'selected_size', 'lamination', 'caderno_option',
                     'caderno_qty', 'cover_personalization', 'assorted',
-                    'artwork_attached', 'artwork_count', 'artwork_help',
+                    'flow_mode', 'design_source', 'artwork_attached', 'artwork_count',
+                    'artwork_total_quantity', 'customization_fee_cents', 'artwork_help',
                     'card_has_text', 'card_photo_count', 'card_audio_count'
                 );
                 foreach ($optionKeys as $ok) {
@@ -748,6 +932,15 @@ foreach ($bySession as $session) {
                     if (!isset($products[$slug]['options_selected'][$key])) $products[$slug]['options_selected'][$key] = 0;
                     $products[$slug]['options_selected'][$key]++;
                 }
+            }
+        }
+
+        if ($name === 'option_selected' && isset($eventExtra['option_type']) && $eventExtra['option_type'] === 'design_source') {
+            $sourceValue = strtolower((string)($eventExtra['option_value'] ?? ''));
+            if (in_array($sourceValue, array('catalog', 'custom'), true)) {
+                $metricKey = 'design_source=' . $sourceValue;
+                if (!isset($products[$slug]['options_selected'][$metricKey])) $products[$slug]['options_selected'][$metricKey] = 0;
+                $products[$slug]['options_selected'][$metricKey]++;
             }
         }
 
@@ -790,6 +983,14 @@ foreach ($bySession as $session) {
         $products[$slug]['steps'][$stepId]++;
     }
 
+    foreach (array_keys($sessionDesignSources) as $source) {
+        $products[$slug]['design_source_sessions'][$source]++;
+    }
+    $products[$slug]['artwork_uploaded_files'] += $sessionArtworkCount;
+    $products[$slug]['artwork_total_quantity'] += $sessionArtworkTotalQuantity;
+    $products[$slug]['customization_fee_cents'] += $sessionCustomizationFeeCents;
+    if ($sessionOrderCreated) $products[$slug]['orders_created']++;
+
     if ($orderSubmitted) {
         $products[$slug]['submitted']++;
     } elseif ($sessionStart !== null && $lastEvent !== null) {
@@ -826,7 +1027,10 @@ function avg_seconds($arr)
 
 function is_artwork_product($slug)
 {
-    return $slug === 'crachas' || $slug === 'imanes';
+    $context = af_product_context($slug);
+    $base = af_product_base_slug($slug);
+    if ($context === 'main-v2') return in_array($base, af_main_v2_slugs(), true);
+    return $context === 'main-legacy' && in_array($base, array('crachas', 'imanes'), true);
 }
 
 // BADGES_MAGNETS_FUNNEL_V2: mantém os eventos do funil antigo legíveis no
@@ -835,7 +1039,12 @@ function is_artwork_product($slug)
 function funnel_step_group($id, $productSlug = '')
 {
     $id = (string)$id;
-    if (!is_artwork_product($productSlug)) return $id;
+    $context = af_product_context($productSlug);
+    $base = af_product_base_slug($productSlug);
+    if ($context === 'congresso-2026') return $id;
+    $isLegacyArtwork = $context === 'main-legacy' && in_array($base, array('crachas', 'imanes'), true);
+    $isMainV2 = $context === 'main-v2';
+    if (!$isLegacyArtwork && !$isMainV2) return $id;
 
     static $aliases = array(
         'designs' => 'artwork_upload',
@@ -853,17 +1062,20 @@ function funnel_step_group($id, $productSlug = '')
         'card_details' => 'details',
         'presentation_card' => 'details',
     );
+    if (!$isLegacyArtwork && $id === 'designs') return 'designs';
     return isset($aliases[$id]) ? $aliases[$id] : $id;
 }
 
 function step_label($id, $productSlug = '')
 {
     $id = funnel_step_group($id, $productSlug);
+    $baseSlug = af_product_base_slug($productSlug);
+    $productContext = af_product_context($productSlug);
     // QUADROS_FUNNEL_V3: os passos das molduras são condicionais ao modelo
     // escolhido. Mantém aqui os mesmos nomes curtos usados no progresso do
     // configurador para que rotas, funil, validações e sessões recentes não
     // mostrem IDs internos nem os rótulos genéricos do fluxo antigo.
-    if ($productSlug === 'quadros') {
+    if ($baseSlug === 'quadros') {
         static $quadroLabels = array(
             'designs'                 => 'Tipo',
             'photo_upload'            => 'Foto',
@@ -889,10 +1101,24 @@ function step_label($id, $productSlug = '')
         if (isset($quadroLabels[$id])) return $quadroLabels[$id];
     }
 
-    if (is_artwork_product($productSlug)) {
+    if ($productContext === 'main-v2') {
+        $mainLabels = array(
+            'designs' => 'Passo 1 · catálogo ou personalizado',
+            'artwork_upload' => 'Carregar imagens personalizadas (ramo personalizado)',
+            'size' => $baseSlug === 'imanes-loja' ? 'Tipo de íman' : 'Tamanho',
+            'pack' => 'Quantidade',
+            'details' => 'Personalização do cartão',
+            'lamination' => 'Laminação',
+            'delivery_contact' => 'Entrega e contacto',
+            'confirm' => 'Confirmação',
+        );
+        if (isset($mainLabels[$id])) return $mainLabels[$id];
+    }
+
+    if ($productContext === 'main-legacy' && in_array($baseSlug, array('crachas', 'imanes'), true)) {
         $artworkLabels = array(
             'artwork_upload' => 'Imagem para personalizar',
-            'size' => $productSlug === 'imanes' ? 'Tipo de íman' : 'Tamanho do crachá',
+            'size' => $baseSlug === 'imanes' ? 'Tipo de íman' : 'Tamanho do crachá',
             'pack' => 'Quantidade',
             'details' => 'Personalização do cartão',
             'delivery_contact' => 'Entrega e contacto',
@@ -935,12 +1161,17 @@ function option_metric_label($key, $productSlug = '')
     if ($name === 'selected_pack') {
         return is_artwork_product($productSlug) ? 'Quantidade: ' . $count : 'Pack ' . $count;
     }
+    $baseSlug = af_product_base_slug($productSlug);
     if ($name === 'selected_size') {
-        if ($productSlug === 'imanes') return 'Tipo: ' . $value;
+        if ($baseSlug === 'imanes' || $baseSlug === 'imanes-loja') return 'Tipo: ' . $value;
         return 'Tamanho: ' . $value;
     }
+    if (($name === 'flow_mode' || $name === 'design_source') && $value === 'catalog') return 'Ramo: catálogo';
+    if (($name === 'flow_mode' || $name === 'design_source') && $value === 'custom') return 'Ramo: personalizado';
     if ($name === 'artwork_attached' && tracking_metric_is_true($value)) return 'Imagem anexada';
     if ($name === 'artwork_count' && $count > 0) return $count . ($count === 1 ? ' imagem anexada' : ' imagens anexadas');
+    if ($name === 'artwork_total_quantity' && $count > 0) return 'Quantidade total personalizada: ' . $count;
+    if ($name === 'customization_fee_cents' && $count > 0) return 'Taxa de preparação: ' . number_format($count / 100, 2, ',', '.') . ' €';
     if ($name === 'artwork_help' && tracking_metric_is_true($value)) return 'Pediu ajuda com a imagem';
     if ($name === 'card_has_text' && tracking_metric_is_true($value)) return 'Cartão com texto';
     if ($name === 'card_photo_count' && $count > 0) return $count . ($count === 1 ? ' foto para o cartão' : ' fotos para o cartão');
@@ -954,20 +1185,33 @@ function option_metric_label($key, $productSlug = '')
 // nome próprio em vez do slug "cru".
 function product_friendly_name($slug, $fallbackFromJson = '')
 {
+    $base = af_product_base_slug($slug);
+    $context = af_product_context($slug);
     static $names = array(
         'crachas'     => 'Crachás',
+        'crachas-loja'=> 'Crachás',
         'imanes'      => 'Ímanes',
+        'imanes-loja' => 'Ímanes',
         'caderninhos' => 'Mini-Cadernos',
+        'mini-cadernos'=> 'Mini-Cadernos',
+        'bloquinhos'  => 'Bloquinhos',
+        'imanes-recortados' => 'Ímanes recortados',
+        'personalizacao' => 'Personalização',
         'cadernos'    => 'Cadernos',
+        'cadernos-anuais' => 'Cadernos anuais',
+        'stickers'    => 'Stickers',
+        'marcadores'  => 'Marcadores',
         'lembrancas'  => 'Lembranças',
         'pins'        => 'Pins',
         'ofertas'     => 'Ofertas',
         'oferta-pdf'  => 'PDF de oferta',
         'oferta-convite-congresso' => 'Envelopes do Congresso',
     );
-    if (isset($names[$slug]) && $names[$slug] !== '') return $names[$slug];
-    if ($fallbackFromJson !== '' && $fallbackFromJson !== $slug) return $fallbackFromJson;
-    return $slug;
+    $label = isset($names[$base]) && $names[$base] !== '' ? $names[$base]
+        : (($fallbackFromJson !== '' && $fallbackFromJson !== $slug) ? $fallbackFromJson : $base);
+    if ($context === 'congresso-2026') return $label . ' · Congresso 2026';
+    if ($context === 'main-legacy') return $label . ' · histórico do site';
+    return $label;
 }
 
 function mp_offer_download_from_event($event)
@@ -981,7 +1225,7 @@ function mp_offer_download_from_event($event)
     if (!is_array($selection)) $selection = array();
     $selectionDownload = isset($selection['download']) && is_array($selection['download']) ? $selection['download'] : array();
 
-    $productSlug = isset($event['product_slug']) ? (string)$event['product_slug'] : '';
+    $productSlug = isset($event['_product_key']) ? (string)$event['_product_key'] : (isset($event['product_slug']) ? (string)$event['product_slug'] : '');
     $downloadLabel = isset($extra['download_label']) ? (string)$extra['download_label'] : '';
     if ($downloadLabel === '' && isset($extra['target_label'])) $downloadLabel = (string)$extra['target_label'];
     if ($downloadLabel === '' && isset($selectionDownload['label'])) $downloadLabel = (string)$selectionDownload['label'];
@@ -1026,7 +1270,7 @@ function mp_offer_download_from_event($event)
         'step_id' => isset($event['step_id']) ? (string)$event['step_id'] : '',
         'device_type' => isset($event['device_type']) ? (string)$event['device_type'] : '',
         'viewport_width' => isset($event['viewport_width']) ? $event['viewport_width'] : null,
-        'landing_page' => isset($extra['landing_page']) ? (string)$extra['landing_page'] : '',
+        'landing_page' => isset($event['_landing_page']) ? (string)$event['_landing_page'] : (isset($extra['landing_page']) ? (string)$extra['landing_page'] : ''),
         'download_id' => $downloadId,
         'download_key' => $downloadFile !== '' ? $downloadFile : $downloadId,
         'download_label' => $downloadLabel,
@@ -1118,6 +1362,21 @@ function render_timeline_entry($t, $localTzHHMM = '') {
     elseif ($name === 'step_completed') $msg = 'completou ' . $stepLabel;
     elseif ($name === 'validation_error') $msg = 'tentou continuar mas faltou algo em ' . $stepLabel;
     elseif ($name === 'order_submitted') $msg = 'enviou o pedido';
+    elseif ($name === 'order_created') $msg = 'pedido criado';
+    elseif ($name === 'option_selected' && isset($t['option_type']) && $t['option_type'] === 'design_source') {
+        $msg = isset($t['option_value']) && $t['option_value'] === 'custom' ? 'escolheu imagens personalizadas' : 'escolheu designs do catálogo';
+    }
+    elseif ($name === 'artwork_upload_started') $msg = 'começou a enviar imagens personalizadas';
+    elseif ($name === 'artwork_upload_completed') {
+        $count = isset($t['artwork_count']) ? max(0, (int)$t['artwork_count']) : 0;
+        $msg = 'enviou ' . $count . ($count === 1 ? ' imagem personalizada' : ' imagens personalizadas');
+    }
+    elseif ($name === 'artwork_upload_failed') $msg = 'não conseguiu enviar uma imagem personalizada';
+    elseif ($name === 'artwork_upload_removed') $msg = 'removeu uma imagem personalizada';
+    elseif ($name === 'artwork_quantity_changed') {
+        $qty = isset($t['artwork_total_quantity']) ? max(0, (int)$t['artwork_total_quantity']) : 0;
+        $msg = 'alterou a quantidade por imagem' . ($qty > 0 ? ' (total ' . $qty . ')' : '');
+    }
     elseif ($name === 'image_magnified') $msg = 'ampliou ' . ($t['design_id'] ?: 'imagem') . ($t['image_slot'] ? ' · ' . $t['image_slot'] : '');
     elseif ($name === 'selection_updated') $msg = 'mudou selecção' . ($t['selected_pack'] ? ' (pack ' . (int)$t['selected_pack'] . ')' : '');
     elseif ($name === 'step_selection_snapshot') $msg = 'snapshot de selecção em ' . $stepLabel;
@@ -1142,6 +1401,11 @@ function render_timeline_entry($t, $localTzHHMM = '') {
 function render_selection_summary($selectionJson, $productSlug = '') {
     if (empty($selectionJson) || !is_array($selectionJson)) return '';
     $parts = array();
+    $baseSlug = af_product_base_slug($productSlug);
+    $flowMode = !empty($selectionJson['design_source']) ? strtolower((string)$selectionJson['design_source'])
+        : (!empty($selectionJson['flow_mode']) ? strtolower((string)$selectionJson['flow_mode']) : '');
+    if ($flowMode === 'catalog') $parts[] = 'designs do catálogo';
+    elseif ($flowMode === 'custom') $parts[] = 'imagens personalizadas';
     if (!empty($selectionJson['selected_designs']) && is_array($selectionJson['selected_designs'])) {
         $count = isset($selectionJson['selection_count']) ? (int)$selectionJson['selection_count'] : count($selectionJson['selected_designs']);
         if ($count > 0) $parts[] = $count . ' design' . ($count === 1 ? '' : 's') . ' seleccionado' . ($count === 1 ? '' : 's');
@@ -1153,8 +1417,8 @@ function render_selection_summary($selectionJson, $productSlug = '') {
         $parts[] = is_artwork_product($productSlug) ? 'quantidade ' . $quantity : 'Pack ' . $quantity;
     }
     if (!empty($selectionJson['selected_size'])) {
-        if ($productSlug === 'imanes') $parts[] = 'tipo ' . $selectionJson['selected_size'];
-        elseif ($productSlug === 'crachas') $parts[] = 'tamanho ' . $selectionJson['selected_size'];
+        if ($baseSlug === 'imanes' || $baseSlug === 'imanes-loja') $parts[] = 'tipo ' . $selectionJson['selected_size'];
+        elseif ($baseSlug === 'crachas' || $baseSlug === 'crachas-loja') $parts[] = 'tamanho ' . $selectionJson['selected_size'];
         else $parts[] = $selectionJson['selected_size'];
     }
 
@@ -1164,6 +1428,10 @@ function render_selection_summary($selectionJson, $productSlug = '') {
     } elseif (isset($selectionJson['artwork_attached']) && tracking_metric_is_true($selectionJson['artwork_attached'])) {
         $parts[] = 'imagem anexada';
     }
+    $artworkTotalQuantity = isset($selectionJson['artwork_total_quantity']) ? max(0, (int)$selectionJson['artwork_total_quantity']) : 0;
+    if ($artworkTotalQuantity > 0) $parts[] = 'quantidade total personalizada ' . $artworkTotalQuantity;
+    $customizationFeeCents = isset($selectionJson['customization_fee_cents']) ? max(0, (int)$selectionJson['customization_fee_cents']) : 0;
+    if ($customizationFeeCents > 0) $parts[] = 'taxa de preparação ' . number_format($customizationFeeCents / 100, 2, ',', '.') . ' €';
     if (isset($selectionJson['artwork_help']) && tracking_metric_is_true($selectionJson['artwork_help'])) {
         $parts[] = 'pediu ajuda com a imagem';
     }
@@ -1234,22 +1502,32 @@ function render_activity_state($lastSeenIso, $heartbeatLatestAt = null, $nowTs =
 //
 // Os dois nem sempre coincidem (cadernos usa "img (27).jpg"); a função de
 // lookup tenta ambos e devolve null se nenhum bater.
-function mp_build_product_catalog($productDir) {
+function af_catalog_image_path($path, $sourceContext) {
+    $path = (string)$path;
+    if ($path === '' || $sourceContext !== 'congresso-2026') return $path;
+    if (preg_match('#^[a-z][a-z0-9+.-]*://#i', $path) || strpos($path, 'congressos/2026/') === 0) return $path;
+    return 'congressos/2026/' . ltrim(str_replace('\\', '/', $path), '/');
+}
+function mp_build_product_catalog($productDir, $sourceContext = 'main') {
     $catalog = array();
     if (!is_dir($productDir)) return $catalog;
     foreach (glob($productDir . '/*.json') as $jsonPath) {
         $slug = basename($jsonPath, '.json');
+        $context = $sourceContext === 'congresso-2026'
+            ? 'congresso-2026'
+            : (af_is_main_v2_slug($slug) ? 'main-v2' : 'main');
+        $productKey = af_product_key($context, $slug);
         $raw = @file_get_contents($jsonPath);
         if ($raw === false) continue;
         $config = json_decode($raw, true);
         if (!is_array($config)) continue;
         $entry = array(
-            'name' => isset($config['name']) ? (string)$config['name'] : $slug,
+            'name' => product_friendly_name($productKey, isset($config['name']) ? (string)$config['name'] : $slug),
             'by_value' => array(),
             'by_basename' => array(),
         );
         if (empty($config['steps']) || !is_array($config['steps'])) {
-            $catalog[$slug] = $entry;
+            $catalog[$productKey] = $entry;
             continue;
         }
         foreach ($config['steps'] as $step) {
@@ -1263,10 +1541,10 @@ function mp_build_product_catalog($productDir) {
                 $id = isset($it['id']) ? (string)$it['id'] : $value;
                 $title = isset($it['title']) ? (string)$it['title'] : $value;
                 $subtitle = isset($it['subtitle']) ? (string)$it['subtitle'] : '';
-                $image = isset($it['image']) ? (string)$it['image'] : '';
+                $image = af_catalog_image_path(isset($it['image']) ? (string)$it['image'] : '', $sourceContext);
                 $slot = mp_step_to_slot($stepId, $image);
                 $record = array(
-                    'product_slug' => $slug,
+                    'product_slug' => $productKey,
                     'product_name' => $entry['name'],
                     'step_id' => $stepId,
                     'value' => $value,
@@ -1290,10 +1568,11 @@ function mp_build_product_catalog($productDir) {
                 // interiorImages, laminationImages, purchaseOptionImages.
                 foreach (array('exampleImage' => null, 'visual' => null) as $imgKey => $_) {
                     if (!empty($it[$imgKey]) && is_string($it[$imgKey])) {
-                        $bnX = mp_image_basename($it[$imgKey]);
+                        $visualPath = af_catalog_image_path($it[$imgKey], $sourceContext);
+                        $bnX = mp_image_basename($visualPath);
                         if ($bnX !== '' && !isset($entry['by_basename'][$bnX])) {
                             $alt = $record;
-                            $alt['image'] = $it[$imgKey];
+                            $alt['image'] = $visualPath;
                             $entry['by_basename'][$bnX] = $alt;
                         }
                     }
@@ -1307,6 +1586,7 @@ function mp_build_product_catalog($productDir) {
                     if (empty($it[$imgKey]) || !is_array($it[$imgKey])) continue;
                     foreach ($it[$imgKey] as $im) {
                         $imgPath = is_string($im) ? $im : (isset($im['image']) ? (string)$im['image'] : '');
+                        $imgPath = af_catalog_image_path($imgPath, $sourceContext);
                         if ($imgPath === '') continue;
                         $bnX = mp_image_basename($imgPath);
                         if ($bnX !== '' && !isset($entry['by_basename'][$bnX])) {
@@ -1319,7 +1599,7 @@ function mp_build_product_catalog($productDir) {
                 }
             }
         }
-        $catalog[$slug] = $entry;
+        $catalog[$productKey] = $entry;
     }
     return $catalog;
 }
@@ -1497,6 +1777,7 @@ function render_interest_card($it, $mode = 'funnel') {
         'delivery' => 'entrega',
         'caderno_qty' => 'quantidade',
         'assorted' => 'sortido',
+        'design_source' => 'origem do design',
         'magnified_image' => 'imagem',
     );
     $slotLabel = isset($typeLabelMap[$itemType]) ? $typeLabelMap[$itemType] : mp_slot_label($slot);
@@ -1513,6 +1794,8 @@ function render_interest_card($it, $mode = 'funnel') {
             $title = ucfirst(str_replace('_', ' ', $raw));
         } elseif ($itemType === 'caderno_qty') {
             $title = 'Quantidade ' . $raw;
+        } elseif ($itemType === 'design_source') {
+            $title = $raw === 'custom' ? 'Personalizado' : 'Catálogo';
         } else {
             $title = ucfirst(str_replace(array('_', '-'), ' ', $raw));
         }
@@ -1591,7 +1874,26 @@ ksort($products);
 // globais por item, reaproveitando o trabalho que já foi feito por produto.
 // Importante: o loop principal acima já fez aggregations por produto. Aqui
 // só consolidamos numa visão global e resolvemos cada chave contra o catálogo.
-$productCatalog = mp_build_product_catalog($productDir);
+$productCatalog = array_merge(
+    mp_build_product_catalog($productDir, 'main'),
+    mp_build_product_catalog(__DIR__ . '/congressos/2026/content/products', 'congresso-2026')
+);
+foreach (af_congress_slugs() as $legacySlug) {
+    $congressKey = af_product_key('congresso-2026', $legacySlug);
+    $legacyKey = af_product_key('main-legacy', $legacySlug);
+    if (isset($productCatalog[$congressKey]) && !isset($productCatalog[$legacyKey])) {
+        $legacyEntry = $productCatalog[$congressKey];
+        $legacyEntry['name'] = product_friendly_name($legacyKey);
+        foreach (array('by_value', 'by_basename') as $indexName) {
+            foreach ($legacyEntry[$indexName] as &$legacyRecord) {
+                $legacyRecord['product_slug'] = $legacyKey;
+                $legacyRecord['product_name'] = $legacyEntry['name'];
+            }
+            unset($legacyRecord);
+        }
+        $productCatalog[$legacyKey] = $legacyEntry;
+    }
+}
 
 // $interestItems: keyed by "product_slug|canonical_id" → {
 //   catalog, magnified_count, magnified_sessions[],
@@ -1684,6 +1986,11 @@ function mp_interest_extract_from_selection($selection, $productSlug) {
     if (!empty($selection['assorted'])) {
         $out[] = array('type' => 'assorted', 'value' => '1', 'step' => 'designs');
     }
+    $flowMode = !empty($selection['design_source']) ? strtolower((string)$selection['design_source'])
+        : (!empty($selection['flow_mode']) ? strtolower((string)$selection['flow_mode']) : '');
+    if (in_array($flowMode, array('catalog', 'custom'), true)) {
+        $out[] = array('type' => 'design_source', 'value' => $flowMode, 'step' => 'designs');
+    }
     // Delivery
     foreach (array('selected_delivery', 'delivery') as $dk) {
         if (!empty($selection[$dk]) && !is_array($selection[$dk])) {
@@ -1699,7 +2006,7 @@ $sessionMagnifiedItems = array(); // sessionId → set of keys (para "ampliado m
 $sessionSelectedItems = array();  // sessionId → set of keys
 foreach ($events as $e) {
     $name = isset($e['event_name']) ? (string)$e['event_name'] : '';
-    if ($name === 'order_submitted' || $name === 'cart_order_submitted') {
+    if ($name === 'order_submitted' || $name === 'cart_order_submitted' || $name === 'order_created') {
         $sid = (string)($e['session_id'] ?? '');
         if ($sid !== '') $sessionSubmitted[$sid] = true;
     }
@@ -1708,7 +2015,7 @@ foreach ($events as $e) {
 // Passa 2: agrega por item (cross-product) e marca sessões.
 foreach ($events as $e) {
     $name = isset($e['event_name']) ? (string)$e['event_name'] : '';
-    $slug = (string)($e['product_slug'] ?? '');
+    $slug = (string)($e['_product_key'] ?? ($e['product_slug'] ?? ''));
     $sid  = (string)($e['session_id'] ?? '');
     if ($slug === '' || $sid === '') continue;
 
@@ -1727,7 +2034,7 @@ foreach ($events as $e) {
         if (!isset($sessionMagnifiedItems[$sid])) $sessionMagnifiedItems[$sid] = array();
         $sessionMagnifiedItems[$sid][$key] = true;
     } elseif ($name === 'design_selected' || $name === 'design_unselected' || $name === 'option_selected'
-              || $name === 'selection_updated' || $name === 'step_selection_snapshot' || $name === 'order_submitted') {
+              || $name === 'selection_updated' || $name === 'step_selection_snapshot' || $name === 'order_submitted' || $name === 'order_created') {
         // INTEREST_FIX_V2 (Phase K): aceita semantic events (design_selected/
         // design_unselected/option_selected) e os snapshot events.
         // Para design_unselected NÃO marcamos selected (é o oposto).
@@ -1758,6 +2065,7 @@ foreach ($events as $e) {
                         'cover_personalization' => 'cover_personalization',
                         'delivery' => 'delivery_contact',
                         'caderno_qty' => 'pack',
+                        'design_source' => 'designs',
                     );
                     $stepForLookup = isset($stepMap[$ot]) ? $stepMap[$ot] : 'pack';
                     $tuples[] = array('type' => $ot, 'value' => $ov, 'step' => $stepForLookup);
@@ -2898,6 +3206,11 @@ details.report-collapse > summary:hover { color: var(--ink); }
     $prevLabel = 'Iniciaram';
     foreach ($order as $stepId) {
         $count = isset($stepCounts[$stepId]) ? $stepCounts[$stepId] : 0;
+        if (af_product_context($slug) === 'main-v2' && $stepId === 'artwork_upload') {
+            // Este passo pertence apenas ao ramo personalizado; não é uma
+            // quebra do ramo de catálogo e não pode gerar um falso abandono.
+            continue;
+        }
         $drop = $prevCount - $count;
         if ($biggestDrop === null || $drop > $biggestDrop['drop']) {
             $biggestDrop = array('from' => $prevLabel, 'to' => step_label($stepId, $slug), 'drop' => $drop);
@@ -2916,7 +3229,7 @@ details.report-collapse > summary:hover { color: var(--ink); }
   ?>
     <section class="product-card">
       <h2><?= htmlspecialchars(product_friendly_name($slug, isset($productNames[$slug]) ? $productNames[$slug] : '')) ?></h2>
-      <p class="period">slug: <code><?= htmlspecialchars($slug) ?></code> · <?= htmlspecialchars($periodLabels[$period]) ?></p>
+      <p class="period">slug: <code><?= htmlspecialchars(af_product_base_slug($slug)) ?></code> · contexto: <strong><?= htmlspecialchars(af_product_context($slug)) ?></strong> · <?= htmlspecialchars($periodLabels[$period]) ?></p>
 
       <div class="metrics">
         <div class="metric"><div class="label">Sessões</div><div class="value"><?= (int)$data['sessions'] ?></div></div>
@@ -2924,6 +3237,14 @@ details.report-collapse > summary:hover { color: var(--ink); }
         <div class="metric"><div class="label">Mobile / Desktop / Tablet</div><div class="value" style="font-size:1.05rem;"><?= (int)$data['devices']['mobile'] ?> · <?= (int)$data['devices']['desktop'] ?> · <?= (int)$data['devices']['tablet'] ?></div></div>
         <div class="metric"><div class="label">Tempo médio até submeter</div><div class="value" style="font-size:1rem;"><?= $avgSubmit !== null ? fmt_seconds($avgSubmit) : '—' ?></div></div>
         <div class="metric"><div class="label">Tempo médio até abandonar</div><div class="value" style="font-size:1rem;"><?= $avgAbandon !== null ? fmt_seconds($avgAbandon) : '—' ?></div></div>
+        <?php if ($data['orders_created'] > 0): ?><div class="metric"><div class="label">Pedidos criados</div><div class="value"><?= (int)$data['orders_created'] ?></div><div class="sub">evento final confirmado</div></div><?php endif; ?>
+        <?php if (af_product_context($slug) === 'main-v2'): ?>
+          <div class="metric"><div class="label">Ramo catálogo</div><div class="value"><?= (int)$data['design_source_sessions']['catalog'] ?></div><div class="sub">sessões que escolheram designs existentes</div></div>
+          <div class="metric"><div class="label">Ramo personalizado</div><div class="value"><?= (int)$data['design_source_sessions']['custom'] ?></div><div class="sub">sessões que escolheram carregar imagens</div></div>
+          <div class="metric"><div class="label">Imagens personalizadas</div><div class="value"><?= (int)$data['artwork_uploaded_files'] ?></div><div class="sub">máximo por sessão, sem nomes nem URLs</div></div>
+          <div class="metric"><div class="label">Quantidade personalizada</div><div class="value"><?= (int)$data['artwork_total_quantity'] ?></div><div class="sub">soma das quantidades por imagem</div></div>
+          <div class="metric"><div class="label">Taxas de preparação</div><div class="value" style="font-size:1rem;"><?= number_format($data['customization_fee_cents'] / 100, 2, ',', '.') ?> €</div><div class="sub">5,00 € por imagem distinta</div></div>
+        <?php endif; ?>
       </div>
 
       <table class="funnel">
@@ -2944,6 +3265,13 @@ details.report-collapse > summary:hover { color: var(--ink); }
               <td class="num"><?= $avgStep !== null ? fmt_seconds($avgStep) : '—' ?></td>
               <td class="num" style="font-size:0.84rem;"><?= $avgMobile !== null ? fmt_seconds($avgMobile) : '—' ?> · <?= $avgDesktop !== null ? fmt_seconds($avgDesktop) : '—' ?></td>
             </tr>
+            <?php if (af_product_context($slug) === 'main-v2' && $stepId === 'designs'):
+              $catalogSessions = (int)$data['design_source_sessions']['catalog'];
+              $customSessions = (int)$data['design_source_sessions']['custom'];
+            ?>
+              <tr><td>↳ Ramo catálogo</td><td class="num"><?= $catalogSessions ?></td><td class="bar-cell"><div class="bar"><span style="width:<?= round($catalogSessions / $maxBar * 100, 1) ?>%;background:#4f7a3a;"></span></div></td><td class="num">—</td><td class="num">—</td></tr>
+              <tr><td>↳ Ramo personalizado</td><td class="num"><?= $customSessions ?></td><td class="bar-cell"><div class="bar"><span style="width:<?= round($customSessions / $maxBar * 100, 1) ?>%;background:#b88616;"></span></div></td><td class="num">—</td><td class="num">—</td></tr>
+            <?php endif; ?>
           <?php endforeach; ?>
           <tr><td><strong>Pedido enviado</strong></td><td class="num"><?= (int)$data['submitted'] ?></td><td class="bar-cell"><div class="bar"><span style="width:<?= $maxBar ? round($data['submitted'] / $maxBar * 100, 1) : 0 ?>%;background:var(--moss);"></span></div></td><td class="num">—</td><td class="num">—</td></tr>
         </tbody>
@@ -3322,3 +3650,7 @@ details.report-collapse > summary:hover { color: var(--ink); }
 </script>
 </body>
 </html>
+<?php
+// SNAPSHOT_V1: fecha a captura e grava o HTML produzido.
+require_once __DIR__ . '/lib/snapshot.php';
+mp_snapshot_end();

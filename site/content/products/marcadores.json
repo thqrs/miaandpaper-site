@@ -1,0 +1,422 @@
+{
+  "slug": "marcadores",
+  "name": "Marcadores",
+  "brand": "Mia & Paper",
+  "homeUrl": "index.html",
+  "instagramUrl": "https://www.instagram.com/miaandpaper/",
+  "form": {
+    "action": "send-order.php",
+    "returnTo": "marcadores.html"
+  },
+  "intro": {
+    "eyebrow": "Marcadores",
+    "title": "Escolhe um design",
+    "text": "Podes escolher um dos nossos designs."
+  },
+  "deliveryOptions": [
+    {
+      "id": "pickup",
+      "label": "Vou recolher na casa da Mia",
+      "text": "",
+      "feeCents": 0
+    },
+    {
+      "id": "shipping",
+      "label": "Envio CTT - até 2 Kg",
+      "text": "",
+      "feeCents": 540,
+      "priceText": "Valor mínimo:\n5,40 €"
+    },
+    {
+      "id": "join_orders",
+      "label": "Junta as minhas encomendas",
+      "text": "",
+      "feeCents": 0
+    }
+  ],
+  "templates": [
+    {
+      "id": "media-list",
+      "label": "Imagem + 2 linhas"
+    },
+    {
+      "id": "text-grid",
+      "label": "Texto em grelha"
+    },
+    {
+      "id": "price-pack-grid",
+      "label": "Packs/preços"
+    },
+    {
+      "id": "quantity-builder",
+      "label": "Pack + quantidades"
+    },
+    {
+      "id": "design-grid",
+      "label": "Grelha de designs"
+    },
+    {
+      "id": "details-form",
+      "label": "Formulário"
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmação"
+    }
+  ],
+  "defaultPriceKey": "Marcadores",
+  "prices": {
+    "Marcadores": {
+      "1": 150,
+      "5": 750,
+      "10": 1500,
+      "20": 3000
+    }
+  },
+  "unitLabel": "marcadores",
+  "unitSingular": "marcador",
+  "unitShort": "marcador",
+  "imageShape": "rect",
+  "rectOrientation": "portrait",
+  "giftRequest": {
+    "label": "Penso oferecer estes artigos a pessoas da minha congregação.",
+    "text": "Escolhe esta opção se quiseres que a Mia te ajude a escolher designs únicos para a tua congregação."
+  },
+  "family": "marcadores",
+  "catalogContext": "main-v2",
+  "orderFlow": "catalog-or-custom",
+  "minimumQuantity": 1,
+  "pricingMode": "flat-unit",
+  "allowUnitDiscounts": false,
+  "flatUnitPricesCents": {
+    "Marcadores": 150
+  },
+  "customArtwork": {
+    "selectionField": "order_flow",
+    "catalogValue": "catalog",
+    "customValue": "custom",
+    "feePerFileCents": 300,
+    "feeLabel": "Preparação da imagem e testes",
+    "feeDescription": "Inclui a preparação do ficheiro e os testes necessários antes da produção.",
+    "quantityPerFile": true,
+    "minimumQuantityPerFile": 1,
+    "acceptedMimeTypes": [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+      "application/pdf"
+    ],
+    "acceptedExtensions": [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".webp",
+      ".heic",
+      ".heif",
+      ".pdf"
+    ],
+    "preserveOriginal": true,
+    "preserveOriginalFileName": true,
+    "compress": false,
+    "convert": false
+  },
+  "steps": [
+    {
+      "id": "designs",
+      "label": "Designs",
+      "title": "Escolhe os teus marcadores favoritos",
+      "text": "Seleciona os designs que queres",
+      "template": "design-grid",
+      "field": "designs[]",
+      "selection": "multi",
+      "items": [
+        {
+          "id": "marcador-01",
+          "value": "Marcador 01",
+          "title": "Marcador 01",
+          "subtitle": "",
+          "badge": "",
+          "visual": "neutral",
+          "image": "",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 1
+        },
+        {
+          "id": "marcador-02",
+          "value": "Marcador 02",
+          "title": "Marcador 02",
+          "subtitle": "",
+          "badge": "",
+          "visual": "neutral",
+          "image": "",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 2
+        },
+        {
+          "id": "marcador-03",
+          "value": "Marcador 03",
+          "title": "Marcador 03",
+          "subtitle": "",
+          "badge": "",
+          "visual": "neutral",
+          "image": "",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 3
+        },
+        {
+          "id": "marcador-04",
+          "value": "Marcador 04",
+          "title": "Marcador 04",
+          "subtitle": "",
+          "badge": "",
+          "visual": "neutral",
+          "image": "",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 4
+        },
+        {
+          "id": "marcador-05",
+          "value": "Marcador 05",
+          "title": "Marcador 05",
+          "subtitle": "",
+          "badge": "",
+          "visual": "neutral",
+          "image": "",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 5
+        },
+        {
+          "id": "marcador-06",
+          "value": "Marcador 06",
+          "title": "Marcador 06",
+          "subtitle": "",
+          "badge": "",
+          "visual": "neutral",
+          "image": "",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 6
+        }
+      ],
+      "sections": [
+        {
+          "id": "novidades",
+          "title": "Novidades",
+          "labelPrefix": ""
+        }
+      ],
+      "orderFlowField": "order_flow",
+      "catalogFlowValue": "catalog",
+      "customPromo": {
+        "enabled": true,
+        "title": "Queres um marcador com uma foto tua?",
+        "text": "",
+        "actionLabel": "Personalizar o meu marcador",
+        "href": "personalizacao.html"
+      }
+    },
+    {
+      "id": "pack",
+      "label": "Pack",
+      "title": "Diz-me quantos marcadores queres",
+      "text": "Escolhe qualquer quantidade a partir de 1. O preço por unidade mantém-se",
+      "template": "quantity-builder",
+      "field": "pack_quantity",
+      "selection": "pack",
+      "items": [
+        {
+          "id": "pack-1",
+          "quantity": 1,
+          "title": "1",
+          "subtitle": "marcador"
+        },
+        {
+          "id": "pack-5",
+          "quantity": 5,
+          "title": "5",
+          "subtitle": "marcadores"
+        },
+        {
+          "id": "pack-10",
+          "quantity": 10,
+          "title": "10",
+          "subtitle": "marcadores"
+        },
+        {
+          "id": "pack-20",
+          "quantity": 20,
+          "title": "20",
+          "subtitle": "marcadores"
+        }
+      ],
+      "minimumQuantity": 1,
+      "pricingMode": "flat-unit",
+      "allowUnitDiscounts": false,
+      "freeQuantity": true,
+      "adjustPerDesign": true
+    },
+    {
+      "id": "details",
+      "label": "Dados",
+      "title": "Vamos personalizar o teu Cartão de Apresentação?",
+      "text": "Estes dados ajudam-nos a tornar a tua encomenda única",
+      "template": "details-form",
+      "fields": [
+        {
+          "name": "recipient_name",
+          "label": "Nome",
+          "placeholder": "Nome a colocar no cartão",
+          "required": false,
+          "autocomplete": "name",
+          "section": "Dados para o Cartão de Apresentação"
+        },
+        {
+          "name": "contact",
+          "label": "Telemóvel ou Email",
+          "placeholder": "Email e/ou telemóvel para o cartão",
+          "required": false,
+          "autocomplete": "off",
+          "section": "Dados para o Cartão de Apresentação"
+        },
+        {
+          "name": "congregation",
+          "label": "Congregação",
+          "placeholder": "Nome da Congregação",
+          "required": false,
+          "autocomplete": "organization",
+          "section": "Dados para o Cartão de Apresentação",
+          "sectionText": "Atenção: Estes dados pessoais serão imprimidos e colocados no Cartão de Apresentação que acompanha a tua encomenda"
+        }
+      ]
+    },
+    {
+      "id": "delivery_contact",
+      "label": "Entrega e contacto",
+      "title": "Entrega e contacto",
+      "text": "",
+      "template": "delivery-contact",
+      "delivery": {
+        "title": "Como queres receber a tua encomenda?",
+        "subtitle": "Caso já tenhas feito uma encomenda que ainda não foi enviada, escolhe \"Junta as minhas encomendas\" para receberes todas as tuas encomendas na mesma embalagem."
+      },
+      "contact": {
+        "title": "Dados de Contacto",
+        "notesAfter": [
+          "Se quiseres fatura com número de contribuinte, preenche este campo. Se deixares em branco, a fatura será emitida como consumidor final.",
+          "A fatura será emitida após confirmação do pagamento. Se indicares email, enviamos por email. Se indicares telemóvel, podemos enviar por WhatsApp."
+        ],
+        "fields": [
+          {
+            "name": "customer_name",
+            "label": "Nome",
+            "placeholder": "O teu nome",
+            "required": true,
+            "autocomplete": "name"
+          },
+          {
+            "name": "customer_contact",
+            "label": "Email ou Telemóvel",
+            "placeholder": "Email ou telemóvel",
+            "required": true,
+            "autocomplete": "email"
+          },
+          {
+            "name": "customer_nif",
+            "label": "Número de Contribuinte (NIF)",
+            "placeholder": "Se quiseres receber fatura com NIF",
+            "required": false,
+            "autocomplete": "off",
+            "inputmode": "numeric"
+          }
+        ]
+      }
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmar",
+      "title": "Confirma o teu pedido",
+      "text": "Se estiver tudo certo, carrega em \"Enviar Pedido\" e já está!",
+      "template": "confirm"
+    }
+  ],
+  "finishOptions": [
+    {
+      "value": "holografica",
+      "title": "Laminação holográfica",
+      "subtitle": "Brilho com reflexos coloridos",
+      "extraPriceCentsPerUnit": 25
+    }
+  ],
+  "variantOptions": [
+    {
+      "field": "marker_border",
+      "label": "Borda",
+      "required": true,
+      "items": [
+        {
+          "value": "com-borda",
+          "title": "Com borda"
+        },
+        {
+          "value": "sem-borda",
+          "title": "Sem borda"
+        }
+      ]
+    }
+  ]
+}

@@ -26,6 +26,20 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <link rel="stylesheet" href="../ofertas/ofertas.css?v=2026062809">
   <link rel="stylesheet" href="../admin-nav.css?v=2026072801">
   <script src="../admin-nav.js?v=2026072801" data-prefix="../" defer></script>
+  <style>
+    /* O card tem dois destinos, por isso deixa de ser um <a>: o título estica-se
+       sobre o card inteiro e o segundo link fica por cima, na sua área. */
+    .tools-card-duplo { position: relative; }
+    .tools-link-principal { color: inherit; text-decoration: none; }
+    .tools-link-principal::after { content: ""; position: absolute; inset: 0; }
+    .tools-link-lado {
+      position: relative;
+      z-index: 1;
+      align-self: start;
+      font-size: 0.82rem;
+      color: var(--moss, #4f7a3a);
+    }
+  </style>
 </head>
 <body data-catalog-page="tools">
   <main class="catalog-shell">
@@ -45,14 +59,15 @@ if (empty($_SESSION['miaandpaper_admin'])) {
     <section class="catalog-section" aria-labelledby="tools-disponiveis-title">
       <h2 id="tools-disponiveis-title">Ferramentas disponíveis</h2>
       <div class="catalog-product-list">
-        <a class="catalog-product-card" href="gerador-cartoes.php" aria-label="Abrir o gerador de cartões de botões">
+        <div class="catalog-product-card tools-card-duplo">
           <span class="offer-card-image-frame"><img src="assets/gerador-cartoes.webp" alt="Cartão de botões" width="224" height="224" loading="lazy"></span>
           <span class="catalog-product-copy">
-            <strong>Gerador de Cartões</strong>
+            <strong><a class="tools-link-principal" href="gerador-cartoes.php" aria-label="Abrir o gerador de cartões de botões">Gerador de Cartões</a></strong>
             <span>Cartões de botões personalizados — PDF para a ET&#8209;8550 e SVG de corte para a Cricut.</span>
             <span class="catalog-product-action">Abrir ferramenta</span>
+            <a class="tools-link-lado" href="README-url-cartoes.md">Instruções de URL para o ChatGPT</a>
           </span>
-        </a>
+        </div>
         <a class="catalog-product-card" href="../galeria.html">
           <span class="catalog-product-thumb" aria-hidden="true">G</span>
           <span class="catalog-product-copy"><strong>Galeria</strong><span>Enquadrar, substituir e organizar as imagens usadas nos produtos.</span><span class="catalog-product-action">Abrir gestão</span></span>
@@ -68,6 +83,18 @@ if (empty($_SESSION['miaandpaper_admin'])) {
         <a class="catalog-product-card" href="../produtos.html">
           <span class="catalog-product-thumb" aria-hidden="true">P</span>
           <span class="catalog-product-copy"><strong>Produtos</strong><span>Consultar produtos, registos configuráveis e os percursos que terminam no carrinho.</span><span class="catalog-product-action">Abrir base de dados</span></span>
+        </a>
+        <a class="catalog-product-card" href="../modulos.php">
+          <span class="catalog-product-thumb" aria-hidden="true">M</span>
+          <span class="catalog-product-copy"><strong>Módulos de CSS</strong><span>Inventário visual de tudo o que existe no styles.css, claro e escuro.</span><span class="catalog-product-action">Abrir inventário</span></span>
+        </a>
+        <a class="catalog-product-card" href="../modulos-temp.html">
+          <span class="catalog-product-thumb" aria-hidden="true">T</span>
+          <span class="catalog-product-copy"><strong>Módulos · sandbox</strong><span>Cópia estática para mexer à vontade. Não toca no site.</span><span class="catalog-product-action">Abrir sandbox</span></span>
+        </a>
+        <a class="catalog-product-card" href="../admin-snapshots.php">
+          <span class="catalog-product-thumb" aria-hidden="true">S</span>
+          <span class="catalog-product-copy"><strong>Snapshots</strong><span>Congelar as páginas pesadas. Refazer sempre que a estrutura mudar.</span><span class="catalog-product-action">Abrir painel</span></span>
         </a>
         <a class="catalog-product-card" href="../admin-funnel.php">
           <span class="catalog-product-thumb" aria-hidden="true">F</span>

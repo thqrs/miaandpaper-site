@@ -10,6 +10,7 @@
   "brandButterflyEnabled": false,
   "catalogFooterLinkVisible": true,
   "ordersSuspended": false,
+  "customPromoEnabled": true,
   "categories": [
     {
       "id": "quadros",
@@ -23,7 +24,7 @@
       "clickable": true
     },
     {
-      "id": "crachas",
+      "id": "crachas-loja",
       "title": "Crachás",
       "subtitle": "Uma lembrança especial",
       "href": "crachas.html",
@@ -36,7 +37,7 @@
       "carouselPanPercent": 0
     },
     {
-      "id": "imanes",
+      "id": "imanes-loja",
       "title": "Ímanes",
       "subtitle": "Para o teu frigorífico",
       "href": "imanes.html",
@@ -50,10 +51,23 @@
       "carouselZoomPercent": 140
     },
     {
-      "id": "caderninhos",
+      "id": "imanes-recortados",
+      "title": "Ímanes recortados",
+      "subtitle": "Cortados à volta do desenho",
+      "href": "imanes-recortados.html",
+      "accent": "blue",
+      "available": true,
+      "carouselEnabled": true,
+      "carouselIntervalMs": 5000,
+      "carouselRandomizeOnLoad": true,
+      "clickable": true,
+      "carouselPanPercent": 0
+    },
+    {
+      "id": "mini-cadernos",
       "title": "Mini-Cadernos",
       "subtitle": "Para pequenas anotações",
-      "href": "caderninhos.html",
+      "href": "mini-cadernos.html",
       "accent": "rose",
       "available": true,
       "carouselEnabled": true,
@@ -63,11 +77,50 @@
       "carouselPanPercent": 0
     },
     {
-      "id": "cadernos",
+      "id": "bloquinhos",
+      "title": "Bloquinhos",
+      "subtitle": "Blocos de notas para o dia a dia",
+      "href": "bloquinhos.html",
+      "accent": "gold",
+      "available": true,
+      "carouselEnabled": true,
+      "carouselIntervalMs": 5000,
+      "carouselRandomizeOnLoad": true,
+      "clickable": true,
+      "carouselPanPercent": 0
+    },
+    {
+      "id": "cadernos-anuais",
       "title": "Cadernos Anuais",
       "subtitle": "Para te acompanharem durante todo o ano",
-      "href": "cadernos.html",
+      "href": "cadernos-anuais.html",
       "accent": "gold",
+      "available": true,
+      "carouselEnabled": true,
+      "carouselIntervalMs": 5000,
+      "carouselRandomizeOnLoad": true,
+      "clickable": true,
+      "carouselPanPercent": 0
+    },
+    {
+      "id": "stickers",
+      "title": "Stickers",
+      "subtitle": "Para colar onde quiseres",
+      "href": "stickers.html",
+      "accent": "rose",
+      "available": true,
+      "carouselEnabled": true,
+      "carouselIntervalMs": 5000,
+      "carouselRandomizeOnLoad": true,
+      "clickable": true,
+      "carouselPanPercent": 0
+    },
+    {
+      "id": "marcadores",
+      "title": "Marcadores",
+      "subtitle": "Para não perderes a página",
+      "href": "marcadores.html",
+      "accent": "sage",
       "available": true,
       "carouselEnabled": true,
       "carouselIntervalMs": 5000,

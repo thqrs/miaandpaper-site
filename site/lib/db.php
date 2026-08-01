@@ -313,6 +313,32 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
             )",
             '2026-07-20_idx_assisted_uploads_created' => "CREATE INDEX IF NOT EXISTS idx_assisted_uploads_created
                 ON assisted_uploads (created_at DESC)",
+            // ORDER_CODE_RESERVATION_V1: o codigo e entregue muito antes do
+            // INSERT em `orders` (no carrinho, os anexos sao copiados para uma
+            // pasta com o nome do codigo pelo meio). Reservar o codigo nesta
+            // tabela, que tem PRIMARY KEY, fecha a janela em que dois pedidos
+            // simultaneos recebiam o mesmo codigo e um deles se perdia.
+            '2026-07-31_init_order_code_reservations' => "CREATE TABLE IF NOT EXISTS order_code_reservations (
+                order_code TEXT PRIMARY KEY,
+                created_at TEXT NOT NULL
+            )",
+            // FORM_RATE_LIMIT_V1: os formulários que disparam mail() não
+            // tinham limite nenhum. Ver mp_db_form_rate_limited().
+            '2026-07-31_init_form_submissions' => "CREATE TABLE IF NOT EXISTS form_submissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                ip_number TEXT NOT NULL
+            )",
+            '2026-07-31_idx_form_submissions' => "CREATE INDEX IF NOT EXISTS idx_form_submissions_ip_created
+                ON form_submissions (ip_number, kind, created_at DESC)",
+            // FUNNEL_CREATED_INDEX_V1: os quatro índices de funnel_events têm
+            // todos `created_at` como SEGUNDA coluna, o que não serve para a
+            // pergunta que o funil e o dashboard fazem sempre — "todos os
+            // eventos entre estas duas datas". Sem índice, cada abertura fazia
+            // SCAN da tabela inteira mais um B-tree temporário para ordenar.
+            '2026-07-31_idx_funnel_created' => "CREATE INDEX IF NOT EXISTS idx_funnel_created
+                ON funnel_events (created_at)",
         );
 
         $check = $pdo->prepare("SELECT 1 FROM schema_migrations WHERE id = ?");
@@ -575,11 +601,9 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
             }
         }
 
-        $check = $pdo->prepare("SELECT 1 FROM orders WHERE order_code = ? LIMIT 1");
         for ($i = 0; $i < 20; $i++) {
             $candidate = $prefix . ($next + $i);
-            $check->execute(array($candidate));
-            if (!$check->fetch()) {
+            if (mp_db_reserve_order_code($pdo, $candidate)) {
                 return $candidate;
             }
         }
@@ -588,13 +612,100 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
         $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         for ($i = 0; $i < 10; $i++) {
             $candidate = $prefix . ($next) . '-' . $alphabet[random_int(0, strlen($alphabet) - 1)] . $alphabet[random_int(0, strlen($alphabet) - 1)];
-            $check->execute(array($candidate));
-            if (!$check->fetch()) {
+            if (mp_db_reserve_order_code($pdo, $candidate)) {
                 return $candidate;
             }
         }
 
         return $prefix . $next . '-' . substr(uniqid('', true), -3);
+    }
+
+    /**
+     * ORDER_CODE_RESERVATION_V1
+     *
+     * Tenta reservar um código. Devolve true só se ninguém o tinha antes —
+     * a atomicidade vem da PRIMARY KEY de `order_code_reservations`, não de
+     * um SELECT seguido de INSERT (que tem uma janela entre os dois).
+     *
+     * Verifica também `orders`, para os códigos anteriores a esta tabela
+     * continuarem a contar como ocupados.
+     */
+    function mp_db_reserve_order_code(PDO $pdo, $candidate)
+    {
+        $exists = $pdo->prepare("SELECT 1 FROM orders WHERE order_code = ? LIMIT 1");
+        $exists->execute(array($candidate));
+        if ($exists->fetch()) {
+            return false;
+        }
+
+        try {
+            $stmt = $pdo->prepare("INSERT INTO order_code_reservations (order_code, created_at) VALUES (?, ?)");
+            $stmt->execute(array($candidate, mp_db_now()));
+            return true;
+        } catch (Exception $e) {
+            // Violação da PRIMARY KEY = outro pedido apanhou este código
+            // primeiro. Qualquer outro erro também não deve dar o código
+            // como reservado.
+            return false;
+        }
+    }
+
+    /**
+     * FORM_RATE_LIMIT_V1
+     *
+     * Limite por IP para os formulários que enviam email. Sem isto,
+     * `send-message.php` e `send-order.php` são um relé aberto: aceitam texto
+     * arbitrário e uma "cópia para" à escolha de quem submete, o que permite
+     * enviar spam a partir do domínio e queimar a reputação de envio.
+     *
+     * Regista a submissão e devolve true quando o IP já passou do limite na
+     * última hora. Falha em aberto de propósito: se a base de dados estiver
+     * indisponível, é preferível deixar passar uma encomenda legítima do que
+     * bloquear toda a gente.
+     */
+    function mp_db_form_rate_limited($kind, $ip, $maxPerHour)
+    {
+        $ip = trim((string)$ip);
+        $kind = (string)$kind;
+        $maxPerHour = max(1, (int)$maxPerHour);
+
+        if ($ip === '') {
+            return false;
+        }
+
+        try {
+            $pdo = mp_db();
+            $windowStart = gmdate('Y-m-d\TH:i:s\Z', time() - 3600);
+
+            $stmt = $pdo->prepare(
+                'SELECT COUNT(*) FROM form_submissions
+                 WHERE ip_number = ? AND kind = ? AND created_at >= ?'
+            );
+            $stmt->execute(array($ip, $kind, $windowStart));
+            $recent = (int)$stmt->fetchColumn();
+
+            // Regista sempre — incluindo as tentativas bloqueadas, para que a
+            // janela não reabra só por a pessoa continuar a insistir.
+            $insert = $pdo->prepare(
+                'INSERT INTO form_submissions (created_at, kind, ip_number) VALUES (?, ?, ?)'
+            );
+            $insert->execute(array(mp_db_now(), $kind, $ip));
+
+            // Limpeza oportunista do que já não conta para nenhuma janela.
+            if ($recent === 0) {
+                $purge = $pdo->prepare('DELETE FROM form_submissions WHERE created_at < ?');
+                $purge->execute(array(gmdate('Y-m-d\TH:i:s\Z', time() - 7 * 24 * 3600)));
+            }
+
+            if ($recent >= $maxPerHour) {
+                @error_log('[miaandpaper] rate-limit do formulário "' . $kind . '" atingido para IP ' . $ip . ' (' . $recent . '/h)');
+                return true;
+            }
+            return false;
+        } catch (Exception $e) {
+            @error_log('[miaandpaper] mp_db_form_rate_limited falhou: ' . $e->getMessage());
+            return false;
+        }
     }
 
     // ----- TRACKING_IGNORE_AND_ARCHIVE_V1 -----
@@ -1516,11 +1627,27 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
             // Morada / institucional
             'address', 'shipping_address', 'billing_address',
             'congregation', 'church',
+            // Identificadores e metadados de anexos. Mesmo sem serem dados de
+            // contacto, podem identificar ficheiros privados da encomenda e
+            // nunca pertencem ao funil analítico.
+            'token', 'upload_token', 'file_token',
+            'sha256', 'hash', 'filename', 'file_name', 'original_name',
+            'stored_name', 'relative_path',
+            'custom_artwork_uploads', 'artwork_uploads',
+            'cracha_artwork_uploads', 'iman_artwork_uploads',
+            'cracha_card_reference_uploads', 'iman_card_reference_uploads',
+            'cracha_card_audio_uploads', 'iman_card_audio_uploads',
+            'quadro_uploads', 'quadro_reference_uploads',
+            'quadro_silhouette_uploads', 'quadro_silhouette_audio_uploads',
+            'quadro_audio_uploads', 'card_reference_uploads', 'card_audio_uploads',
             // Texto livre
             'message', 'note', 'notes', 'comment', 'comments',
             'personalization', 'personalization_text', 'personalisation', 'personalisation_text',
             'cover_personalization_text', 'personalization_phrase',
             'custom_text', 'typed_text', 'free_text',
+            'recipient_name', 'contact', 'card_description',
+            'quadro_text', 'quadro_dedication', 'quadro_description',
+            'quadro_silhouette_description',
         );
     }
 

@@ -785,6 +785,16 @@ if ($view === 'list') :
     } elseif (isset($raw['checkout']) && is_array($raw['checkout']) && isset($raw['checkout']['customer_nif'])) {
         $customerNif = trim((string)$raw['checkout']['customer_nif']);
     }
+    $rawCartContext = isset($raw['cart_context']) ? trim((string)$raw['cart_context']) : '';
+    $rawCartContextLabels = array(
+        'main-v2' => 'Catálogo principal (main-v2)',
+        'congress-2026' => 'Congresso 2026',
+        'mixed' => 'Misto: catálogo principal e Congresso 2026',
+        'main' => 'Catálogo geral',
+    );
+    $rawCartContextLabel = isset($rawCartContextLabels[$rawCartContext]) ? $rawCartContextLabels[$rawCartContext] : $rawCartContext;
+    $rawCustomizationFileCount = isset($raw['customization_file_count']) ? max(0, (int)$raw['customization_file_count']) : 0;
+    $rawCustomizationFeeCents = isset($raw['customization_fee_cents']) ? max(0, (int)$raw['customization_fee_cents']) : 0;
 ?>
   <p><a class="back-link" href="admin-orders.php?view=list">← Lista de encomendas</a></p>
   <h2 style="margin:0 0 4px;font-size:1.4rem;"><?= admin_orders_h($order['order_code']) ?> <small style="color:var(--muted);font-weight:600;font-size:1rem;"><?= admin_orders_h(admin_orders_friendly_status($order['payment_status'], $order['fulfillment_status'])) ?></small></h2>
@@ -803,6 +813,9 @@ if ($view === 'list') :
         <dt>Cartão (nome)</dt><dd><?= admin_orders_h($order['card_name']) ?></dd>
         <?php if (!empty($order['congregation'])): ?><dt>Congregação</dt><dd><?= admin_orders_h($order['congregation']) ?></dd><?php endif; ?>
         <dt>Entrega</dt><dd><?= admin_orders_h($order['delivery_label']) ?> (<?= admin_orders_h($order['delivery_option']) ?>)</dd>
+        <?php if ($rawCartContextLabel !== ''): ?><dt>Contexto do carrinho</dt><dd><?= admin_orders_h($rawCartContextLabel) ?></dd><?php endif; ?>
+        <?php if ($rawCustomizationFileCount > 0): ?><dt>Ficheiros personalizados</dt><dd><?= (int)$rawCustomizationFileCount ?></dd><?php endif; ?>
+        <?php if ($rawCustomizationFeeCents > 0): ?><dt>Taxas de personalização</dt><dd><?= admin_orders_cents_to_eur($rawCustomizationFeeCents) ?> <small style="color:var(--muted);">(preparação das imagens e testes)</small></dd><?php endif; ?>
         <dt>Subtotal</dt><dd><?= !empty($raw['has_price_to_confirm']) ? admin_orders_h(admin_orders_cents_to_eur($order['subtotal_cents']) . ' + preço a confirmar') : admin_orders_cents_to_eur($order['subtotal_cents']) ?></dd>
         <dt>Portes (estimativa)</dt><dd><?= admin_orders_cents_to_eur($order['shipping_estimate_cents']) ?></dd>
         <dt>Total estimado</dt><dd><strong><?= !empty($raw['has_price_to_confirm']) ? 'A confirmar pela Mia' : admin_orders_cents_to_eur($order['total_estimate_cents']) ?></strong></dd>
@@ -890,10 +903,40 @@ if ($view === 'list') :
           if (!$isCustomArtwork && (!empty($customArtworkUploads) || $customArtworkHelp || $customCardDescription !== '' || !empty($customCardReferenceUploads) || !empty($customCardAudioUploads))) {
               $isCustomArtwork = true;
           }
+          $itemCatalogContext = admin_orders_text_value(admin_orders_item_value($item, array('catalog_context'), array('catalog_context'), ''));
+          $itemContextLabels = array(
+              'main-v2' => 'Catálogo principal (main-v2)',
+              'congress-2026' => 'Congresso 2026',
+              'main' => 'Catálogo geral',
+          );
+          $itemCatalogContextLabel = isset($itemContextLabels[$itemCatalogContext]) ? $itemContextLabels[$itemCatalogContext] : $itemCatalogContext;
+          $itemOrderFlow = admin_orders_text_value(admin_orders_item_value($item, array('order_flow'), array('order_flow'), ''));
+          $itemDesignSource = admin_orders_text_value(admin_orders_item_value($item, array('design_source'), array('design_source'), ''));
+          $itemProductQuantity = max(0, (int)admin_orders_item_value($item, array('product_quantity', 'caderno_order_quantity', 'pack_quantity'), array('caderno_order_quantity', 'pack_quantity'), 0));
+          $itemCustomizationFileCount = max(0, (int)admin_orders_item_value($item, array('customization_file_count'), array('customization_file_count'), 0));
+          $itemCustomizationFeePerFileCents = max(0, (int)admin_orders_item_value($item, array('customization_fee_per_file_cents'), array(), 0));
+          $itemCustomizationFeeCents = max(0, (int)admin_orders_item_value($item, array('customization_fee_cents'), array('customization_fee_cents'), 0));
+          $itemProductSubtotalCents = max(0, (int)admin_orders_item_value($item, array('product_subtotal_cents'), array(), 0));
+          $itemPurchaseOptionLabel = admin_orders_text_value(admin_orders_item_value($item, array('purchase_option_label'), array(), ''));
+          $itemLaminationLabel = admin_orders_text_value(admin_orders_item_value($item, array('lamination_label', 'lamination'), array('lamination'), ''));
+          $itemUnitLabel = admin_orders_text_value(admin_orders_item_value($item, array('unit_label'), array(), 'unidades'));
+          $itemDesigns = admin_orders_item_value($item, array('designs'), array('designs'), array());
+          $itemDesignQuantities = admin_orders_item_value($item, array('design_quantities'), array('design_quantities'), array());
+          $itemDesignLabels = admin_orders_item_value($item, array('design_labels'), array('design_labels'), array());
+          $itemAssortedDesigns = admin_orders_bool_value(admin_orders_item_value($item, array('assorted_designs'), array('assorted_designs'), false));
+          if (!is_array($itemDesigns)) $itemDesigns = array();
+          if (!is_array($itemDesignQuantities)) $itemDesignQuantities = array();
+          if (!is_array($itemDesignLabels)) $itemDesignLabels = array();
         ?>
           <div style="margin:0 0 14px;padding:12px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,0.35);">
             <dl class="kv" style="margin:0;">
               <dt>Produto</dt><dd><?= admin_orders_h(!empty($item['is_quadros']) ? admin_orders_moldura_text(isset($item['product_name']) ? $item['product_name'] : '') : (isset($item['product_name']) ? $item['product_name'] : '')) ?></dd>
+              <?php if ($itemCatalogContextLabel !== ''): ?>
+                <dt>Contexto</dt><dd><?= admin_orders_h($itemCatalogContextLabel) ?></dd>
+              <?php endif; ?>
+              <?php if ($itemOrderFlow !== ''): ?>
+                <dt>Flow</dt><dd><?= admin_orders_h($itemOrderFlow === 'custom' || $itemOrderFlow === 'custom-artwork' ? 'Personalizado' : 'Designs existentes') ?><?php if ($itemDesignSource !== '' && $itemDesignSource !== $itemOrderFlow): ?> <small style="color:var(--muted);">(origem: <?= admin_orders_h($itemDesignSource) ?>)</small><?php endif; ?></dd>
+              <?php endif; ?>
               <?php if (!empty($item['is_quadros'])): ?>
                 <dt>Tipo</dt><dd><?= admin_orders_h(admin_orders_moldura_text(isset($item['quadro_type_label']) && $item['quadro_type_label'] !== '' ? $item['quadro_type_label'] : (isset($item['quadro_type']) ? $item['quadro_type'] : ''))) ?></dd>
                 <?php if (!empty($item['quadro_palette_label'])): ?>
@@ -1005,24 +1048,39 @@ if ($view === 'list') :
                 <?php
                   $customSizeLabel = admin_orders_text_value(admin_orders_item_value($item, array('size_label', 'size'), array('size'), ''));
                   $customPriceKey = admin_orders_text_value(admin_orders_item_value($item, array('price_key'), array(), ''));
-                  $customQuantity = admin_orders_text_value(admin_orders_item_value($item, array('pack_quantity', 'quantity'), array('pack_quantity'), ''));
+                  $customQuantity = $itemProductQuantity > 0 ? (string)$itemProductQuantity : admin_orders_text_value(admin_orders_item_value($item, array('pack_quantity', 'quantity'), array('pack_quantity'), ''));
                 ?>
+                <?php if ($itemPurchaseOptionLabel !== ''): ?><dt>Opção</dt><dd><?= admin_orders_h($itemPurchaseOptionLabel) ?></dd><?php endif; ?>
+                <?php if ($itemLaminationLabel !== ''): ?><dt>Laminação</dt><dd><?= admin_orders_h($itemLaminationLabel) ?></dd><?php endif; ?>
                 <?php if ($customSizeLabel !== ''): ?>
                   <dt>Tipo / tamanho</dt><dd><?= admin_orders_h($customSizeLabel) ?><?php if ($customPriceKey !== '' && $customPriceKey !== $customSizeLabel): ?> <small style="color:var(--muted);">(tabela: <?= admin_orders_h($customPriceKey) ?>)</small><?php endif; ?></dd>
                 <?php endif; ?>
-                <?php if ($customQuantity !== ''): ?><dt>Quantidade</dt><dd><?= admin_orders_h($customQuantity) ?></dd><?php endif; ?>
+                <?php if ($customQuantity !== ''): ?><dt>Quantidade total</dt><dd><?= admin_orders_h($customQuantity) ?> <?= admin_orders_h($itemUnitLabel) ?></dd><?php endif; ?>
                 <?php if ($customArtworkHelp): ?>
                   <dt>Imagem principal</dt><dd>O cliente pediu ajuda para preparar ou enviar a imagem.</dd>
                 <?php endif; ?>
                 <?php if (!empty($customArtworkUploads) && is_array($customArtworkUploads)): ?>
-                  <dt>Imagem principal</dt>
+                  <dt>Ficheiros personalizados</dt>
                   <dd>
                     <?php foreach ($customArtworkUploads as $upload): ?>
                       <?php if (is_array($upload) && !empty($upload['id'])): ?>
-                        <a href="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>"><?= admin_orders_h(isset($upload['name']) ? $upload['name'] : 'Descarregar imagem') ?></a><br>
+                        <?php
+                          $uploadName = isset($upload['name']) ? (string)$upload['name'] : 'Descarregar ficheiro';
+                          $uploadQuantity = isset($upload['quantity']) ? max(1, (int)$upload['quantity']) : 0;
+                          $uploadFeeCents = isset($upload['fee_cents']) ? max(0, (int)$upload['fee_cents']) : $itemCustomizationFeePerFileCents;
+                          $uploadIsPdf = (isset($upload['mime']) && strtolower((string)$upload['mime']) === 'application/pdf') || strtolower(pathinfo($uploadName, PATHINFO_EXTENSION)) === 'pdf';
+                        ?>
+                        <a href="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>"><?= admin_orders_h($uploadName) ?></a>
+                        <?php if ($uploadIsPdf): ?><small style="color:var(--muted);">(PDF)</small><?php endif; ?>
+                        <?php if ($uploadQuantity > 0): ?> · <?= (int)$uploadQuantity ?> <?= admin_orders_h($itemUnitLabel) ?><?php endif; ?>
+                        <?php if ($uploadFeeCents > 0): ?> · <strong>+<?= admin_orders_cents_to_eur($uploadFeeCents) ?></strong><?php endif; ?><br>
                       <?php endif; ?>
                     <?php endforeach; ?>
                   </dd>
+                <?php endif; ?>
+                <?php if ($itemProductSubtotalCents > 0): ?><dt>Produtos sem taxa</dt><dd><?= admin_orders_cents_to_eur($itemProductSubtotalCents) ?></dd><?php endif; ?>
+                <?php if ($itemCustomizationFeeCents > 0): ?>
+                  <dt>Taxa de personalização</dt><dd><strong><?= admin_orders_cents_to_eur($itemCustomizationFeeCents) ?></strong> · <?= (int)$itemCustomizationFileCount ?> <?= $itemCustomizationFileCount === 1 ? 'ficheiro' : 'ficheiros' ?> × <?= admin_orders_cents_to_eur($itemCustomizationFeePerFileCents) ?><br><small style="color:var(--muted);">Inclui a preparação de cada imagem e os testes necessários antes da produção.</small></dd>
                 <?php endif; ?>
                 <?php if ($customCardDescription !== ''): ?>
                   <dt>Cartão — fundo e texto</dt><dd><?= nl2br(admin_orders_h($customCardDescription)) ?></dd>
@@ -1045,6 +1103,24 @@ if ($view === 'list') :
                         <audio controls preload="metadata" style="display:block;width:min(100%,420px);margin:0 0 6px;" src="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>&amp;inline=1"></audio>
                         <a href="admin-order-file.php?order_id=<?= (int)$id ?>&amp;file=<?= rawurlencode((string)$upload['id']) ?>"><?= admin_orders_h(isset($upload['name']) ? $upload['name'] : 'Descarregar áudio') ?></a><br>
                       <?php endif; ?>
+                    <?php endforeach; ?>
+                  </dd>
+                <?php endif; ?>
+              <?php endif; ?>
+              <?php if (!$isCustomArtwork && empty($item['is_quadros'])): ?>
+                <?php if ($itemPurchaseOptionLabel !== ''): ?><dt>Opção</dt><dd><?= admin_orders_h($itemPurchaseOptionLabel) ?></dd><?php endif; ?>
+                <?php if ($itemLaminationLabel !== ''): ?><dt>Laminação</dt><dd><?= admin_orders_h($itemLaminationLabel) ?></dd><?php endif; ?>
+                <?php if ($itemProductQuantity > 0): ?><dt>Quantidade</dt><dd><?= (int)$itemProductQuantity ?> <?= admin_orders_h($itemUnitLabel) ?></dd><?php endif; ?>
+                <?php if ($itemAssortedDesigns): ?>
+                  <dt>Designs</dt><dd>Sortido · a Mia escolhe a combinação.</dd>
+                <?php elseif (!empty($itemDesigns)): ?>
+                  <dt>Designs</dt><dd>
+                    <?php foreach ($itemDesigns as $design):
+                      $design = (string)$design;
+                      $designLabel = isset($itemDesignLabels[$design]) ? (string)$itemDesignLabels[$design] : $design;
+                      $designQuantity = isset($itemDesignQuantities[$design]) ? max(0, (int)$itemDesignQuantities[$design]) : 0;
+                    ?>
+                      <?= admin_orders_h($designLabel) ?><?php if ($designQuantity > 0): ?> × <?= (int)$designQuantity ?><?php endif; ?><br>
                     <?php endforeach; ?>
                   </dd>
                 <?php endif; ?>

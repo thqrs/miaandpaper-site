@@ -39,12 +39,12 @@
                     "105": 5300
                 },
                 "3 mm": {
-                    "1": 200,
-                    "3": 500,
-                    "5": 750,
-                    "30": 3500,
-                    "60": 6400,
-                    "102": 10000
+                    "1": 250,
+                    "3": 715,
+                    "5": 1165,
+                    "10": 2250,
+                    "30": 6000,
+                    "60": 11250
                 }
             }
         },
@@ -71,6 +71,175 @@
                     "24": 3200,
                     "48": 5800,
                     "96": 10500
+                }
+            }
+        },
+        "crachas-loja": {
+            "id": "crachas-loja",
+            "family": "crachas",
+            "catalogContext": "main-v2",
+            "label": "Crachás",
+            "unitLabel": "crachás",
+            "unitSingular": "crachá",
+            "unitShort": "crachá",
+            "defaultPriceKey": "25 mm",
+            "minimumQuantity": 1,
+            "pricingMode": "pack-combination",
+            "allowUnitDiscounts": true,
+            "customArtworkFeePerFileCents": 300,
+            "prices": {
+                "25 mm": {
+                    "1": 150,
+                    "3": 420,
+                    "5": 650,
+                    "24": 2700,
+                    "48": 5000,
+                    "96": 9000
+                },
+                "32 mm": {
+                    "1": 175,
+                    "3": 500,
+                    "5": 750,
+                    "24": 3200,
+                    "48": 5800,
+                    "96": 10500
+                }
+            }
+        },
+        "imanes-loja": {
+            "id": "imanes-loja",
+            "family": "imanes",
+            "catalogContext": "main-v2",
+            "label": "Ímanes",
+            "unitLabel": "ímanes",
+            "unitSingular": "íman",
+            "unitShort": "íman",
+            "defaultPriceKey": "Achatados",
+            "minimumQuantity": 1,
+            "pricingMode": "pack-combination",
+            "allowUnitDiscounts": true,
+            "customArtworkFeePerFileCents": 300,
+            "prices": {
+                "Achatados": {
+                    "15": 1000,
+                    "30": 1800,
+                    "60": 3200,
+                    "105": 5300
+                },
+                "3 mm": {
+                    "1": 250,
+                    "3": 715,
+                    "5": 1165,
+                    "10": 2250,
+                    "30": 6000,
+                    "60": 11250
+                }
+            },
+            "pricingModeByPriceKey": {
+                "Achatados": "tier-unit"
+            },
+            "combinationTieBreakByPriceKey": {
+                "3 mm": "fewer-packs"
+            }
+        },
+        "imanes-recortados": {
+            "id": "imanes-recortados",
+            "family": "imanes-recortados",
+            "catalogContext": "main-v2",
+            "label": "Ímanes recortados",
+            "unitLabel": "ímanes",
+            "unitSingular": "íman",
+            "unitShort": "íman",
+            "defaultPriceKey": "Recortados",
+            "minimumQuantity": 12,
+            "pricingMode": "tier-unit",
+            "allowUnitDiscounts": true,
+            "customArtworkFeePerFileCents": 300,
+            "prices": {
+                "Recortados": {
+                    "12": 1300,
+                    "24": 2400,
+                    "36": 3400,
+                    "48": 4400,
+                    "60": 5400
+                }
+            }
+        },
+        "mini-cadernos": {
+            "id": "mini-cadernos",
+            "family": "caderninhos",
+            "catalogContext": "main-v2",
+            "label": "Mini-cadernos",
+            "unitLabel": "mini-cadernos",
+            "unitSingular": "mini-caderno",
+            "unitShort": "mini-caderno",
+            "defaultPriceKey": "Mini-Cadernos",
+            "minimumQuantity": 1,
+            "pricingMode": "pack-combination",
+            "allowUnitDiscounts": true,
+            "customArtworkFeePerFileCents": 300,
+            "prices": {
+                "Mini-Cadernos": {
+                    "1": 450,
+                    "3": 1250,
+                    "5": 1950,
+                    "10": 3600,
+                    "24": 7800,
+                    "48": 14500,
+                    "96": 28000
+                }
+            }
+        },
+        "bloquinhos": {
+            "id": "bloquinhos",
+            "family": "bloquinhos",
+            "catalogContext": "main-v2",
+            "label": "Bloquinhos",
+            "unitLabel": "bloquinhos",
+            "unitSingular": "bloquinho",
+            "unitShort": "bloquinho",
+            "defaultPriceKey": "Bloquinhos",
+            "minimumQuantity": 1,
+            "pricingMode": "pack-combination",
+            "allowUnitDiscounts": true,
+            "customArtworkFeePerFileCents": 300,
+            "prices": {
+                "Bloquinhos": {
+                    "1": 450,
+                    "3": 1250,
+                    "5": 1950,
+                    "10": 3600,
+                    "24": 7800,
+                    "48": 14500,
+                    "96": 28000
+                }
+            }
+        },
+        "cadernos-anuais": {
+            "id": "cadernos-anuais",
+            "family": "cadernos",
+            "catalogContext": "main-v2",
+            "label": "Cadernos anuais",
+            "unitLabel": "cadernos",
+            "unitSingular": "caderno",
+            "unitShort": "caderno",
+            "defaultPriceKey": "Cadernos",
+            "minimumQuantity": 1,
+            "pricingMode": "flat-unit",
+            "allowUnitDiscounts": false,
+            "customArtworkFeePerFileCents": 300,
+            "flatUnitPricesCents": {
+                "caderno_normal": 2990,
+                "caderno_pioneiro": 3490,
+                "pack_normal": 3790,
+                "pack_pioneiro": 4290
+            },
+            "prices": {
+                "Cadernos": {
+                    "1": 2990,
+                    "2": 3490,
+                    "3": 3790,
+                    "4": 4290
                 }
             }
         },
@@ -142,6 +311,57 @@
                     "3": 0,
                     "5": 0,
                     "10": 0
+                }
+            }
+        },
+        "stickers": {
+            "id": "stickers",
+            "family": "stickers",
+            "catalogContext": "main-v2",
+            "label": "Stickers",
+            "unitLabel": "stickers",
+            "unitSingular": "sticker",
+            "unitShort": "sticker",
+            "defaultPriceKey": "Stickers",
+            "minimumQuantity": 1,
+            "pricingMode": "flat-unit",
+            "allowUnitDiscounts": false,
+            "customArtworkFeePerFileCents": 300,
+            "flatUnitPricesCents": {
+                "Stickers": 50
+            },
+            "prices": {
+                "Stickers": {
+                    "1": 50,
+                    "5": 250,
+                    "10": 500,
+                    "25": 1250,
+                    "50": 2500
+                }
+            }
+        },
+        "marcadores": {
+            "id": "marcadores",
+            "family": "marcadores",
+            "catalogContext": "main-v2",
+            "label": "Marcadores",
+            "unitLabel": "marcadores",
+            "unitSingular": "marcador",
+            "unitShort": "marcador",
+            "defaultPriceKey": "Marcadores",
+            "minimumQuantity": 1,
+            "pricingMode": "flat-unit",
+            "allowUnitDiscounts": false,
+            "customArtworkFeePerFileCents": 300,
+            "flatUnitPricesCents": {
+                "Marcadores": 150
+            },
+            "prices": {
+                "Marcadores": {
+                    "1": 150,
+                    "5": 750,
+                    "10": 1500,
+                    "20": 3000
                 }
             }
         }

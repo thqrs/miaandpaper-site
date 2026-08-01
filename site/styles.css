@@ -1943,6 +1943,92 @@ p {
   color: var(--moss);
 }
 
+.order-upload-pdf {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--linen);
+  color: var(--moss);
+  font-size: .78rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+}
+
+.order-upload-item-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.order-upload-item .artwork-upload-fee {
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.order-upload-item .artwork-upload-fee strong {
+  display: inline;
+  overflow: visible;
+  color: var(--moss);
+  font-size: inherit;
+  white-space: normal;
+}
+
+.artwork-upload-quantity {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+  color: var(--ink);
+  font-size: .82rem;
+  font-weight: 750;
+}
+
+.artwork-upload-quantity input {
+  width: 76px;
+  min-height: 38px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  text-align: center;
+}
+
+.original-artwork-upload {
+  display: grid;
+  gap: 14px;
+}
+
+.original-artwork-note,
+.original-artwork-fee-total {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--linen);
+}
+
+.original-artwork-note p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.original-artwork-fee-total {
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.cart-item-customization-fee {
+  color: var(--moss) !important;
+  font-style: normal !important;
+  font-weight: 750;
+}
+
 .order-upload-item--audio {
   grid-template-columns: minmax(0, 1fr) 40px;
 }
@@ -2289,6 +2375,45 @@ html[data-theme="dark"] .photo-help-choice {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
   gap: 10px;
+}
+
+.design-upload-choice {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  margin: 0 0 10px;
+  padding: 12px;
+  color: var(--ink);
+  text-align: left;
+}
+
+.design-upload-choice-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--linen);
+  color: var(--moss);
+}
+
+.design-upload-choice-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.design-upload-choice .choice-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.design-upload-choice .choice-copy span {
+  color: var(--muted);
+  font-size: .84rem;
 }
 
 .design-action-card {
@@ -3788,6 +3913,18 @@ html[data-theme="dark"] .pack-disabled-message {
   background: #fffdf8;
 }
 
+/* QUANTITY_DISTRIBUTION_LAYOUT_V1: o ajuste por design no fluxo de quantidade
+   livre vive dentro deste bloco. Sem grelha, a dica e o "Distribuir por igual"
+   ficavam encostados à esquerda em vez de acompanharem a largura do passo. */
+.quantity-distribution {
+  display: grid;
+  gap: 12px;
+}
+
+.quantity-distribution > .quantity-adjust-hint {
+  margin: 0;
+}
+
 .auto-distribute {
   min-height: 44px;
   border: 1px solid rgba(142, 103, 31, 0.24);
@@ -5041,7 +5178,7 @@ body.has-site-background {
 }
 
 .step-list .is-hidden-step button span::after {
-  content: "â€¢";
+  content: "•";
   display: block;
   margin-top: -5px;
   font-size: 0.7rem;
@@ -7566,6 +7703,62 @@ html[data-theme="dark"] .crachas-size-card-proof-note {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.cadernos-order-quantity-control {
+  display: grid;
+  grid-template-columns: 44px minmax(96px, 150px) 44px auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.cadernos-order-quantity-control > button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(126, 93, 22, 0.24);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--moss);
+  font: inherit;
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.cadernos-order-quantity-control > button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.cadernos-order-quantity-control label {
+  display: block;
+}
+
+.cadernos-order-quantity-control label > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.cadernos-order-quantity-control input {
+  width: 100%;
+  height: 44px;
+  box-sizing: border-box;
+  border: 1px solid rgba(126, 93, 22, 0.24);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  text-align: center;
+}
+
+.cadernos-order-quantity-control > small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
 .cadernos-info-note {
   display: inline-block;
   max-width: 100%;
@@ -7773,6 +7966,15 @@ html[data-theme="dark"] .cadernos-info-note {
 
   .cadernos-order-quantity-options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cadernos-order-quantity-control {
+    grid-template-columns: 42px minmax(82px, 1fr) 42px;
+  }
+
+  .cadernos-order-quantity-control > small {
+    grid-column: 1 / -1;
+    text-align: center;
   }
 }
 
@@ -8669,6 +8871,41 @@ input.is-missing,
 .design-action-card,
 .pack-option {
   padding-right: 46px;
+}
+
+/* PACK_COMBINATION_MARKS_V1: os packs que compõem o total escolhido levam um
+   visto por cada vez que entram no conjunto (10 = 5 + 5 mostra dois vistos no
+   pack de 5, 20 = 5 x 4 mostra quatro). Como o número varia, os vistos ficam
+   em linha dentro do card, e não no canto — cabem em qualquer ecrã. O ::after
+   da selecção é dispensado para não haver dois vistos a dizer o mesmo. */
+.pack-option.is-in-combination {
+  padding-right: 12px;
+}
+
+.pack-option.is-in-combination::after {
+  content: none;
+}
+
+.pack-option-marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.pack-option-marks i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #756026;
+  color: #fff;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .design-action-card[data-select-all-designs] {
@@ -11141,6 +11378,99 @@ html[data-theme="dark"] .home-products-section .category-grid:not(.is-admin-home
   margin-top: 18px;
 }
 
+/* PACK_COMBINATION_V1: de que packs é feito o total, e quanto se poupa a subir
+   para o pack seguinte. Segue a largura e o desenho da caixa de preço. */
+.pack-combination {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 560px);
+  margin: 14px auto 0;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  text-align: center;
+}
+
+.pack-combination-title {
+  margin: 0;
+  color: var(--muted);
+  font-size: .9rem;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.pack-combination-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pack-combination-list li,
+.pack-combination-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  font-size: .95rem;
+}
+
+.pack-combination-list li span {
+  color: var(--ink);
+}
+
+.pack-combination-list li strong {
+  color: var(--moss);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pack-combination-total {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.pack-combination-total strong {
+  font-size: 1.12rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.pack-combination-upgrade {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--moss);
+  font-size: .92rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.pack-combination-upgrade strong {
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 420px) {
+  .pack-combination {
+    padding: 12px 14px;
+  }
+
+  .pack-combination-title,
+  .pack-combination-upgrade {
+    font-size: .86rem;
+  }
+
+  .pack-combination-list li,
+  .pack-combination-total {
+    font-size: .9rem;
+  }
+}
+
 .free-quantity-builder > p {
   margin: 0;
   color: var(--muted);
@@ -11514,4 +11844,490 @@ html[data-theme="dark"] .free-price-chart-tooltip {
     grid-template-columns: 1fr auto;
     align-items: baseline;
   }
+}
+
+/* ==== PERSONALIZACAO_BUILDER_V1 =========================================
+   Passo 2 de personalizacao.html: cada cartao e uma linha do pedido
+   (design x produto x opcoes x quantidade). */
+.custom-product-builder {
+  display: grid;
+  gap: 16px;
+}
+
+.builder-card {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-cream);
+}
+
+.builder-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.builder-card-header strong {
+  font-size: 1.02rem;
+  line-height: 1.3;
+}
+
+.builder-card-remove {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.builder-card-remove:hover {
+  color: var(--rose);
+  border-color: var(--rose);
+}
+
+.builder-field {
+  display: grid;
+  gap: 8px;
+}
+
+.builder-field-label {
+  color: var(--muted);
+  font-size: .82rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.builder-group-title {
+  margin: 6px 0 0;
+  color: var(--moss);
+  font-size: .88rem;
+  font-weight: 600;
+}
+
+.builder-design-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 10px;
+}
+
+.builder-design-choice,
+.builder-product-choice,
+.builder-option-choice,
+.builder-finish-choice {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  cursor: pointer;
+}
+
+.builder-design-choice input,
+.builder-product-choice input,
+.builder-option-choice input,
+.builder-finish-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.builder-design-choice.is-selected,
+.builder-product-choice.is-selected,
+.builder-option-choice.is-selected,
+.builder-finish-choice.is-selected {
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 1px var(--gold);
+}
+
+.builder-design-choice img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--surface-image);
+}
+
+.builder-design-pdf {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--surface-image);
+  color: var(--moss);
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+.builder-design-choice small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: .72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.builder-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.builder-product-choice {
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.builder-product-media {
+  width: 48px;
+  height: 48px;
+  border-radius: calc(var(--radius) - 2px);
+  background-color: var(--surface-image);
+  background-position: center;
+  background-size: cover;
+}
+
+.builder-product-media.is-round {
+  border-radius: 50%;
+}
+
+.builder-product-media.is-blank {
+  border: 1px dashed var(--line);
+}
+
+.builder-product-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.builder-product-copy strong {
+  font-size: .9rem;
+  line-height: 1.25;
+}
+
+.builder-product-copy small,
+.builder-option-choice small,
+.builder-finish-choice small {
+  color: var(--muted);
+  font-size: .76rem;
+}
+
+.builder-option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.builder-option-choice span,
+.builder-finish-choice span {
+  display: grid;
+  gap: 2px;
+}
+
+.builder-finish-list {
+  display: grid;
+  gap: 10px;
+}
+
+.builder-quantity-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.builder-quantity-tile {
+  min-width: 52px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  font-size: .92rem;
+  cursor: pointer;
+}
+
+.builder-quantity-tile.is-selected {
+  border-color: var(--gold);
+  background: var(--surface-gold-soft);
+}
+
+.builder-quantity-input {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  width: fit-content;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.builder-quantity-input button {
+  width: 42px;
+  border: 0;
+  background: transparent;
+  color: var(--moss);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.builder-quantity-input input {
+  width: 84px;
+  border: 0;
+  border-inline: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.builder-line-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .86rem;
+}
+
+.builder-line-price strong {
+  margin-left: auto;
+  color: var(--ink);
+  font-size: 1.05rem;
+}
+
+.builder-line-price.is-quote,
+.builder-line-price.is-invalid {
+  color: var(--moss);
+}
+
+.builder-add {
+  width: 100%;
+  padding: 16px;
+  border: 1px dashed var(--border-soft-gold);
+  border-radius: var(--radius);
+  background: var(--surface-gold-soft);
+  color: var(--moss);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.builder-add:hover {
+  border-color: var(--gold);
+}
+
+.builder-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-cream-strong);
+}
+
+.builder-total strong {
+  margin-left: auto;
+  font-size: 1.2rem;
+}
+
+.builder-total small {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: .8rem;
+}
+
+@media (max-width: 520px) {
+  .builder-card {
+    padding: 14px;
+  }
+
+  .builder-product-grid,
+  .builder-option-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==== PERSONALIZACAO_PROMO_V1 ==========================================
+   Convite ao flow de artwork proprio no topo do passo dos designs. Discreto:
+   nao compete com os cartoes de design nem entra na grelha. */
+.custom-promo {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-soft-gold);
+  border-radius: var(--radius);
+  background: var(--surface-gold-soft);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.custom-promo:hover {
+  border-color: var(--gold);
+}
+
+.custom-promo-media {
+  width: 64px;
+  height: 64px;
+  border-radius: calc(var(--radius) - 2px);
+  background-color: var(--surface-image);
+  background-position: center;
+  background-size: cover;
+}
+
+.custom-promo-media.is-icon {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  background-color: var(--card);
+  color: var(--moss);
+}
+
+.custom-promo-media.is-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.custom-promo-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.custom-promo-copy strong {
+  font-size: .98rem;
+  line-height: 1.3;
+}
+
+.custom-promo-copy span {
+  color: var(--muted);
+  font-size: .84rem;
+}
+
+.custom-promo-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--moss);
+  font-size: .88rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.custom-promo-action b {
+  font-weight: 400;
+}
+
+@media (max-width: 560px) {
+  .custom-promo {
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 4px 12px;
+  }
+
+  /* A accao passa para a segunda linha, por isso a imagem tem de atravessar as
+     duas — senao ficava centrada so na primeira e parecia encostada ao topo.
+     Tem de ser `span 2`: sem grid-template-rows nao ha grelha explicita e o
+     `-1` de `1 / -1` resolvia para a linha 1, deixando tudo na mesma. */
+  .custom-promo-media {
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 52px;
+    height: 52px;
+  }
+
+  .custom-promo-action {
+    grid-column: 2;
+  }
+}
+
+/* Bloco estatico gerado por tools/seo-build.js. Vive dentro de #app e e
+   substituido pelo app.js assim que os JSON chegam.
+
+   Fica escondido: o intervalo ate os JSON chegarem chega para se ver o texto a
+   aparecer e a desaparecer, e isso parece um erro. Escondido continua a servir
+   para o que interessa — o Googlebot le o HTML em bruto, sem CSS, por isso ve na
+   mesma o texto e os links; e quando renderiza a pagina com JavaScript encontra
+   o conteudo real do app.js, que diz o mesmo ou mais. Nao ha nada escondido do
+   Google que os visitantes vejam, nem o contrario.
+
+   Quem nao tem JavaScript volta a ve-lo: o <noscript> gerado em cada pagina
+   repoe o display, senao ficavam com uma pagina em branco.
+
+   Estilo minimo de proposito: e uma pagina de recurso, nao vale a pena replicar
+   o layout real. */
+.seo-prerender {
+  display: none;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 24px 64px;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.seo-prerender h1 {
+  margin: 0 0 16px;
+  font-size: clamp(26px, 4vw, 36px);
+  line-height: 1.2;
+  color: var(--moss);
+}
+
+.seo-prerender h2 {
+  margin: 32px 0 12px;
+  font-size: 19px;
+  color: var(--moss);
+}
+
+.seo-prerender p {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.seo-prerender ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.seo-prerender li {
+  margin-bottom: 6px;
+}
+
+.seo-prerender a {
+  color: var(--moss);
+}
+
+.seo-prerender-nav {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.seo-prerender-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  padding: 0;
+  list-style: none;
 }

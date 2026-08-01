@@ -5,7 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Pré-visualização · galeria</title>
-  <link rel="stylesheet" href="styles.css?v=2026072815">
+  <script>
+    // O contexto vem no URL do iframe e decide qual renderer carregar. A
+    // página de preview vive na raiz, por isso as imagens dos dois contextos
+    // continuam a resolver a partir de site/ sem alterar os JSON da cápsula.
+    (function () {
+      var requested = new URLSearchParams(window.location.search).get("context");
+      var context = requested === "congresso-2026" ? requested : "principal";
+      var stylesheet = context === "congresso-2026"
+        ? "congressos/2026/styles-congressos.css?v=2026072901"
+        : "styles.css?v=2026073101";
+      window.MiaGalleryPreviewContext = context;
+      document.write('<link rel="stylesheet" href="' + stylesheet + '">');
+    }());
+  </script>
   <style>
     /* GALERIA_PREVIEW_V1 — página carregada dentro de cada <iframe> da galeria.
        Desenha o passo real com as funções do app.js e devolve à galeria a
@@ -21,7 +34,16 @@
 </head>
 <body data-page="preview">
   <div id="app" class="app-shell"></div>
-  <script src="app.js?v=2026072819"></script>
+  <script>
+    (function () {
+      var context = window.MiaGalleryPreviewContext || "principal";
+      var renderer = context === "congresso-2026"
+        ? "congressos/2026/app-congressos.js?v=2026072901"
+        : "app.js?v=2026080101";
+      document.body.dataset.previewContext = context;
+      document.write('<script src="' + renderer + '"><\/script>');
+    }());
+  </script>
   <script>
   (function () {
     "use strict";
@@ -124,6 +146,18 @@
         return;
       }
 
+      if (node.classList.contains("interior-slide")) {
+        frame = node.closest(".interior-slideshow-frame");
+        slides = frame ? Array.prototype.slice.call(frame.querySelectorAll(".interior-slide")) : [];
+        slides.forEach(function (slide) {
+          slide.style.animation = "none";
+          slide.style.opacity = slide === node ? "1" : "0";
+          slide.style.transform = "none";
+          slide.style.zIndex = slide === node ? "1" : "0";
+        });
+        return;
+      }
+
       if (!node.classList.contains("cadernos-cover-preview-slide")) { return; }
       frame = node.closest("[data-cadernos-preview]");
       if (!frame) { return; }
@@ -163,6 +197,9 @@
       if (!node) { return null; }
       if (node.classList.contains("cadernos-cover-preview-slide")) {
         return node.closest("[data-cadernos-preview]") || node;
+      }
+      if (node.classList.contains("interior-slide")) {
+        return node.closest(".interior-slideshow") || node;
       }
       return node.closest(
         ".choice-card, .crachas-step2-summary-tile, .cadernos-build-part, .details-example-choice, .details-example-image-button,"
@@ -209,6 +246,12 @@
       var product = request.product;
       var html;
 
+      if ((request.context || "principal") !== (window.MiaGalleryPreviewContext || "principal")) {
+        post({ type: "mia-preview-measured", key: request.key, found: false,
+          contextMismatch: true, documentHeight: document.documentElement.scrollHeight });
+        return;
+      }
+
       current = request;
       lastPosted = "";
       if (request.kind === "home") {
@@ -240,7 +283,7 @@
       if (data.type === "mia-preview-measure" && current) { measure(current); }
     });
 
-    post({ type: "mia-preview-ready" });
+    post({ type: "mia-preview-ready", context: window.MiaGalleryPreviewContext || "principal" });
   }());
   </script>
 </body>

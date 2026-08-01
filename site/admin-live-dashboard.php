@@ -32,6 +32,143 @@ require_once __DIR__ . '/lib/db.php';
 
 function lr_h($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 
+// PRODUCT_CONTEXT_V2: os quatro wizards do Congresso e os quatro wizards da
+// loja principal podem partilhar a mesma família de produto, mas nunca o
+// mesmo catálogo/linha de funil. A chave interna mantém-nos separados sem
+// alterar o product_slug original guardado na base de dados.
+function lr_json_array($raw) {
+    if (is_array($raw)) return $raw;
+    $decoded = json_decode((string)$raw, true);
+    return is_array($decoded) ? $decoded : array();
+}
+function lr_main_v2_slugs() {
+    return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'personalizacao');
+}
+function lr_congress_slugs() {
+    return array('crachas', 'imanes', 'caderninhos', 'cadernos');
+}
+function lr_is_main_v2_slug($slug) {
+    return in_array((string)$slug, lr_main_v2_slugs(), true);
+}
+function lr_is_congress_slug($slug) {
+    return in_array((string)$slug, lr_congress_slugs(), true);
+}
+function lr_normalize_context_value($value, $slug = '') {
+    $value = strtolower(trim(str_replace('\\', '/', (string)$value)));
+    if ($value === '') return '';
+    if (strpos($value, 'congress') !== false && strpos($value, '2026') !== false) return 'congresso-2026';
+    if ($value === 'congresso' || $value === 'congressos') return 'congresso-2026';
+    if ($value === 'main-v2' || $value === 'main_v2' || $value === 'loja-v2') return 'main-v2';
+    if ($value === 'main-legacy' || $value === 'main_legacy' || $value === 'historico') return 'main-legacy';
+    if ($value === 'main' || $value === 'root' || $value === 'loja') {
+        return lr_is_congress_slug($slug) ? 'main-legacy' : 'main';
+    }
+    return '';
+}
+function lr_event_landing_page($event) {
+    foreach (array('landing_page', 'first_landing_page') as $field) {
+        if (!empty($event[$field])) return (string)$event[$field];
+    }
+    $extra = lr_json_array(isset($event['event_json']) ? $event['event_json'] : '');
+    foreach (array('landing_page', 'first_landing_page', 'page_url', 'page_path') as $field) {
+        if (!empty($extra[$field])) return (string)$extra[$field];
+    }
+    return '';
+}
+function lr_event_context_evidence($event) {
+    $slug = isset($event['product_slug']) ? (string)$event['product_slug'] : '';
+    $extra = lr_json_array(isset($event['event_json']) ? $event['event_json'] : '');
+    $selection = lr_json_array(isset($event['selection_json']) ? $event['selection_json'] : '');
+    $candidates = array(
+        isset($event['product_context']) ? $event['product_context'] : '',
+        isset($selection['product_context']) ? $selection['product_context'] : '',
+        isset($selection['catalog_context']) ? $selection['catalog_context'] : '',
+        isset($extra['product_context']) ? $extra['product_context'] : '',
+        isset($extra['catalog_context']) ? $extra['catalog_context'] : '',
+    );
+    foreach ($candidates as $candidate) {
+        $context = lr_normalize_context_value($candidate, $slug);
+        if ($context !== '') return array($context, 100);
+    }
+
+    $landing = strtolower(str_replace('\\', '/', lr_event_landing_page($event)));
+    if ($landing !== '' && preg_match('#/congressos/2026(?:/|$)#', $landing)) {
+        return array('congresso-2026', 90);
+    }
+    if (lr_is_main_v2_slug($slug)) return array('main-v2', 80);
+    if (lr_is_congress_slug($slug)) {
+        // Um landing conhecido fora do Congresso identifica tráfego antigo
+        // da raiz. Sem evidência, os slugs reservados pertencem ao Congresso.
+        return $landing !== '' ? array('main-legacy', 60) : array('congresso-2026', 20);
+    }
+    return array('main', 10);
+}
+function lr_product_key($context, $slug) {
+    $slug = (string)$slug;
+    if ($slug === '') return '';
+    if ($context === 'congresso-2026') return 'congresso-2026|' . $slug;
+    if ($context === 'main-legacy') return 'main-legacy|' . $slug;
+    return $slug;
+}
+function lr_product_base_slug($productKey) {
+    $parts = explode('|', (string)$productKey, 2);
+    return count($parts) === 2 ? $parts[1] : $parts[0];
+}
+function lr_product_context($productKey) {
+    $parts = explode('|', (string)$productKey, 2);
+    if (count($parts) === 2 && in_array($parts[0], array('congresso-2026', 'main-legacy'), true)) return $parts[0];
+    return lr_is_main_v2_slug($parts[0]) ? 'main-v2' : 'main';
+}
+function lr_line_key($productKey) {
+    $base = lr_product_base_slug($productKey);
+    $context = lr_product_context($productKey);
+    if ($context === 'congresso-2026') return 'congresso-' . $base;
+    if ($context === 'main-legacy') {
+        $legacyRoutes = array('crachas'=>'crachas-loja', 'imanes'=>'imanes-loja', 'caderninhos'=>'congresso-caderninhos', 'cadernos'=>'congresso-cadernos');
+        return isset($legacyRoutes[$base]) ? $legacyRoutes[$base] : $base;
+    }
+    return $base;
+}
+function lr_normalize_events_product_context(&$events) {
+    $best = array();
+    $sessionLanding = array();
+    foreach ($events as $event) {
+        $sid = isset($event['session_id']) ? (string)$event['session_id'] : '';
+        $landing = lr_event_landing_page($event);
+        if ($sid !== '' && $landing !== '' && empty($sessionLanding[$sid])) $sessionLanding[$sid] = $landing;
+    }
+    foreach ($events as $event) {
+        $slug = isset($event['product_slug']) ? (string)$event['product_slug'] : '';
+        if ($slug === '') continue;
+        $sid = isset($event['session_id']) ? (string)$event['session_id'] : '';
+        list($context, $priority) = lr_event_context_evidence($event);
+        if (lr_is_congress_slug($slug) && !empty($sessionLanding[$sid]) && $priority < 90) {
+            $sessionLandingLc = strtolower(str_replace('\\', '/', $sessionLanding[$sid]));
+            if (preg_match('#/congressos/2026(?:/|$)#', $sessionLandingLc)) {
+                $context = 'congresso-2026'; $priority = 90;
+            } else {
+                $context = 'main-legacy'; $priority = 60;
+            }
+        }
+        $pair = $sid . '|' . $slug;
+        if (!isset($best[$pair]) || $priority > $best[$pair]['priority']) {
+            $best[$pair] = array('context' => $context, 'priority' => $priority);
+        }
+    }
+    foreach ($events as &$event) {
+        $slug = isset($event['product_slug']) ? (string)$event['product_slug'] : '';
+        $sid = isset($event['session_id']) ? (string)$event['session_id'] : '';
+        $pair = $sid . '|' . $slug;
+        list($fallbackContext) = lr_event_context_evidence($event);
+        $context = isset($best[$pair]) ? $best[$pair]['context'] : $fallbackContext;
+        $event['_product_context'] = $context;
+        $event['_product_key'] = lr_product_key($context, $slug);
+        $event['_landing_page'] = lr_event_landing_page($event);
+        if ($event['_landing_page'] === '' && !empty($sessionLanding[$sid])) $event['_landing_page'] = $sessionLanding[$sid];
+    }
+    unset($event);
+}
+
 // ------------------------------------------------------------------
 // Date range / period selection
 // ------------------------------------------------------------------
@@ -65,6 +202,17 @@ switch ($period) {
     default:          $startDate = $todayUtc; $endDate = $todayUtc; break;
 }
 
+// SNAPSHOT_V1: daqui para baixo a página lê e agrega todos os eventos do
+// período. Se houver snapshot para esta combinação de período e vista, é
+// servido aqui e o pedido termina. Ver lib/snapshot.php.
+require_once __DIR__ . '/lib/snapshot.php';
+mp_snapshot_start('dashboard', array(
+    'period' => $period,
+    'view' => $dashboardView,
+    'start' => $period === 'custom' ? $startDate : '',
+    'end' => $period === 'custom' ? $endDate : '',
+));
+
 $cutoffStartIso = $startDate . 'T00:00:00Z';
 $cutoffEndIso   = $endDate . 'T23:59:59Z';
 
@@ -75,6 +223,7 @@ $pdo = mp_db();
 $stmt = $pdo->prepare("SELECT * FROM funnel_events WHERE created_at >= ? AND created_at <= ? ORDER BY created_at ASC LIMIT 50000");
 $stmt->execute(array($cutoffStartIso, $cutoffEndIso));
 $events = $stmt->fetchAll();
+lr_normalize_events_product_context($events);
 
 $offerDownloads = array();
 $offerDownloadsByFile = array();
@@ -152,16 +301,26 @@ function lr_safe_image_path($path) {
     if (preg_match('#^[A-Za-z]:[\\\\/]#', $path)) return '';
     return $path;
 }
-function lr_build_catalog($productDir) {
+function lr_catalog_image_path($path, $sourceContext) {
+    $path = (string)$path;
+    if ($path === '' || $sourceContext !== 'congresso-2026') return $path;
+    if (preg_match('#^[a-z][a-z0-9+.-]*://#i', $path) || strpos($path, 'congressos/2026/') === 0) return $path;
+    return 'congressos/2026/' . ltrim(str_replace('\\', '/', $path), '/');
+}
+function lr_build_catalog($productDir, $sourceContext = 'main') {
     $catalog = array();
     if (!is_dir($productDir)) return $catalog;
     foreach (glob($productDir . '/*.json') as $jsonPath) {
         $slug = basename($jsonPath, '.json');
+        $context = $sourceContext === 'congresso-2026'
+            ? 'congresso-2026'
+            : (lr_is_main_v2_slug($slug) ? 'main-v2' : 'main');
+        $productKey = lr_product_key($context, $slug);
         $raw = @file_get_contents($jsonPath);
         if ($raw === false) continue;
         $cfg = json_decode($raw, true);
         if (!is_array($cfg)) continue;
-        $entry = array('name' => $cfg['name'] ?? $slug, 'by_value' => array(), 'by_basename' => array());
+        $entry = array('name' => lr_product_friendly_name($productKey), 'by_value' => array(), 'by_basename' => array());
         foreach (($cfg['steps'] ?? array()) as $step) {
             $stepId = $step['id'] ?? '';
             foreach (($step['items'] ?? array()) as $it) {
@@ -169,7 +328,7 @@ function lr_build_catalog($productDir) {
                 $value = isset($it['value']) ? (string)$it['value'] : (isset($it['id']) ? (string)$it['id'] : '');
                 $id    = isset($it['id']) ? (string)$it['id'] : $value;
                 $title = isset($it['title']) ? (string)$it['title'] : $value;
-                $image = isset($it['image']) ? (string)$it['image'] : '';
+                $image = lr_catalog_image_path(isset($it['image']) ? (string)$it['image'] : '', $sourceContext);
                 $slot  = 'main';
                 if ($stepId === 'lamination') $slot = 'lamination_example';
                 elseif ($stepId === 'pack') $slot = 'pack';
@@ -179,7 +338,7 @@ function lr_build_catalog($productDir) {
                     $slot = (strpos($lc, 'capa') !== false) ? 'cover' : 'main';
                 }
                 $rec = array(
-                    'product_slug' => $slug, 'product_name' => $entry['name'],
+                    'product_slug' => $productKey, 'product_name' => $entry['name'],
                     'step_id' => $stepId, 'value' => $value, 'id' => $id,
                     'title' => $title, 'image' => $image, 'slot' => $slot,
                 );
@@ -192,6 +351,7 @@ function lr_build_catalog($productDir) {
                     if (empty($it[$k]) || !is_array($it[$k])) continue;
                     foreach ($it[$k] as $im) {
                         $p = is_string($im) ? $im : (isset($im['image']) ? (string)$im['image'] : '');
+                        $p = lr_catalog_image_path($p, $sourceContext);
                         if ($p === '') continue;
                         $bn2 = lr_image_basename($p);
                         if ($bn2 === '' || isset($entry['by_basename'][$bn2])) continue;
@@ -201,7 +361,7 @@ function lr_build_catalog($productDir) {
                 }
             }
         }
-        $catalog[$slug] = $entry;
+        $catalog[$productKey] = $entry;
     }
     return $catalog;
 }
@@ -220,11 +380,47 @@ function lr_thumb($path, $alt = '', $size = 64) {
     if ($safe === '') return '<div class="lr-thumb lr-thumb-ph" aria-hidden="true">?</div>';
     return '<div class="lr-thumb"><img loading="lazy" src="' . lr_h($safe) . '" alt="' . lr_h($alt) . '" width="' . (int)$size . '" height="' . (int)$size . '"></div>';
 }
-$catalog = lr_build_catalog(__DIR__ . '/content/products');
+$catalog = array_merge(
+    lr_build_catalog(__DIR__ . '/content/products', 'main'),
+    lr_build_catalog(__DIR__ . '/congressos/2026/content/products', 'congresso-2026')
+);
+// Compatibilidade de leitura: eventos históricos da raiz com os slugs
+// antigos usam a estrutura antiga, mas nunca entram nos buckets Congresso.
+foreach (lr_congress_slugs() as $legacySlug) {
+    $congressKey = lr_product_key('congresso-2026', $legacySlug);
+    $legacyKey = lr_product_key('main-legacy', $legacySlug);
+    if (isset($catalog[$congressKey]) && !isset($catalog[$legacyKey])) {
+        $legacyEntry = $catalog[$congressKey];
+        $legacyEntry['name'] = lr_product_friendly_name($legacyKey);
+        foreach (array('by_value', 'by_basename') as $indexName) {
+            foreach ($legacyEntry[$indexName] as &$legacyRecord) {
+                $legacyRecord['product_slug'] = $legacyKey;
+                $legacyRecord['product_name'] = $legacyEntry['name'];
+            }
+            unset($legacyRecord);
+        }
+        $catalog[$legacyKey] = $legacyEntry;
+    }
+}
 
 function lr_product_friendly_name($slug) {
-    static $m = array('crachas'=>'Crachás','imanes'=>'Ímanes','caderninhos'=>'Mini-Cadernos','cadernos'=>'Cadernos','quadros'=>'Molduras','lembrancas'=>'Lembranças','pins'=>'Pins','ofertas'=>'Ofertas','oferta-pdf'=>'PDF de oferta','oferta-convite-congresso'=>'Envelopes do Congresso');
-    return isset($m[$slug]) ? $m[$slug] : ($slug ?: '—');
+    $base = lr_product_base_slug($slug);
+    $context = lr_product_context($slug);
+    static $m = array(
+        'crachas'=>'Crachás','crachas-loja'=>'Crachás',
+        'imanes'=>'Ímanes','imanes-loja'=>'Ímanes',
+        'caderninhos'=>'Mini-Cadernos','mini-cadernos'=>'Mini-Cadernos',
+        'cadernos'=>'Cadernos','cadernos-anuais'=>'Cadernos anuais',
+        'bloquinhos'=>'Bloquinhos','imanes-recortados'=>'Ímanes recortados',
+        'personalizacao'=>'Personalização',
+        'stickers'=>'Stickers','marcadores'=>'Marcadores',
+        'quadros'=>'Molduras','lembrancas'=>'Lembranças','pins'=>'Pins','ofertas'=>'Ofertas',
+        'oferta-pdf'=>'PDF de oferta','oferta-convite-congresso'=>'Envelopes do Congresso'
+    );
+    $label = isset($m[$base]) ? $m[$base] : ($base ?: '—');
+    if ($context === 'congresso-2026') return $label . ' · Congresso 2026';
+    if ($context === 'main-legacy') return $label . ' · histórico do site';
+    return $label;
 }
 function lr_offer_download_from_event($event)
 {
@@ -237,7 +433,7 @@ function lr_offer_download_from_event($event)
     if (!is_array($selection)) $selection = array();
     $selectionDownload = isset($selection['download']) && is_array($selection['download']) ? $selection['download'] : array();
 
-    $productSlug = isset($event['product_slug']) ? (string)$event['product_slug'] : '';
+    $productSlug = isset($event['_product_key']) ? (string)$event['_product_key'] : (isset($event['product_slug']) ? (string)$event['product_slug'] : '');
     $downloadLabel = isset($extra['download_label']) ? (string)$extra['download_label'] : '';
     if ($downloadLabel === '' && isset($extra['target_label'])) $downloadLabel = (string)$extra['target_label'];
     if ($downloadLabel === '' && isset($selectionDownload['label'])) $downloadLabel = (string)$selectionDownload['label'];
@@ -282,7 +478,7 @@ function lr_offer_download_from_event($event)
         'step_id' => isset($event['step_id']) ? (string)$event['step_id'] : '',
         'device_type' => isset($event['device_type']) ? (string)$event['device_type'] : '',
         'viewport_width' => isset($event['viewport_width']) ? $event['viewport_width'] : null,
-        'landing_page' => isset($extra['landing_page']) ? (string)$extra['landing_page'] : '',
+        'landing_page' => isset($event['_landing_page']) ? (string)$event['_landing_page'] : (isset($extra['landing_page']) ? (string)$extra['landing_page'] : ''),
         'download_id' => $downloadId,
         'download_key' => $downloadFile !== '' ? $downloadFile : $downloadId,
         'download_label' => $downloadLabel,
@@ -294,11 +490,27 @@ function lr_offer_download_from_event($event)
         'attribution' => $attribution,
     );
 }
-function lr_step_label($id) {
+function lr_step_label($id, $productKey = '') {
+    $context = lr_product_context($productKey);
+    $base = lr_product_base_slug($productKey);
+    if ($context === 'main-v2') {
+        $mainLabels = array(
+            'designs' => 'Passo 1 · catálogo ou personalizado',
+            'artwork_upload' => 'Carregar imagens personalizadas',
+            'size' => $base === 'imanes-loja' ? 'Tipo de íman' : 'Tamanho',
+            'pack' => 'Quantidade',
+            'details' => 'Dados do cartão',
+            'lamination' => 'Laminação',
+            'delivery_contact' => 'Entrega e contacto',
+            'confirm' => 'Confirmação',
+        );
+        if (isset($mainLabels[$id])) return $mainLabels[$id];
+    }
     static $l = array(
         'designs'=>'Escolheram designs','size'=>'Escolheram tamanho','pack'=>'Escolheram quantidade',
         'details'=>'Dados do cartão','delivery_contact'=>'Entrega e contacto','confirm'=>'Confirmação',
         'lamination'=>'Escolheram laminação','cover_personalization'=>'Personalização da capa',
+        'artwork_upload'=>'Carregar imagens personalizadas',
         'ofertas'=>'Ofertas','oferta-pdf'=>'PDF de oferta','oferta-convite-congresso'=>'Envelopes do Congresso',
     );
     return isset($l[$id]) ? $l[$id] : ($id ?: '—');
@@ -318,12 +530,21 @@ foreach ($events as $idx => $e) {
     $sid = (string)($e['session_id'] ?? '');
     if ($sid === '') continue;
     $nm = (string)($e['event_name'] ?? '');
-    $slug = (string)($e['product_slug'] ?? '');
+    $slug = (string)($e['_product_key'] ?? ($e['product_slug'] ?? ''));
+    $productContext = (string)($e['_product_context'] ?? lr_product_context($slug));
     $stepId = (string)($e['step_id'] ?? '');
     $extra = json_decode((string)($e['event_json'] ?? '{}'), true);
     if (!is_array($extra)) $extra = array();
     $sel = json_decode((string)($e['selection_json'] ?? ''), true);
     if (!is_array($sel)) $sel = null;
+    $flowMode = '';
+    if (isset($extra['flow_mode'])) $flowMode = strtolower((string)$extra['flow_mode']);
+    if (is_array($sel) && !empty($sel['flow_mode'])) $flowMode = strtolower((string)$sel['flow_mode']);
+    if (is_array($sel) && !empty($sel['design_source'])) $flowMode = strtolower((string)$sel['design_source']);
+    if (!in_array($flowMode, array('catalog', 'custom'), true)) $flowMode = '';
+    $artworkCount = max(0, (int)(is_array($sel) && isset($sel['artwork_count']) ? $sel['artwork_count'] : ($extra['artwork_count'] ?? ($extra['file_count'] ?? 0))));
+    $artworkTotalQuantity = max(0, (int)(is_array($sel) && isset($sel['artwork_total_quantity']) ? $sel['artwork_total_quantity'] : ($extra['artwork_total_quantity'] ?? ($extra['quantity'] ?? 0))));
+    $customizationFeeCents = max(0, (int)(is_array($sel) && isset($sel['customization_fee_cents']) ? $sel['customization_fee_cents'] : ($extra['customization_fee_cents'] ?? 0)));
 
     if (!isset($sessions[$sid])) {
         $sessions[$sid] = array(
@@ -334,10 +555,12 @@ foreach ($events as $idx => $e) {
             'device_type' => (string)($e['device_type'] ?? ''),
             'viewport_width' => $e['viewport_width'] ?? null,
             'product_slug' => '',
+            'product_context' => '',
             'step_id' => '',
             'event_count' => 0,
             'submitted' => false,
-            'landing_page' => isset($extra['landing_page']) ? (string)$extra['landing_page'] : '',
+            'order_created' => false,
+            'landing_page' => isset($e['_landing_page']) ? (string)$e['_landing_page'] : '',
             'referrer' => isset($extra['referrer']) ? (string)$extra['referrer'] : '',
             'first_referrer' => (string)($e['first_referrer'] ?? ''),
             'utm_source' => (string)($e['utm_source'] ?? ''),
@@ -349,22 +572,34 @@ foreach ($events as $idx => $e) {
             'selection_latest' => null,
             'page_path' => array(),
             'heartbeat_at' => null,
+            'design_source' => '',
+            'artwork_count' => 0,
+            'artwork_total_quantity' => 0,
+            'customization_fee_cents' => 0,
         );
     }
     $sessions[$sid]['last_at'] = $e['created_at'];
     $sessions[$sid]['event_count']++;
-    if ($slug !== '') $sessions[$sid]['product_slug'] = $slug;
+    if ($slug !== '') {
+        $sessions[$sid]['product_slug'] = $slug;
+        $sessions[$sid]['product_context'] = $productContext;
+    }
+    if ($flowMode !== '') $sessions[$sid]['design_source'] = $flowMode;
+    $sessions[$sid]['artwork_count'] = max($sessions[$sid]['artwork_count'], $artworkCount);
+    $sessions[$sid]['artwork_total_quantity'] = max($sessions[$sid]['artwork_total_quantity'], $artworkTotalQuantity);
+    $sessions[$sid]['customization_fee_cents'] = max($sessions[$sid]['customization_fee_cents'], $customizationFeeCents);
     if ($stepId !== '') $sessions[$sid]['step_id'] = $stepId;
     if (!empty($extra['page_instance_id'])) {
         $sessions[$sid]['page_instances'][$extra['page_instance_id']] = true;
     }
     if ($nm === 'heartbeat') $sessions[$sid]['heartbeat_at'] = $e['created_at'];
-    if ($nm === 'site_landed' && !$sessions[$sid]['landing_page'] && isset($extra['landing_page'])) {
-        $sessions[$sid]['landing_page'] = (string)$extra['landing_page'];
+    if (!$sessions[$sid]['landing_page'] && !empty($e['_landing_page'])) {
+        $sessions[$sid]['landing_page'] = (string)$e['_landing_page'];
     }
     if (is_array($sel)) $sessions[$sid]['selection_latest'] = $sel;
-    if ($nm === 'order_submitted' || $nm === 'cart_order_submitted') {
+    if ($nm === 'order_submitted' || $nm === 'cart_order_submitted' || $nm === 'order_created') {
         $sessions[$sid]['submitted'] = true;
+        if ($nm === 'order_created') $sessions[$sid]['order_created'] = true;
         $submittedSessions[$sid] = true;
     }
     if ($nm === 'image_magnified') {
@@ -400,6 +635,7 @@ foreach ($events as $idx => $e) {
         'cei' => $cei,
         'event_name' => $nm,
         'product_slug' => $slug,
+        'product_context' => $productContext,
         'step_id' => $stepId,
         'page_instance_id' => isset($extra['page_instance_id']) ? (string)$extra['page_instance_id'] : '',
         'from_step' => isset($extra['from_step']) ? (string)$extra['from_step'] : '',
@@ -413,7 +649,11 @@ foreach ($events as $idx => $e) {
         'option_label' => isset($extra['option_label']) ? (string)$extra['option_label'] : '',
         'target_label' => isset($extra['target_label']) ? (string)$extra['target_label'] : '',
         'action_name' => isset($extra['action_name']) ? (string)$extra['action_name'] : '',
-        'landing_page' => isset($extra['landing_page']) ? (string)$extra['landing_page'] : '',
+        'landing_page' => isset($e['_landing_page']) ? (string)$e['_landing_page'] : '',
+        'flow_mode' => $flowMode,
+        'artwork_count' => $artworkCount,
+        'artwork_total_quantity' => $artworkTotalQuantity,
+        'customization_fee_cents' => $customizationFeeCents,
         'download_label' => isset($extra['download_label']) ? (string)$extra['download_label'] : '',
         'download_file' => isset($extra['download_file']) ? (string)$extra['download_file'] : '',
         'download_kind' => isset($extra['download_kind']) ? (string)$extra['download_kind'] : '',
@@ -421,7 +661,7 @@ foreach ($events as $idx => $e) {
     );
 
     // Interest aggregation (designs + options)
-    if ($nm === 'design_selected' || $nm === 'option_selected' || $nm === 'selection_updated' || $nm === 'step_selection_snapshot' || $nm === 'order_submitted') {
+    if ($nm === 'design_selected' || $nm === 'option_selected' || $nm === 'selection_updated' || $nm === 'step_selection_snapshot' || $nm === 'order_submitted' || $nm === 'order_created') {
         $tuples = array();
         if ($nm === 'design_selected') {
             $did = isset($extra['design_id']) ? (string)$extra['design_id'] : '';
@@ -451,6 +691,8 @@ foreach ($events as $idx => $e) {
                 if ($val !== '') $tuples[] = array('type'=>'personalization', 'value'=>$val);
             }
             if (!empty($sel['selected_delivery'])) $tuples[] = array('type'=>'delivery', 'value'=>(string)$sel['selected_delivery']);
+            $source = !empty($sel['design_source']) ? strtolower((string)$sel['design_source']) : (!empty($sel['flow_mode']) ? strtolower((string)$sel['flow_mode']) : '');
+            if (in_array($source, array('catalog', 'custom'), true)) $tuples[] = array('type'=>'design_source', 'value'=>$source);
         }
         // Dedupe per session+key
         foreach ($tuples as $t) {
@@ -489,13 +731,22 @@ unset($session);
 
 // Activity sort: most recent first
 uasort($sessions, function ($a, $b) { return strcmp($b['last_at'], $a['last_at']); });
+$mainFlowTotals = array('catalog'=>0, 'custom'=>0, 'artwork_count'=>0, 'artwork_total_quantity'=>0, 'customization_fee_cents'=>0, 'orders_created'=>0);
+foreach ($sessions as $sessionSummary) {
+    if ($sessionSummary['product_context'] !== 'main-v2') continue;
+    if (isset($mainFlowTotals[$sessionSummary['design_source']])) $mainFlowTotals[$sessionSummary['design_source']]++;
+    $mainFlowTotals['artwork_count'] += (int)$sessionSummary['artwork_count'];
+    $mainFlowTotals['artwork_total_quantity'] += (int)$sessionSummary['artwork_total_quantity'];
+    $mainFlowTotals['customization_fee_cents'] += (int)$sessionSummary['customization_fee_cents'];
+    if (!empty($sessionSummary['order_created'])) $mainFlowTotals['orders_created']++;
+}
 
 // Funnel field bucketization
 function lr_field_bucket($landing, $stepId, $submitted) {
     if ($submitted) return 'pedido';
     $stepId = (string)$stepId;
     if ($stepId === 'designs') return 'designs';
-    if ($stepId === 'size' || $stepId === 'pack' || $stepId === 'lamination' || $stepId === 'cover_personalization') return 'opcoes';
+    if ($stepId === 'artwork_upload' || $stepId === 'size' || $stepId === 'pack' || $stepId === 'lamination' || $stepId === 'cover_personalization') return 'opcoes';
     if ($stepId === 'details') return 'contacto';
     if ($stepId === 'delivery_contact') return 'entrega';
     if ($stepId === 'confirm') return 'confirmacao';
@@ -602,7 +853,7 @@ function lr_interest_card($it, $mode = 'funnel') {
     $raw = $it['raw_id'];
     $typeLabels = array('design'=>'design','cover'=>'capa','lamination'=>'laminação','pack'=>'pack',
         'product_option'=>'opção','size'=>'tamanho','personalization'=>'personalização',
-        'delivery'=>'entrega','caderno_qty'=>'quantidade','assorted'=>'sortido','magnified_image'=>'imagem');
+        'delivery'=>'entrega','caderno_qty'=>'quantidade','assorted'=>'sortido','design_source'=>'origem do design','magnified_image'=>'imagem');
     $slotLabel = isset($typeLabels[$itemType]) ? $typeLabels[$itemType] : $itemType;
     $title = $rec && !empty($rec['title']) ? $rec['title'] : $raw;
     if (!$rec) {
@@ -610,6 +861,7 @@ function lr_interest_card($it, $mode = 'funnel') {
         elseif ($itemType === 'pack') $title = 'Pack ' . $raw;
         elseif ($itemType === 'assorted') $title = 'Sortido';
         elseif ($itemType === 'delivery') $title = ucfirst(str_replace('_', ' ', $raw));
+        elseif ($itemType === 'design_source') $title = $raw === 'custom' ? 'Personalizado' : 'Catálogo';
         else $title = ucfirst(str_replace(array('_','-'), ' ', $raw));
     }
     $productName = $rec && !empty($rec['product_name']) ? $rec['product_name'] : lr_product_friendly_name($it['product_slug']);
@@ -658,6 +910,12 @@ function lr_timeline_icon($name) {
         'validation_error' => '⚠️',
         'order_submitted' => '🎉',
         'cart_order_submitted' => '🎉',
+        'order_created' => '🎉',
+        'artwork_upload_started' => '⬆️',
+        'artwork_upload_completed' => '✅',
+        'artwork_upload_failed' => '⚠️',
+        'artwork_upload_removed' => '✕',
+        'artwork_quantity_changed' => '🔢',
         'heartbeat' => '·',
         'delivery_selected' => '🚚',
         'ui_interaction' => '👆',
@@ -707,14 +965,14 @@ function lr_render_timeline_entry($t) {
     elseif ($nm === 'offer_scroll_depth') $msg = 'continuou a ver a página';
     elseif ($nm === 'step_view') {
         if ($t['transition_reason'] === 'back_button' || $t['transition_reason'] === 'browser_back') {
-            $msg = 'voltou para ' . lr_step_label($t['to_step'] ?: $t['step_id']);
+            $msg = 'voltou para ' . lr_step_label($t['to_step'] ?: $t['step_id'], $t['product_slug']);
         } elseif ($t['transition_reason'] === 'next_button') {
-            $msg = 'avançou para ' . lr_step_label($t['to_step'] ?: $t['step_id']);
+            $msg = 'avançou para ' . lr_step_label($t['to_step'] ?: $t['step_id'], $t['product_slug']);
         } else {
-            $msg = 'abriu passo ' . lr_step_label($t['step_id']);
+            $msg = 'abriu passo ' . lr_step_label($t['step_id'], $t['product_slug']);
         }
     }
-    elseif ($nm === 'step_completed') $msg = 'completou ' . lr_step_label($t['step_id']);
+    elseif ($nm === 'step_completed') $msg = 'completou ' . lr_step_label($t['step_id'], $t['product_slug']);
     elseif ($nm === 'design_selected') {
         $title = $t['design_title'] ?: $t['design_id'];
         $msg = 'escolheu ' . $title;
@@ -724,14 +982,24 @@ function lr_render_timeline_entry($t) {
         $msg = 'desmarcou ' . $title;
     }
     elseif ($nm === 'option_selected') {
-        $msg = 'escolheu ' . ($t['option_type'] ? $t['option_type'] . ' ' : '') . ($t['option_label'] ?: $t['option_value']);
+        if ($t['option_type'] === 'design_source') {
+            $msg = ($t['option_value'] === 'custom' ? 'escolheu personalizar com imagens próprias' : 'escolheu designs do catálogo');
+        } else {
+            $msg = 'escolheu ' . ($t['option_type'] ? $t['option_type'] . ' ' : '') . ($t['option_label'] ?: $t['option_value']);
+        }
     }
     elseif ($nm === 'image_magnified' || $nm === 'design_zoom_opened') {
         $title = $t['design_title'] ?: $t['design_id'];
         $msg = 'ampliou ' . ($title ?: 'imagem') . ($t['image_slot'] ? ' · ' . $t['image_slot'] : '');
     }
-    elseif ($nm === 'validation_error') $msg = 'tentou continuar — faltava algo em ' . lr_step_label($t['step_id']);
+    elseif ($nm === 'validation_error') $msg = 'tentou continuar — faltava algo em ' . lr_step_label($t['step_id'], $t['product_slug']);
     elseif ($nm === 'order_submitted' || $nm === 'cart_order_submitted') $msg = 'enviou o pedido';
+    elseif ($nm === 'order_created') $msg = 'pedido criado';
+    elseif ($nm === 'artwork_upload_started') $msg = 'começou a enviar imagens personalizadas';
+    elseif ($nm === 'artwork_upload_completed') $msg = 'enviou ' . max(1, (int)$t['artwork_count']) . ((int)$t['artwork_count'] === 1 ? ' imagem personalizada' : ' imagens personalizadas');
+    elseif ($nm === 'artwork_upload_failed') $msg = 'não conseguiu enviar uma imagem personalizada';
+    elseif ($nm === 'artwork_upload_removed') $msg = 'removeu uma imagem personalizada';
+    elseif ($nm === 'artwork_quantity_changed') $msg = 'alterou a quantidade por imagem' . ((int)$t['artwork_total_quantity'] > 0 ? ' (total ' . (int)$t['artwork_total_quantity'] . ')' : '');
     elseif ($nm === 'delivery_selected') $msg = 'escolheu entrega';
     elseif ($nm === 'contact_completed') $msg = 'completou contacto';
     elseif ($nm === 'ui_interaction') {
@@ -740,7 +1008,7 @@ function lr_render_timeline_entry($t) {
     }
     elseif ($nm === 'heartbeat') $msg = 'continua na página';
     elseif ($nm === 'selection_updated') $msg = 'mudou selecção';
-    elseif ($nm === 'step_selection_snapshot') $msg = 'snapshot em ' . lr_step_label($t['step_id']);
+    elseif ($nm === 'step_selection_snapshot') $msg = 'snapshot em ' . lr_step_label($t['step_id'], $t['product_slug']);
     else $msg = $nm;
     return '<li class="lr-tl-entry"><span class="lr-tl-time">' . lr_h($time) . '</span><span class="lr-tl-icon">' . $icon . '</span><span class="lr-tl-msg">' . lr_h($msg) . '</span></li>';
 }
@@ -779,26 +1047,83 @@ function lr_funnel_lines() {
     static $lines = null;
     if ($lines !== null) return $lines;
     $lines = array(
-        'crachas' => array('label' => 'Crachás', 'color' => '#ef767a', 'stations' => array(
-            array('id' => 'designs', 'label' => 'Design', 'steps' => array('designs')),
-            array('id' => 'imagem', 'label' => 'Imagem', 'steps' => array('artwork_upload')),
+        'crachas-loja' => array('label' => 'Crachás · site', 'color' => '#ef767a', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
+            array('id' => 'origem', 'label' => 'Catálogo / teu design', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
             array('id' => 'tamanho', 'label' => 'Tamanho', 'steps' => array('size')),
             array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
             array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
         )),
-        'imanes' => array('label' => 'Ímanes', 'color' => '#6cb4a8', 'stations' => array(
-            array('id' => 'designs', 'label' => 'Design', 'steps' => array('designs')),
-            array('id' => 'imagem', 'label' => 'Imagem', 'steps' => array('artwork_upload')),
+        'imanes-loja' => array('label' => 'Ímanes · site', 'color' => '#6cb4a8', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
+            array('id' => 'origem', 'label' => 'Catálogo / teu design', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
             array('id' => 'tipo', 'label' => 'Tipo', 'steps' => array('size')),
             array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
             array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
         )),
-        'caderninhos' => array('label' => 'Mini-Cadernos', 'color' => '#7aa7e8', 'stations' => array(
+        'mini-cadernos' => array('label' => 'Mini-Cadernos · site', 'color' => '#7aa7e8', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
+            array('id' => 'origem', 'label' => 'Catálogo / teu design', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+            array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
+        )),
+        'bloquinhos' => array('label' => 'Bloquinhos · site', 'color' => '#d7aa36', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
+            array('id' => 'origem', 'label' => 'Catálogo / teu design', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+            array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
+        )),
+        // Estes dois produtos tinham tráfego real mas não tinham linha: os
+        // eventos caíam todos em 'split' e desapareciam do mapa.
+        'imanes-recortados' => array('label' => 'Ímanes recortados · site', 'color' => '#6fa8b5', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
+            array('id' => 'origem', 'label' => 'Catálogo / teu design', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+            array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
+        )),
+        // A personalização não tem passo de designs: começa no upload do
+        // ficheiro do cliente e segue para a escolha dos produtos a fazer
+        // com ele.
+        'personalizacao' => array('label' => 'Personalização · site', 'color' => '#c58a72', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Envio do design', 'steps' => array('artwork_upload')),
+            array('id' => 'quantidade', 'label' => 'Produtos e quantidades', 'steps' => array('custom_products')),
+        )),
+        'cadernos-anuais' => array('label' => 'Cadernos anuais · site', 'color' => '#b68be8', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
+            array('id' => 'origem', 'label' => 'Catálogo / tua capa', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
+            array('id' => 'laminacao', 'label' => 'Laminação', 'steps' => array('lamination')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+        )),
+        'stickers' => array('label' => 'Stickers · site', 'color' => '#e8a05a', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
+            array('id' => 'origem', 'label' => 'Catálogo / teu design', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+            array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
+        )),
+        'marcadores' => array('label' => 'Marcadores · site', 'color' => '#8fb56a', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
+            array('id' => 'origem', 'label' => 'Catálogo / teu design', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+            array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
+        )),
+        'congresso-crachas' => array('label' => 'Crachás · Congresso', 'color' => '#b74f54', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Design', 'steps' => array('designs')),
+            array('id' => 'tamanho', 'label' => 'Tamanho', 'steps' => array('size')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+            array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
+        )),
+        'congresso-imanes' => array('label' => 'Ímanes · Congresso', 'color' => '#45877d', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Design', 'steps' => array('designs')),
+            array('id' => 'tipo', 'label' => 'Tipo', 'steps' => array('size')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+            array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
+        )),
+        'congresso-caderninhos' => array('label' => 'Mini-Cadernos · Congresso', 'color' => '#5075ad', 'stations' => array(
             array('id' => 'designs', 'label' => 'Design', 'steps' => array('designs')),
             array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
             array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
         )),
-        'cadernos' => array('label' => 'Cadernos', 'color' => '#b68be8', 'stations' => array(
+        'congresso-cadernos' => array('label' => 'Cadernos · Congresso', 'color' => '#805aaa', 'stations' => array(
             array('id' => 'capa', 'label' => 'Capa', 'steps' => array('designs')),
             array('id' => 'laminacao', 'label' => 'Laminação', 'steps' => array('lamination')),
             array('id' => 'compra', 'label' => 'Opção de compra', 'steps' => array('pack')),
@@ -914,33 +1239,49 @@ function lr_funnel_geometry() {
  * Maps a single funnel event onto the metro station vocabulary.
  * Returns one of: home, split, <slug>-<station>, contacto, envio.
  */
-function lr_event_to_station($name, $stepId, $slug, $landing = '', $submitted = false) {
+function lr_event_to_station($name, $stepId, $slug, $landing = '', $submitted = false, $optionType = '', $optionValue = '') {
     $name = (string)$name; $stepId = (string)$stepId; $slug = (string)$slug;
     $map = lr_funnel_step_map();
     $shared = lr_funnel_shared_steps();
+    $lineKey = lr_line_key($slug);
+    $base = lr_product_base_slug($slug);
+    $context = lr_product_context($slug);
 
-    if ($submitted || $name === 'order_submitted' || $name === 'cart_order_submitted') return 'envio';
+    if ($submitted || $name === 'order_submitted' || $name === 'cart_order_submitted' || $name === 'order_created') return 'envio';
     if ($name === 'wizard_started' || $name === 'product_view') return 'split';
     if ($name === 'site_landed') {
         $lc = strtolower((string)$landing);
-        $pages = array_merge(array_keys($map), array('molduras'));
+        $pages = array('crachas-loja', 'imanes-loja', 'mini-cadernos', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'crachas', 'imanes', 'caderninhos', 'cadernos', 'molduras', 'congressos/2026');
         foreach ($pages as $page) {
             if (strpos($lc, $page) !== false) return 'split';
         }
         return 'home';
     }
+    if ($optionType === 'design_source' && in_array($optionValue, array('catalog', 'custom'), true)) {
+        $sourceStep = 'design_source_' . $optionValue;
+        if (isset($map[$lineKey][$sourceStep])) return $map[$lineKey][$sourceStep];
+    }
     if ($stepId === '' && $slug === '') return 'home';
     if ($stepId === '') return 'split';
+    if (in_array($name, array('artwork_upload_started', 'artwork_upload_completed', 'artwork_upload_failed', 'artwork_upload_removed', 'artwork_quantity_changed'), true)) {
+        $stepId = 'artwork_upload';
+    }
+    // O antigo funil personalizado da raiz chamava `designs` ao upload. Este
+    // alias é apenas histórico; no Congresso `designs` continua intocado.
+    if ($context === 'main-legacy' && in_array($base, array('crachas', 'imanes'), true) && $stepId === 'designs') {
+        $stepId = 'artwork_upload';
+    }
     if (isset($shared[$stepId])) return $shared[$stepId];
-    if (isset($map[$slug][$stepId])) return $map[$slug][$stepId];
+    if (isset($map[$lineKey][$stepId])) return $map[$lineKey][$stepId];
     // Passo desconhecido de um produto conhecido: fica na entrada da linha.
-    if (isset($map[$slug]) && $map[$slug]) return reset($map[$slug]);
+    if (isset($map[$lineKey]) && $map[$lineKey]) return reset($map[$lineKey]);
     return 'split';
 }
 
 function lr_pin_color($slug) {
     $lines = lr_funnel_lines();
-    if (isset($lines[$slug]['color'])) return $lines[$slug]['color'];
+    $lineKey = lr_line_key($slug);
+    if (isset($lines[$lineKey]['color'])) return $lines[$lineKey]['color'];
     static $c = array(
         'lembrancas' => '#d49a55',
         'pins' => '#ef767a',
@@ -990,6 +1331,7 @@ foreach ($sessions as $sid => $s) {
         'key' => (string)$sid,
         'miniId' => $miniId,
         'productSlug' => $prodSlug,
+        'productContext' => (string)$s['product_context'],
         'productName' => $prodSlug ? lr_product_friendly_name($prodSlug) : 'Página inicial',
         'ip' => (string)$s['ip'],
         'geo' => $geoLine,
@@ -1006,6 +1348,10 @@ foreach ($sessions as $sid => $s) {
         'lastAt' => (string)$s['last_at'],
         'offerDownloadCount' => count($sessionDownloads),
         'offerDownloads' => $sessionDownloadPayload,
+        'designSource' => (string)$s['design_source'],
+        'artworkCount' => (int)$s['artwork_count'],
+        'artworkTotalQuantity' => (int)$s['artwork_total_quantity'],
+        'customizationFeeCents' => (int)$s['customization_fee_cents'],
         'pinColor' => lr_pin_color($prodSlug),
     );
     foreach ($timeline as $t) {
@@ -1014,7 +1360,9 @@ foreach ($sessions as $sid => $s) {
             $t['event_name'], $t['step_id'],
             ($t['product_slug'] ?: $prodSlug),
             ($t['landing_page'] ?: $s['landing_page']),
-            ($t['event_name'] === 'order_submitted' || $t['event_name'] === 'cart_order_submitted')
+            in_array($t['event_name'], array('order_submitted', 'cart_order_submitted', 'order_created'), true),
+            $t['option_type'],
+            $t['option_value']
         );
         if ($station === null) continue;
         $ts = (int)$t['ms'];
@@ -1030,6 +1378,7 @@ foreach ($sessions as $sid => $s) {
             'isoAt' => (string)$t['at'],
             'visitorKey' => (string)$sid,
             'productSlug' => (string)($t['product_slug'] ?: $prodSlug),
+            'productContext' => (string)($t['product_context'] ?: $s['product_context']),
             'eventName' => (string)$t['event_name'],
             'stepId' => (string)$t['step_id'],
             'fromStep' => (string)$t['from_step'],
@@ -1041,6 +1390,10 @@ foreach ($sessions as $sid => $s) {
             'optionType' => (string)$t['option_type'],
             'optionLabel' => (string)($t['option_label'] ?: $t['option_value']),
             'optionValue' => (string)$t['option_value'],
+            'flowMode' => (string)$t['flow_mode'],
+            'artworkCount' => (int)$t['artwork_count'],
+            'artworkTotalQuantity' => (int)$t['artwork_total_quantity'],
+            'customizationFeeCents' => (int)$t['customization_fee_cents'],
             'imageSlot' => (string)$t['image_slot'],
             'targetLabel' => (string)$t['target_label'],
             'downloadLabel' => (string)($t['download_label'] ?: $t['target_label']),
@@ -1054,6 +1407,38 @@ usort($replayEvents, function ($a, $b) {
     if ($a['ts'] !== $b['ts']) return $a['ts'] - $b['ts'];
     return $a['id'] - $b['id'];
 });
+
+/**
+ * LR_REPLAY_BUDGET_V1
+ *
+ * O payload do replay levava TODOS os eventos do período. Com ~20 mil eventos
+ * o json_encode() rebentava o memory_limit de 128 MB e a página morria a meio
+ * com "Fatal error: Allowed memory size exhausted" — a `<script id=
+ * "lrReplayData">` nunca chegava a ser escrita, o replay ficava em 0/0 e a
+ * vista "Teia" recebia um payload vazio.
+ *
+ * O replay é uma passagem visual passo a passo: acima de alguns milhares de
+ * eventos já não é utilizável de qualquer maneira. Ficamos com os mais
+ * RECENTES e dizemos na interface que foi truncado. Os totais no topo da
+ * página continuam a contar tudo — só o replay é que é limitado.
+ */
+define('LR_REPLAY_MAX_EVENTS', 4000);
+
+$replayTotalEvents = count($replayEvents);
+$replayTruncated = $replayTotalEvents > LR_REPLAY_MAX_EVENTS;
+if ($replayTruncated) {
+    $replayEvents = array_slice($replayEvents, -LR_REPLAY_MAX_EVENTS);
+
+    // Sem os eventos, os visitantes correspondentes só ocupam espaço: o pin
+    // nunca chega a ser desenhado. Manter só os que ainda têm eventos.
+    $chavesVivas = array();
+    foreach ($replayEvents as $ev) {
+        $chavesVivas[$ev['visitorKey']] = true;
+    }
+    $replayVisitors = array_values(array_filter($replayVisitors, function ($v) use ($chavesVivas) {
+        return isset($chavesVivas[$v['key']]);
+    }));
+}
 
 // Only auto-isolate if user came in with ?sid=… in the URL. Default view shows all pins.
 $explicitSid = isset($_GET['sid']) && isset($sessions[(string)$_GET['sid']]) ? (string)$_GET['sid'] : '';
@@ -1070,7 +1455,47 @@ $replayPayload = array(
         'totalEvents' => count($events),
         'visitorCount' => count($replayVisitors),
         'isolatedSid' => $explicitSid,
+        'replayTruncated' => $replayTruncated,
+        'replayLimit' => LR_REPLAY_MAX_EVENTS,
+        'replayAvailableEvents' => $replayTotalEvents,
     ),
+);
+
+/**
+ * LR_TEIA_SLIM_PAYLOAD_V1
+ *
+ * A vista "Teia" não usa o replay — usa um iframe do produtos.html, ao qual
+ * manda os eventos por postMessage. Mas o payload completo era emitido nas
+ * duas vistas: 2,3 MB de JSON dentro do HTML, mesmo quando o mapa de metro
+ * estava escondido. Era isso que fazia a Teia demorar mais de 5 segundos a
+ * abrir.
+ *
+ * O grafo lê exactamente 12 campos de cada evento (confirmado por varredura
+ * do produtos-admin.js). Os restantes 13 — downloads, artwork, laminação,
+ * transições — só servem à lista lateral do replay.
+ */
+function lr_teia_slim_event(array $ev)
+{
+    $slim = array(
+        'ts' => $ev['ts'],
+        'visitorKey' => $ev['visitorKey'],
+        'productSlug' => $ev['productSlug'],
+        'eventName' => $ev['eventName'],
+    );
+    // Campos opcionais: só entram quando têm conteúdo. Numa amostra real isto
+    // corta mais de metade do peso, porque a maioria vem vazia.
+    foreach (array('productContext', 'stepId', 'toStep', 'designTitle', 'designId', 'optionLabel', 'optionValue', 'targetLabel') as $campo) {
+        if (isset($ev[$campo]) && $ev[$campo] !== '' && $ev[$campo] !== 0) {
+            $slim[$campo] = $ev[$campo];
+        }
+    }
+    return $slim;
+}
+
+$teiaPayload = array(
+    'visitors' => $replayVisitors,
+    'events' => array_map('lr_teia_slim_event', $replayEvents),
+    'meta' => $replayPayload['meta'],
 );
 
 header('Content-Type: text/html; charset=utf-8');
@@ -1496,6 +1921,9 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
       <div class="metric"><div class="label">Downloads oferta</div><div class="value"><?= (int)$offerDownloadTotal ?></div><div class="sub"><?= (int)$offerDownloadSessionsCount ?> sessões</div></div>
       <div class="metric"><div class="label">IPs públicos</div><div class="value"><?= $publicIpsKnown ?></div><div class="sub"><?= $publicIpsResolved ?> com geo</div></div>
       <div class="metric"><div class="label">Itens com interesse</div><div class="value"><?= count($interest) ?></div></div>
+      <div class="metric"><div class="label">Catálogo / personalizado</div><div class="value" style="font-size:1rem;"><?= (int)$mainFlowTotals['catalog'] ?> · <?= (int)$mainFlowTotals['custom'] ?></div><div class="sub">sessões main-v2 por ramo</div></div>
+      <div class="metric"><div class="label">Imagens / quantidade</div><div class="value" style="font-size:1rem;"><?= (int)$mainFlowTotals['artwork_count'] ?> · <?= (int)$mainFlowTotals['artwork_total_quantity'] ?></div><div class="sub">uploads distintos · unidades personalizadas</div></div>
+      <div class="metric"><div class="label">Taxas de preparação</div><div class="value" style="font-size:1rem;"><?= number_format($mainFlowTotals['customization_fee_cents'] / 100, 2, ',', '.') ?> €</div><div class="sub"><?= (int)$mainFlowTotals['orders_created'] ?> pedidos criados</div></div>
     </div>
   </section>
 
@@ -1667,6 +2095,13 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
 
       <section class="lr-panel">
         <h2>Eventos do replay <span style="color:var(--muted);font-weight:400;font-size:0.84rem;" id="lrEventCounter">0/0</span></h2>
+        <?php if ($replayTruncated): ?>
+          <p style="color:var(--muted);font-size:0.82rem;margin:0 0 10px;">
+            O replay mostra os <?= (int)LR_REPLAY_MAX_EVENTS ?> eventos mais recentes
+            de <?= (int)$replayTotalEvents ?> no período. Os totais no topo contam tudo;
+            para veres um intervalo mais antigo, escolhe datas mais curtas.
+          </p>
+        <?php endif; ?>
         <div class="lr-event-list" id="lrEventList"></div>
       </section>
     </aside>
@@ -1779,7 +2214,12 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
 
 </main>
 
-<script type="application/json" id="lrReplayData"><?= json_encode($replayPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?></script>
+<?php
+// Cada vista carrega só o payload de que precisa. Antes eram os dois, e a
+// Teia pagava 2,3 MB de JSON que nunca usava. Ver LR_TEIA_SLIM_PAYLOAD_V1.
+$lrPayloadActivo = $dashboardView === 'teia' ? $teiaPayload : $replayPayload;
+?>
+<script type="application/json" id="lrReplayData"><?= json_encode($lrPayloadActivo, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?></script>
 
 <script>
 (function () {
@@ -1841,8 +2281,15 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
   data.stations.forEach(function (s) { stationMap.set(s.id, s); });
 
   var lineLabel = {
-    home: 'Página inicial', crachas: 'Crachás', imanes: 'Ímanes',
-    caderninhos: 'Caderninhos', cadernos: 'Cadernos', final: 'Contacto / envio'
+    home: 'Página inicial',
+    'crachas-loja': 'Crachás · site', 'imanes-loja': 'Ímanes · site',
+    'mini-cadernos': 'Mini-Cadernos · site', 'cadernos-anuais': 'Cadernos anuais · site',
+    bloquinhos: 'Bloquinhos · site', 'imanes-recortados': 'Ímanes recortados · site',
+    personalizacao: 'Personalização · site',
+    stickers: 'Stickers · site', marcadores: 'Marcadores · site',
+    'congresso-crachas': 'Crachás · Congresso', 'congresso-imanes': 'Ímanes · Congresso',
+    'congresso-caderninhos': 'Mini-Cadernos · Congresso', 'congresso-cadernos': 'Cadernos · Congresso',
+    quadros: 'Molduras', final: 'Contacto / envio'
   };
 
   /* ───────── State ───────── */
@@ -1921,6 +2368,10 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
       design_zoom_opened: 'ampliou imagem', design_zoom_closed: 'fechou imagem',
       validation_error: 'erro de validação',
       order_submitted: 'enviou pedido', cart_order_submitted: 'enviou pedido',
+      order_created: 'pedido criado',
+      artwork_upload_started: 'começou o upload', artwork_upload_completed: 'enviou imagens',
+      artwork_upload_failed: 'upload falhou', artwork_upload_removed: 'removeu imagem',
+      artwork_quantity_changed: 'alterou quantidade por imagem',
       delivery_selected: 'escolheu entrega', ui_interaction: 'clicou',
       cart_item_added: 'adicionou ao carrinho', cart_checkout_started: 'iniciou checkout',
       contact_completed: 'completou contacto', confirmation_view: 'viu confirmação',
@@ -1938,7 +2389,15 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
     var n = ev.eventName;
     if (n === 'design_selected' || n === 'design_unselected') return ev.designTitle || ev.designId || '';
     if (n === 'image_magnified' || n === 'design_zoom_opened') return (ev.designTitle || ev.designId || '') + (ev.imageSlot ? ' · ' + ev.imageSlot : '');
+    if (n === 'option_selected' && ev.optionType === 'design_source') return ev.optionValue === 'custom' ? 'Personalizado' : 'Catálogo';
     if (n === 'option_selected') return (ev.optionType ? ev.optionType + ' ' : '') + (ev.optionLabel || '');
+    if (n === 'artwork_upload_completed') {
+      var uploadDetail = (ev.artworkCount || 0) + ((ev.artworkCount || 0) === 1 ? ' imagem' : ' imagens');
+      if (ev.customizationFeeCents) uploadDetail += ' · taxa ' + (ev.customizationFeeCents / 100).toFixed(2).replace('.', ',') + ' €';
+      return uploadDetail;
+    }
+    if (n === 'artwork_quantity_changed') return ev.artworkTotalQuantity ? 'Total ' + ev.artworkTotalQuantity : '';
+    if (n === 'artwork_upload_removed') return ev.artworkCount ? ev.artworkCount + ' restantes' : 'Sem imagens';
     if (n === 'step_view') return ev.stepId || '';
     if (n === 'ui_interaction') return ev.targetLabel || '';
     if (n === 'offer_pdf_download_clicked') return ev.downloadLabel || ev.targetLabel || '';
@@ -1954,7 +2413,7 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
       pin = {
         key: ev.visitorKey, meta: visitor, stationId: null,
         status: 'active', history: [],
-        choices: { designs: new Set(), cover: '', size: '', pack: '', lamination: '', personalization: '', delivery: '' },
+        choices: { designs: new Set(), cover: '', size: '', pack: '', lamination: '', personalization: '', delivery: '', designSource: visitor.designSource || '', artworkCount: 0, artworkTotalQuantity: 0, customizationFeeCents: 0 },
         magnified: new Set(), offerDownloads: [], lastTs: 0, el: null
       };
       pins.set(ev.visitorKey, pin);
@@ -1964,7 +2423,7 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
     pin.stationId = ev.stationId;
     pin.lastTs = ev.ts;
     pin.history.push(ev);
-    if (ev.eventName === 'order_submitted' || ev.eventName === 'cart_order_submitted') {
+    if (ev.eventName === 'order_submitted' || ev.eventName === 'cart_order_submitted' || ev.eventName === 'order_created') {
       pin.status = 'completed';
     } else if (ev.eventName === 'design_selected') {
       if (ev.designId) pin.choices.designs.add(ev.designTitle || ev.designId);
@@ -1984,6 +2443,11 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
       else if (ot === 'lamination') pin.choices.lamination = ov;
       else if (ot === 'cover_personalization' || ot === 'personalization') pin.choices.personalization = ov;
       else if (ot === 'delivery') pin.choices.delivery = ov;
+      else if (ot === 'design_source') pin.choices.designSource = ev.optionValue === 'custom' ? 'Personalizado' : 'Catálogo';
+    } else if (ev.eventName.indexOf('artwork_') === 0) {
+      if (ev.artworkCount >= 0) pin.choices.artworkCount = ev.artworkCount;
+      if (ev.artworkTotalQuantity >= 0) pin.choices.artworkTotalQuantity = ev.artworkTotalQuantity;
+      if (ev.customizationFeeCents >= 0) pin.choices.customizationFeeCents = ev.customizationFeeCents;
     } else if (ev.eventName === 'offer_pdf_download_clicked') {
       pin.offerDownloads.push({
         label: ev.downloadLabel || ev.targetLabel || 'PDF',
@@ -1998,7 +2462,7 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
     if (!st) { st = { reached: new Set(), choices: new Map(), latest: [] }; stationStats.set(ev.stationId, st); }
     st.reached.add(ev.visitorKey);
     var choiceLabel = detailFromEvent(ev);
-    if (choiceLabel && (ev.eventName === 'design_selected' || ev.eventName === 'option_selected')) {
+    if (choiceLabel && (ev.eventName === 'design_selected' || ev.eventName === 'option_selected' || ev.eventName === 'artwork_upload_completed' || ev.eventName === 'artwork_quantity_changed')) {
       st.choices.set(choiceLabel, (st.choices.get(choiceLabel) || 0) + 1);
     }
     st.latest.unshift({ ts: ev.ts, visitorKey: ev.visitorKey, label: actionLabelOf(ev), detail: choiceLabel });
@@ -2256,6 +2720,10 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
     if (p.choices.lamination) parts.push('<div><strong>Laminação:</strong> ' + escapeHtml(p.choices.lamination) + '</div>');
     if (p.choices.personalization) parts.push('<div><strong>Personalização:</strong> ' + escapeHtml(p.choices.personalization) + '</div>');
     if (p.choices.delivery) parts.push('<div><strong>Envio:</strong> ' + escapeHtml(p.choices.delivery) + '</div>');
+    if (p.choices.designSource) parts.push('<div><strong>Origem do design:</strong> ' + escapeHtml(p.choices.designSource) + '</div>');
+    if (p.choices.artworkCount) parts.push('<div><strong>Imagens personalizadas:</strong> ' + p.choices.artworkCount + '</div>');
+    if (p.choices.artworkTotalQuantity) parts.push('<div><strong>Quantidade total personalizada:</strong> ' + p.choices.artworkTotalQuantity + '</div>');
+    if (p.choices.customizationFeeCents) parts.push('<div><strong>Taxa de preparação:</strong> ' + (p.choices.customizationFeeCents / 100).toFixed(2).replace('.', ',') + ' €</div>');
     var downloads = (p.offerDownloads && p.offerDownloads.length) ? p.offerDownloads : (v.offerDownloads || []);
     var downloadsHtml = downloads.length
       ? downloads.slice(0, 5).map(function (d) {
@@ -2418,3 +2886,7 @@ details.jsonl-files summary { cursor: pointer; color: var(--muted); font-weight:
 </script>
 </body>
 </html>
+<?php
+// SNAPSHOT_V1: fecha a captura e grava o HTML produzido.
+require_once __DIR__ . '/lib/snapshot.php';
+mp_snapshot_end();

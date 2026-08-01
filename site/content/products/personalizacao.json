@@ -1,0 +1,356 @@
+{
+  "slug": "personalizacao",
+  "name": "Personalização",
+  "brand": "Mia & Paper",
+  "homeUrl": "index.html",
+  "instagramUrl": "https://www.instagram.com/miaandpaper/",
+  "artworkBuilder": true,
+  "catalogContext": "main-v2",
+  "orderFlow": "custom-only",
+  "form": {
+    "action": "send-order.php",
+    "returnTo": "personalizacao.html"
+  },
+  "intro": {
+    "eyebrow": "Personalização",
+    "title": "Os teus designs, feitos por nós",
+    "text": "Envia os teus ficheiros e escolhe em que produtos os queres."
+  },
+  "customArtwork": {
+    "selectionField": "order_flow",
+    "customValue": "custom",
+    "feePerFileCents": 300,
+    "feeLabel": "Preparação do design e testes",
+    "feeDescription": "Cada design tem de ser ajustado ao formato de cada produto.",
+    "acceptedMimeTypes": [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+      "application/pdf"
+    ],
+    "acceptedExtensions": [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".webp",
+      ".heic",
+      ".heif",
+      ".pdf"
+    ],
+    "preserveOriginal": true,
+    "preserveOriginalFileName": true,
+    "compress": false,
+    "convert": false
+  },
+  "deliveryOptions": [
+    {
+      "id": "pickup",
+      "label": "Vou recolher na casa da Mia",
+      "text": "",
+      "feeCents": 0
+    },
+    {
+      "id": "shipping",
+      "label": "Envio CTT - até 2 Kg",
+      "text": "",
+      "feeCents": 540,
+      "priceText": "Valor mínimo:\n5,40 €"
+    },
+    {
+      "id": "join_orders",
+      "label": "Junta as minhas encomendas",
+      "text": "",
+      "feeCents": 0
+    }
+  ],
+  "steps": [
+    {
+      "id": "artwork_upload",
+      "label": "Designs",
+      "title": "Envia os teus designs",
+      "text": "",
+      "template": "original-artwork-upload",
+      "upload": {
+        "selectionKey": "custom_artwork_uploads",
+        "multiple": true,
+        "minimumFiles": 1,
+        "maxFiles": 10,
+        "buttonLabel": "Adicionar imagem ou PDF",
+        "showQuantity": false,
+        "acceptedMimeTypes": [
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          "image/heic",
+          "image/heif",
+          "application/pdf"
+        ],
+        "acceptedExtensions": [
+          ".jpg",
+          ".jpeg",
+          ".png",
+          ".webp",
+          ".heic",
+          ".heif",
+          ".pdf"
+        ],
+        "preserveOriginal": true,
+        "preserveOriginalFileName": true,
+        "compress": false,
+        "convert": false,
+        "purpose": "custom-artwork"
+      }
+    },
+    {
+      "id": "custom_products",
+      "label": "Produtos",
+      "title": "O que queres fazer com eles?",
+      "text": "",
+      "template": "custom-product-builder",
+      "addLabel": "Adicionar produto",
+      "products": [
+        {
+          "id": "crachas-pequenos",
+          "group": "Crachás",
+          "title": "Crachás pequenos",
+          "subtitle": "2,5 cm x 2,5 cm (25 mm)",
+          "slug": "crachas-loja",
+          "size": "25 mm",
+          "image": "content/designs/loja/crachas-loja/uploads/crachas-25-3d7d4ac2504c.webp",
+          "imageShape": "round",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "crachas-medios",
+          "group": "Crachás",
+          "title": "Crachás médios",
+          "subtitle": "3,2 cm x 3,2 cm (32 mm)",
+          "slug": "crachas-loja",
+          "size": "32 mm",
+          "image": "content/designs/loja/crachas-loja/uploads/crachas-32-accc814bd59f.webp",
+          "imageShape": "round",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "crachas-grandes",
+          "group": "Crachás",
+          "title": "Crachás grandes",
+          "subtitle": "5,8 cm x 5,8 cm (58 mm)",
+          "slug": "crachas-loja",
+          "size": "Grandes",
+          "image": "content/designs/loja/crachas-loja/uploads/crachas-32-accc814bd59f.webp",
+          "imageShape": "round",
+          "quoteOnly": true,
+          "quoteNote": "Preço a confirmar",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "imanes-finos",
+          "group": "Ímanes",
+          "title": "Ímanes finos e flexíveis",
+          "subtitle": "5,5 cm x 6,5 cm, 0,7 mm de espessura",
+          "slug": "imanes-loja",
+          "size": "Achatados",
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/tipo/iman-flexivel.webp",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "imanes-3mm",
+          "group": "Ímanes",
+          "title": "Ímanes grossos com 3 mm de espessura",
+          "subtitle": "5,5 cm x 6,5 cm, 3 mm de espessura",
+          "slug": "imanes-loja",
+          "size": "3 mm",
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/tipo/iman-2mm.webp",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "imanes-recortados",
+          "group": "Ímanes",
+          "title": "Ímanes com recorte personalizado",
+          "subtitle": "Cortados à volta do desenho",
+          "slug": "imanes-recortados",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "marcadores",
+          "group": "Papel",
+          "title": "Marcadores",
+          "subtitle": "Laminados dos dois lados",
+          "slug": "marcadores",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ],
+          "choices": [
+            {
+              "field": "marker_border",
+              "label": "Borda",
+              "required": true,
+              "items": [
+                {
+                  "value": "com-borda",
+                  "title": "Com borda"
+                },
+                {
+                  "value": "sem-borda",
+                  "title": "Sem borda"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "stickers",
+          "group": "Papel",
+          "title": "Stickers",
+          "subtitle": "Autocolantes recortados",
+          "slug": "stickers",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "mini-cadernos",
+          "group": "Cadernos",
+          "title": "Mini-cadernos",
+          "subtitle": "Capa com o teu design",
+          "slug": "mini-cadernos",
+          "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "bloquinhos",
+          "group": "Cadernos",
+          "title": "Bloquinhos",
+          "subtitle": "Capa com o teu design",
+          "slug": "bloquinhos",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "cadernos-anuais",
+          "group": "Cadernos",
+          "title": "Cadernos anuais",
+          "subtitle": "Capa com o teu design",
+          "slug": "cadernos-anuais",
+          "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp",
+          "imageShape": "rect",
+          "quantityField": "caderno_order_quantity",
+          "fixedSelections": {
+            "cover_personalization": "no",
+            "cover_personalization_text": ""
+          },
+          "choices": [
+            {
+              "field": "purchase_option",
+              "label": "Opção de compra",
+              "required": true,
+              "isPriceKey": true,
+              "items": [
+                {
+                  "value": "caderno_normal",
+                  "title": "Caderno Normal",
+                  "subtitle": "Oferta: 1 crachá de 32 mm com o design da capa",
+                  "quantity": 1
+                },
+                {
+                  "value": "caderno_pioneiro",
+                  "title": "Caderno Pioneiro",
+                  "subtitle": "Oferta: 1 crachá de 32 mm com o design da capa",
+                  "quantity": 2
+                },
+                {
+                  "value": "pack_normal",
+                  "title": "Pack Normal",
+                  "subtitle": "1 Caderno Normal + 1 marcador + 5 crachás de 32 mm",
+                  "quantity": 3,
+                  "isPack": true
+                },
+                {
+                  "value": "pack_pioneiro",
+                  "title": "Pack Pioneiro",
+                  "subtitle": "1 Caderno Pioneiro + 1 marcador + 5 crachás de 32 mm",
+                  "quantity": 4,
+                  "isPack": true
+                }
+              ]
+            },
+            {
+              "field": "lamination",
+              "label": "Laminação",
+              "required": true,
+              "items": [
+                {
+                  "value": "matte",
+                  "title": "Matte",
+                  "subtitle": "Acabamento suave, sem brilho"
+                },
+                {
+                  "value": "normal",
+                  "title": "Glossy",
+                  "subtitle": "Acabamento brilhante normal"
+                },
+                {
+                  "value": "holografica",
+                  "title": "Holográfica",
+                  "subtitle": "Brilho com reflexos coloridos"
+                },
+                {
+                  "value": "glitter_branco",
+                  "title": "Glitter branco",
+                  "subtitle": "Brilho tipo purpurinas brancas"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "finishes": [
+        {
+          "value": "holografica",
+          "title": "Laminação holográfica",
+          "subtitle": "Brilho com reflexos coloridos",
+          "extraPriceCentsPerUnit": 25
+        }
+      ]
+    },
+    {
+      "id": "delivery_contact",
+      "label": "Entrega e contacto",
+      "title": "Entrega e contacto",
+      "text": "",
+      "template": "delivery-contact"
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmar",
+      "title": "Confirma o teu pedido",
+      "text": "",
+      "template": "confirm"
+    }
+  ]
+}
