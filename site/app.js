@@ -10241,7 +10241,7 @@
       '<div class="builder-group' + (selected.length ? ' has-selection' : '') + (open ? ' is-open' : '') + '">',
       '<button type="button" class="builder-group-tile" data-builder-group="' + escapeHtml(group.name) + '" data-builder-design-token="' + escapeHtml(token) + '" aria-expanded="' + (open ? 'true' : 'false') + '">',
       builderRenderEntryMedia({ image: group.image, imageShape: group.imageShape }, "builder-tile-media"),
-      '<span class="builder-tile-copy"><strong>' + escapeHtml(group.name) + '</strong>' + (selected.length ? '<small>' + escapeHtml(selected.map(function (entry) { return entry.title; }).join(" · ")) + '</small>' : "") + '</span>',
+      '<span class="builder-tile-copy"><strong>' + escapeHtml(group.name) + '</strong></span>',
       '<span class="builder-group-chevron" aria-hidden="true"></span>',
       '</button>',
       open ? '<div class="builder-group-drawer">' + group.entries.map(function (entry) {
@@ -10262,7 +10262,7 @@
       '<span class="builder-tile-copy"><strong>' + escapeHtml(entry.title) + '</strong>' + (entry.subtitle ? '<small>' + escapeHtml(entry.subtitle) + '</small>' : "") + '</span>',
       // A taxa de ajuste e o unico preco que ja se sabe neste passo (o resto
       // depende da quantidade): fica a vista para nao aparecer so no fim.
-      fee ? '<span class="builder-variant-price"><strong>+ ' + escapeHtml(formatCents(fee)) + '</strong><small>ajuste</small></span>' : "",
+      fee ? '<span class="builder-variant-price"><strong>+ ' + escapeHtml(formatCents(fee)) + '</strong><small>Para ajustes e testes de impressão</small></span>' : "",
       '</label>'
     ].join("");
   }

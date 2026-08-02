@@ -12027,11 +12027,6 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   cursor: pointer;
 }
 
-.builder-group.is-open > .builder-group-tile {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
 .builder-group.has-selection > .builder-group-tile {
   border-color: var(--gold);
 }
@@ -12049,31 +12044,29 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   transform: rotate(-135deg) translate(-2px, -2px);
 }
 
+/* Mesma chrome do painel que abre por baixo da opcao escolhida nos cadernos
+   anuais (.crachas-size-card-proof): mais estreito do que o cartao, puxado
+   para cima para ficar encaixado nele, e so com cantos em baixo. */
 .builder-group-drawer {
   display: grid;
-  gap: 14px;
-  padding: 16px 0;
-  border: 1px solid var(--moss);
+  gap: 12px;
+  margin: -6px 8px 12px;
+  padding: 14px;
+  border: 1px solid rgba(126, 93, 22, 0.18);
   border-top: 0;
   border-radius: 0 0 var(--radius) var(--radius);
-  background: var(--surface-cream-strong);
-}
-
-.builder-group:not(.has-selection) .builder-group-drawer {
-  border-color: var(--line);
+  background: #fffaf0;
 }
 
 /* As opcoes avancam em relacao ao cartao do grupo — o recuo vem da esquerda,
    nao de padding a toda a volta — para se ler que sao um nivel abaixo. */
 .builder-variant {
-  /* `width: 100%` vem da regra partilhada com o cartao do grupo e ignoraria a
-     margem: aqui a largura tem de ser a que sobra depois do recuo. */
-  width: auto;
-  margin-inline: 28px;
   grid-template-columns: 48px minmax(0, 1fr) auto;
   padding-right: 46px;
-  border-color: var(--moss);
-  background: var(--card);
+  border: 1px solid rgba(126, 93, 22, 0.20);
+  border-radius: 16px;
+  background: #fffdf7;
+  box-shadow: 0 1px 2px rgba(69, 49, 14, 0.05);
 }
 
 .builder-variant input {
@@ -12139,7 +12132,9 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   display: grid;
   justify-items: end;
   gap: 1px;
-  padding-left: 8px;
+  max-width: 168px;
+  padding-left: 10px;
+  text-align: right;
 }
 
 .builder-variant-price strong {
@@ -12153,6 +12148,7 @@ html[data-theme="dark"] .free-price-chart-tooltip {
 .builder-variant-price small {
   color: var(--muted);
   font-size: .72rem;
+  line-height: 1.25;
 }
 
 /* O total mora na barra de Voltar/Continuar: em mobile essa barra e sticky,
@@ -12355,10 +12351,6 @@ html[data-theme="dark"] .free-price-chart-tooltip {
     grid-template-columns: 1fr;
   }
 
-  .builder-variant {
-    margin-inline: 14px;
-  }
-
   /* Em ecras estreitos o nome, a medida e o preco nao cabem na mesma linha:
      o preco desce para baixo do texto em vez de lhe passar por cima. */
   .builder-variant:has(.builder-variant-price),
@@ -12369,11 +12361,10 @@ html[data-theme="dark"] .free-price-chart-tooltip {
 
   .builder-variant-price {
     grid-column: 2;
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-    justify-content: flex-start;
+    justify-items: start;
+    max-width: none;
     padding-left: 0;
+    text-align: left;
   }
 
   .builder-quantity-input input {

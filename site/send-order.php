@@ -81,7 +81,7 @@ function parse_email_recipients($value)
 function safe_return_to()
 {
     $returnTo = field('return_to');
-    $allowed = array('index.html', 'molduras.html', 'quadros.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'mini-cadernos.html', 'bloquinhos.html', 'cadernos-anuais.html', 'imanes.html', 'imanes-recortados.html', 'stickers.html', 'marcadores.html', 'lembrancas.html', 'personalizacao.html', 'adicionar-produto.html', 'checkout.html');
+    $allowed = array('index.html', 'molduras.html', 'quadros.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'mini-cadernos.html', 'blocos-a6.html', 'bloquinhos.html', 'cadernos-anuais.html', 'imanes.html', 'imanes-recortados.html', 'stickers.html', 'marcadores.html', 'lembrancas.html', 'personalizacao.html', 'adicionar-produto.html', 'checkout.html');
 
     if (in_array($returnTo, $allowed, true)) {
         return $returnTo;
@@ -93,7 +93,7 @@ function safe_return_to()
 function safe_product_slug()
 {
     $slug = strtolower(field('product_slug'));
-    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'personalizacao');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'personalizacao');
 
     if (in_array($slug, $allowed, true)) {
         return $slug;
@@ -408,7 +408,7 @@ function cart_allowed_product_slug($slug)
     // aqui de proposito: e a pagina de origem, nao um produto — cada linha
     // que sai de la traz o slug do produto real (crachas-loja, marcadores...).
     $slug = strtolower(trim((string)$slug));
-    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores');
 
     return in_array($slug, $allowed, true) ? $slug : '';
 }
@@ -833,7 +833,7 @@ function cart_assoc_text_selection($selections, $name)
 
 function cart_is_main_v2_slug($slug)
 {
-    return in_array((string)$slug, array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores'), true);
+    return in_array((string)$slug, array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores'), true);
 }
 
 function cart_is_congress_slug($slug)

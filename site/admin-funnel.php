@@ -143,7 +143,7 @@ function af_json_array($raw) {
     $decoded = json_decode((string)$raw, true);
     return is_array($decoded) ? $decoded : array();
 }
-function af_main_v2_slugs() { return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'personalizacao'); }
+function af_main_v2_slugs() { return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'personalizacao'); }
 function af_congress_slugs() { return array('crachas', 'imanes', 'caderninhos', 'cadernos'); }
 function af_is_main_v2_slug($slug) { return in_array((string)$slug, af_main_v2_slugs(), true); }
 function af_is_congress_slug($slug) { return in_array((string)$slug, af_congress_slugs(), true); }
@@ -1194,6 +1194,7 @@ function product_friendly_name($slug, $fallbackFromJson = '')
         'imanes-loja' => 'Ímanes',
         'caderninhos' => 'Mini-Cadernos',
         'mini-cadernos'=> 'Mini-Cadernos',
+        'blocos-a6'=> 'Bloco Argolas A6',
         'bloquinhos'  => 'Bloquinhos',
         'imanes-recortados' => 'Ímanes recortados',
         'personalizacao' => 'Personalização',

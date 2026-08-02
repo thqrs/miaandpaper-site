@@ -223,6 +223,37 @@
                 }
             }
         },
+        "blocos-a6": {
+            "id": "blocos-a6",
+            "family": "caderninhos",
+            "catalogContext": "main-v2",
+            "label": "Bloco Argolas A6",
+            "unitLabel": "blocos",
+            "unitSingular": "bloco",
+            "unitShort": "bloco",
+            "defaultPriceKey": "Blocos A6",
+            "minimumQuantity": 1,
+            "pricingMode": "pack-combination",
+            "allowUnitDiscounts": true,
+            "quantityPricingSwitchByPriceKey": {
+                "Blocos A6": {
+                    "quantityTiers": true,
+                    "sliderMaximum": 150
+                }
+            },
+            "customArtworkFeePerFileCents": 300,
+            "prices": {
+                "Blocos A6": {
+                    "1": 900,
+                    "3": 2500,
+                    "5": 3900,
+                    "10": 7200,
+                    "24": 15600,
+                    "48": 29000,
+                    "96": 56000
+                }
+            }
+        },
         "bloquinhos": {
             "id": "bloquinhos",
             "family": "bloquinhos",

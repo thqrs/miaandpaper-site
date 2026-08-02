@@ -200,71 +200,9 @@
           ]
         },
         {
-          "id": "marcadores",
-          "group": "Papel",
-          "title": "Marcadores",
-          "subtitle": "Laminados dos dois lados",
-          "slug": "marcadores",
-          "imageShape": "rect",
-          "finishes": [
-            "holografica"
-          ],
-          "choices": [
-            {
-              "field": "marker_border",
-              "label": "Borda",
-              "required": true,
-              "items": [
-                {
-                  "value": "com-borda",
-                  "title": "Com borda"
-                },
-                {
-                  "value": "sem-borda",
-                  "title": "Sem borda"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "stickers",
-          "group": "Papel",
-          "title": "Stickers",
-          "subtitle": "Autocolantes recortados",
-          "slug": "stickers",
-          "imageShape": "rect",
-          "finishes": [
-            "holografica"
-          ]
-        },
-        {
-          "id": "mini-cadernos",
-          "group": "Cadernos",
-          "title": "Mini-cadernos",
-          "subtitle": "Capa com o teu design",
-          "slug": "mini-cadernos",
-          "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
-          "imageShape": "rect",
-          "finishes": [
-            "holografica"
-          ]
-        },
-        {
-          "id": "bloquinhos",
-          "group": "Cadernos",
-          "title": "Bloquinhos",
-          "subtitle": "Capa com o teu design",
-          "slug": "bloquinhos",
-          "imageShape": "rect",
-          "finishes": [
-            "holografica"
-          ]
-        },
-        {
           "id": "cadernos-anuais",
-          "group": "Cadernos",
-          "title": "Cadernos anuais",
+          "group": "Apontamentos",
+          "title": "Caderno Anual Argolas A5",
           "subtitle": "Capa com o teu design",
           "slug": "cadernos-anuais",
           "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp",
@@ -333,6 +271,80 @@
                   "value": "glitter_branco",
                   "title": "Glitter branco",
                   "subtitle": "Brilho tipo purpurinas brancas"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "blocos-a6",
+          "group": "Apontamentos",
+          "title": "Bloco Argolas A6",
+          "subtitle": "Capa com o teu design",
+          "slug": "blocos-a6",
+          "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "bloquinhos",
+          "group": "Apontamentos",
+          "title": "Bloquinho A7",
+          "subtitle": "Capa com o teu design",
+          "slug": "bloquinhos",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "mini-cadernos",
+          "group": "Apontamentos",
+          "title": "Mini-Caderno Argolas",
+          "subtitle": "Capa com o teu design",
+          "slug": "mini-cadernos",
+          "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "stickers",
+          "group": "Papel",
+          "title": "Stickers",
+          "subtitle": "Autocolantes recortados",
+          "slug": "stickers",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "marcadores",
+          "group": "Papel",
+          "title": "Marcadores",
+          "subtitle": "Laminados dos dois lados",
+          "slug": "marcadores",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ],
+          "choices": [
+            {
+              "field": "marker_border",
+              "label": "Borda",
+              "required": true,
+              "items": [
+                {
+                  "value": "com-borda",
+                  "title": "Com borda"
+                },
+                {
+                  "value": "sem-borda",
+                  "title": "Sem borda"
                 }
               ]
             }

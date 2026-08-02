@@ -42,7 +42,7 @@ function lr_json_array($raw) {
     return is_array($decoded) ? $decoded : array();
 }
 function lr_main_v2_slugs() {
-    return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'personalizacao');
+    return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'personalizacao');
 }
 function lr_congress_slugs() {
     return array('crachas', 'imanes', 'caderninhos', 'cadernos');
@@ -409,7 +409,7 @@ function lr_product_friendly_name($slug) {
     static $m = array(
         'crachas'=>'Crachás','crachas-loja'=>'Crachás',
         'imanes'=>'Ímanes','imanes-loja'=>'Ímanes',
-        'caderninhos'=>'Mini-Cadernos','mini-cadernos'=>'Mini-Cadernos',
+        'caderninhos'=>'Mini-Cadernos','mini-cadernos'=>'Mini-Cadernos','blocos-a6'=>'Bloco Argolas A6',
         'cadernos'=>'Cadernos','cadernos-anuais'=>'Cadernos anuais',
         'bloquinhos'=>'Bloquinhos','imanes-recortados'=>'Ímanes recortados',
         'personalizacao'=>'Personalização',
@@ -1251,7 +1251,7 @@ function lr_event_to_station($name, $stepId, $slug, $landing = '', $submitted = 
     if ($name === 'wizard_started' || $name === 'product_view') return 'split';
     if ($name === 'site_landed') {
         $lc = strtolower((string)$landing);
-        $pages = array('crachas-loja', 'imanes-loja', 'mini-cadernos', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'crachas', 'imanes', 'caderninhos', 'cadernos', 'molduras', 'congressos/2026');
+        $pages = array('crachas-loja', 'imanes-loja', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'crachas', 'imanes', 'caderninhos', 'cadernos', 'molduras', 'congressos/2026');
         foreach ($pages as $page) {
             if (strpos($lc, $page) !== false) return 'split';
         }
@@ -2283,7 +2283,7 @@ $lrPayloadActivo = $dashboardView === 'teia' ? $teiaPayload : $replayPayload;
   var lineLabel = {
     home: 'Página inicial',
     'crachas-loja': 'Crachás · site', 'imanes-loja': 'Ímanes · site',
-    'mini-cadernos': 'Mini-Cadernos · site', 'cadernos-anuais': 'Cadernos anuais · site',
+    'mini-cadernos': 'Mini-Cadernos · site', 'blocos-a6': 'Bloco Argolas A6 · site', 'cadernos-anuais': 'Cadernos anuais · site',
     bloquinhos: 'Bloquinhos · site', 'imanes-recortados': 'Ímanes recortados · site',
     personalizacao: 'Personalização · site',
     stickers: 'Stickers · site', marcadores: 'Marcadores · site',
