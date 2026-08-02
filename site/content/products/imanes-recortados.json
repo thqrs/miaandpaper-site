@@ -89,6 +89,12 @@
   "minimumQuantity": 12,
   "pricingMode": "tier-unit",
   "allowUnitDiscounts": true,
+  "quantityPricingSwitchByPriceKey": {
+    "Recortados": {
+      "quantityTiers": true,
+      "sliderMaximum": 150
+    }
+  },
   "flatUnitPricesCents": {
     "Stickers": 50
   },

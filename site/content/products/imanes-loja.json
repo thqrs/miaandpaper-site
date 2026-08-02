@@ -422,7 +422,7 @@
       "id": "pack",
       "label": "Pack",
       "title": "Diz-me quantos ímanes queres",
-      "text": "Quanto maior o pack, maior o desconto",
+      "text": "Quanto maior o pack, melhor o preço por unidade",
       "textByField": {
         "size": {
           "3 mm": "Quanto maior o pack, melhor o preço por unidade"
@@ -593,6 +593,16 @@
   "minimumQuantity": 1,
   "pricingMode": "pack-combination",
   "allowUnitDiscounts": true,
+  "quantityPricingSwitchByPriceKey": {
+    "Achatados": {
+      "quantityTiers": true,
+      "sliderMaximum": 150
+    },
+    "3 mm": {
+      "quantityTiers": true,
+      "sliderMaximum": 150
+    }
+  },
   "customArtwork": {
     "selectionField": "order_flow",
     "catalogValue": "catalog",

@@ -765,7 +765,7 @@
       "id": "pack",
       "label": "Pack",
       "title": "Diz-me quantos crachás queres",
-      "text": "Quanto maior o pack, maior o desconto",
+      "text": "Quanto maior o pack, melhor o preço por unidade",
       "template": "quantity-builder",
       "field": "pack_quantity",
       "selection": "pack",
@@ -912,6 +912,16 @@
   "minimumQuantity": 1,
   "pricingMode": "pack-combination",
   "allowUnitDiscounts": true,
+  "quantityPricingSwitchByPriceKey": {
+    "25 mm": {
+      "quantityTiers": true,
+      "sliderMaximum": 150
+    },
+    "32 mm": {
+      "quantityTiers": true,
+      "sliderMaximum": 150
+    }
+  },
   "customArtwork": {
     "selectionField": "order_flow",
     "catalogValue": "catalog",

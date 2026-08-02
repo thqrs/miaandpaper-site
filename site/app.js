@@ -179,6 +179,10 @@
     selections: {},
     errors: "",
     invalidFields: [],
+    // Gavetas abertas no passo dos produtos da personalizacao: chave
+    // designToken::grupo. E estado de interface, por isso vive fora das
+    // selections (nao vai para o carrinho nem para o pedido).
+    builderOpenGroups: {},
     quantitySignature: "",
     quantitiesTouched: false,
     quantityPackBaseline: 0,
@@ -258,6 +262,8 @@
     "purchase-option": "Opções de compra",
     "cover-personalization": "Personalização da capa",
     "details-form": "Formulário",
+    "custom-product-builder": "Personalização: produtos",
+    "custom-quantity-builder": "Personalização: quantidades",
     "confirm": "Confirmação"
   };
 
@@ -3039,6 +3045,9 @@
 
   function bindCartUi() {
     ensureCartHeaderButton();
+    // No telemovel o carrinho e o menu ocupam o ecra todo: as reviews a rodar
+    // por cima deixam de ser um detalhe simpatico e passam a estorvar.
+    document.body.classList.toggle("is-cart-panel-open", state.cartPanelOpen === true);
 
     document.querySelectorAll("[data-cart-open]").forEach(function (button) {
       if (button.dataset.cartBound === "1") {
@@ -3586,10 +3595,13 @@
     ].join("");
   }
 
-  function renderCartEntryActions(product) {
+  function renderCartEntryActions(product, step) {
+    var totals = builderActionTotals(product, step);
+
     if (state.editingCartItemId) {
       return [
         '<div class="step-actions">',
+        totals,
         '<button class="button secondary" type="button" data-back data-track="true" data-track-action="back" data-track-id="back">Voltar</button>',
         '<div class="next-action-wrap">',
         state.errors ? '<p class="form-error action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
@@ -3600,6 +3612,7 @@
 
     return [
       '<div class="step-actions cart-entry-actions">',
+      totals,
       '<button class="button secondary" type="button" data-back data-track="true" data-track-action="back" data-track-id="back">Voltar</button>',
       '<div class="cart-entry-buttons">',
       state.errors ? '<p class="form-error action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
@@ -4131,6 +4144,15 @@
     ].join("");
   }
 
+  function renderAdminQuantityPricingSwitchSetting() {
+    return [
+      '<label class="admin-check admin-quantity-pricing-setting">',
+      '<input type="checkbox"' + (quantityPricingSwitchEnabled() ? " checked" : "") + ' data-admin-quantity-pricing-switch-visible> ',
+      'Mostrar escolha entre “Packs” e “Por quantidade”',
+      '</label>'
+    ].join("");
+  }
+
   function renderAdminPricePanel(product) {
     var prices;
     var sizeKeys;
@@ -4586,6 +4608,7 @@
       currentProduct ? renderAdminRectOrientationPanel(currentProduct) : "",
       currentHome ? renderAdminHomeSettingsPanel(currentHome) : "",
       currentProduct ? renderAdminSiteSettingsPanel() : "",
+      currentProduct ? renderAdminQuantityPricingSwitchSetting() : "",
       currentProduct ? renderAdminPricePanel(currentProduct) : "",
       currentProduct ? renderAdminDeliveryPanel(currentProduct) : "",
       currentProduct ? renderAdminProductPreviewPanel(currentProduct) : "",
@@ -4764,6 +4787,23 @@
           pushUndo(currentProduct);
         }
         siteSettings().smartQuantities = !!input.checked;
+        if (currentProduct) {
+          rerenderProduct(currentProduct);
+        } else {
+          rerender();
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-admin-quantity-pricing-switch-visible]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        if (currentProduct) {
+          pushUndo(currentProduct);
+        }
+        siteSettings().quantityPricingSwitchVisible = !!input.checked;
+        if (!input.checked) {
+          state.selections.quantity_pricing_mode = "quantity_tiers";
+        }
         if (currentProduct) {
           rerenderProduct(currentProduct);
         } else {
@@ -5798,6 +5838,45 @@
     return String((product && product.pricingMode) || (step && step.pricingMode) || "");
   }
 
+  // QUANTITY_PRICING_SWITCH_V1: a escolha do método altera apenas o cálculo.
+  // A grelha de packs, o slider e a quantidade continuam a usar a mesma fonte
+  // de dados e o mesmo estado, independentemente deste valor.
+  function quantityPricingSwitchConfig(product, priceKey) {
+    var step = freeQuantityStep(product);
+    var mapping = (product && product.quantityPricingSwitchByPriceKey)
+      || (step && step.quantityPricingSwitchByPriceKey)
+      || {};
+    var key = String(priceKey
+      || priceKeyForSize(product, state.selections.size)
+      || (product && product.defaultPriceKey)
+      || "");
+    var config = mapping[key];
+
+    return config && typeof config === "object" && config.quantityTiers === true
+      ? config
+      : null;
+  }
+
+  function supportsQuantityPricingSwitch(product, priceKey) {
+    return !!quantityPricingSwitchConfig(product, priceKey);
+  }
+
+  function selectedQuantityPricingMode(product, priceKey) {
+    if (!supportsQuantityPricingSwitch(product, priceKey)) {
+      return "packs";
+    }
+    if (!quantityPricingSwitchEnabled()) {
+      return "quantity_tiers";
+    }
+    return state.selections.quantity_pricing_mode === "packs"
+      ? "packs"
+      : "quantity_tiers";
+  }
+
+  function usesSelectedQuantityTierPricing(product, priceKey) {
+    return selectedQuantityPricingMode(product, priceKey) === "quantity_tiers";
+  }
+
   function usesLinearDiscountPricing(product) {
     var step = freeQuantityStep(product);
     return !!(step && effectivePricingMode(product) === "linear-discount-interpolation");
@@ -6020,12 +6099,18 @@
     return current && table && table[String(current)] != null ? "pack" : "custom";
   }
 
-  var FREE_QUANTITY_RANGE_MAXIMUM = 100;
+  // O limite de 150 é comum a todos os produtos com quantidade livre. Não deve
+  // depender de o produto usar packs combinados ou escalões por unidade.
+  var FREE_QUANTITY_RANGE_MAXIMUM = 150;
 
   function freeQuantityRangeMaximum(product) {
+    var config = quantityPricingSwitchConfig(product);
+    var configuredMaximum = Math.max(0, parseInt(config && config.sliderMaximum, 10) || 0);
+    var rangeLimit = configuredMaximum || FREE_QUANTITY_RANGE_MAXIMUM;
+
     return Math.max(
       effectiveMinimumFreeQuantity(product),
-      Math.min(maximumFreeQuantity(product), FREE_QUANTITY_RANGE_MAXIMUM)
+      Math.min(maximumFreeQuantity(product), rangeLimit)
     );
   }
 
@@ -6648,7 +6733,10 @@
   // designs escalam proporcionalmente em vez de fazer reset.
   function siteSettings() {
     if (!state.pricing) {
-      return { smartQuantities: true };
+      return {
+        smartQuantities: true,
+        quantityPricingSwitchVisible: true
+      };
     }
     if (!state.pricing.settings) {
       state.pricing.settings = {};
@@ -6656,11 +6744,18 @@
     if (state.pricing.settings.smartQuantities === undefined) {
       state.pricing.settings.smartQuantities = true;
     }
+    if (state.pricing.settings.quantityPricingSwitchVisible === undefined) {
+      state.pricing.settings.quantityPricingSwitchVisible = true;
+    }
     return state.pricing.settings;
   }
 
   function smartQuantitiesEnabled() {
     return siteSettings().smartQuantities !== false;
+  }
+
+  function quantityPricingSwitchEnabled() {
+    return siteSettings().quantityPricingSwitchVisible !== false;
   }
 
   function applyPricingToProduct(product, pricing) {
@@ -6885,13 +6980,15 @@
     var table = product.prices && product.prices[priceKey] ? product.prices[priceKey] : null;
     var cents = table && packQuantity
       ? (freeQuantityStep(product)
-        ? (usesPackCombinationPricing(product)
+        ? (usesSelectedQuantityTierPricing(product, priceKey)
+          ? tierPriceCents(table, packQuantity)
+          : (usesPackCombinationPricing(product)
           ? packCombinationCents(table, packQuantity, packCombinationPrefersFewerPacks(product, priceKey))
           : (usesFlatUnitPricing(product)
             ? Math.round(baselineUnitCents(table) * packQuantity)
             : (usesLinearDiscountPricing(product)
               ? linearDiscountPriceCents(table, packQuantity)
-              : tierPriceCents(table, packQuantity))))
+              : tierPriceCents(table, packQuantity)))))
         : Number(table[String(packQuantity)]))
       : 0;
     var unitCents = baselineUnitCents(table);
@@ -6902,7 +6999,9 @@
       // No modo escalão o desconto é o do escalão, e é constante dentro dele.
       // Tirá-lo do total arredondado fazia a percentagem saltar entre 7% e 8%
       // de quantidade para quantidade, quando o desconto real não muda.
-      tierUnitCents = usesTierUnitPricing(product) ? tierUnitPriceCents(table, packQuantity) : 0;
+      tierUnitCents = (usesTierUnitPricing(product) || usesSelectedQuantityTierPricing(product, priceKey))
+        ? tierUnitPriceCents(table, packQuantity)
+        : 0;
       discount = tierUnitCents
         ? Math.round((1 - (tierUnitCents / unitCents)) * 100)
         : Math.round((1 - (cents / (unitCents * packQuantity))) * 100);
@@ -9502,7 +9601,9 @@
       var fallbackName = kind === "audio" ? "Áudio" : (kind === "artwork" ? "Design" : "Foto");
       var removeLabel = kind === "audio" ? "Remover áudio" : (kind === "artwork" ? "Remover design" : "Remover foto");
       var quantity = customArtworkItemQuantity(item);
-      var feeCents = Math.max(0, parseInt(config.feePerFileCents, 10) || parseInt(item && item.feeCents, 10) || 0);
+      var feeCents = config.hideFee === true
+        ? 0
+        : Math.max(0, parseInt(config.feePerFileCents, 10) || parseInt(item && item.feeCents, 10) || 0);
       var quantityControl = "";
       var feeText = "";
 
@@ -9535,6 +9636,32 @@
     ].join("");
   }
 
+  function orderUploadHelperText(config, artworkMode, multiple, maxFiles, itemCount) {
+    var messages = config && config.helperTextByUploadCount;
+    var template = "";
+    var remaining = isFinite(maxFiles) ? Math.max(0, maxFiles - itemCount) : 0;
+
+    if (messages && typeof messages === "object") {
+      if (isFinite(maxFiles) && itemCount >= maxFiles && messages.full) {
+        template = messages.full;
+      } else if (itemCount === 1 && messages.one) {
+        template = messages.one;
+      } else if (itemCount > 1 && messages.multiple) {
+        template = messages.multiple;
+      } else if (!itemCount && messages.empty) {
+        template = messages.empty;
+      }
+    }
+    if (template) {
+      return String(template)
+        .replace(/\{maxFiles\}/g, isFinite(maxFiles) ? String(maxFiles) : "")
+        .replace(/\{remaining\}/g, String(remaining));
+    }
+    return itemCount
+      ? itemCount + (artworkMode ? (itemCount === 1 ? " design anexado" : " designs anexados") : (itemCount === 1 ? " foto anexada" : " fotos anexadas"))
+      : String(config.helperText || (multiple && isFinite(maxFiles) ? "Até " + maxFiles + (artworkMode ? " designs" : " fotos") : "")).trim();
+  }
+
   function renderOrderPhotoAction(config, options) {
     var settings = options || {};
     var key = config.selectionKey || "quadro_uploads";
@@ -9552,9 +9679,12 @@
     if (buttonLabel === "Enviar foto") {
       buttonLabel = "Escolher foto";
     }
-    var helperText = items.length
-      ? items.length + (artworkMode ? (items.length === 1 ? " design anexado" : " designs anexados") : (items.length === 1 ? " foto anexada" : " fotos anexadas"))
-      : String(config.helperText || (multiple && isFinite(maxFiles) ? "Até " + maxFiles + (artworkMode ? " designs" : " fotos") : "")).trim();
+    if (items.length && config.uploadedButtonLabel) {
+      buttonLabel = String(config.uploadedButtonLabel);
+    }
+    var helperText = config.hideHelperText === true
+      ? ""
+      : orderUploadHelperText(config, artworkMode, multiple, maxFiles, items.length);
 
     return [
       '<label class="order-upload-button' + (settings.compact ? ' order-media-action' : '') + (disabled ? ' is-disabled' : '') + '">',
@@ -9669,12 +9799,14 @@
     config.showQuantity = !builder;
     config.purpose = "custom-artwork";
     if (builder) {
+      // No construtor a taxa e por produto (passo 2), nunca por imagem.
       config.feePerFileCents = 0;
+      config.hideFee = true;
     }
 
     return [
       '<section class="order-photo-upload original-artwork-upload">',
-      '<div class="original-artwork-note"><strong>O ficheiro segue tal como o envias.</strong><p>Aceitamos imagens e PDF até 30 MB por ficheiro, sem compressão nem conversão.' + (builder ? '' : ' Podes carregar vários designs e indicar uma quantidade diferente para cada um.') + '</p></div>',
+      builder ? '' : '<div class="original-artwork-note"><strong>O ficheiro segue tal como o envias.</strong><p>Aceitamos imagens e PDF até 30 MB por ficheiro, sem compressão nem conversão. Podes carregar vários designs e indicar uma quantidade diferente para cada um.</p></div>',
       renderOrderPhotoControl(config, { showStatus: true }),
       !builder && items.length ? '<p class="original-artwork-fee-total"><strong>Preparação e testes:</strong> ' + items.length + (items.length === 1 ? ' imagem × ' : ' imagens × ') + escapeHtml(formatCents(config.feePerFileCents)) + ' = <strong>' + escapeHtml(formatCents(feeTotal)) + '</strong></p>' : '',
       '</section>'
@@ -9968,83 +10100,233 @@
     line.quantity = builderMinimumQuantity(product, line);
   }
 
-  function builderCreateLine(product) {
-    var uploads = builderUploads(product);
-
-    return {
+  function builderCreateLine(product, designToken, productId) {
+    var line = {
       id: "bl_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 7),
-      designToken: uploads.length === 1 ? String(uploads[0].token) : "",
+      designToken: String(designToken || ""),
       productId: "",
       choices: {},
       finishes: [],
       quantity: 0
     };
+
+    builderApplyProduct(product, line, productId);
+    return line;
   }
 
-  function builderRenderDesignField(product, line) {
-    var uploads = builderUploads(product);
+  // ==== PERSONALIZACAO_BUILDER_V2 ==========================================
+  // O passo 2 deixou de ser "adiciona uma linha de cada vez": agora e uma
+  // matriz imagem x produto. Marcar um produto numa imagem cria a linha,
+  // desmarcar apaga-a. O passo 3 pega nessas linhas e so pergunta as
+  // quantidades (e as opcoes que mudam o preco). A estrutura da linha nao
+  // mudou, por isso builderCartItem / send-order.php continuam iguais.
+
+  function builderLineFor(product, designToken, productId) {
+    return builderLines(product).filter(function (line) {
+      return line
+        && String(line.designToken) === String(designToken || "")
+        && String(line.productId) === String(productId || "");
+    })[0] || null;
+  }
+
+  function builderIsSelected(product, designToken, productId) {
+    return !!builderLineFor(product, designToken, productId);
+  }
+
+  function builderToggleSelection(product, designToken, productId, on) {
+    var existing = builderLineFor(product, designToken, productId);
+
+    if (on && !existing) {
+      builderLines(product).push(builderCreateLine(product, designToken, productId));
+      return;
+    }
+    if (!on && existing) {
+      state.selections.builder_lines = builderLines(product).filter(function (line) {
+        return line !== existing;
+      });
+    }
+  }
+
+  // Os grupos vem do JSON (entry.group) e mantem a ordem do catalogo: cada um
+  // vira uma gaveta com os seus tamanhos/variantes.
+  function builderGroups(product) {
+    var order = [];
+    var byName = {};
+
+    builderCatalog(product).forEach(function (entry) {
+      var name = String(entry.group || "Produtos");
+      if (!byName[name]) {
+        byName[name] = { name: name, entries: [], image: "", imageShape: "rect" };
+        order.push(name);
+      }
+      byName[name].entries.push(entry);
+      if (!byName[name].image && entry.image) {
+        byName[name].image = String(entry.image);
+        byName[name].imageShape = String(entry.imageShape || "rect");
+      }
+    });
+
+    return order.map(function (name) {
+      return byName[name];
+    });
+  }
+
+  function builderGroupSelectedEntries(product, designToken, group) {
+    return group.entries.filter(function (entry) {
+      return builderIsSelected(product, designToken, entry.id);
+    });
+  }
+
+  function builderGroupKey(designToken, groupName) {
+    return String(designToken || "") + "::" + String(groupName || "");
+  }
+
+  function builderGroupIsOpen(product, designToken, group) {
+    var key = builderGroupKey(designToken, group.name);
+
+    if (!state.builderOpenGroups || typeof state.builderOpenGroups !== "object") {
+      state.builderOpenGroups = {};
+    }
+    if (Object.prototype.hasOwnProperty.call(state.builderOpenGroups, key)) {
+      return state.builderOpenGroups[key] === true;
+    }
+    // Sem decisao da pessoa, a gaveta fica aberta se ja la houver escolhas:
+    // assim nada do que escolheu desaparece de vista ao voltar ao passo.
+    return builderGroupSelectedEntries(product, designToken, group).length > 0;
+  }
+
+  // Linhas de uma imagem, pela ordem do catalogo (e nao pela ordem em que
+  // foram marcadas), para o passo 3 ficar sempre igual ao passo 2.
+  function builderLinesForDesign(product, designToken) {
+    var lines = builderLines(product);
+
+    return builderCatalog(product).map(function (entry) {
+      return lines.filter(function (line) {
+        return line
+          && String(line.designToken) === String(designToken || "")
+          && String(line.productId) === String(entry.id);
+      })[0] || null;
+    }).filter(Boolean);
+  }
+
+  function builderRenderUploadMedia(upload, className) {
+    if (builderUploadIsPdf(upload)) {
+      return '<span class="' + className + ' is-pdf" aria-hidden="true">PDF</span>';
+    }
+    return '<span class="' + className + '" style="background-image:url(&quot;' + escapeHtml(orderUploadPreviewUrl(upload)) + '&quot;)" role="img" aria-label="' + escapeHtml(upload.name || "Design") + '"></span>';
+  }
+
+  function builderRenderEntryMedia(entry, className) {
+    var extra = entry && entry.imageShape === "round" ? " is-round" : "";
+
+    if (!entry || !entry.image) {
+      return '<span class="' + className + extra + ' is-blank" aria-hidden="true"></span>';
+    }
+    return '<span class="' + className + extra + '" style="background-image:url(&quot;' + escapeHtml(entry.image) + '&quot;)" aria-hidden="true"></span>';
+  }
+
+  function builderRenderGroup(product, upload, group) {
+    var token = String(upload.token);
+    var selected = builderGroupSelectedEntries(product, token, group);
+    var open = builderGroupIsOpen(product, token, group);
+    var single = group.entries.length === 1;
+
+    if (single) {
+      // Um grupo com uma unica variante nao precisa de gaveta: o proprio
+      // cartao e a escolha.
+      return builderRenderVariant(product, token, group.entries[0], "builder-group-tile");
+    }
 
     return [
-      '<div class="builder-field">',
-      '<span class="builder-field-label">Design</span>',
-      '<div class="builder-design-grid">',
-      uploads.map(function (upload) {
-        var checked = String(line.designToken || "") === String(upload.token);
-        var media = builderUploadIsPdf(upload)
-          ? '<span class="builder-design-pdf" aria-hidden="true">PDF</span>'
-          : '<img src="' + escapeHtml(orderUploadPreviewUrl(upload)) + '" alt="">';
-
-        return [
-          '<label class="builder-design-choice' + (checked ? ' is-selected' : '') + '">',
-          '<input type="radio" name="builder-design-' + escapeHtml(line.id) + '" value="' + escapeHtml(upload.token) + '" data-builder-design data-builder-line="' + escapeHtml(line.id) + '"' + (checked ? ' checked' : '') + '>',
-          media,
-          '<small>' + escapeHtml(upload.name || "Design") + '</small>',
-          '</label>'
-        ].join("");
-      }).join(""),
-      '</div>',
+      '<div class="builder-group' + (selected.length ? ' has-selection' : '') + (open ? ' is-open' : '') + '">',
+      '<button type="button" class="builder-group-tile" data-builder-group="' + escapeHtml(group.name) + '" data-builder-design-token="' + escapeHtml(token) + '" aria-expanded="' + (open ? 'true' : 'false') + '">',
+      builderRenderEntryMedia({ image: group.image, imageShape: group.imageShape }, "builder-tile-media"),
+      '<span class="builder-tile-copy"><strong>' + escapeHtml(group.name) + '</strong>' + (selected.length ? '<small>' + escapeHtml(selected.map(function (entry) { return entry.title; }).join(" · ")) + '</small>' : "") + '</span>',
+      '<span class="builder-group-chevron" aria-hidden="true"></span>',
+      '</button>',
+      open ? '<div class="builder-group-drawer">' + group.entries.map(function (entry) {
+        return builderRenderVariant(product, token, entry, "builder-variant");
+      }).join("") + '</div>' : "",
       '</div>'
     ].join("");
   }
 
-  function builderRenderProductField(product, line) {
-    var order = [];
-    var byGroup = {};
-
-    builderCatalog(product).forEach(function (entry) {
-      var name = String(entry.group || "Produtos");
-      if (!byGroup[name]) {
-        byGroup[name] = [];
-        order.push(name);
-      }
-      byGroup[name].push(entry);
-    });
+  function builderRenderVariant(product, token, entry, className) {
+    var checked = builderIsSelected(product, token, entry.id);
+    var fee = builderFeeCents(product);
 
     return [
-      '<div class="builder-field">',
-      '<span class="builder-field-label">Produto</span>',
-      order.map(function (name) {
-        return [
-          '<p class="builder-group-title">' + escapeHtml(name) + '</p>',
-          '<div class="builder-product-grid">',
-          byGroup[name].map(function (entry) {
-            var checked = String(line.productId || "") === String(entry.id);
-            var media = entry.image
-              ? '<span class="builder-product-media' + (entry.imageShape === "round" ? " is-round" : "") + '" style="background-image:url(&quot;' + escapeHtml(entry.image) + '&quot;)"></span>'
-              : '<span class="builder-product-media is-blank" aria-hidden="true"></span>';
+      '<label class="' + className + (checked ? ' is-selected' : '') + '">',
+      '<input type="checkbox" data-builder-select data-builder-design-token="' + escapeHtml(token) + '" value="' + escapeHtml(entry.id) + '"' + (checked ? ' checked' : '') + '>',
+      builderRenderEntryMedia(entry, "builder-tile-media"),
+      '<span class="builder-tile-copy"><strong>' + escapeHtml(entry.title) + '</strong>' + (entry.subtitle ? '<small>' + escapeHtml(entry.subtitle) + '</small>' : "") + '</span>',
+      // A taxa de ajuste e o unico preco que ja se sabe neste passo (o resto
+      // depende da quantidade): fica a vista para nao aparecer so no fim.
+      fee ? '<span class="builder-variant-price"><strong>+ ' + escapeHtml(formatCents(fee)) + '</strong><small>ajuste</small></span>' : "",
+      '</label>'
+    ].join("");
+  }
 
-            return [
-              '<label class="builder-product-choice' + (checked ? ' is-selected' : '') + '">',
-              '<input type="radio" name="builder-product-' + escapeHtml(line.id) + '" value="' + escapeHtml(entry.id) + '" data-builder-product data-builder-line="' + escapeHtml(line.id) + '"' + (checked ? ' checked' : '') + '>',
-              media,
-              '<span class="builder-product-copy"><strong>' + escapeHtml(entry.title) + '</strong>' + (entry.subtitle ? '<small>' + escapeHtml(entry.subtitle) + '</small>' : "") + '</span>',
-              '</label>'
-            ].join("");
-          }).join(""),
-          '</div>'
-        ].join("");
+  // As imagens sao tratadas pela ordem em que foram enviadas: e assim que
+  // aparecem no ecra e e assim que se fala delas nos avisos.
+  var BUILDER_ORDINALS = [
+    "primeira", "segunda", "terceira", "quarta", "quinta",
+    "sexta", "sétima", "oitava", "nona", "décima"
+  ];
+
+  function builderDesignOrdinal(index) {
+    return BUILDER_ORDINALS[index] || (index + 1) + ".ª";
+  }
+
+  function builderDesignTitle(index) {
+    var ordinal = builderDesignOrdinal(index);
+    return ordinal.charAt(0).toUpperCase() + ordinal.slice(1) + " imagem";
+  }
+
+  function builderRenderDesignPicker(product, upload, index) {
+    return [
+      '<article class="builder-design-block" data-builder-design-block="' + escapeHtml(upload.token) + '">',
+      '<h3 class="section-title">' + escapeHtml(builderDesignTitle(index)) + '</h3>',
+      '<div class="builder-design-figure">' + builderRenderUploadMedia(upload, "builder-design-preview") + '</div>',
+      '<div class="builder-group-list">',
+      builderGroups(product).map(function (group) {
+        return builderRenderGroup(product, upload, group);
       }).join(""),
-      '</div>'
+      '</div>',
+      '</article>'
+    ].join("");
+  }
+
+  // A mesma caixa "O que vais encomendar" dos crachas e das molduras: um tile
+  // por linha, com a imagem de origem, para se ver o pedido a crescer sem ter
+  // de percorrer os cartoes todos.
+  function builderRenderOrderSummary(product, options) {
+    var settings = options || {};
+    var tiles = "";
+
+    builderUploads(product).forEach(function (upload) {
+      builderLinesForDesign(product, upload.token).forEach(function (line) {
+        var entry = builderEntry(product, line.productId);
+
+        tiles += [
+          '<article class="crachas-step2-summary-tile builder-summary-tile">',
+          builderRenderUploadMedia(upload, "builder-summary-thumb"),
+          '<span class="crachas-step2-summary-tile-name">' + escapeHtml(entry.title) + '</span>',
+          settings.withQuantity ? '<span class="builder-summary-qty">' + escapeHtml(builderUnitLabel(product, line, builderQuantity(line))) + '</span>' : "",
+          '</article>'
+        ].join("");
+      });
+    });
+
+    if (!tiles) {
+      return "";
+    }
+
+    return [
+      '<section class="crachas-step2-summary builder-summary" aria-label="O que vais encomendar">',
+      '<h3 class="crachas-step2-summary-title">O que vais encomendar:</h3>',
+      '<div class="crachas-step2-summary-grid">' + tiles + '</div>',
+      '</section>'
     ].join("");
   }
 
@@ -10113,71 +10395,106 @@
 
     return [
       '<div class="builder-field">',
-      '<span class="builder-field-label">Quantidade</span>',
       options.length ? '<div class="builder-quantity-grid">' + options.map(function (value) {
-        return '<button type="button" class="builder-quantity-tile' + (value === quantity ? ' is-selected' : '') + '" data-builder-quantity="' + value + '" data-builder-line="' + escapeHtml(line.id) + '">' + value + '</button>';
+        return '<button type="button" class="builder-quantity-tile' + (value === quantity ? ' is-selected' : '') + '" data-builder-quantity="' + value + '" data-builder-line="' + escapeHtml(line.id) + '" aria-pressed="' + (value === quantity ? 'true' : 'false') + '">' + escapeHtml(builderUnitLabel(product, line, value)) + '</button>';
       }).join("") + '</div>' : "",
       '<div class="builder-quantity-input">',
-      '<button type="button" data-builder-quantity-step="-1" data-builder-line="' + escapeHtml(line.id) + '" aria-label="Menos">−</button>',
-      '<input type="number" min="' + minimum + '" max="9999" step="1" value="' + quantity + '" inputmode="numeric" data-builder-quantity-input data-builder-line="' + escapeHtml(line.id) + '">',
+      '<button type="button" data-builder-quantity-step="-1" data-builder-line="' + escapeHtml(line.id) + '" aria-label="Menos"' + (quantity <= minimum ? ' disabled' : '') + '>−</button>',
+      '<input type="number" min="' + minimum + '" max="9999" step="1" value="' + quantity + '" inputmode="numeric" data-builder-quantity-input data-builder-line="' + escapeHtml(line.id) + '" aria-label="Quantidade">',
       '<button type="button" data-builder-quantity-step="1" data-builder-line="' + escapeHtml(line.id) + '" aria-label="Mais">+</button>',
       '</div>',
       '</div>'
     ].join("");
   }
 
-  function builderRenderLinePrice(product, line) {
+  // Mesma caixa de preços dos outros produtos (pack-price-card): à esquerda o
+  // preço por unidade, à direita o total. O ajuste do design é uma linha à
+  // parte porque é por produto e não por unidade.
+  function builderRenderPriceBox(product, line) {
     var entry = builderEntry(product, line.productId);
     var quantity = builderQuantity(line);
     var base;
     var extra;
     var fee;
+    var perUnit;
 
     if (!entry) {
       return "";
     }
     if (entry.quoteOnly === true) {
-      return '<p class="builder-line-price is-quote">' + escapeHtml(entry.quoteNote || "Preço a confirmar") + '</p>';
+      return [
+        '<section class="pack-price-overview builder-price-box" aria-label="Preço">',
+        '<article class="pack-price-card pack-price-card--solo">',
+        '<div class="summary-total summary-total--solo">',
+        '<div class="total-top"><div class="total-value">' + escapeHtml(entry.quoteNote || "Preço a confirmar") + '</div></div>',
+        '</div>',
+        '</article>',
+        '</section>'
+      ].join("");
     }
     if (!builderQuantityIsValid(product, line)) {
-      return '<p class="builder-line-price is-invalid">' + escapeHtml("A partir de " + builderMinimumQuantity(product, line) + " unidades.") + '</p>';
+      return '<p class="builder-line-price is-invalid">' + escapeHtml("A partir de " + builderUnitLabel(product, line, builderMinimumQuantity(product, line)) + ".") + '</p>';
     }
 
     base = builderLineBaseCents(product, line);
     extra = builderFinishExtraPerUnitCents(product, line) * quantity;
     fee = builderFeeCents(product);
+    perUnit = quantity ? Math.round((base + extra) / quantity) : 0;
 
     return [
-      '<p class="builder-line-price">',
-      '<span>' + escapeHtml(formatCents(base)) + '</span>',
-      extra ? '<span>+ ' + escapeHtml(formatCents(extra)) + ' acabamento</span>' : "",
-      fee ? '<span>+ ' + escapeHtml(formatCents(fee)) + ' preparação</span>' : "",
-      '<strong>' + escapeHtml(formatCents(base + extra + fee)) + '</strong>',
-      '</p>'
+      '<section class="pack-price-overview builder-price-box" aria-label="Preço">',
+      '<article class="pack-price-card">',
+      '<div class="summary-left">',
+      '<div class="summary-row">',
+      tagIconSvg(),
+      '<span class="summary-value">' + escapeHtml(formatCents(perUnit)) + '</span>',
+      '<span class="summary-label">cada</span>',
+      '</div>',
+      fee ? '<div class="summary-row"><span class="summary-value">+ ' + escapeHtml(formatCents(fee)) + '</span><span class="summary-label">ajuste</span></div>' : "",
+      '</div>',
+      '<div class="summary-divider" aria-hidden="true"></div>',
+      '<div class="summary-total">',
+      '<div class="total-top"><div class="total-value">' + escapeHtml(formatCents(base + extra + fee)) + '</div></div>',
+      '<div class="total-label">total</div>',
+      '</div>',
+      '</article>',
+      '</section>'
     ].join("");
   }
 
-  function builderRenderCard(product, line, index) {
+  function builderRenderCard(product, line) {
     var entry = builderEntry(product, line.productId);
-    var upload = builderUpload(product, line.designToken);
-    var title = entry
-      ? (entry.quoteOnly === true ? entry.title : builderUnitLabel(product, line, builderQuantity(line)) + " · " + entry.title)
-      : "Produto " + (index + 1);
+
+    if (!entry) {
+      return "";
+    }
 
     return [
       '<article class="builder-card" data-builder-card="' + escapeHtml(line.id) + '">',
       '<header class="builder-card-header">',
-      '<strong>' + escapeHtml(title) + '</strong>',
-      '<button type="button" class="builder-card-remove" data-builder-remove="' + escapeHtml(line.id) + '" aria-label="Remover produto">×</button>',
+      builderRenderEntryMedia(entry, "builder-tile-media"),
+      '<span class="builder-tile-copy"><strong>' + escapeHtml(entry.title) + '</strong>' + (entry.subtitle ? '<small>' + escapeHtml(entry.subtitle) + '</small>' : "") + '</span>',
+      '<button type="button" class="builder-card-remove" data-builder-remove="' + escapeHtml(line.id) + '" aria-label="Remover ' + escapeHtml(entry.title) + '">×</button>',
       '</header>',
-      builderRenderDesignField(product, line),
-      builderRenderProductField(product, line),
-      entry ? builderRenderChoiceFields(product, line) : "",
-      entry ? builderRenderFinishField(product, line) : "",
-      entry ? builderRenderQuantityField(product, line) : "",
-      entry && upload ? builderRenderLinePrice(product, line) : "",
+      builderRenderChoiceFields(product, line),
+      builderRenderFinishField(product, line),
+      builderRenderQuantityField(product, line),
+      builderRenderPriceBox(product, line),
       '</article>'
     ].join("");
+  }
+
+  // O total vive na barra de accoes e nao no fim do passo: em mobile essa barra
+  // e sticky, por isso o preco acompanha sempre quem esta a escolher.
+  function builderActionTotals(product, step) {
+    var template = String(step && step.template || "");
+
+    if (!isArtworkBuilderProduct(product)
+      || (template !== "custom-product-builder" && template !== "custom-quantity-builder")
+      || !builderLines(product).length) {
+      return "";
+    }
+    return builderRenderTotals(product);
   }
 
   function builderRenderTotals(product) {
@@ -10192,29 +10509,148 @@
     ].join("");
   }
 
-  function renderCustomProductBuilderStep(product, step) {
-    var lines = builderLines(product);
-    var addLabel = String((step && step.addLabel) || "Adicionar produto");
+  // ==== PERSONALIZACAO_BUILDER_DEBUG =======================================
+  // `personalizacao.html?debug=builder` finge duas imagens ja enviadas e salta
+  // para o passo dos produtos, para se poder ver os passos 2 e 3 sem esperar
+  // por uploads reais. `&images=N` escolhe quantas (1 a 10), util para ver os
+  // textos do passo 1 e o titulo do passo 2 em cada contagem. Os tokens sao
+  // falsos: serve so para ver o ecra, um pedido feito assim nao teria
+  // ficheiros no servidor.
+  var BUILDER_DEBUG_PREVIEWS = [
+    "content/designs/loja/crachas-loja/uploads/crachas-25-3d7d4ac2504c.webp",
+    "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp"
+  ];
 
-    // Um design apagado no passo 1 deixa de existir: limpa a referencia para a
-    // linha nao ficar a apontar para um ficheiro que ja nao segue no pedido.
-    lines.forEach(function (line) {
-      if (line.designToken && !builderUpload(product, line.designToken)) {
-        line.designToken = "";
-      }
+  function seedBuilderDebugUploads(product) {
+    var key;
+    var steps;
+    var index;
+    var count;
+    var previews;
+
+    if (!isArtworkBuilderProduct(product) || currentUrlParams().get("debug") !== "builder") {
+      return;
+    }
+
+    key = customArtworkConfig(product).uploadKey;
+    if (orderUploadItems(key).length) {
+      return;
+    }
+
+    count = Math.max(1, Math.min(10, parseInt(currentUrlParams().get("images"), 10) || 2));
+    previews = [];
+    while (previews.length < count) {
+      previews.push(BUILDER_DEBUG_PREVIEWS[previews.length % BUILDER_DEBUG_PREVIEWS.length]);
+    }
+
+    state.selections[key] = previews.map(function (preview, position) {
+      var token = "debug-artwork-" + (position + 1);
+      orderUploadPreviews[token] = preview;
+      return {
+        token: token,
+        name: "placeholder-" + (position + 1) + ".webp",
+        size: 120000,
+        mime: "image/webp",
+        kind: "artwork",
+        quantity: 1,
+        feeCents: builderFeeCents(product)
+      };
     });
 
+    steps = visibleSteps(product);
+    index = steps.findIndex(function (step) {
+      return step && step.id === String(currentUrlParams().get("step") || "custom_products");
+    });
+    if (index >= 0) {
+      state.currentStep = index;
+      state.maxVisitedStep = Math.max(state.maxVisitedStep, index);
+    }
+  }
+
+  // Um design apagado no passo 1 deixa de existir: as linhas que apontavam
+  // para esse ficheiro tem de desaparecer com ele.
+  function builderPruneOrphanLines(product) {
+    var lines = builderLines(product);
+    var kept = lines.filter(function (line) {
+      return !!builderUpload(product, line.designToken) && !!builderEntry(product, line.productId);
+    });
+
+    if (kept.length !== lines.length) {
+      state.selections.builder_lines = kept;
+    }
+  }
+
+  function renderCustomProductBuilderStep(product) {
+    builderPruneOrphanLines(product);
+
     return [
-      '<section class="custom-product-builder">',
-      lines.map(function (line, index) {
-        return builderRenderCard(product, line, index);
+      '<section class="custom-product-builder builder-picker">',
+      builderUploads(product).map(function (upload, index) {
+        return builderRenderDesignPicker(product, upload, index);
       }).join(""),
-      '<button type="button" class="builder-add" data-builder-add>+ ' + escapeHtml(addLabel) + '</button>',
-      lines.length ? builderRenderTotals(product) : "",
+      builderRenderOrderSummary(product),
       '</section>'
     ].join("");
   }
 
+  function renderCustomQuantityBuilderStep(product) {
+    builderPruneOrphanLines(product);
+
+    return [
+      '<section class="custom-product-builder builder-quantities">',
+      builderUploads(product).map(function (upload, index) {
+        var lines = builderLinesForDesign(product, upload.token);
+
+        if (!lines.length) {
+          return "";
+        }
+        return [
+          '<article class="builder-design-block" data-builder-design-block="' + escapeHtml(upload.token) + '">',
+          '<h3 class="section-title">' + escapeHtml(builderDesignTitle(index)) + '</h3>',
+          '<div class="builder-design-figure">' + builderRenderUploadMedia(upload, "builder-design-preview") + '</div>',
+          '<div class="builder-card-list">',
+          lines.map(function (line) {
+            return builderRenderCard(product, line);
+          }).join(""),
+          '</div>',
+          '</article>'
+        ].join("");
+      }).join(""),
+      builderRenderOrderSummary(product, { withQuantity: true }),
+      '</section>'
+    ].join("");
+  }
+
+  // Passo 2: cada imagem tem de ir para algum lado. Quem nao quer nada com uma
+  // imagem apaga-a no passo anterior.
+  function validateBuilderProductsStep(product) {
+    var uploads = builderUploads(product);
+    var semProduto;
+
+    if (state.orderUploadBusy) {
+      return "Espera até todos os ficheiros terminarem de enviar.";
+    }
+    if (!uploads.length) {
+      return "Carrega pelo menos uma imagem ou um PDF no passo anterior.";
+    }
+
+    semProduto = uploads.map(function (upload, index) {
+      return builderLinesForDesign(product, upload.token).length === 0 ? index : -1;
+    }).filter(function (index) {
+      return index >= 0;
+    });
+
+    if (semProduto.length === uploads.length) {
+      return "Escolhe pelo menos um produto.";
+    }
+    if (semProduto.length) {
+      return "Escolhe pelo menos um produto para a tua " + builderDesignOrdinal(semProduto[0]) + " imagem.";
+    }
+    return "";
+  }
+
+  // Passo 3: opcoes obrigatorias preenchidas e quantidade que a tabela de
+  // precos aceita.
   function validateBuilderStep(product) {
     var lines = builderLines(product);
     var error = "";
@@ -10222,24 +10658,16 @@
     if (state.orderUploadBusy) {
       return "Espera até todos os ficheiros terminarem de enviar.";
     }
-    if (!builderUploads(product).length) {
-      return "Carrega pelo menos uma imagem ou um PDF no passo anterior.";
-    }
     if (!lines.length) {
-      return "Adiciona pelo menos um produto.";
+      return "Escolhe pelo menos um produto no passo anterior.";
     }
 
-    lines.some(function (line, index) {
+    lines.some(function (line) {
       var entry = builderEntry(product, line.productId);
-      var position = "no produto " + (index + 1);
+      var position = entry ? "em " + entry.title : "";
 
-      if (!line.designToken || !builderUpload(product, line.designToken)) {
-        error = "Escolhe o design " + position + ".";
-        return true;
-      }
       if (!entry) {
-        error = "Escolhe o que queres fazer " + position + ".";
-        return true;
+        return false;
       }
       if (builderEntryChoices(entry).some(function (choice) {
         return choice && choice.required === true && !(line.choices && line.choices[choice.field]);
@@ -10248,7 +10676,7 @@
         return true;
       }
       if (!builderQuantityIsValid(product, line)) {
-        error = "Escolhe uma quantidade válida " + position + " (a partir de " + builderMinimumQuantity(product, line) + ").";
+        error = "Escolhe uma quantidade válida " + position + " (a partir de " + builderUnitLabel(product, line, builderMinimumQuantity(product, line)) + ").";
         return true;
       }
       return false;
@@ -10319,7 +10747,10 @@
     return {
       id: createCartItemId({ slug: entry.slug }),
       productSlug: String(entry.slug),
-      productName: entry.title || (record && record.label) || entry.slug,
+      // No carrinho estas linhas ficam ao lado das do catalogo normal: sem a
+      // marca, um "Crachás pequenos" feito com o desenho de quem encomenda
+      // seria indistinguivel de um da loja.
+      productName: (entry.title || (record && record.label) || entry.slug) + " (Personalização)",
       selections: selections,
       summary: {
         title: quoteOnly
@@ -10366,6 +10797,7 @@
 
     // Sem isto, voltar atras no browser reenviaria as mesmas linhas.
     state.selections.builder_lines = [];
+    state.builderOpenGroups = {};
     window.location.href = destination;
   }
 
@@ -10380,14 +10812,6 @@
       rerenderProduct(product);
     }
 
-    document.querySelectorAll("[data-builder-add]").forEach(function (button) {
-      button.addEventListener("click", function () {
-        builderLines(product).push(builderCreateLine(product));
-        state.errors = "";
-        rerenderProduct(product);
-      });
-    });
-
     document.querySelectorAll("[data-builder-remove]").forEach(function (button) {
       button.addEventListener("click", function () {
         var id = String(button.dataset.builderRemove || "");
@@ -10399,19 +10823,31 @@
       });
     });
 
-    document.querySelectorAll("[data-builder-design]").forEach(function (input) {
-      input.addEventListener("change", function () {
-        withLine(input, function (line) {
-          line.designToken = String(input.value || "");
+    // Passo 2: abrir/fechar a gaveta de um grupo. So uma gaveta aberta de cada
+    // vez por imagem, para a lista nao crescer sem fim no telemovel.
+    document.querySelectorAll("[data-builder-group]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var token = String(button.dataset.builderDesignToken || "");
+        var name = String(button.dataset.builderGroup || "");
+        var open = button.getAttribute("aria-expanded") === "true";
+
+        if (!state.builderOpenGroups || typeof state.builderOpenGroups !== "object") {
+          state.builderOpenGroups = {};
+        }
+        builderGroups(product).forEach(function (group) {
+          state.builderOpenGroups[builderGroupKey(token, group.name)] = false;
         });
+        state.builderOpenGroups[builderGroupKey(token, name)] = !open;
+        state.errors = "";
+        rerenderProduct(product);
       });
     });
 
-    document.querySelectorAll("[data-builder-product]").forEach(function (input) {
+    document.querySelectorAll("[data-builder-select]").forEach(function (input) {
       input.addEventListener("change", function () {
-        withLine(input, function (line) {
-          builderApplyProduct(product, line, input.value);
-        });
+        builderToggleSelection(product, input.dataset.builderDesignToken, input.value, input.checked);
+        state.errors = "";
+        rerenderProduct(product);
       });
     });
 
@@ -10902,6 +11338,19 @@
     ) : null;
     var counts = {};
     var tier;
+    var quantity;
+
+    // No modo por quantidade os cartões continuam a escolher exactamente a
+    // mesma quantidade, mas deixam de representar uma combinação de packs.
+    // Assim, só há visto quando a quantidade coincide com um cartão existente.
+    if (usesSelectedQuantityTierPricing(product)) {
+      quantity = getPackQuantity(product);
+      table = activePriceTableForPackFilter(product);
+      if (quantity && table && table[String(quantity)] != null) {
+        counts[quantity] = 1;
+      }
+      return counts;
+    }
 
     if (isCustomArtworkSelected(product) || isAssortedSelected(product)) {
       return counts;
@@ -11118,6 +11567,30 @@
     }
 
     return '<section class="pack-price-overview" aria-label="Preços deste pack">' + rows + '</section>';
+  }
+
+  function renderQuantityPricingSwitch(product) {
+    var priceKey = priceKeyForSize(product, state.selections.size);
+    var quantityTiers = selectedQuantityPricingMode(product, priceKey) === "quantity_tiers";
+
+    if (!freeQuantityStep(product)
+      || !supportsQuantityPricingSwitch(product, priceKey)
+      || !quantityPricingSwitchEnabled()) {
+      return "";
+    }
+
+    return [
+      '<section class="quantity-pricing-switch" aria-label="Método de cálculo do preço">',
+      '<div class="quantity-pricing-switch__copy">',
+      '<strong>Método de cálculo</strong>',
+      '<span>' + (quantityTiers ? 'Desconto por quantidade' : 'Combinação de packs') + '</span>',
+      '</div>',
+      '<button type="button" class="quantity-pricing-switch__control" role="switch" aria-checked="' + (quantityTiers ? 'true' : 'false') + '" data-quantity-pricing-toggle aria-label="Alternar entre combinação de packs e desconto por quantidade">',
+      '<span aria-hidden="true"></span>',
+      '</button>',
+      '<div class="quantity-pricing-switch__labels" aria-hidden="true"><span>Packs</span><span>Por quantidade</span></div>',
+      '</section>'
+    ].join("");
   }
 
   function renderUnassignedPins(product) {
@@ -11473,9 +11946,9 @@
       return "Define a quantidade";
     }
     if (usesPackCombinationPricing(product)) {
-      return "...ou escolhe a tua quantidade e calculamos o melhor conjunto de packs automaticamente";
+      return "...ou escolhe uma quantidade específica";
     }
-    return "Ou define outra quantidade";
+    return "...ou escolhe uma quantidade específica";
   }
 
   function renderFreeQuantityBuilder(product) {
@@ -11496,7 +11969,9 @@
         '<div class="free-quantity-readout"><strong>' + current + '</strong><small>' + escapeHtml(current === 1 ? productUnitSingular(product) : productUnit(product)) + '</small></div>',
         '<p class="step-helper">Para alterar este total, volta ao passo dos ficheiros e ajusta a quantidade junto de cada imagem.</p>',
         '</section>',
-        renderPackPriceOverview(product)
+        renderPackPriceOverview(product),
+        renderQuantityPricingSwitch(product),
+        renderPackCombinationSummary(product)
       ].join("");
     }
 
@@ -11512,6 +11987,7 @@
       '</div>',
       '</section>',
       renderPackPriceOverview(product),
+      renderQuantityPricingSwitch(product),
       renderPackCombinationSummary(product),
       renderQuantityDistribution(product),
       renderFreeQuantityPriceChart(product)
@@ -11642,18 +12118,93 @@
       '</ul>',
       '<p class="pack-combination-total"><span>Total</span><strong>' + escapeHtml(formatCents(plan.cents)) + '</strong></p>',
       upgrade
-        ? '<p class="pack-combination-upgrade">No entanto, se comprares 1 pack de ' + upgrade.quantity
+        ? '<p class="pack-combination-upgrade">Atenção! Se comprares 1 pack de ' + upgrade.quantity
         + ', consegues ' + escapeHtml(packCombinationQuantityLabel(product, upgrade.quantity))
         + ' por <strong>' + escapeHtml(formatCents(upgrade.cents)) + '</strong>'
-        + ' — poupas ' + escapeHtml(formatCents(upgrade.saving))
-        + ', e consegues ' + escapeHtml(packCombinationQuantityLabel(product, upgrade.quantity - quantity))
-        + ' extra.</p>'
+        + ' — poupas <strong>' + escapeHtml(formatCents(upgrade.saving)) + '</strong>'
+        + ' e consegues <strong>' + escapeHtml(packCombinationQuantityLabel(product, upgrade.quantity - quantity))
+        + ' extra.</strong></p>'
         : "",
       '</section>'
     ].join("");
   }
 
+  function quantityTierPricingResult(product, table, quantity) {
+    var baseline = baselineUnitCents(table);
+    var tiers = priceTiers(table);
+    var tier = 0;
+    var nextTier = 0;
+    var unitCents;
+    var totalCents;
+    var savingCents;
+
+    tiers.forEach(function (candidate) {
+      if (candidate <= quantity) {
+        tier = candidate;
+      } else if (!nextTier) {
+        nextTier = candidate;
+      }
+    });
+
+    if (!tier || !baseline) {
+      return null;
+    }
+
+    unitCents = tierUnitPriceCents(table, quantity);
+    totalCents = tierPriceCents(table, quantity);
+    savingCents = Math.max(0, Math.round(baseline * quantity) - totalCents);
+
+    return {
+      tier: tier,
+      unitCents: unitCents,
+      totalCents: totalCents,
+      savingCents: savingCents,
+      discount: Math.max(0, Math.round((1 - unitCents / baseline) * 100)),
+      nextTier: nextTier,
+      nextTierDiscount: nextTier
+        ? Math.max(0, Math.round((1 - (Number(table[String(nextTier)]) / nextTier) / baseline) * 100))
+        : 0,
+      nextTierUnitCents: nextTier ? Number(table[String(nextTier)]) / nextTier : 0
+    };
+  }
+
+  function renderQuantityTierPricingSummary(product) {
+    var table = activePriceTableForPackFilter(product);
+    var quantity = getPackQuantity(product);
+    var result = table && quantity ? quantityTierPricingResult(product, table, quantity) : null;
+    var nextTierCents;
+    var saving;
+
+    if (!result || !result.nextTier) {
+      return "";
+    }
+
+    nextTierCents = Math.max(0, Number(table[String(result.nextTier)]) || 0);
+    saving = result.totalCents - nextTierCents;
+
+    // O cartão principal já mostra desconto, unitário, total e poupança. Esta
+    // caixa só acrescenta valor quando subir já para o escalão seguinte custa
+    // menos no total e dá mais unidades.
+    if (!nextTierCents || saving <= 0) {
+      return "";
+    }
+
+    return [
+      '<section class="pack-combination quantity-tier-summary" aria-label="Recomendação de poupança">',
+      '<p class="pack-combination-upgrade">Atenção! Se comprares 1 pack de ' + result.nextTier
+        + ', consegues ' + escapeHtml(packCombinationQuantityLabel(product, result.nextTier))
+        + ' por <strong>' + escapeHtml(formatCents(nextTierCents)) + '</strong>'
+        + ' — poupas <strong>' + escapeHtml(formatCents(saving)) + '</strong>'
+        + ' e consegues <strong>' + escapeHtml(packCombinationQuantityLabel(product, result.nextTier - quantity))
+        + ' extra.</strong></p>',
+      '</section>'
+    ].join("");
+  }
+
   function renderPackCombinationSummary(product) {
+    if (usesSelectedQuantityTierPricing(product)) {
+      return renderQuantityTierPricingSummary(product);
+    }
     if (usesTierUnitPricing(product)) {
       return renderTierUpgradeSummary(product);
     }
@@ -11686,14 +12237,13 @@
       '</ul>',
       '<p class="pack-combination-total"><span>Total</span><strong>' + escapeHtml(formatCents(plan.cents)) + '</strong></p>',
       upgrade && upgrade.plan
-        ? '<p class="pack-combination-upgrade">No entanto, se comprares '
+        ? '<p class="pack-combination-upgrade">Atenção! Se comprares '
           + escapeHtml(packCombinationSummaryParts(upgrade.plan, product).join(" + "))
           + ', consegues ' + escapeHtml(packCombinationQuantityLabel(product, upgrade.quantity))
           + ' por <strong>' + escapeHtml(formatCents(upgrade.cents)) + '</strong>'
-          + ' — poupas ' + escapeHtml(formatCents(upgrade.saving))
-          + (packCombinationUsesNextPackUpgrade(product) ? ' e consegues ' : ', e consegues ')
-          + escapeHtml(packCombinationQuantityLabel(product, upgrade.quantity - quantity))
-          + ' extra.</p>'
+          + ' — poupas <strong>' + escapeHtml(formatCents(upgrade.saving)) + '</strong>'
+          + ' e consegues <strong>' + escapeHtml(packCombinationQuantityLabel(product, upgrade.quantity - quantity))
+          + ' extra.</strong></p>'
         : "",
       '</section>'
     ].join("");
@@ -11826,7 +12376,8 @@
   function refreshPackCombinationSummary(product) {
     var atual = document.querySelector(".pack-combination");
     var markup = renderPackCombinationSummary(product);
-    var ancora = document.querySelector(".pack-price-overview")
+    var ancora = document.querySelector(".quantity-pricing-switch")
+      || document.querySelector(".pack-price-overview")
       || document.querySelector(".free-quantity-builder");
     var wrapper;
     var proximo;
@@ -14654,7 +15205,11 @@
     }
 
     if (step.template === "custom-product-builder") {
-      return renderCustomProductBuilderStep(product, step);
+      return renderCustomProductBuilderStep(product);
+    }
+
+    if (step.template === "custom-quantity-builder") {
+      return renderCustomQuantityBuilderStep(product);
     }
 
     if (isCadernosProduct(product) && step.id === "pack") {
@@ -15116,8 +15671,20 @@
 
   function displayStepTitle(product, step) {
     var mapped = mappedStepCopy(step, "titleByField");
+    var artworkTitles;
+    var artworkCount;
     if (mapped) {
       return mapped;
+    }
+    artworkTitles = step && step.titleByArtworkCount;
+    if (artworkTitles && typeof artworkTitles === "object" && isArtworkBuilderProduct(product)) {
+      artworkCount = customArtworkItems(product).length;
+      if (artworkCount === 1 && artworkTitles.one) {
+        return String(artworkTitles.one);
+      }
+      if (artworkCount > 1 && artworkTitles.multiple) {
+        return String(artworkTitles.multiple);
+      }
     }
     if (step && step.template === "palette-grid" && paletteSelectionLimit(step) === 2) {
       return "Escolhe as cores do degradê";
@@ -15227,8 +15794,9 @@
       stepBody(product, step),
       renderQuadrosBuildSummary(product, step),
       '</div>',
-      cartEntry ? renderCartEntryActions(product) : [
+      cartEntry ? renderCartEntryActions(product, step) : [
       '<div class="step-actions">',
+      builderActionTotals(product, step),
       '<button class="button secondary" type="button" data-back data-track="true" data-track-action="back" data-track-id="back">Voltar</button>',
       '<div class="next-action-wrap">',
       state.errors ? '<p class="form-error action-error" id="step-action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
@@ -15742,6 +16310,10 @@
     }
 
     if (step.template === "custom-product-builder") {
+      return validateBuilderProductsStep(product);
+    }
+
+    if (step.template === "custom-quantity-builder") {
       return validateBuilderStep(product);
     }
 
@@ -16533,7 +17105,9 @@
       if (kind === "audio") {
         state.orderUploadMessage = uploads.length === 1 ? "Áudio enviado." : uploads.length + " áudios enviados.";
       } else if (kind === "artwork") {
-        state.orderUploadMessage = uploads.length === 1 ? "Design enviado sem alterações." : uploads.length + " designs enviados sem alterações.";
+        if (!isArtworkBuilderProduct(product)) {
+          state.orderUploadMessage = uploads.length === 1 ? "Design enviado sem alterações." : uploads.length + " designs enviados sem alterações.";
+        }
         try {
           trackProductEvent(product, "artwork_upload_completed", {
             file_count: uploads.length,
@@ -17809,6 +18383,22 @@
       });
     });
 
+    document.querySelectorAll("[data-quantity-pricing-toggle]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var priceKey = priceKeyForSize(product, state.selections.size);
+
+        if (!supportsQuantityPricingSwitch(product, priceKey)) {
+          return;
+        }
+
+        state.selections.quantity_pricing_mode = selectedQuantityPricingMode(product, priceKey) === "quantity_tiers"
+          ? "packs"
+          : "quantity_tiers";
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
     bindQuantityDistributionEvents(product);
 
     document.querySelectorAll("[data-detail-field]").forEach(function (input) {
@@ -18148,6 +18738,7 @@
     appendHidden(form, "product_slug", product.slug || "");
     appendHidden(form, "product_name", product.name || "");
     appendHidden(form, "pack_quantity", String(getPackQuantity(product)));
+    appendHidden(form, "quantity_pricing_mode", selectedQuantityPricingMode(product));
     appendHidden(form, "size", priceInfo(product).size || state.selections.size || "");
     appendHidden(form, "price_total", info.total || "");
     appendHidden(form, "price_per_pin", info.perPin || "");
@@ -19867,6 +20458,7 @@
       product = applyPricingToProduct(applyColorCatalog(results[0], results[4]), results[1]);
       state.product = product;
       loadCartEditMode(product);
+      seedBuilderDebugUploads(product);
       applySessionCardDetails(product);
       initWizardHistory(product);
       renderProduct(product);

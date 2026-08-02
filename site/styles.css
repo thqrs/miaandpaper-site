@@ -2518,6 +2518,17 @@ html[data-theme="dark"] .photo-help-choice {
   transform: translateY(0) scale(1);
 }
 
+/* No telemovel o carrinho e o menu tapam o ecra: as reviews a rodar por cima
+   passam a estorvar quem esta a consultar o pedido. */
+@media (max-width: 900px) {
+  body.is-cart-panel-open .review-bubbles-host,
+  body.is-site-menu-open .review-bubbles-host {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+
 .review-bubble-card {
   --review-drag-x: 0px;
   position: relative;
@@ -3919,6 +3930,10 @@ html[data-theme="dark"] .pack-disabled-message {
 .quantity-distribution {
   display: grid;
   gap: 12px;
+}
+
+.pack-price-overview + .quantity-distribution {
+  margin-top: 18px;
 }
 
 .quantity-distribution > .quantity-adjust-hint {
@@ -8807,6 +8822,7 @@ input.is-missing,
 /* Estados seleccionados: uma linguagem sÃ³ â€” border + outline, sem cartÃµes amarelos diferentes */
 .choice-card:has(input:checked),
 .pack-option.is-selected,
+.builder-variant:has(input:checked),
 .delivery-option:has(input:checked),
 .dc-delivery-option.is-selected,
 .dc-delivery-option:has(input:checked) {
@@ -8828,6 +8844,7 @@ input.is-missing,
 .choice-card.text-grid:has(input:checked)::after,
 .choice-card.price-pack-grid:has(input:checked)::after,
 .choice-card.size-choice:has(input:checked)::after,
+.builder-variant:has(input:checked)::after,
 .design-action-card.is-selected::after,
 .pack-option.is-selected::after {
   content: "✓";
@@ -8864,6 +8881,11 @@ input.is-missing,
   transform: var(--selection-check-transform);
 }
 
+.builder-variant:has(input:checked)::after {
+  top: var(--selection-check-inset, 14px);
+  right: var(--selection-check-inset, 14px);
+}
+
 .choice-card.media-list:not(.crachas-size-card),
 .choice-card.text-grid,
 .choice-card.price-pack-grid,
@@ -8875,11 +8897,10 @@ input.is-missing,
 
 /* PACK_COMBINATION_MARKS_V1: os packs que compõem o total escolhido levam um
    visto por cada vez que entram no conjunto (10 = 5 + 5 mostra dois vistos no
-   pack de 5, 20 = 5 x 4 mostra quatro). Como o número varia, os vistos ficam
-   em linha dentro do card, e não no canto — cabem em qualquer ecrã. O ::after
-   da selecção é dispensado para não haver dois vistos a dizer o mesmo. */
+   pack de 5). Os vistos mantêm a posição original no canto superior direito.
+   O ::after da selecção é dispensado para não haver dois vistos a dizer o mesmo. */
 .pack-option.is-in-combination {
-  padding-right: 12px;
+  padding-right: 46px;
 }
 
 .pack-option.is-in-combination::after {
@@ -8887,9 +8908,15 @@ input.is-missing,
 }
 
 .pack-option-marks {
+  position: absolute;
+  z-index: 5;
+  top: var(--selection-check-top);
+  right: var(--selection-check-right);
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 4px;
+  transform: var(--selection-check-transform);
   pointer-events: none;
 }
 
@@ -9437,6 +9464,7 @@ html[data-theme="dark"] .quantity-adjust-hint {
 .choice-card.text-grid:has(input:checked)::after,
 .choice-card.price-pack-grid:has(input:checked)::after,
 .choice-card.size-choice:has(input:checked)::after,
+.builder-variant:has(input:checked)::after,
 .design-action-card.is-selected::after,
 .pack-option.is-selected::after {
   box-shadow: none;
@@ -11378,6 +11406,89 @@ html[data-theme="dark"] .home-products-section .category-grid:not(.is-admin-home
   margin-top: 18px;
 }
 
+/* QUANTITY_PRICING_SWITCH_V1: fica fora dos controlos de quantidade. O switch
+   troca apenas a fórmula usada pelo resumo de preço. */
+.quantity-pricing-switch {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 6px 16px;
+  width: min(100%, 560px);
+  margin: 14px auto 0;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.quantity-pricing-switch__copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.quantity-pricing-switch__copy strong {
+  color: var(--ink);
+  font-size: .92rem;
+}
+
+.quantity-pricing-switch__copy span,
+.quantity-pricing-switch__labels {
+  color: var(--muted);
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.quantity-pricing-switch__control {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-stone);
+}
+
+.quantity-pricing-switch__control > span:first-child {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--moss);
+  box-shadow: 0 1px 4px rgba(46, 36, 19, .2);
+  transition: transform .18s ease;
+}
+
+.quantity-pricing-switch__control[aria-checked="true"] {
+  background: var(--surface-cream-soft);
+  border-color: var(--moss);
+}
+
+.quantity-pricing-switch__control[aria-checked="true"] > span:first-child {
+  transform: translateX(20px);
+}
+
+.quantity-pricing-switch__control:focus-visible {
+  outline: 3px solid rgba(125, 139, 98, .24);
+  outline-offset: 2px;
+}
+
+.quantity-pricing-switch__labels {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+@media (max-width: 420px) {
+  .quantity-pricing-switch {
+    padding: 11px 13px;
+  }
+}
+
 /* PACK_COMBINATION_V1: de que packs é feito o total, e quanto se poupa a subir
    para o pack seguinte. Segue a largura e o desenho da caixa de preço. */
 .pack-combination {
@@ -11846,33 +11957,233 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   }
 }
 
-/* ==== PERSONALIZACAO_BUILDER_V1 =========================================
-   Passo 2 de personalizacao.html: cada cartao e uma linha do pedido
-   (design x produto x opcoes x quantidade). */
+/* ==== PERSONALIZACAO_BUILDER_V2 =========================================
+   personalizacao.html: o passo 2 e uma matriz imagem x produto (grupos com
+   gaveta) e o passo 3 pergunta as quantidades de cada produto escolhido. */
 .custom-product-builder {
   display: grid;
-  gap: 16px;
+  gap: 24px;
 }
 
-.builder-card {
+.builder-design-block {
   display: grid;
-  gap: 18px;
-  padding: 18px;
+  gap: 14px;
+  padding: 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface-cream);
 }
 
-.builder-card-header {
+.builder-design-figure {
   display: flex;
+  justify-content: center;
+}
+
+.builder-design-preview {
+  display: block;
+  width: min(100%, 220px);
+  aspect-ratio: 1;
+  border: 3px solid var(--moss);
+  border-radius: var(--radius);
+  background-color: var(--surface-image);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.builder-design-preview.is-pdf {
+  display: grid;
+  place-items: center;
+  color: var(--moss);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.builder-group-list,
+.builder-card-list {
+  display: grid;
+  gap: 10px;
+}
+
+.builder-group {
+  display: grid;
+  gap: 0;
+}
+
+.builder-group-tile,
+.builder-variant {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.builder-group.is-open > .builder-group-tile {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.builder-group.has-selection > .builder-group-tile {
+  border-color: var(--gold);
+}
+
+.builder-group-chevron {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform .18s ease;
+}
+
+.builder-group.is-open .builder-group-chevron {
+  transform: rotate(-135deg) translate(-2px, -2px);
+}
+
+.builder-group-drawer {
+  display: grid;
+  gap: 14px;
+  padding: 16px 0;
+  border: 1px solid var(--moss);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: var(--surface-cream-strong);
+}
+
+.builder-group:not(.has-selection) .builder-group-drawer {
+  border-color: var(--line);
+}
+
+/* As opcoes avancam em relacao ao cartao do grupo — o recuo vem da esquerda,
+   nao de padding a toda a volta — para se ler que sao um nivel abaixo. */
+.builder-variant {
+  /* `width: 100%` vem da regra partilhada com o cartao do grupo e ignoraria a
+     margem: aqui a largura tem de ser a que sobra depois do recuo. */
+  width: auto;
+  margin-inline: 28px;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  padding-right: 46px;
+  border-color: var(--moss);
+  background: var(--card);
+}
+
+.builder-variant input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.builder-tile-media {
+  width: 48px;
+  height: 48px;
+  border-radius: calc(var(--radius) - 2px);
+  background-color: var(--surface-image);
+  background-position: center;
+  background-size: cover;
+}
+
+.builder-tile-media.is-round {
+  border-radius: 50%;
+}
+
+.builder-tile-media.is-blank {
+  border: 1px dashed var(--line);
+}
+
+.builder-tile-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.builder-tile-copy strong {
+  font-size: .95rem;
+  line-height: 1.25;
+}
+
+.builder-tile-copy small {
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+.builder-card {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.builder-card-header {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
   gap: 12px;
 }
 
-.builder-card-header strong {
-  font-size: 1.02rem;
-  line-height: 1.3;
+.builder-price-box {
+  margin: 0;
+}
+
+.builder-variant-price {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  padding-left: 8px;
+}
+
+.builder-variant-price strong {
+  color: var(--moss);
+  font-size: 1.06rem;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.builder-variant-price small {
+  color: var(--muted);
+  font-size: .72rem;
+}
+
+/* O total mora na barra de Voltar/Continuar: em mobile essa barra e sticky,
+   por isso o preco acompanha quem esta a escolher. */
+.step-actions > .builder-total {
+  grid-column: 1 / -1;
+  margin-bottom: 2px;
+}
+
+.builder-summary-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: calc(var(--radius) - 2px);
+  background-color: var(--surface-image);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.builder-summary-thumb.is-pdf {
+  display: grid;
+  place-items: center;
+  color: var(--moss);
+  font-size: .74rem;
+  font-weight: 600;
+}
+
+.builder-summary-qty {
+  color: var(--muted);
+  font-size: .78rem;
+  text-align: center;
 }
 
 .builder-card-remove {
@@ -11905,21 +12216,6 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   text-transform: uppercase;
 }
 
-.builder-group-title {
-  margin: 6px 0 0;
-  color: var(--moss);
-  font-size: .88rem;
-  font-weight: 600;
-}
-
-.builder-design-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-  gap: 10px;
-}
-
-.builder-design-choice,
-.builder-product-choice,
 .builder-option-choice,
 .builder-finish-choice {
   position: relative;
@@ -11932,8 +12228,6 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   cursor: pointer;
 }
 
-.builder-design-choice input,
-.builder-product-choice input,
 .builder-option-choice input,
 .builder-finish-choice input {
   position: absolute;
@@ -11941,84 +12235,12 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   pointer-events: none;
 }
 
-.builder-design-choice.is-selected,
-.builder-product-choice.is-selected,
 .builder-option-choice.is-selected,
 .builder-finish-choice.is-selected {
   border-color: var(--gold);
   box-shadow: inset 0 0 0 1px var(--gold);
 }
 
-.builder-design-choice img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: calc(var(--radius) - 2px);
-  background: var(--surface-image);
-}
-
-.builder-design-pdf {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: calc(var(--radius) - 2px);
-  background: var(--surface-image);
-  color: var(--moss);
-  font-size: .8rem;
-  font-weight: 600;
-}
-
-.builder-design-choice small {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: .72rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.builder-product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
-}
-
-.builder-product-choice {
-  grid-template-columns: 48px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-}
-
-.builder-product-media {
-  width: 48px;
-  height: 48px;
-  border-radius: calc(var(--radius) - 2px);
-  background-color: var(--surface-image);
-  background-position: center;
-  background-size: cover;
-}
-
-.builder-product-media.is-round {
-  border-radius: 50%;
-}
-
-.builder-product-media.is-blank {
-  border: 1px dashed var(--line);
-}
-
-.builder-product-copy {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.builder-product-copy strong {
-  font-size: .9rem;
-  line-height: 1.25;
-}
-
-.builder-product-copy small,
 .builder-option-choice small,
 .builder-finish-choice small {
   color: var(--muted);
@@ -12094,43 +12316,10 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   text-align: center;
 }
 
-.builder-line-price {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 10px;
-  margin: 0;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: .86rem;
-}
-
-.builder-line-price strong {
-  margin-left: auto;
-  color: var(--ink);
-  font-size: 1.05rem;
-}
-
-.builder-line-price.is-quote,
 .builder-line-price.is-invalid {
+  margin: 0;
   color: var(--moss);
-}
-
-.builder-add {
-  width: 100%;
-  padding: 16px;
-  border: 1px dashed var(--border-soft-gold);
-  border-radius: var(--radius);
-  background: var(--surface-gold-soft);
-  color: var(--moss);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.builder-add:hover {
-  border-color: var(--gold);
+  font-size: .88rem;
 }
 
 .builder-total {
@@ -12157,13 +12346,38 @@ html[data-theme="dark"] .free-price-chart-tooltip {
 }
 
 @media (max-width: 520px) {
-  .builder-card {
-    padding: 14px;
+  .builder-card,
+  .builder-design-block {
+    padding: 12px;
   }
 
-  .builder-product-grid,
   .builder-option-grid {
     grid-template-columns: 1fr;
+  }
+
+  .builder-variant {
+    margin-inline: 14px;
+  }
+
+  /* Em ecras estreitos o nome, a medida e o preco nao cabem na mesma linha:
+     o preco desce para baixo do texto em vez de lhe passar por cima. */
+  .builder-variant:has(.builder-variant-price),
+  .builder-group-tile:has(.builder-variant-price) {
+    grid-template-columns: 48px minmax(0, 1fr);
+    row-gap: 6px;
+  }
+
+  .builder-variant-price {
+    grid-column: 2;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    justify-content: flex-start;
+    padding-left: 0;
+  }
+
+  .builder-quantity-input input {
+    width: 64px;
   }
 }
 

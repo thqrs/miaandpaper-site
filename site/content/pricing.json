@@ -2,7 +2,8 @@
     "currency": "EUR",
     "note": "Preços em cêntimos. Este ficheiro é a fonte central de preços do site; o modo admin mostra/edita em euros.",
     "settings": {
-        "smartQuantities": true
+        "smartQuantities": true,
+        "quantityPricingSwitchVisible": false
     },
     "products": {
         "caderninhos": {
@@ -86,6 +87,16 @@
             "minimumQuantity": 1,
             "pricingMode": "pack-combination",
             "allowUnitDiscounts": true,
+            "quantityPricingSwitchByPriceKey": {
+                "25 mm": {
+                    "quantityTiers": true,
+                    "sliderMaximum": 150
+                },
+                "32 mm": {
+                    "quantityTiers": true,
+                    "sliderMaximum": 150
+                }
+            },
             "customArtworkFeePerFileCents": 300,
             "prices": {
                 "25 mm": {
@@ -118,6 +129,16 @@
             "minimumQuantity": 1,
             "pricingMode": "pack-combination",
             "allowUnitDiscounts": true,
+            "quantityPricingSwitchByPriceKey": {
+                "Achatados": {
+                    "quantityTiers": true,
+                    "sliderMaximum": 150
+                },
+                "3 mm": {
+                    "quantityTiers": true,
+                    "sliderMaximum": 150
+                }
+            },
             "customArtworkFeePerFileCents": 300,
             "prices": {
                 "Achatados": {
@@ -154,6 +175,12 @@
             "minimumQuantity": 12,
             "pricingMode": "tier-unit",
             "allowUnitDiscounts": true,
+            "quantityPricingSwitchByPriceKey": {
+                "Recortados": {
+                    "quantityTiers": true,
+                    "sliderMaximum": 150
+                }
+            },
             "customArtworkFeePerFileCents": 300,
             "prices": {
                 "Recortados": {
@@ -177,6 +204,12 @@
             "minimumQuantity": 1,
             "pricingMode": "pack-combination",
             "allowUnitDiscounts": true,
+            "quantityPricingSwitchByPriceKey": {
+                "Mini-Cadernos": {
+                    "quantityTiers": true,
+                    "sliderMaximum": 150
+                }
+            },
             "customArtworkFeePerFileCents": 300,
             "prices": {
                 "Mini-Cadernos": {
@@ -202,6 +235,12 @@
             "minimumQuantity": 1,
             "pricingMode": "pack-combination",
             "allowUnitDiscounts": true,
+            "quantityPricingSwitchByPriceKey": {
+                "Bloquinhos": {
+                    "quantityTiers": true,
+                    "sliderMaximum": 150
+                }
+            },
             "customArtworkFeePerFileCents": 300,
             "prices": {
                 "Bloquinhos": {

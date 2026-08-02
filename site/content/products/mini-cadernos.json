@@ -365,7 +365,7 @@
       "id": "pack",
       "label": "Pack",
       "title": "Diz-me quantos mini-cadernos queres",
-      "text": "Quanto maior o pack, maior o desconto",
+      "text": "Quanto maior o pack, melhor o preço por unidade",
       "template": "quantity-builder",
       "field": "pack_quantity",
       "selection": "pack",
@@ -516,6 +516,12 @@
   "minimumQuantity": 1,
   "pricingMode": "pack-combination",
   "allowUnitDiscounts": true,
+  "quantityPricingSwitchByPriceKey": {
+    "Mini-Cadernos": {
+      "quantityTiers": true,
+      "sliderMaximum": 150
+    }
+  },
   "customArtwork": {
     "selectionField": "order_flow",
     "catalogValue": "catalog",

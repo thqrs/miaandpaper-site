@@ -212,6 +212,28 @@ function load_pricing_product($slug)
         : array();
 }
 
+function load_main_pricing_settings()
+{
+    static $settings = null;
+
+    if ($settings !== null) {
+        return $settings;
+    }
+
+    $path = __DIR__ . '/content/pricing.json';
+    if (!is_file($path)) {
+        $settings = array();
+        return $settings;
+    }
+
+    $data = json_decode(file_get_contents($path), true);
+    $settings = !empty($data['settings']) && is_array($data['settings'])
+        ? $data['settings']
+        : array();
+
+    return $settings;
+}
+
 function product_step($product, $id)
 {
     if (empty($product['steps']) || !is_array($product['steps'])) {
@@ -924,7 +946,34 @@ function main_v2_pricing_modes_agree($product, $pricingProduct)
     ksort($byKey);
     ksort($pricingByKey);
 
-    return array_map('strval', $byKey) === array_map('strval', $pricingByKey);
+    $quantitySwitch = isset($product['quantityPricingSwitchByPriceKey']) && is_array($product['quantityPricingSwitchByPriceKey'])
+        ? $product['quantityPricingSwitchByPriceKey']
+        : array();
+    $pricingQuantitySwitch = isset($pricingProduct['quantityPricingSwitchByPriceKey']) && is_array($pricingProduct['quantityPricingSwitchByPriceKey'])
+        ? $pricingProduct['quantityPricingSwitchByPriceKey']
+        : array();
+
+    return array_map('strval', $byKey) === array_map('strval', $pricingByKey)
+        && $quantitySwitch == $pricingQuantitySwitch;
+}
+
+function main_v2_quantity_pricing_switch_enabled($product, $priceKey)
+{
+    if (!is_array($product) || !isset($product['quantityPricingSwitchByPriceKey'][$priceKey])) {
+        return false;
+    }
+    $config = $product['quantityPricingSwitchByPriceKey'][$priceKey];
+    return is_array($config) && !empty($config['quantityTiers']);
+}
+
+function main_v2_selected_pricing_mode($product, $priceKey, $selection)
+{
+    if ((string)$selection === 'quantity_tiers'
+        && main_v2_quantity_pricing_switch_enabled($product, $priceKey)
+    ) {
+        return 'tier-unit';
+    }
+    return main_v2_effective_pricing_mode($product, $priceKey);
 }
 
 function main_v2_uses_price_ladder($product, $priceKey = '')
@@ -1502,6 +1551,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
 
     $size = cart_string_selection($selections, 'size');
     $packQuantity = (int)cart_selection($selections, 'pack_quantity', 0);
+    $quantityPricingMode = cart_string_selection($selections, 'quantity_pricing_mode');
     $designs = cart_list_selection($selections, 'designs');
     $designQuantities = cart_assoc_int_selection($selections, 'design_quantities');
     $designLabels = cart_assoc_text_selection($selections, 'design_labels');
@@ -2129,9 +2179,20 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     // O unitário passa a ser derivado, apenas para as linhas de "x €/unidade".
     // Um tamanho por orçamentar não tem tabela nenhuma: fica fora de todos os
     // modos para não disparar os erros de "preço não confirmado".
-    $mainV2UsesLadder = $isMainV2 && !$sizeQuoteOnly && main_v2_uses_price_ladder($productConfig, $mainFlatPriceKey);
-    $mainV2UsesPacks = $isMainV2 && !$sizeQuoteOnly && main_v2_uses_pack_combination($productConfig, $mainFlatPriceKey);
-    $mainV2UsesTiers = $isMainV2 && !$sizeQuoteOnly && main_v2_uses_tier_unit($productConfig, $mainFlatPriceKey);
+    $mainV2HasQuantityPricingSwitch = $isMainV2
+        && !$sizeQuoteOnly
+        && main_v2_quantity_pricing_switch_enabled($productConfig, $mainFlatPriceKey);
+    if ($isMainV2 && !in_array($quantityPricingMode, array('', 'packs', 'quantity_tiers'), true)) {
+        $errors[] = 'O método de cálculo do preço não é válido.';
+    } elseif ($isMainV2 && $quantityPricingMode === 'quantity_tiers' && !$mainV2HasQuantityPricingSwitch) {
+        $errors[] = 'O desconto por quantidade não está disponível para esta opção.';
+    }
+    $mainV2SelectedPricingMode = $isMainV2 && !$sizeQuoteOnly
+        ? main_v2_selected_pricing_mode($productConfig, $mainFlatPriceKey, $quantityPricingMode)
+        : '';
+    $mainV2UsesLadder = $mainV2SelectedPricingMode === 'linear-discount-interpolation';
+    $mainV2UsesPacks = $mainV2SelectedPricingMode === 'pack-combination';
+    $mainV2UsesTiers = $mainV2SelectedPricingMode === 'tier-unit';
     $mainV2PriceTable = !empty($packPrices[$mainFlatPriceKey]) && is_array($packPrices[$mainFlatPriceKey])
         ? $packPrices[$mainFlatPriceKey]
         : array();
@@ -2185,6 +2246,11 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         $selections['designs'] = $designs;
         $selections['design_quantities'] = $designQuantities;
         $selections['design_labels'] = $designLabels;
+        if ($mainV2HasQuantityPricingSwitch) {
+            $selections['quantity_pricing_mode'] = $quantityPricingMode === 'quantity_tiers' ? 'quantity_tiers' : 'packs';
+        } else {
+            unset($selections['quantity_pricing_mode']);
+        }
         unset($selections['custom_artwork_uploads']);
         if ($isMainCustomArtwork) {
             $selections['customization_file_count'] = $customizationFileCount;
