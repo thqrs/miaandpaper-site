@@ -50,6 +50,10 @@
       review.order = Number(review.order) || index + 1;
       if (typeof review.enabled !== "boolean") review.enabled = true;
       if (typeof review.linkEnabled !== "boolean") review.linkEnabled = false;
+      // Reviews antigas nao tinham estes campos: sem isto o input ficava
+      // "undefined" em vez de vazio.
+      if (typeof review.date !== "string") review.date = "";
+      if (typeof review.orderNote !== "string") review.orderNote = "";
     });
     return base;
   }
@@ -132,7 +136,7 @@
 
   function addReview(source) {
     var review = source ? JSON.parse(JSON.stringify(source)) : {
-      enabled: true, name: "", text: "", image: "", linkEnabled: false, link: "", ratingMode: "default", stars: 5, icon: "default", customIcon: ""
+      enabled: true, name: "", text: "", date: "", orderNote: "", image: "", linkEnabled: false, link: "", ratingMode: "default", stars: 5, icon: "default", customIcon: ""
     };
     review.id = newId();
     review.order = state.data.reviews.length + 1;

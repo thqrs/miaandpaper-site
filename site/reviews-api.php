@@ -126,6 +126,10 @@ function reviews_normalize($input)
             'order' => max(1, min(9999, (int)(isset($row['order']) ? $row['order'] : ($index + 1)))),
             'name' => reviews_text(isset($row['name']) ? $row['name'] : '', 120),
             'text' => reviews_text(isset($row['text']) ? $row['text'] : '', 1000),
+            // Registo interno: quando chegou e de que encomenda veio. Nao sai
+            // no site — serve para a Mia saber a origem de cada review.
+            'date' => reviews_text(isset($row['date']) ? $row['date'] : '', 40),
+            'orderNote' => reviews_text(isset($row['orderNote']) ? $row['orderNote'] : '', 200),
             'image' => reviews_text(isset($row['image']) ? $row['image'] : '', 500),
             'linkEnabled' => reviews_bool(isset($row['linkEnabled']) ? $row['linkEnabled'] : false, false),
             'link' => reviews_text(isset($row['link']) ? $row['link'] : '', 500),

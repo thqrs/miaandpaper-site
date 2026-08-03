@@ -450,6 +450,22 @@
             "stars": 5,
             "icon": "default",
             "customIcon": ""
+        },
+        {
+            "id": "review-wa-32",
+            "enabled": true,
+            "order": 32,
+            "name": "Deborah Tarch / Ivone Ferreira",
+            "text": "Muito obrigado gostei beijinhos ❤️",
+            "date": "2-Agosto-2026",
+            "orderNote": "Encomenda de Marcadores da Escola de Pioneiros",
+            "image": "",
+            "linkEnabled": false,
+            "link": "",
+            "ratingMode": "default",
+            "stars": 5,
+            "icon": "default",
+            "customIcon": ""
         }
     ]
 }

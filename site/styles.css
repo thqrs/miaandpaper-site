@@ -8822,7 +8822,6 @@ input.is-missing,
 /* Estados seleccionados: uma linguagem sÃ³ â€” border + outline, sem cartÃµes amarelos diferentes */
 .choice-card:has(input:checked),
 .pack-option.is-selected,
-.builder-variant:has(input:checked),
 .delivery-option:has(input:checked),
 .dc-delivery-option.is-selected,
 .dc-delivery-option:has(input:checked) {
@@ -11695,7 +11694,7 @@ html[data-theme="dark"] .home-products-section .category-grid:not(.is-admin-home
   height: 8px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: linear-gradient(to right, var(--moss) 0 var(--range-progress), var(--card) var(--range-progress) 100%);
+  background: linear-gradient(to right, var(--pick-slider, var(--moss)) 0 var(--range-progress), var(--card) var(--range-progress) 100%);
 }
 
 .free-quantity-slider input[type="range"]::-webkit-slider-thumb {
@@ -11706,8 +11705,8 @@ html[data-theme="dark"] .home-products-section .category-grid:not(.is-admin-home
   margin-top: -9px;
   border: 3px solid var(--card);
   border-radius: 50%;
-  background: var(--moss);
-  box-shadow: 0 0 0 1px var(--moss), 0 4px 10px rgba(68, 41, 0, 0.18);
+  background: var(--pick-slider, var(--moss));
+  box-shadow: 0 0 0 1px var(--pick-slider, var(--moss)), 0 4px 10px rgba(68, 41, 0, 0.18);
 }
 
 .free-quantity-slider input[type="range"]::-moz-range-track {
@@ -11720,7 +11719,7 @@ html[data-theme="dark"] .home-products-section .category-grid:not(.is-admin-home
 .free-quantity-slider input[type="range"]::-moz-range-progress {
   height: 8px;
   border-radius: 999px;
-  background: var(--moss);
+  background: var(--pick-slider, var(--moss));
 }
 
 .free-quantity-slider input[type="range"]::-moz-range-thumb {
@@ -11728,8 +11727,8 @@ html[data-theme="dark"] .home-products-section .category-grid:not(.is-admin-home
   height: 20px;
   border: 3px solid var(--card);
   border-radius: 50%;
-  background: var(--moss);
-  box-shadow: 0 0 0 1px var(--moss), 0 4px 10px rgba(68, 41, 0, 0.18);
+  background: var(--pick-slider, var(--moss));
+  box-shadow: 0 0 0 1px var(--pick-slider, var(--moss)), 0 4px 10px rgba(68, 41, 0, 0.18);
 }
 
 @media (max-width: 390px) {
@@ -11971,7 +11970,7 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--surface-cream);
+  background: #fff;
 }
 
 .builder-design-figure {
@@ -12027,8 +12026,27 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   cursor: pointer;
 }
 
-.builder-group.has-selection > .builder-group-tile {
-  border-color: var(--gold);
+/* O botao do grupo e o cartao dos cadernos anuais (.choice-card): mesma borda,
+   mesmo raio e mesmo fundo, e o mesmo destaque quando ja tem escolhas. E um
+   cabecalho, por isso leva a serifada maior; as opcoes da gaveta ficam
+   deliberadamente mais leves. */
+.builder-group > .builder-group-tile {
+  padding: 16px 14px;
+  min-height: 84px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fffdf8;
+}
+
+.builder-group > .builder-group-tile .builder-tile-copy strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.14rem;
+  font-weight: 700;
+}
+
+.builder-group > .builder-group-tile .builder-tile-media {
+  width: 54px;
+  height: 54px;
 }
 
 .builder-group-chevron {
@@ -12044,29 +12062,49 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   transform: rotate(-135deg) translate(-2px, -2px);
 }
 
-/* Mesma chrome do painel que abre por baixo da opcao escolhida nos cadernos
-   anuais (.crachas-size-card-proof): mais estreito do que o cartao, puxado
-   para cima para ficar encaixado nele, e so com cantos em baixo. */
+/* Copia fiel do painel dos cadernos anuais (.crachas-size-card-proof e
+   .cadernos-cover-drawer): margem, padding, borda de 0.18 sem topo, cantos so
+   em baixo e o mesmo creme claro. Mais estreito do que o cartao e puxado para
+   cima, para ficar encaixado nele. */
 .builder-group-drawer {
   display: grid;
   gap: 12px;
   margin: -6px 8px 12px;
   padding: 14px;
+  overflow: visible;
   border: 1px solid rgba(126, 93, 22, 0.18);
   border-top: 0;
   border-radius: 0 0 var(--radius) var(--radius);
-  background: #fffaf0;
+  background: var(--pick-drawer, #fffaf0);
 }
 
-/* As opcoes avancam em relacao ao cartao do grupo — o recuo vem da esquerda,
-   nao de padding a toda a volta — para se ler que sao um nivel abaixo. */
+/* A borda diz qual e a gaveta aberta — fica assim ate se abrir outra. Quais os
+   produtos escolhidos e coisa dos vistos, la dentro. */
+.builder-group.is-open > .builder-group-tile {
+  border-color: var(--moss);
+  outline: 3px solid var(--ui-focus);
+  background: var(--ui-card);
+}
+
+/* Dentro da gaveta o peso desce: borda fina, cantos menores e fundo branco
+   sobre o creme do painel. Quem manda e o cartao de cima. */
 .builder-variant {
-  grid-template-columns: 48px minmax(0, 1fr) auto;
-  padding-right: 46px;
-  border: 1px solid rgba(126, 93, 22, 0.20);
-  border-radius: 16px;
-  background: #fffdf7;
-  box-shadow: 0 1px 2px rgba(69, 49, 14, 0.05);
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  padding: 10px;
+  padding-right: 44px;
+  border: 1px solid rgba(126, 93, 22, 0.16);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.builder-variant .builder-tile-media {
+  width: 42px;
+  height: 42px;
+}
+
+.builder-variant .builder-tile-copy strong {
+  font-size: .9rem;
 }
 
 .builder-variant input {
@@ -12186,18 +12224,19 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   flex: none;
   width: 32px;
   height: 32px;
-  border: 1px solid var(--line);
+  border: 1px solid #a3231d;
   border-radius: 50%;
-  background: var(--card);
-  color: var(--muted);
+  background: #c62f28;
+  color: #fff;
   font-size: 1.1rem;
+  font-weight: 700;
   line-height: 1;
   cursor: pointer;
 }
 
 .builder-card-remove:hover {
-  color: var(--rose);
-  border-color: var(--rose);
+  background: #a3231d;
+  border-color: #7f1a15;
 }
 
 .builder-field {
@@ -12351,20 +12390,35 @@ html[data-theme="dark"] .free-price-chart-tooltip {
     grid-template-columns: 1fr;
   }
 
-  /* Em ecras estreitos o nome, a medida e o preco nao cabem na mesma linha:
-     o preco desce para baixo do texto em vez de lhe passar por cima. */
+  /* Em ecras estreitos ha pouca largura para tudo: a imagem encolhe e o preco
+     ocupa a linha toda por baixo, para a nota nao ficar em coluna estreita a
+     partir-se em tres linhas. */
   .builder-variant:has(.builder-variant-price),
   .builder-group-tile:has(.builder-variant-price) {
-    grid-template-columns: 48px minmax(0, 1fr);
-    row-gap: 6px;
+    grid-template-columns: 40px minmax(0, 1fr);
+    row-gap: 8px;
+    padding-right: 38px;
   }
 
+  .builder-variant .builder-tile-media {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Ocupa a largura toda, mas recuado para comecar debaixo do titulo e nao
+     debaixo da imagem: a coluna do texto fica alinhada de alto a baixo.
+     40px da imagem + 12px de intervalo. */
   .builder-variant-price {
-    grid-column: 2;
+    grid-column: 1 / -1;
     justify-items: start;
     max-width: none;
+    margin-left: 52px;
     padding-left: 0;
     text-align: left;
+  }
+
+  .builder-group > .builder-group-tile .builder-tile-copy strong {
+    font-size: 1.04rem;
   }
 
   .builder-quantity-input input {
@@ -12535,4 +12589,204 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   gap: 6px 18px;
   padding: 0;
   list-style: none;
+}
+
+/* ==== COLOR_PICKER_V1 ====================================================
+   Painel flutuante de `?picker=1`: escolher as cores de destaque ao vivo e
+   ler o hex para copiar. Nao aparece a quem visita o site. */
+.color-picker-panel {
+  position: fixed;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 1200;
+  display: grid;
+  gap: 8px;
+  width: 208px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: 0 14px 34px rgba(69, 49, 14, 0.24);
+}
+
+.color-picker-panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.color-picker-panel header strong {
+  color: var(--moss);
+  font-size: .92rem;
+}
+
+.color-picker-panel header button {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Nome em cima, hex por baixo, ambos na coluna a seguir ao quadrado: o
+   input[type=color] tem largura propria em cada browser e numa so linha
+   acabava por empurrar o resto para fora. */
+.color-picker-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 0;
+  font-size: .84rem;
+  cursor: pointer;
+}
+
+.color-picker-row input[type="color"] {
+  grid-row: 1 / span 2;
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.color-picker-name {
+  align-self: end;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.color-picker-row code {
+  align-self: start;
+  color: var(--muted);
+  font-size: .72rem;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.color-picker-row.is-absent {
+  opacity: .45;
+}
+
+.color-picker-panel select,
+.color-picker-panel [data-color-picker-name] {
+  width: 100%;
+  min-height: 30px;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: .82rem;
+}
+
+.color-picker-panel [data-color-picker-name][hidden] {
+  display: none;
+}
+
+/* COLOR_PICKER_V3: o controlo pisca quando se mexe na cor dele, para nao
+   haver duvida sobre o que e que cada linha do painel pinta. */
+@keyframes mia-picker-flash {
+  0%, 100% { outline-color: transparent; }
+  50% { outline-color: #e0245e; }
+}
+
+/* !important porque varios controlos ja usam outline para o estado escolhido
+   (.pack-option.is-selected, .choice-card:has(input:checked)) e ganhariam por
+   especificidade. A cor animada vem dos keyframes, que vencem na cascata. */
+.mia-picker-flash {
+  outline-width: 3px !important;
+  outline-style: solid !important;
+  outline-color: transparent;
+  outline-offset: 3px !important;
+  animation: mia-picker-flash .42s ease-in-out 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mia-picker-flash {
+    outline-color: #e0245e !important;
+    animation: none;
+  }
+}
+
+/* A lista cresce conforme os controlos do ecra: com muitos, rola dentro do
+   painel em vez de o esticar para fora da janela. */
+.color-picker-list {
+  display: grid;
+  gap: 8px;
+  max-height: min(46vh, 340px);
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.color-picker-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+/* Os swatches sao um atalho para as cores do site: nao substituem o selector
+   nativo, que continua a dar qualquer cor. */
+.color-picker-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.color-picker-swatch {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid rgba(46, 36, 19, 0.28);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.color-picker-swatch:hover {
+  outline: 2px solid var(--moss);
+  outline-offset: 1px;
+}
+
+.color-picker-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.color-picker-actions button {
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--moss);
+  font-size: .8rem;
+  cursor: pointer;
+}
+
+.color-picker-actions button:disabled {
+  opacity: .4;
+  cursor: default;
+}
+
+/* COLOR_PICKER_V1: so morde quando o painel define --pick-button; sem isso
+   cai no --button-bg do tema e o site fica exactamente como estava. */
+.button.primary,
+html[data-theme="dark"] .button.primary {
+  background: var(--pick-button, var(--button-bg));
+}
+
+/* PERSONALIZACAO_FUNDO_BRANCO: so esta pagina troca o creme do site por
+   branco. O `data-product` vem do proprio HTML, por isso nao depende de nada
+   que o app.js escreva. */
+html:has(body[data-product="personalizacao"]),
+body[data-product="personalizacao"] {
+  background-color: #fff;
 }

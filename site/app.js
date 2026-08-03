@@ -20503,6 +20503,584 @@
     });
   }
 
+  // ==== COLOR_PICKER_V3 ====================================================
+  // `?picker=1` abre um painel flutuante para experimentar cores. O painel nao
+  // tem uma lista fixa: percorre o registo abaixo e mostra so os controlos que
+  // estao mesmo no ecra naquele momento, em qualquer pagina. A cor de cada
+  // linha e a que o browser esta a calcular para esse controlo, por isso segue
+  // o tema, o passo e a paleta escolhida.
+  //
+  // Pintar e feito por uma folha de estilo propria (regras com !important) e
+  // nao por variaveis: assim funciona com qualquer controlo sem ser preciso
+  // preparar o CSS do site controlo a controlo.
+  var COLOR_PICKER_SESSION_KEY = "miaandpaper-color-picker";
+  var COLOR_PICKER_STORE_KEY = "miaandpaper-color-palettes";
+  var COLOR_PICKER_STYLE_ID = "mia-color-picker-style";
+
+  // `read` e a propriedade lida para mostrar a cor actual; `paint` sao as que
+  // levam a cor escolhida.
+  var COLOR_PICKER_CONTROLS = [
+    { id: "botao-principal", label: "Botão principal", selector: ".button.primary", read: "backgroundColor", paint: ["background-color"] },
+    { id: "botao-secundario", label: "Botão secundário", selector: ".button.secondary", read: "color", paint: ["color", "border-color"] },
+    { id: "pack", label: "Packs", selector: ".pack-option", read: "backgroundColor", paint: ["background-color"] },
+    { id: "pack-escolhido", label: "Pack escolhido", selector: ".pack-option.is-selected", read: "borderColor", paint: ["border-color"] },
+    { id: "cartao-escolha", label: "Cartões de escolha", selector: ".choice-card", read: "backgroundColor", paint: ["background-color"] },
+    { id: "slider", label: "Slider", selector: ".free-quantity-slider input[type=\"range\"]", read: "color", paint: [], varName: "--pick-slider" },
+    { id: "slider-botoes", label: "Botões +/−", selector: ".free-quantity-control button", read: "backgroundColor", paint: ["background-color"] },
+    { id: "leitura-quantidade", label: "Número da quantidade", selector: ".free-quantity-readout strong", read: "color", paint: ["color"] },
+    { id: "caixa-preco", label: "Caixa de preços", selector: ".pack-price-card", read: "backgroundColor", paint: ["background-color"] },
+    { id: "grupo", label: "Grupo (cabeçalho)", selector: ".builder-group > .builder-group-tile", read: "backgroundColor", paint: ["background-color"] },
+    { id: "gaveta", label: "Gaveta", selector: ".builder-group-drawer", read: "backgroundColor", paint: ["background-color"] },
+    { id: "opcao-gaveta", label: "Opção da gaveta", selector: ".builder-variant", read: "backgroundColor", paint: ["background-color"] },
+    { id: "quantidade-pack", label: "Botões de pack", selector: ".builder-quantity-tile", read: "backgroundColor", paint: ["background-color"] },
+    { id: "quantidade-passo", label: "Botões da quantidade", selector: ".builder-quantity-input button", read: "color", paint: ["color"] },
+    { id: "remover", label: "Botão remover", selector: ".builder-card-remove", read: "backgroundColor", paint: ["background-color", "border-color"] },
+    { id: "total", label: "Caixa do total", selector: ".builder-total", read: "backgroundColor", paint: ["background-color"] },
+    { id: "resumo", label: "O que vais encomendar", selector: ".crachas-step2-summary", read: "backgroundColor", paint: ["background-color"] },
+    { id: "passos", label: "Números dos passos", selector: ".step-list button", read: "color", paint: ["color"] },
+    { id: "entrega", label: "Opções de entrega", selector: ".delivery-option", read: "backgroundColor", paint: ["background-color"] },
+    { id: "cabecalho", label: "Links do cabeçalho", selector: ".header-link", read: "color", paint: ["color"] },
+    { id: "carrinho-flutuante", label: "Botão do carrinho", selector: ".cart-floating-button", read: "backgroundColor", paint: ["background-color"] },
+    { id: "categoria", label: "Cartões de categoria", selector: ".category-card", read: "backgroundColor", paint: ["background-color"] },
+    { id: "review", label: "Balão das reviews", selector: ".review-bubble-card", read: "backgroundColor", paint: ["background-color"] },
+    { id: "cookies", label: "Aceitar cookies", selector: ".cookie-banner-accept", read: "backgroundColor", paint: ["background-color"] }
+  ];
+
+  // Sugestoes para explorar depressa quanta separacao dar aos tres niveis do
+  // passo 2 (cabecalho do grupo / gaveta / opcao). Ficam dentro da familia de
+  // cores do site, mas nao se limitam aos tokens oficiais: o que interessa e
+  // variar a distancia entre eles.
+  var COLOR_PICKER_PRESETS = [
+    { id: "preset:suave", name: "Suave", colors: { "grupo": "#fffdf5", "gaveta": "#f6e7bf", "opcao-gaveta": "#fffdf5" } },
+    { id: "preset:actual", name: "Média (actual)", colors: { "grupo": "#f6e7bf", "gaveta": "#e7d3a4", "opcao-gaveta": "#ffffff" } },
+    { id: "preset:funda", name: "Gaveta funda", colors: { "grupo": "#f9edcd", "gaveta": "#dcc590", "opcao-gaveta": "#fffefa" } },
+    { id: "preset:areia", name: "Areia quente", colors: { "grupo": "#f3e3bb", "gaveta": "#e0cb9a", "opcao-gaveta": "#fffdf3" } },
+    { id: "preset:oliva", name: "Oliva discreta", colors: { "grupo": "#efe9d6", "gaveta": "#d8d2b2", "opcao-gaveta": "#fffdf5" } },
+    { id: "preset:forte", name: "Contraste alto", colors: { "grupo": "#efdcaa", "gaveta": "#cdb27a", "opcao-gaveta": "#ffffff" } },
+    { id: "preset:invertida", name: "Gaveta clara", colors: { "grupo": "#e7d3a4", "gaveta": "#fffdf5", "opcao-gaveta": "#f6e7bf" } },
+    // Medidas na pagina dos cadernos anuais: cartao da opcao de compra
+    // (#fffdf8), painel que abre por baixo (#fffaf0) e a moldura de dentro
+    // (#f6ead1). Aqui a cor esta na opcao e nao na gaveta.
+    { id: "preset:cadernos", name: "Cadernos", colors: { "grupo": "#fffdf8", "gaveta": "#fffaf0", "opcao-gaveta": "#f6ead1" } },
+    { id: "preset:cadernos-2", name: "Cadernos (gaveta com cor)", colors: { "grupo": "#fffdf8", "gaveta": "#f6ead1", "opcao-gaveta": "#fffdf8" } }
+  ];
+
+  function colorPickerPreset(id) {
+    return COLOR_PICKER_PRESETS.filter(function (preset) {
+      return preset.id === id;
+    })[0] || null;
+  }
+
+  function colorPickerRequested() {
+    var wanted;
+    try {
+      wanted = currentUrlParams().get("picker");
+    } catch (error) {
+      wanted = null;
+    }
+    if (wanted === "1") {
+      try { window.sessionStorage.setItem(COLOR_PICKER_SESSION_KEY, "1"); } catch (error) {}
+      return true;
+    }
+    if (wanted === "0") {
+      try { window.sessionStorage.removeItem(COLOR_PICKER_SESSION_KEY); } catch (error) {}
+      return false;
+    }
+    return safeSessionGetItem(COLOR_PICKER_SESSION_KEY) === "1";
+  }
+
+  function colorPickerStore() {
+    var guardado = safeStorageGetItem(COLOR_PICKER_STORE_KEY);
+    var dados = null;
+
+    try {
+      dados = guardado ? JSON.parse(guardado) : null;
+    } catch (error) {
+      dados = null;
+    }
+    if (!dados || typeof dados !== "object" || !Array.isArray(dados.palettes)) {
+      dados = { activeId: "", palettes: [] };
+    }
+    dados.activeId = String(dados.activeId || "");
+    dados.palettes = dados.palettes.filter(function (palette) {
+      return palette && palette.id && palette.colors && typeof palette.colors === "object";
+    });
+    return dados;
+  }
+
+  function colorPickerPersist(dados) {
+    safeStorageSetItem(COLOR_PICKER_STORE_KEY, JSON.stringify(dados));
+  }
+
+  function colorPickerActive(dados) {
+    return colorPickerPreset(dados.activeId) || dados.palettes.filter(function (palette) {
+      return palette.id === dados.activeId;
+    })[0] || null;
+  }
+
+  // Presets e Original nao se editam: mexer neles cria uma paleta a partir do
+  // que estava a ser mostrado.
+  function colorPickerEditable(dados) {
+    return dados.palettes.filter(function (palette) {
+      return palette.id === dados.activeId;
+    })[0] || null;
+  }
+
+  // As cores do proprio design, para o selector nativo as oferecer como
+  // swatches em vez de se ter de acertar o hex a olho.
+  var COLOR_PICKER_SWATCH_VARS = [
+    "--moss", "--gold", "--gold-soft", "--rose", "--sage", "--blue",
+    "--ink", "--muted", "--linen", "--paper", "--card"
+  ];
+  var COLOR_PICKER_SWATCH_ID = "mia-color-picker-swatches";
+
+  function colorPickerSwatches() {
+    var lista = document.getElementById(COLOR_PICKER_SWATCH_ID);
+    var raiz = window.getComputedStyle(document.documentElement);
+    var vistos = {};
+    var opcoes = [];
+
+    if (!lista) {
+      lista = document.createElement("datalist");
+      lista.id = COLOR_PICKER_SWATCH_ID;
+      document.body.appendChild(lista);
+    }
+    COLOR_PICKER_SWATCH_VARS.forEach(function (nome) {
+      var hex = String(raiz.getPropertyValue(nome) || "").trim();
+
+      if (/^#[0-9a-f]{3}$/i.test(hex)) {
+        hex = "#" + hex.slice(1).split("").map(function (c) { return c + c; }).join("");
+      }
+      if (!/^#[0-9a-f]{6}$/i.test(hex) || vistos[hex.toLowerCase()]) {
+        return;
+      }
+      vistos[hex.toLowerCase()] = true;
+      opcoes.push('<option value="' + escapeHtml(hex) + '"></option>');
+    });
+    lista.innerHTML = opcoes.join("");
+    return lista.id;
+  }
+
+  function colorPickerSwatchList() {
+    var raiz = window.getComputedStyle(document.documentElement);
+    var vistos = {};
+    var cores = [];
+
+    COLOR_PICKER_SWATCH_VARS.forEach(function (nome) {
+      var hex = String(raiz.getPropertyValue(nome) || "").trim();
+
+      if (/^#[0-9a-f]{3}$/i.test(hex)) {
+        hex = "#" + hex.slice(1).split("").map(function (c) { return c + c; }).join("");
+      }
+      if (!/^#[0-9a-f]{6}$/i.test(hex) || vistos[hex.toLowerCase()]) {
+        return;
+      }
+      vistos[hex.toLowerCase()] = true;
+      cores.push({ hex: hex, nome: nome.replace(/^--/, "") });
+    });
+    return cores;
+  }
+
+  function colorPickerClearFlash() {
+    document.querySelectorAll(".mia-picker-flash").forEach(function (alvo) {
+      alvo.classList.remove("mia-picker-flash");
+    });
+  }
+
+  // Pisca o sitio onde a cor aparece, para nao haver duvida sobre o que e que
+  // cada linha do painel esta a pintar.
+  function colorPickerFlash(control) {
+    var alvos;
+
+    try {
+      alvos = document.querySelectorAll(control.selector);
+    } catch (error) {
+      return;
+    }
+    Array.prototype.slice.call(alvos, 0, 40).forEach(function (alvo) {
+      alvo.classList.remove("mia-picker-flash");
+      // Reinicia a animacao quando se mexe na mesma cor duas vezes seguidas.
+      void alvo.offsetWidth;
+      alvo.classList.add("mia-picker-flash");
+      window.setTimeout(function () {
+        alvo.classList.remove("mia-picker-flash");
+      }, 1400);
+    });
+  }
+
+  function colorPickerControl(id) {
+    return COLOR_PICKER_CONTROLS.filter(function (control) {
+      return control.id === id;
+    })[0] || null;
+  }
+
+  function colorPickerMatch(control) {
+    try {
+      return document.querySelector(control.selector);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function colorPickerHex(valor) {
+    var partes = String(valor || "").match(/\d+/g);
+
+    if (!partes || partes.length < 3) {
+      return "#000000";
+    }
+    return "#" + partes.slice(0, 3).map(function (parte) {
+      return ("0" + Math.max(0, Math.min(255, parseInt(parte, 10) || 0)).toString(16)).slice(-2);
+    }).join("");
+  }
+
+  // A cor actual vem do elemento real quando ele existe. O slider e a excepcao:
+  // a cor dele vive num pseudo-elemento que nao se consegue ler, por isso le-se
+  // a variavel que o alimenta.
+  function colorPickerCurrent(control, palette) {
+    var guardada = palette && palette.colors ? palette.colors[control.id] : "";
+    var alvo;
+    var probe;
+    var valor;
+
+    if (/^#[0-9a-f]{6}$/i.test(String(guardada || ""))) {
+      return guardada;
+    }
+    if (control.varName) {
+      probe = document.createElement("span");
+      probe.style.cssText = "position:absolute;visibility:hidden;color:var(" + control.varName + ", var(--moss))";
+      document.body.appendChild(probe);
+      valor = window.getComputedStyle(probe).color;
+      document.body.removeChild(probe);
+      return colorPickerHex(valor);
+    }
+    alvo = colorPickerMatch(control);
+    if (!alvo) {
+      return "#000000";
+    }
+    return colorPickerHex(window.getComputedStyle(alvo)[control.read]);
+  }
+
+  function colorPickerApply(palette) {
+    var folha = document.getElementById(COLOR_PICKER_STYLE_ID);
+    var regras = [];
+
+    if (!folha) {
+      folha = document.createElement("style");
+      folha.id = COLOR_PICKER_STYLE_ID;
+      document.head.appendChild(folha);
+    }
+    if (!palette || !palette.colors) {
+      folha.textContent = "";
+      document.documentElement.style.removeProperty("--pick-slider");
+      return;
+    }
+
+    document.documentElement.style.removeProperty("--pick-slider");
+    Object.keys(palette.colors).forEach(function (id) {
+      var control = colorPickerControl(id);
+      var cor = palette.colors[id];
+
+      if (!control || !/^#[0-9a-f]{6}$/i.test(String(cor || ""))) {
+        return;
+      }
+      if (control.varName) {
+        document.documentElement.style.setProperty(control.varName, cor);
+      }
+      if (control.paint.length) {
+        regras.push(control.selector + "{" + control.paint.map(function (prop) {
+          return prop + ":" + cor + " !important";
+        }).join(";") + "}");
+      }
+    });
+    folha.textContent = regras.join("\n");
+  }
+
+  function initColorPicker() {
+    var painel;
+    var lista;
+    var observer = null;
+    var observerTimer = 0;
+    var dados;
+    var seletor;
+    var nome;
+    var apagar;
+    var tiras;
+    var ultimoControlo = "";
+
+    if (!document.body || !colorPickerRequested() || document.querySelector(".color-picker-panel")) {
+      return;
+    }
+
+    dados = colorPickerStore();
+    colorPickerApply(colorPickerActive(dados));
+    colorPickerSwatches();
+
+    painel = document.createElement("aside");
+    painel.className = "color-picker-panel";
+    painel.setAttribute("aria-label", "Experimentar cores");
+    painel.innerHTML = [
+      '<header><strong>Cores</strong><button type="button" data-color-picker-close aria-label="Fechar">×</button></header>',
+      '<select data-color-picker-select aria-label="Paleta"></select>',
+      '<input type="text" maxlength="40" data-color-picker-name aria-label="Nome da paleta" placeholder="Nome da paleta">',
+      '<div class="color-picker-list" data-color-picker-list></div>',
+      '<div class="color-picker-swatches" data-color-picker-swatches></div>',
+      '<div class="color-picker-actions">',
+      '<button type="button" data-color-picker-new>+ Paleta</button>',
+      '<button type="button" data-color-picker-delete>Apagar</button>',
+      '</div>'
+    ].join("");
+    document.body.appendChild(painel);
+
+    seletor = painel.querySelector("[data-color-picker-select]");
+    nome = painel.querySelector("[data-color-picker-name]");
+    apagar = painel.querySelector("[data-color-picker-delete]");
+    lista = painel.querySelector("[data-color-picker-list]");
+    tiras = painel.querySelector("[data-color-picker-swatches]");
+
+    function desenharSeletor() {
+      var activa = colorPickerActive(dados);
+
+      seletor.innerHTML = [
+        '<option value="">Original (site)</option>',
+        '<optgroup label="Sugestões">' + COLOR_PICKER_PRESETS.map(function (preset) {
+          return '<option value="' + escapeHtml(preset.id) + '">' + escapeHtml(preset.name) + '</option>';
+        }).join("") + '</optgroup>',
+        dados.palettes.length ? '<optgroup label="As minhas">' + dados.palettes.map(function (palette) {
+          return '<option value="' + escapeHtml(palette.id) + '">' + escapeHtml(palette.name) + '</option>';
+        }).join("") + '</optgroup>' : ''
+      ].join("");
+      var minha = colorPickerEditable(dados);
+
+      seletor.value = activa ? activa.id : "";
+      nome.hidden = !minha;
+      if (document.activeElement !== nome) {
+        nome.value = minha ? minha.name : "";
+      }
+      apagar.disabled = !minha;
+    }
+
+    // O painel e reconstruido a partir do que esta no ecra: navegar ou mudar de
+    // passo muda as linhas. So se refaz o HTML quando o conjunto de controlos
+    // visiveis muda, senao perdia-se o input que estivesse a ser arrastado.
+    // Pela ordem em que se veem no ecra, de cima para baixo: e assim que se
+    // procura um controlo, nao pela ordem em que foi registado no codigo.
+    function visiveis() {
+      return COLOR_PICKER_CONTROLS.map(function (control) {
+        var alvo = colorPickerMatch(control);
+        var caixa;
+        var fixo;
+
+        if (!alvo) {
+          return null;
+        }
+        caixa = alvo.getBoundingClientRect();
+        fixo = window.getComputedStyle(alvo).position === "fixed";
+        return {
+          control: control,
+          topo: caixa.top + (fixo ? 0 : window.pageYOffset),
+          esquerda: caixa.left
+        };
+      }).filter(Boolean).sort(function (a, b) {
+        return a.topo === b.topo ? a.esquerda - b.esquerda : a.topo - b.topo;
+      }).map(function (entrada) {
+        return entrada.control;
+      });
+    }
+
+    function desenharLista() {
+      var activa = colorPickerActive(dados);
+      var presentes = visiveis();
+      // A assinatura ignora a ordem: o painel so se refaz quando entra ou sai
+      // um controlo. Sem isto as linhas trocavam de sitio a cada re-render,
+      // porque a posicao no ecra mexe-se por tudo e por nada.
+      var assinatura = presentes.map(function (control) { return control.id; }).slice().sort().join("|");
+
+      if (lista.dataset.assinatura !== assinatura) {
+        lista.dataset.assinatura = assinatura;
+        lista.innerHTML = presentes.length ? presentes.map(function (control) {
+          return [
+            '<label class="color-picker-row" data-color-picker-row="' + escapeHtml(control.id) + '">',
+            '<input type="color" data-color-picker-control="' + escapeHtml(control.id) + '">',
+            '<span class="color-picker-name">' + escapeHtml(control.label) + '</span>',
+            '<code data-color-picker-hex="' + escapeHtml(control.id) + '"></code>',
+            '</label>'
+          ].join("");
+        }).join("") : '<p class="color-picker-empty">Nada para pintar neste ecrã.</p>';
+        lista.querySelectorAll("[data-color-picker-control]").forEach(function (input) {
+          var control = colorPickerControl(input.dataset.colorPickerControl);
+
+          input.addEventListener("input", function () {
+            var alvo = colorPickerEditable(dados);
+
+            // Original e sugestoes nunca se alteram: mexer numa delas abre uma
+            // paleta nova ja com as cores que estavam a ser mostradas.
+            if (!alvo) {
+              alvo = novaPaleta(colorPickerActive(dados));
+            }
+            alvo.colors[input.dataset.colorPickerControl] = input.value;
+            ultimoControlo = input.dataset.colorPickerControl;
+            colorPickerApply(alvo);
+            colorPickerPersist(dados);
+            desenharSeletor();
+            // O destaque sai de cena assim que se escolhe: ficava por cima da
+            // cor que se esta a tentar avaliar.
+            colorPickerClearFlash();
+            lista.querySelector('[data-color-picker-hex="' + input.dataset.colorPickerControl + '"]').textContent = input.value;
+          });
+          // Tocar na linha mostra onde ela manda, antes sequer de escolher.
+          input.addEventListener("focus", function () {
+            ultimoControlo = input.dataset.colorPickerControl;
+            colorPickerFlash(control);
+          });
+        });
+      }
+
+      presentes.forEach(function (control) {
+        var input = lista.querySelector('[data-color-picker-control="' + control.id + '"]');
+        var hex = colorPickerCurrent(control, activa);
+
+        if (input && document.activeElement !== input) {
+          input.value = hex;
+        }
+        lista.querySelector('[data-color-picker-hex="' + control.id + '"]').textContent = hex;
+      });
+    }
+
+    function actualizarValores() {
+      // Enquanto se esta a escolher uma cor o painel nao se toca: refazer o
+      // HTML fecharia o selector nativo a meio da escolha.
+      if (lista.contains(document.activeElement)) {
+        return;
+      }
+      colorPickerSwatches();
+      desenharLista();
+    }
+
+    function desenharTiras() {
+      tiras.innerHTML = colorPickerSwatchList().map(function (cor) {
+        return '<button type="button" class="color-picker-swatch" data-color-picker-swatch="' + escapeHtml(cor.hex) + '" title="' + escapeHtml(cor.nome + " · " + cor.hex) + '" style="background:' + escapeHtml(cor.hex) + '"></button>';
+      }).join("");
+    }
+
+    // O swatch escreve na linha em que se mexeu por ultimo. `mousedown` com
+    // preventDefault evita que o botao roube o foco a essa linha.
+    tiras.addEventListener("mousedown", function (event) {
+      var botao = event.target.closest("[data-color-picker-swatch]");
+      var input;
+
+      if (!botao) {
+        return;
+      }
+      event.preventDefault();
+      input = lista.querySelector('[data-color-picker-control="' + ultimoControlo + '"]');
+      if (!input) {
+        return;
+      }
+      input.value = botao.dataset.colorPickerSwatch;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    // Ao sair da escolha, actualiza o que ficou por actualizar.
+    lista.addEventListener("focusout", function () {
+      window.setTimeout(actualizarValores, 0);
+    });
+
+    // Tocar em qualquer parte da linha ja a torna a linha em uso: assim o
+    // swatch sabe onde escrever mesmo que o `focus` do input nao chegue a
+    // disparar (acontece quando a janela nao tem foco).
+    lista.addEventListener("pointerdown", function (event) {
+      var linha = event.target.closest("[data-color-picker-row]");
+      var control;
+
+      if (!linha) {
+        return;
+      }
+      ultimoControlo = linha.dataset.colorPickerRow;
+      control = colorPickerControl(ultimoControlo);
+      if (control) {
+        colorPickerFlash(control);
+      }
+    });
+
+    function novaPaleta(base) {
+      var palette = {
+        id: "pal_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 6),
+        name: base && base.name ? base.name + " (cópia)" : "Paleta " + (dados.palettes.length + 1),
+        colors: base && base.colors ? JSON.parse(JSON.stringify(base.colors)) : {}
+      };
+
+      dados.palettes.push(palette);
+      dados.activeId = palette.id;
+      return palette;
+    }
+
+    seletor.addEventListener("change", function () {
+      dados.activeId = String(seletor.value || "");
+      colorPickerApply(colorPickerActive(dados));
+      colorPickerPersist(dados);
+      desenharSeletor();
+      actualizarValores();
+    });
+
+    nome.addEventListener("input", function () {
+      var activa = colorPickerEditable(dados);
+      var opcao;
+
+      if (!activa) {
+        return;
+      }
+      activa.name = nome.value;
+      colorPickerPersist(dados);
+      opcao = seletor.querySelector('option[value="' + activa.id + '"]');
+      if (opcao) {
+        opcao.textContent = activa.name;
+      }
+    });
+
+    painel.querySelector("[data-color-picker-new]").addEventListener("click", function () {
+      novaPaleta(colorPickerActive(dados));
+      colorPickerApply(colorPickerActive(dados));
+      colorPickerPersist(dados);
+      desenharSeletor();
+      actualizarValores();
+      nome.focus();
+      nome.select();
+    });
+
+    apagar.addEventListener("click", function () {
+      dados.palettes = dados.palettes.filter(function (palette) {
+        return palette.id !== dados.activeId;
+      });
+      dados.activeId = "";
+      colorPickerApply(null);
+      colorPickerPersist(dados);
+      desenharSeletor();
+      actualizarValores();
+    });
+
+    painel.querySelector("[data-color-picker-close]").addEventListener("click", function () {
+      try { window.sessionStorage.removeItem(COLOR_PICKER_SESSION_KEY); } catch (error) {}
+      if (observer) {
+        observer.disconnect();
+      }
+      painel.remove();
+    });
+
+    desenharSeletor();
+    desenharTiras();
+    actualizarValores();
+
+    // O site re-renderiza o passo inteiro a cada escolha: sem isto o painel
+    // ficaria a mostrar os controlos do ecra anterior.
+    observer = typeof window.MutationObserver === "function" ? new window.MutationObserver(function () {
+      window.clearTimeout(observerTimer);
+      observerTimer = window.setTimeout(actualizarValores, 140);
+    }) : null;
+    if (observer) {
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "data-theme"] });
+    }
+  }
+
   function initButterflyFriend() {
     window.MiaButterflies = {
       show: function () { return false; },
@@ -20918,6 +21496,7 @@
   });
 
   initButterflyFriend();
+  initColorPicker();
   // COOKIE_BANNER_V1: chamado depois do init das páginas para evitar
   // flash do banner antes do conteúdo principal estar pintado.
   if (document.body) {

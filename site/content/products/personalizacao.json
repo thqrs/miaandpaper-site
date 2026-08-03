@@ -165,8 +165,8 @@
         {
           "id": "imanes-finos",
           "group": "Ímanes",
-          "title": "Ímanes finos e flexíveis",
-          "subtitle": "5,5 cm x 6,5 cm, 0,7 mm de espessura",
+          "title": "Ímanes finos",
+          "subtitle": "5,5 × 6,5 cm · 0,7 mm",
           "slug": "imanes-loja",
           "size": "Achatados",
           "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/tipo/iman-flexivel.webp",
@@ -178,8 +178,8 @@
         {
           "id": "imanes-3mm",
           "group": "Ímanes",
-          "title": "Ímanes grossos com 3 mm de espessura",
-          "subtitle": "5,5 cm x 6,5 cm, 3 mm de espessura",
+          "title": "Ímanes grossos",
+          "subtitle": "5,5 × 6,5 cm · 3 mm",
           "slug": "imanes-loja",
           "size": "3 mm",
           "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/tipo/iman-2mm.webp",
@@ -191,7 +191,7 @@
         {
           "id": "imanes-recortados",
           "group": "Ímanes",
-          "title": "Ímanes com recorte personalizado",
+          "title": "Ímanes recortados",
           "subtitle": "Cortados à volta do desenho",
           "slug": "imanes-recortados",
           "imageShape": "rect",
