@@ -88,7 +88,7 @@ function render_page($title, $message, $type, $details = array())
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="styles.css?v=2026072903">
+  <link rel="stylesheet" href="styles.css?v=2026080401">
 </head>
 <body data-page="contact-result">
   <main class="message-result-shell">
@@ -128,7 +128,7 @@ function render_page($title, $message, $type, $details = array())
       <span>© Mia &amp; Paper 2026 Todos os Direitos Reservados</span>
     </footer>
   </main>
-  <script src="app.js?v=2026080101"></script>
+  <script src="app.js?v=2026080401"></script>
   <script>
     if (window.trackOrderEvent) {
       window.trackOrderEvent("contact_result_view", {

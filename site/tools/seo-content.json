@@ -150,13 +150,14 @@
     {
       "file": "agendas.html",
       "url": "/agendas.html",
-      "priority": "0.6",
-      "changefreq": "monthly",
-      "headOnly": true,
+      "priority": "0.8",
+      "changefreq": "weekly",
+      "product": "agendas",
       "title": "Agendas personalizadas | Mia & Paper",
-      "description": "Agendas personalizadas com a capa escolhida por ti, preparadas à mão por encomenda.",
-      "ogDescription": "Agendas personalizadas para organizar os teus dias.",
-      "h1": "Agendas personalizadas"
+      "description": "Agendas personalizadas com capa, laminação e add-ons à tua escolha, preparadas por encomenda.",
+      "ogDescription": "Agendas personalizadas com capa, laminação e add-ons à tua escolha.",
+      "h1": "Agendas personalizadas",
+      "lead": "Escolhe a capa, a laminação e os add-ons para preparar uma agenda à tua medida."
     },
     {
       "file": "postais.html",

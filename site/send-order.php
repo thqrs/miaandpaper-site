@@ -81,7 +81,7 @@ function parse_email_recipients($value)
 function safe_return_to()
 {
     $returnTo = field('return_to');
-    $allowed = array('index.html', 'molduras.html', 'quadros.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'mini-cadernos.html', 'blocos-a6.html', 'bloquinhos.html', 'cadernos-anuais.html', 'imanes.html', 'imanes-recortados.html', 'stickers.html', 'marcadores.html', 'lembrancas.html', 'personalizacao.html', 'adicionar-produto.html', 'checkout.html');
+    $allowed = array('index.html', 'molduras.html', 'quadros.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'mini-cadernos.html', 'blocos-a6.html', 'bloquinhos.html', 'cadernos-anuais.html', 'agendas.html', 'imanes.html', 'imanes-recortados.html', 'stickers.html', 'marcadores.html', 'lembrancas.html', 'personalizacao.html', 'adicionar-produto.html', 'checkout.html');
 
     if (in_array($returnTo, $allowed, true)) {
         return $returnTo;
@@ -93,7 +93,7 @@ function safe_return_to()
 function safe_product_slug()
 {
     $slug = strtolower(field('product_slug'));
-    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'personalizacao');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'personalizacao');
 
     if (in_array($slug, $allowed, true)) {
         return $slug;
@@ -408,7 +408,7 @@ function cart_allowed_product_slug($slug)
     // aqui de proposito: e a pagina de origem, nao um produto — cada linha
     // que sai de la traz o slug do produto real (crachas-loja, marcadores...).
     $slug = strtolower(trim((string)$slug));
-    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores');
 
     return in_array($slug, $allowed, true) ? $slug : '';
 }
@@ -833,7 +833,7 @@ function cart_assoc_text_selection($selections, $name)
 
 function cart_is_main_v2_slug($slug)
 {
-    return in_array((string)$slug, array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores'), true);
+    return in_array((string)$slug, array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores'), true);
 }
 
 function cart_is_congress_slug($slug)
@@ -1486,7 +1486,8 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $isMainV2 = cart_is_main_v2_slug($slug);
     $isCongress = cart_is_congress_slug($slug);
     $catalogContext = cart_string_selection($selections, 'catalog_context');
-    $isCadernos = in_array($slug, array('cadernos', 'cadernos-anuais'), true);
+    $isCadernos = in_array($slug, array('cadernos', 'cadernos-anuais'), true)
+        || (!empty($productConfig['family']) && (string)$productConfig['family'] === 'cadernos');
     $isQuadros = $slug === 'quadros';
 
     if ($slug === '' || empty($productConfig)) {
@@ -1753,6 +1754,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $coverPersonalization = cart_string_selection($selections, 'cover_personalization');
     $coverPersonalizationText = cart_string_selection($selections, 'cover_personalization_text');
     $laminationStep = product_step($productConfig, 'lamination');
+    $addOnsStep = product_step($productConfig, 'add_ons');
     $purchaseStep = product_step($productConfig, 'pack');
     $personalizationStep = product_step($productConfig, 'cover_personalization');
     $hasPersonalizationStep = !empty($personalizationStep);
@@ -1760,6 +1762,21 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $purchaseItem = $isCadernos ? product_step_item_by_quantity($purchaseStep, $packQuantity) : array();
     $cadernoOrderQuantityOptions = $isCadernos ? product_order_quantity_options($purchaseStep) : array(1);
     $cadernoOrderQuantity = $isCadernos ? (int)cart_selection($selections, 'caderno_order_quantity', 1) : 1;
+    $selectedAddOns = $isCadernos ? array_values(array_unique(cart_list_selection($selections, 'add_ons'))) : array();
+    $addOnLabels = array();
+    $addOnsExtraCents = 0;
+
+    foreach ($selectedAddOns as $addOnValue) {
+        $addOnItem = product_step_item_by_value($addOnsStep, $addOnValue);
+        if (empty($addOnItem)) {
+            $errors[] = 'Um dos add-ons escolhidos em ' . $productName . ' não é válido.';
+            continue;
+        }
+        $addOnLabels[] = !empty($addOnItem['title']) ? cart_text($addOnItem['title']) : $addOnValue;
+        $addOnsExtraCents += max(0, (int)(isset($addOnItem['extraPriceCents']) ? $addOnItem['extraPriceCents'] : 0));
+    }
+    $selections['add_ons'] = $selectedAddOns;
+    $selections['add_on_labels'] = $addOnLabels;
 
     if ($isCadernos && $cadernoOrderQuantity <= 0) {
         $cadernoOrderQuantity = product_order_quantity_default($purchaseStep, $cadernoOrderQuantityOptions);
@@ -2293,13 +2310,13 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $quoteOnly = $quadroQuoteOnly || $sizeQuoteOnly;
     $unitPriceCents = $quoteOnly
         ? 0
-        : $basePriceCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents;
+        : $basePriceCents + $addOnsExtraCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents;
     $productQuantity = $isCadernos ? $cadernoOrderQuantity : $packQuantity;
     $productSubtotalCents = $quoteOnly
         ? 0
         : ($isMainV2
             ? ($mainV2UsesTotalFromPacks
-                ? $mainV2LadderTotalCents + (($personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents) * $productQuantity)
+                ? $mainV2LadderTotalCents + (($addOnsExtraCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents) * $productQuantity)
                 : $unitPriceCents * $productQuantity)
             : ($isCadernos ? $unitPriceCents * $cadernoOrderQuantity : $unitPriceCents));
     // A preparação do design cobra-se mesmo quando o produto ainda não tem
@@ -2389,7 +2406,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     // O extra do acabamento tem linha propria (finish_extra_line), por isso a
     // linha dos packs mostra so o preco dos produtos — senao a soma "1 pack de
     // 24 + 4 packs de 5 = X" nao fecharia com o X apresentado.
-    $productBaseSubtotalCents = max(0, $productSubtotalCents - ($finishExtraPerUnitCents * $productQuantity));
+    $productBaseSubtotalCents = max(0, $productSubtotalCents - (($addOnsExtraCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents) * $productQuantity));
     $basePriceLine = $quoteOnly
         ? ($priceRangeLine !== '' ? $priceRangeLine : 'Preço a confirmar')
         : ($basePriceCents
@@ -2401,6 +2418,9 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
             : 'Não calculado');
     $personalizationExtraLine = $personalizationExtraCents
         ? ($isCadernos && $cadernoOrderQuantity > 1 ? format_euros($personalizationExtraCents) . ' x ' . $cadernoOrderQuantity . ' = ' . format_euros($personalizationExtraCents * $cadernoOrderQuantity) : format_euros($personalizationExtraCents))
+        : '';
+    $addOnsExtraLine = $addOnsExtraCents
+        ? ($isCadernos && $cadernoOrderQuantity > 1 ? format_euros($addOnsExtraCents) . ' x ' . $cadernoOrderQuantity . ' = ' . format_euros($addOnsExtraCents * $cadernoOrderQuantity) : format_euros($addOnsExtraCents))
         : '';
     $packagingExtraLine = $packagingExtraCents ? format_euros($packagingExtraCents) : 'Grátis';
     $customizationFeeLine = $customizationFeeCents > 0
@@ -2496,6 +2516,10 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         'show_congregation_gift_line' => $showCongregationGiftLine,
         'lamination' => $lamination,
         'lamination_label' => $laminationLabel,
+        'add_ons' => $selectedAddOns,
+        'add_on_labels' => $addOnLabels,
+        'add_ons_extra_cents' => $addOnsExtraCents,
+        'add_ons_extra_line' => $addOnsExtraLine,
         'purchase_option' => $purchaseOption,
         'purchase_option_label' => $purchaseOptionLabel,
         'purchase_includes' => $purchaseIncludes,
@@ -2710,6 +2734,10 @@ function cart_item_owner_lines($line)
         }
         $rows[] = 'Capa escolhida: ' . $line['cover_line_owner'];
         $rows[] = 'Laminação escolhida: ' . $line['lamination_label'];
+        if (!empty($line['add_on_labels'])) {
+            $rows[] = 'Add-ons: ' . implode(', ', $line['add_on_labels']);
+            $rows[] = 'Acréscimo dos add-ons: ' . $line['add_ons_extra_line'];
+        }
         $rows[] = 'Opção escolhida: ' . $line['purchase_option_label'];
         $rows[] = 'Quantidade: ' . $line['caderno_order_quantity'] . ' x ' . $line['purchase_option_label'];
         $rows[] = 'Preço base: ' . $line['base_price_line'];
@@ -2908,6 +2936,10 @@ function cart_item_customer_lines($line)
         }
         $rows[] = 'Capa escolhida: ' . $line['cover_line_customer'];
         $rows[] = 'Laminação escolhida: ' . $line['lamination_label'];
+        if (!empty($line['add_on_labels'])) {
+            $rows[] = 'Add-ons: ' . implode(', ', $line['add_on_labels']);
+            $rows[] = 'Acréscimo dos add-ons: ' . $line['add_ons_extra_line'];
+        }
         $rows[] = 'Opção escolhida: ' . $line['purchase_option_label'];
         $rows[] = 'Quantidade: ' . $line['caderno_order_quantity'] . ' x ' . $line['purchase_option_label'];
         $rows[] = 'Preço base: ' . $line['base_price_line'];
@@ -3312,7 +3344,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="styles.css?v=2026072903">
+  <link rel="stylesheet" href="styles.css?v=2026080401">
 </head>
 <body class="result-body">
   <main class="result-card <?php echo h($kind); ?>">

@@ -183,6 +183,7 @@
     // designToken::grupo. E estado de interface, por isso vive fora das
     // selections (nao vai para o carrinho nem para o pedido).
     builderOpenGroups: {},
+    builderRemovePendingId: "",
     quantitySignature: "",
     quantitiesTouched: false,
     quantityPackBaseline: 0,
@@ -239,6 +240,8 @@
   var ICON_INSTAGRAM = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="1.9"></rect><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle><circle cx="17.4" cy="6.6" r="1.2" fill="currentColor"></circle></svg>';
   var ICON_MAIL = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2.5" ry="2.5" fill="none" stroke="currentColor" stroke-width="1.9"></rect><path d="M4.5 7l7.5 6 7.5-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
   var ICON_CART = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 5.5h2.4l2 9.2a2 2 0 0 0 2 1.6h6.6a2 2 0 0 0 1.9-1.4l1.3-5.2H8.1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="10.8" cy="20" r="1.2" fill="currentColor"></circle><circle cx="17.6" cy="20" r="1.2" fill="currentColor"></circle></svg>';
+  var ICON_BACK = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5m0 0 5.5-5.5M5 12l5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+  var ICON_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12.5 4.3 4.3L19 7" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
   var ICON_MENU = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>';
   var ICON_CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>';
   var ICON_ZOOM = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="5.7" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M15 15l4.6 4.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>';
@@ -1706,6 +1709,10 @@
             if (opt && opt.id) snap.caderno_option = String(opt.id).slice(0, 60);
           }
           if (sel.caderno_order_quantity) snap.caderno_qty = Number(sel.caderno_order_quantity) || 0;
+          if (Array.isArray(sel.add_ons) && sel.add_ons.length) {
+            snap.add_ons = sel.add_ons.slice(0, 12).map(function (value) { return String(value).slice(0, 60); });
+            snap.add_on_count = sel.add_ons.length;
+          }
           // Personalização (yes/no) sem texto.
           if (sel.cover_personalization) snap.cover_personalization = sel.cover_personalization === 'yes' ? 1 : 0;
           // Cover title (se houver dados de produto) — label estático, não PII.
@@ -3334,6 +3341,11 @@
     if (isCadernosProduct(product)) {
       selections.lamination = cadernoLamination ? cadernoLamination.value : "";
       selections.lamination_label = cadernoLamination ? cadernoLamination.title : "";
+      selections.add_ons = selectedCadernoAddOns(product).map(function (item) { return item.value; });
+      selections.add_on_labels = selectedCadernoAddOns(product).reduce(function (labels, item) {
+        labels[item.value] = item.title || item.value;
+        return labels;
+      }, {});
       selections.purchase_option = cadernoOption ? cadernoOption.value : "";
       selections.purchase_option_label = cadernoOption ? cadernoOption.title : "";
       selections.purchase_includes = cadernoOption && cadernoOption.includes ? cadernoOption.includes : "";
@@ -3461,6 +3473,9 @@
       if (option) {
         parts.push(option.title);
       }
+      cadernoAddOnsLabels(product).forEach(function (label) {
+        parts.push(label);
+      });
       if (state.selections.cover_personalization === "yes") {
         parts.push("capa personalizada");
       }
@@ -3597,6 +3612,11 @@
 
   function renderCartEntryActions(product, step) {
     var totals = builderActionTotals(product, step);
+    var compactPersonalizationActions = isArtworkBuilderProduct(product)
+      && String(step && step.template || "") === "custom-quantity-builder";
+    var backLabel = compactPersonalizationActions ? '<span data-action-icon aria-hidden="true">' + ICON_BACK + '</span><span data-action-full>Voltar</span><span data-action-short aria-hidden="true">Voltar</span>' : "Voltar";
+    var addAnotherLabel = compactPersonalizationActions ? '<span data-action-icon aria-hidden="true">' + ICON_CART + '</span><span data-action-full>Adicionar ao cesto e escolher outro produto</span><span data-action-short aria-hidden="true">Carrinho</span>' : "Adicionar ao cesto e escolher outro produto";
+    var finalizeLabel = compactPersonalizationActions ? '<span data-action-icon aria-hidden="true">' + ICON_CHECK + '</span><span data-action-full>Finalizar pedido</span><span data-action-short aria-hidden="true">Finalizar</span>' : "Finalizar pedido";
 
     if (state.editingCartItemId) {
       return [
@@ -3613,11 +3633,11 @@
     return [
       '<div class="step-actions cart-entry-actions">',
       totals,
-      '<button class="button secondary" type="button" data-back data-track="true" data-track-action="back" data-track-id="back">Voltar</button>',
+      '<button class="button secondary" type="button" data-back aria-label="Voltar" data-track="true" data-track-action="back" data-track-id="back">' + backLabel + '</button>',
       '<div class="cart-entry-buttons">',
       state.errors ? '<p class="form-error action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
-      '<button class="button secondary" type="button" data-cart-add-another>Adicionar ao cesto e escolher outro produto</button>',
-      '<button class="button primary" type="button" data-cart-finalize-current>Finalizar pedido</button>',
+      '<button class="button secondary" type="button" data-cart-add-another aria-label="Adicionar ao cesto e escolher outro produto">' + addAnotherLabel + '</button>',
+      '<button class="button primary" type="button" data-cart-finalize-current aria-label="Finalizar pedido">' + finalizeLabel + '</button>',
       '</div>',
       '</div>'
     ].join("");
@@ -5743,6 +5763,33 @@
       : 0;
   }
 
+  function cadernoAddOnsStep(product) {
+    return product ? findStep(product, "add_ons") : null;
+  }
+
+  function selectedCadernoAddOns(product) {
+    var step = cadernoAddOnsStep(product);
+    var selected = step && Array.isArray(state.selections[step.id])
+      ? state.selections[step.id]
+      : [];
+
+    return step && Array.isArray(step.items) ? step.items.filter(function (item) {
+      return item && selected.indexOf(item.value) !== -1;
+    }) : [];
+  }
+
+  function cadernoAddOnsExtraCents(product) {
+    return selectedCadernoAddOns(product).reduce(function (total, item) {
+      return total + Math.max(0, parseInt(item && item.extraPriceCents, 10) || 0);
+    }, 0);
+  }
+
+  function cadernoAddOnsLabels(product) {
+    return selectedCadernoAddOns(product).map(function (item) {
+      return item.title || item.value;
+    });
+  }
+
   function cadernoPersonalizationText() {
     return String(state.selections.cover_personalization_text || "").trim();
   }
@@ -7050,9 +7097,10 @@
   function cadernoPriceInfo(product) {
     var option = selectedCadernoPurchaseOption(product);
     var baseCents = cadernoPurchasePriceCents(product, option);
-    var extraCents = cadernoPersonalizationExtraCents(product);
+    var personalizationCents = cadernoPersonalizationExtraCents(product);
+    var addOnsCents = cadernoAddOnsExtraCents(product);
     var orderQuantity = cadernoOrderQuantity(product);
-    var unitCents = baseCents + extraCents;
+    var unitCents = baseCents + personalizationCents + addOnsCents;
     var customizationFeeCents = customArtworkFeeCents(product);
     var totalCents = unitCents * orderQuantity + customizationFeeCents;
 
@@ -7062,14 +7110,18 @@
       orderQuantity: option ? orderQuantity : 0,
       cents: totalCents,
       baseCents: baseCents,
-      personalizationCents: extraCents,
+      personalizationCents: personalizationCents,
+      addOnsCents: addOnsCents,
       customizationFeeCents: customizationFeeCents,
       unitCents: unitCents,
       total: totalCents ? formatCents(totalCents) : "",
       baseTotal: baseCents ? formatCents(baseCents) : "",
       baseSubtotal: baseCents ? multipliedPriceText(baseCents, orderQuantity) : "",
-      personalizationTotal: extraCents ? formatCents(extraCents) : "",
-      personalizationSubtotal: extraCents ? multipliedPriceText(extraCents, orderQuantity) : "",
+      personalizationTotal: personalizationCents ? formatCents(personalizationCents) : "",
+      personalizationSubtotal: personalizationCents ? multipliedPriceText(personalizationCents, orderQuantity) : "",
+      addOnsTotal: addOnsCents ? formatCents(addOnsCents) : "",
+      addOnsSubtotal: addOnsCents ? multipliedPriceText(addOnsCents, orderQuantity) : "",
+      productSubtotal: unitCents ? multipliedPriceText(unitCents, orderQuantity) : "",
       unitTotal: unitCents ? formatCents(unitCents) : "",
       perPin: "",
       discount: 0
@@ -7077,19 +7129,25 @@
   }
 
   function cadernoPriceEquation(info) {
+    var parts;
+
     if (!info || !info.baseTotal) {
       return "";
     }
 
     if (info.customizationFeeCents) {
-      return "Produtos: " + (info.baseSubtotal || info.baseTotal) + " + Preparação dos designs: " + formatCents(info.customizationFeeCents) + " = " + info.total;
+      return "Produtos: " + (info.productSubtotal || info.baseSubtotal || info.baseTotal) + " + Preparação dos designs: " + formatCents(info.customizationFeeCents) + " = " + info.total;
     }
 
+    parts = ["Preço base: " + info.baseTotal];
+    if (info.addOnsTotal) {
+      parts.push("Add-ons: " + info.addOnsTotal);
+    }
     if (info.personalizationTotal) {
-      return "Preço base: " + info.baseTotal + " + Personalização: " + info.personalizationTotal + " = " + info.unitTotal;
+      parts.push("Personalização: " + info.personalizationTotal);
     }
 
-    return "Preço base: " + info.baseTotal;
+    return parts.join(" + ") + (parts.length > 1 ? " = " + info.unitTotal : "");
   }
 
   function selectedQuadroPackaging(product) {
@@ -10055,6 +10113,10 @@
     }, 0);
   }
 
+  function builderAdjustmentTotalCents(product) {
+    return builderLines(product).length * builderFeeCents(product);
+  }
+
   function builderHasQuoteOnly(product) {
     return builderLines(product).some(function (line) {
       var entry = builderEntry(product, line && line.productId);
@@ -10388,35 +10450,119 @@
     ].join("");
   }
 
+  // O titulo do passo 3 diz o que a pessoa escolheu no passo 2: com um produto
+  // so, chama-o pelo nome; com varios, fala deles em geral.
+  function builderQuantityStepTitle(product) {
+    var lines = builderLines(product);
+    var entry = lines.length === 1 ? builderEntry(product, lines[0].productId) : null;
+    var record;
+
+    if (!entry) {
+      return "Diz-me quantas unidades queres de cada produto";
+    }
+    // O plural do produto e nao o nome da variante: ha nomes no singular
+    // ("Bloco Argolas A6") que dariam "quantos Bloco Argolas A6 queres". Assim
+    // a frase fica igual a das paginas do catalogo, e o cartao logo por baixo
+    // diz qual e a variante.
+    record = builderPricing(entry);
+    return "Diz-me quantos " + (record && record.unitLabel ? String(record.unitLabel) : "produtos") + " queres";
+  }
+
+  // Desconto face ao preco de uma unidade, pela mesma conta do priceForSize()
+  // dos outros produtos: no modo escalao vale o unitario do escalao, senao a
+  // diferenca entre o total e o preco unitario vezes a quantidade.
+  function builderDiscountPercent(product, line) {
+    var entry = builderEntry(product, line && line.productId);
+    var priceKey = builderPriceKey(product, line);
+    var table = builderPriceTable(entry, priceKey);
+    var quantity = builderQuantity(line);
+    var base = builderLineBaseCents(product, line);
+    var unitCents = baselineUnitCents(table);
+    var tierUnit;
+
+    if (!unitCents || !base || !quantity || base >= unitCents * quantity) {
+      return 0;
+    }
+    tierUnit = builderPricingMode(entry, priceKey) === "tier-unit"
+      ? tierUnitPriceCents(table, quantity)
+      : 0;
+    return tierUnit
+      ? Math.round((1 - (tierUnit / unitCents)) * 100)
+      : Math.round((1 - (base / (unitCents * quantity))) * 100);
+  }
+
+  // Limite do slider: o maior pack da tabela, ou o que o produto configurar
+  // para o slider, para nao ficar preso no ultimo escalao.
+  function builderRangeMaximum(product, line) {
+    var entry = builderEntry(product, line && line.productId);
+    var record = builderPricing(entry);
+    var priceKey = builderPriceKey(product, line);
+    var config = record && record.quantityPricingSwitchByPriceKey && record.quantityPricingSwitchByPriceKey[priceKey];
+    var configurado = Math.max(0, parseInt(config && config.sliderMaximum, 10) || 0);
+    var opcoes = builderQuantityOptions(product, line);
+    var maiorPack = opcoes.length ? opcoes[opcoes.length - 1] : 0;
+
+    return Math.max(builderMinimumQuantity(product, line), configurado || maiorPack || 100);
+  }
+
   function builderRenderQuantityField(product, line) {
     var options = builderQuantityOptions(product, line);
     var minimum = builderMinimumQuantity(product, line);
     var quantity = builderQuantity(line);
 
+    var entry = builderEntry(product, line.productId);
+    var record = builderPricing(entry);
+    var hasProductOptions = builderEntryChoices(entry).length > 0
+      || (entry && Array.isArray(entry.finishes) && entry.finishes.length > 0);
+    var singular = record && record.unitSingular ? String(record.unitSingular) : "unidade";
+    var plural = record && record.unitLabel ? String(record.unitLabel) : "unidades";
+    var maximo = builderRangeMaximum(product, line);
+    var posicao = Math.max(minimum, Math.min(maximo, quantity));
+    var progresso = maximo > minimum ? ((posicao - minimum) / (maximo - minimum) * 100).toFixed(2) : "0";
+
+    // Mesmo desenho dos outros produtos: .pack-option para os packs e
+    // .free-quantity-builder para a quantidade livre. Muda so a origem dos
+    // dados, que aqui e a linha e nao o produto inteiro.
     return [
       '<div class="builder-field">',
-      options.length ? '<div class="builder-quantity-grid">' + options.map(function (value) {
-        return '<button type="button" class="builder-quantity-tile' + (value === quantity ? ' is-selected' : '') + '" data-builder-quantity="' + value + '" data-builder-line="' + escapeHtml(line.id) + '" aria-pressed="' + (value === quantity ? 'true' : 'false') + '">' + escapeHtml(builderUnitLabel(product, line, value)) + '</button>';
-      }).join("") + '</div>' : "",
-      '<div class="builder-quantity-input">',
-      '<button type="button" data-builder-quantity-step="-1" data-builder-line="' + escapeHtml(line.id) + '" aria-label="Menos"' + (quantity <= minimum ? ' disabled' : '') + '>−</button>',
-      '<input type="number" min="' + minimum + '" max="9999" step="1" value="' + quantity + '" inputmode="numeric" data-builder-quantity-input data-builder-line="' + escapeHtml(line.id) + '" aria-label="Quantidade">',
-      '<button type="button" data-builder-quantity-step="1" data-builder-line="' + escapeHtml(line.id) + '" aria-label="Mais">+</button>',
+      hasProductOptions ? '<span class="builder-field-label">Quantidade</span>' : "",
+      options.length ? [
+        '<div class="pack-control">',
+        '<div class="pack-options">',
+        options.map(function (value) {
+          return [
+            '<button class="pack-option' + (value === quantity ? ' is-selected' : '') + '" type="button" data-builder-quantity="' + value + '" data-builder-line="' + escapeHtml(line.id) + '" aria-pressed="' + (value === quantity ? 'true' : 'false') + '">',
+            '<strong>' + value + '</strong>',
+            '<span>' + escapeHtml(value === 1 ? singular : plural) + '</span>',
+            '</button>'
+          ].join("");
+        }).join(""),
+        '</div>',
+        '</div>'
+      ].join("") : "",
+      '<section class="free-quantity-builder" aria-label="Quantidade">',
+      '<p class="free-quantity-mode-label"><span>' + escapeHtml(options.length ? "...ou escolhe uma quantidade específica" : "Define a quantidade") + '</span></p>',
+      '<div class="free-quantity-readout"><strong>' + quantity + '</strong><small>' + escapeHtml(quantity === 1 ? singular : plural) + '</small></div>',
+      '<div class="free-quantity-control">',
+      '<button type="button" data-builder-quantity-step="-1" data-builder-line="' + escapeHtml(line.id) + '" aria-label="Retirar uma unidade"' + (quantity <= minimum ? ' disabled' : '') + '>−</button>',
+      '<label class="free-quantity-slider"><span>Quantidade: ' + quantity + '</span><input type="range" min="' + minimum + '" max="' + maximo + '" step="1" value="' + posicao + '" style="--range-progress:' + progresso + '%" data-builder-quantity-range data-builder-line="' + escapeHtml(line.id) + '" aria-valuetext="' + escapeHtml(builderUnitLabel(product, line, quantity)) + '"></label>',
+      '<button type="button" data-builder-quantity-step="1" data-builder-line="' + escapeHtml(line.id) + '" aria-label="Acrescentar uma unidade"' + (quantity >= maximo ? ' disabled' : '') + '>+</button>',
       '</div>',
+      '</section>',
       '</div>'
     ].join("");
   }
 
   // Mesma caixa de preços dos outros produtos (pack-price-card): à esquerda o
-  // preço por unidade, à direita o total. O ajuste do design é uma linha à
-  // parte porque é por produto e não por unidade.
+  // preço por unidade e o desconto, à direita o total dos produtos. A taxa de
+  // ajuste já foi apresentada no passo 2 e não entra neste resumo do passo 3.
   function builderRenderPriceBox(product, line) {
     var entry = builderEntry(product, line.productId);
     var quantity = builderQuantity(line);
     var base;
     var extra;
-    var fee;
     var perUnit;
+    var desconto;
 
     if (!entry) {
       return "";
@@ -10438,8 +10584,8 @@
 
     base = builderLineBaseCents(product, line);
     extra = builderFinishExtraPerUnitCents(product, line) * quantity;
-    fee = builderFeeCents(product);
     perUnit = quantity ? Math.round((base + extra) / quantity) : 0;
+    desconto = builderDiscountPercent(product, line);
 
     return [
       '<section class="pack-price-overview builder-price-box" aria-label="Preço">',
@@ -10450,11 +10596,11 @@
       '<span class="summary-value">' + escapeHtml(formatCents(perUnit)) + '</span>',
       '<span class="summary-label">cada</span>',
       '</div>',
-      fee ? '<div class="summary-row"><span class="summary-value">+ ' + escapeHtml(formatCents(fee)) + '</span><span class="summary-label">ajuste</span></div>' : "",
+      desconto > 0 ? '<div class="summary-row is-discount">' + percentBadgeIconSvg() + '<span class="summary-value">' + desconto + '%</span><span class="summary-label">desconto</span></div>' : "",
       '</div>',
       '<div class="summary-divider" aria-hidden="true"></div>',
       '<div class="summary-total">',
-      '<div class="total-top"><div class="total-value">' + escapeHtml(formatCents(base + extra + fee)) + '</div></div>',
+      '<div class="total-top"><div class="total-value">' + escapeHtml(formatCents(base + extra)) + '</div></div>',
       '<div class="total-label">total</div>',
       '</div>',
       '</article>',
@@ -10464,6 +10610,7 @@
 
   function builderRenderCard(product, line) {
     var entry = builderEntry(product, line.productId);
+    var pendingRemoval = String(state.builderRemovePendingId || "") === String(line.id);
 
     if (!entry) {
       return "";
@@ -10474,12 +10621,24 @@
       '<header class="builder-card-header">',
       builderRenderEntryMedia(entry, "builder-tile-media"),
       '<span class="builder-tile-copy"><strong>' + escapeHtml(entry.title) + '</strong>' + (entry.subtitle ? '<small>' + escapeHtml(entry.subtitle) + '</small>' : "") + '</span>',
-      '<button type="button" class="builder-card-remove" data-builder-remove="' + escapeHtml(line.id) + '" aria-label="Remover ' + escapeHtml(entry.title) + '">×</button>',
+      '<button type="button" class="builder-card-remove" data-builder-remove="' + escapeHtml(line.id) + '" aria-label="Remover ' + escapeHtml(entry.title) + '" aria-expanded="' + (pendingRemoval ? 'true' : 'false') + '"' + (pendingRemoval ? ' aria-controls="builder-remove-confirmation"' : '') + '>×</button>',
       '</header>',
+      pendingRemoval ? [
+        '<div id="builder-remove-confirmation" data-builder-remove-confirmation role="alert">',
+        '<p>Queres remover?</p>',
+        '<div class="actions">',
+        '<button type="button" class="button secondary" data-builder-confirm-remove="' + escapeHtml(line.id) + '">Sim</button>',
+        '<button type="button" class="button secondary" data-builder-cancel-remove="' + escapeHtml(line.id) + '">Não</button>',
+        '</div>',
+        '</div>'
+      ].join("") : "",
       builderRenderChoiceFields(product, line),
       builderRenderFinishField(product, line),
       builderRenderQuantityField(product, line),
+      '<div class="builder-field">',
+      '<span class="builder-field-label">Sub-total</span>',
       builderRenderPriceBox(product, line),
+      '</div>',
       '</article>'
     ].join("");
   }
@@ -10494,17 +10653,20 @@
       || !builderLines(product).length) {
       return "";
     }
-    return builderRenderTotals(product);
+    return builderRenderTotals(product, {
+      adjustmentsOnly: template === "custom-product-builder"
+    });
   }
 
-  function builderRenderTotals(product) {
-    var total = builderTotalCents(product);
+  function builderRenderTotals(product, options) {
+    var settings = options || {};
+    var total = settings.adjustmentsOnly ? builderAdjustmentTotalCents(product) : builderTotalCents(product);
 
     return [
       '<p class="builder-total">',
       '<span>Total</span>',
       '<strong>' + escapeHtml(formatCents(total)) + '</strong>',
-      builderHasQuoteOnly(product) ? '<small>Há produtos com preço a confirmar.</small>' : "",
+      !settings.adjustmentsOnly && builderHasQuoteOnly(product) ? '<small>Há produtos com preço a confirmar.</small>' : "",
       '</p>'
     ].join("");
   }
@@ -10513,7 +10675,9 @@
   // `personalizacao.html?debug=builder` finge duas imagens ja enviadas e salta
   // para o passo dos produtos, para se poder ver os passos 2 e 3 sem esperar
   // por uploads reais. `&images=N` escolhe quantas (1 a 10), util para ver os
-  // textos do passo 1 e o titulo do passo 2 em cada contagem. Os tokens sao
+  // textos do passo 1 e o titulo do passo 2 em cada contagem.
+  // `personalizacao.html?debugstep3` e o atalho para ver o passo 3 cheio: tres
+  // imagens e todos os produtos do catalogo marcados em cada uma. Os tokens sao
   // falsos: serve so para ver o ecra, um pedido feito assim nao teria
   // ficheiros no servidor.
   var BUILDER_DEBUG_PREVIEWS = [
@@ -10521,45 +10685,71 @@
     "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp"
   ];
 
+  function builderDebugConfig() {
+    var params = currentUrlParams();
+    var wantsStep3 = params.has("debugstep3");
+    var images = parseInt(params.get("images"), 10) || 0;
+
+    if (!wantsStep3 && params.get("debug") !== "builder") {
+      return null;
+    }
+    return {
+      count: Math.max(1, Math.min(10, images || (wantsStep3 ? 3 : 2))),
+      stepId: String(params.get("step") || (wantsStep3 ? "custom_quantities" : "custom_products")),
+      selectEverything: wantsStep3
+    };
+  }
+
+  // Marca todos os produtos do catalogo em todas as imagens: o passo 3 abre com
+  // uma linha por combinacao, ja com a quantidade minima de cada uma.
+  function seedBuilderDebugSelections(product) {
+    builderUploads(product).forEach(function (upload) {
+      builderCatalog(product).forEach(function (entry) {
+        builderToggleSelection(product, upload.token, entry.id, true);
+      });
+    });
+  }
+
   function seedBuilderDebugUploads(product) {
+    var config = isArtworkBuilderProduct(product) ? builderDebugConfig() : null;
     var key;
     var steps;
     var index;
-    var count;
     var previews;
 
-    if (!isArtworkBuilderProduct(product) || currentUrlParams().get("debug") !== "builder") {
+    if (!config) {
       return;
     }
 
     key = customArtworkConfig(product).uploadKey;
-    if (orderUploadItems(key).length) {
-      return;
+    if (!orderUploadItems(key).length) {
+      previews = [];
+      while (previews.length < config.count) {
+        previews.push(BUILDER_DEBUG_PREVIEWS[previews.length % BUILDER_DEBUG_PREVIEWS.length]);
+      }
+
+      state.selections[key] = previews.map(function (preview, position) {
+        var token = "debug-artwork-" + (position + 1);
+        orderUploadPreviews[token] = preview;
+        return {
+          token: token,
+          name: "placeholder-" + (position + 1) + ".webp",
+          size: 120000,
+          mime: "image/webp",
+          kind: "artwork",
+          quantity: 1,
+          feeCents: builderFeeCents(product)
+        };
+      });
     }
 
-    count = Math.max(1, Math.min(10, parseInt(currentUrlParams().get("images"), 10) || 2));
-    previews = [];
-    while (previews.length < count) {
-      previews.push(BUILDER_DEBUG_PREVIEWS[previews.length % BUILDER_DEBUG_PREVIEWS.length]);
+    if (config.selectEverything) {
+      seedBuilderDebugSelections(product);
     }
-
-    state.selections[key] = previews.map(function (preview, position) {
-      var token = "debug-artwork-" + (position + 1);
-      orderUploadPreviews[token] = preview;
-      return {
-        token: token,
-        name: "placeholder-" + (position + 1) + ".webp",
-        size: 120000,
-        mime: "image/webp",
-        kind: "artwork",
-        quantity: 1,
-        feeCents: builderFeeCents(product)
-      };
-    });
 
     steps = visibleSteps(product);
     index = steps.findIndex(function (step) {
-      return step && step.id === String(currentUrlParams().get("step") || "custom_products");
+      return step && step.id === config.stepId;
     });
     if (index >= 0) {
       state.currentStep = index;
@@ -10608,6 +10798,7 @@
           '<article class="builder-design-block" data-builder-design-block="' + escapeHtml(upload.token) + '">',
           '<h3 class="section-title">' + escapeHtml(builderDesignTitle(index)) + '</h3>',
           '<div class="builder-design-figure">' + builderRenderUploadMedia(upload, "builder-design-preview") + '</div>',
+          '<h3 class="section-title">' + (lines.length === 1 ? 'Produto escolhido:' : 'Produtos escolhidos:') + '</h3>',
           '<div class="builder-card-list">',
           lines.map(function (line) {
             return builderRenderCard(product, line);
@@ -10802,11 +10993,29 @@
   }
 
   function bindCustomProductBuilder(product) {
+    function dismissBuilderRemovalPrompt() {
+      var prompt;
+
+      if (!state.builderRemovePendingId) {
+        return;
+      }
+      state.builderRemovePendingId = "";
+      prompt = document.querySelector("[data-builder-remove-confirmation]");
+      if (prompt) {
+        prompt.remove();
+      }
+      document.querySelectorAll("[data-builder-remove][aria-expanded='true']").forEach(function (button) {
+        button.setAttribute("aria-expanded", "false");
+        button.removeAttribute("aria-controls");
+      });
+    }
+
     function withLine(element, handler) {
       var line = builderLine(product, element.dataset.builderLine);
       if (!line) {
         return;
       }
+      state.builderRemovePendingId = "";
       handler(line);
       state.errors = "";
       rerenderProduct(product);
@@ -10815,12 +11024,42 @@
     document.querySelectorAll("[data-builder-remove]").forEach(function (button) {
       button.addEventListener("click", function () {
         var id = String(button.dataset.builderRemove || "");
+        var nextId = String(state.builderRemovePendingId || "") === id ? "" : id;
+        state.builderRemovePendingId = nextId;
+        state.errors = "";
+        rerenderProduct(product);
+        var confirmButton = nextId ? document.querySelector("[data-builder-confirm-remove]") : null;
+        if (confirmButton) {
+          confirmButton.focus();
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-builder-confirm-remove]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = String(button.dataset.builderConfirmRemove || "");
         state.selections.builder_lines = builderLines(product).filter(function (line) {
           return String(line.id) !== id;
         });
+        state.builderRemovePendingId = "";
         state.errors = "";
         rerenderProduct(product);
       });
+    });
+
+    document.querySelectorAll("[data-builder-cancel-remove]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.builderRemovePendingId = "";
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("button").forEach(function (button) {
+      if (button.matches("[data-builder-remove], [data-builder-confirm-remove], [data-builder-cancel-remove]")) {
+        return;
+      }
+      button.addEventListener("click", dismissBuilderRemovalPrompt, true);
     });
 
     // Passo 2: abrir/fechar a gaveta de um grupo. So uma gaveta aberta de cada
@@ -10899,6 +11138,16 @@
           var delta = parseInt(button.dataset.builderQuantityStep, 10) || 0;
           var minimum = builderMinimumQuantity(product, line);
           line.quantity = Math.max(minimum, Math.min(9999, builderQuantity(line) + delta));
+        });
+      });
+    });
+
+    document.querySelectorAll("[data-builder-quantity-range]").forEach(function (input) {
+      input.addEventListener("input", function () {
+        withLine(input, function (line) {
+          var minimo = builderMinimumQuantity(product, line);
+          var maximo = builderRangeMaximum(product, line);
+          line.quantity = Math.max(minimo, Math.min(maximo, parseInt(input.value, 10) || minimo));
         });
       });
     });
@@ -13517,6 +13766,61 @@
       + (state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : "");
   }
 
+  function renderCadernoAddOnDrawer(item) {
+    var proof = renderCadernosProofPhoto(item, "Imagem ilustrativa");
+
+    return [
+      '<div class="cadernos-add-on-drawer">',
+      proof || [
+        '<span class="crachas-size-card-proof cadernos-proof cadernos-proof--adaptive">',
+        '<span class="crachas-size-card-proof-media cadernos-add-on-placeholder">',
+        '<strong>Imagem provisória</strong>',
+        '<span>Este espaço fica pronto para receber a fotografia final.</span>',
+        '</span>',
+        '</span>'
+      ].join(""),
+      item && item.drawerText ? '<p>' + escapeHtml(item.drawerText) + '</p>' : "",
+      '</div>'
+    ].join("");
+  }
+
+  function renderCadernosAddOnsStep(product, step) {
+    var selected = selectedValues(step);
+    var extraCents = cadernoAddOnsExtraCents(product);
+    var html = "";
+
+    (step.items || []).forEach(function (item) {
+      var checked = selected.indexOf(item.value) !== -1;
+      var priceCents = Math.max(0, parseInt(item.extraPriceCents, 10) || 0);
+
+      html += [
+        '<div class="cadernos-add-on-choice">',
+        '<label class="choice-card crachas-size-card cadernos-add-on-card' + (checked ? ' is-selected' : '') + '">',
+        '<input type="checkbox" name="' + escapeHtml(step.field) + '" value="' + escapeHtml(item.value) + '" data-choice-step="' + escapeHtml(step.id) + '"' + (checked ? ' checked' : '') + '>',
+        '<span class="crachas-size-card-visual">' + renderVisual(item, "media-list", step) + '</span>',
+        '<span class="choice-copy crachas-size-card-text">',
+        '<strong>' + escapeHtml(item.title || "") + '</strong>',
+        '<span>' + escapeHtml(item.subtitle || "") + '</span>',
+        '</span>',
+        '<span class="cadernos-purchase-price">+' + escapeHtml(formatCents(priceCents)) + '</span>',
+        '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+        adminItemControls(step, item),
+        '</label>',
+        checked ? renderCadernoAddOnDrawer(item) : "",
+        '</div>'
+      ].join("");
+    });
+
+    return [
+      '<div class="option-list size-choice-list crachas-size-card-list cadernos-add-on-list">' + html + '</div>',
+      '<p class="cadernos-add-ons-total" role="status" aria-live="polite">',
+      '<span>' + (selected.length ? selected.length + (selected.length === 1 ? ' add-on escolhido' : ' add-ons escolhidos') : 'Sem add-ons') + '</span>',
+      '<strong>+' + escapeHtml(formatCents(extraCents)) + ' por agenda</strong>',
+      '</p>',
+      state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : ""
+    ].join("");
+  }
+
   function renderCadernosPurchaseOptions(product, step) {
     var current = getPackQuantity(product);
     var promo = step && step.promoNote ? String(step.promoNote) : "";
@@ -13757,10 +14061,12 @@
     var steps = visibleSteps(product);
     var currentIndex = steps.indexOf(step);
     var laminationIndex = steps.indexOf(findStep(product, "lamination"));
+    var addOnsIndex = steps.indexOf(findStep(product, "add_ons"));
     var optionIndex = steps.indexOf(findStep(product, "pack"));
     var personalizationIndex = steps.indexOf(findStep(product, "cover_personalization"));
     var cover = selectedCadernoCover(product);
     var lamination = selectedCadernoLamination(product);
+    var addOns = selectedCadernoAddOns(product);
     var option = selectedCadernoPurchaseOption(product);
     var orderQuantity = cadernoOrderQuantity(product);
     var personalization = state.selections.cover_personalization || "";
@@ -13774,6 +14080,16 @@
 
     if (currentIndex >= laminationIndex && lamination) {
       parts += renderCadernosBuildPart("Laminação", lamination.title, cadernoSummaryLaminationPreviewItem(product, lamination), findStep(product, "lamination"), "cadernos-build-part--lamination");
+    }
+
+    if (addOnsIndex >= 0 && currentIndex >= addOnsIndex) {
+      addOns.forEach(function (addOn) {
+        parts += renderCadernosBuildTextPart(
+          "Add-on",
+          addOn.title || addOn.value,
+          "+" + formatCents(Math.max(0, parseInt(addOn.extraPriceCents, 10) || 0))
+        );
+      });
     }
 
     if (currentIndex >= optionIndex && option) {
@@ -14858,6 +15174,7 @@
     if (isCadernosProduct(product)) {
       var cover = selectedCadernoCover(product);
       var lamination = selectedCadernoLamination(product);
+      var addOnLabels = cadernoAddOnsLabels(product);
       var option = selectedCadernoPurchaseOption(product);
       var personalization = state.selections.cover_personalization === "yes";
       var personalizationStep = cadernoPersonalizationStep(product);
@@ -14874,10 +15191,12 @@
       var cadernoOrderRows = [
         ["Capa escolhida:", cover ? displayItemTitle(cover) : ""],
         ["Laminação escolhida:", lamination ? lamination.title : ""],
+        ["Add-ons:", addOnLabels.join(", ")],
         ["Opção escolhida:", option ? option.title : ""]
       ];
       var cadernoPriceRows = [
         ["Preço:", cadernoPriceText],
+        ["Acréscimo dos add-ons:", info.addOnsSubtotal || ""],
         ["Inclui:", option && option.includes ? option.includes : ""],
         ["Personalização da capa:", personalization ? "Sim" : "Não"],
         ["Nome/frase:", personalization ? cadernoPersonalizationText() : ""],
@@ -15198,6 +15517,10 @@
 
     if (isCadernosProduct(product) && step.id === "lamination") {
       return renderCadernosLaminationStep(product, step) + renderCadernosBuildSummaryV2(product, step);
+    }
+
+    if (isCadernosProduct(product) && step.template === "add-ons") {
+      return renderCadernosAddOnsStep(product, step) + renderCadernosBuildSummaryV2(product, step);
     }
 
     if (step.template === "original-artwork-upload") {
@@ -15676,6 +15999,9 @@
     if (mapped) {
       return mapped;
     }
+    if (step && step.template === "custom-quantity-builder" && isArtworkBuilderProduct(product)) {
+      return builderQuantityStepTitle(product);
+    }
     artworkTitles = step && step.titleByArtworkCount;
     if (artworkTitles && typeof artworkTitles === "object" && isArtworkBuilderProduct(product)) {
       artworkCount = customArtworkItems(product).length;
@@ -16083,6 +16409,7 @@
     var prevStepId = prevStepObj ? prevStepObj.id : '';
     if (next !== previous) {
       cancelOrderMediaActivityForStep(prevStepObj);
+      state.builderRemovePendingId = "";
       state.progressAnimationFromPercent = progressVisualPercent(product, previous);
     }
     state.currentStep = next;
@@ -18751,6 +19078,11 @@
     if (isCadernosProduct(product)) {
       appendHidden(form, "lamination", cadernoLamination ? cadernoLamination.value : "");
       appendHidden(form, "lamination_label", cadernoLamination ? cadernoLamination.title : "");
+      selectedCadernoAddOns(product).forEach(function (item) {
+        appendHidden(form, "add_ons[]", item.value || "");
+      });
+      appendHidden(form, "add_ons_extra", info.addOnsTotal || "");
+      appendHidden(form, "add_ons_extra_cents", String(info.addOnsCents || 0));
       appendHidden(form, "purchase_option", cadernoOption ? cadernoOption.value : "");
       appendHidden(form, "purchase_option_label", cadernoOption ? cadernoOption.title : "");
       appendHidden(form, "purchase_includes", cadernoOption && cadernoOption.includes ? cadernoOption.includes : "");
@@ -18809,7 +19141,7 @@
   }
 
   function cartProductCategories(home) {
-    var allowed = { quadros: true, crachas: true, imanes: true, caderninhos: true, cadernos: true };
+    var allowed = { quadros: true, crachas: true, imanes: true, caderninhos: true, cadernos: true, agendas: true };
     return (home.categories || []).filter(function (category) {
       return category && allowed[category.id] && homeCategoryIsVisible(category);
     });
@@ -20571,6 +20903,34 @@
     })[0] || null;
   }
 
+  // As linhas (bordas) do ecra, para se poderem afinar em separado dos fundos.
+  // So entram as que existem mesmo: o `visiveis()` exige tambem que a borda
+  // tenha espessura, senao a linha do painel nao pintava nada.
+  var COLOR_PICKER_LINE_CONTROLS = [
+    { id: "linha:wizard", label: "Contorno do wizard", selector: ".wizard-shell", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:cartao-passo", label: "Contorno do passo", selector: ".step-card", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:titulo", label: "Traço do título", selector: ".section-title", read: "borderBottomColor", paint: ["border-bottom-color"] },
+    { id: "linha:painel-imagem", label: "Painel da imagem", selector: ".builder-design-block", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:imagem", label: "Moldura da imagem", selector: ".builder-design-preview", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:grupo", label: "Cartão do grupo", selector: ".builder-group > .builder-group-tile", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:gaveta", label: "Gaveta", selector: ".builder-group-drawer", read: "borderBottomColor", paint: ["border-color"] },
+    { id: "linha:opcao", label: "Opção da gaveta", selector: ".builder-variant", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:cartao-quantidade", label: "Cartão da quantidade", selector: ".builder-card", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:quantidade", label: "Campo da quantidade", selector: ".builder-quantity-input", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:quantidade-pack", label: "Botões de pack", selector: ".builder-quantity-tile", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:total", label: "Caixa do total", selector: ".builder-total", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:resumo", label: "O que vais encomendar", selector: ".crachas-step2-summary", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:cartao-escolha", label: "Cartões de escolha", selector: ".choice-card", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:pack", label: "Packs", selector: ".pack-option", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:caixa-preco", label: "Caixa de preços", selector: ".pack-price-card", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:botao-secundario", label: "Botão secundário", selector: ".button.secondary", read: "borderTopColor", paint: ["border-color"] },
+    { id: "linha:entrega", label: "Opções de entrega", selector: ".delivery-option", read: "borderTopColor", paint: ["border-color"] }
+  ];
+
+  function colorPickerIsLine(id) {
+    return String(id || "").indexOf("linha:") === 0;
+  }
+
   function colorPickerRequested() {
     var wanted;
     try {
@@ -20582,6 +20942,12 @@
       try { window.sessionStorage.setItem(COLOR_PICKER_SESSION_KEY, "1"); } catch (error) {}
       return true;
     }
+    try {
+      if (currentUrlParams().get("line_picker") === "1") {
+        try { window.sessionStorage.setItem(COLOR_PICKER_SESSION_KEY, "1"); } catch (error) {}
+        return true;
+      }
+    } catch (error) {}
     if (wanted === "0") {
       try { window.sessionStorage.removeItem(COLOR_PICKER_SESSION_KEY); } catch (error) {}
       return false;
@@ -20602,6 +20968,7 @@
       dados = { activeId: "", palettes: [] };
     }
     dados.activeId = String(dados.activeId || "");
+    dados.mode = dados.mode === "linha" ? "linha" : "fundo";
     dados.palettes = dados.palettes.filter(function (palette) {
       return palette && palette.id && palette.colors && typeof palette.colors === "object";
     });
@@ -20709,7 +21076,7 @@
   }
 
   function colorPickerControl(id) {
-    return COLOR_PICKER_CONTROLS.filter(function (control) {
+    return COLOR_PICKER_CONTROLS.concat(COLOR_PICKER_LINE_CONTROLS).filter(function (control) {
       return control.id === id;
     })[0] || null;
   }
@@ -20760,6 +21127,15 @@
     return colorPickerHex(window.getComputedStyle(alvo)[control.read]);
   }
 
+  // Uma borda a zero nao se ve: nao vale a pena oferecer a cor dela.
+  function colorPickerHasBorder(alvo) {
+    var estilo = window.getComputedStyle(alvo);
+
+    return ["borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth"].some(function (lado) {
+      return parseFloat(estilo[lado]) > 0;
+    });
+  }
+
   function colorPickerApply(palette) {
     var folha = document.getElementById(COLOR_PICKER_STYLE_ID);
     var regras = [];
@@ -20805,6 +21181,7 @@
     var nome;
     var apagar;
     var tiras;
+    var modo;
     var ultimoControlo = "";
 
     if (!document.body || !colorPickerRequested() || document.querySelector(".color-picker-panel")) {
@@ -20812,6 +21189,7 @@
     }
 
     dados = colorPickerStore();
+    modo = currentUrlParams().get("line_picker") === "1" ? "linha" : String(dados.mode || "fundo");
     colorPickerApply(colorPickerActive(dados));
     colorPickerSwatches();
 
@@ -20822,6 +21200,10 @@
       '<header><strong>Cores</strong><button type="button" data-color-picker-close aria-label="Fechar">×</button></header>',
       '<select data-color-picker-select aria-label="Paleta"></select>',
       '<input type="text" maxlength="40" data-color-picker-name aria-label="Nome da paleta" placeholder="Nome da paleta">',
+      '<div class="color-picker-modes" role="group" aria-label="O que pintar">',
+      '<button type="button" data-color-picker-mode="fundo">Fundos</button>',
+      '<button type="button" data-color-picker-mode="linha">Linhas</button>',
+      '</div>',
       '<div class="color-picker-list" data-color-picker-list></div>',
       '<div class="color-picker-swatches" data-color-picker-swatches></div>',
       '<div class="color-picker-actions">',
@@ -20865,12 +21247,14 @@
     // Pela ordem em que se veem no ecra, de cima para baixo: e assim que se
     // procura um controlo, nao pela ordem em que foi registado no codigo.
     function visiveis() {
-      return COLOR_PICKER_CONTROLS.map(function (control) {
+      var registo = modo === "linha" ? COLOR_PICKER_LINE_CONTROLS : COLOR_PICKER_CONTROLS;
+
+      return registo.map(function (control) {
         var alvo = colorPickerMatch(control);
         var caixa;
         var fixo;
 
-        if (!alvo) {
+        if (!alvo || (modo === "linha" && !colorPickerHasBorder(alvo))) {
           return null;
         }
         caixa = alvo.getBoundingClientRect();
@@ -20893,7 +21277,7 @@
       // A assinatura ignora a ordem: o painel so se refaz quando entra ou sai
       // um controlo. Sem isto as linhas trocavam de sitio a cada re-render,
       // porque a posicao no ecra mexe-se por tudo e por nada.
-      var assinatura = presentes.map(function (control) { return control.id; }).slice().sort().join("|");
+      var assinatura = modo + "#" + presentes.map(function (control) { return control.id; }).slice().sort().join("|");
 
       if (lista.dataset.assinatura !== assinatura) {
         lista.dataset.assinatura = assinatura;
@@ -20978,6 +21362,23 @@
       }
       input.value = botao.dataset.colorPickerSwatch;
       input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    function desenharModos() {
+      painel.querySelectorAll("[data-color-picker-mode]").forEach(function (botao) {
+        botao.classList.toggle("is-active", botao.dataset.colorPickerMode === modo);
+        botao.setAttribute("aria-pressed", botao.dataset.colorPickerMode === modo ? "true" : "false");
+      });
+    }
+
+    painel.querySelectorAll("[data-color-picker-mode]").forEach(function (botao) {
+      botao.addEventListener("click", function () {
+        modo = botao.dataset.colorPickerMode;
+        dados.mode = modo;
+        colorPickerPersist(dados);
+        desenharModos();
+        actualizarValores();
+      });
     });
 
     // Ao sair da escolha, actualiza o que ficou por actualizar.
@@ -21067,6 +21468,7 @@
     });
 
     desenharSeletor();
+    desenharModos();
     desenharTiras();
     actualizarValores();
 

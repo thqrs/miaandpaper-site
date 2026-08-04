@@ -198,15 +198,11 @@
             "subtitle": "Para organizar os teus dias",
             "href": "agendas.html",
             "menuHref": "agendas.html",
-            "image": "content/designs/cadernos/novos/vestido_verde/vestido_verde_matte.webp",
+            "image": "",
             "accent": "sage",
             "available": true,
-            "carouselEnabled": true,
-            "carouselSourceImages": [
-                "content/designs/cadernos/novos/vestido_verde/vestido_verde_matte.webp",
-                "content/designs/cadernos/novos/cornfield/cornfield_matte.webp",
-                "content/designs/cadernos/novos/idoso_jovem/idoso_jovem_matte.webp"
-            ],
+            "carouselEnabled": false,
+            "carouselSourceImages": [],
             "clickable": true
         },
         {

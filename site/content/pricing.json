@@ -313,6 +313,34 @@
                 }
             }
         },
+        "agendas": {
+            "id": "agendas",
+            "family": "cadernos",
+            "catalogContext": "main-v2",
+            "label": "Agendas",
+            "unitLabel": "agendas",
+            "unitSingular": "agenda",
+            "unitShort": "agenda",
+            "defaultPriceKey": "Agendas",
+            "minimumQuantity": 1,
+            "pricingMode": "flat-unit",
+            "allowUnitDiscounts": false,
+            "customArtworkFeePerFileCents": 300,
+            "flatUnitPricesCents": {
+                "agenda_normal": 2990,
+                "agenda_pioneiro": 3490,
+                "pack_normal": 3790,
+                "pack_pioneiro": 4290
+            },
+            "prices": {
+                "Agendas": {
+                    "1": 2990,
+                    "2": 3490,
+                    "3": 3790,
+                    "4": 4290
+                }
+            }
+        },
         "pins": {
             "id": "pins",
             "label": "Pins",

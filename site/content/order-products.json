@@ -103,6 +103,16 @@
       "carouselPanPercent": 0
     },
     {
+      "id": "agendas",
+      "title": "Agendas",
+      "subtitle": "Para organizar os teus dias",
+      "href": "agendas.html",
+      "accent": "sage",
+      "available": true,
+      "carouselEnabled": false,
+      "clickable": true
+    },
+    {
       "id": "stickers",
       "title": "Stickers",
       "subtitle": "Para colar onde quiseres",

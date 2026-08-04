@@ -71,6 +71,7 @@
     quadros: "MOLDURA", cadernos: "CADERNO", caderninhos: "MINICADERNO",
     crachas: "CRACHA", imanes: "IMAN", lembrancas: "LEMBRANCA", pins: "PINS",
     "cadernos-anuais": "CADERNO-ANUAL", "mini-cadernos": "MINICADERNO-LOJA",
+    agendas: "AGENDA",
     "crachas-loja": "CRACHA-LOJA", "imanes-loja": "IMAN-LOJA",
     stickers: "STICKER", marcadores: "MARCADOR", bloquinhos: "BLOQUINHO",
     postais: "POSTAL", home: "HOMEPAGE"
@@ -87,6 +88,7 @@
     imanes: "IM",
     "mini-cadernos": "ML",
     "cadernos-anuais": "AL",
+    agendas: "AG",
     "crachas-loja": "RL",
     "imanes-loja": "IL",
     quadros: "MO",
@@ -618,7 +620,8 @@
 
     function walk(node, trail) {
       if (typeof node === "string") {
-        if (isImagePath(node)) {
+        var prop = String(trail[trail.length - 1] || "");
+        if (isImagePath(node) || (node === "" && (prop === "image" || prop === "featureImage"))) {
           slots.push(makeHomeSlot(trail, node));
         }
         return;
@@ -769,7 +772,7 @@
         // e cover-personalization, por exemplo, têm items mas não usam imagens.
         var emptyImageTemplates = {
           "design-grid": true, "media-list": true, "text-grid": true,
-          "lamination-choice": true, "purchase-option": true
+          "lamination-choice": true, "purchase-option": true, "add-ons": true
         };
         var imageTrail = ["steps", index, "items", itemIndex, "image"];
         var alreadyCollected = slots.some(function (slot) {

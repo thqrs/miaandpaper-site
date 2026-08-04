@@ -5345,6 +5345,9 @@ body.has-site-background {
 
 .button,
 .pack-option,
+.builder-card-remove,
+.builder-option-choice,
+.builder-finish-choice,
 .example-toggle,
 .auto-distribute,
 .site-footer button,
@@ -5357,6 +5360,9 @@ body.has-site-background {
 
 .button:active,
 .pack-option:active,
+.builder-card-remove:active,
+.builder-option-choice:active,
+.builder-finish-choice:active,
 .example-toggle:active,
 .auto-distribute:active,
 .site-footer button:active,
@@ -5938,7 +5944,10 @@ body:has(.site-header.has-site-menu) .cart-floating-button {
 }
 
 .button.primary:active,
-.pack-option:active {
+.pack-option:active,
+.builder-card-remove:active,
+.builder-option-choice:active,
+.builder-finish-choice:active {
   box-shadow: inset 0 2px 8px rgba(46, 36, 19, 0.24);
 }
 
@@ -7353,6 +7362,7 @@ html[data-theme="dark"] .design-grid-section-title.is-admin-only {
 .crachas-size-choice,
 .cadernos-cover-choice,
 .cadernos-lamination-choice,
+.cadernos-add-on-choice,
 .cadernos-purchase-choice {
   display: grid;
 }
@@ -7476,12 +7486,14 @@ html[data-theme="dark"] .crachas-size-card-proof-note {
 
 .choice-card.cadernos-cover-card .crachas-size-card-visual .uploaded-image,
 .choice-card.cadernos-lamination-card .crachas-size-card-visual .uploaded-image,
+.choice-card.cadernos-add-on-card .crachas-size-card-visual .uploaded-image,
 .choice-card.cadernos-purchase-card .crachas-size-card-visual .uploaded-image {
   background-color: #fff;
 }
 
 .choice-card.cadernos-cover-card .crachas-size-card-visual .uploaded-image-inner,
 .choice-card.cadernos-lamination-card .crachas-size-card-visual .uploaded-image-inner,
+.choice-card.cadernos-add-on-card .crachas-size-card-visual .uploaded-image-inner,
 .choice-card.cadernos-purchase-card .crachas-size-card-visual .uploaded-image-inner {
   inset: 0;
   background-size: contain !important;
@@ -7663,7 +7675,77 @@ html[data-theme="dark"] .crachas-size-card-proof-note {
   grid-template-columns: auto minmax(0, 1fr) auto 32px;
 }
 
+.choice-card.cadernos-add-on-card {
+  grid-template-columns: auto minmax(0, 1fr) auto 32px;
+}
+
+.choice-card.cadernos-add-on-card .crachas-size-card-visual .option-image,
+.choice-card.cadernos-add-on-card .crachas-size-card-visual .uploaded-image {
+  width: var(--frame-width-px, 86px) !important;
+  height: var(--frame-height-px, 64px) !important;
+  border-radius: 12px;
+}
+
+.cadernos-add-on-drawer {
+  display: grid;
+  gap: 10px;
+  margin: -6px 8px 12px;
+  padding: 14px;
+  border: 1px solid rgba(126, 93, 22, 0.18);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: #fffaf0;
+}
+
+.cadernos-add-on-drawer .crachas-size-card-proof {
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.cadernos-add-on-drawer > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.cadernos-add-on-placeholder {
+  display: grid;
+  min-height: 180px;
+  place-content: center;
+  gap: 6px;
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.cadernos-add-on-placeholder strong {
+  color: var(--moss);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.1rem;
+}
+
+.cadernos-add-ons-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(126, 93, 22, 0.18);
+  border-radius: var(--radius);
+  background: #fffaf0;
+  color: var(--muted);
+}
+
+.cadernos-add-ons-total strong {
+  color: var(--moss);
+  white-space: nowrap;
+}
+
 .choice-card.cadernos-purchase-card .choice-copy,
+.choice-card.cadernos-add-on-card .choice-copy,
 .choice-card.cadernos-personalization-card .choice-copy {
   align-items: flex-start;
 }
@@ -8822,6 +8904,8 @@ input.is-missing,
 /* Estados seleccionados: uma linguagem sÃ³ â€” border + outline, sem cartÃµes amarelos diferentes */
 .choice-card:has(input:checked),
 .pack-option.is-selected,
+.builder-option-choice:has(input:checked),
+.builder-finish-choice:has(input:checked),
 .delivery-option:has(input:checked),
 .dc-delivery-option.is-selected,
 .dc-delivery-option:has(input:checked) {
@@ -8844,6 +8928,8 @@ input.is-missing,
 .choice-card.price-pack-grid:has(input:checked)::after,
 .choice-card.size-choice:has(input:checked)::after,
 .builder-variant:has(input:checked)::after,
+.builder-option-choice:has(input:checked)::after,
+.builder-finish-choice:has(input:checked)::after,
 .design-action-card.is-selected::after,
 .pack-option.is-selected::after {
   content: "✓";
@@ -8880,7 +8966,9 @@ input.is-missing,
   transform: var(--selection-check-transform);
 }
 
-.builder-variant:has(input:checked)::after {
+.builder-variant:has(input:checked)::after,
+.builder-option-choice:has(input:checked)::after,
+.builder-finish-choice:has(input:checked)::after {
   top: var(--selection-check-inset, 14px);
   right: var(--selection-check-inset, 14px);
 }
@@ -9464,6 +9552,8 @@ html[data-theme="dark"] .quantity-adjust-hint {
 .choice-card.price-pack-grid:has(input:checked)::after,
 .choice-card.size-choice:has(input:checked)::after,
 .builder-variant:has(input:checked)::after,
+.builder-option-choice:has(input:checked)::after,
+.builder-finish-choice:has(input:checked)::after,
 .design-action-card.is-selected::after,
 .pack-option.is-selected::after {
   box-shadow: none;
@@ -12147,12 +12237,47 @@ html[data-theme="dark"] .free-price-chart-tooltip {
 }
 
 .builder-card {
+  position: relative;
   display: grid;
   gap: 16px;
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--card);
+  background: #fff;
+}
+
+/* No passo das quantidades, a largura minima dos controlos aninhados nao pode
+   aumentar a coluna do cartao. Sem este limite, o titulo recebia uma coluna
+   mais larga do que o ecra e acabava cortado pelo overflow-x do body. */
+.step-card:has(.builder-quantities),
+.builder-quantities,
+.builder-quantities .builder-design-block,
+.builder-quantities .builder-card-list,
+.builder-quantities .builder-card {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.step-card:has(.builder-quantities) > *,
+.builder-quantities,
+.builder-quantities .builder-design-block,
+.builder-quantities .builder-card-list,
+.builder-quantities .builder-card {
+  min-width: 0;
+}
+
+/* No passo 3, os cartões vivem dentro de outro painel branco. Um pouco mais
+   de intervalo, um banho creme só no topo e uma sombra curta separam-nos sem
+   transformar a lista numa sucessão de caixas pesadas. */
+.builder-quantities .builder-card-list {
+  gap: 14px;
+}
+
+.builder-quantities .builder-card {
+  background:
+    linear-gradient(180deg, rgba(247, 239, 218, 0.55) 0, rgba(255, 255, 255, 0.96) 72px, #fff 100%);
+  box-shadow:
+    0 5px 14px rgba(82, 59, 19, 0.055),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
 }
 
 .builder-card-header {
@@ -12160,6 +12285,7 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   grid-template-columns: 48px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
+  padding-right: 20px;
 }
 
 .builder-price-box {
@@ -12196,6 +12322,74 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   margin-bottom: 2px;
 }
 
+/* PERSONALIZACAO_STEP3_ACTIONS_MOBILE_V1: só neste passo, as três ações ficam
+   numa linha compacta em mobile. Os textos completos continuam no desktop e
+   nos nomes acessíveis dos botões. */
+body[data-product="personalizacao"] .step-card:has(.builder-quantities) + .cart-entry-actions [data-action-icon],
+body[data-product="personalizacao"] .step-card:has(.builder-quantities) + .cart-entry-actions [data-action-short] {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  body[data-product="personalizacao"] .step-card:has(.builder-quantities) + .cart-entry-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding-top: 8px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body[data-product="personalizacao"] .step-card:has(.builder-quantities) + .cart-entry-actions > .builder-total {
+    grid-column: 1 / -1;
+  }
+
+  body[data-product="personalizacao"] .step-card:has(.builder-quantities) + .cart-entry-actions > [data-back] {
+    grid-column: 1;
+  }
+
+  body[data-product="personalizacao"] .step-card:has(.builder-quantities) + .cart-entry-actions > .cart-entry-buttons {
+    display: contents;
+  }
+
+  body[data-product="personalizacao"] .step-card:has(.builder-quantities) + .cart-entry-actions [data-cart-add-another] {
+    grid-column: 2;
+  }
+
+  body[data-product="personalizacao"] .step-card:has(.builder-quantities) + .cart-entry-actions [data-cart-finalize-current] {
+    grid-column: 3;
+  }
+
+  body[data-product="personalizacao"] .step-card:has(.builder-quantities) + .cart-entry-actions .button {
+    gap: 5px;
+    min-width: 0;
+    min-height: 44px;
+    padding-inline: 6px;
+    font-size: .78rem;
+    white-space: nowrap;
+  }
+
+  body[data-product="personalizacao"] .step-card:has(.builder-quantities) + .cart-entry-actions [data-action-full] {
+    display: none;
+  }
+
+  body[data-product="personalizacao"] .step-card:has(.builder-quantities) + .cart-entry-actions [data-action-icon] {
+    display: inline-grid;
+    flex: none;
+    width: 17px;
+    height: 17px;
+    place-items: center;
+  }
+
+  body[data-product="personalizacao"] .step-card:has(.builder-quantities) + .cart-entry-actions [data-action-icon] svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  body[data-product="personalizacao"] .step-card:has(.builder-quantities) + .cart-entry-actions [data-action-short] {
+    display: inline;
+  }
+}
+
 .builder-summary-thumb {
   width: 56px;
   height: 56px;
@@ -12221,22 +12415,65 @@ html[data-theme="dark"] .free-price-chart-tooltip {
 }
 
 .builder-card-remove {
-  flex: none;
-  width: 32px;
-  height: 32px;
-  border: 1px solid #a3231d;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #ead0cd;
   border-radius: 50%;
-  background: #c62f28;
-  color: #fff;
-  font-size: 1.1rem;
+  background: #fffafa;
+  color: #a8615a;
+  font-size: .86rem;
   font-weight: 700;
   line-height: 1;
+  opacity: .72;
   cursor: pointer;
 }
 
 .builder-card-remove:hover {
-  background: #a3231d;
-  border-color: #7f1a15;
+  border-color: #d9aaa4;
+  background: #f8e8e6;
+  color: #983b33;
+  opacity: 1;
+}
+
+[data-builder-remove-confirmation] {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(199, 68, 56, 0.22);
+  border-radius: var(--radius);
+  background: #fff7f6;
+  color: #8c3028;
+}
+
+[data-builder-remove-confirmation] > p {
+  margin: 0;
+  font-weight: 850;
+}
+
+[data-builder-remove-confirmation] .actions {
+  margin-top: 0;
+}
+
+[data-builder-confirm-remove] {
+  border-color: #d29a92;
+  background: #f7dedb;
+  color: #8c3028;
+}
+
+[data-builder-cancel-remove] {
+  background: var(--card);
+}
+
+@media (max-width: 700px) {
+  .step-card:has([data-builder-remove-confirmation]) + .step-actions {
+    position: static;
+  }
 }
 
 .builder-field {
@@ -12244,11 +12481,70 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   gap: 8px;
 }
 
+/* Mesmo registo do "O que vais encomendar:" (.crachas-step2-summary-title),
+   uma escala abaixo: serifada, moss e com o traco por baixo. */
 .builder-field-label {
-  color: var(--muted);
-  font-size: .82rem;
-  letter-spacing: .04em;
-  text-transform: uppercase;
+  margin: 0 0 2px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--line);
+  color: var(--moss);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .98rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: .01em;
+  text-transform: none;
+}
+
+/* O passo 3 ja tem cartoes e espacos suficientes para separar os grupos. As
+   linhas sob os titulos acrescentavam ruido visual sem esclarecer a hierarquia. */
+.builder-quantities .section-title,
+.builder-quantities .builder-field-label,
+.builder-quantities .crachas-step2-summary-title {
+  border-bottom: 0;
+}
+
+.builder-quantities .section-title,
+.builder-quantities .crachas-step2-summary-title {
+  padding-top: 6px;
+  padding-bottom: 0;
+}
+
+.builder-quantities .builder-field-label {
+  padding-top: 5px;
+  padding-bottom: 3px;
+}
+
+.builder-quantities .builder-field {
+  gap: 0;
+  margin-top: 10px;
+}
+
+.builder-quantities .builder-field > .builder-field-label {
+  margin: 0;
+  transform: translateY(-5px);
+}
+
+.builder-quantities .builder-field > .pack-control + .free-quantity-builder {
+  margin-top: 10px;
+}
+
+.builder-quantities .free-quantity-mode-label {
+  grid-template-columns: minmax(0, 1fr);
+  padding-block: 4px 0;
+}
+
+.builder-quantities .free-quantity-mode-label::before,
+.builder-quantities .free-quantity-mode-label::after {
+  content: none;
+}
+
+.builder-quantities .pack-price-card:not(.pack-price-card--solo) {
+  grid-template-columns: minmax(112px, max-content) minmax(128px, 1fr);
+}
+
+.builder-quantities .summary-divider {
+  display: none;
 }
 
 .builder-option-choice,
@@ -12270,10 +12566,21 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   pointer-events: none;
 }
 
-.builder-option-choice.is-selected,
-.builder-finish-choice.is-selected {
-  border-color: var(--gold);
-  box-shadow: inset 0 0 0 1px var(--gold);
+.builder-option-choice,
+.builder-finish-choice {
+  padding-right: 46px;
+}
+
+/* Dentro do construtor os cartoes sao brancos: o creme do resto do site
+   deixava-os com um tom que nao assentava no cartao branco do produto. O
+   escolhido tambem — o que o marca e a borda e o visto, nao o fundo. */
+.custom-product-builder .pack-option,
+.custom-product-builder .pack-option.is-selected,
+.builder-option-choice,
+.builder-option-choice:has(input:checked),
+.builder-finish-choice,
+.builder-finish-choice:has(input:checked) {
+  background: #fff;
 }
 
 .builder-option-choice small,
@@ -12367,11 +12674,17 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface-cream-strong);
+  font-weight: 800;
 }
 
 .builder-total strong {
   margin-left: auto;
   font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.builder-total small {
+  font-weight: 400;
 }
 
 .builder-total small {
@@ -12388,6 +12701,21 @@ html[data-theme="dark"] .free-price-chart-tooltip {
 
   .builder-option-grid {
     grid-template-columns: 1fr;
+  }
+
+  .builder-quantities .pack-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .builder-quantities .pack-option {
+    padding-right: 12px;
+  }
+
+  .builder-quantities .pack-price-card:not(.pack-price-card--solo) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 0;
   }
 
   /* Em ecras estreitos ha pouca largura para tudo: a imagem encolhe e o preco
@@ -12733,6 +13061,33 @@ html[data-theme="dark"] .free-price-chart-tooltip {
   font-size: .78rem;
 }
 
+.color-picker-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.color-picker-modes button {
+  padding: 5px;
+  border: 0;
+  border-radius: calc(var(--radius) - 3px);
+  background: transparent;
+  color: var(--muted);
+  font-size: .8rem;
+  cursor: pointer;
+}
+
+.color-picker-modes button.is-active {
+  background: var(--card);
+  color: var(--moss);
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(69, 49, 14, 0.12);
+}
+
 /* Os swatches sao um atalho para as cores do site: nao substituem o selector
    nativo, que continua a dar qualquer cor. */
 .color-picker-swatches {
@@ -12781,12 +13136,4 @@ html[data-theme="dark"] .free-price-chart-tooltip {
 .button.primary,
 html[data-theme="dark"] .button.primary {
   background: var(--pick-button, var(--button-bg));
-}
-
-/* PERSONALIZACAO_FUNDO_BRANCO: so esta pagina troca o creme do site por
-   branco. O `data-product` vem do proprio HTML, por isso nao depende de nada
-   que o app.js escreva. */
-html:has(body[data-product="personalizacao"]),
-body[data-product="personalizacao"] {
-  background-color: #fff;
 }

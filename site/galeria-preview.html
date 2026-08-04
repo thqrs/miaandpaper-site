@@ -14,7 +14,7 @@
       var context = requested === "congresso-2026" ? requested : "principal";
       var stylesheet = context === "congresso-2026"
         ? "congressos/2026/styles-congressos.css?v=2026072901"
-        : "styles.css?v=2026073101";
+        : "styles.css?v=2026080401";
       window.MiaGalleryPreviewContext = context;
       document.write('<link rel="stylesheet" href="' + stylesheet + '">');
     }());
@@ -39,7 +39,7 @@
       var context = window.MiaGalleryPreviewContext || "principal";
       var renderer = context === "congresso-2026"
         ? "congressos/2026/app-congressos.js?v=2026072901"
-        : "app.js?v=2026080101";
+        : "app.js?v=2026080401";
       document.body.dataset.previewContext = context;
       document.write('<script src="' + renderer + '"><\/script>');
     }());

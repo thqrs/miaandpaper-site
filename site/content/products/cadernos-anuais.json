@@ -2118,7 +2118,6 @@
       "template": "purchase-option",
       "field": "pack_quantity",
       "selection": "pack",
-      "promoNote": "Na compra de um Pack Normal ou Pack Pioneiro receberá grátis uma caneta com a inscrição \"Felicidade Eterna\". Válido apenas para as próximas 5 encomendas.",
       "orderQuantity": {
         "title": "Quantidade",
         "text": "Podes encomendar mais do que um caderno ou pack com a mesma capa, laminação e opção de compra.",
