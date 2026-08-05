@@ -462,6 +462,31 @@
                     "20": 3000
                 }
             }
+        },
+        "marcadores-magneticos": {
+            "id": "marcadores-magneticos",
+            "family": "marcadores-magneticos",
+            "catalogContext": "main-v2",
+            "label": "Marcadores magnéticos",
+            "unitLabel": "marcadores magnéticos",
+            "unitSingular": "marcador magnético",
+            "unitShort": "marcador",
+            "defaultPriceKey": "Marcadores magnéticos",
+            "minimumQuantity": 1,
+            "pricingMode": "flat-unit",
+            "allowUnitDiscounts": false,
+            "customArtworkFeePerFileCents": 300,
+            "flatUnitPricesCents": {
+                "Marcadores magnéticos": 150
+            },
+            "prices": {
+                "Marcadores magnéticos": {
+                    "1": 150,
+                    "5": 750,
+                    "10": 1500,
+                    "20": 3000
+                }
+            }
         }
     }
 }

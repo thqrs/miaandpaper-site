@@ -326,28 +326,26 @@
           "id": "marcadores",
           "group": "Papel",
           "title": "Marcadores",
-          "subtitle": "Laminados dos dois lados",
+          "subtitle": "Com opções de impressão e acabamento",
           "slug": "marcadores",
           "imageShape": "rect",
           "finishes": [
-            "holografica"
-          ],
-          "choices": [
-            {
-              "field": "marker_border",
-              "label": "Borda",
-              "required": true,
-              "items": [
-                {
-                  "value": "com-borda",
-                  "title": "Com borda"
-                },
-                {
-                  "value": "sem-borda",
-                  "title": "Sem borda"
-                }
-              ]
-            }
+            "holografica-marcador",
+            "dois-lados-marcador",
+            "buraquinho-marcador",
+            "margem-plastico-marcador"
+          ]
+        },
+        {
+          "id": "marcadores-magneticos",
+          "group": "Papel",
+          "title": "Marcadores magnéticos",
+          "subtitle": "Com acabamento glossy ou holográfico",
+          "slug": "marcadores-magneticos",
+          "image": "",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica-marcador"
           ]
         }
       ],
@@ -357,6 +355,30 @@
           "title": "Laminação holográfica",
           "subtitle": "Brilho com reflexos coloridos",
           "extraPriceCentsPerUnit": 25
+        },
+        {
+          "value": "holografica-marcador",
+          "title": "Papel ou acabamento holográfico",
+          "subtitle": "Para marcadores",
+          "extraPriceCentsPerUnit": 15
+        },
+        {
+          "value": "dois-lados-marcador",
+          "title": "Impressão dos dois lados",
+          "subtitle": "Para marcadores",
+          "extraPriceCentsPerUnit": 15
+        },
+        {
+          "value": "buraquinho-marcador",
+          "title": "Buraquinho para pendente",
+          "subtitle": "Para pompom ou outro pendente",
+          "extraPriceCentsPerUnit": 25
+        },
+        {
+          "value": "margem-plastico-marcador",
+          "title": "Margem de plástico",
+          "subtitle": "Margem transparente à volta do marcador",
+          "extraPriceCentsPerUnit": 20
         }
       ]
     },

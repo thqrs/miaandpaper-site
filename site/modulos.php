@@ -59,6 +59,7 @@ function mod_descricao_template($template)
     $mapa = array(
         'design-grid' => 'Grelha de designs para escolher. O passo 1 da maioria dos produtos.',
         'quantity-builder' => 'Packs e quantidade livre, com o cálculo do melhor conjunto e a sugestão de poupança.',
+        'option-drawers' => 'Gavetas independentes para escolher opções extra e acréscimos por unidade.',
         'price-pack-grid' => 'Tabela de packs e preços, sem escolha de quantidade.',
         'details-form' => 'Campos de texto — normalmente os dados do cartão de apresentação.',
         'delivery-contact' => 'Escolha de entrega mais os dados de contacto e o NIF.',

@@ -73,7 +73,7 @@
     "cadernos-anuais": "CADERNO-ANUAL", "mini-cadernos": "MINICADERNO-LOJA",
     agendas: "AGENDA",
     "crachas-loja": "CRACHA-LOJA", "imanes-loja": "IMAN-LOJA",
-    stickers: "STICKER", marcadores: "MARCADOR", bloquinhos: "BLOQUINHO",
+    stickers: "STICKER", marcadores: "MARCADOR", "marcadores-magneticos": "MARCADOR-MAGNETICO", bloquinhos: "BLOQUINHO",
     postais: "POSTAL", home: "HOMEPAGE"
   };
 
@@ -97,6 +97,7 @@
     pins: "PI",
     stickers: "ST",
     marcadores: "MK",
+    "marcadores-magneticos": "MG",
     bloquinhos: "BQ",
     "congresso-2026|caderninhos": "QN",
     "congresso-2026|cadernos": "QA",
@@ -259,11 +260,18 @@
     var step = entry.product.steps && entry.product.steps[context.stepIndex];
     var item = context.itemTrail ? resolveTrail(entry.product, context.itemTrail) : null;
     var dynamicIndex = trail.indexOf("exampleByField");
+    var drawerIndex = trail.indexOf("drawers");
 
     // Vistas condicionais (gavetas das molduras, sideImage, etc.) precisam de
     // ter o item dono seleccionado para o site desenhar a imagem certa.
     if (step && step.id && item && item !== step && item.value != null) {
-      if (trail.indexOf("exampleImages") !== -1 && step.selectableExamples === true) {
+      if (drawerIndex !== -1 && step.drawers && step.drawers[Number(trail[drawerIndex + 1])]) {
+        var drawer = step.drawers[Number(trail[drawerIndex + 1])];
+        if (drawer.field) {
+          selections[String(drawer.field)] = item.value;
+          selections.order_flow = "catalog";
+        }
+      } else if (trail.indexOf("exampleImages") !== -1 && step.selectableExamples === true) {
         selections[String(step.exampleSelectionKey || "details_example")] = item.value;
       } else {
         selections[step.id] = step.selection === "multi" ? [item.value] : item.value;

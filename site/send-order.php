@@ -81,7 +81,7 @@ function parse_email_recipients($value)
 function safe_return_to()
 {
     $returnTo = field('return_to');
-    $allowed = array('index.html', 'molduras.html', 'quadros.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'mini-cadernos.html', 'blocos-a6.html', 'bloquinhos.html', 'cadernos-anuais.html', 'agendas.html', 'imanes.html', 'imanes-recortados.html', 'stickers.html', 'marcadores.html', 'lembrancas.html', 'personalizacao.html', 'adicionar-produto.html', 'checkout.html');
+    $allowed = array('index.html', 'molduras.html', 'quadros.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'mini-cadernos.html', 'blocos-a6.html', 'bloquinhos.html', 'cadernos-anuais.html', 'agendas.html', 'imanes.html', 'imanes-recortados.html', 'stickers.html', 'marcadores.html', 'marcadores-magneticos.html', 'lembrancas.html', 'personalizacao.html', 'adicionar-produto.html', 'checkout.html');
 
     if (in_array($returnTo, $allowed, true)) {
         return $returnTo;
@@ -93,7 +93,7 @@ function safe_return_to()
 function safe_product_slug()
 {
     $slug = strtolower(field('product_slug'));
-    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'personalizacao');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'personalizacao');
 
     if (in_array($slug, $allowed, true)) {
         return $slug;
@@ -408,7 +408,7 @@ function cart_allowed_product_slug($slug)
     // aqui de proposito: e a pagina de origem, nao um produto — cada linha
     // que sai de la traz o slug do produto real (crachas-loja, marcadores...).
     $slug = strtolower(trim((string)$slug));
-    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos');
 
     return in_array($slug, $allowed, true) ? $slug : '';
 }
@@ -679,6 +679,40 @@ function product_variant_item($variant, $value)
     return array();
 }
 
+// Gavetas de opções do catálogo. Cada escolha pode acrescentar um valor por
+// unidade; o servidor volta a ler esse valor no JSON e nunca aceita o preço
+// enviado pelo browser.
+function product_option_drawers($product)
+{
+    $drawers = array();
+    $steps = isset($product['steps']) && is_array($product['steps']) ? $product['steps'] : array();
+    foreach ($steps as $step) {
+        if (!is_array($step) || !isset($step['template']) || (string)$step['template'] !== 'option-drawers') {
+            continue;
+        }
+        if (isset($step['drawers']) && is_array($step['drawers'])) {
+            foreach ($step['drawers'] as $drawer) {
+                if (is_array($drawer)) {
+                    $drawers[] = $drawer;
+                }
+            }
+        }
+    }
+    return $drawers;
+}
+
+function product_option_drawer_item($drawer, $value)
+{
+    $items = isset($drawer['items']) && is_array($drawer['items']) ? $drawer['items'] : array();
+    foreach ($items as $item) {
+        $itemValue = is_array($item) && isset($item['value']) ? (string)$item['value'] : '';
+        if ($itemValue !== '' && $itemValue === (string)$value) {
+            return $item;
+        }
+    }
+    return array();
+}
+
 function product_tier_price_cents($table, $quantity)
 {
     if (!is_array($table) || empty($table) || (int)$quantity <= 0) {
@@ -833,7 +867,7 @@ function cart_assoc_text_selection($selections, $name)
 
 function cart_is_main_v2_slug($slug)
 {
-    return in_array((string)$slug, array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores'), true);
+    return in_array((string)$slug, array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos'), true);
 }
 
 function cart_is_congress_slug($slug)
@@ -1622,6 +1656,38 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
             . (isset($variantItem['title']) ? cart_text($variantItem['title']) : $variantValue);
     }
 
+    $optionDrawerLabels = array();
+    $optionDrawerExtraPerUnitCents = 0;
+    if (!$isMainCustomArtwork) {
+        foreach (product_option_drawers($productConfig) as $drawer) {
+            $drawerField = isset($drawer['field']) ? cart_text($drawer['field']) : '';
+            $drawerValue = $drawerField !== '' ? cart_string_selection($selections, $drawerField) : '';
+            if ($drawerValue === '' && isset($drawer['defaultValue'])) {
+                $drawerValue = cart_text($drawer['defaultValue']);
+            }
+            $drawerItem = $drawerField !== '' ? product_option_drawer_item($drawer, $drawerValue) : array();
+
+            if ($drawerField === '') {
+                continue;
+            }
+            if ($drawerValue === '') {
+                if (!empty($drawer['required'])) {
+                    $errors[] = 'Escolhe ' . strtolower(isset($drawer['label']) ? cart_text($drawer['label']) : $drawerField) . ' em ' . $productName . '.';
+                }
+                continue;
+            }
+            if (empty($drawerItem)) {
+                $errors[] = 'Uma das opções extra escolhidas em ' . $productName . ' não é válida.';
+                continue;
+            }
+
+            $selections[$drawerField] = $drawerValue;
+            $optionDrawerLabels[] = (isset($drawer['label']) ? cart_text($drawer['label']) . ': ' : '')
+                . (isset($drawerItem['title']) ? cart_text($drawerItem['title']) : $drawerValue);
+            $optionDrawerExtraPerUnitCents += max(0, (int)(isset($drawerItem['extraPriceCentsPerUnit']) ? $drawerItem['extraPriceCentsPerUnit'] : 0));
+        }
+    }
+
     $cardDescriptionKey = $slug === 'crachas' ? 'cracha_card_description' : 'iman_card_description';
     $cardReferenceKey = $slug === 'crachas' ? 'cracha_card_reference_uploads' : 'iman_card_reference_uploads';
     $cardAudioKey = $slug === 'crachas' ? 'cracha_card_audio_uploads' : 'iman_card_audio_uploads';
@@ -2310,13 +2376,13 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $quoteOnly = $quadroQuoteOnly || $sizeQuoteOnly;
     $unitPriceCents = $quoteOnly
         ? 0
-        : $basePriceCents + $addOnsExtraCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents;
+        : $basePriceCents + $addOnsExtraCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents + $optionDrawerExtraPerUnitCents;
     $productQuantity = $isCadernos ? $cadernoOrderQuantity : $packQuantity;
     $productSubtotalCents = $quoteOnly
         ? 0
         : ($isMainV2
             ? ($mainV2UsesTotalFromPacks
-                ? $mainV2LadderTotalCents + (($addOnsExtraCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents) * $productQuantity)
+                ? $mainV2LadderTotalCents + (($addOnsExtraCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents + $optionDrawerExtraPerUnitCents) * $productQuantity)
                 : $unitPriceCents * $productQuantity)
             : ($isCadernos ? $unitPriceCents * $cadernoOrderQuantity : $unitPriceCents));
     // A preparação do design cobra-se mesmo quando o produto ainda não tem
@@ -2324,6 +2390,9 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $priceCents = $productSubtotalCents + ($isMainV2 ? $customizationFeeCents : 0);
     $finishExtraLine = $finishExtraPerUnitCents && $productQuantity
         ? format_euros($finishExtraPerUnitCents) . ' x ' . $productQuantity . ' = ' . format_euros($finishExtraPerUnitCents * $productQuantity)
+        : '';
+    $optionDrawerExtraLine = $optionDrawerExtraPerUnitCents && $productQuantity
+        ? format_euros($optionDrawerExtraPerUnitCents) . ' x ' . $productQuantity . ' = ' . format_euros($optionDrawerExtraPerUnitCents * $productQuantity)
         : '';
     $priceRangeLine = '';
     if ($sizeQuoteOnly && !$quadroQuoteOnly) {
@@ -2406,7 +2475,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     // O extra do acabamento tem linha propria (finish_extra_line), por isso a
     // linha dos packs mostra so o preco dos produtos — senao a soma "1 pack de
     // 24 + 4 packs de 5 = X" nao fecharia com o X apresentado.
-    $productBaseSubtotalCents = max(0, $productSubtotalCents - (($addOnsExtraCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents) * $productQuantity));
+    $productBaseSubtotalCents = max(0, $productSubtotalCents - (($addOnsExtraCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents + $optionDrawerExtraPerUnitCents) * $productQuantity));
     $basePriceLine = $quoteOnly
         ? ($priceRangeLine !== '' ? $priceRangeLine : 'Preço a confirmar')
         : ($basePriceCents
@@ -2544,6 +2613,9 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         'finish_extra_per_unit_cents' => $finishExtraPerUnitCents,
         'finish_extra_line' => $finishExtraLine,
         'variant_labels' => $variantLabels,
+        'option_drawer_labels' => $optionDrawerLabels,
+        'option_drawer_extra_per_unit_cents' => $optionDrawerExtraPerUnitCents,
+        'option_drawer_extra_line' => $optionDrawerExtraLine,
         'price_min_cents' => $quadroPriceMinCents,
         'price_max_cents' => $quadroPriceMaxCents,
         'price_range_line' => $priceRangeLine,
@@ -2764,6 +2836,12 @@ function cart_item_owner_lines($line)
     }
     $rows[] = (!empty($line['is_main_v2']) ? 'Quantidade: ' : 'Pack: ') . $line['pack_quantity'] . ' ' . $line['unit_label'];
     $rows[] = 'Tamanho: ' . $line['size'];
+    if (!empty($line['option_drawer_labels'])) {
+        $rows[] = 'Opções extra: ' . implode(' · ', $line['option_drawer_labels']);
+    }
+    if ($line['option_drawer_extra_line'] !== '') {
+        $rows[] = 'Acréscimo das opções: ' . $line['option_drawer_extra_line'];
+    }
     $rows[] = 'Preço do produto: ' . $line['price_line'] . ($line['unit_price_line'] !== '' ? ' (' . $line['unit_price_line'] . ')' : '');
     $rows[] = '';
     $rows[] = 'Designs e quantidades:';
@@ -2966,6 +3044,12 @@ function cart_item_customer_lines($line)
     }
     $rows[] = (!empty($line['is_main_v2']) ? 'Quantidade: ' : 'Pack: ') . $line['pack_quantity'] . ' ' . $line['unit_label'];
     $rows[] = 'Tamanho: ' . $line['size'];
+    if (!empty($line['option_drawer_labels'])) {
+        $rows[] = 'Opções extra: ' . implode(' · ', $line['option_drawer_labels']);
+    }
+    if ($line['option_drawer_extra_line'] !== '') {
+        $rows[] = 'Acréscimo das opções: ' . $line['option_drawer_extra_line'];
+    }
     $rows[] = 'Preço do produto: ' . $line['price_line'] . ($line['unit_price_line'] !== '' ? ', ou seja: ' . $line['unit_price_line'] : '');
     $rows[] = '';
     $rows[] = 'Designs escolhidos:';
@@ -3344,7 +3428,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="styles.css?v=2026080401">
+  <link rel="stylesheet" href="styles.css?v=2026080410">
 </head>
 <body class="result-body">
   <main class="result-card <?php echo h($kind); ?>">

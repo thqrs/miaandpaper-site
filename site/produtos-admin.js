@@ -197,6 +197,7 @@
       "imanes-loja": "Íman",
       stickers: "Sticker",
       marcadores: "Marcador",
+      "marcadores-magneticos": "Marcador magnético",
       bloquinhos: "Bloquinho",
       quadros: "Moldura",
       lembrancas: "Lembrança"
@@ -222,6 +223,7 @@
       "imanes-loja": "Ímanes",
       stickers: "Stickers",
       marcadores: "Marcadores",
+      "marcadores-magneticos": "Marcadores magnéticos",
       bloquinhos: "Bloquinhos",
       quadros: "Molduras",
       lembrancas: "Lembranças"

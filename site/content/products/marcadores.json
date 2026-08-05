@@ -56,6 +56,10 @@
       "label": "Grelha de designs"
     },
     {
+      "id": "option-drawers",
+      "label": "Gavetas de opções extra"
+    },
+    {
       "id": "details-form",
       "label": "Formulário"
     },
@@ -271,6 +275,123 @@
       }
     },
     {
+      "id": "extras",
+      "label": "Opções extra",
+      "title": "Queres acrescentar alguma opção?",
+      "text": "Abre cada gaveta e escolhe como queres os teus marcadores.",
+      "template": "option-drawers",
+      "condition": {
+        "field": "order_flow",
+        "equals": "catalog"
+      },
+      "drawers": [
+        {
+          "id": "print-sides",
+          "title": "Impressão",
+          "label": "Impressão",
+          "field": "marker_print_sides",
+          "required": true,
+          "defaultValue": "one-side",
+          "items": [
+            {
+              "id": "one-side",
+              "value": "one-side",
+              "title": "Impressão de um lado",
+              "subtitle": "Opção por omissão",
+              "image": "",
+              "extraPriceCentsPerUnit": 0
+            },
+            {
+              "id": "two-sides",
+              "value": "two-sides",
+              "title": "Impressão dos dois lados",
+              "subtitle": "+0,15 € por marcador",
+              "image": "",
+              "extraPriceCentsPerUnit": 15
+            }
+          ]
+        },
+        {
+          "id": "paper",
+          "title": "Papel",
+          "label": "Papel",
+          "field": "marker_paper",
+          "required": true,
+          "defaultValue": "normal",
+          "items": [
+            {
+              "id": "normal",
+              "value": "normal",
+              "title": "Papel normal",
+              "subtitle": "Opção por omissão",
+              "image": "",
+              "extraPriceCentsPerUnit": 0
+            },
+            {
+              "id": "holographic",
+              "value": "holographic",
+              "title": "Papel holográfico",
+              "subtitle": "+0,15 € por marcador",
+              "image": "",
+              "extraPriceCentsPerUnit": 15
+            }
+          ]
+        },
+        {
+          "id": "hole",
+          "title": "Buraquinho para pendente",
+          "label": "Buraquinho",
+          "field": "marker_hole",
+          "required": true,
+          "defaultValue": "no-hole",
+          "items": [
+            {
+              "id": "no-hole",
+              "value": "no-hole",
+              "title": "Sem buraquinho",
+              "subtitle": "Opção por omissão",
+              "image": "",
+              "extraPriceCentsPerUnit": 0
+            },
+            {
+              "id": "hole",
+              "value": "hole",
+              "title": "Com buraquinho para pendente",
+              "subtitle": "+0,25 € por marcador — para pompom ou outro pendente",
+              "image": "",
+              "extraPriceCentsPerUnit": 25
+            }
+          ]
+        },
+        {
+          "id": "border",
+          "title": "Margem de plástico",
+          "label": "Margem de plástico",
+          "field": "marker_border",
+          "required": true,
+          "defaultValue": "without-border",
+          "items": [
+            {
+              "id": "without-border",
+              "value": "without-border",
+              "title": "Sem margem",
+              "subtitle": "Opção por omissão",
+              "image": "",
+              "extraPriceCentsPerUnit": 0
+            },
+            {
+              "id": "with-border",
+              "value": "with-border",
+              "title": "Com margem de plástico",
+              "subtitle": "+0,20 € por marcador",
+              "image": "",
+              "extraPriceCentsPerUnit": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "pack",
       "label": "Pack",
       "title": "Diz-me quantos marcadores queres",
@@ -396,27 +517,28 @@
   ],
   "finishOptions": [
     {
-      "value": "holografica",
-      "title": "Laminação holográfica",
+      "value": "holografica-marcador",
+      "title": "Papel holográfico",
       "subtitle": "Brilho com reflexos coloridos",
-      "extraPriceCentsPerUnit": 25
-    }
-  ],
-  "variantOptions": [
+      "extraPriceCentsPerUnit": 15
+    },
     {
-      "field": "marker_border",
-      "label": "Borda",
-      "required": true,
-      "items": [
-        {
-          "value": "com-borda",
-          "title": "Com borda"
-        },
-        {
-          "value": "sem-borda",
-          "title": "Sem borda"
-        }
-      ]
+      "value": "dois-lados-marcador",
+      "title": "Impressão dos dois lados",
+      "subtitle": "Impressão também no verso",
+      "extraPriceCentsPerUnit": 15
+    },
+    {
+      "value": "buraquinho-marcador",
+      "title": "Buraquinho para pendente",
+      "subtitle": "Para pompom ou outro pendente",
+      "extraPriceCentsPerUnit": 25
+    },
+    {
+      "value": "margem-plastico-marcador",
+      "title": "Margem de plástico",
+      "subtitle": "Acabamento com margem transparente",
+      "extraPriceCentsPerUnit": 20
     }
   ]
 }

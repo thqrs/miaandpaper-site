@@ -137,6 +137,17 @@
       "carouselRandomizeOnLoad": true,
       "clickable": true,
       "carouselPanPercent": 0
+    },
+    {
+      "id": "marcadores-magneticos",
+      "title": "Marcadores magnéticos",
+      "subtitle": "Fecham a página com um toque magnético",
+      "href": "marcadores-magneticos.html",
+      "image": "",
+      "accent": "gold",
+      "available": true,
+      "carouselEnabled": false,
+      "clickable": true
     }
   ],
   "theme": {

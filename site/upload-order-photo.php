@@ -6,8 +6,17 @@ header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 header('Cache-Control: no-store');
 
-define('ORDER_MEDIA_LEGACY_MAX_BYTES', 15 * 1024 * 1024);
-define('ORDER_MEDIA_ARTWORK_MAX_BYTES', 30 * 1024 * 1024);
+/**
+ * O tecto por ficheiro. 40 MB dá para uma foto de telemóvel moderno em máxima
+ * qualidade ou um PDF de impressão sem a pessoa ter de ir reduzir nada.
+ *
+ * Este é o limite que manda: o .user.ini está de propósito acima (44M/48M) para
+ * que seja este ficheiro a recusar, com mensagem e com uma entrada em
+ * private/order-uploads/rejeicoes.log. Se algum dia baixares o .user.ini abaixo
+ * destes valores, o PHP passa a cortar primeiro e perdes as duas coisas.
+ */
+define('ORDER_MEDIA_LEGACY_MAX_BYTES', 40 * 1024 * 1024);
+define('ORDER_MEDIA_ARTWORK_MAX_BYTES', 40 * 1024 * 1024);
 
 /**
  * ORDER_MEDIA_RETENTION_V2 — os ficheiros dos clientes NÃO são apagados
@@ -38,11 +47,202 @@ define('ORDER_MEDIA_AREA_WARN_BYTES', 6 * 1024 * 1024 * 1024);     // 6 GiB
 define('ORDER_MEDIA_AREA_CACHE_SECONDS', 300);
 define('ORDER_MEDIA_UPLOADS_PER_IP_PER_HOUR', 60);
 
+/**
+ * ORDER_MEDIA_REJECT_LOG_V1 — quando um ficheiro é recusado, o cliente vê uma
+ * frase curta e nós ficamos sem saber porquê. Cada recusa passa a escrever um
+ * bloco em `private/order-uploads/rejeicoes.log` com tudo o que é preciso para
+ * perceber o caso sem estar lá: limites do PHP em vigor, tamanho anunciado pelo
+ * browser vs. tamanho que chegou, código de erro do upload, assinatura do
+ * ficheiro, o que o finfo/getimagesize disseram.
+ *
+ * Uma linha-resumo vai também para o error_log, que no `php -S` do
+ * desenvolvimento é a consola. A resposta JSON leva um `code` estável (nunca
+ * texto para o cliente ler) para o log do browser cruzar com este ficheiro.
+ *
+ * O ficheiro roda sozinho aos 2 MiB para nunca crescer sem fim.
+ */
+define('ORDER_MEDIA_REJECT_LOG_MAX_BYTES', 2 * 1024 * 1024);
+
 function order_media_respond($status, $payload)
 {
     http_response_code($status);
     echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
+}
+
+/** "30M", "8K", "1G" ou um número puro → bytes. 0 quando é ilimitado. */
+function order_media_ini_bytes($value)
+{
+    $value = trim((string)$value);
+    if ($value === '' || $value === '-1') {
+        return 0;
+    }
+    $unit = strtolower(substr($value, -1));
+    $number = (float)$value;
+    if ($unit === 'g') {
+        return (int)($number * 1073741824);
+    }
+    if ($unit === 'm') {
+        return (int)($number * 1048576);
+    }
+    if ($unit === 'k') {
+        return (int)($number * 1024);
+    }
+    return (int)$number;
+}
+
+function order_media_bytes_human($bytes)
+{
+    $bytes = (int)$bytes;
+    if ($bytes <= 0) {
+        return '0 B';
+    }
+    if ($bytes < 1024) {
+        return $bytes . ' B';
+    }
+    if ($bytes < 1048576) {
+        return round($bytes / 1024, 1) . ' KB';
+    }
+    return round($bytes / 1048576, 2) . ' MB';
+}
+
+/** Nome legível do código de erro do PHP para um ficheiro do $_FILES. */
+function order_media_upload_error_name($code)
+{
+    $nomes = array(
+        UPLOAD_ERR_OK => 'UPLOAD_ERR_OK',
+        UPLOAD_ERR_INI_SIZE => 'UPLOAD_ERR_INI_SIZE (maior que upload_max_filesize)',
+        UPLOAD_ERR_FORM_SIZE => 'UPLOAD_ERR_FORM_SIZE (maior que MAX_FILE_SIZE do formulário)',
+        UPLOAD_ERR_PARTIAL => 'UPLOAD_ERR_PARTIAL (envio interrompido a meio)',
+        UPLOAD_ERR_NO_FILE => 'UPLOAD_ERR_NO_FILE (não veio ficheiro nenhum)',
+        UPLOAD_ERR_NO_TMP_DIR => 'UPLOAD_ERR_NO_TMP_DIR (falta a pasta temporária do PHP)',
+        UPLOAD_ERR_CANT_WRITE => 'UPLOAD_ERR_CANT_WRITE (o PHP não conseguiu gravar em disco)',
+        UPLOAD_ERR_EXTENSION => 'UPLOAD_ERR_EXTENSION (uma extensão do PHP travou o upload)',
+    );
+    $code = (int)$code;
+    return isset($nomes[$code]) ? $nomes[$code] : 'desconhecido (' . $code . ')';
+}
+
+/**
+ * Os limites em vigor NESTE pedido. Vale a pena registá-los sempre: em
+ * produção o `.user.ini` manda, mas o `php -S` do desenvolvimento ignora
+ * `.user.ini` por completo e fica com os defaults do php.ini (2M/8M) — a
+ * diferença explica sozinha a maior parte das recusas de fotos pesadas.
+ */
+function order_media_limits()
+{
+    $uploadMax = order_media_ini_bytes(ini_get('upload_max_filesize'));
+    $postMax = order_media_ini_bytes(ini_get('post_max_size'));
+    return array(
+        'sapi' => PHP_SAPI,
+        'user_ini_lido' => PHP_SAPI !== 'cli-server',
+        'upload_max_filesize' => $uploadMax,
+        'post_max_size' => $postMax,
+        'max_file_uploads' => (int)ini_get('max_file_uploads'),
+        'memory_limit' => ini_get('memory_limit'),
+        'content_length' => isset($_SERVER['CONTENT_LENGTH']) ? (int)$_SERVER['CONTENT_LENGTH'] : 0,
+    );
+}
+
+/** Tudo o que se consegue saber sobre um ficheiro que acabou de ser recusado. */
+function order_media_file_diagnostics($file)
+{
+    $tmp = isset($file['tmp_name']) ? (string)$file['tmp_name'] : '';
+    $temFicheiro = $tmp !== '' && is_file($tmp);
+    $assinatura = $temFicheiro ? order_media_signature_type($tmp) : null;
+    $dados = array(
+        'nome' => (string)(isset($file['name']) ? $file['name'] : ''),
+        'tipo_anunciado' => (string)(isset($file['type']) ? $file['type'] : ''),
+        'tamanho_anunciado' => (int)(isset($file['size']) ? $file['size'] : 0),
+        'erro_php' => order_media_upload_error_name(isset($file['error']) ? $file['error'] : UPLOAD_ERR_NO_FILE),
+        'tmp_existe' => $temFicheiro ? 'sim' : 'não',
+        'is_uploaded_file' => ($tmp !== '' && is_uploaded_file($tmp)) ? 'sim' : 'não',
+        'tamanho_recebido' => $temFicheiro ? (int)@filesize($tmp) : 0,
+        'assinatura' => $assinatura === null ? '(não reconhecida)' : $assinatura['mime'],
+        'finfo' => $temFicheiro ? (order_media_mime($tmp) ?: '(vazio)') : '(sem ficheiro)',
+    );
+
+    if ($temFicheiro) {
+        $tamanho = @getimagesize($tmp);
+        $dados['getimagesize'] = is_array($tamanho)
+            ? (int)$tamanho[0] . 'x' . (int)$tamanho[1] . ' ' . (isset($tamanho['mime']) ? $tamanho['mime'] : '?')
+            : 'falhou';
+    }
+
+    return $dados;
+}
+
+function order_media_reject_log_path()
+{
+    $dir = mp_private_path('order-uploads');
+    if ($dir === null) {
+        return null;
+    }
+    if (!is_dir($dir) && !@mkdir($dir, 0700, true)) {
+        return null;
+    }
+    return $dir . DIRECTORY_SEPARATOR . 'rejeicoes.log';
+}
+
+/**
+ * Escreve o bloco de diagnóstico. Nunca lança nem interrompe o pedido: um log
+ * que falha não pode ser mais um motivo para o cliente não conseguir enviar.
+ */
+function order_media_log_rejection($code, $message, array $detalhes)
+{
+    $limites = order_media_limits();
+    $linhas = array(
+        '=== ' . gmdate('Y-m-d H:i:s') . ' UTC  ficheiro recusado: ' . $code . ' ===',
+        'mensagem ao cliente: ' . $message,
+        'IP: ' . (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '(desconhecido)'),
+        'página: ' . (isset($_SERVER['HTTP_REFERER']) ? substr((string)$_SERVER['HTTP_REFERER'], 0, 200) : '(sem referer)'),
+        'dispositivo: ' . (isset($_SERVER['HTTP_USER_AGENT']) ? substr((string)$_SERVER['HTTP_USER_AGENT'], 0, 200) : '(desconhecido)'),
+        'purpose: ' . (isset($_POST['purpose']) ? (string)$_POST['purpose'] : '(não veio)'),
+        'kind: ' . (isset($_POST['kind']) ? (string)$_POST['kind'] : '(não veio)'),
+        'corpo do pedido: ' . order_media_bytes_human($limites['content_length']),
+        'limites em vigor: upload_max_filesize=' . order_media_bytes_human($limites['upload_max_filesize'])
+            . '  post_max_size=' . order_media_bytes_human($limites['post_max_size'])
+            . '  max_file_uploads=' . $limites['max_file_uploads']
+            . '  memory_limit=' . $limites['memory_limit'],
+        'SAPI: ' . $limites['sapi'] . ($limites['user_ini_lido'] ? ' (.user.ini aplica-se)' : ' (.user.ini IGNORADO — limites do php.ini)'),
+    );
+
+    foreach ($detalhes as $chave => $valor) {
+        if (is_array($valor)) {
+            $linhas[] = $chave . ':';
+            foreach ($valor as $subChave => $subValor) {
+                $linhas[] = '  ' . $subChave . ': ' . (is_scalar($subValor) ? $subValor : json_encode($subValor));
+            }
+            continue;
+        }
+        $linhas[] = $chave . ': ' . (is_scalar($valor) ? $valor : json_encode($valor));
+    }
+    $linhas[] = '';
+
+    @error_log('[miaandpaper] upload recusado (' . $code . '): ' . $message
+        . ' | corpo ' . order_media_bytes_human($limites['content_length'])
+        . ' | upload_max_filesize ' . order_media_bytes_human($limites['upload_max_filesize'])
+        . ' | post_max_size ' . order_media_bytes_human($limites['post_max_size'])
+        . ($limites['user_ini_lido'] ? '' : ' | ATENCAO: SAPI ' . $limites['sapi'] . ' ignora .user.ini'));
+
+    $path = order_media_reject_log_path();
+    if ($path === null) {
+        return;
+    }
+    $tamanho = @filesize($path);
+    if ($tamanho !== false && $tamanho > ORDER_MEDIA_REJECT_LOG_MAX_BYTES) {
+        @rename($path, $path . '.1');
+    }
+    if (@file_put_contents($path, implode("\n", $linhas) . "\n", FILE_APPEND | LOCK_EX) !== false) {
+        @chmod($path, 0600);
+    }
+}
+
+/** Recusa um ficheiro: regista o porquê e responde com um `code` estável. */
+function order_media_reject($status, $code, $message, array $detalhes = array())
+{
+    order_media_log_rejection($code, $message, $detalhes);
+    order_media_respond($status, array('ok' => false, 'code' => $code, 'message' => $message));
 }
 
 function order_media_safe_name($name, $fallback)
@@ -352,13 +552,18 @@ if ($origin !== '') {
     $originHost = parse_url($origin, PHP_URL_HOST);
     $requestHost = preg_replace('/:\d+$/', '', $host);
     if (!is_string($originHost) || strtolower($originHost) !== strtolower($requestHost)) {
-        order_media_respond(403, array('ok' => false, 'message' => 'Origem inválida.'));
+        order_media_reject(403, 'origem_invalida', 'Origem inválida.', array(
+            'origin' => $origin,
+            'host' => $host,
+        ));
     }
 }
 
 $privateDir = order_media_temp_dir();
 if ($privateDir === null || (!is_dir($privateDir) && !@mkdir($privateDir, 0700, true))) {
-    order_media_respond(500, array('ok' => false, 'message' => 'Não foi possível preparar o envio.'));
+    order_media_reject(500, 'pasta_indisponivel', 'Não foi possível preparar o envio.', array(
+        'pasta' => (string)$privateDir,
+    ));
 }
 @chmod($privateDir, 0700);
 
@@ -384,11 +589,40 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete') {
 
 $files = order_media_files();
 $customArtwork = order_media_is_custom_artwork();
+
+// Quando o corpo passa `post_max_size`, o PHP descarta $_POST e $_FILES antes
+// de este ficheiro correr: não há erro, não há ficheiro, não há `purpose`. Sem
+// este ramo o cliente levava um "tenta novamente" que nunca ia funcionar.
+$limitesPedido = order_media_limits();
+if (
+    empty($files)
+    && $limitesPedido['post_max_size'] > 0
+    && $limitesPedido['content_length'] > $limitesPedido['post_max_size']
+) {
+    order_media_reject(
+        413,
+        'post_max_size_excedido',
+        'Este ficheiro é demasiado pesado para o servidor aceitar (limite actual: '
+            . order_media_bytes_human($limitesPedido['post_max_size']) . ').',
+        array(
+            'diagnostico' => 'O corpo do pedido passou post_max_size, por isso o PHP deitou fora $_POST e $_FILES.',
+            'em_falta' => 'post_max_size tem de ser maior que upload_max_filesize, com folga para o resto do formulário.',
+        )
+    );
+}
+
 if (empty($files)) {
-    order_media_respond(400, array('ok' => false, 'message' => 'Não foi possível receber o ficheiro. Tenta novamente.'));
+    order_media_reject(400, 'sem_ficheiro', 'Não foi possível receber o ficheiro. Tenta novamente.', array(
+        'diagnostico' => 'Nem $_FILES[media] nem $_FILES[photos] chegaram ao servidor.',
+        'campos_post' => implode(', ', array_keys($_POST)) ?: '(nenhum)',
+        'campos_files' => implode(', ', array_keys($_FILES)) ?: '(nenhum)',
+    ));
 }
 if (count($files) > 10) {
-    order_media_respond(400, array('ok' => false, 'message' => 'Envia os ficheiros novamente, em grupos mais pequenos.'));
+    order_media_reject(400, 'demasiados_ficheiros', 'Envia os ficheiros novamente, em grupos mais pequenos.', array(
+        'ficheiros_recebidos' => count($files),
+        'maximo' => 10,
+    ));
 }
 
 // ORDER_MEDIA_RETENTION_V2 — guardrails. Como nada é apagado por tempo, o que
@@ -408,10 +642,12 @@ if (mp_db_form_rate_limited('upload', isset($_SERVER['REMOTE_ADDR']) ? $_SERVER[
         ),
         mp_aviso_contexto()
     ));
-    order_media_respond(429, array(
-        'ok' => false,
-        'message' => 'Já recebemos muitos ficheiros deste dispositivo. Espera um bocado antes de enviar mais.',
-    ));
+    order_media_reject(
+        429,
+        'ritmo_por_ip',
+        'Já recebemos muitos ficheiros deste dispositivo. Espera um bocado antes de enviar mais.',
+        array('limite_por_hora' => ORDER_MEDIA_UPLOADS_PER_IP_PER_HOUR)
+    );
 }
 
 $incomingBytes = 0;
@@ -447,10 +683,16 @@ if ($areaBytes + $incomingBytes > ORDER_MEDIA_AREA_BUDGET_BYTES) {
         ),
         mp_aviso_contexto()
     ));
-    order_media_respond(507, array(
-        'ok' => false,
-        'message' => 'Não conseguimos guardar mais ficheiros neste momento. Fala connosco pelo Instagram que resolvemos já.',
-    ));
+    order_media_reject(
+        507,
+        'area_cheia',
+        'Não conseguimos guardar mais ficheiros neste momento. Fala connosco pelo Instagram que resolvemos já.',
+        array(
+            'ocupado' => order_media_bytes_human($areaBytes),
+            'tecto' => order_media_bytes_human(ORDER_MEDIA_AREA_BUDGET_BYTES),
+            'a_entrar' => order_media_bytes_human($incomingBytes),
+        )
+    );
 }
 if ($areaBytes >= ORDER_MEDIA_AREA_WARN_BYTES) {
     @error_log(sprintf(
@@ -476,14 +718,50 @@ $uploads = array();
 foreach ($files as $file) {
     $actualSize = @filesize($file['tmp_name']);
     $maxBytes = $customArtwork ? ORDER_MEDIA_ARTWORK_MAX_BYTES : ORDER_MEDIA_LEGACY_MAX_BYTES;
-    if (
-        $file['error'] !== UPLOAD_ERR_OK
-        || $actualSize === false
-        || $actualSize < 1
-        || $actualSize > $maxBytes
-        || !is_uploaded_file($file['tmp_name'])
-    ) {
-        order_media_respond(400, array('ok' => false, 'message' => 'Não foi possível receber o ficheiro. Tenta novamente.'));
+    $diagnostico = order_media_file_diagnostics($file);
+
+    // Cada motivo tem o seu código: "não foi possível receber o ficheiro" tanto
+    // podia ser o ficheiro passar o limite do PHP como o disco estar cheio.
+    if ($file['error'] === UPLOAD_ERR_INI_SIZE || $file['error'] === UPLOAD_ERR_FORM_SIZE) {
+        order_media_reject(
+            413,
+            'upload_max_filesize_excedido',
+            'Este ficheiro é demasiado pesado para o servidor aceitar (limite actual: '
+                . order_media_bytes_human(order_media_ini_bytes(ini_get('upload_max_filesize'))) . ').',
+            array('ficheiro' => $diagnostico)
+        );
+    }
+    if ($file['error'] === UPLOAD_ERR_PARTIAL) {
+        order_media_reject(400, 'envio_interrompido', 'O envio foi interrompido a meio. Tenta novamente.', array(
+            'ficheiro' => $diagnostico,
+        ));
+    }
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        order_media_reject(500, 'erro_php_no_upload', 'Não foi possível receber o ficheiro. Tenta novamente.', array(
+            'ficheiro' => $diagnostico,
+        ));
+    }
+    if (!is_uploaded_file($file['tmp_name'])) {
+        order_media_reject(400, 'tmp_invalido', 'Não foi possível receber o ficheiro. Tenta novamente.', array(
+            'ficheiro' => $diagnostico,
+        ));
+    }
+    if ($actualSize === false || $actualSize < 1) {
+        order_media_reject(400, 'ficheiro_vazio', 'Não foi possível receber o ficheiro. Tenta novamente.', array(
+            'ficheiro' => $diagnostico,
+        ));
+    }
+    if ($actualSize > $maxBytes) {
+        order_media_reject(
+            413,
+            'acima_do_limite_do_endpoint',
+            'Este ficheiro é demasiado pesado (máximo ' . order_media_bytes_human($maxBytes) . ').',
+            array(
+                'ficheiro' => $diagnostico,
+                'limite_do_endpoint' => order_media_bytes_human($maxBytes)
+                    . ($customArtwork ? ' (personalização)' : ' (fluxo normal)'),
+            )
+        );
     }
 
     $width = 0;
@@ -492,15 +770,25 @@ foreach ($files as $file) {
         ? order_media_artwork_type($file, $width, $height)
         : order_media_type($file);
     if ($type === null) {
-        if ($customArtwork) {
-            order_media_respond(415, array('ok' => false, 'message' => 'Escolhe um ficheiro JPG, PNG, WebP, HEIC ou PDF válido.'));
-        }
-        order_media_respond(415, array('ok' => false, 'message' => 'Escolhe uma foto JPG, PNG, WebP ou HEIC, ou grava um novo áudio.'));
+        order_media_reject(
+            415,
+            $customArtwork ? 'tipo_recusado_personalizacao' : 'tipo_recusado',
+            $customArtwork
+                ? 'Escolhe um ficheiro JPG, PNG, WebP, HEIC ou PDF válido.'
+                : 'Escolhe uma foto JPG, PNG, WebP ou HEIC, ou grava um novo áudio.',
+            array(
+                'ficheiro' => $diagnostico,
+                'diagnostico' => 'A assinatura, o finfo e o getimagesize acima dizem porquê: assinatura'
+                    . ' desconhecida, mime a discordar da assinatura, ou getimagesize a falhar.',
+            )
+        );
     }
 
     $sha256 = @hash_file('sha256', $file['tmp_name']);
     if (!is_string($sha256) || !preg_match('/^[a-f0-9]{64}$/', $sha256)) {
-        order_media_respond(500, array('ok' => false, 'message' => 'Não foi possível validar o ficheiro.'));
+        order_media_reject(500, 'hash_falhou', 'Não foi possível validar o ficheiro.', array(
+            'ficheiro' => $diagnostico,
+        ));
     }
 
     try {
@@ -513,7 +801,11 @@ foreach ($files as $file) {
     $metadataPath = $privateDir . DIRECTORY_SEPARATOR . $token . '.json';
 
     if (!$customArtwork && $type['kind'] === 'photo' && !order_media_custom_image_dimensions($file['tmp_name'], $type['mime'], $width, $height)) {
-        order_media_respond(415, array('ok' => false, 'message' => 'Escolhe uma foto JPG, PNG, WebP ou HEIC válida.'));
+        order_media_reject(415, 'dimensoes_ilegiveis', 'Escolhe uma foto JPG, PNG, WebP ou HEIC válida.', array(
+            'ficheiro' => $diagnostico,
+            'assinatura_aceite' => $type['mime'],
+            'diagnostico' => 'A assinatura foi reconhecida mas o getimagesize não confirmou as dimensões.',
+        ));
     }
     $shortSide = min($width, $height);
     $longSide = max($width, $height);
@@ -537,18 +829,30 @@ foreach ($files as $file) {
     }
 
     if (!move_uploaded_file($file['tmp_name'], $storedPath)) {
-        order_media_respond(500, array('ok' => false, 'message' => 'Não foi possível guardar o ficheiro.'));
+        order_media_reject(500, 'gravacao_falhou', 'Não foi possível guardar o ficheiro.', array(
+            'ficheiro' => $diagnostico,
+            'destino' => $storedPath,
+            'destino_escrevivel' => is_writable($privateDir) ? 'sim' : 'não',
+        ));
     }
     @chmod($storedPath, 0600);
     $storedSize = @filesize($storedPath);
     $storedSha256 = @hash_file('sha256', $storedPath);
     if ((int)$storedSize !== (int)$actualSize || !is_string($storedSha256) || !hash_equals($sha256, $storedSha256)) {
         @unlink($storedPath);
-        order_media_respond(500, array('ok' => false, 'message' => 'Não foi possível confirmar o ficheiro guardado.'));
+        order_media_reject(500, 'gravacao_incompleta', 'Não foi possível confirmar o ficheiro guardado.', array(
+            'ficheiro' => $diagnostico,
+            'bytes_esperados' => (int)$actualSize,
+            'bytes_gravados' => (int)$storedSize,
+            'diagnostico' => 'Disco cheio ou quota do alojamento é a causa habitual.',
+        ));
     }
     if (@file_put_contents($metadataPath, json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX) === false) {
         @unlink($storedPath);
-        order_media_respond(500, array('ok' => false, 'message' => 'Não foi possível concluir o envio.'));
+        order_media_reject(500, 'metadados_falharam', 'Não foi possível concluir o envio.', array(
+            'ficheiro' => $diagnostico,
+            'destino' => $metadataPath,
+        ));
     }
     @chmod($metadataPath, 0600);
     $uploads[] = array(

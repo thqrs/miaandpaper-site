@@ -42,7 +42,7 @@ function lr_json_array($raw) {
     return is_array($decoded) ? $decoded : array();
 }
 function lr_main_v2_slugs() {
-    return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'personalizacao');
+    return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'marcadores-magneticos', 'personalizacao');
 }
 function lr_congress_slugs() {
     return array('crachas', 'imanes', 'caderninhos', 'cadernos');
@@ -413,7 +413,7 @@ function lr_product_friendly_name($slug) {
         'cadernos'=>'Cadernos','cadernos-anuais'=>'Cadernos anuais',
         'bloquinhos'=>'Bloquinhos','imanes-recortados'=>'Ímanes recortados',
         'personalizacao'=>'Personalização',
-        'stickers'=>'Stickers','marcadores'=>'Marcadores',
+        'stickers'=>'Stickers','marcadores'=>'Marcadores','marcadores-magneticos'=>'Marcadores magnéticos',
         'quadros'=>'Molduras','lembrancas'=>'Lembranças','pins'=>'Pins','ofertas'=>'Ofertas',
         'oferta-pdf'=>'PDF de oferta','oferta-convite-congresso'=>'Envelopes do Congresso'
     );
@@ -1103,6 +1103,14 @@ function lr_funnel_lines() {
         'marcadores' => array('label' => 'Marcadores · site', 'color' => '#8fb56a', 'stations' => array(
             array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
             array('id' => 'origem', 'label' => 'Catálogo / teu design', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
+            array('id' => 'extras', 'label' => 'Opções extra', 'steps' => array('extras')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+            array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
+        )),
+        'marcadores-magneticos' => array('label' => 'Marcadores magnéticos · site', 'color' => '#d1aa45', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
+            array('id' => 'origem', 'label' => 'Catálogo / teu design', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
+            array('id' => 'extras', 'label' => 'Acabamento', 'steps' => array('extras')),
             array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
             array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
         )),
@@ -1251,7 +1259,7 @@ function lr_event_to_station($name, $stepId, $slug, $landing = '', $submitted = 
     if ($name === 'wizard_started' || $name === 'product_view') return 'split';
     if ($name === 'site_landed') {
         $lc = strtolower((string)$landing);
-        $pages = array('crachas-loja', 'imanes-loja', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'crachas', 'imanes', 'caderninhos', 'cadernos', 'molduras', 'congressos/2026');
+        $pages = array('crachas-loja', 'imanes-loja', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'marcadores-magneticos', 'crachas', 'imanes', 'caderninhos', 'cadernos', 'molduras', 'congressos/2026');
         foreach ($pages as $page) {
             if (strpos($lc, $page) !== false) return 'split';
         }
@@ -2286,7 +2294,7 @@ $lrPayloadActivo = $dashboardView === 'teia' ? $teiaPayload : $replayPayload;
     'mini-cadernos': 'Mini-Cadernos · site', 'blocos-a6': 'Bloco Argolas A6 · site', 'cadernos-anuais': 'Cadernos anuais · site',
     bloquinhos: 'Bloquinhos · site', 'imanes-recortados': 'Ímanes recortados · site',
     personalizacao: 'Personalização · site',
-    stickers: 'Stickers · site', marcadores: 'Marcadores · site',
+    stickers: 'Stickers · site', marcadores: 'Marcadores · site', 'marcadores-magneticos': 'Marcadores magnéticos · site',
     'congresso-crachas': 'Crachás · Congresso', 'congresso-imanes': 'Ímanes · Congresso',
     'congresso-caderninhos': 'Mini-Cadernos · Congresso', 'congresso-cadernos': 'Cadernos · Congresso',
     quadros: 'Molduras', final: 'Contacto / envio'

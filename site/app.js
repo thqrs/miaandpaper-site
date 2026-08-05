@@ -9,6 +9,10 @@
   var ADMIN_API = "admin-api.php";
   var COLORS_API = "colors-api.php";
   var ORDER_UPLOAD_API = "upload-order-photo.php";
+  // Igual a ORDER_MEDIA_*_MAX_BYTES no upload-order-photo.php. Aqui serve só
+  // para não gastar a ligação de alguém a subir 200 MB que vão ser recusados no
+  // fim; quem manda continua a ser o servidor.
+  var ORDER_UPLOAD_MAX_BYTES = 40 * 1024 * 1024;
   var ORDER_MEDIA_PREVIEW_API = "order-media-preview.php";
   var CART_KEY = "miaandpaper_cart_v1";
   var CART_SCHEMA_VERSION = 1;
@@ -51,6 +55,7 @@
   var orderAudioContext = null;
   var orderUploadOperations = [];
   var orderUploadNextOperationId = 1;
+  var orderUploadRejectionLog = [];
   var orderFilePickerRevision = 0;
   var orderActiveFilePicker = null;
   var freeQuantityChartCleanup = function () {};
@@ -183,6 +188,9 @@
     // designToken::grupo. E estado de interface, por isso vive fora das
     // selections (nao vai para o carrinho nem para o pedido).
     builderOpenGroups: {},
+    // Gavetas de opções extra dos produtos. Tal como builderOpenGroups, é
+    // apenas estado de interface e nunca segue no pedido.
+    optionDrawerOpen: {},
     builderRemovePendingId: "",
     quantitySignature: "",
     quantitiesTouched: false,
@@ -264,6 +272,7 @@
     "lamination-choice": "Laminação",
     "purchase-option": "Opções de compra",
     "cover-personalization": "Personalização da capa",
+    "option-drawers": "Gavetas de opções extra",
     "details-form": "Formulário",
     "custom-product-builder": "Personalização: produtos",
     "custom-quantity-builder": "Personalização: quantidades",
@@ -1120,7 +1129,6 @@
 
   function renderHomeHeroCarousel(hero) {
     var images = homeHeroImages(hero);
-    var showControls = hero.carouselEnabled !== false && images.length > 1;
 
     if (!images.length) { return ""; }
 
@@ -1133,13 +1141,20 @@
           + '" style="background-image:url(&quot;' + escapeHtml(image) + '&quot;)" aria-hidden="true"></span>';
       }).join(""),
       '</div>',
-      showControls ? '<div class="home-hero-carousel__dots" aria-label="Escolher imagem do destaque">'
-        + images.map(function (_image, index) {
-          return '<button type="button" data-home-hero-dot="' + index + '" aria-label="Mostrar imagem '
-            + (index + 1) + ' de ' + images.length + '" aria-current="' + (index === 0 ? "true" : "false") + '"></button>';
-        }).join("") + '</div>' : "",
       '</div>'
     ].join("");
+  }
+
+  function renderHomeHeroCarouselDots(hero) {
+    var images = homeHeroImages(hero);
+
+    if (hero.carouselEnabled === false || images.length <= 1) { return ""; }
+
+    return '<div class="home-hero-carousel__dots" role="group" aria-label="Escolher imagem do destaque">'
+      + images.map(function (_image, index) {
+        return '<button type="button" data-home-hero-dot="' + index + '" aria-label="Mostrar imagem '
+          + (index + 1) + ' de ' + images.length + '" aria-current="' + (index === 0 ? "true" : "false") + '"></button>';
+      }).join("") + '</div>';
   }
 
   function startHomeHeroCarousel(home) {
@@ -1148,7 +1163,7 @@
     var carousel = section && section.querySelector("[data-home-hero-carousel]");
     var track = carousel && carousel.querySelector("[data-home-hero-track]");
     var frames = track ? Array.prototype.slice.call(track.children) : [];
-    var dots = carousel ? Array.prototype.slice.call(carousel.querySelectorAll("[data-home-hero-dot]")) : [];
+    var dots = section ? Array.prototype.slice.call(section.querySelectorAll("[data-home-hero-dot]")) : [];
     var speed = Math.max(3, Math.min(30, Number(hero.rotationSeconds) || 5)) * 1000;
     var resumeDelay = Math.max(3, Math.min(60, Number(hero.resumeSeconds) || 10)) * 1000;
     var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1630,6 +1645,10 @@
       if (sel.pack_quantity) snap.selected_pack = Number(sel.pack_quantity) || 0;
       if (sel.size) snap.selected_size = String(sel.size).slice(0, 60);
       if (sel.delivery_option) snap.selected_delivery = String(sel.delivery_option).slice(0, 60);
+      selectedOptionDrawerRecords(product).forEach(function (record) {
+        var key = "extra_" + String(record.drawer.field || record.drawer.id || "option").replace(/[^a-z0-9_]/gi, "_");
+        snap[key] = String(record.item.value || record.item.id || "").slice(0, 80);
+      });
       if (isMainCatalogProduct(product)) {
         snap.flow_mode = isCustomArtworkSelected(product) ? "custom" : "catalog";
         snap.product_context = String(product.catalogContext || "main-v2");
@@ -2964,7 +2983,7 @@
       '<p class="eyebrow">Carrinho</p>',
       '<h2 id="cart-panel-title">' + (count ? "O teu pedido" : "Carrinho") + '</h2>',
       '</div>',
-      '<button type="button" class="cart-close-button" data-cart-close aria-label="Fechar carrinho">×</button>',
+      '<button type="button" class="cart-close-button" data-cart-close aria-label="Fechar carrinho">' + ICON_CLOSE + '</button>',
       '</div>',
       count ? [
         '<ol class="cart-panel-list">',
@@ -3296,6 +3315,7 @@
   }
 
   function currentProductCartSelections(product) {
+    ensureOptionDrawerSelections(product);
     var selections = cloneJson(state.selections);
     var cadernoLamination = isCadernosProduct(product) ? selectedCadernoLamination(product) : null;
     var cadernoOption = isCadernosProduct(product) ? selectedCadernoPurchaseOption(product) : null;
@@ -3495,7 +3515,14 @@
       names.push("+" + (designs.length - 3));
     }
 
-    return names.length ? "Designs: " + names.join(", ") : "";
+    parts = [];
+    if (names.length) {
+      parts.push("Designs: " + names.join(", "));
+    }
+    selectedOptionDrawerRecords(product).forEach(function (record) {
+      parts.push(String(record.drawer.label || record.drawer.title || "Opção") + ": " + String(record.item.title || record.item.value || ""));
+    });
+    return parts.join(" · ");
   }
 
   function buildCartItemFromCurrentProduct(product) {
@@ -3772,6 +3799,36 @@
     return href || "index.html";
   }
 
+  function renderSiteMenuIcon(iconName, modifier) {
+    var safeName = String(iconName || "catalogo").replace(/[^a-z0-9-]/gi, "");
+    return '<span class="site-menu-icon' + (modifier ? ' ' + modifier : '') + '" aria-hidden="true">'
+      + '<img src="content/brand/menu-icons/line-art/' + safeName + '.png" alt="" width="64" height="64">'
+      + '</span>';
+  }
+
+  function siteMenuGroupIcon(group) {
+    var order = Number(group && group.order);
+    if (order === 1) { return "grupo-personalizados"; }
+    if (order === 2) { return "grupo-cadernos-papelaria"; }
+    if (order === 3) { return "grupo-crachas-imanes"; }
+    if (order === 4) { return "grupo-colecoes-ofertas"; }
+    return "catalogo";
+  }
+
+  function siteMenuCategoryIcon(category) {
+    var id = String(category && category.id ? category.id : "").trim();
+    var aliases = {
+      "cadernos-geral": "cadernos",
+      "mini-cadernos-geral": "mini-cadernos",
+      "quadros": "molduras",
+      "crachas-geral": "crachas",
+      "imanes-geral": "imanes",
+      // Ícone provisório enquanto os marcadores magnéticos não têm arte final.
+      "marcadores-magneticos": "marcadores"
+    };
+    return aliases[id] || id || "catalogo";
+  }
+
   function renderSiteMenu(categories, instagramUrl) {
     var isOpen = state.siteMenuOpen === true;
     var orderedCategories = categories.map(function (category, index) {
@@ -3785,12 +3842,54 @@
     }).map(function (record) {
       return record.category;
     });
-    var categoryLinks = orderedCategories.map(function (category) {
+    var menuGroups = [];
+
+    orderedCategories.forEach(function (category, categoryIndex) {
+      var title = String(category.menuGroup || "Produtos").trim() || "Produtos";
+      var order = Number(category.menuGroupOrder);
+      var group = menuGroups.filter(function (record) {
+        return record.title === title;
+      })[0];
+
+      if (!group) {
+        group = {
+          title: title,
+          order: isFinite(order) && order > 0 ? order : 1000 + categoryIndex,
+          categories: []
+        };
+        menuGroups.push(group);
+      }
+      group.categories.push(category);
+    });
+
+    menuGroups.sort(function (a, b) {
+      return a.order - b.order;
+    });
+
+    var groupedCategoryLinks = menuGroups.map(function (group) {
+      var links = group.categories.map(function (category) {
+        return [
+          '<a class="site-menu-category-link" href="' + escapeHtml(siteMenuCategoryHref(category)) + '" data-site-menu-link>',
+          '<span class="site-menu-category-main">',
+          renderSiteMenuIcon(siteMenuCategoryIcon(category), 'site-menu-icon--category'),
+          '<span>' + escapeHtml(category.menuTitle || category.title || "Produto") + '</span>',
+          '</span>',
+          '<b aria-hidden="true">→</b>',
+          '</a>'
+        ].join("");
+      }).join("");
+
       return [
-        '<a class="site-menu-category-link" href="' + escapeHtml(siteMenuCategoryHref(category)) + '" data-site-menu-link>',
-        '<span>' + escapeHtml(category.menuTitle || category.title || "Produto") + '</span>',
-        '<b aria-hidden="true">→</b>',
-        '</a>'
+        '<details class="site-menu-group" data-site-menu-group>',
+        '<summary class="site-menu-group-summary">',
+        '<span class="site-menu-entry-label">',
+        renderSiteMenuIcon(siteMenuGroupIcon(group), 'site-menu-icon--group'),
+        '<span>' + escapeHtml(group.title) + '</span>',
+        '</span>',
+        '<span class="site-menu-group-chevron" aria-hidden="true"></span>',
+        '</summary>',
+        '<div class="site-menu-group-links">' + links + '</div>',
+        '</details>'
       ].join("");
     }).join("");
 
@@ -3802,15 +3901,16 @@
       '<div><p>Menu</p><h2 id="site-menu-title">Mia &amp; Paper</h2></div>',
       '<button type="button" class="site-menu-close" data-site-menu-close aria-label="Fechar menu">' + ICON_CLOSE + '</button>',
       '</div>',
-      '<nav class="site-menu-nav" aria-label="Produtos">',
-      '<a class="site-menu-home-link" href="index.html" data-site-menu-link>Início</a>',
-      '<p>Produtos</p>',
-      categoryLinks,
+      '<nav class="site-menu-nav" aria-label="Navegação principal">',
+      '<a class="site-menu-home-link" href="index.html" data-site-menu-link>',
+      '<span class="site-menu-entry-label">' + renderSiteMenuIcon('inicio') + '<span>Início</span></span>',
+      '</a>',
+      groupedCategoryLinks,
       '</nav>',
       '<div class="site-menu-secondary">',
-      '<a href="index.html#produtos" data-site-menu-link>Produtos</a>',
-      '<a href="contacto.html" data-site-menu-link>Contacto</a>',
-      '<a href="' + escapeHtml(instagramUrl || "https://www.instagram.com/miaandpaper/") + '" target="_blank" rel="noopener" data-site-menu-link>Instagram</a>',
+      '<a href="catalogo/index.html" data-site-menu-link>' + renderSiteMenuIcon('catalogo') + '<span>Catálogo</span></a>',
+      '<a href="contacto.html" data-site-menu-link>' + renderSiteMenuIcon('contacto') + '<span>Contacto</span></a>',
+      '<a href="' + escapeHtml(instagramUrl || "https://www.instagram.com/miaandpaper/") + '" target="_blank" rel="noopener" data-site-menu-link>' + renderSiteMenuIcon('instagram') + '<span>Instagram</span></a>',
       '</div>',
       '</aside>',
       '</div>'
@@ -3951,6 +4051,11 @@
     if (surface) {
       surface.classList.toggle("is-open", state.siteMenuOpen);
       surface.setAttribute("aria-hidden", state.siteMenuOpen ? "false" : "true");
+      if (!state.siteMenuOpen) {
+        surface.querySelectorAll("[data-site-menu-group]").forEach(function (group) {
+          group.removeAttribute("open");
+        });
+      }
     }
     if (trigger) {
       trigger.setAttribute("aria-expanded", state.siteMenuOpen ? "true" : "false");
@@ -4000,6 +4105,23 @@
       link.dataset.siteMenuBound = "1";
       link.addEventListener("click", function () {
         setSiteMenuOpen(false, false);
+      });
+    });
+
+    surface.querySelectorAll("[data-site-menu-group]").forEach(function (group) {
+      if (group.dataset.siteMenuBound === "1") {
+        return;
+      }
+      group.dataset.siteMenuBound = "1";
+      group.addEventListener("toggle", function () {
+        if (!group.open) {
+          return;
+        }
+        surface.querySelectorAll("[data-site-menu-group][open]").forEach(function (otherGroup) {
+          if (otherGroup !== group) {
+            otherGroup.removeAttribute("open");
+          }
+        });
       });
     });
 
@@ -4076,7 +4198,7 @@
   function renderFooter(brand, showAdminLogin) {
     return [
       '<footer class="site-footer">',
-      '<a class="catalog-footer-link" href="index.html#produtos">Ver produtos</a>',
+      '<a class="catalog-footer-link" href="catalogo/index.html">Comprar por catálogo</a>',
       '<a href="privacy.html">Política de Privacidade</a>',
       showAdminLogin === false ? "" : '<button type="button" data-admin-open>Login de Administrador</button>',
       '<span>© ' + escapeHtml(brand || "Mia & Paper") + ' 2026 Todos os Direitos Reservados</span>',
@@ -5521,6 +5643,7 @@
       var heroImage = hero.image || (menuCategories[0] && menuCategories[0].image) || "";
       var heroImages = homeHeroImages(hero);
       var heroCarouselHtml = renderHomeHeroCarousel(hero);
+      var heroCarouselDotsHtml = renderHomeHeroCarouselDots(hero);
       var heroPosition = String(hero.imagePosition || "center").trim();
       var heroStyle;
       var newsCards;
@@ -5562,6 +5685,7 @@
         '<h1 id="home-title">' + escapeHtml(home.intro.title) + '</h1>',
         '<p>' + escapeHtml(home.intro.text) + '</p>',
         heroActions,
+        heroCarouselDotsHtml,
         '</div>',
         '</div>',
         '</section>',
@@ -5643,7 +5767,7 @@
   }
 
   function supportsAssortedDesigns(product) {
-    return !!(product && ["crachas", "imanes", "imanes-recortados", "caderninhos", "bloquinhos", "stickers", "marcadores"].indexOf(productFamily(product)) !== -1);
+    return !!(product && ["crachas", "imanes", "imanes-recortados", "caderninhos", "bloquinhos", "stickers", "marcadores", "marcadores-magneticos"].indexOf(productFamily(product)) !== -1);
   }
 
   function isAssortedSelected(product) {
@@ -5697,6 +5821,76 @@
 
     return (step.items || []).filter(function (item) {
       return values.indexOf(item.value) !== -1;
+    });
+  }
+
+  // OPTION_DRAWERS_V1: opções por unidade definidas inteiramente no JSON do
+  // produto. Cada gaveta é uma escolha única e o servidor repete a mesma
+  // validação/cálculo, por isso os preços mostrados não dependem do browser.
+  function optionDrawerSteps(product) {
+    return product && Array.isArray(product.steps) ? product.steps.filter(function (step) {
+      return step && step.template === "option-drawers" && Array.isArray(step.drawers);
+    }) : [];
+  }
+
+  function optionDrawerRecords(product) {
+    var records = [];
+
+    optionDrawerSteps(product).forEach(function (step) {
+      step.drawers.forEach(function (drawer) {
+        if (drawer && drawer.field && Array.isArray(drawer.items)) {
+          records.push({ step: step, drawer: drawer });
+        }
+      });
+    });
+    return records;
+  }
+
+  function optionDrawerItem(drawer, value) {
+    return drawer && Array.isArray(drawer.items) ? drawer.items.filter(function (item) {
+      return item && String(item.value) === String(value == null ? "" : value);
+    })[0] || null : null;
+  }
+
+  function ensureOptionDrawerSelections(product) {
+    optionDrawerRecords(product).forEach(function (record) {
+      var drawer = record.drawer;
+      var field = String(drawer.field);
+      var current = state.selections[field];
+      var fallback = drawer.defaultValue != null ? String(drawer.defaultValue) : "";
+
+      if ((current == null || current === "") && fallback && optionDrawerItem(drawer, fallback)) {
+        state.selections[field] = fallback;
+      }
+    });
+  }
+
+  function selectedOptionDrawerRecords(product) {
+    ensureOptionDrawerSelections(product);
+    return optionDrawerRecords(product).map(function (record) {
+      var field = String(record.drawer.field);
+      var item = optionDrawerItem(record.drawer, state.selections[field]);
+      return item ? { step: record.step, drawer: record.drawer, item: item } : null;
+    }).filter(Boolean);
+  }
+
+  function optionDrawerExtraPerUnitCents(product) {
+    if (isMainCatalogProduct(product) && isCustomArtworkSelected(product)) {
+      return 0;
+    }
+    return selectedOptionDrawerRecords(product).reduce(function (total, record) {
+      return total + Math.max(0, parseInt(record.item.extraPriceCentsPerUnit, 10) || 0);
+    }, 0);
+  }
+
+  function optionDrawerSummaryRows(product) {
+    return selectedOptionDrawerRecords(product).map(function (record) {
+      var extra = Math.max(0, parseInt(record.item.extraPriceCentsPerUnit, 10) || 0);
+      var value = String(record.item.title || record.item.value || "");
+      if (extra) {
+        value += " (+" + formatCents(extra) + " por " + productUnitSingular(product) + ")";
+      }
+      return [String(record.drawer.label || record.drawer.title || "Opção") + ":", value];
     });
   }
 
@@ -7055,17 +7249,22 @@
     }
 
     var basePriceCents = cents;
+    var optionExtraPerUnitCents = optionDrawerExtraPerUnitCents(product);
+    var optionExtraCents = optionExtraPerUnitCents * packQuantity;
+    var productPriceCents = basePriceCents + optionExtraCents;
     var artworkFeeCents = customArtworkFeeCents(product);
-    cents = basePriceCents + artworkFeeCents;
+    cents = productPriceCents + artworkFeeCents;
 
     return {
       size: size,
       quantity: packQuantity,
       cents: cents,
       baseCents: Math.max(0, basePriceCents),
+      optionExtraPerUnitCents: optionExtraPerUnitCents,
+      optionExtraCents: optionExtraCents,
       customizationFeeCents: artworkFeeCents,
       total: cents ? formatCents(cents) : "",
-      perPin: basePriceCents ? formatUnitPrice(basePriceCents, packQuantity, productUnitShort(product)) : "",
+      perPin: productPriceCents ? formatUnitPrice(productPriceCents, packQuantity, productUnitShort(product)) : "",
       discount: discount
     };
   }
@@ -11296,7 +11495,7 @@
       '<label>Título<input type="text" value="' + escapeHtml(item.title) + '" data-admin-edit="title" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>',
       '<label>Linha 2<input type="text" value="' + escapeHtml(item.subtitle || "") + '" data-admin-edit="subtitle" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>',
       '<label>Valor<input type="text" value="' + escapeHtml(item.value || "") + '" data-admin-edit="value" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>',
-      state.product && ["imanes", "caderninhos", "bloquinhos", "stickers", "marcadores"].indexOf(productFamily(state.product)) !== -1 && step.id === "designs" ? '<label>Formato<select data-admin-edit="rectOrientation" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"><option value="portrait"' + (itemRectOrientation(item) === "portrait" ? " selected" : "") + '>Em pé</option><option value="landscape"' + (itemRectOrientation(item) === "landscape" ? " selected" : "") + '>Deitado</option></select></label>' : "",
+      state.product && ["imanes", "caderninhos", "bloquinhos", "stickers", "marcadores", "marcadores-magneticos"].indexOf(productFamily(state.product)) !== -1 && step.id === "designs" ? '<label>Formato<select data-admin-edit="rectOrientation" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"><option value="portrait"' + (itemRectOrientation(item) === "portrait" ? " selected" : "") + '>Em pé</option><option value="landscape"' + (itemRectOrientation(item) === "landscape" ? " selected" : "") + '>Deitado</option></select></label>' : "",
       item.quantity != null ? '<label>Quantidade<input type="number" min="1" step="1" value="' + escapeHtml(item.quantity) + '" data-admin-edit="quantity" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
       '<label>Nota<input type="text" value="' + escapeHtml(item.note || "") + '" data-admin-edit="note" data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>',
       step.template !== "quantity-builder" ? '<label>Imagem<input type="file" accept="image/*" data-admin-upload data-step-id="' + escapeHtml(step.id) + '" data-item-id="' + escapeHtml(item.id) + '"></label>' : "",
@@ -15243,12 +15442,13 @@
 
     var orderRows = [
       ["Encomendaste:", getPackQuantity(product) ? productQuantityLabel(product, getPackQuantity(product)) : ""],
-      ["Tamanho:", selectedSizeLabel(product)],
+      ["Tamanho:", selectedSizeLabel(product)]
+    ].concat(optionDrawerSummaryRows(product), [
       ["Preço do produto:", priceLine],
       ["Portes:", shippingLine],
       [totalLabel, totalLine],
       ["Entrega:", deliveryText]
-    ];
+    ]);
 
     var cardRows;
     if (isCustomArtworkSelected(product)) {
@@ -15506,6 +15706,52 @@
     ].join("");
   }
 
+  function optionDrawerUiKey(step, drawer) {
+    return String(step && step.id || "opcoes") + "::" + String(drawer && (drawer.id || drawer.field) || "gaveta");
+  }
+
+  function renderOptionDrawerChoice(product, step, drawer, item) {
+    var selected = String(state.selections[drawer.field] || "") === String(item.value || "");
+    var extra = Math.max(0, parseInt(item.extraPriceCentsPerUnit, 10) || 0);
+
+    return [
+      '<label class="option-drawer-choice' + (selected ? ' is-selected' : '') + '">',
+      '<input type="radio" name="' + escapeHtml(drawer.field) + '" value="' + escapeHtml(item.value || "") + '" data-option-drawer-choice data-option-drawer-field="' + escapeHtml(drawer.field) + '"' + (selected ? ' checked' : '') + '>',
+      renderVisual(item, "media-list", step),
+      '<span class="option-drawer-choice-copy"><strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>' + (item.subtitle ? '<small>' + escapeHtml(item.subtitle) + '</small>' : '') + '</span>',
+      '<span class="option-drawer-choice-price">' + (extra ? '+ ' + escapeHtml(formatCents(extra)) + '<small>por ' + escapeHtml(productUnitSingular(product)) + '</small>' : '<small>Sem acréscimo</small>') + '</span>',
+      '<span class="option-drawer-choice-check" aria-hidden="true">' + ICON_CHECK + '</span>',
+      '</label>'
+    ].join("");
+  }
+
+  function renderOptionDrawers(product, step) {
+    ensureOptionDrawerSelections(product);
+
+    return '<div class="option-drawer-list">' + (step.drawers || []).map(function (drawer) {
+      var selected = optionDrawerItem(drawer, state.selections[drawer.field]);
+      var selectedExtra = selected ? Math.max(0, parseInt(selected.extraPriceCentsPerUnit, 10) || 0) : 0;
+      var key = optionDrawerUiKey(step, drawer);
+      var open = state.optionDrawerOpen && state.optionDrawerOpen[key] === true;
+
+      return [
+        '<details class="option-drawer' + (selected ? ' has-selection' : '') + '" data-option-drawer="' + escapeHtml(key) + '"' + (open ? ' open' : '') + '>',
+        '<summary class="option-drawer-summary">',
+        selected ? renderVisual(selected, "media-list", step) : '<span class="option-image neutral" aria-hidden="true"></span>',
+        '<span class="option-drawer-summary-copy"><strong>' + escapeHtml(drawer.title || drawer.label || "Opção") + '</strong><small>' + escapeHtml(selected ? (selected.title || selected.value) : "Escolhe uma opção") + '</small></span>',
+        '<span class="option-drawer-summary-price">' + (selectedExtra ? '+ ' + escapeHtml(formatCents(selectedExtra)) + '<small>por ' + escapeHtml(productUnitSingular(product)) + '</small>' : '<small>Incluído</small>') + '</span>',
+        '<span class="option-drawer-chevron" aria-hidden="true"></span>',
+        '</summary>',
+        '<div class="option-drawer-body" role="radiogroup" aria-label="' + escapeHtml(drawer.label || drawer.title || "Opção") + '">',
+        (drawer.items || []).map(function (item) {
+          return renderOptionDrawerChoice(product, step, drawer, item);
+        }).join(""),
+        '</div>',
+        '</details>'
+      ].join("");
+    }).join("") + '</div>';
+  }
+
   function stepBody(product, step) {
     if (isQuadrosProduct(product) && step.id === "designs") {
       return renderQuadrosDesignStep(product, step);
@@ -15545,6 +15791,10 @@
 
     if (step.template === "quantity-builder") {
       return renderInteriorSlideshow(product) + renderQuantityBuilder(product);
+    }
+
+    if (step.template === "option-drawers") {
+      return renderOptionDrawers(product, step);
     }
 
     if (step.template === "palette-grid") {
@@ -16783,6 +17033,26 @@
       return "";
     }
 
+    if (step.template === "option-drawers") {
+      ensureOptionDrawerSelections(product);
+      for (i = 0; i < (step.drawers || []).length; i += 1) {
+        var optionDrawer = step.drawers[i];
+        var optionDrawerValue = optionDrawer && optionDrawer.field ? state.selections[optionDrawer.field] : "";
+        if (!optionDrawer || !optionDrawer.field) {
+          continue;
+        }
+        if (!optionDrawerValue && optionDrawer.required === true) {
+          state.invalidFields = [optionDrawer.field];
+          return "Escolhe " + String(optionDrawer.label || optionDrawer.title || "uma opção").toLowerCase() + ".";
+        }
+        if (optionDrawerValue && !optionDrawerItem(optionDrawer, optionDrawerValue)) {
+          state.invalidFields = [optionDrawer.field];
+          return "Uma das opções escolhidas deixou de estar disponível.";
+        }
+      }
+      return "";
+    }
+
     if (step.selection === "multi" && step.minSelections != null && selectedValues(step).length < Number(step.minSelections)) {
       return step.selectionError || "Escolhe mais opções para continuar.";
     }
@@ -16921,6 +17191,71 @@
     rerenderProduct(product);
   }
 
+  // ORDER_MEDIA_REJECT_LOG_V1 — o lado do browser do log de recusas. Metade das
+  // falhas de envio (tipo recusado, foto que não descodifica, ligação que
+  // desiste) nunca chegam ao servidor, por isso não aparecem em
+  // private/order-uploads/rejeicoes.log. Ficam aqui, com o `code` do servidor
+  // quando houve resposta, para os dois lados se cruzarem.
+  //
+  // Na consola: `MiaUploadDebug.dump()`. Como o problema costuma ser no
+  // telemóvel de outra pessoa, `MiaUploadDebug.copy()` devolve o texto pronto a
+  // colar.
+  function orderUploadFileInfo(file) {
+    if (!file) {
+      return null;
+    }
+    var bytes = Number(file.size) || 0;
+    return {
+      nome: String(file.name || "(sem nome)"),
+      tipo: String(file.type || "(o browser não disse)"),
+      bytes: bytes,
+      mb: Math.round(bytes / 10485.76) / 100,
+      modificado: file.lastModified ? new Date(file.lastModified).toISOString() : ""
+    };
+  }
+
+  function logOrderUploadRejection(code, entry) {
+    var record = Object.assign({
+      code: String(code || "desconhecido"),
+      quando: new Date().toISOString(),
+      pagina: window.location.pathname + window.location.search,
+      online: navigator.onLine !== false,
+      ligacao: navigator.connection && navigator.connection.effectiveType ? navigator.connection.effectiveType : ""
+    }, entry || {});
+
+    orderUploadRejectionLog.push(record);
+    if (orderUploadRejectionLog.length > 30) {
+      orderUploadRejectionLog.shift();
+    }
+    try {
+      if (window.console && window.console.error) {
+        window.console.error("[mia] ficheiro recusado: " + record.code, record);
+      }
+    } catch (error) {}
+    return record;
+  }
+
+  window.MiaUploadDebug = {
+    rejeicoes: function () {
+      return orderUploadRejectionLog.slice();
+    },
+    dump: function () {
+      if (window.console && window.console.table && orderUploadRejectionLog.length) {
+        window.console.table(orderUploadRejectionLog);
+      }
+      return orderUploadRejectionLog.slice();
+    },
+    copy: function () {
+      return JSON.stringify({
+        userAgent: navigator.userAgent,
+        rejeicoes: orderUploadRejectionLog
+      }, null, 2);
+    },
+    limpar: function () {
+      orderUploadRejectionLog = [];
+    }
+  };
+
   function orderPhotoFileIsSupported(file, allowPdf) {
     var type = String(file && file.type || "").toLowerCase();
     var name = String(file && file.name || "").toLowerCase();
@@ -17032,11 +17367,17 @@
         var prepared = new File([result.blob], stem + "-web.webp", { type: "image/webp", lastModified: Date.now() });
         return { file: prepared, width: result.width, height: result.height };
       });
-    }).catch(function () {
+    }).catch(function (cause) {
+      var error;
       if (file.size <= targetBytes) {
         return { file: file, width: 0, height: 0 };
       }
-      throw new Error("Não foi possível preparar esta foto. Tenta escolhê-la novamente.");
+      // Só chega aqui uma foto pesada que o browser não conseguiu descodificar
+      // nem recomprimir — HEIC sem suporte, canvas sem memória, ficheiro roto.
+      error = new Error("Não foi possível preparar esta foto. Tenta escolhê-la novamente.");
+      error.code = cause && cause.message === "decode" ? "descodificacao_falhou" : "recompressao_falhou";
+      error.causa = cause && cause.message ? cause.message : "";
+      throw error;
     });
   }
 
@@ -17096,18 +17437,48 @@
 
       xhr.addEventListener("load", function () {
         var payload = {};
+        var resposta = String(xhr.responseText || "");
+        var recusa;
+        var parseOk = true;
+        var ultimoObjecto;
         try {
-          payload = JSON.parse(xhr.responseText || "{}");
-        } catch (error) {}
+          payload = JSON.parse(resposta || "{}");
+        } catch (error) {
+          // Um `post_max_size` excedido faz o PHP escrever um warning ANTES de
+          // o nosso ficheiro correr, e o JSON vem colado a seguir. Sem isto, a
+          // recusa mais informativa que temos era a única ilegível.
+          ultimoObjecto = resposta.slice(resposta.indexOf("{"));
+          try {
+            payload = JSON.parse(ultimoObjecto);
+          } catch (outro) {
+            parseOk = false;
+          }
+        }
         if (xhr.status < 200 || xhr.status >= 300 || !payload.ok
             || !Array.isArray(payload.uploads) || !payload.uploads[0]) {
-          finish(reject, new Error(payload.message || "Não foi possível enviar o ficheiro."));
+          recusa = new Error(payload.message || "Não foi possível enviar o ficheiro.");
+          // O `code` do servidor é o que liga este erro ao bloco em
+          // private/order-uploads/rejeicoes.log.
+          recusa.code = payload.code || (parseOk ? "resposta_inesperada" : "resposta_ilegivel");
+          recusa.status = xhr.status;
+          recusa.bytesEnviados = file.size || 0;
+          if (!parseOk) {
+            // Resposta não-JSON: normalmente é o servidor a cortar o pedido
+            // (413 do Apache/nginx) ou um erro do PHP em HTML.
+            recusa.corpo = resposta.slice(0, 400);
+          }
+          finish(reject, recusa);
           return;
         }
         finish(resolve, payload.uploads[0]);
       });
       xhr.addEventListener("error", function () {
-        finish(reject, new Error("Não foi possível enviar o ficheiro."));
+        var recusa = new Error("Não foi possível enviar o ficheiro.");
+        recusa.code = "rede_falhou";
+        recusa.status = xhr.status;
+        recusa.bytesEnviados = file.size || 0;
+        recusa.segundos = Math.round((Date.now() - startedAt) / 100) / 10;
+        finish(reject, recusa);
       });
       xhr.addEventListener("abort", function () {
         finish(reject, orderUploadCanceledError());
@@ -17204,7 +17575,7 @@
     });
   }
 
-  function withOrderUploadTimeout(promise, operation, timeoutMs, message) {
+  function withOrderUploadTimeout(promise, operation, timeoutMs, message, code) {
     if (!orderUploadOperationIsActive(operation)) {
       return Promise.reject(orderUploadCanceledError());
     }
@@ -17229,6 +17600,7 @@
         settle(reject, error || orderUploadCanceledError());
       };
       operation.timeoutId = window.setTimeout(function () {
+        var expirou;
         if (!orderUploadOperationIsActive(operation)) {
           return;
         }
@@ -17243,7 +17615,15 @@
           } catch (error) {}
           operation.xhr = null;
         }
-        settle(reject, new Error(message));
+        expirou = new Error(message);
+        expirou.code = code || "tempo_esgotado";
+        expirou.limiteSegundos = Math.round(timeoutMs / 1000);
+        // Quanto é que chegou a subir antes de desistirmos: distingue uma
+        // ligação lenta (percentagem alta) de uma ligação morta (0%).
+        if (state.orderUploadProgress && state.orderUploadProgress.operationId === operation.id) {
+          expirou.percentagem = Math.round(state.orderUploadProgress.percent || 0);
+        }
+        settle(reject, expirou);
       }, timeoutMs);
 
       Promise.resolve(promise).then(function (value) {
@@ -17317,14 +17697,40 @@
     var key = config.selectionKey || (kind === "audio" ? "quadro_audio_uploads" : "quadro_uploads");
     var maxFiles = orderUploadMaxFiles(config);
     var existing = orderUploadItems(key);
-    var candidates = Array.prototype.slice.call(files || []).filter(function (file) {
+    var escolhidos = Array.prototype.slice.call(files || []);
+    var candidates = escolhidos.filter(function (file) {
       return file && Number(file.size) > 0;
     });
     var remaining = isFinite(maxFiles) ? Math.max(0, maxFiles - (config.multiple === true ? existing.length : 0)) : candidates.length;
     var selected = candidates.slice(0, remaining || (config.multiple === true ? 0 : 1));
     var uploads = [];
     var chain = Promise.resolve();
+    var naoSuportados;
+    var acimaDoLimite;
     var operation;
+
+    // Ficheiros que o browser entregou vazios: pasta do iCloud por descarregar,
+    // ficheiro em uso, permissão negada. Desapareciam sem deixar rasto.
+    if (candidates.length < escolhidos.length) {
+      logOrderUploadRejection("ficheiro_vazio_no_browser", {
+        fase: "selecao",
+        kind: kind,
+        chave: key,
+        ficheiros: escolhidos.filter(function (file) {
+          return !file || !(Number(file.size) > 0);
+        }).map(orderUploadFileInfo)
+      });
+    }
+    if (selected.length < candidates.length) {
+      logOrderUploadRejection("acima_do_maximo_de_ficheiros", {
+        fase: "selecao",
+        kind: kind,
+        chave: key,
+        maximo: maxFiles,
+        jaEnviados: existing.length,
+        ficheiros: candidates.slice(selected.length).map(orderUploadFileInfo)
+      });
+    }
 
     if (!selected.length) {
       return;
@@ -17332,10 +17738,40 @@
     state.orderUploadError = "";
     state.orderUploadMessage = "";
     state.orderUploadFeedbackKind = kind;
-    if ((kind === "photo" || kind === "artwork") && selected.some(function (file) { return !orderPhotoFileIsSupported(file, config.allowPdf === true); })) {
+    naoSuportados = (kind === "photo" || kind === "artwork")
+      ? selected.filter(function (file) { return !orderPhotoFileIsSupported(file, config.allowPdf === true); })
+      : [];
+    if (naoSuportados.length) {
       state.orderUploadError = config.allowPdf === true
         ? "Escolhe imagens JPG, PNG, WebP ou HEIC, ou ficheiros PDF."
         : "Escolhe fotos JPG, PNG, WebP ou HEIC.";
+      logOrderUploadRejection("tipo_recusado_no_browser", {
+        fase: "validacao-local",
+        kind: kind,
+        chave: key,
+        permitePdf: config.allowPdf === true,
+        ficheiros: naoSuportados.map(orderUploadFileInfo)
+      });
+      rerenderProduct(product);
+      return;
+    }
+
+    // Só trava o que o servidor ia recusar de certeza. O fluxo normal de fotos
+    // recomprime antes de subir, por isso aqui só apanha os originais que a
+    // personalização envia tal como estão.
+    acimaDoLimite = selected.filter(function (file) {
+      return Number(file.size) > ORDER_UPLOAD_MAX_BYTES && (kind !== "photo" || config.preserveOriginal === true);
+    });
+    if (acimaDoLimite.length) {
+      state.orderUploadError = "Este ficheiro é demasiado pesado (máximo "
+        + Math.round(ORDER_UPLOAD_MAX_BYTES / 1048576) + " MB).";
+      logOrderUploadRejection("acima_do_limite_no_browser", {
+        fase: "validacao-local",
+        kind: kind,
+        chave: key,
+        limiteBytes: ORDER_UPLOAD_MAX_BYTES,
+        ficheiros: acimaDoLimite.map(orderUploadFileInfo)
+      });
       rerenderProduct(product);
       return;
     }
@@ -17370,6 +17806,7 @@
           throw orderUploadCanceledError();
         }
         operation.fileIndex = fileIndex + 1;
+        operation.currentFile = file;
         state.orderUploadProgress = {
           operationId: operation.id,
           phase: "preparing",
@@ -17380,6 +17817,9 @@
           fileCount: operation.fileCount
         };
         updateOrderUploadProgressDom();
+        // A personalização usa preserveOriginal, por isso o ficheiro sobe tal
+        // como saiu da câmara — é aqui que os megabytes fazem diferença.
+        operation.currentPhase = kind === "photo" && config.preserveOriginal !== true ? "preparacao" : "sem-preparacao";
         preparation = kind === "photo" && config.preserveOriginal !== true
           ? prepareOrderPhoto(file)
           : Promise.resolve({ file: file, width: 0, height: 0 });
@@ -17387,17 +17827,21 @@
           preparation,
           operation,
           45000,
-          "A preparação do ficheiro demorou demasiado. Tenta escolhê-lo novamente."
+          "A preparação do ficheiro demorou demasiado. Tenta escolhê-lo novamente.",
+          "preparacao_demorou_demasiado"
         );
       }).then(function (prepared) {
         if (!orderUploadOperationIsActive(operation)) {
           throw orderUploadCanceledError();
         }
+        operation.currentPhase = "envio";
+        operation.currentPrepared = prepared.file;
         return withOrderUploadTimeout(
           uploadOrderMediaFile(prepared, kind, operation, config),
           operation,
           90000,
-          "O envio demorou demasiado. Confirma a ligação e tenta novamente."
+          "O envio demorou demasiado. Confirma a ligação e tenta novamente.",
+          "envio_demorou_demasiado"
         ).then(function (upload) {
           if (!orderUploadOperationIsActive(operation)) {
             throw orderUploadCanceledError();
@@ -17457,8 +17901,28 @@
         return;
       }
       state.orderUploadError = error && error.message ? error.message : "Não foi possível enviar o ficheiro.";
+      logOrderUploadRejection((error && error.code) || "envio_falhou", {
+        fase: operation.currentPhase || "envio",
+        kind: kind,
+        chave: key,
+        mensagem: state.orderUploadError,
+        estadoHttp: error && error.status ? error.status : 0,
+        ficheiro: orderUploadFileInfo(operation.currentFile),
+        // Só difere do original quando houve recompressão; é o que foi mesmo
+        // pela rede acima.
+        enviado: operation.currentPrepared && operation.currentPrepared !== operation.currentFile
+          ? orderUploadFileInfo(operation.currentPrepared)
+          : null,
+        ficheiroNumero: operation.fileIndex,
+        totalFicheiros: operation.fileCount,
+        limiteSegundos: error && error.limiteSegundos ? error.limiteSegundos : 0,
+        percentagem: error && typeof error.percentagem === "number" ? error.percentagem : null,
+        segundos: error && error.segundos ? error.segundos : 0,
+        causa: error && error.causa ? error.causa : "",
+        corpo: error && error.corpo ? error.corpo : ""
+      });
       if (kind === "artwork") {
-        try { trackProductEvent(product, "artwork_upload_failed", { error_code: "upload_failed" }); } catch (e) {}
+        try { trackProductEvent(product, "artwork_upload_failed", { error_code: (error && error.code) || "upload_failed" }); } catch (e) {}
       }
     }).then(function () {
       var shouldRender = orderUploadOperationIsActive(operation);
@@ -18371,12 +18835,36 @@
       });
       input.addEventListener("change", function () {
         var picker = orderActiveFilePicker;
-        var files = Array.prototype.slice.call(input.files || []).filter(function (file) {
+        var escolhidos = Array.prototype.slice.call(input.files || []);
+        var files = escolhidos.filter(function (file) {
           return file && Number(file.size) > 0;
         });
         var revision;
 
+        // Um ficheiro que chega com 0 bytes (placeholder do iCloud/OneDrive por
+        // descarregar, permissão negada) era descartado aqui sem sinal nenhum:
+        // a pessoa escolhia a foto e não acontecia nada.
+        if (files.length < escolhidos.length) {
+          logOrderUploadRejection("ficheiro_vazio_no_picker", {
+            fase: "picker",
+            chave: input.dataset.orderUploadKey || "",
+            passo: step && step.id ? step.id : "",
+            ficheiros: escolhidos.filter(function (file) {
+              return !file || !(Number(file.size) > 0);
+            }).map(orderUploadFileInfo)
+          });
+        }
+
         if (!picker || picker.input !== input) {
+          logOrderUploadRejection("sessao_do_picker_perdida", {
+            fase: "picker",
+            chave: input.dataset.orderUploadKey || "",
+            passo: step && step.id ? step.id : "",
+            diagnostico: picker
+              ? "O change chegou de um input diferente do que abriu o picker."
+              : "Não havia sessão de picker aberta quando o change chegou.",
+            ficheiros: escolhidos.map(orderUploadFileInfo)
+          });
           input.value = "";
           return;
         }
@@ -18393,6 +18881,19 @@
             !activeStep ||
             activeStep.id !== step.id
           ) {
+            // Guarda contra escolhas de um passo que já não é o actual. Quando
+            // dispara sem o passo ter mudado é bug nosso, e sem registo não há
+            // maneira de saber que aconteceu.
+            logOrderUploadRejection("escolha_descartada", {
+              fase: "picker",
+              chave: input.dataset.orderUploadKey || "",
+              passo: step && step.id ? step.id : "",
+              passoActual: activeStep && activeStep.id ? activeStep.id : "(nenhum)",
+              revisaoEsperada: revision,
+              revisaoActual: orderFilePickerRevision,
+              inputNoDom: document.documentElement.contains(input),
+              ficheiros: files.map(orderUploadFileInfo)
+            });
             return;
           }
 
@@ -18534,6 +19035,28 @@
         // SEMANTIC_EVENTS_V1
         try { trackOptionSelected(product, 'assorted', active ? 'off' : 'on', ''); } catch (e) {}
         state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-option-drawer]").forEach(function (drawer) {
+      drawer.addEventListener("toggle", function () {
+        if (!state.optionDrawerOpen || typeof state.optionDrawerOpen !== "object") {
+          state.optionDrawerOpen = {};
+        }
+        state.optionDrawerOpen[drawer.dataset.optionDrawer] = drawer.open;
+      });
+    });
+
+    document.querySelectorAll("[data-option-drawer-choice]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        var field = String(input.dataset.optionDrawerField || "");
+        if (!field || !input.checked) {
+          return;
+        }
+        state.selections[field] = input.value;
+        state.errors = "";
+        try { trackOptionSelected(product, field, input.value, input.closest("label").textContent || ""); } catch (e) {}
         rerenderProduct(product);
       });
     });
@@ -19129,6 +19652,10 @@
     dcFields.forEach(function (field) {
       appendHidden(form, field.name, state.selections[field.name] || "");
     });
+
+    selectedOptionDrawerRecords(product).forEach(function (record) {
+      appendHidden(form, record.drawer.field, record.item.value || "");
+    });
   }
 
   function appendHidden(form, name, value) {
@@ -19141,9 +19668,8 @@
   }
 
   function cartProductCategories(home) {
-    var allowed = { quadros: true, crachas: true, imanes: true, caderninhos: true, cadernos: true, agendas: true };
     return (home.categories || []).filter(function (category) {
-      return category && allowed[category.id] && homeCategoryIsVisible(category);
+      return category && category.href && homeCategoryIsVisible(category);
     });
   }
 
