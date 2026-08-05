@@ -849,7 +849,9 @@
   // Lado maior a que a fotografia é reduzida antes de se contarem as cores.
   var QUADROS_PHOTO_SAMPLE_SIZE = 132;
   // Quantos grupos de cor se procuram na fotografia (usam-se os melhores).
-  var QUADROS_PHOTO_CLUSTERS = 6;
+  // 8 em vez de 6: com poucos grupos, uma cor viva com sombras dentro (flores
+  // enroladas) fundia-se num tom escuro só, e o azul-royal saía marinho.
+  var QUADROS_PHOTO_CLUSTERS = 8;
   // A mesma família pode entrar duas vezes com tons diferentes: castanho claro
   // + castanho escuro fica melhor do que forçar uma terceira família que já não
   // tem nada a ver com a fotografia. Repetir custa, mas não é proibido.
@@ -1214,6 +1216,11 @@
       var weight = focus
         * (1 + Math.min(labChroma(lab), 0.22) * 5.5)
         * (quadrosIsSkinLike(r, g, b) ? 0.16 : 1);
+      // Paredes, papel e fundos lavados sao a maior mancha de quase todas as
+      // fotografias de clientes e quase nunca a cor que se quer nas flores:
+      // pesam pouco, sem desaparecerem (uma foto toda em tons claros ainda
+      // os pode escolher).
+      if (lab[0] > 0.82 && labChroma(lab) < 0.03) { weight *= 0.25; }
       // Agrupar antes de analisar: 32 níveis por canal chegam para o resultado
       // e deixam o k-means a correr sobre uns milhares de baldes, não milhões.
       var key = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
@@ -1331,8 +1338,18 @@
     });
   }
 
-  // Junta grupos que ficaram perto demais e ordena pelo que mais se nota: área
-  // ocupada, com um empurrão para as cores vivas.
+  // Junta grupos que ficaram perto demais e ordena pelo que mais se nota.
+  // A área ocupada mandava (peso × pequeno bónus de croma) e o resultado era o
+  // fundo — parede, papel, céu lavado — à cabeça de quase todas as fotografias,
+  // com as flores a sério em terceiro. Agora manda o carácter: a raiz do peso
+  // trava o domínio da área, o croma multiplica, e as cores vivas passam
+  // sempre à frente dos neutros — os neutros só lideram quando a fotografia
+  // não tem nenhuma cor viva.
+  function quadrosClusterSalience(cluster) {
+    return Math.pow(cluster.weight, 0.6)
+      * (0.03 + Math.min(labChroma(cluster.lab), 0.25) * 2.2);
+  }
+
   function quadrosRankClusters(clusters) {
     var merged = [];
 
@@ -1350,10 +1367,14 @@
       merged.push({ lab: cluster.lab.slice(), weight: cluster.weight });
     });
 
-    return merged.sort(function (a, b) {
-      return b.weight * (1 + Math.min(labChroma(b.lab), 0.2) * 2)
-        - a.weight * (1 + Math.min(labChroma(a.lab), 0.2) * 2);
+    merged.sort(function (a, b) {
+      return quadrosClusterSalience(b) - quadrosClusterSalience(a);
     });
+
+    var vivid = merged.filter(function (cluster) { return labChroma(cluster.lab) >= 0.05; });
+    var pale = merged.filter(function (cluster) { return labChroma(cluster.lab) < 0.05; });
+
+    return vivid.concat(pale);
   }
 
   function analyseQuadrosPhoto(img, step) {
