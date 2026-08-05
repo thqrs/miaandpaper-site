@@ -1,0 +1,771 @@
+/* css/10-entrega-uniformizacao.css — parte 10/12 do antigo styles.css (codigo intacto, so dividido).
+   A ordem dos <link> nos HTML segue 01 → 12 e a cascata depende dela.
+   Conteudo: passo de entrega/contacto, nota de encomendas abertas, e a camada CSS_UNIFORMITY_LAYER_V1 (superficies, titulos, texto secundario, inputs, estados seleccionados, checkmarks, botoes; + mobile + dark). */
+/* DELIVERY_CONTACT_STEP_V1
+   Estilos para o novo passo "Entrega e contacto". ComposiÃ§Ã£o:
+   - .delivery-contact-step â†’ wrapper com gap entre blocos
+   - .dc-block â†’ cada bloco (delivery, contact, designs); fundo creme suave
+   - .dc-delivery-options / .dc-delivery-option â†’ radios estilo card
+   - .dc-contact-grid / .dc-field â†’ grelha responsiva 2 colunas â†’ 1 em mobile
+   - .dc-block-note â†’ texto explicativo abaixo dos campos (Phase B)
+   - .dc-designs reaproveita .crachas-step2-summary com pequena adaptaÃ§Ã£o
+*/
+.delivery-contact-step {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.dc-block {
+  background: var(--card-bg, var(--surface-cream));
+  border: 1px solid var(--card-border, #ead8a9);
+  border-radius: 14px;
+  padding: 22px 22px 20px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 6px 16px -10px rgba(0, 0, 0, 0.08);
+}
+
+/* STYLE_TOKENS_V1: estilo canÃ³nico aplicado pela regra agrupada acima. */
+
+.dc-block-subtitle {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.dc-block-note {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.dc-delivery-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dc-delivery-option {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--card-border, #ead8a9);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dc-delivery-option:hover {
+  border-color: #c9a45e;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.dc-delivery-option input {
+  margin: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--gold, #b88616);
+}
+
+.dc-delivery-option.is-selected,
+.dc-delivery-option:has(input:checked) {
+  border-color: var(--gold, #b88616);
+  outline: 2px solid var(--gold, #b88616);
+  outline-offset: -2px;
+  background: var(--surface-cream-soft);
+}
+
+.dc-delivery-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dc-delivery-text strong {
+  font-size: 1rem;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.dc-delivery-text em {
+  font-style: normal;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.dc-delivery-price {
+  font-style: normal;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--ink);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.dc-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dc-field > label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dc-field span {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.dc-field span small {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.dc-field-note {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.dc-field input {
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border, #ead8a9);
+  background: #fff;
+  color: var(--ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dc-field input:focus {
+  outline: none;
+  border-color: var(--gold, #b88616);
+  box-shadow: 0 0 0 3px rgba(184, 134, 22, 0.18);
+}
+
+.dc-field input.is-missing {
+  border-color: #c0392b;
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.15);
+}
+
+.dc-designs {
+  /* reaproveita estilos de .crachas-step2-summary mas com fundo do dc-block */
+  background: var(--card-bg, var(--surface-cream));
+}
+
+@media (max-width: 540px) {
+  .dc-block {
+    padding: 18px 16px 16px;
+  }
+
+  .dc-contact-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dc-delivery-option {
+    grid-template-columns: auto 1fr;
+    gap: 10px 12px;
+  }
+
+  .dc-delivery-price {
+    grid-column: 2;
+    text-align: left;
+    font-size: 0.9rem;
+  }
+}
+
+html[data-theme="dark"] .dc-block {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+html[data-theme="dark"] .dc-delivery-option {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+html[data-theme="dark"] .dc-delivery-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--gold, #d4a84a);
+}
+
+html[data-theme="dark"] .dc-delivery-option.is-selected,
+html[data-theme="dark"] .dc-delivery-option:has(input:checked) {
+  background: rgba(212, 168, 74, 0.12);
+  border-color: var(--gold, #d4a84a);
+  outline-color: var(--gold, #d4a84a);
+}
+
+html[data-theme="dark"] .dc-field input {
+  background: rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--ink);
+}
+
+/* OPEN_ORDER_HINT_V1: nota discreta acima dos blocos do passo
+   delivery_contact, mostrada quando check-open-orders.php devolve true.
+   NÃ£o revela detalhes da encomenda anterior. */
+.open-order-hint {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(79, 122, 58, 0.10);
+  border: 1px solid rgba(79, 122, 58, 0.30);
+  color: var(--ink);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.open-order-hint strong {
+  color: var(--moss, #4f7a3a);
+  font-weight: 850;
+}
+
+.open-order-hint em {
+  font-style: normal;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+/* Destaca visualmente a opÃ§Ã£o "Junta as minhas encomendas" enquanto a
+   hint estiver activa. MantÃ©m a aparÃªncia consistente com is-selected. */
+.dc-delivery-option.is-suggested {
+  border-color: var(--moss, #4f7a3a);
+  box-shadow: 0 0 0 2px rgba(79, 122, 58, 0.18) inset;
+}
+
+.dc-delivery-option.is-suggested .dc-delivery-text strong::after {
+  content: " · recomendado";
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--moss, #4f7a3a);
+  margin-left: 4px;
+}
+
+html[data-theme="dark"] .open-order-hint {
+  background: rgba(79, 122, 58, 0.16);
+  border-color: rgba(79, 122, 58, 0.4);
+}
+
+/* CSS_UNIFORMITY_LAYER_V1
+   Camada canÃ³nica de UI: forÃ§a os principais componentes pÃºblicos
+   a partilharem a mesma linguagem visual, sem apagar o histÃ³rico acima.
+   ReversÃ£o simples: remover este bloco inteiro. */
+:root {
+  --ui-surface: rgba(255, 253, 248, 0.92);
+  --ui-card: #fffdf8;
+  --ui-card-soft: var(--surface-cream-soft);
+  --ui-card-muted: var(--surface-stone);
+  --ui-card-highlight: var(--surface-gold-soft);
+  --ui-border: var(--line);
+  --ui-border-warm: rgba(142, 103, 31, 0.24);
+  --ui-border-strong: rgba(142, 103, 31, 0.32);
+  --ui-radius: var(--radius);
+  --ui-radius-lg: 14px;
+  --ui-shadow-card: 0 10px 24px rgba(68, 41, 0, 0.07);
+  --ui-shadow-shell: var(--shadow);
+  --ui-focus: rgba(125, 139, 98, 0.24);
+  --ui-danger-bg: #fff7f6;
+  --ui-danger-border: rgba(199, 68, 56, 0.18);
+  --ui-danger-text: #8c3028;
+  --ui-success-bg: rgba(79, 122, 58, 0.10);
+  --ui-success-border: rgba(79, 122, 58, 0.30);
+}
+
+/* SuperfÃ­cies principais */
+.home-intro,
+.product-intro,
+.wizard-shell,
+.result-card,
+.fallback,
+.contact-card,
+.privacy-content {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-shell);
+  color: var(--ink);
+}
+
+.step-card,
+.choice-card,
+.quantity-card,
+.pack-option,
+.delivery-option,
+.dc-delivery-option,
+.selected-pill,
+.copy-request,
+.confirm-card,
+.summary-list div,
+.result-list,
+.contact-card,
+.privacy-content {
+  border-color: var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-card);
+  color: var(--ink);
+}
+
+.details-section,
+.dc-block,
+.price-panel,
+.quantity-status,
+.privacy-summary,
+.crachas-step2-summary,
+.delivery-choice.is-standalone {
+  border: 1px solid var(--ui-border-warm);
+  border-radius: var(--ui-radius);
+  background: var(--ui-card-soft);
+  color: var(--ink);
+}
+
+.price-panel.muted,
+.summary-list div,
+.confirm-card,
+.copy-request,
+.result-list,
+.selected-pill,
+.quantity-status {
+  background: var(--ui-card-muted);
+}
+
+.product-crachas .confirm-card {
+  background: var(--ui-card-soft);
+}
+
+.product-crachas .dc-design-quantity-wrap .quantity-badge {
+  right: auto;
+  left: -8px;
+}
+
+.payment-notice,
+.order-success-card {
+  border: 1px solid var(--border-soft-gold);
+  border-radius: var(--ui-radius-lg);
+  background: linear-gradient(180deg, var(--surface-cream) 0%, var(--ui-card-highlight) 100%);
+  color: var(--ink);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85) inset, var(--ui-shadow-card);
+}
+
+.pack-price-card {
+  border-color: var(--ui-border-strong);
+  border-radius: var(--ui-radius-lg);
+  background: linear-gradient(180deg, var(--surface-cream) 0%, var(--ui-card-soft) 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85) inset, var(--ui-shadow-card);
+}
+
+/* TÃ­tulos de secÃ§Ã£o: mesmo tom, mesma famÃ­lia e mesma linha inferior */
+.section-title,
+.design-grid-section-title,
+.crachas-step2-summary-title,
+.confirm-card-title,
+.dc-block-title,
+.details-section h3,
+.privacy-content h3 {
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--ui-border);
+  color: var(--moss);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.04rem, 4.4vw, 1.32rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+
+.details-section h3,
+.privacy-content h3 {
+  margin-top: 0;
+}
+
+.dc-block-title + .dc-block-subtitle,
+.details-section h3 + p,
+.privacy-content h3 + p {
+  margin-top: -2px;
+}
+
+/* Texto secundÃ¡rio */
+.choice-copy span,
+.choice-note,
+.details-grid label > span,
+.summary-list dt,
+.empty-state,
+.price-panel span,
+.price-panel p,
+.price-panel em,
+.delivery-option em,
+.dc-block-subtitle,
+.dc-block-note,
+.dc-delivery-text em,
+.dc-field-note,
+.privacy-summary p,
+.privacy-content p,
+.form-hint,
+.selected-pill > span,
+.quantity-main > div span,
+.quantity-status,
+.result-list {
+  color: var(--muted);
+}
+
+/* Inputs e campos */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+select,
+textarea,
+.dc-field input,
+.contact-form input,
+.contact-form textarea,
+.contact-form select {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--card);
+  color: var(--ink);
+}
+
+input.is-missing,
+.details-grid textarea.is-missing,
+.dc-field input.is-missing,
+.contact-form input.is-missing,
+.contact-form textarea.is-missing {
+  border-color: var(--ui-danger-text);
+  background: var(--ui-danger-bg);
+  box-shadow: 0 0 0 3px rgba(185, 52, 43, 0.16);
+}
+
+.form-error,
+.details-grid label:has(.is-missing) > span,
+.dc-field:has(.is-missing) span {
+  color: var(--ui-danger-text);
+  font-weight: 900;
+}
+
+/* Estados seleccionados: uma linguagem sÃ³ â€” border + outline, sem cartÃµes amarelos diferentes */
+.choice-card:has(input:checked),
+.pack-option.is-selected,
+.delivery-option:has(input:checked),
+.dc-delivery-option.is-selected,
+.dc-delivery-option:has(input:checked) {
+  border-color: var(--moss);
+  outline: 3px solid var(--ui-focus);
+  background: var(--ui-card);
+}
+
+.dc-delivery-option.is-selected,
+.dc-delivery-option:has(input:checked) {
+  outline-offset: 0;
+}
+
+/* SELECTED_CHECKMARKS_V1: o visto passa a ser a marca visual comum de selecao.
+   Por defeito fica no canto superior direito; as variaveis em :root permitem
+   voltar facilmente ao lado direito centrado. */
+.choice-card.design-grid:has(input:checked)::after,
+.choice-card.media-list:not(.crachas-size-card):has(input:checked)::after,
+.choice-card.text-grid:has(input:checked)::after,
+.choice-card.price-pack-grid:has(input:checked)::after,
+.choice-card.size-choice:has(input:checked)::after,
+.design-action-card.is-selected::after,
+.pack-option.is-selected::after {
+  content: "✓";
+  position: absolute;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #756026;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.choice-card.design-grid:has(input:checked)::after {
+  top: var(--selection-check-inset, 14px);
+  right: var(--selection-check-inset, 14px);
+}
+
+.choice-card.media-list:not(.crachas-size-card):has(input:checked)::after,
+.choice-card.text-grid:has(input:checked)::after,
+.choice-card.price-pack-grid:has(input:checked)::after,
+.choice-card.size-choice:has(input:checked)::after,
+.design-action-card.is-selected::after,
+.pack-option.is-selected::after {
+  top: var(--selection-check-top);
+  right: var(--selection-check-right);
+  transform: var(--selection-check-transform);
+}
+
+.choice-card.media-list:not(.crachas-size-card),
+.choice-card.text-grid,
+.choice-card.price-pack-grid,
+.choice-card.size-choice,
+.design-action-card,
+.pack-option {
+  padding-right: 46px;
+}
+
+.design-action-card[data-select-all-designs] {
+  grid-template-columns: 38px minmax(0, 1fr);
+}
+
+.design-action-card[data-select-all-designs] .design-action-icon {
+  display: grid;
+}
+
+/* Quando o botão está em modo "Limpar Seleção", o ícone de ação passa de ✓ para × */
+.design-action-card[data-select-all-designs].is-selected .design-action-icon {
+  font-size: 0;
+}
+
+.design-action-card[data-select-all-designs].is-selected .design-action-icon::before {
+  content: "×";
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+@media (max-width: 390px) {
+  .design-action-card[data-select-all-designs] {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+}
+
+.delivery-option input,
+.dc-delivery-option input {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  border: 1px solid var(--ui-border, var(--line));
+  border-radius: 999px;
+  background: #fffdf8;
+  color: #fff;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.delivery-option input:checked,
+.dc-delivery-option input:checked {
+  border-color: #756026;
+  background: #756026;
+}
+
+.delivery-option input:checked::before,
+.dc-delivery-option input:checked::before {
+  content: "✓";
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.pack-option.is-disabled {
+  border-color: var(--ui-border);
+  background: var(--ui-card-muted);
+  color: var(--muted);
+}
+
+.pack-disabled-message,
+.admin-message {
+  border-color: var(--ui-danger-border);
+  background: var(--ui-danger-bg);
+  color: var(--ui-danger-text);
+}
+
+.open-order-hint {
+  border: 1px solid var(--ui-success-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-success-bg);
+  color: var(--ink);
+}
+
+/* BotÃµes pÃºblicos */
+.button,
+.example-toggle,
+.auto-distribute,
+.cookie-banner-accept {
+  border-radius: var(--ui-radius);
+  font-weight: 850;
+}
+
+.button.primary,
+.cookie-banner-accept {
+  border-color: var(--button-bg);
+  background: var(--button-bg);
+  color: var(--button-text);
+}
+
+.button.is-disabled,
+.button[aria-disabled="true"] {
+  border-color: var(--ui-border-strong);
+  background: var(--ui-card-muted);
+  color: var(--muted);
+  opacity: 0.72;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+}
+
+.button.secondary,
+.example-toggle,
+.auto-distribute,
+.quantity-controls button {
+  border-color: var(--ui-border);
+  background: var(--ui-card-muted);
+  color: var(--moss);
+}
+
+/* Molduras de imagem */
+.option-image,
+.design-image,
+.uploaded-image,
+.example-image,
+.interior-slideshow,
+.interior-slideshow-frame {
+  border-color: var(--ui-border-strong);
+  background-color: var(--ui-card-soft);
+}
+
+/* Contacto/privacidade usam a mesma largura visual das pÃ¡ginas do funil */
+.contact-shell,
+.privacy-page {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.contact-card,
+.privacy-summary,
+.privacy-content {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+/* Mobile: os blocos mantÃªm o mesmo ritmo de espaÃ§amento */
+@media (max-width: 540px) {
+  .home-shell,
+  .product-shell,
+  .contact-shell,
+  .privacy-page,
+  .fallback {
+    padding: 12px;
+  }
+
+  .home-intro,
+  .product-intro,
+  .wizard-shell,
+  .contact-card,
+  .privacy-summary,
+  .privacy-content {
+    padding: 16px;
+  }
+
+  .step-card,
+  .details-section,
+  .dc-block,
+  .quantity-card,
+  .pack-price-card,
+  .payment-notice,
+  .order-success-card {
+    padding: 14px;
+  }
+}
+
+/* Dark mode: as mesmas categorias continuam alinhadas */
+html[data-theme="dark"] {
+  --ui-surface: rgba(255, 255, 255, 0.04);
+  --ui-card: rgba(255, 255, 255, 0.04);
+  --ui-card-soft: rgba(216, 192, 138, 0.12);
+  --ui-card-muted: rgba(255, 255, 255, 0.04);
+  --ui-card-highlight: rgba(212, 168, 74, 0.12);
+  --ui-border: var(--line);
+  --ui-border-warm: rgba(216, 192, 138, 0.28);
+  --ui-border-strong: rgba(216, 192, 138, 0.32);
+  --ui-shadow-card: 0 10px 24px rgba(0, 0, 0, 0.32);
+  --ui-danger-bg: rgba(208, 154, 130, 0.12);
+  --ui-danger-border: rgba(208, 154, 130, 0.32);
+  --ui-danger-text: var(--rose);
+  --ui-success-bg: rgba(79, 122, 58, 0.16);
+  --ui-success-border: rgba(79, 122, 58, 0.4);
+}
+
+html[data-theme="dark"] .step-card,
+html[data-theme="dark"] .choice-card,
+html[data-theme="dark"] .quantity-card,
+html[data-theme="dark"] .pack-option,
+html[data-theme="dark"] .delivery-option,
+html[data-theme="dark"] .dc-delivery-option,
+html[data-theme="dark"] .selected-pill,
+html[data-theme="dark"] .copy-request,
+html[data-theme="dark"] .confirm-card,
+html[data-theme="dark"] .summary-list div,
+html[data-theme="dark"] .result-list,
+html[data-theme="dark"] .contact-card,
+html[data-theme="dark"] .privacy-content,
+html[data-theme="dark"] .details-section,
+html[data-theme="dark"] .dc-block,
+html[data-theme="dark"] .price-panel,
+html[data-theme="dark"] .quantity-status,
+html[data-theme="dark"] .privacy-summary,
+html[data-theme="dark"] .crachas-step2-summary,
+html[data-theme="dark"] .delivery-choice.is-standalone {
+  border-color: var(--ui-border-warm);
+  background: var(--ui-card);
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .choice-card:has(input:checked),
+html[data-theme="dark"] .pack-option.is-selected,
+html[data-theme="dark"] .delivery-option:has(input:checked),
+html[data-theme="dark"] .dc-delivery-option.is-selected,
+html[data-theme="dark"] .dc-delivery-option:has(input:checked) {
+  border-color: var(--moss);
+  outline-color: rgba(216, 192, 138, 0.32);
+  background: rgba(216, 192, 138, 0.10);
+}
+
+html[data-theme="dark"] input[type="text"],
+html[data-theme="dark"] input[type="password"],
+html[data-theme="dark"] input[type="email"],
+html[data-theme="dark"] input[type="tel"],
+html[data-theme="dark"] input[type="number"],
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] .dc-field input,
+html[data-theme="dark"] .contact-form input,
+html[data-theme="dark"] .contact-form textarea,
+html[data-theme="dark"] .contact-form select {
+  border-color: var(--ui-border-warm);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--ink);
+}
+
+

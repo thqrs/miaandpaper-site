@@ -1,0 +1,247 @@
+/* css/01-tokens-agua.css — parte 01/12 do antigo styles.css (codigo intacto, so dividido).
+   A ordem dos <link> nos HTML segue 01 → 12 e a cascata depende dela.
+   Conteudo: variaveis :root (cores, superficies, tokens de estilo) e agua da paleta (os quadrados com fisica em canvas usam isto). */
+:root {
+  --paper: #fff8df;
+  --card: #fffdf5;
+  --linen: #f6e7bf;
+  --sage: #d6bf77;
+  --moss: #72551e;
+  --ink: #2e2413;
+  --muted: #7f6b42;
+  --gold: #d7aa36;
+  --gold-soft: #f4dd91;
+  --rose: #c58a72;
+  --blue: #9a8656;
+  --line: rgba(142, 103, 31, 0.22);
+  --shadow: 0 20px 55px rgba(97, 70, 20, 0.13);
+  --radius: 8px;
+  /* Superfícies editoriais partilhadas pela homepage e páginas interiores. */
+  --surface-page: var(--paper);
+  --surface-panel: var(--card);
+  --surface-raised: var(--card);
+  --surface-image: var(--linen);
+  --surface-header: color-mix(in srgb, var(--paper) 94%, transparent);
+  --hero-foreground: #fffdf8;
+  --hero-foreground-muted: rgba(255, 253, 248, 0.94);
+  --hero-accent: #f6df99;
+  --hero-button-ink: #3b2d18;
+  --hero-overlay: rgba(31, 25, 15, 0.52);
+  --accent-hover: var(--rose);
+  --shadow-header: 0 8px 28px rgba(46, 36, 19, 0.07);
+  --shadow-editorial: 0 12px 30px rgba(46, 36, 19, 0.08);
+  --shadow-menu: -20px 0 50px rgba(37, 28, 14, 0.2);
+  --menu-backdrop: rgba(25, 20, 12, 0.56);
+  --hero-text-shadow: 0 3px 22px rgba(20, 15, 8, 0.36);
+  --hero-copy-shadow: 0 2px 12px rgba(20, 15, 8, 0.48);
+  --hero-action-bg: rgba(35, 28, 17, 0.46);
+  --hero-action-shadow: 0 10px 24px rgba(20, 15, 8, 0.2);
+  /* STYLE_TOKENS_V1 â€” superfÃ­cies cremes uniformes para reduzir variantes
+     de amarelo. Ver log_css_mods.txt para histÃ³rico de substituiÃ§Ãµes.
+       --surface-cream         â†’ wrapper geral (dc-block, banners discretos)
+       --surface-cream-soft    â†’ caixas com mais Ãªnfase (price-panel)
+       --surface-cream-strong  â†’ caixas com saturaÃ§Ã£o extra (resumos)
+       --surface-stone         â†’ cinza-creme neutro (confirm-card, listas)
+       --surface-gold-soft     â†’ realce dourado suave para CTA / notas
+       --border-soft-gold      â†’ borda subtil dourada associada a notas
+  */
+  --surface-cream:        #fffbe9;
+  --surface-cream-soft:   #fff8df;
+  --surface-cream-strong: #f6e7bf;
+  --surface-stone:        #f7f1e6;
+  --surface-gold-soft:    #fff5d0;
+  --border-soft-gold:     rgba(184, 134, 22, 0.42);
+  /* CHECKMARK_CORNER_MODE_V1: para voltar ao centro-direita, usar
+     --selection-check-top: 50%; --selection-check-transform: translateY(-50%); */
+  --selection-check-top: var(--selection-check-inset, 14px);
+  --selection-check-right: var(--selection-check-inset, 14px);
+  --selection-check-transform: none;
+}
+
+/* FLOW_REFINEMENTS_20260720 */
+.step-card > .wizard-progress {
+  width: 100%;
+  margin: -4px 0 0;
+  padding: 0;
+}
+
+.step-card > .wizard-progress .wizard-progress__rail {
+  height: 38px;
+}
+
+.step-card > .wizard-progress .wizard-progress__track {
+  top: 10px;
+}
+
+.step-card > .wizard-progress .wizard-progress__ticks li {
+  top: -4px;
+}
+
+.wizard-progress__ticks li:last-child button span {
+  display: none;
+}
+
+/* ---- Água nos quadrados da paleta ----------------------------------------
+   Física real num <canvas> (ver MiaWater em app.js): shallow-water por colunas
+   (conserva massa, gera ondas/slosh) + partículas balísticas para o salpico. O
+   quadrado é o "copo": fundo tingido com a cor por baixo (vidro vazio), o canvas
+   desenha a água, e o ::after faz o reflexo de vidro por cima. Reage ao dedo/
+   rato e ao girómetro; corre sempre, mesmo com "reduzir movimento". */
+.palette-composition__slot.is-filled {
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.06) 0 8%, transparent 30%),
+    color-mix(in srgb, var(--palette-preview-color) 14%, var(--surface-stone));
+}
+
+.pcs__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Reflexo de vidro por cima da água. */
+.palette-composition__slot.is-filled::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(118deg, rgba(255,255,255,.30) 0 12%, transparent 26% 66%, rgba(255,255,255,.10) 80%, transparent 94%);
+}
+
+.individual-color-choice.is-unavailable {
+  opacity: .72;
+}
+
+.individual-color-choice.is-unavailable::before {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 7%;
+  width: 86%;
+  height: 3px;
+  border-radius: 999px;
+  background: #c74438;
+  box-shadow: 0 1px 1px rgba(255,255,255,.75);
+  transform: rotate(-45deg);
+  pointer-events: none;
+}
+
+.admin-colors-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.details-character-count {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  z-index: 2;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+  color: var(--muted);
+  font: 700 .74rem/1.2 system-ui, sans-serif;
+}
+
+.details-grid label:has(textarea) {
+  position: relative;
+}
+
+/* A água corre mesmo com "reduzir movimento" — pedido explícito. */
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  min-height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: clip;
+  background: var(--surface-page);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.orders-suspended-banner {
+  width: min(calc(100% - 32px), 760px);
+  margin: 14px auto 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(114, 85, 30, 0.28);
+  border-radius: var(--radius);
+  background: var(--surface-gold-soft);
+  color: var(--moss);
+  font-weight: 850;
+  text-align: center;
+}
+
+.home-shell,
+.product-shell,
+.fallback {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0 20px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.04rem;
+}
+
+.brand-text {
+  position: relative;
+  display: inline-block;
+  line-height: 1.1;
+  transition: opacity 0.3s ease;
+}
+

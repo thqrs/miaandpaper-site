@@ -14,10 +14,15 @@ for %%F in ("site\admin-api.php" "site\send-order.php" "site\track-order-event.p
     echo Ficheiro nao encontrado: %%~F
   )
 )
-if exist "site\app.js" (
-  where node >nul 2>nul
-  if not errorlevel 1 (
-    echo.
+where node >nul 2>nul
+if not errorlevel 1 (
+  echo.
+  rem O antigo app.js esta dividido em modulos site\js\*.js (escopo global partilhado).
+  for %%F in ("site\js\*.js") do (
+    echo Validating site\js\%%~nxF...
+    node --check "site\js\%%~nxF"
+  )
+  if exist "site\app.js" (
     echo Validating site\app.js...
     node --check "site\app.js"
   )

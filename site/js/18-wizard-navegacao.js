@@ -1,0 +1,452 @@
+// js/18-wizard-navegacao.js — parte 18/23 do antigo app.js (codigo intacto, so dividido).
+// Os modulos js/*.js partilham TODOS o mesmo escopo global (scripts classicos,
+// sem IIFE por ficheiro) e carregam pela ordem dos <script> nos HTML: 01 → 23.
+// Conteudo: navegacao do wizard: currentStep, validacoes e goNext.
+  function currentStep(product) {
+    return visibleSteps(product)[state.currentStep];
+  }
+
+  function setSelection(step, input) {
+    var values;
+
+    if (step.selection === "multi") {
+      if (step.id === "designs") {
+        state.selections.assorted_designs = "";
+      }
+      values = state.selections[step.id] || [];
+      state.selections[step.id] = input.checked
+        ? Array.from(new Set(values.concat(input.value)))
+        : values.filter(function (value) { return value !== input.value; });
+      state.quantitySignature = "";
+      state.quantitiesTouched = false;
+      state.quantityPackBaseline = 0;
+      return;
+    }
+
+    if (step.id === "designs" && isQuadrosProduct(state.product) && state.selections.designs && state.selections.designs !== input.value) {
+      (state.product.steps || []).filter(function (candidate) {
+        return candidate && candidate.template === "palette-grid";
+      }).forEach(function (colorStep) {
+        var keys = quadrosColorSelectionKeys(colorStep);
+        delete state.selections[keys.colors];
+        delete state.selections[keys.palette];
+        delete state.selections[keys.mia];
+        delete state.selections[keys.tones];
+      });
+      delete state.selections.colors;
+      delete state.selections.color_palette;
+      delete state.selections.mia_choose_colors;
+      delete state.selections.quadro_color_mode;
+      delete state.selections.quadro_color_tones;
+      state.paletteColorSlots = [];
+      state.quadroActiveColorSlot = 0;
+      state.quadroToneEdit = null;
+      state.quadroColorUi = {};
+      resetQuadrosPhotoColorAnalysis();
+      delete state.selections.photo_orientation;
+      delete state.selections.photo_help;
+      delete state.selections.silhouette;
+      delete state.selections.quadro_text;
+      delete state.selections.quadro_description;
+      delete state.selections.no_phrase;
+      delete state.selections.quadro_super_example;
+      delete state.selections.heart_finish;
+      delete state.selections.frame_size;
+      delete state.selections.heart_background_colors;
+      delete state.selections.heart_background_color_tones;
+      delete state.selections.heart_background_palette;
+      delete state.selections.mia_choose_heart_background_colors;
+      delete state.selections.quadro_dedication;
+      delete state.selections.no_dedication;
+      delete state.selections.quadro_silhouette_description;
+      delete state.selections.silhouette_contact_me;
+      delete state.selections.quadro_silhouette_text;
+      delete state.selections.no_silhouette_text;
+      delete state.selections.no_text;
+      delete state.selections.baby_animal;
+      delete state.selections.baby_custom_animal;
+      delete state.selections.baby_gender;
+      delete state.selections.baby_name;
+      delete state.selections.baby_birth_date;
+      delete state.selections.baby_birth_time;
+      delete state.selections.baby_birth_weight;
+      state.orderUploadMessage = "";
+      state.orderUploadError = "";
+      state.invalidFields = [];
+    }
+
+    state.selections[step.id] = input.value;
+    if (Array.isArray(step.resetSelectionKeys)) {
+      step.resetSelectionKeys.forEach(function (key) {
+        delete state.selections[String(key)];
+      });
+    }
+    if (Array.isArray(step.resetColorSteps)) {
+      step.resetColorSteps.forEach(function (stepId) {
+        var colorStep = findStep(state.product, String(stepId));
+        if (colorStep) {
+          quadrosResetColorUi(colorStep);
+        }
+      });
+    }
+    if (step.selection === "single") {
+      var selectedDesign = (step.items || []).filter(function (item) {
+        return item && item.value === input.value;
+      })[0] || null;
+      var defaults = selectedDesign && selectedDesign.defaultSelections && typeof selectedDesign.defaultSelections === "object"
+        ? selectedDesign.defaultSelections
+        : {};
+
+      Object.keys(defaults).forEach(function (key) {
+        state.selections[key] = cloneJson(defaults[key]);
+      });
+    }
+    if (step.id === "size" && freeQuantityStep(state.product)) {
+      state.selections.pack_quantity = minimumFreeQuantity(state.product);
+      delete state.selections.free_quantity_mode;
+      state.quantitySignature = "";
+      state.quantitiesTouched = false;
+      state.quantityPackBaseline = 0;
+    }
+    if (step.id === "baby_animal" && input.value !== "Outro animal") {
+      delete state.selections.baby_custom_animal;
+    }
+  }
+
+  function detailsStepHasAnyInput(step) {
+    var fields = step && Array.isArray(step.fields) ? step.fields : [];
+    var attachments = step && step.mediaAttachments ? step.mediaAttachments : {};
+    var configs = [attachments.photos, attachments.audio].filter(Boolean);
+    var hasFieldValue = fields.some(function (field) {
+      return field && String(state.selections[field.name] || "").trim();
+    });
+
+    if (step && step.skipOption && step.skipOption.selectionKey && state.selections[step.skipOption.selectionKey]) {
+      return true;
+    }
+
+    if (step && step.selectableExamples === true && String(state.selections[step.exampleSelectionKey || "details_example"] || "").trim()) {
+      return true;
+    }
+
+    if (hasFieldValue) {
+      return true;
+    }
+
+    return configs.some(function (config) {
+      var key = config.selectionKey || (config === attachments.audio ? "quadro_audio_uploads" : "quadro_reference_uploads");
+      return orderUploadItems(key).length > 0;
+    });
+  }
+
+  function orderStepHasMediaControls(step) {
+    var attachments = step && step.mediaAttachments ? step.mediaAttachments : null;
+    return !!(step && (
+      step.template === "photo-upload" ||
+      (attachments && (attachments.photos || attachments.audio))
+    ));
+  }
+
+  function validateStep(product, step) {
+    var field;
+    var i;
+    var missing = [];
+    var total;
+    var packQuantity;
+
+    state.invalidFields = [];
+
+    if (orderStepHasMediaControls(step) && (state.orderUploadBusy || orderAudioPendingStart || state.orderAudioRecording)) {
+      return state.orderAudioRecording ? "Solta o botão do áudio para terminar a gravação." : "Espera até o anexo terminar de enviar.";
+    }
+
+    if (step.id === "designs" && selectedDesignItems(product).length === 0 && !isAssortedSelected(product)) {
+      if (isQuadrosProduct(product)) {
+        return "Escolhe o tipo de moldura que queres criar.";
+      }
+      if (isCadernosProduct(product)) {
+        return "Escolhe uma capa.";
+      }
+      return "Escolhe pelo menos um design ou a opção Sortido";
+    }
+
+    if (isCadernosProduct(product) && step.id === "pack") {
+      if (!selectedCadernoPurchaseOption(product)) {
+        return "Escolhe uma opção de compra.";
+      }
+      if (cadernoOrderQuantityOptions(product).indexOf(cadernoOrderQuantity(product)) === -1) {
+        return "Escolhe uma quantidade válida.";
+      }
+      ensurePackAndQuantities(product);
+      return "";
+    }
+
+    if (isCadernosProduct(product) && step.id === "cover_personalization") {
+      if (!state.selections.cover_personalization) {
+        return "Escolhe se queres personalizar a capa.";
+      }
+
+      if (state.selections.cover_personalization === "yes") {
+        var personalizationText = cadernoPersonalizationText();
+        var personalizationLimit = cadernoPersonalizationLimit(product);
+
+        if (!personalizationText) {
+          state.invalidFields = ["cover_personalization_text"];
+          return "Escreve o nome ou frase para personalizar a capa.";
+        }
+
+        if (personalizationText.length > personalizationLimit) {
+          state.invalidFields = ["cover_personalization_text"];
+          return "O nome/frase tem de ter no máximo " + personalizationLimit + " caracteres.";
+        }
+      }
+
+      return "";
+    }
+
+    if (step.id === "pack") {
+      if (step.freeQuantity === true) {
+        packQuantity = getPackQuantity(product);
+        if (!packQuantity) {
+          return "Indica uma quantidade válida (mínimo " + minimumFreeQuantity(product) + ").";
+        }
+        return "";
+      }
+      ensurePackAndQuantities(product);
+      total = quantityTotal(product);
+      packQuantity = getPackQuantity(product);
+
+      if (!packQuantity) {
+        return "Escolhe um pack.";
+      }
+
+      if (isAssortedSelected(product)) {
+        return "";
+      }
+
+      if (total !== packQuantity) {
+        if (total < packQuantity && selectedDesignItems(product).length >= 3) {
+          return "Ainda há unidades sem design.";
+        }
+
+        return total < packQuantity ? "Ainda faltam unidades por distribuir." : "Tens unidades a mais neste pack.";
+      }
+    }
+
+    if (step.template === "palette-grid") {
+      var colorKeys = quadrosColorSelectionKeys(step);
+      if (state.selections[colorKeys.mia]) {
+        return "";
+      }
+      var selectionLimit = paletteSelectionLimit(step);
+      var selectedPalette = String(state.selections[colorKeys.palette] || "");
+      var validPalette = (step.items || []).some(function (item) {
+        return item && item.value === selectedPalette && paletteColors(item, selectionLimit).length === selectionLimit;
+      });
+      var individualValues = Array.isArray(state.selections[colorKeys.colors]) ? state.selections[colorKeys.colors] : [];
+      var individualTones = Array.isArray(state.selections[colorKeys.tones]) ? state.selections[colorKeys.tones] : [];
+      var allowedIndividualValues = (step.individualColors || []).map(function (item) { return item.value; });
+      var validIndividuals = individualValues.length === selectionLimit && individualValues.every(function (value) {
+        return allowedIndividualValues.indexOf(value) !== -1;
+      });
+
+      if (step.tonePicker === true && validIndividuals) {
+        var exactPairs = {};
+        validIndividuals = individualTones.length >= selectionLimit && individualValues.every(function (value, index) {
+          var tone = Number(individualTones[index]);
+          var pair = value + "\u0000" + tone;
+          if (!Number.isInteger(tone) || tone < 0 || tone > 2 || exactPairs[pair]) {
+            return false;
+          }
+          exactPairs[pair] = true;
+          return true;
+        });
+      }
+
+      if (!validPalette && !validIndividuals) {
+        return step.selectionError || "Escolhe uma combinação ou exatamente " + (selectionLimit === 1 ? "uma cor" : selectionLimit === 2 ? "duas cores" : selectionLimit === 3 ? "três cores" : selectionLimit + " cores") + ".";
+      }
+      return "";
+    }
+
+    if (step.selection === "multi" && step.minSelections != null && selectedValues(step).length < Number(step.minSelections)) {
+      return step.selectionError || "Escolhe mais opções para continuar.";
+    }
+
+    if (step.selection === "multi" && step.maxSelections != null && selectedValues(step).length > Number(step.maxSelections)) {
+      return step.selectionError || "Escolheste opções a mais.";
+    }
+
+    if (step.selection === "single" && !state.selections[step.id]) {
+      return "Escolhe uma opção.";
+    }
+
+    if (step.template === "details-form" || step.template === "photo-upload") {
+      var stepFields = Array.isArray(step.fields) ? step.fields : [];
+      for (i = 0; i < stepFields.length; i += 1) {
+        field = stepFields[i];
+        if (field.required && !String(state.selections[field.name] || "").trim()) {
+          missing.push(field.name);
+        }
+        if (field.maxLength && String(state.selections[field.name] || "").length > Number(field.maxLength)) {
+          state.invalidFields = [field.name];
+          return field.maxLengthError || "O texto é demasiado longo.";
+        }
+      }
+
+      if (missing.length) {
+        state.invalidFields = missing;
+        return "Preenche os campos obrigatórios.";
+      }
+
+      if (step.requireAnyInput && !detailsStepHasAnyInput(step)) {
+        state.invalidFields = stepFields.length && stepFields[0].name ? [stepFields[0].name] : [];
+        return step.requireAnyInputError || "Escreve uma mensagem, grava um áudio ou envia uma foto.";
+      }
+    }
+
+    if (step.template === "photo-upload") {
+      var uploadConfig = step.upload || {};
+      var uploadKey = uploadConfig.selectionKey || "quadro_uploads";
+      var uploadedItems = orderUploadItems(uploadKey);
+
+      if (state.orderUploadBusy) {
+        return "Espera até a foto terminar de enviar.";
+      }
+      if (uploadConfig.requiredUnlessHelp && uploadedItems.length === 0 && !state.selections[uploadConfig.helpKey || "photo_help"]) {
+        state.invalidFields = [uploadKey];
+        return "Escolhe uma foto ou assinala que precisas de ajuda para a enviar.";
+      }
+    }
+
+    // DELIVERY_CONTACT_STEP_V1 + CONTACT_VALIDATION_V1: validação do novo
+    // passo. Exige (1) escolha explícita de entrega, (2) campos
+    // obrigatórios de contacto preenchidos, (3) que customer_contact seja
+    // um email válido OU um número de telemóvel válido (regex em
+    // validateContactInput).
+    if (step.template === "delivery-contact") {
+      if (!state.selections.delivery_option) {
+        return "Escolhe como queres receber a tua encomenda.";
+      }
+
+      var contactFields = (step.contact && step.contact.fields) || [];
+      for (i = 0; i < contactFields.length; i += 1) {
+        field = contactFields[i];
+        if (field.required && !String(state.selections[field.name] || "").trim()) {
+          missing.push(field.name);
+        }
+      }
+
+      if (missing.length) {
+        state.invalidFields = missing;
+        return "Preenche os dados de contacto.";
+      }
+
+      var contactError = validateContactInput(state.selections.customer_contact);
+      if (contactError) {
+        state.invalidFields = ["customer_contact"];
+        return contactError;
+      }
+
+      if (!validNifInput(state.selections.customer_nif)) {
+        state.invalidFields = ["customer_nif"];
+        return "O NIF deve ter 9 dígitos.";
+      }
+    }
+
+    return "";
+  }
+
+  function goNext(product) {
+    var step = currentStep(product);
+    var error = state.admin ? "" : validateStep(product, step);
+
+    if (error) {
+      // FUNNEL_TRACKING_V1: regista validações falhadas com o ID do passo.
+      // TRANSITION_REASON_V1: marca que a próxima transição foi causada por
+      // falha de validação (não vai haver, mas se houver redirect lateral...)
+      var errCount = state.invalidFields && state.invalidFields.length ? state.invalidFields.length : 1;
+      trackProductEvent(product, 'validation_error', {
+        step_id: step ? step.id : '',
+        step_index: state.currentStep,
+        transition_reason: 'validation_failed',
+        validation_error_count: errCount
+      });
+      state.errors = error;
+      rerenderProduct(product);
+      focusProductFirstError();
+      return;
+    }
+
+    // FUNNEL_TRACKING_V1: passo concluído com sucesso. Em delivery_contact
+    // dispara também contact_completed (funil mais granular).
+    trackProductEvent(product, 'step_completed', {
+      step_id: step ? step.id : '',
+      step_index: state.currentStep
+    });
+    if (step && step.id === 'delivery_contact') {
+      // FUNNEL_TRACKING_SQLITE_V2: deixou de enviar customer_name/email no
+      // tracking. Os dados pessoais ficam em `orders` (Fase 2), não em
+      // `funnel_events`. O contact_completed continua a ser registado
+      // como marco do funil sem PII.
+      trackProductEvent(product, 'contact_completed', {
+        step_id: step.id
+      });
+    }
+
+    if (step.id === "designs") {
+      ensurePackAndQuantities(product);
+    }
+
+    state.errors = "";
+    state.packDisabledMessage = "";
+    state.orderUploadMessage = "";
+    state.orderUploadFeedbackKind = "";
+    setCurrentStep(product, state.currentStep + 1);
+    pushWizardHistory(product);
+    rerenderProduct(product);
+  }
+
+  function orderPhotoFileIsSupported(file) {
+    var type = String(file && file.type || "").toLowerCase();
+    var name = String(file && file.name || "").toLowerCase();
+    return /^image\/(?:jpeg|png|webp|heic|heif)$/.test(type) || /\.(?:jpe?g|png|webp|heic|heif)$/.test(name);
+  }
+
+  function orderMediaConfigForStep(step, key, kind) {
+    var direct = step && step.upload ? step.upload : null;
+    var attachments = step && step.mediaAttachments ? step.mediaAttachments : {};
+    var candidate = kind === "audio" ? attachments.audio : attachments.photos;
+    if (direct && (direct.selectionKey || "quadro_uploads") === key) {
+      return direct;
+    }
+    return candidate || {};
+  }
+
+  function loadOrderPhotoImage(file) {
+    return new Promise(function (resolve, reject) {
+      var image = new Image();
+      var url = URL.createObjectURL(file);
+      image.onload = function () {
+        resolve({ image: image, url: url, width: image.naturalWidth, height: image.naturalHeight });
+      };
+      image.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error("decode"));
+      };
+      image.src = url;
+    });
+  }
+
+  function orderCanvasBlob(canvas, quality) {
+    return new Promise(function (resolve, reject) {
+      canvas.toBlob(function (blob) {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error("encode"));
+        }
+      }, "image/webp", quality);
+    });
+  }
+

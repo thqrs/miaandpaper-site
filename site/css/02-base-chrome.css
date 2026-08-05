@@ -1,0 +1,811 @@
+/* css/02-base-chrome.css — parte 02/12 do antigo styles.css (codigo intacto, so dividido).
+   A ordem dos <link> nos HTML segue 01 → 12 e a cascata depende dela.
+   Conteudo: base do site: fade da marca no scroll, header/chrome, tipografia base, lista de passos do wizard (incl. mobile fit). */
+/* Sem fundo no topo, o texto da marca ficaria por cima do conteudo durante o scroll.
+   Desvanece assim que se sai do topo e reaparece quando se volta. */
+body[data-scrolled="1"] .site-header .brand-text {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.brand-letter-r {
+  position: relative;
+  display: inline-block;
+}
+
+.brand-butterfly-frame {
+  position: absolute;
+  left: 62%;
+  top: -1.54em;
+  z-index: 2;
+  display: block;
+  width: 42px;
+  height: 34px;
+  border: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: transparent;
+  filter: drop-shadow(0 3px 4px rgba(46, 36, 19, 0.18));
+  transform: translateX(-50%) rotate(-10deg);
+}
+
+body:not(.is-brand-butterfly-enabled) .brand-butterfly-frame {
+  display: none;
+}
+
+body.is-catalog-footer-hidden .catalog-footer-link {
+  display: none;
+}
+
+.brand-mark {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  overflow: hidden;
+  border: 2px solid rgba(202, 162, 59, 0.55);
+  border-radius: 50%;
+  background: var(--surface-page);
+  color: var(--moss);
+  font-size: 0.78rem;
+  box-shadow: 0 6px 18px rgba(107, 84, 30, 0.16);
+}
+
+.brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.header-link {
+  color: var(--moss);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  padding: 18px 4px 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.site-footer a,
+.site-footer button {
+  color: var(--moss);
+  font-weight: 850;
+}
+
+.site-footer button {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--moss);
+  font-size: 0.74rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  overflow-wrap: anywhere;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+h1 {
+  font-size: clamp(2.35rem, 11.5vw, 4.2rem);
+  line-height: 0.96;
+}
+
+h2 {
+  font-size: clamp(1.9rem, 8vw, 3rem);
+  line-height: 1;
+}
+
+p {
+  line-height: 1.6;
+}
+
+.home-intro,
+.product-intro,
+.wizard-shell,
+.result-card,
+.fallback {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-panel);
+  box-shadow: var(--shadow);
+}
+
+.home-intro,
+.product-intro,
+.fallback {
+  padding: 22px;
+}
+
+.home-intro p:last-child,
+.product-intro p:last-child,
+.step-card > p {
+  margin: 14px 0 0;
+  color: var(--muted);
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.home-back-row {
+  margin: 2px 0 12px;
+}
+
+.home-back-link {
+  color: var(--moss);
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.home-back-link:hover,
+.home-back-link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.category-card {
+  position: relative;
+  display: grid;
+  align-content: space-between;
+  min-height: 0;
+  aspect-ratio: 1;
+  padding: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.category-card.has-image {
+  background:
+    linear-gradient(180deg, rgba(46, 36, 19, 0.08), rgba(46, 36, 19, 0.42)),
+    var(--category-image) center / cover no-repeat,
+    var(--card);
+  color: #fffdf5;
+}
+
+ .category-card.has-image::after,
+.category-card.has-image .category-art {
+  display: none;
+}
+
+.category-card.has-image .category-number,
+.category-card.has-image > span:last-child {
+  color: rgba(255, 253, 245, 0.88);
+  text-shadow:
+    0 1px 3px rgba(20, 15, 8, 0.72),
+    0 7px 18px rgba(20, 15, 8, 0.46);
+}
+
+.admin-hidden-category-section {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px dashed rgba(114, 85, 30, 0.32);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 248, 0.74);
+}
+
+.admin-hidden-category-section h2 {
+  margin: 0;
+  color: var(--moss);
+  font-size: 1rem;
+}
+
+.admin-hidden-category-section p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.admin-hidden-category-grid {
+  margin-top: 0;
+}
+
+.category-card.has-image strong {
+  text-shadow:
+    0 1px 3px rgba(20, 15, 8, 0.78),
+    0 8px 22px rgba(20, 15, 8, 0.52);
+}
+
+.category-card:has(.home-admin-tools) {
+  aspect-ratio: auto;
+  min-height: 0;
+}
+
+.category-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -30% -38% 36%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.24;
+  background: var(--gold);
+}
+
+.category-card.blue::after {
+  background: var(--blue);
+}
+
+.category-card.gold::after {
+  background: var(--gold);
+}
+
+.category-card.sage::after {
+  background: var(--sage);
+}
+
+.category-card.rose::after {
+  background: var(--rose);
+}
+
+.category-card.is-disabled {
+  color: rgba(37, 41, 31, 0.48);
+}
+
+.category-card.is-admin-hidden {
+  outline: 2px dashed rgba(114, 85, 30, 0.32);
+  outline-offset: -8px;
+}
+
+.admin-hidden-badge {
+  display: inline-flex;
+  width: max-content;
+  max-width: 100%;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(114, 85, 30, 0.12);
+  color: var(--moss);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.category-number,
+.category-card strong,
+.category-card > span:last-child {
+  position: relative;
+  z-index: 1;
+}
+
+.category-number {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.category-art {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  width: 38px;
+  height: 38px;
+  border: 7px solid #f0eee7;
+  border-radius: 50%;
+  background: var(--linen);
+}
+
+.category-card strong {
+  align-self: end;
+  font-family: Georgia, "Times New Roman", serif;
+  min-width: 0;
+  font-size: clamp(1.18rem, 5.8vw, 1.82rem);
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
+.category-card > span:last-child {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.product-intro {
+  margin-bottom: 12px;
+}
+
+.wizard-shell {
+  padding: 16px;
+}
+
+.step-list {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 0 0 14px;
+  /* Referência para o círculo fantasma do STEP_NUMBERS_FLIP_V1 (app.js), que
+     recua por baixo dos que ficaram quando o design escolhido tem menos passos. */
+  position: relative;
+  padding: 2px 0 12px;
+  overflow-x: visible;
+  list-style: none;
+}
+
+.step-list li {
+  flex: 0 0 auto;
+  position: relative;
+}
+
+.step-list [data-step-ghost] {
+  pointer-events: none;
+}
+
+.step-list [data-step-ghost]::before {
+  display: none;
+}
+
+.step-list li + li::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 1px);
+  width: 14px;
+  height: 1px;
+  background: var(--line);
+}
+
+.step-list button {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface-stone);
+  color: var(--muted);
+  font-size: 0;
+  font-weight: 850;
+}
+
+.step-list button:disabled {
+  opacity: 0.62;
+}
+
+.step-list span {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 0.94rem;
+}
+
+.step-list .is-active button {
+  border-color: var(--moss);
+  background: var(--moss);
+  color: #fffdf8;
+}
+
+.step-list .is-complete button {
+  border-color: rgba(142, 103, 31, 0.55);
+  color: var(--moss);
+}
+
+.step-list .is-active.is-complete button {
+  color: #fffdf8;
+}
+
+.wizard-progress {
+  width: min(100%, 420px);
+  margin: 0 auto 20px;
+  padding: 8px 22px 10px;
+}
+
+.wizard-progress__rail {
+  position: relative;
+  height: 44px;
+}
+
+.wizard-progress__track {
+  position: absolute;
+  z-index: 1;
+  top: 14px;
+  right: 0;
+  left: 0;
+  height: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(114, 85, 30, 0.24);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #efe2bd 0%, #fff8df 52%, #e8d6a8 100%);
+  box-shadow:
+    inset 0 2px 4px rgba(114, 85, 30, 0.18),
+    0 2px 6px rgba(97, 70, 20, 0.12);
+}
+
+.wizard-progress__fill {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.24) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.24) 50%, rgba(255, 255, 255, 0.24) 75%, transparent 75%, transparent),
+    linear-gradient(180deg, #edc45c 0%, var(--gold) 48%, #b97817 100%);
+  background-size: 18px 18px, 100% 100%;
+  box-shadow:
+    inset 0 2px 2px rgba(255, 251, 226, 0.5),
+    inset 0 -2px 3px rgba(114, 69, 8, 0.24);
+}
+
+@keyframes wizard-progress-grow {
+  from { width: var(--progress-from); }
+  to { width: var(--progress-to); }
+}
+
+@keyframes wizard-progress-tick-pop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scaleY(0.25);
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(-50%) scaleY(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scaleY(1);
+  }
+}
+
+.wizard-progress.is-changing .wizard-progress__fill {
+  animation: wizard-progress-grow 720ms cubic-bezier(0.22, 0.72, 0.25, 1) both;
+}
+
+.wizard-progress.is-changing .wizard-progress__ticks .is-active button span {
+  transform-origin: center;
+  animation: wizard-progress-tick-pop 220ms ease-out 690ms both;
+}
+
+.wizard-progress.is-empty .wizard-progress__ticks,
+.wizard-progress__ticks li:first-child button span {
+  display: none;
+}
+
+.wizard-progress.is-empty .wizard-progress__track::before {
+  content: "";
+  position: absolute;
+  inset: 2px 8px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(199, 137, 36, 0.04), rgba(255, 253, 235, 0.58), rgba(199, 137, 36, 0.04));
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.44);
+}
+
+.wizard-progress__ticks {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wizard-progress__ticks li {
+  position: absolute;
+  top: 0;
+  width: 44px;
+  height: 44px;
+  transform: translateX(-50%);
+}
+
+.wizard-progress__ticks button {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.wizard-progress__ticks button:disabled {
+  cursor: default;
+}
+
+.wizard-progress__ticks button span {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  width: 2px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(114, 85, 30, 0.3);
+  transform: translateX(-50%);
+}
+
+.wizard-progress__ticks .is-complete button span {
+  background: rgba(255, 253, 235, 0.62);
+  box-shadow: 0 1px 1px rgba(114, 69, 8, 0.22);
+}
+
+.wizard-progress__ticks .is-active button span {
+  top: 16px;
+  width: 0;
+  height: 12px;
+  border-left: 2px solid #fffdf0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: 1px 0 1px rgba(114, 69, 8, 0.2);
+}
+
+.wizard-progress__ticks .is-future button span {
+  background: rgba(114, 85, 30, 0.28);
+}
+
+.wizard-progress__ticks button:focus-visible {
+  outline: 2px solid var(--moss);
+  outline-offset: -6px;
+  border-radius: 999px;
+}
+
+/* STEP_LIST_MOBILE_FIT_V1: com 6+ passos (caderninhos/cadernos sÃ³ tÃªm 5,
+   mas crachas/imanes/lembrancas/pins agora tÃªm 6+ por causa de
+   delivery_contact) os cÃ­rculos de 42px + gap 16px ultrapassam a largura
+   de telemÃ³vel. Reduzimos progressivamente em trÃªs breakpoints. Mantemos
+   sempre place-items center e legÃ­vel (>= 14px). */
+@media (max-width: 520px) {
+  .step-list {
+    gap: 10px;
+  }
+  .step-list button {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+  }
+  .step-list li + li::before {
+    width: 10px;
+  }
+  .step-list span {
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .step-list {
+    gap: 7px;
+  }
+  .step-list button {
+    width: 30px;
+    height: 30px;
+    min-height: 30px;
+  }
+  .step-list li + li::before {
+    width: 7px;
+  }
+  .step-list span {
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 340px) {
+  .step-list {
+    gap: 5px;
+  }
+  .step-list button {
+    width: 26px;
+    height: 26px;
+    min-height: 26px;
+  }
+  .step-list li + li::before {
+    width: 5px;
+  }
+  .step-list span {
+    font-size: 0.72rem;
+  }
+}
+
+.hidden-field {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.step-card {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.option-list,
+.text-grid,
+.price-pack-grid,
+.design-grid,
+.details-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.option-list {
+  grid-template-columns: 1fr;
+}
+
+.text-grid,
+.price-pack-grid,
+.design-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.choice-card {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fffdf8;
+  cursor: pointer;
+}
+
+.choice-card.media-list {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  min-height: 104px;
+  padding: 12px;
+}
+
+.choice-card.size-choice {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  min-height: 94px;
+  padding: 10px;
+}
+
+.choice-card.size-choice .option-image {
+  width: 58px;
+  border-width: 2px;
+}
+
+.choice-card.size-choice .option-image.pin-large {
+  width: 66px;
+}
+
+.choice-card.size-choice .choice-copy strong {
+  color: var(--ink);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.choice-card.size-choice.is-muted .option-image,
+.choice-card.size-choice.is-muted .choice-copy,
+.choice-card.size-choice.is-muted .size-price-preview {
+  opacity: 0.54;
+}
+
+.size-price-preview {
+  display: grid;
+  gap: 3px;
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.size-price-preview span,
+.size-price-preview p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.22;
+}
+
+.size-price-preview strong {
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.size-price-preview em {
+  color: var(--moss);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.choice-card.text-grid,
+.choice-card.price-pack-grid,
+.choice-card.design-grid {
+  min-height: 124px;
+  padding: 14px;
+}
+
+.choice-card.color-grid {
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  min-height: 70px;
+  padding: 12px;
+}
+
+.choice-card.color-grid:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
+.choice-swatch {
+  display: block;
+  width: 42px;
+  aspect-ratio: 1;
+  border: 2px solid rgba(46, 36, 19, 0.18);
+  border-radius: 50%;
+  background: var(--choice-swatch);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.42);
+}
+
+.choice-selection-counter {
+  margin: 0;
+  color: var(--moss);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.product-quadros .design-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.product-quadros .design-grid > :last-child:nth-child(odd) {
+  grid-column: auto;
+}
+
+.product-quadros .text-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+

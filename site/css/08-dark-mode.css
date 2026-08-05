@@ -1,0 +1,429 @@
+/* css/08-dark-mode.css — parte 08/12 do antigo styles.css (codigo intacto, so dividido).
+   A ordem dos <link> nos HTML segue 01 → 12 e a cascata depende dela.
+   Conteudo: modo escuro: carrossel da homepage, stepper, wizard/shells, cartoes de escolha, packs, inputs, botoes, brand mark, slideshow, pills. */
+/* HOMEPAGE_CAROUSEL_DARKMODE_V1_OFFICIAL_SITE
+   - Botao sol/lua: usa .header-link-icon (40x40 redondo) ja existente.
+   - Numeros 01/02 sao removidos do DOM em renderHomeCategoryCard quando
+     home.showCategoryNumbers !== true; nao precisa de regra para esconder.
+   - Dark mode: html[data-theme="dark"] sobrepoe as CSS vars com !important
+     porque applySiteSettings escreve as cores do home.json como inline
+     style no <html>, e inline ganha sempre a CSS sem !important. Em dark,
+     a paleta dos admins do home.json e ignorada de proposito. */
+
+.header-theme-toggle {
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  margin-left: auto;
+}
+
+.header-theme-toggle svg {
+  pointer-events: none;
+}
+
+html[data-theme="dark"] {
+  --paper: #15110a !important;
+  --card: #221a0f !important;
+  --linen: #2a2014 !important;
+  --sage: #a59065 !important;
+  --moss: #d8c08a !important;
+  --ink: #f3e6c4 !important;
+  --muted: #b89e6e !important;
+  --gold: #e1bd5c !important;
+  --gold-soft: #54401d !important;
+  --rose: #d09a82 !important;
+  --blue: #b09e72 !important;
+  --line: rgba(216, 192, 138, 0.22) !important;
+  --surface-cream: #21190e !important;
+  --surface-cream-soft: #2a2014 !important;
+  --surface-cream-strong: #342715 !important;
+  --surface-stone: #271e13 !important;
+  --surface-gold-soft: #3b2d15 !important;
+  --border-soft-gold: rgba(216, 192, 138, 0.32) !important;
+  --shadow: 0 20px 55px rgba(0, 0, 0, 0.5) !important;
+  --button-bg: #d8c08a !important;
+  --button-text: #15110a !important;
+  --shadow-header: 0 8px 28px rgba(0, 0, 0, 0.42) !important;
+  --shadow-editorial: 0 12px 30px rgba(0, 0, 0, 0.36) !important;
+  --shadow-menu: -20px 0 50px rgba(0, 0, 0, 0.5) !important;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] body {
+  background: var(--surface-page) !important;
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .choice-card,
+html[data-theme="dark"] .step-card,
+html[data-theme="dark"] .home-intro,
+html[data-theme="dark"] .summary-card,
+html[data-theme="dark"] .delivery-card,
+html[data-theme="dark"] .price-card,
+html[data-theme="dark"] .interior-slideshow,
+html[data-theme="dark"] .quantity-card,
+html[data-theme="dark"] .contact-card,
+html[data-theme="dark"] .privacy-page section,
+html[data-theme="dark"] .home-shell,
+html[data-theme="dark"] .product-shell {
+  background: var(--card);
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .header-link-icon {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(216, 192, 138, 0.32);
+  color: var(--moss);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme="dark"] .header-link-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.55);
+}
+
+html[data-theme="dark"] .cart-header-button.has-items,
+html[data-theme="dark"] .cart-floating-button,
+html[data-theme="dark"] .cart-panel,
+html[data-theme="dark"] .cart-close-button,
+html[data-theme="dark"] .cart-edit-bar {
+  background: var(--card);
+  color: var(--moss);
+}
+
+html[data-theme="dark"] .cart-count-badge,
+html[data-theme="dark"] .cart-floating-button strong {
+  border-color: var(--card);
+  background: var(--moss);
+  color: var(--paper);
+}
+
+html[data-theme="dark"] .cart-panel-backdrop {
+  background: rgba(0, 0, 0, 0.42);
+}
+
+html[data-theme="dark"] .cart-empty-state,
+html[data-theme="dark"] .cart-panel-item,
+html[data-theme="dark"] .checkout-step-list li {
+  background: var(--surface-stone);
+}
+
+html[data-theme="dark"] .checkout-step-list .is-active {
+  background: rgba(216, 192, 138, 0.14);
+  border-color: rgba(216, 192, 138, 0.34);
+}
+
+html[data-theme="dark"] .cart-item-thumb {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .cart-remove-button {
+  background: rgba(185, 52, 43, 0.12);
+  border-color: rgba(208, 154, 130, 0.34);
+  color: #d09a82;
+}
+
+html[data-theme="dark"] .button.primary,
+html[data-theme="dark"] button.primary,
+html[data-theme="dark"] [class*="button"].primary {
+  background: var(--button-bg);
+  color: var(--button-text);
+  border-color: var(--button-bg);
+}
+
+html[data-theme="dark"] .button.is-disabled,
+html[data-theme="dark"] .button[aria-disabled="true"] {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  opacity: 0.76;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .uploaded-image {
+  background-color: var(--linen);
+}
+
+html[data-theme="dark"] .pin-small,
+html[data-theme="dark"] .pin-large {
+  background:
+    radial-gradient(circle at 50% 50%, var(--gold) 0 24%, transparent 25%),
+    var(--linen);
+}
+
+html[data-theme="dark"] .site-footer,
+html[data-theme="dark"] .step-list button {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .admin-toolbar,
+html[data-theme="dark"] .admin-login {
+  background: var(--card);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+/* HOMEPAGE_CAROUSEL_DARKMODE_FIX_V2_OFFICIAL_SITE
+   Patch sobre V1:
+   1) Placeholder do numero da homepage: ocupa o mesmo espaco vertical
+      mas e invisivel quando o toggle "Mostrar numeros" esta desligado,
+      para o titulo do cartao continuar centrado (grid space-between).
+   2) Dark mode completo do wizard: stepper, packs, cartoes informativos,
+      summary, delivery, price, inputs/selects/textareas, botoes secundarios,
+      fundos (.app-shell, .product-shell, .wizard-shell, body) e qualquer
+      card branco do passo 4/5 que ainda usasse cores fixas.
+   So toca em html[data-theme="dark"] selectors. Light mode intacto. */
+
+.category-number.is-placeholder {
+  visibility: hidden;
+}
+
+/* Stepper */
+html[data-theme="dark"] .step-list button {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .step-list .is-active button {
+  background: var(--moss);
+  border-color: var(--moss);
+  color: var(--paper);
+}
+
+html[data-theme="dark"] .step-list .is-complete button {
+  border-color: rgba(216, 192, 138, 0.55);
+  color: var(--moss);
+}
+
+html[data-theme="dark"] .step-list .is-active.is-complete button {
+  color: var(--paper);
+}
+
+html[data-theme="dark"] .wizard-progress__track {
+  border-color: rgba(244, 221, 145, 0.24);
+  background: linear-gradient(180deg, #4b3d24 0%, #302719 54%, #49391f 100%);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.36),
+    0 2px 6px rgba(0, 0, 0, 0.24);
+}
+
+html[data-theme="dark"] .step-list li + li::before {
+  background: var(--line);
+}
+
+/* Wizard / shells */
+html[data-theme="dark"] .wizard-shell,
+html[data-theme="dark"] .product-shell,
+html[data-theme="dark"] .home-shell,
+html[data-theme="dark"] .fallback,
+html[data-theme="dark"] .contact-shell,
+html[data-theme="dark"] .privacy-page {
+  background: transparent;
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .step-card {
+  background: var(--card);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+/* Cartoes de escolha (designs, ordem, etc.) */
+html[data-theme="dark"] .choice-card {
+  background: var(--card);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .choice-card:has(input:checked) {
+  border-color: var(--moss);
+  outline-color: rgba(216, 192, 138, 0.32);
+}
+
+/* Pack options */
+html[data-theme="dark"] .pack-option {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .pack-option span {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .pack-option.is-selected {
+  border-color: var(--moss);
+  outline-color: rgba(216, 192, 138, 0.32);
+}
+
+html[data-theme="dark"] .pack-option strong,
+html[data-theme="dark"] .quantity-status strong,
+html[data-theme="dark"] .summary-value,
+html[data-theme="dark"] .total-value {
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .summary-row.is-discount .summary-value {
+  color: var(--gold);
+}
+
+html[data-theme="dark"] .summary-label,
+html[data-theme="dark"] .total-label {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .pack-price-card {
+  background: linear-gradient(180deg, rgba(216, 192, 138, 0.16) 0%, rgba(216, 192, 138, 0.10) 100%);
+  border-color: rgba(216, 192, 138, 0.28);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 10px 24px rgba(0, 0, 0, 0.32);
+}
+
+html[data-theme="dark"] .summary-divider {
+  background: rgba(216, 192, 138, 0.32);
+}
+
+html[data-theme="dark"] .summary-icon {
+  color: var(--gold);
+  opacity: 1;
+}
+
+/* Cartoes informativos / status / preco / packs / quantidade.
+   .pack-price-overview e .pack-price-card tÃªm dark mode prÃ³prio acima
+   (V5), por isso nÃ£o entram aqui. */
+html[data-theme="dark"] .quantity-status,
+html[data-theme="dark"] .copy-request,
+html[data-theme="dark"] .summary-list div,
+html[data-theme="dark"] .confirm-card,
+html[data-theme="dark"] .quantity-status.is-complete {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+/* Inputs / textareas / selects */
+html[data-theme="dark"] .details-grid input,
+html[data-theme="dark"] .details-grid textarea,
+html[data-theme="dark"] .details-grid select,
+html[data-theme="dark"] .contact-form input,
+html[data-theme="dark"] .contact-form textarea,
+html[data-theme="dark"] .contact-form select,
+html[data-theme="dark"] .admin-card-tools input,
+html[data-theme="dark"] .admin-card-tools textarea,
+html[data-theme="dark"] .admin-card-tools select,
+html[data-theme="dark"] .admin-toolbar input,
+html[data-theme="dark"] .admin-toolbar textarea,
+html[data-theme="dark"] .admin-toolbar select {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+/* Botao secundario */
+html[data-theme="dark"] .button.secondary {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .button.primary {
+  background: var(--button-bg);
+  color: var(--button-text);
+  border-color: var(--button-bg);
+}
+
+/* Brand mark (logo redondo) â€” fundo claro fica estranho em dark */
+html[data-theme="dark"] .brand-mark {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(216, 192, 138, 0.45);
+}
+
+/* Marca de admin oculto */
+html[data-theme="dark"] .admin-hidden-badge {
+  background: rgba(216, 192, 138, 0.18);
+  color: var(--moss);
+}
+
+html[data-theme="dark"] .admin-hidden-category-section {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(216, 192, 138, 0.32);
+}
+
+/* Erro continua legivel em dark */
+html[data-theme="dark"] .form-error {
+  color: #ff8a7a;
+}
+
+/* Slideshow do interior (passo 2 cadernos) */
+html[data-theme="dark"] .interior-slideshow {
+  background: var(--card);
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .interior-slideshow-frame {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--line);
+}
+
+/* Notas/banners de preco com fundos crema var(--surface-cream-soft) */
+html[data-theme="dark"] .quantity-status.is-complete {
+  background: rgba(216, 192, 138, 0.12);
+}
+
+/* Selected-pill / selected-summary do passo 4 */
+html[data-theme="dark"] .selected-summary,
+html[data-theme="dark"] .selected-pill {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+/* Pin-stack-dot, e moldura interna */
+html[data-theme="dark"] .pin-stack-dot {
+  background: rgba(216, 192, 138, 0.18);
+  color: var(--ink);
+}
+
+/* Privacy/contact specifics */
+html[data-theme="dark"] .privacy-summary,
+html[data-theme="dark"] .privacy-content,
+html[data-theme="dark"] .contact-card {
+  background: var(--card);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .privacy-summary p,
+html[data-theme="dark"] .privacy-content p {
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .form-hint {
+  color: var(--muted);
+}
+
+/* Hidden-step (admin) */
+html[data-theme="dark"] .step-list .is-hidden-step button {
+  border-style: dashed;
+}
+
+/* Confirm row no passo final */
+html[data-theme="dark"] .confirm-design-row span {
+  color: var(--ink);
+}
+

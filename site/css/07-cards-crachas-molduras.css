@@ -1,0 +1,244 @@
+/* css/07-cards-crachas-molduras.css — parte 07/12 do antigo styles.css (codigo intacto, so dividido).
+   A ordem dos <link> nos HTML segue 01 → 12 e a cascata depende dela.
+   Conteudo: resto +NN na pilha de crachas, encolhimento das molduras dos cards em mobile (APP_FRAME_FIT), grelha propria dos cards de molduras. */
+/* The +NN remainder should behave like one more small crachÃ¡ in the stack. */
+.product-shape-round .quantity-main .pin-stack {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: center;
+  overflow: visible;
+  padding-right: 0;
+}
+
+.product-shape-round .quantity-main .pin-stack > strong {
+  position: relative !important;
+  right: auto !important;
+  bottom: auto !important;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-left: -8px;
+  border-radius: 50%;
+}
+
+
+/* v15: final crachÃ¡ layout fix.
+   Do not use min(var(...), 100%) for round uploaded images: in shrink-to-fit
+   wrappers it can resolve too small/empty. The edited frame size is the real
+   layout width; the Y offset is already compensated by margins so text spacing
+   stays balanced. */
+.product-shape-round .choice-card.design-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: auto auto auto !important;
+  justify-items: center !important;
+  align-content: start !important;
+  gap: 16px !important;
+  padding: 16px !important;
+  min-height: 0 !important;
+  text-align: center !important;
+}
+
+.product-shape-round .choice-card.design-grid .design-image.uploaded-image {
+  width: var(--image-frame-render-size, 102px) !important;
+  max-width: none !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.product-shape-round .choice-card.design-grid .choice-copy {
+  width: 100% !important;
+  justify-items: center !important;
+  text-align: center !important;
+}
+
+@media (max-width: 430px) {
+  .product-shape-round .step-card {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .product-shape-round .design-grid {
+    gap: 6px;
+  }
+
+  .product-shape-round .choice-card.design-grid {
+    padding: 12px 4px !important;
+  }
+
+  .product-shape-round .choice-card.design-grid .design-image.uploaded-image {
+    width: min(var(--image-frame-render-size, 102px), 118px) !important;
+  }
+}
+
+/* APP_FRAME_FIT_V8_MOBILE: design-grid frames must shrink with the card on
+   narrow viewports. Hard-coded widths plus minmax(0,1fr) columns were causing
+   the right side of the frame to be clipped (round circles read as ovals,
+   portrait rectangles read as squares with the bottom cut), and at very
+   narrow widths the image overflowed the card. Letting width track 100% of
+   the cell with the existing aspect-ratio preserves the shape. The
+   --frame-width-px / --frame-aspect vars come from app.js V7 so the admin's
+   manual frameWidth/frameHeight is respected on mobile too (clamped to the
+   cell width). */
+@media (max-width: 620px) {
+  .choice-card.design-grid .design-image.uploaded-image,
+  .choice-card.design-grid .design-image {
+    width: min(var(--frame-width-px, var(--image-frame-render-size, 102px)), 100%) !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+  }
+
+  .choice-card.design-grid .design-image.uploaded-image {
+    aspect-ratio: var(--frame-aspect, 1) !important;
+  }
+
+  .product-shape-rect .choice-card.design-grid .design-image.uploaded-image {
+    aspect-ratio: var(--frame-aspect, 3 / 4) !important;
+  }
+
+
+.product-shape-rect .choice-card.design-grid {
+    grid-template-rows: auto auto !important;
+    min-height: 0;
+  }
+
+  .product-shape-round .choice-card.design-grid {
+    grid-template-rows: auto auto !important;
+    min-height: 0;
+  }
+
+  .product-shape-round .choice-card.design-grid:not(:has(.admin-card-tools)) {
+    min-height: 0 !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .choice-card.design-grid .design-image.uploaded-image,
+  .choice-card.design-grid .design-image {
+    width: min(var(--frame-width-px, var(--image-frame-render-size, 102px)), 100%) !important;
+  }
+}
+
+.product-shape-round .quantity-visual-wrap {
+  width: max-content !important;
+  max-width: none !important;
+}
+
+.product-shape-round .quantity-hero .design-image.uploaded-image {
+  width: var(--image-frame-render-size, 148px) !important;
+  max-width: none !important;
+  min-width: var(--image-frame-render-size, 148px) !important;
+}
+
+.product-shape-round .pin-stack .pin-stack-dot.uploaded-image {
+  width: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  height: 32px !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  transform: none !important;
+}
+
+.product-shape-round .quantity-main .pin-stack {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  align-content: center !important;
+  overflow: visible !important;
+  padding-right: 0 !important;
+}
+
+.product-shape-round .quantity-main .pin-stack > strong {
+  position: relative !important;
+  right: auto !important;
+  bottom: auto !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  margin-left: -8px !important;
+  border-radius: 50% !important;
+}
+
+
+/* v16: Ã­manes/mini-cadernos no PASSO dos packs.
+   As imagens retangulares carregadas precisam de tamanho real dentro do hero,
+   senÃ£o min(var(...), 100%) pode encolher dentro do wrapper e a foto desaparece. */
+.product-shape-rect .quantity-visual-wrap {
+  width: max-content !important;
+  max-width: none !important;
+}
+
+.product-shape-rect .quantity-hero .design-image.uploaded-image {
+  width: var(--image-frame-render-size, 120px) !important;
+  min-width: var(--image-frame-render-size, 120px) !important;
+  max-width: none !important;
+  aspect-ratio: 3 / 4;
+}
+
+.product-shape-rect.product-rect-orientation-landscape .design-image,
+.product-shape-rect.product-rect-orientation-landscape .option-image,
+.product-shape-rect.product-rect-orientation-landscape .pin-stack > span {
+  aspect-ratio: 4 / 3;
+}
+
+.product-shape-rect.product-rect-orientation-landscape .choice-card.design-grid {
+  grid-template-rows: 112px auto;
+}
+
+.product-shape-rect.product-rect-orientation-landscape .quantity-hero .design-image.uploaded-image {
+  aspect-ratio: 4 / 3;
+}
+
+@media (max-width: 620px) {
+  .product-shape-rect .quantity-hero .design-image.uploaded-image {
+    width: min(var(--image-frame-render-size, 104px), 104px) !important;
+    min-width: min(var(--image-frame-render-size, 104px), 104px) !important;
+  }
+}
+
+
+/* v17: formato individual por design para Ã­manes e mini-cadernos.
+   O selector no admin grava rectOrientation em cada item do Passo 1. */
+.product-shape-rect .item-rect-orientation-portrait {
+  aspect-ratio: 3 / 4 !important;
+}
+
+.product-shape-rect .item-rect-orientation-landscape {
+  aspect-ratio: 4 / 3 !important;
+}
+
+/* As molduras ficam de fora: o card delas tem grelha propria (imagem | texto | preco,
+   com o tamanho por baixo da imagem em ecras estreitos) e alturas automaticas. */
+.product-shape-rect:not(.product-quadros) .choice-card.design-grid:has(.item-rect-orientation-portrait) {
+  grid-template-rows: 136px auto !important;
+}
+
+.product-shape-rect:not(.product-quadros) .choice-card.design-grid:has(.item-rect-orientation-landscape) {
+  grid-template-rows: 112px auto !important;
+}
+
+.product-shape-rect .quantity-hero .design-image.item-rect-orientation-portrait.uploaded-image {
+  aspect-ratio: 3 / 4 !important;
+}
+
+.product-shape-rect .quantity-hero .design-image.item-rect-orientation-landscape.uploaded-image {
+  aspect-ratio: 4 / 3 !important;
+}
+
+.product-shape-rect .pin-stack > .item-rect-orientation-portrait {
+  width: 32px !important;
+  height: 42px !important;
+  aspect-ratio: 3 / 4 !important;
+}
+
+.product-shape-rect .pin-stack > .item-rect-orientation-landscape {
+  width: 42px !important;
+  height: 32px !important;
+  aspect-ratio: 4 / 3 !important;
+}
+

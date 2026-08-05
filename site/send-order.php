@@ -2380,7 +2380,18 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="styles.css?v=2026072814">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=2026080501">
+  <link rel="stylesheet" href="css/02-base-chrome.css?v=2026080501">
+  <link rel="stylesheet" href="css/03-grelha-designs-tons.css?v=2026080501">
+  <link rel="stylesheet" href="css/04-reviews-passos-acoes.css?v=2026080501">
+  <link rel="stylesheet" href="css/05-cookies-packs-entrega.css?v=2026080501">
+  <link rel="stylesheet" href="css/06-admin.css?v=2026080501">
+  <link rel="stylesheet" href="css/07-cards-crachas-molduras.css?v=2026080501">
+  <link rel="stylesheet" href="css/08-dark-mode.css?v=2026080501">
+  <link rel="stylesheet" href="css/09-seccoes-produtos.css?v=2026080501">
+  <link rel="stylesheet" href="css/10-entrega-uniformizacao.css?v=2026080501">
+  <link rel="stylesheet" href="css/11-home-marca.css?v=2026080501">
+  <link rel="stylesheet" href="css/12-composer-glitter-chart.css?v=2026080501">
 </head>
 <body class="result-body">
   <main class="result-card <?php echo h($kind); ?>">
