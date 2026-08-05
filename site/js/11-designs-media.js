@@ -43,7 +43,7 @@
 
     return {
       style: [
-        '--uploaded-image:url(&quot;' + escapeHtml(item.image) + '&quot;)',
+        '--uploaded-image:url(&quot;' + escapeHtml(siteAssetUrl(item.image)) + '&quot;)',
         "--image-zoom-scale:" + imageZoom,
         "--image-position-x:" + imagePositionX + "%",
         "--image-position-y:" + imagePositionY + "%",
@@ -110,7 +110,7 @@
     var imageFit = item && item.sideImageFit === "contain" ? "contain" : "cover";
 
     return [
-      '--uploaded-image:url(&quot;' + escapeHtml(item.sideImage) + '&quot;)',
+      '--uploaded-image:url(&quot;' + escapeHtml(siteAssetUrl(item.sideImage)) + '&quot;)',
       "--image-zoom-scale:" + imageZoom,
       "--image-position-x:" + imagePositionX + "%",
       "--image-position-y:" + imagePositionY + "%",
@@ -173,7 +173,7 @@
     var imageFit = item && item.imageFit === "contain" ? "contain" : "cover";
 
     return [
-      '--uploaded-image:url(&quot;' + escapeHtml(item.image) + '&quot;)',
+      '--uploaded-image:url(&quot;' + escapeHtml(siteAssetUrl(item.image)) + '&quot;)',
       "--image-zoom-scale:" + imageZoom,
       "--image-position-x:" + imagePositionX + "%",
       "--image-position-y:" + imagePositionY + "%",

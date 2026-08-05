@@ -117,7 +117,7 @@
     var effOverlay = Math.max(0, Math.min(80, effectiveCarouselValue(category, "carouselOverlayOpacity", globalOverlayOpacity)));
     var effPan = Math.max(0, Math.min(18, effectiveCarouselValue(category, "carouselPanPercent", globalPanPercent)));
     var carouselStyle = hasCarousel ? ' style="--carousel-speed:' + escapeHtml(effSpeed) + 's;--carousel-zoom-scale:' + escapeHtml((effZoom / 100).toFixed(3)) + ';--carousel-overlay:' + escapeHtml((effOverlay / 100).toFixed(2)) + ';--carousel-pan:' + escapeHtml(effPan) + '%"' : "";
-    var imageStyle = hasStaticImage ? ' style="--category-image:url(&quot;' + escapeHtml(category.image) + '&quot;)"' : carouselStyle;
+    var imageStyle = hasStaticImage ? ' style="--category-image:url(&quot;' + escapeHtml(siteAssetUrl(category.image)) + '&quot;)"' : carouselStyle;
     var carouselHtml = hasCarousel ? renderHomeCarousel(category, home.carousel) : "";
     var numberHtml = home.showCategoryNumbers === true
       ? '<span class="category-number">' + String(index + 1).padStart(2, "0") + '</span>'

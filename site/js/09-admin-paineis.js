@@ -1343,7 +1343,7 @@
       var effOverlay = Math.max(0, Math.min(80, effectiveCarouselValue(category, "carouselOverlayOpacity", globalOverlayOpacity)));
       var effPan = Math.max(0, Math.min(18, effectiveCarouselValue(category, "carouselPanPercent", globalPanPercent)));
       var carouselStyle = hasCarousel ? ' style="--carousel-speed:' + escapeHtml(effSpeed) + 's;--carousel-zoom-scale:' + escapeHtml((effZoom / 100).toFixed(3)) + ';--carousel-overlay:' + escapeHtml((effOverlay / 100).toFixed(2)) + ';--carousel-pan:' + escapeHtml(effPan) + '%"' : "";
-      var imageStyle = hasStaticImage ? ' style="--category-image:url(&quot;' + escapeHtml(category.image) + '&quot;)"' : carouselStyle;
+      var imageStyle = hasStaticImage ? ' style="--category-image:url(&quot;' + escapeHtml(siteAssetUrl(category.image)) + '&quot;)"' : carouselStyle;
       var isClickable = category.clickable !== false;
       var unavailableMessage = !adminEditing && !isClickable && category.unavailableMessage ? String(category.unavailableMessage) : "";
       var disabledClass = !isClickable ? " is-link-disabled" : "";
@@ -1445,7 +1445,7 @@
         heroPosition = "center";
       }
       heroStyle = (heroImage || heroImages.length)
-        ? ' style="' + (!heroImages.length && heroImage ? '--home-hero-image:url(&quot;' + escapeHtml(heroImage) + '&quot;);' : '')
+        ? ' style="' + (!heroImages.length && heroImage ? '--home-hero-image:url(&quot;' + escapeHtml(siteAssetUrl(heroImage)) + '&quot;);' : '')
           + '--home-hero-position:' + escapeHtml(heroPosition) + '"'
         : "";
 

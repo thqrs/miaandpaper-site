@@ -348,7 +348,7 @@
     }
 
     if (theme.backgroundImage) {
-      root.style.setProperty("--site-bg-image", 'url("' + String(theme.backgroundImage).replace(/"/g, "%22") + '")');
+      root.style.setProperty("--site-bg-image", 'url("' + siteAssetUrl(theme.backgroundImage).replace(/"/g, "%22") + '")');
       document.body.classList.add("has-site-background");
     } else {
       root.style.removeProperty("--site-bg-image");

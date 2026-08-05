@@ -311,6 +311,17 @@
     return String(value == null ? "" : value).replace(/<s>.*?<\/s>\s*/g, "");
   }
 
+  // Um url() relativo dentro de uma custom property (--x:url(content/...))
+  // consumida por uma folha em css/ resolve contra css/, nao contra a pagina —
+  // toda a imagem passada por var() ao CSS tem de vir daqui ja absoluta.
+  function siteAssetUrl(value) {
+    try {
+      return new URL(String(value), document.baseURI).href;
+    } catch (e) {
+      return String(value);
+    }
+  }
+
   var miaSlotDebugFlatKeys = ["imageZoom", "imagePositionX", "imagePositionY", "imageRotation"];
   var miaSlotDebugSideFlatKeys = ["sideImageZoom", "sideImagePositionX", "sideImagePositionY", "sideImageRotation"];
   var miaSlotDebugFrameKeys = ["frameScale", "frameWidth", "frameHeight", "frameMarginX", "frameMarginY"];
