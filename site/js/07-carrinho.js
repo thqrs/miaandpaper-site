@@ -189,10 +189,28 @@
     };
   }
 
-  function cartProductPage(productSlugValue) {
+  function cartCustomizationFeeText(item) {
+    var selections = item && item.selections && typeof item.selections === "object" ? item.selections : {};
+    var count = Math.max(0, parseInt(selections.customization_file_count, 10) || 0);
+    var cents = Math.max(0, parseInt(selections.customization_fee_cents, 10) || 0);
+    if (!count || !cents) {
+      return "";
+    }
+    return "Preparação e testes: " + count + (count === 1 ? " imagem × 5,00 € = " : " imagens × 5,00 € = ") + formatCents(cents);
+  }
+
+  function cartProductPage(productSlugValue, selections) {
     var slug = String(productSlugValue || "").trim().replace(/[^a-z0-9_-]/gi, "");
+    var context = selections && typeof selections === "object" ? String(selections.catalog_context || "") : "";
     if (slug === "quadros") {
       return "molduras.html";
+    }
+    if (slug === "crachas-loja") return "crachas.html";
+    if (slug === "imanes-loja") return "imanes.html";
+    if (slug === "mini-cadernos") return "mini-cadernos.html";
+    if (slug === "cadernos-anuais") return "cadernos-anuais.html";
+    if (!context && ["crachas", "imanes", "caderninhos", "cadernos"].indexOf(slug) !== -1) {
+      return "congressos/2026/" + slug + ".html";
     }
     return slug ? slug + ".html" : "adicionar-produto.html";
   }
@@ -223,8 +241,16 @@
 
   function cartEditUrl(item, returnTo) {
     var id = item && item.id ? String(item.id) : "";
-    var href = cartProductPage(item && item.productSlug);
+    var href = cartProductPage(item && item.productSlug, item && item.selections);
     return href + "?mode=edit&cartItem=" + encodeURIComponent(id) + "&returnTo=" + encodeURIComponent(safeCartReturnTo(returnTo));
+  }
+
+  // PERSONALIZACAO_BUILDER_V1: as linhas com artwork proprio sao montadas em
+  // personalizacao.html e o wizard do catalogo ja nao sabe editá-las (perdeu o
+  // passo de upload). Podem ser removidas e refeitas, mas nao editadas.
+  function cartItemIsEditable(item) {
+    var selections = item && item.selections && typeof item.selections === "object" ? item.selections : {};
+    return String(selections.design_source || "") !== "custom";
   }
 
   function findCartItemById(itemId) {
@@ -349,6 +375,7 @@
 
   function renderCartItem(item, index) {
     var summary = formatCartItemSummary(item);
+    var customizationFee = cartCustomizationFeeText(item);
     var returnTo = page === "checkout" ? checkoutUrlForStep(state.checkoutStep) : "index.html";
     var thumb = summary.image
       ? '<img src="' + escapeHtml(summary.image) + '" alt="" loading="lazy">'
@@ -361,11 +388,12 @@
       '<strong>' + escapeHtml(index + 1) + '. ' + escapeHtml(summary.productName) + '</strong>',
       '<span>' + escapeHtml(summary.title) + '</span>',
       summary.subtitle ? '<em>' + escapeHtml(summary.subtitle) + '</em>' : "",
+      customizationFee ? '<em class="cart-item-customization-fee">' + escapeHtml(customizationFee) + '</em>' : "",
       '</div>',
       '<div class="cart-item-side">',
       '<span class="cart-item-price">' + escapeHtml(summary.priceText) + '</span>',
       '<div class="cart-item-actions">',
-      '<button type="button" class="cart-edit-button" data-cart-edit="' + escapeHtml(item.id) + '" data-cart-edit-return="' + escapeHtml(returnTo) + '">Editar</button>',
+      cartItemIsEditable(item) ? '<button type="button" class="cart-edit-button" data-cart-edit="' + escapeHtml(item.id) + '" data-cart-edit-return="' + escapeHtml(returnTo) + '">Editar</button>' : "",
       '<button type="button" class="cart-remove-button" data-cart-remove="' + escapeHtml(item.id) + '">Remover</button>',
       '</div>',
       '</div>',
@@ -386,7 +414,7 @@
       '<p class="eyebrow">Carrinho</p>',
       '<h2 id="cart-panel-title">' + (count ? "O teu pedido" : "Carrinho") + '</h2>',
       '</div>',
-      '<button type="button" class="cart-close-button" data-cart-close aria-label="Fechar carrinho">×</button>',
+      '<button type="button" class="cart-close-button" data-cart-close aria-label="Fechar carrinho">' + ICON_CLOSE + '</button>',
       '</div>',
       count ? [
         '<ol class="cart-panel-list">',
@@ -474,6 +502,9 @@
 
   function bindCartUi() {
     ensureCartHeaderButton();
+    // No telemovel o carrinho e o menu ocupam o ecra todo: as reviews a rodar
+    // por cima deixam de ser um detalhe simpatico e passam a estorvar.
+    document.body.classList.toggle("is-cart-panel-open", state.cartPanelOpen === true);
 
     document.querySelectorAll("[data-cart-open]").forEach(function (button) {
       if (button.dataset.cartBound === "1") {
@@ -715,6 +746,7 @@
   }
 
   function currentProductCartSelections(product) {
+    ensureOptionDrawerSelections(product);
     var selections = cloneJson(state.selections);
     var cadernoLamination = isCadernosProduct(product) ? selectedCadernoLamination(product) : null;
     var cadernoOption = isCadernosProduct(product) ? selectedCadernoPurchaseOption(product) : null;
@@ -727,13 +759,27 @@
     delete selections.send_copy_touched;
     delete selections.copy_email;
 
-    selections.designs = isAssortedSelected(product) ? ["__sortido__"] : selectedDesignValues();
-    selections.design_quantities = cartDesignQuantities(product);
-    selections.design_labels = cartDesignLabels(product);
-    selections.assorted_designs = isAssortedSelected(product) ? "1" : "";
+    selections.designs = isCustomArtworkSelected(product) ? [] : (isAssortedSelected(product) ? ["__sortido__"] : selectedDesignValues());
+    selections.design_quantities = isCustomArtworkSelected(product) ? {} : cartDesignQuantities(product);
+    selections.design_labels = isCustomArtworkSelected(product) ? {} : cartDesignLabels(product);
+    selections.assorted_designs = !isCustomArtworkSelected(product) && isAssortedSelected(product) ? "1" : "";
     selections.pack_quantity = getPackQuantity(product);
     selections.size = priceInfo(product).size || selections.size || "";
-    if (product && product.orderFlow) {
+    if (isMainCatalogProduct(product)) {
+      selections.catalog_context = String(product.catalogContext || "main-v2");
+      selections.order_flow = isCustomArtworkSelected(product) ? "custom" : "catalog";
+      selections.design_source = selections.order_flow;
+      if (!isCustomArtworkSelected(product)) {
+        delete selections[customArtworkConfig(product).uploadKey];
+        delete selections.customization_fee_cents;
+        delete selections.customization_file_count;
+        delete selections.artwork_total_quantity;
+      } else {
+        selections.customization_fee_cents = customArtworkFeeCents(product);
+        selections.customization_file_count = customArtworkItems(product).length;
+        selections.artwork_total_quantity = customArtworkTotalQuantity(product);
+      }
+    } else if (product && product.orderFlow) {
       selections.order_flow = String(product.orderFlow);
     } else {
       delete selections.order_flow;
@@ -746,6 +792,11 @@
     if (isCadernosProduct(product)) {
       selections.lamination = cadernoLamination ? cadernoLamination.value : "";
       selections.lamination_label = cadernoLamination ? cadernoLamination.title : "";
+      selections.add_ons = selectedCadernoAddOns(product).map(function (item) { return item.value; });
+      selections.add_on_labels = selectedCadernoAddOns(product).reduce(function (labels, item) {
+        labels[item.value] = item.title || item.value;
+        return labels;
+      }, {});
       selections.purchase_option = cadernoOption ? cadernoOption.value : "";
       selections.purchase_option_label = cadernoOption ? cadernoOption.title : "";
       selections.purchase_includes = cadernoOption && cadernoOption.includes ? cadernoOption.includes : "";
@@ -768,10 +819,13 @@
     var custom;
     var uploads;
 
-    if (isCustomArtworkProduct(product)) {
+    if (isCustomArtworkSelected(product)) {
       custom = customArtworkConfig(product);
       uploads = orderUploadItems(custom.uploadKey);
-      return uploads.length ? orderUploadPreviewUrl(uploads[0]) : null;
+      if (!uploads.length || String(uploads[0].mime || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(String(uploads[0].name || ""))) {
+        return null;
+      }
+      return orderUploadPreviewUrl(uploads[0]);
     }
 
     if (item && laminationKey && item.laminationImages && item.laminationImages[laminationKey]) {
@@ -788,9 +842,16 @@
     var option;
     var parts;
 
-    if (isCustomArtworkProduct(product)) {
+    if (isCustomArtworkSelected(product)) {
       var custom = customArtworkConfig(product);
-      parts = [selectedSizeLabel(product), productQuantityLabel(product, getPackQuantity(product))].filter(Boolean);
+      var customQuantity = isCadernosProduct(product) ? cadernoOrderQuantity(product) : getPackQuantity(product);
+      var customCount = customArtworkItems(product).length;
+      parts = [
+        selectedSizeLabel(product),
+        productQuantityLabel(product, customQuantity),
+        customCount + (customCount === 1 ? " design personalizado" : " designs personalizados"),
+        customArtworkFeeCents(product) ? "preparação " + formatCents(customArtworkFeeCents(product)) : ""
+      ].filter(Boolean);
       if (String(state.selections[custom.cardField] || "").trim()
           || orderUploadItems(custom.cardPhotoKey).length
           || orderUploadItems(custom.cardAudioKey).length) {
@@ -863,6 +924,9 @@
       if (option) {
         parts.push(option.title);
       }
+      cadernoAddOnsLabels(product).forEach(function (label) {
+        parts.push(label);
+      });
       if (state.selections.cover_personalization === "yes") {
         parts.push("capa personalizada");
       }
@@ -882,7 +946,14 @@
       names.push("+" + (designs.length - 3));
     }
 
-    return names.length ? "Designs: " + names.join(", ") : "";
+    parts = [];
+    if (names.length) {
+      parts.push("Designs: " + names.join(", "));
+    }
+    selectedOptionDrawerRecords(product).forEach(function (record) {
+      parts.push(String(record.drawer.label || record.drawer.title || "Opção") + ": " + String(record.item.title || record.item.value || ""));
+    });
+    return parts.join(" · ");
   }
 
   function buildCartItemFromCurrentProduct(product) {
@@ -929,6 +1000,13 @@
   function addCurrentProductToCart(product, destination) {
     var item;
     var cart;
+
+    // O construtor nao e um produto: cada linha do passo 2 entra no carrinho
+    // como uma linha do seu proprio slug.
+    if (isArtworkBuilderProduct(product)) {
+      addBuilderLinesToCart(product, destination);
+      return;
+    }
 
     if (!validateProductForCart(product)) {
       return;
@@ -990,10 +1068,18 @@
     ].join("");
   }
 
-  function renderCartEntryActions(product) {
+  function renderCartEntryActions(product, step) {
+    var totals = builderActionTotals(product, step);
+    var compactPersonalizationActions = isArtworkBuilderProduct(product)
+      && String(step && step.template || "") === "custom-quantity-builder";
+    var backLabel = compactPersonalizationActions ? '<span data-action-icon aria-hidden="true">' + ICON_BACK + '</span><span data-action-full>Voltar</span><span data-action-short aria-hidden="true">Voltar</span>' : "Voltar";
+    var addAnotherLabel = compactPersonalizationActions ? '<span data-action-icon aria-hidden="true">' + ICON_CART + '</span><span data-action-full>Adicionar ao cesto e escolher outro produto</span><span data-action-short aria-hidden="true">Carrinho</span>' : "Adicionar ao cesto e escolher outro produto";
+    var finalizeLabel = compactPersonalizationActions ? '<span data-action-icon aria-hidden="true">' + ICON_CHECK + '</span><span data-action-full>Finalizar pedido</span><span data-action-short aria-hidden="true">Finalizar</span>' : "Finalizar pedido";
+
     if (state.editingCartItemId) {
       return [
         '<div class="step-actions">',
+        totals,
         '<button class="button secondary" type="button" data-back data-track="true" data-track-action="back" data-track-id="back">Voltar</button>',
         '<div class="next-action-wrap">',
         state.errors ? '<p class="form-error action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
@@ -1004,11 +1090,12 @@
 
     return [
       '<div class="step-actions cart-entry-actions">',
-      '<button class="button secondary" type="button" data-back data-track="true" data-track-action="back" data-track-id="back">Voltar</button>',
+      totals,
+      '<button class="button secondary" type="button" data-back aria-label="Voltar" data-track="true" data-track-action="back" data-track-id="back">' + backLabel + '</button>',
       '<div class="cart-entry-buttons">',
       state.errors ? '<p class="form-error action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
-      '<button class="button secondary" type="button" data-cart-add-another>Adicionar ao cesto e escolher outro produto</button>',
-      '<button class="button primary" type="button" data-cart-finalize-current>Finalizar pedido</button>',
+      '<button class="button secondary" type="button" data-cart-add-another aria-label="Adicionar ao cesto e escolher outro produto">' + addAnotherLabel + '</button>',
+      '<button class="button primary" type="button" data-cart-finalize-current aria-label="Finalizar pedido">' + finalizeLabel + '</button>',
       '</div>',
       '</div>'
     ].join("");
@@ -1049,7 +1136,7 @@
       }
     });
 
-    if (product && product.slug === "cadernos" && Array.isArray(normalized.designs)) {
+    if (isCadernosProduct(product) && Array.isArray(normalized.designs)) {
       normalized.designs = normalized.designs[0] || "";
     }
 

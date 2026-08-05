@@ -365,7 +365,7 @@
   function shouldShowDesignZoom(product, step, item) {
     return !state.admin
       && product
-      && ["crachas", "imanes", "caderninhos", "cadernos"].indexOf(product.slug) !== -1
+      && ["crachas", "imanes", "caderninhos", "cadernos"].indexOf(productFamily(product)) !== -1
       && step
       && step.id === "designs"
       && item

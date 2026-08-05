@@ -187,10 +187,18 @@
     var pricing = pricingProducts && pricingProducts[slug] ? pricingProducts[slug] : null;
     var map = {
       caderninhos: "Mini-Caderno",
+      "mini-cadernos": "Mini-Caderno",
       cadernos: "Caderno",
+      "cadernos-anuais": "Caderno",
       crachas: "Crachá",
+      "crachas-loja": "Crachá",
       pins: "Crachá",
       imanes: "Íman",
+      "imanes-loja": "Íman",
+      stickers: "Sticker",
+      marcadores: "Marcador",
+      "marcadores-magneticos": "Marcador magnético",
+      bloquinhos: "Bloquinho",
       quadros: "Moldura",
       lembrancas: "Lembrança"
     };
@@ -205,10 +213,18 @@
     if (slug === "home") { return "Homepage"; }
     var map = {
       caderninhos: "Mini-Cadernos",
+      "mini-cadernos": "Mini-Cadernos",
       cadernos: "Cadernos",
+      "cadernos-anuais": "Cadernos anuais",
       crachas: "Crachás",
+      "crachas-loja": "Crachás",
       pins: "Crachás (ficheiro antigo)",
       imanes: "Ímanes",
+      "imanes-loja": "Ímanes",
+      stickers: "Stickers",
+      marcadores: "Marcadores",
+      "marcadores-magneticos": "Marcadores magnéticos",
+      bloquinhos: "Bloquinhos",
       quadros: "Molduras",
       lembrancas: "Lembranças"
     };
@@ -301,7 +317,7 @@
       routes.push([source.contextLabel || "Site", familyLabel(source.slug, source.data)]);
     }
 
-    if (state.payload.catalogPages && state.payload.catalogPages[source.slug]) {
+    if (source.context === "principal" && state.payload.catalogPages && state.payload.catalogPages[source.slug]) {
       routes.push(["Catálogo", familyLabel(source.slug, source.data)]);
     }
 
@@ -313,10 +329,23 @@
     });
   }
 
+  function sourceFamilyKey(source) {
+    return text(source && source.context || "principal") + "|" + text(source && source.slug);
+  }
+
+  function recordFamilyKey(record) {
+    return text(record && record.sourceContext || record && record.contexts && record.contexts[0] || "principal")
+      + "|" + text(record && record.slug);
+  }
+
   function canonicalRecordKey(source, item) {
     var image = safeImagePath(item && item.image);
     var identity = image ? "image:" + normalize(image) : "item:" + normalize(item && (item.id || item.value || item.title));
-    return source.slug + "|" + identity;
+    return sourceFamilyKey(source) + "|" + identity;
+  }
+
+  function customRecordKey(source) {
+    return sourceFamilyKey(source) + "|custom-artwork";
   }
 
   function mergeUnique(target, values, keyFunction) {
@@ -382,9 +411,8 @@
       });
 
       var artworkStep = steps.filter(function (step) { return step && step.id === "artwork_upload"; })[0];
-      var quantityStep = steps.filter(function (step) { return step && step.id === "pack" && step.freeQuantity === true; })[0];
-      if (artworkStep && quantityStep) {
-        var customKey = source.slug + "|custom-artwork";
+      if (artworkStep) {
+        var customKey = customRecordKey(source);
         var custom = byKey[customKey];
         if (!custom) {
           custom = {
@@ -400,7 +428,9 @@
             page: source.page || "",
             image: "",
             price: priceLabel(product, null),
-            notes: "A imagem é enviada pela pessoa durante o pedido.",
+            notes: product.customArtwork && Number(product.customArtwork.feePerFileCents) > 0
+              ? "A imagem é enviada durante o pedido. Inclui " + formatCents(product.customArtwork.feePerFileCents) + " de preparação por ficheiro."
+              : "A imagem é enviada pela pessoa durante o pedido.",
             routes: [],
             sources: [],
             contexts: [],
@@ -500,7 +530,7 @@
     if (state.categoryFilter === "catalog") {
       return record.routes.some(function (route) { return route[0] === "Catálogo"; });
     }
-    return record.slug === state.categoryFilter;
+    return recordFamilyKey(record) === state.categoryFilter;
   }
 
   function filteredRecords() {
@@ -542,7 +572,7 @@
       var stateInfo = stateDisplay(record);
       productThumb(row.querySelector("[data-thumb]"), record);
       row.querySelector("[data-name]").textContent = record.name;
-      row.querySelector("[data-id]").textContent = record.slug + " · " + record.sourceId;
+      row.querySelector("[data-id]").textContent = record.sourceContext + " · " + record.slug + " · " + record.sourceId;
       row.querySelector("[data-edited]").hidden = !record.edited;
       kind.textContent = record.kind === "configurable" ? "Configurável" : "Produto real";
       kind.classList.add(record.kind === "configurable" ? "is-configurable" : "is-real");
@@ -562,8 +592,8 @@
     }
   }
 
-  function recordCountForSlug(slug) {
-    return state.records.filter(function (record) { return record.slug === slug; }).length;
+  function recordCountForFamily(familyKey) {
+    return state.records.filter(function (record) { return recordFamilyKey(record) === familyKey; }).length;
   }
 
   function treeButton(label, value, count, level, icon) {
@@ -583,16 +613,23 @@
   function renderTree() {
     var categories = {};
     state.records.forEach(function (record) {
-      if (!categories[record.slug]) {
-        categories[record.slug] = record.category;
+      var familyKey = recordFamilyKey(record);
+      if (!categories[familyKey]) {
+        categories[familyKey] = {
+          label: record.category,
+          contextLabel: record.sources[0] && record.sources[0].contextLabel || record.sourceContext
+        };
       }
     });
     treeNode.innerHTML = "";
     treeNode.appendChild(treeButton("Todos os produtos", "all", state.records.length, 0, "MP"));
     Object.keys(categories).sort(function (a, b) {
-      return categories[a].localeCompare(categories[b], "pt-PT");
-    }).forEach(function (slug) {
-      treeNode.appendChild(treeButton(categories[slug], slug, recordCountForSlug(slug), 1, categories[slug].charAt(0)));
+      return categories[a].label.localeCompare(categories[b].label, "pt-PT")
+        || text(categories[a].contextLabel).localeCompare(text(categories[b].contextLabel), "pt-PT");
+    }).forEach(function (familyKey) {
+      var category = categories[familyKey];
+      var label = category.label + (category.contextLabel ? " · " + category.contextLabel : "");
+      treeNode.appendChild(treeButton(label, familyKey, recordCountForFamily(familyKey), 1, category.label.charAt(0)));
     });
 
     var divider = document.createElement("div");
@@ -606,8 +643,10 @@
     treeNode.appendChild(treeButton("Sem percurso", "orphan", orphanCount, 0, "!"));
   }
 
-  function sourceForFlow(slug) {
-    var sources = (state.payload.products || []).filter(function (source) { return source.slug === slug; });
+  function sourceForFlow(familyKey) {
+    var sources = (state.payload.products || []).filter(function (source) {
+      return sourceFamilyKey(source) === familyKey;
+    });
     return sources.sort(function (a, b) {
       var aSteps = (a.data && a.data.steps || []).filter(function (step) { return !step.hidden; }).length;
       var bSteps = (b.data && b.data.steps || []).filter(function (step) { return !step.hidden; }).length;
@@ -622,17 +661,18 @@
   function renderSitemap() {
     var groups = {};
     state.records.forEach(function (record) {
-      if (!groups[record.slug]) {
-        groups[record.slug] = [];
+      var familyKey = recordFamilyKey(record);
+      if (!groups[familyKey]) {
+        groups[familyKey] = [];
       }
-      groups[record.slug].push(record);
+      groups[familyKey].push(record);
     });
 
     sitemapNode.innerHTML = Object.keys(groups).sort(function (a, b) {
       return groups[a][0].category.localeCompare(groups[b][0].category, "pt-PT");
-    }).map(function (slug) {
-      var records = groups[slug];
-      var source = sourceForFlow(slug);
+    }).map(function (familyKey) {
+      var records = groups[familyKey];
+      var source = sourceForFlow(familyKey);
       var product = source ? source.data || {} : {};
       var steps = Array.isArray(product.steps) ? product.steps : [];
       var route = recordRoute(records[0]);
@@ -656,7 +696,7 @@
 
       return [
         '<article class="flow-card">',
-        '<header class="flow-card-head"><div><h3>' + escapeHtml(records[0].category) + '</h3><p>' + records.length + ' registos · ' + escapeHtml(source ? source.contextLabel : "Sem fonte") + '</p></div><button type="button" class="row-action" data-flow-filter="' + escapeHtml(slug) + '">Ver na base de dados</button></header>',
+        '<header class="flow-card-head"><div><h3>' + escapeHtml(records[0].category) + '</h3><p>' + records.length + ' registos · ' + escapeHtml(source ? source.contextLabel : "Sem fonte") + '</p></div><button type="button" class="row-action" data-flow-filter="' + escapeHtml(familyKey) + '">Ver na base de dados</button></header>',
         '<div class="flow-line">' + flow + '</div>',
         '<div class="flow-products">' + productButtons + '</div>',
         '</article>'
@@ -756,10 +796,11 @@
     var allMode = familyFilter === "all";
 
     state.records.forEach(function (record) {
-      if (!groups[record.slug]) {
-        groups[record.slug] = [];
+      var familyKey = recordFamilyKey(record);
+      if (!groups[familyKey]) {
+        groups[familyKey] = [];
       }
-      groups[record.slug].push(record);
+      groups[familyKey].push(record);
     });
 
     function addNode(node) {
@@ -778,17 +819,17 @@
 
     Object.keys(groups).sort(function (a, b) {
       return groups[a][0].category.localeCompare(groups[b][0].category, "pt-PT");
-    }).forEach(function (slug) {
-      if (!allMode && familyFilter !== slug) {
+    }).forEach(function (familyKey) {
+      if (!allMode && familyFilter !== familyKey) {
         return;
       }
 
-      var records = groups[slug];
-      var source = sourceForFlow(slug);
+      var records = groups[familyKey];
+      var source = sourceForFlow(familyKey);
       var product = source ? source.data || {} : {};
       var steps = Array.isArray(product.steps) ? product.steps : [];
-      var familyId = "family|" + slug;
-      var cartId = "cart|" + slug;
+      var familyId = "family|" + familyKey;
+      var cartId = "cart|" + familyKey;
       var columns = 6;
       var clusterTop = clusterY + BAND_TITLE_SPACE;
       var stepRows = Math.max(1, Math.ceil(steps.length / columns));
@@ -799,8 +840,8 @@
       var productNodeByKey = {};
 
       clusters.push({
-        slug: slug,
-        label: records[0].category,
+        slug: familyKey,
+        label: records[0].category + " · " + (source ? source.contextLabel : records[0].sourceContext),
         y: clusterY,
         height: clusterHeight,
         productStartY: productStartY,
@@ -808,20 +849,20 @@
       });
 
       addNode({
-        id: familyId, type: "family", family: slug, label: records[0].category,
+        id: familyId, type: "family", family: familyKey, label: records[0].category,
         subtitle: records.length + " produtos", x: 28, y: clusterTop + 28, width: 178, height: 62
       });
       addNode({
-        id: cartId, type: "cart", family: slug, label: "Carrinho",
+        id: cartId, type: "cart", family: familyKey, label: "Carrinho",
         subtitle: records[0].category, x: graphCartX(), y: clusterTop + 30, width: 150, height: 58
       });
 
       steps.forEach(function (step, index) {
-        var id = "step|" + slug + "|" + text(step.id || index);
+        var id = "step|" + familyKey + "|" + text(step.id || index);
         var node = {
           id: id,
           type: "step",
-          family: slug,
+          family: familyKey,
           stepId: text(step.id || index),
           field: text(step.field),
           label: text(step.title || step.label || step.id),
@@ -843,7 +884,7 @@
         var node = {
           id: id,
           type: "product",
-          family: slug,
+          family: familyKey,
           recordKey: record.key,
           sourceId: record.sourceId,
           label: record.name,
@@ -867,7 +908,7 @@
         return;
       }
 
-      addEdge(familyId, "step|" + slug + "|" + text(steps[0].id || 0), "entry", "Entrada");
+      addEdge(familyId, "step|" + familyKey + "|" + text(steps[0].id || 0), "entry", "Entrada");
 
       var designIndex = steps.findIndex(function (step) { return step && step.id === "designs"; });
       var designStep = designIndex >= 0 ? steps[designIndex] : null;
@@ -1003,7 +1044,7 @@
   }
 
   function graphSourceKey(source) {
-    return text(source && source.context || "principal") + "|" + text(source && source.slug);
+    return sourceFamilyKey(source);
   }
 
   function graphGalleryEntryKey(source) {
@@ -1188,11 +1229,22 @@
     });
   }
 
-  function visitorEventNodeId(event, nodeById) {
+  function visitorContext(event, visitor) {
+    var explicit = text(event && event.context || visitor && visitor.context);
+    var landing = text(event && (event.landingPage || event.landing_page)
+      || visitor && (visitor.landingPage || visitor.landing_page));
+
+    if (explicit === "congresso-2026" || explicit === "principal") { return explicit; }
+    return /(?:^|\/)congressos\/2026(?:\/|$|[?#])/i.test(landing)
+      ? "congresso-2026"
+      : "principal";
+  }
+
+  function visitorEventNodeId(event, nodeById, visitor) {
     var slug = text(event && event.productSlug);
     var eventName = text(event && event.eventName);
     var stepId = text(event && (event.toStep || event.stepId));
-    var contexts = ["principal", "congresso-2026"];
+    var context = visitorContext(event, visitor);
     var candidate;
 
     function resolve(id) {
@@ -1207,21 +1259,19 @@
       return resolve(candidate) || resolve("family|principal|home");
     }
 
-    for (var index = 0; index < contexts.length; index += 1) {
-      if (["cart_item_added", "cart_checkout_started", "cart_order_submitted"].indexOf(eventName) !== -1) {
-        candidate = "cart|" + contexts[index] + "|" + slug;
-        candidate = resolve(candidate);
-        if (candidate) { return candidate; }
-      }
-      if (stepId) {
-        candidate = "step|" + contexts[index] + "|" + slug + "|" + stepId;
-        candidate = resolve(candidate);
-        if (candidate) { return candidate; }
-      }
-      candidate = "family|" + contexts[index] + "|" + slug;
+    if (["cart_item_added", "cart_checkout_started", "order_submitted", "cart_order_submitted"].indexOf(eventName) !== -1) {
+      candidate = "cart|" + context + "|" + slug;
       candidate = resolve(candidate);
       if (candidate) { return candidate; }
     }
+    if (stepId) {
+      candidate = "step|" + context + "|" + slug + "|" + stepId;
+      candidate = resolve(candidate);
+      if (candidate) { return candidate; }
+    }
+    candidate = "family|" + context + "|" + slug;
+    candidate = resolve(candidate);
+    if (candidate) { return candidate; }
     return "";
   }
 
@@ -1271,7 +1321,8 @@
 
     events.forEach(function (event) {
       var visitorKey = text(event.visitorKey);
-      var nodeId = visitorEventNodeId(event, nodeById);
+      var visitor = visitorMap[visitorKey] || null;
+      var nodeId = visitorEventNodeId(event, nodeById, visitor);
       var bucket;
       if (!visitorKey || !nodeId) { return; }
       byNode[nodeId] = byNode[nodeId] || {};
@@ -1396,8 +1447,7 @@
     var steps = Array.isArray(product.steps) ? product.steps : [];
     var designs = steps.filter(function (step) { return step && step.id === "designs"; })[0];
     var artwork = steps.filter(function (step) { return step && step.id === "artwork_upload"; })[0];
-    var freeQuantity = steps.filter(function (step) { return step && step.id === "pack" && step.freeQuantity === true; })[0];
-    var hasCustomProduct = !!(artwork && freeQuantity);
+    var hasCustomProduct = !!artwork;
     var rows = [];
 
     // Nos fluxos personalizados, os designs antigos ficam no JSON apenas como
@@ -1415,7 +1465,7 @@
     }
 
     if (hasCustomProduct) {
-      var customKey = source.slug + "|custom-artwork";
+      var customKey = customRecordKey(source);
       var custom = state.records.filter(function (candidate) { return candidate.key === customKey; })[0];
       if (custom) {
         rows.push({ record: custom, item: null, itemId: "", itemValue: "custom-artwork" });
@@ -1620,10 +1670,18 @@
       var stepLayout = {};
       var cartY = 0;
       var designStepIndex = steps.findIndex(function (step) { return step && step.id === "designs"; });
+      var artworkStepIndex = steps.findIndex(function (step) { return step && step.id === "artwork_upload"; });
+      var initialDesignStep = designStepIndex >= 0 ? steps[designStepIndex] : null;
+      var initialArtworkStep = artworkStepIndex >= 0 ? steps[artworkStepIndex] : null;
+      var catalogOrCustom = product.orderFlow === "catalog-or-custom"
+        && !!initialDesignStep && !!initialArtworkStep;
       var boundaryIndex = steps.findIndex(function (step) {
         return step && !step.when && (step.id === "delivery_contact" || step.template === "delivery-contact" || step.id === "confirm");
       });
-      var productRows = Math.max(1, Math.ceil(records.length / columns));
+      var catalogRecordCount = catalogOrCustom
+        ? recordsInfo.filter(function (row) { return row.record.sourceId !== "custom-artwork"; }).length
+        : records.length;
+      var productRows = Math.max(1, Math.ceil(catalogRecordCount / columns));
       var mainCursor = clusterTop + 26;
       var productStartY;
       var productBoxHeight = Math.max(112, productRows * productRowHeight() + 38);
@@ -1657,6 +1715,13 @@
           ? "design:" + accepted.join("|")
           : (controller && branchKeyByStep[controller.id]) || "field:" + text(condition.field);
         var label = condition.field === "designs" && accepted.length ? accepted.join(" / ") : text(condition.field || "Condição");
+        var chooserField = text(initialDesignStep && (initialDesignStep.orderFlowField
+          || initialDesignStep.customUploadOption && initialDesignStep.customUploadOption.field)
+          || product.customArtwork && product.customArtwork.selectionField);
+        if (catalogOrCustom && chooserField && condition.field === chooserField) {
+          label = text(initialDesignStep.customUploadOption && (initialDesignStep.customUploadOption.title
+            || initialDesignStep.customUploadOption.label) || "Personalizado");
+        }
         if (!branchByKey[key]) {
           branchByKey[key] = { key: key, label: label, members: [] };
           branchGroups.push(branchByKey[key]);
@@ -1745,7 +1810,7 @@
           y: productStartY - 28,
           width: NODE_WIDTH + (columns - 1) * columnPitch() + 36,
           height: productBoxHeight,
-          count: records.length,
+          count: catalogRecordCount,
           label: familyName
         },
         conditionBox: branchGroups.length ? {
@@ -1820,9 +1885,13 @@
         stepById[step.id] = node;
       });
 
-      recordsInfo.forEach(function (row, index) {
+      var catalogNodeIndex = 0;
+      recordsInfo.forEach(function (row) {
         var record = row.record;
         var id = "product|" + entryKey + "|" + record.key;
+        var isCustomArtwork = record.sourceId === "custom-artwork";
+        var customLayout = catalogOrCustom && isCustomArtwork && stepLayout[artworkStepIndex];
+        var gridIndex = customLayout ? 0 : catalogNodeIndex++;
         var node = {
           id: id,
           type: "product",
@@ -1840,8 +1909,8 @@
           label: record.name,
           subtitle: record.price + " · " + source.contextLabel,
           configurable: record.kind === "configurable",
-          x: columnX(2) + (index % columns) * columnPitch(),
-          y: productStartY + Math.floor(index / columns) * productRowHeight(),
+          x: customLayout ? customLayout.x + columnPitch() : columnX(2) + (gridIndex % columns) * columnPitch(),
+          y: customLayout ? customLayout.y + 2 : productStartY + Math.floor(gridIndex / columns) * productRowHeight(),
           width: 168,
           height: 50
         };
@@ -1871,6 +1940,79 @@
       var artworkStep = stepById.artwork_upload;
       var customEntryMode = !!(artworkStep && customProductNodes.length);
       var hasConditionalSteps = steps.some(function (step) { return !!(step && step.when); });
+
+      // Os catálogos novos começam todos no mesmo Passo 1. A pessoa pode
+      // seguir pelos designs existentes ou abrir o upload original; os dois
+      // percursos só voltam a juntar-se nos passos comuns e no carrinho.
+      if (catalogOrCustom && designNode && artworkStep) {
+        var customOption = designStep.customUploadOption || {};
+        var customSettings = product.customArtwork || {};
+        var orderFlowField = text(customOption.field || designStep.orderFlowField
+          || customSettings.selectionField || "order_flow");
+        var catalogFlowValue = text(designStep.catalogFlowValue || customSettings.catalogValue || "catalog");
+        var customFlowValue = text(customOption.value || customSettings.customValue || "custom");
+        var designSelectionField = text(designStep.field || "designs").replace(/\[\]$/, "") || "designs";
+        var beforeChooser = familyId;
+
+        steps.slice(0, designIndex + 1).forEach(function (step) {
+          var current = step && stepById[step.id];
+          if (!current || step.when) { return; }
+          addEdge(beforeChooser, current.id, beforeChooser === familyId ? "entry" : "flow", "Continuar");
+          beforeChooser = current.id;
+        });
+
+        function addBranchPath(startId, startIndex, baseSelections) {
+          var scenarios = graphConditionScenarios(steps.slice(startIndex + 1), baseSelections);
+          scenarios.forEach(function (selections) {
+            var previous = startId;
+            var cartUsed = false;
+
+            steps.slice(startIndex + 1).forEach(function (step) {
+              var current = step && stepById[step.id];
+              var isBoundary;
+              if (!current || (step.when && !graphConditionMatches(step.when, selections))) { return; }
+
+              isBoundary = step.id === "delivery_contact" || step.template === "delivery-contact" || step.id === "confirm";
+              if (isBoundary && !cartUsed) {
+                addEdge(previous, cartId, "cart", "Adicionar ao carrinho");
+                addEdge(cartId, current.id, "checkout", "Continuar pedido");
+                cartUsed = true;
+              } else {
+                addEdge(previous, current.id, step.when ? "conditional" : "flow",
+                  step.when ? "Condição válida" : "Continuar");
+              }
+              previous = current.id;
+            });
+
+            if (!cartUsed) { addEdge(previous, cartId, "cart", "Adicionar ao carrinho"); }
+          });
+        }
+
+        recordsInfo.filter(function (row) {
+          return row.record.sourceId !== "custom-artwork" && !!productNodeByKey[row.record.key];
+        }).forEach(function (row) {
+          var productNode = productNodeByKey[row.record.key];
+          var catalogSelections = {};
+          catalogSelections[orderFlowField] = catalogFlowValue;
+          catalogSelections[designSelectionField] = row.itemValue;
+          addEdge(designNode.id, productNode.id, "product", "Escolher design existente");
+          addBranchPath(productNode.id, designIndex, catalogSelections);
+        });
+
+        var customSelections = {};
+        customSelections[orderFlowField] = customFlowValue;
+        addEdge(designNode.id, artworkStep.id, "conditional", "Personalizar · carregar ficheiros");
+        customProductNodes.forEach(function (node) {
+          var feeLabel = Number(customSettings.feePerFileCents) > 0
+            ? "Imagem personalizada · " + formatCents(customSettings.feePerFileCents) + " por ficheiro"
+            : "Imagem personalizada";
+          addEdge(artworkStep.id, node.id, "product", feeLabel);
+          addBranchPath(node.id, artworkStepIndex, customSelections);
+        });
+
+        clusterY += clusterHeight;
+        return;
+      }
 
       // Um fluxo com condições é uma sequência de passos visíveis, não um
       // conjunto de atalhos para o próximo passo comum. Enumeramos os estados
@@ -2134,16 +2276,21 @@
     var productsByFamily = {};
     nodes.forEach(function (node) {
       if (node.type === "product") {
-        (productsByFamily[node.family] = productsByFamily[node.family] || []).push(node);
+        // Mantém o produto personalizado fora do grupo dos designs de
+        // catálogo. Caso contrário, o modo compacto apagava visualmente a
+        // bifurcação principal dos novos fluxos.
+        var groupKey = node.family + "|" + (node.configurable ? "configurable" : "catalog");
+        (productsByFamily[groupKey] = productsByFamily[groupKey] || []).push(node);
       }
     });
-    Object.keys(productsByFamily).forEach(function (family) {
-      var members = productsByFamily[family];
+    Object.keys(productsByFamily).forEach(function (groupKey) {
+      var members = productsByFamily[groupKey];
       if (members.length < 2) { return; }
       var first = members[0];
+      var family = first.family;
       var familyNode = nodeById["family|" + family];
       var group = {
-        id: "group|" + family + "|products",
+        id: "group|" + family + "|products-" + (first.configurable ? "configurable" : "catalog"),
         type: "product",
         family: family,
         group: true,
@@ -3284,24 +3431,26 @@
     var groups = {};
 
     records.forEach(function (record) {
-      if (!groups[record.slug]) {
-        groups[record.slug] = [];
+      var familyKey = recordFamilyKey(record);
+      if (!groups[familyKey]) {
+        groups[familyKey] = [];
       }
-      groups[record.slug].push(record);
+      groups[familyKey].push(record);
     });
 
     var families = Object.keys(groups).sort(function (a, b) {
       return groups[a][0].category.localeCompare(groups[b][0].category, "pt-PT");
-    }).map(function (slug) {
-      var groupRecords = groups[slug];
-      var source = sourceForFlow(slug);
+    }).map(function (familyKey) {
+      var groupRecords = groups[familyKey];
+      var source = sourceForFlow(familyKey);
       var steps = source && source.data && Array.isArray(source.data.steps) ? source.data.steps : [];
       var routes = [];
       groupRecords.forEach(function (record) {
         mergeUnique(routes, record.routes, function (route) { return route.join("|"); });
       });
       var family = {
-        slug: slug,
+        slug: groupRecords[0].slug,
+        context: source ? source.context : groupRecords[0].sourceContext,
         name: groupRecords[0].category,
         product_count: groupRecords.length,
         public_pages: uniqueStrings(groupRecords.map(function (record) { return record.page; })),
@@ -3374,6 +3523,7 @@
       lines.push("", "## " + markdownInline(family.name) + " (`" + markdownInline(family.slug) + "`)", "");
       lines.push("- Registos: " + family.product_count);
       lines.push("- Páginas: " + (family.public_pages.length ? family.public_pages.map(function (page) { return "`" + markdownInline(page) + "`"; }).join(", ") : "nenhuma"));
+      lines.push("- Contexto: `" + markdownInline(family.context || "principal") + "`");
       if (family.source_context) {
         lines.push("- Contexto-fonte: " + markdownInline(family.source_context));
       }
@@ -3573,7 +3723,9 @@
     var source = document.querySelector("[data-editor-source]");
     source.innerHTML = record.local
       ? '<strong>Origem:</strong> registo criado neste browser.'
-      : '<strong>Origem actual:</strong> <code>' + escapeHtml(record.sourceFile) + '</code><br><strong>Local:</strong> passo <code>designs</code>, item <code>' + escapeHtml(record.sourceId) + '</code>'
+      : '<strong>Origem actual:</strong> <code>' + escapeHtml(record.sourceFile) + '</code>'
+        + '<br><strong>Contexto:</strong> <code>' + escapeHtml(record.sourceContext) + '</code>'
+        + '<br><strong>Local:</strong> passo <code>designs</code>, item <code>' + escapeHtml(record.sourceId) + '</code>'
         + (record.page ? '<br><a href="' + escapeHtml(record.page) + '" target="_blank" rel="noopener">Abrir página de encomenda ↗</a>' : '<br>Este ficheiro não tem uma página pública activa.');
     document.querySelector("[data-delete-local]").hidden = !record.local;
     document.querySelector("[data-reset-record]").hidden = record.local;

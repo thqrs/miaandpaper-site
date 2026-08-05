@@ -93,6 +93,27 @@
     var summary = source.summary && typeof source.summary === "object" ? source.summary : {};
     var id = String(source.id || "").trim();
     var priceCents = summary.priceCents == null ? 0 : parseInt(summary.priceCents, 10);
+    var productSlugValue = String(source.productSlug || "").trim();
+    var selections = source.selections && typeof source.selections === "object" && !Array.isArray(source.selections)
+      ? cloneJson(source.selections)
+      : {};
+    var legacyUploadKey;
+
+    if ((productSlugValue === "crachas" || productSlugValue === "imanes")
+        && String(selections.order_flow || "") === "custom-artwork") {
+      legacyUploadKey = productSlugValue === "crachas" ? "cracha_artwork_uploads" : "iman_artwork_uploads";
+      selections.custom_artwork_uploads = (Array.isArray(selections[legacyUploadKey]) ? selections[legacyUploadKey] : []).map(function (upload) {
+        var normalizedUpload = Object.assign({}, upload);
+        normalizedUpload.quantity = Math.max(1, parseInt(upload && upload.quantity, 10) || parseInt(selections.pack_quantity, 10) || 1);
+        normalizedUpload.feeCents = 500;
+        return normalizedUpload;
+      });
+      delete selections[legacyUploadKey];
+      selections.order_flow = "custom";
+      selections.design_source = "custom";
+      selections.catalog_context = "main-v2";
+      productSlugValue = productSlugValue === "crachas" ? "crachas-loja" : "imanes-loja";
+    }
 
     if (!id) {
       id = "ci_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
@@ -100,7 +121,7 @@
 
     return {
       id: id,
-      productSlug: String(source.productSlug || "").trim(),
+      productSlug: productSlugValue,
       productName: String(source.productName || "Produto").trim() || "Produto",
       summary: {
         title: String(summary.title || source.productName || "Produto").trim() || "Produto",
@@ -110,9 +131,7 @@
         priceToConfirm: summary.priceToConfirm === true,
         image: summary.image ? String(summary.image).trim() : null
       },
-      selections: source.selections && typeof source.selections === "object" && !Array.isArray(source.selections)
-        ? source.selections
-        : {}
+      selections: selections
     };
   }
 

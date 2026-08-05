@@ -894,6 +894,92 @@
   color: var(--moss);
 }
 
+.order-upload-pdf {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--linen);
+  color: var(--moss);
+  font-size: .78rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+}
+
+.order-upload-item-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.order-upload-item .artwork-upload-fee {
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.order-upload-item .artwork-upload-fee strong {
+  display: inline;
+  overflow: visible;
+  color: var(--moss);
+  font-size: inherit;
+  white-space: normal;
+}
+
+.artwork-upload-quantity {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+  color: var(--ink);
+  font-size: .82rem;
+  font-weight: 750;
+}
+
+.artwork-upload-quantity input {
+  width: 76px;
+  min-height: 38px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  text-align: center;
+}
+
+.original-artwork-upload {
+  display: grid;
+  gap: 14px;
+}
+
+.original-artwork-note,
+.original-artwork-fee-total {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--linen);
+}
+
+.original-artwork-note p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.original-artwork-fee-total {
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.cart-item-customization-fee {
+  color: var(--moss) !important;
+  font-style: normal !important;
+  font-weight: 750;
+}
+
 .order-upload-item--audio {
   grid-template-columns: minmax(0, 1fr) 40px;
 }

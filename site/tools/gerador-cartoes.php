@@ -13,6 +13,19 @@ if (empty($_SESSION['miaandpaper_admin'])) {
         . '<p>Inicia sessão como administradora a partir de <a href="../index.html">index.html</a> e regressa a esta página.</p>';
     exit;
 }
+
+/* O link partilhável não pode dizer "localhost": no telemóvel da Mia isso
+   aponta para o próprio telemóvel. Descobre-se aqui o IP da máquina na rede
+   local, que é o único endereço que serve para ela abrir este servidor. */
+$miaLanOrigin = '';
+$miaHost = $_SERVER['HTTP_HOST'] ?? '';
+if (preg_match('/^(localhost|127\.0\.0\.1)(:|$)/i', $miaHost)) {
+    $ip = @gethostbyname(@gethostname());
+    if ($ip && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && strpos($ip, '127.') !== 0) {
+        $porta = $_SERVER['SERVER_PORT'] ?? '';
+        $miaLanOrigin = 'http://' . $ip . ($porta && $porta != 80 ? ':' . $porta : '');
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-PT">
@@ -41,6 +54,9 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   button { cursor: pointer; border: none; border-radius: 7px; font-size: 14px; padding: 9px 16px; }
   .add { background: #eef2f7; color: var(--accent); font-weight: 600; margin-top: 8px; }
   .gen { background: var(--accent); color: #fff; font-weight: 700; font-size: 15px; padding: 12px 22px; }
+  /* Chegou-se aqui por link já preenchido: o botão fica em destaque porque é o
+     único passo que falta. */
+  .gen.pronto { box-shadow: 0 0 0 4px rgba(232, 67, 147, 0.28); }
   .del { background: none; color: #bbb; font-size: 16px; padding: 4px 8px; }
   .del:hover { color: #c0392b; }
   .muted { color: #888; font-size: 12px; }
@@ -100,10 +116,11 @@ if (empty($_SESSION['miaandpaper_admin'])) {
     </div>
 
     <div class="panel settings">
-      <label><input type="checkbox" id="cutline" onchange="refresh()"> <b>Linha à volta do cartão</b> — para cortar à mão</label>
+      <label><input type="checkbox" id="cutline" checked onchange="refresh()"> <b>Linha à volta do cartão</b> — para cortar à mão</label>
       <label>Espessura (mm) <input type="number" id="cutlineW" value="0.1" min="0.02" max="2" step="0.05" onchange="refresh()"></label>
-      <label>Cor <input type="color" id="cutlineC" value="#808080" onchange="refresh()"></label>
+      <label>Cor <input type="color" id="cutlineC" value="#dcdcdc" onchange="refresh()"></label>
       <label><input type="checkbox" id="cutlineA" checked onchange="refresh()"> Suavizada (anti-alias)</label>
+      <label><input type="checkbox" id="cutlineOnly"> <b>Só as linhas</b> — PDF sem os cartões, para imprimir por cima de folhas já impressas</label>
       <span class="muted">A linha é impressa no cartão, mesmo nos modelos sem corte de Cricut. Sem suavização o traço encosta à grelha de pixéis e sai mais duro — mais fácil de seguir à tesoura.</span>
     </div>
 
@@ -129,6 +146,7 @@ if (empty($_SESSION['miaandpaper_admin'])) {
 
     <div class="panel">
       <button class="gen" onclick="tryGenerate()">Gerar PDF + SVGs</button>
+      <button class="add" id="btnLink" onclick="copiarLink(this)" style="margin-left:10px">&#128279; Copiar link</button>
       <label style="margin-left:14px;font-size:13px"><input type="checkbox" id="ptc" onchange="refresh()"> <b>Print Then Cut</b> — gera SVGs com a imagem embebida; o Design Space imprime e o sensor alinha o corte</label>
       <label style="margin-left:14px;font-size:13px"><input type="checkbox" id="gensvg"> Gerar SVGs de corte</label>
       <label style="margin-left:14px;font-size:13px"><input type="checkbox" id="legacy" onchange="refresh()"> Incluir linhas dos cartões no corte (legado)</label>
@@ -647,53 +665,47 @@ const TEMPLATES = [
   }
 ];
 
-/* Reaproveita uma arte noutro formato: a imagem entra inteira e centrada (ver
-   `artSize` em composeCard) e toda a geometria do texto é escalada e deslocada
-   com ela, para continuar a assentar nos mesmos sítios da arte. */
-function derivarParaTamanho(base, sizeKey, extra) {
-  const art = SIZES[base.size], dst = SIZES[sizeKey];
-  const k = Math.min(dst.w / art.w, dst.h / art.h);
-  const dx = (dst.w - art.w * k) / 2, dy = (dst.h - art.h * k) / 2;
+/* Crachá PR: medidas e fendas do crachá grande, arte do íman de corte
+   personalizado a preencher a largura toda (ver `artFill` em composeCard).
+   O bloco do título desce 5 mm para não ficar colado ao topo.
+
+   A arte tem conteúdo em 0,97–16,28 mm (título) e 55,79–104,27 mm (ilustração
+   e citação), com 39,5 mm de papel entre os dois: o corte das duas metades é
+   feito lá pelo meio. A geometria do texto acompanha a metade onde vive — a
+   linha da turma pelo topo, o nome e a congregação pelo fundo. */
+const CRACHA_PR_DESCE = 5;
+const CRACHA_PR_CORTE = 25;
+(function () {
+  const base = TEMPLATES.find(t => t.id === 'iman_corte_pioneiros');
+  const art = SIZES[base.size], dst = SIZES.big;
+  const k = dst.w / art.w;
+  const noTopo = y => y * k + CRACHA_PR_DESCE;
+  const noFundo = y => dst.h - (art.h - y) * k;
   const ts = base.textStyle, nl = base.numberLine;
-  return Object.assign({
-    size: sizeKey,
+
+  TEMPLATES.push({
+    id: 'cracha_pr',
+    label: 'Crachá PR · Escola de Pioneiros',
+    size: 'big',
     artSize: base.size,
+    artFill: { topShift: CRACHA_PR_DESCE, splitCard: CRACHA_PR_CORTE },
     img: base.img,
-    text: base.text,
-    textStyle: ts ? Object.assign({}, ts, {
-      sizePt: ts.sizePt * k,
-      x: ts.x == null ? ts.x : dx + ts.x * k,
-      capTop: dy + ts.capTop * k,
-      maxW: ts.maxW * k,
-      box: ts.box ? Object.assign({}, ts.box, { pad: ts.box.pad * k, radius: ts.box.radius * k }) : null
-    }) : null,
-    numberLine: nl ? {
+    text: true,
+    // O formato muda, o corpo do texto não: nome e congregação saem no mesmo
+    // tamanho que nos ímanes, e o limite antes de encolher é o mesmo em mm.
+    textStyle: Object.assign({}, ts, { x: ts.x * k, capTop: noFundo(ts.capTop) }),
+    numberLine: {
       sizePt: nl.sizePt,
       capTarget: nl.capTarget * k,
-      capTop: dy + nl.capTop * k,
-      centre: dx + nl.centre * k,
+      capTop: noTopo(nl.capTop),
+      centre: nl.centre * k,
       width: nl.width * k,
-      clear: { x1: dx + nl.clear.x1 * k, y1: dy + nl.clear.y1 * k,
-               x2: dx + nl.clear.x2 * k, y2: dy + nl.clear.y2 * k },
-      sample: { x: dx + nl.sample.x * k, y: dy + nl.sample.y * k }
-    } : null
-  }, extra);
-}
-
-// Crachá PR: medidas e fendas do crachá grande, arte do íman de corte personalizado.
-// O bloco do título desce 5 mm neste formato, para não ficar colado ao topo.
-const CRACHA_PR_DESCE = 5;
-const crachaPR = derivarParaTamanho(
-  TEMPLATES.find(t => t.id === 'iman_corte_pioneiros'),
-  'big',
-  { id: 'cracha_pr', label: 'Crachá PR · Escola de Pioneiros' }
-);
-crachaPR.artShift = { height: 13, dy: CRACHA_PR_DESCE };
-crachaPR.numberLine.capTop += CRACHA_PR_DESCE;
-crachaPR.numberLine.clear.y1 += CRACHA_PR_DESCE;
-crachaPR.numberLine.clear.y2 += CRACHA_PR_DESCE;
-crachaPR.numberLine.sample.y += CRACHA_PR_DESCE;
-TEMPLATES.push(crachaPR);
+      clear: { x1: nl.clear.x1 * k, y1: noTopo(nl.clear.y1),
+               x2: nl.clear.x2 * k, y2: noTopo(nl.clear.y2) },
+      sample: { x: nl.sample.x * k, y: noTopo(nl.sample.y) }
+    }
+  });
+}());
 
 const SIZE_LABELS = {
   big: { one: 'grande', many: 'grandes' },
@@ -1027,35 +1039,34 @@ async function composeCard(tpl, lines, canvas, textY, nums) {
   const cv = canvas || document.createElement('canvas');
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
-  if (tpl.artSize) {
-    // A arte foi desenhada para outro formato: entra inteira e centrada, sem
-    // cortar nada. As faixas que sobram levam a cor do papel da própria arte.
+  if (tpl.artFill) {
+    /* A arte é mais estreita e mais alta do que este cartão. Para a pôr o
+       maior possível sem cortar nada, enche-se a largura toda e o que sobra em
+       altura sai da faixa em branco do meio: o bloco do título fica encostado
+       ao topo e o bloco da ilustração encostado ao fundo. As duas metades
+       encontram-se em `splitCard`, que cai dentro dessa faixa vazia. */
     const art = SIZES[tpl.artSize];
     const px = W / s.w;
-    const k = Math.min(s.w / art.w, s.h / art.h);
-    const dw = art.w * k * px, dh = art.h * k * px;
-    const dx = (W - dw) / 2, dy = (H - dh) / 2;
-    ctx.drawImage(img, dx, dy, dw, dh);
+    const k = s.w / art.w;
+    const srcPx = (img.naturalWidth || img.width) / art.w;
+    const desce = tpl.artFill.topShift || 0;
+    const corte = tpl.artFill.splitCard;
+
+    const fundoDesde = art.h - (s.h - corte) / k;
+    ctx.drawImage(img, 0, fundoDesde * srcPx, img.naturalWidth, (art.h - fundoDesde) * srcPx,
+      0, corte * px, W, (s.h - corte) * px);
+
     let papel = '#ffffff';
     try {
-      const p = ctx.getImageData(Math.round(dx + 2), Math.round(dy + 2), 1, 1).data;
+      const p = ctx.getImageData(Math.round(3 * px), Math.round((corte + 1) * px), 1, 1).data;
       papel = 'rgb(' + p[0] + ',' + p[1] + ',' + p[2] + ')';
     } catch (e) { /* canvas sem acesso aos pixéis: fica o branco */ }
     ctx.fillStyle = papel;
-    ctx.fillRect(0, 0, W, H);
-    ctx.drawImage(img, dx, dy, dw, dh);
-    // Desce o bloco do título (Escola de Pioneiros + turma/ano) sem mexer no
-    // resto da arte. A faixa é recortada, o sítio antigo fica em papel e a
-    // faixa volta a ser colada mais abaixo.
-    if (tpl.artShift) {
-      const px = W / s.w;
-      const altura = Math.round(tpl.artShift.height * px);
-      const desce = Math.round(tpl.artShift.dy * px);
-      const faixa = ctx.getImageData(0, 0, W, altura);
-      ctx.fillStyle = papel;
-      ctx.fillRect(0, 0, W, altura + desce);
-      ctx.putImageData(faixa, 0, desce);
-    }
+    ctx.fillRect(0, 0, W, Math.round(corte * px));
+
+    const topoAte = (corte - desce) / k;
+    ctx.drawImage(img, 0, 0, img.naturalWidth, topoAte * srcPx,
+      0, desce * px, W, topoAte * k * px);
   } else {
     ctx.drawImage(img, 0, 0, W, H);
   }
@@ -1103,13 +1114,20 @@ function drawCutOutline(ctx, tpl, W, H) {
   }
 }
 
+function hexParaRgb(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ''));
+  if (!m) return [220, 220, 220];
+  const n = parseInt(m[1], 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
 function getCutOutline() {
   const el = id => document.getElementById(id);
   if (!el('cutline')) return { on: false };
   return {
     on: el('cutline').checked,
     mm: num(el('cutlineW').value) || 0.1,
-    cor: el('cutlineC').value || '#808080',
+    cor: el('cutlineC').value || '#dcdcdc',
     alias: el('cutlineA').checked
   };
 }
@@ -1339,7 +1357,10 @@ function refresh() {
     ctx.beginPath();
     s.slit.forEach((p, i) => i ? ctx.lineTo((p[0]+off.gx+off.sx)*px, (p[1]+off.gy+off.sy)*px) : ctx.moveTo((p[0]+off.gx+off.sx)*px, (p[1]+off.gy+off.sy)*px));
     ctx.stroke();
-    ctx.strokeStyle = '#bbb'; ctx.strokeRect(0, 0, cv.width, cv.height);
+    // Moldura só para dar limite ao cartão no ecrã. Com a linha de corte ligada
+    // seria desenhada mesmo por cima dela e escondia-a — aí o cartão já tem
+    // limite próprio e mostra-se a linha verdadeira.
+    if (!getCutOutline().on) { ctx.strokeStyle = '#bbb'; ctx.strokeRect(0, 0, cv.width, cv.height); }
     const margin = num(document.getElementById('margin').value);
     const landscape = isLandscapeLayout();
     const sameSize = batches.filter(x => x.tpl.size === b.tpl.size);
@@ -1592,6 +1613,15 @@ async function tryGenerate() {
 async function generate() {
   const batches = readBatches();
   if (!batches.length) { alert('Adicione pelo menos um lote.'); return; }
+  const contorno = getCutOutline();
+  const soLinhas = document.getElementById('cutlineOnly').checked;
+  // Sem linha à volta não há guia para cortar — e só se dá por isso depois de
+  // imprimir. Avisa antes de gastar folha.
+  if (!contorno.on && !soLinhas &&
+      !confirm('A linha à volta do cartão está desligada: o PDF sai sem guia para cortar.\n\nGerar na mesma?')) {
+    document.getElementById('result').innerHTML = '<p class="muted">Cancelado. Ligue “Linha à volta do cartão” no painel das definições.</p>';
+    return;
+  }
   const margin = num(document.getElementById('margin').value);
   const off = getOffsets();
   const landscape = isLandscapeLayout();
@@ -1620,7 +1650,9 @@ async function generate() {
     const seq = [];
     for (const b of group) {
       const bi = batches.indexOf(b);
-      const png = (await composePlacedCard(b.tpl, b.lines, b.ty, landscape, b.nums)).toDataURL('image/png');
+      // No modo "só as linhas" não se compõe o cartão: a folha já está impressa.
+      const png = soLinhas ? null
+        : (await composePlacedCard(b.tpl, b.lines, b.ty, landscape, b.nums)).toDataURL('image/png');
       for (let k = 0; k < b.qty; k++) seq.push({ png, alias: 'lote' + bi, lote: bi + 1 });
     }
     const sheets = layoutSheets(sizeKey, seq.length, margin, landscape);
@@ -1631,7 +1663,17 @@ async function generate() {
       for (const c of sheet.cards) {
         const card = seq[idx++];
         const d = cardDims(sizeKey, c);
-        doc.addImage(card.png, 'PNG', c.x, c.y, d.w, d.h, card.alias);
+        if (soLinhas) {
+          // Só o rectângulo, nas mesmas posições, para imprimir por cima de uma
+          // folha já feita. Vectorial, para o traço sair exacto.
+          const lw = Math.max(0.02, contorno.mm || 0.1);
+          const cor = hexParaRgb(contorno.cor);
+          doc.setDrawColor(cor[0], cor[1], cor[2]);
+          doc.setLineWidth(lw);
+          doc.rect(c.x + lw / 2, c.y + lw / 2, d.w - lw, d.h - lw);
+        } else {
+          doc.addImage(card.png, 'PNG', c.x, c.y, d.w, d.h, card.alias);
+        }
         counts.set(card.lote, (counts.get(card.lote) || 0) + 1);
       }
       if (draft && !s.noCut) {
@@ -1654,13 +1696,15 @@ async function generate() {
       if (!s.noCut && !svgFiles.has(svgName)) svgFiles.set(svgName, sheetCutSVG(sizeKey, sheet, off));
       const lotesTxt = [...counts.entries()].map(([l, n]) => `lote ${l} ×${n}`).join(' + ');
       pageList.push({ pageNo, batch: lotesTxt, tpl: sizePt + (landscape ? ' deitado' : ''), n: sheet.n, svg: svgName });
-      doc.setFontSize(7); doc.setTextColor(160);
-      doc.text(`pág. ${pageNo} · ${lotesTxt} · SVG: ${svgName}`, 105, 296, { align: 'center' });
+      if (!soLinhas) {   // numa folha já impressa o rodapé só sujava
+        doc.setFontSize(7); doc.setTextColor(160);
+        doc.text(`pág. ${pageNo} · ${lotesTxt} · SVG: ${svgName}`, 105, 296, { align: 'center' });
+      }
     }
   }
 
   const stamp = new Date().toISOString().slice(0, 16).replace(/[-T:]/g, '').slice(0, 12);
-  const pdfName = `imprimir_${draft ? 'RASCUNHO_' : ''}${stamp}.pdf`;
+  const pdfName = `${soLinhas ? 'so_linhas_' : 'imprimir_'}${draft ? 'RASCUNHO_' : ''}${stamp}.pdf`;
   download(pdfName, doc.output('blob'));
   if (genSvg) {
     let delay = 400;
@@ -1674,7 +1718,8 @@ async function generate() {
     <table><tr><th>Página</th><th>Lotes</th><th>Tamanho</th><th>Cartões</th><th>SVG de corte</th></tr>
     ${pageList.map(p => `<tr><td>${p.pageNo}</td><td>${p.batch}</td><td>${p.tpl}</td><td>${p.n}</td><td>${p.svg}</td></tr>`).join('')}
     </table>
-    <p class="muted">Se o browser pedir permissão para “transferir vários ficheiros”, aceite.</p>`;
+    <p class="muted">Se o browser pedir permissão para “transferir vários ficheiros”, aceite.</p>
+    ${soLinhas ? '<p class="muted"><b>Só as linhas:</b> volte a pôr a folha já impressa na impressora, na mesma orientação, e imprima este PDF a 100% (sem “ajustar à página”).</p>' : ''}`;
 }
 
 
@@ -1737,7 +1782,140 @@ async function generatePTC(batches, off, res) {
     <p class="muted">No Design Space: Upload do SVG → confirmar a <b>largura exata</b> indicada acima → selecionar tudo → <b>Attach/Anexar</b> → a imagem fica Print Then Cut e as linhas ficam Basic Cut → imprimir do Design Space na ET‑8550 (escala 100%) → cortar.</p>`;
 }
 
-addBatch();
+/* ---------- pré-preenchimento por URL ----------
+   Permite chegar com tudo escolhido a partir de um link, sem passar pela
+   tabela. Nunca gera sozinho: o PDF continua a sair só do botão, para haver
+   sempre uma pré-visualização antes de gastar folha.
+
+   Lotes (repetível), campos separados por "|" e omissíveis pelo fim:
+     ?lote=modelo|linha1|linha2|linha3|qtd|turma|ano|textoY
+   Atalho de três campos:
+     ?lote=modelo|linha1|qtd
+   Um lote só, em parâmetros soltos:
+     ?cartao=modelo&linha1=…&linha2=…&linha3=…&qtd=20&turma=…&ano=…&textoy=…
+
+   Definições: margem, deitado, contorno, contornoMm, contornoCor,
+   contornoSuave, solinhas, ptc, gensvg, legado, rascunho, gx, gy, sx, sy. */
+function parseLote(valor) {
+  const p = String(valor).split('|').map(s => s.trim());
+  const tpl = p[0];
+  if (!TEMPLATES.some(t => t.id === tpl)) return null;
+  // Atalho: modelo|nome|qtd. Distingue-se do formato longo porque o terceiro
+  // campo é um número — na forma longa esse lugar é a linha 3.
+  if (p.length === 3 && /^\d+$/.test(p[2])) {
+    return { tpl, l1: p[1], qty: parseInt(p[2], 10) };
+  }
+  return {
+    tpl,
+    l1: p[1] || '', l2: p[2] || '', l3: p[3] || '',
+    qty: parseInt(p[4], 10) || 12,
+    turma: p[5] || '', ano: p[6] || '', ty: num(p[7])
+  };
+}
+
+function applyUrlParams() {
+  const q = new URLSearchParams(location.search);
+  const lotes = [];
+
+  for (const v of q.getAll('lote')) {
+    const lote = parseLote(v);
+    if (lote) lotes.push(lote);
+  }
+
+  const cartao = q.get('cartao');
+  if (cartao && TEMPLATES.some(t => t.id === cartao)) {
+    lotes.push({
+      tpl: cartao,
+      l1: q.get('linha1') || '', l2: q.get('linha2') || '', l3: q.get('linha3') || '',
+      qty: parseInt(q.get('qtd'), 10) || 12,
+      turma: q.get('turma') || '', ano: q.get('ano') || '', ty: num(q.get('textoy'))
+    });
+  }
+
+  const set = (nome, id) => { if (q.has(nome)) document.getElementById(id).value = q.get(nome); };
+  const marcar = (nome, id) => {
+    if (!q.has(nome)) return;
+    const v = q.get(nome);
+    document.getElementById(id).checked = !(v === '0' || v === 'false' || v === 'nao' || v === 'não');
+  };
+
+  set('margem', 'margin');
+  set('contornoMm', 'cutlineW');
+  set('contornoCor', 'cutlineC');
+  set('gx', 'offGx'); set('gy', 'offGy'); set('sx', 'offSx'); set('sy', 'offSy');
+  marcar('deitado', 'landscape');
+  marcar('contorno', 'cutline');
+  marcar('contornoSuave', 'cutlineA');
+  marcar('solinhas', 'cutlineOnly');
+  marcar('ptc', 'ptc');
+  marcar('gensvg', 'gensvg');
+  marcar('legado', 'legacy');
+  marcar('rascunho', 'draft');
+
+  if (!lotes.length) { addBatch(); return; }
+  lotes.forEach(addBatch);
+  document.querySelector('.gen').classList.add('pronto');
+}
+
+applyUrlParams();
+
+/* ---------- link partilhável (o inverso do pré-preenchimento) ---------- */
+const LAN_ORIGIN = <?= json_encode($miaLanOrigin) ?>;
+
+function construirLink() {
+  const q = new URLSearchParams();
+
+  for (const tr of document.querySelectorAll('#batches tbody tr')) {
+    const v = c => tr.querySelector('.' + c).value.trim();
+    const qty = parseInt(v('qty'), 10) || 0;
+    if (!qty) continue;
+    // Campos vazios do fim não vão para o link, para ficar legível no WhatsApp.
+    const campos = [v('tpl'), v('l1'), v('l2'), v('l3'), String(qty), v('turma'), v('ano'), v('ty') === '0' ? '' : v('ty')];
+    while (campos.length && campos[campos.length - 1] === '') campos.pop();
+    q.append('lote', campos.join('|'));
+  }
+  if (![...q.keys()].length) return null;
+
+  // Só o que estiver fora do valor por omissão: um link curto é um link que se
+  // consegue ler antes de clicar.
+  const el = id => document.getElementById(id);
+  const seDif = (nome, id, omissao) => { if (el(id).value !== omissao) q.set(nome, el(id).value); };
+  const seLigado = (nome, id) => { if (el(id).checked) q.set(nome, '1'); };
+  const seDesligado = (nome, id) => { if (!el(id).checked) q.set(nome, '0'); };
+
+  seDif('margem', 'margin', '3');
+  seDif('contornoMm', 'cutlineW', '0.1');
+  seDif('contornoCor', 'cutlineC', '#dcdcdc');
+  for (const [nome, id] of [['gx', 'offGx'], ['gy', 'offGy'], ['sx', 'offSx'], ['sy', 'offSy']]) seDif(nome, id, '0');
+  seLigado('deitado', 'landscape');
+  seLigado('solinhas', 'cutlineOnly');
+  seLigado('ptc', 'ptc');
+  seLigado('gensvg', 'gensvg');
+  seLigado('legado', 'legacy');
+  seLigado('rascunho', 'draft');
+  seDesligado('contorno', 'cutline');
+  seDesligado('contornoSuave', 'cutlineA');
+
+  const origem = LAN_ORIGIN || location.origin;
+  return origem + location.pathname + '?' + q.toString();
+}
+
+async function copiarLink(btn) {
+  const url = construirLink();
+  if (!url) { alert('Adicione pelo menos um lote com quantidade.'); return; }
+  const original = btn.innerHTML;
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch (e) {
+    // Sem permissão de área de transferência (ou fora de HTTPS): mostra o link
+    // já selecionado para copiar à mão.
+    prompt('Copie o link:', url);
+    return;
+  }
+  btn.innerHTML = '&#10003; Copiado';
+  btn.disabled = true;
+  setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 1800);
+}
 
 </script>
 </body>

@@ -317,6 +317,7 @@
       state.brandButterflyEnabled = false;
       state.catalogFooterLinkVisible = true;
       state.ordersSuspended = false;
+      state.customPromoEnabled = true;
       return;
     }
 
@@ -358,6 +359,10 @@
     state.brandButterflyEnabled = home.brandButterflyEnabled === true;
     state.catalogFooterLinkVisible = home.catalogFooterLinkVisible !== false;
     state.ordersSuspended = home.ordersSuspended === true;
+    // PERSONALIZACAO_PROMO_V1: interruptor geral do convite ao flow de artwork
+    // proprio. Fica ligado por omissao; `"customPromoEnabled": false` no
+    // content/order-products.json apaga-o de todos os produtos de uma vez.
+    state.customPromoEnabled = home.customPromoEnabled !== false;
     document.body.classList.toggle("is-brand-butterfly-enabled", state.brandButterflyEnabled);
     document.body.classList.toggle("is-catalog-footer-hidden", !state.catalogFooterLinkVisible);
     document.body.classList.toggle("has-orders-suspended", state.ordersSuspended);
@@ -391,7 +396,7 @@
   function homeCarouselImagesFromProduct(product) {
     var step = product && product.steps && product.steps[0] ? product.steps[0] : null;
     var images = [];
-    var onlyPrimaryImages = product && product.slug === "cadernos";
+    var onlyPrimaryImages = product && productFamily(product) === "cadernos";
 
     (step && step.items ? step.items : []).forEach(function (item) {
       if (item && item.image && images.indexOf(item.image) === -1) {
@@ -529,7 +534,6 @@
 
   function renderHomeHeroCarousel(hero) {
     var images = homeHeroImages(hero);
-    var showControls = hero.carouselEnabled !== false && images.length > 1;
 
     if (!images.length) { return ""; }
 
@@ -542,13 +546,20 @@
           + '" style="background-image:url(&quot;' + escapeHtml(image) + '&quot;)" aria-hidden="true"></span>';
       }).join(""),
       '</div>',
-      showControls ? '<div class="home-hero-carousel__dots" aria-label="Escolher imagem do destaque">'
-        + images.map(function (_image, index) {
-          return '<button type="button" data-home-hero-dot="' + index + '" aria-label="Mostrar imagem '
-            + (index + 1) + ' de ' + images.length + '" aria-current="' + (index === 0 ? "true" : "false") + '"></button>';
-        }).join("") + '</div>' : "",
       '</div>'
     ].join("");
+  }
+
+  function renderHomeHeroCarouselDots(hero) {
+    var images = homeHeroImages(hero);
+
+    if (hero.carouselEnabled === false || images.length <= 1) { return ""; }
+
+    return '<div class="home-hero-carousel__dots" role="group" aria-label="Escolher imagem do destaque">'
+      + images.map(function (_image, index) {
+        return '<button type="button" data-home-hero-dot="' + index + '" aria-label="Mostrar imagem '
+          + (index + 1) + ' de ' + images.length + '" aria-current="' + (index === 0 ? "true" : "false") + '"></button>';
+      }).join("") + '</div>';
   }
 
   function startHomeHeroCarousel(home) {
@@ -557,7 +568,7 @@
     var carousel = section && section.querySelector("[data-home-hero-carousel]");
     var track = carousel && carousel.querySelector("[data-home-hero-track]");
     var frames = track ? Array.prototype.slice.call(track.children) : [];
-    var dots = carousel ? Array.prototype.slice.call(carousel.querySelectorAll("[data-home-hero-dot]")) : [];
+    var dots = section ? Array.prototype.slice.call(section.querySelectorAll("[data-home-hero-dot]")) : [];
     var speed = Math.max(3, Math.min(30, Number(hero.rotationSeconds) || 5)) * 1000;
     var resumeDelay = Math.max(3, Math.min(60, Number(hero.resumeSeconds) || 10)) * 1000;
     var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;

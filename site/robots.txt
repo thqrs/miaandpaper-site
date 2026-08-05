@@ -1,2 +1,39 @@
 User-agent: *
-Disallow:
+
+# Paginas e endpoints de administracao: nao devem aparecer em pesquisas.
+# Isto e sobre indexacao, nao sobre acesso — o acesso continua a ser
+# controlado (ou nao) pela sessao de admin em cada ficheiro.
+Disallow: /galeria.html
+Disallow: /galeria-preview.html
+Disallow: /multimedia.html
+Disallow: /produtos.html
+Disallow: /reviews.html
+Disallow: /admin-colors.html
+Disallow: /styleguide.html
+Disallow: /modulos.php
+Disallow: /modulos-temp.html
+Disallow: /modulos-preview.html
+Disallow: /admin-orders.php
+Disallow: /admin-funnel.php
+Disallow: /admin-live-dashboard.php
+Disallow: /admin-api.php
+Disallow: /admin-uploads.php
+Disallow: /admin-open.php
+Disallow: /admin-order-file.php
+Disallow: /admin-assisted-file.php
+Disallow: /galeria-api.php
+Disallow: /produtos-api.php
+Disallow: /reviews-api.php
+Disallow: /colors-api.php
+Disallow: /order-media-preview.php
+Disallow: /adicionar-produto.html
+Disallow: /checkout.html
+Disallow: /tools/
+
+# Os redirects antigos (pins, quadros, caderninhos, cadernos, catalogo) ja
+# trazem <meta name="robots" content="noindex"> ou um canonical para a pagina
+# nova. Nao os bloqueamos aqui de proposito: uma pagina bloqueada no robots.txt
+# nunca chega a ser lida, por isso o Google nunca veria esse noindex e podia
+# manter o URL na pesquisa na mesma.
+
+Sitemap: https://miaandpaper.com/sitemap.xml

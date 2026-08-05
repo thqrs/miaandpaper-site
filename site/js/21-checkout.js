@@ -16,6 +16,7 @@
     appendHidden(form, "product_slug", product.slug || "");
     appendHidden(form, "product_name", product.name || "");
     appendHidden(form, "pack_quantity", String(getPackQuantity(product)));
+    appendHidden(form, "quantity_pricing_mode", selectedQuantityPricingMode(product));
     appendHidden(form, "size", priceInfo(product).size || state.selections.size || "");
     appendHidden(form, "price_total", info.total || "");
     appendHidden(form, "price_per_pin", info.perPin || "");
@@ -28,6 +29,11 @@
     if (isCadernosProduct(product)) {
       appendHidden(form, "lamination", cadernoLamination ? cadernoLamination.value : "");
       appendHidden(form, "lamination_label", cadernoLamination ? cadernoLamination.title : "");
+      selectedCadernoAddOns(product).forEach(function (item) {
+        appendHidden(form, "add_ons[]", item.value || "");
+      });
+      appendHidden(form, "add_ons_extra", info.addOnsTotal || "");
+      appendHidden(form, "add_ons_extra_cents", String(info.addOnsCents || 0));
       appendHidden(form, "purchase_option", cadernoOption ? cadernoOption.value : "");
       appendHidden(form, "purchase_option_label", cadernoOption ? cadernoOption.title : "");
       appendHidden(form, "purchase_includes", cadernoOption && cadernoOption.includes ? cadernoOption.includes : "");
@@ -74,6 +80,10 @@
     dcFields.forEach(function (field) {
       appendHidden(form, field.name, state.selections[field.name] || "");
     });
+
+    selectedOptionDrawerRecords(product).forEach(function (record) {
+      appendHidden(form, record.drawer.field, record.item.value || "");
+    });
   }
 
   function appendHidden(form, name, value) {
@@ -86,9 +96,8 @@
   }
 
   function cartProductCategories(home) {
-    var allowed = { quadros: true, crachas: true, imanes: true, caderninhos: true, cadernos: true };
     return (home.categories || []).filter(function (category) {
-      return category && allowed[category.id] && homeCategoryIsVisible(category);
+      return category && category.href && homeCategoryIsVisible(category);
     });
   }
 
@@ -177,8 +186,30 @@
     return item ? item.productSlug : "";
   }
 
+  function cartItemCatalogContext(item) {
+    var selections = item && item.selections && typeof item.selections === "object" ? item.selections : {};
+    var explicit = String(selections.catalog_context || "");
+    var slug = String(item && item.productSlug || "");
+    if (explicit) {
+      return explicit;
+    }
+    return ["crachas", "imanes", "caderninhos", "cadernos"].indexOf(slug) !== -1 ? "congress-2026" : "main";
+  }
+
+  function cartCatalogContext(cart) {
+    var contexts = [];
+    ((cart && cart.items) || []).forEach(function (item) {
+      var context = cartItemCatalogContext(item);
+      if (contexts.indexOf(context) === -1) contexts.push(context);
+    });
+    return contexts.length > 1 ? "mixed" : (contexts[0] || "main");
+  }
+
   function loadCheckoutDeliveryOptions() {
-    var slug = firstCartProductSlug();
+    var cart = loadCart();
+    var firstItem = cart.items[0] || null;
+    var slug = firstItem ? firstItem.productSlug : "";
+    var context = firstItem ? cartItemCatalogContext(firstItem) : "main";
 
     state.checkoutDeliveryOptions = defaultDeliveryOptions();
 
@@ -186,7 +217,7 @@
       return Promise.resolve(state.checkoutDeliveryOptions);
     }
 
-    return loadJson("content/products/" + slug + ".json").then(function (product) {
+    return loadJson((context === "congress-2026" ? "congressos/2026/content/products/" : "content/products/") + slug + ".json").then(function (product) {
       state.checkoutDeliveryOptions = deliveryOptions(product);
       return state.checkoutDeliveryOptions;
     }).catch(function () {
@@ -442,6 +473,7 @@
       '<ol class="cart-panel-list">',
       items.map(function (item, index) {
         var summary = formatCartItemSummary(item);
+        var customizationFee = cartCustomizationFeeText(item);
         var thumb = summary.image
           ? '<img src="' + escapeHtml(summary.image) + '" alt="" loading="lazy">'
           : '<span aria-hidden="true">' + escapeHtml(summary.productName.slice(0, 1).toUpperCase()) + '</span>';
@@ -452,11 +484,12 @@
           '<strong>' + escapeHtml(index + 1) + '. ' + escapeHtml(summary.productName) + '</strong>',
           '<span>' + escapeHtml(summary.title) + '</span>',
           summary.subtitle ? '<em>' + escapeHtml(summary.subtitle) + '</em>' : "",
+          customizationFee ? '<em class="cart-item-customization-fee">' + escapeHtml(customizationFee) + '</em>' : "",
           '</div>',
           '<div class="cart-item-side">',
           '<span class="cart-item-price">' + escapeHtml(summary.priceText) + '</span>',
           '<div class="cart-item-actions">',
-          opts.allowEdit ? '<button type="button" class="cart-edit-button" data-checkout-edit="' + escapeHtml(item.id) + '">Editar</button>' : "",
+          opts.allowEdit && cartItemIsEditable(item) ? '<button type="button" class="cart-edit-button" data-checkout-edit="' + escapeHtml(item.id) + '">Editar</button>' : "",
           opts.allowRemove ? '<button type="button" class="cart-remove-button" data-checkout-remove="' + escapeHtml(item.id) + '">Remover</button>' : "",
           '</div>',
           '</div>',
@@ -560,10 +593,13 @@
 
   function cartSubmissionPayload() {
     var cart = loadCart();
+    var session = funnelSession();
     return {
       order_mode: "cart",
       schemaVersion: cart.schemaVersion,
       cartId: cart.cartId,
+      funnel_session_id: session && session.id ? session.id : "",
+      cart_context: cartCatalogContext(cart),
       items: cart.items,
       checkout: {
         customer_name: String(state.checkout.customer_name || "").trim(),
@@ -774,6 +810,7 @@
         appendHidden(form, "cart_json", JSON.stringify(payload));
         trackOrderEvent("cart_order_submitted", {
           cart_id: payload.cartId,
+          cart_context: payload.cart_context,
           item_count: payload.items.length,
           subtotal_cents: checkoutSubtotalCents()
         });

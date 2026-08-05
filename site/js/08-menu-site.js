@@ -7,6 +7,36 @@
     return href || "index.html";
   }
 
+  function renderSiteMenuIcon(iconName, modifier) {
+    var safeName = String(iconName || "catalogo").replace(/[^a-z0-9-]/gi, "");
+    return '<span class="site-menu-icon' + (modifier ? ' ' + modifier : '') + '" aria-hidden="true">'
+      + '<img src="content/brand/menu-icons/line-art/' + safeName + '.png" alt="" width="64" height="64">'
+      + '</span>';
+  }
+
+  function siteMenuGroupIcon(group) {
+    var order = Number(group && group.order);
+    if (order === 1) { return "grupo-personalizados"; }
+    if (order === 2) { return "grupo-cadernos-papelaria"; }
+    if (order === 3) { return "grupo-crachas-imanes"; }
+    if (order === 4) { return "grupo-colecoes-ofertas"; }
+    return "catalogo";
+  }
+
+  function siteMenuCategoryIcon(category) {
+    var id = String(category && category.id ? category.id : "").trim();
+    var aliases = {
+      "cadernos-geral": "cadernos",
+      "mini-cadernos-geral": "mini-cadernos",
+      "quadros": "molduras",
+      "crachas-geral": "crachas",
+      "imanes-geral": "imanes",
+      // Ícone provisório enquanto os marcadores magnéticos não têm arte final.
+      "marcadores-magneticos": "marcadores"
+    };
+    return aliases[id] || id || "catalogo";
+  }
+
   function renderSiteMenu(categories, instagramUrl) {
     var isOpen = state.siteMenuOpen === true;
     var orderedCategories = categories.map(function (category, index) {
@@ -20,12 +50,54 @@
     }).map(function (record) {
       return record.category;
     });
-    var categoryLinks = orderedCategories.map(function (category) {
+    var menuGroups = [];
+
+    orderedCategories.forEach(function (category, categoryIndex) {
+      var title = String(category.menuGroup || "Produtos").trim() || "Produtos";
+      var order = Number(category.menuGroupOrder);
+      var group = menuGroups.filter(function (record) {
+        return record.title === title;
+      })[0];
+
+      if (!group) {
+        group = {
+          title: title,
+          order: isFinite(order) && order > 0 ? order : 1000 + categoryIndex,
+          categories: []
+        };
+        menuGroups.push(group);
+      }
+      group.categories.push(category);
+    });
+
+    menuGroups.sort(function (a, b) {
+      return a.order - b.order;
+    });
+
+    var groupedCategoryLinks = menuGroups.map(function (group) {
+      var links = group.categories.map(function (category) {
+        return [
+          '<a class="site-menu-category-link" href="' + escapeHtml(siteMenuCategoryHref(category)) + '" data-site-menu-link>',
+          '<span class="site-menu-category-main">',
+          renderSiteMenuIcon(siteMenuCategoryIcon(category), 'site-menu-icon--category'),
+          '<span>' + escapeHtml(category.menuTitle || category.title || "Produto") + '</span>',
+          '</span>',
+          '<b aria-hidden="true">→</b>',
+          '</a>'
+        ].join("");
+      }).join("");
+
       return [
-        '<a class="site-menu-category-link" href="' + escapeHtml(siteMenuCategoryHref(category)) + '" data-site-menu-link>',
-        '<span>' + escapeHtml(category.menuTitle || category.title || "Produto") + '</span>',
-        '<b aria-hidden="true">→</b>',
-        '</a>'
+        '<details class="site-menu-group" data-site-menu-group>',
+        '<summary class="site-menu-group-summary">',
+        '<span class="site-menu-entry-label">',
+        renderSiteMenuIcon(siteMenuGroupIcon(group), 'site-menu-icon--group'),
+        '<span>' + escapeHtml(group.title) + '</span>',
+        '</span>',
+        '<span class="site-menu-group-chevron" aria-hidden="true"></span>',
+        '</summary>',
+        '<div class="site-menu-group-links">' + links + '</div>',
+        '</details>'
       ].join("");
     }).join("");
 
@@ -37,15 +109,16 @@
       '<div><p>Menu</p><h2 id="site-menu-title">Mia &amp; Paper</h2></div>',
       '<button type="button" class="site-menu-close" data-site-menu-close aria-label="Fechar menu">' + ICON_CLOSE + '</button>',
       '</div>',
-      '<nav class="site-menu-nav" aria-label="Produtos">',
-      '<a class="site-menu-home-link" href="index.html" data-site-menu-link>Início</a>',
-      '<p>Produtos</p>',
-      categoryLinks,
+      '<nav class="site-menu-nav" aria-label="Navegação principal">',
+      '<a class="site-menu-home-link" href="index.html" data-site-menu-link>',
+      '<span class="site-menu-entry-label">' + renderSiteMenuIcon('inicio') + '<span>Início</span></span>',
+      '</a>',
+      groupedCategoryLinks,
       '</nav>',
       '<div class="site-menu-secondary">',
-      '<a href="catalogo/index.html" data-site-menu-link>Encomendar por Catálogo</a>',
-      '<a href="contacto.html" data-site-menu-link>Contacto</a>',
-      '<a href="' + escapeHtml(instagramUrl || "https://www.instagram.com/miaandpaper/") + '" target="_blank" rel="noopener" data-site-menu-link>Instagram</a>',
+      '<a href="catalogo/index.html" data-site-menu-link>' + renderSiteMenuIcon('catalogo') + '<span>Catálogo</span></a>',
+      '<a href="contacto.html" data-site-menu-link>' + renderSiteMenuIcon('contacto') + '<span>Contacto</span></a>',
+      '<a href="' + escapeHtml(instagramUrl || "https://www.instagram.com/miaandpaper/") + '" target="_blank" rel="noopener" data-site-menu-link>' + renderSiteMenuIcon('instagram') + '<span>Instagram</span></a>',
       '</div>',
       '</aside>',
       '</div>'
@@ -186,6 +259,11 @@
     if (surface) {
       surface.classList.toggle("is-open", state.siteMenuOpen);
       surface.setAttribute("aria-hidden", state.siteMenuOpen ? "false" : "true");
+      if (!state.siteMenuOpen) {
+        surface.querySelectorAll("[data-site-menu-group]").forEach(function (group) {
+          group.removeAttribute("open");
+        });
+      }
     }
     if (trigger) {
       trigger.setAttribute("aria-expanded", state.siteMenuOpen ? "true" : "false");
@@ -235,6 +313,23 @@
       link.dataset.siteMenuBound = "1";
       link.addEventListener("click", function () {
         setSiteMenuOpen(false, false);
+      });
+    });
+
+    surface.querySelectorAll("[data-site-menu-group]").forEach(function (group) {
+      if (group.dataset.siteMenuBound === "1") {
+        return;
+      }
+      group.dataset.siteMenuBound = "1";
+      group.addEventListener("toggle", function () {
+        if (!group.open) {
+          return;
+        }
+        surface.querySelectorAll("[data-site-menu-group][open]").forEach(function (otherGroup) {
+          if (otherGroup !== group) {
+            otherGroup.removeAttribute("open");
+          }
+        });
       });
     });
 
@@ -311,7 +406,7 @@
   function renderFooter(brand, showAdminLogin) {
     return [
       '<footer class="site-footer">',
-      '<a class="catalog-footer-link" href="catalogo/index.html">Encomendar por Catálogo</a>',
+      '<a class="catalog-footer-link" href="catalogo/index.html">Comprar por catálogo</a>',
       '<a href="privacy.html">Política de Privacidade</a>',
       showAdminLogin === false ? "" : '<button type="button" data-admin-open>Login de Administrador</button>',
       '<span>© ' + escapeHtml(brand || "Mia & Paper") + ' 2026 Todos os Direitos Reservados</span>',

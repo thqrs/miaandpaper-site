@@ -1,0 +1,460 @@
+# Vistoria completa — site Mia & Paper
+
+**Data:** 31 de Julho de 2026
+**Âmbito:** backend PHP, frontend, conteúdo, consistência de preços, deploy e peso do site.
+**Fora de âmbito por pedido:** o facto de as páginas de administração estarem
+acessíveis publicamente (`galeria.html`, `produtos.html`, `multimedia.html`,
+`reviews.html`, `admin-*.php`, `tools/`). Os *endpoints de escrita* sem
+autenticação estão incluídos, porque permitem alterar o site e não apenas vê-lo.
+
+---
+
+## 0. O que está bem
+
+Vale a pena registar, porque condiciona as prioridades:
+
+- **Sem erros de sintaxe** em nenhum dos 31 PHP nem dos 11 JS da raiz.
+- **Zero links mortos**: as 31 páginas HTML respondem 200 e todos os recursos
+  que referenciam (CSS, JS, imagens, JSON) resolvem.
+- **Zero imagens em falta**: as 631 referências de imagem nos JSON de conteúdo
+  existem todas em disco.
+- **Sem injecção de SQL**: `lib/db.php`, `admin-orders.php` e `reviews-api.php`
+  usam sempre *prepared statements*; os nomes de coluna vêm de arrays fixos.
+- **O servidor não confia no preço do cliente**: `price_total` é enviado no
+  formulário mas nunca é lido pelo `send-order.php` — o total é sempre
+  recalculado.
+- **`upload-order-photo.php` está bem feito**: valida pelos *magic bytes*, não
+  pela extensão; grava fora da raiz web com nome aleatório e permissões 0600;
+  confirma o SHA-256 depois de gravar.
+- **O reenvio de cópia do pedido** (`process_post_success_copy`) está protegido
+  por token com hash e é de uso único.
+- **`check-open-orders.php`** só responde `true`/`false` e exige que o IP
+  coincida — não dá para descobrir encomendas de terceiros.
+- **O tracking respeita a política de privacidade**: o `privacy.html` declara
+  explicitamente a recolha de IP, que é o que o `track-order-event.php` faz.
+
+---
+
+## Tier 1 — mecânico, baixo risco
+
+> Alterações localizadas, com resultado verificável de imediato e sem risco de
+> regressão noutro sítio. Um agente mais pequeno resolve isto com o ficheiro à
+> frente.
+
+### 1.1 · 131 MB de PDFs duplicados em pastas com o nome corrompido ⚠️ maior ganho isolado
+
+`site/ofertas/` tem **quatro** cópias dos mesmos 7 PDFs do congresso:
+
+| pasta | tamanho | referenciada no código? |
+|---|---|---|
+| `arquivos-gratis-convite-congresso/` | 44,6 MB | **sim** (`ofertas/convite-congresso/index.html`) |
+| `Arquivos gr├ítis convite congresso/` | 44,6 MB | não |
+| `Arquivos gr├ö├Â┬ú...tis convite congresso/` | 44,6 MB | não |
+| `Arquivos grÔö£├¡tis convite congresso/` | 44,6 MB | não |
+
+Os nomes são o mesmo texto ("Arquivos grátis…") corrompido em camadas
+sucessivas de codificação — sintoma de cópias repetidas com *encoding* errado.
+Confirmei por hash que os ficheiros são idênticos, e por *grep* que nenhuma
+página aponta para as três pastas corrompidas (só aparecem no cache
+`content/.galeria-dimensoes.json`).
+
+**Solução:** apagar as três pastas corrompidas e limpar as entradas
+correspondentes do `.galeria-dimensoes.json`. Passa de 263 MB para ~130 MB.
+Atenção ao ponto 3.2 — apagar do repositório não chega para as tirar do
+servidor.
+
+### 1.2 · Cache-busting desactualizado — os visitantes ficam com JS e CSS velhos
+
+Quatro ficheiros foram alterados a 31/07 mas continuam a ser pedidos com a
+versão de 29/07:
+
+| ficheiro | alterado | pedido como |
+|---|---|---|
+| `app.js` | 2026-07-31 | `?v=2026072903` |
+| `styles.css` | 2026-07-31 | `?v=2026072903` |
+| `galeria-slots.js` | 2026-07-31 | `?v=2026072903` |
+| `produtos-admin.js` | 2026-07-31 | `?v=2026072903` |
+
+Quem já visitou o site continua a receber a versão em cache. **Isto inclui as
+alterações dos Bloquinhos que acabei de fazer.**
+
+**Solução imediata:** substituir `v=2026072903` por `v=2026073101` nos 21 HTML
+que referenciam `styles.css` e nos 20 que referenciam `app.js`.
+**Solução de fundo:** um script que carimba a versão a partir do `mtime` antes
+do deploy — senão isto repete-se a cada alteração.
+
+### 1.3 · Caminho absoluto do servidor exposto ao público
+
+- `site/send-message.php:185` → `'Ficheiro esperado: ' . $configPath`
+- `site/send-order.php:3784` → `'Cria o ficheiro: ' . $configPath`
+
+Se o ficheiro privado de configuração desaparecer, qualquer visitante que
+submeta o formulário vê `/home/currwkdi/private/...` na página de erro.
+
+**Solução:** manter a mensagem genérica na página e passar o caminho para
+`error_log()`. O `send-order.php` já faz exactamente isto no bloco
+`SAFE_ERROR_OUTPUT_V1` (linha 4424) — é copiar o padrão.
+
+### 1.4 · `.htaccess` não bloqueia os `.galeria-bak`
+
+O `FilesMatch` bloqueia `\.bak$`, mas a galeria grava as cópias de segurança
+como `mini-cadernos.json.galeria-bak` (`galeria-api.php:885`) — o carácter
+antes de `bak` é um hífen, por isso a regra não apanha.
+
+Impacto baixo (o JSON do produto já é público), mas são ficheiros servíveis que
+não deviam estar acessíveis.
+
+**Solução:** acrescentar `galeria-bak` à lista do `FilesMatch`.
+
+### 1.5 · `robots.txt` deixa indexar tudo
+
+```
+User-agent: *
+Disallow:
+```
+
+Não é uma questão de acesso (fora de âmbito), mas de indexação: o Google pode
+listar `galeria.html`, `produtos.html`, `multimedia.html`, `reviews.html` e
+`tools/` nos resultados de pesquisa da marca.
+
+**Solução:** `Disallow:` para essas rotas e `noindex` no `<head>` das páginas
+de administração (o `produtos.html` e o `quadros.html` já o têm; as outras não).
+
+### 1.6 · Lixo que vai para produção
+
+| item | peso |
+|---|---|
+| `catalogo/` (inclui um `.docx` de 7,6 MB) | 17 MB |
+| `media_tiago/` | 2,1 MB |
+| `mockups/` | 232 KB |
+| `content/products-legacy/` | 224 KB |
+| `local-test-data/`, `cgi-bin/` (vazia) | — |
+| `content/products/*.legacy` (4 ficheiros), `log_css_mods.txt`, `biscoito.txt`, `reviews.txt` | — |
+
+Nenhum é servido a clientes. O `catalogo/` são páginas antigas substituídas
+pelo catálogo actual.
+
+**Solução:** decidir o que é histórico (fica no repositório, sai do deploy) e o
+que é lixo (apaga-se). Um `.deployignore` respeitado pelo script de deploy
+resolve o primeiro caso.
+
+### 1.7 · `AGENTS.md` documenta um deploy que não existe
+
+O `AGENTS.md` diz: *"O ficheiro de deploy é `.cpanel.yml` e copia `site/.` →
+`/home/currwkdi/miaandpaper.com/`"*. **Esse ficheiro não existe** e nunca
+existiu no histórico do git. O deploy real é o `[2]upload-or-download.bat`, por
+SSH: `git pull --ff-only` no servidor seguido de `cp -R site/. LIVE_PATH/`.
+
+**Solução:** corrigir o `AGENTS.md`. O caminho de destino e a regra de "só
+`site/` é publicado" estão certos; só o mecanismo é que está errado.
+
+---
+
+## Tier 2 — precisa de raciocínio entre ficheiros
+
+> Envolve perceber duas implementações em simultâneo, ou mexer em código
+> partilhado onde uma alteração mal calibrada estraga outro produto. Cada um
+> destes precisa de verificação antes e depois.
+
+### 2.1 · Escrita sem autenticação em `galeria-api.php` e `reviews-api.php` ⚠️ o mais grave
+
+```php
+site/galeria-api.php:10   define('GALERIA_REQUIRE_ADMIN', false);
+site/reviews-api.php:6    define('REVIEWS_REQUIRE_ADMIN', false);
+```
+
+Não é "a página de admin está visível" — são **endpoints de escrita abertos**.
+Qualquer pessoa na Internet pode:
+
+- `POST galeria-api.php?action=save` → **reescrever qualquer
+  `content/products/*.json`**, incluindo a tabela de preços, e incluindo os
+  ficheiros da cápsula `congressos/2026/` que o `AGENTS.md` diz para nunca
+  tocar;
+- `POST galeria-api.php?action=upload` → enviar imagens para
+  `content/uploads/`;
+- `POST reviews-api.php?action=save` → reescrever as reviews.
+
+O `save` valida a estrutura (o slug tem de bater certo com o ficheiro, tem de
+haver `steps`) e exige a revisão SHA-256 do conteúdo actual — que se obtém
+pedindo `?action=data`, também aberto. Não é obstáculo.
+
+O upload está bem defendido contra execução de código: valida com
+`getimagesize()`, exige que a extensão corresponda ao MIME real e converte tudo
+para WebP com nome higienizado. **Não há caminho para RCE** — o problema é
+integridade de conteúdo e preços, não execução.
+
+O `AGENTS.md` já regista o `GALERIA_REQUIRE_ADMIN` como dívida assumida para o
+período pré-lançamento. O `reviews-api.php` tem o mesmo padrão e **não está
+documentado**. O `produtos-api.php` também está aberto mas é só de leitura de
+dados já públicos — esse é benigno.
+
+**Solução:** pôr as duas constantes a `true` e confirmar que a galeria e o
+painel de reviews continuam a funcionar com sessão iniciada (o CSRF e o
+`session_start()` já estão implementados nos dois ficheiros, só estão
+*by-passed* pelo `if (!X_REQUIRE_ADMIN) return;`). Verificar a seguir que
+`galeria.html` e `reviews.html` fazem login antes de gravar.
+
+### 2.2 · Os formulários de email são um relé aberto
+
+`send-message.php` e `send-order.php` aceitam `send_copy` + um email de
+destino, e enviam para esse endereço um email a partir do domínio, com corpo
+controlado por quem submete (`message`, `name`, designs, congregação…).
+
+```php
+send-message.php:246   mail($contact, 'Cópia da tua mensagem - Mia & Paper', ...)
+send-order.php:4463    mail($copyEmail, $customerCopySubject, $customerBody, ...)
+```
+
+Não há rate limiting em nenhum dos dois — a única defesa é o campo *honeypot*
+`website`, que se contorna trivialmente. O `track-order-event.php` tem
+rate limiting (60 eventos/IP/60 s) e o login de admin regista tentativas; os
+formulários de email não têm nada.
+
+**Risco concreto:** um spammer usa `miaandpaper.com` para enviar texto
+arbitrário a destinatários à escolha, e o domínio acaba em listas negras — o
+que faz falhar também os emails legítimos de encomenda.
+
+**Solução:** o mesmo padrão que já existe no funil — contador por IP em SQLite
+(ex.: 5 submissões / IP / hora) e recusa acima disso. Vale a pena decidir
+também se a "cópia para o cliente" deve continuar a aceitar um endereço
+diferente do contacto da encomenda; se for sempre o mesmo, o vector fecha-se
+quase todo.
+
+### 2.3 · `personalizacao` está fora das *allowlists* do `send-order.php`
+
+A `personalizacao.html` submete `return_to=personalizacao.html` e
+`product_slug=personalizacao` (`app.js:15175` e `app.js:18104`), mas nenhuma
+das duas está nas listas do servidor:
+
+- `send-order.php:84` (`safe_return_to`) → cai para `index.html`
+- `send-order.php:96` (`safe_product_slug`) → cai para **`crachas`**
+
+Duas consequências reais:
+
+1. Depois de finalizar um pedido de personalização, o botão "Voltar ao pedido"
+   leva à página inicial em vez da personalização.
+2. `send-order.php:3299` grava a flag de reset como
+   `miaandpaper-reset-crachas`. O `app.js:19790` procura-a pelo slug da página
+   — nenhuma página usa o slug `crachas` (a `crachas.html` é `crachas-loja`).
+   **Resultado: o wizard da personalização não limpa o estado depois de uma
+   encomenda** e o cliente volta a encontrar os ficheiros e escolhas antigos.
+
+O pedido em si fica correcto: o fluxo entra por `process_cart_order()`
+(`send-order.php:3872`) e cada linha do carrinho traz o seu próprio slug,
+validado por `cart_allowed_product_slug()`.
+
+**Solução:** acrescentar `'personalizacao.html'` à lista do `safe_return_to()`
+e `'personalizacao'` à do `safe_product_slug()`. Verificar depois que o
+`load_product_config('personalizacao')` (linha 3818) não parte nada — como o
+fluxo do carrinho sai antes, deve ser inócuo, mas é preciso confirmar.
+
+### 2.4 · Divergência de 1 cêntimo entre o preço mostrado e o preço cobrado (latente)
+
+Corri o cross-check que o `AGENTS.md` exige — as duas implementações,
+`app.js` e `send-order.php`, sobre **todas as 20 tabelas de preços e todas as
+quantidades de 1 a 500**, nos dois modos.
+
+`pack-combination`: **zero divergências**. As duas implementações são
+equivalentes.
+
+`tier-unit`: **3 divergências**, todas o mesmo caso — quantidade 54 sobre um
+escalão de 48 → 14 500:
+
+| | cálculo | resultado |
+|---|---|---|
+| `app.js:6189` | `Math.round(54 * 14500 / 48)` = `round(16312.5)` | **16313** |
+| `send-order.php:694` | `round(54 * (14500 / 48))` = `round(16312.499999999998)` | **16312** |
+
+A diferença é a ordem das operações: o JS multiplica primeiro (inteiro exacto)
+e só depois divide; o PHP divide primeiro, e `14500/48` não é representável em
+binário.
+
+**Hoje não é alcançável**: as tabelas afectadas (Mini-Cadernos, Bloquinhos)
+são `pack-combination`, e as duas tabelas que usam mesmo `tier-unit` (ímanes
+Achatados e Recortados) não têm divergências — confirmei até à quantidade 5000.
+É um defeito latente que aparece assim que uma tabela `tier-unit` cair num
+valor com `.5` exacto.
+
+**Solução:** alinhar o PHP com o JS —
+`round($quantity * $selectedTotal / $selectedQuantity)` em vez de
+`round($quantity * ($selectedTotal / $selectedQuantity))`. Voltar a correr o
+cross-check depois.
+
+### 2.5 · Colisão no código de encomenda perde o pedido
+
+O comentário em `lib/db.php:549-552` diz: *"order_code é UNIQUE → o INSERT vai
+sempre falhar em empate, e o caller deve apanhar a excepção e re-gerar"*.
+
+O caller **não re-gera**. `send-order.php:4424` apanha a excepção e mostra
+"Não foi possível guardar o teu pedido". Em duas encomendas simultâneas, uma
+perde-se e o cliente tem de repetir tudo.
+
+Probabilidade baixa com o tráfego actual, custo alto quando acontece (o cliente
+já preencheu tudo e já fez upload dos ficheiros).
+
+**Solução:** envolver a geração + insert num `retry` de 3 tentativas, como o
+comentário já prevê.
+
+### 2.6 · Crescimento de disco sem tecto
+
+Três caminhos, todos sem autenticação e sem limite global:
+
+1. **`upload-order-photo.php`** — 10 ficheiros × 30 MB por pedido, sem limite
+   de pedidos. A limpeza (`order_media_cleanup_temp`) só corre no próprio
+   pedido, só examina 300 entradas e só apaga o que tem mais de 7 dias.
+2. **`track-order-event.php`** — mesmo quando o rate limit dispara, o evento
+   **continua** a ser escrito nos dois ficheiros JSONL (linha 385, decisão
+   deliberada para auditoria). O rate limit protege a base de dados, não o
+   disco.
+3. **`.galeria-bak`** — uma cópia por gravação da galeria, sem rotação.
+
+Num alojamento partilhado, encher o disco tira o site inteiro do ar.
+
+**Solução:** tecto de tamanho total na pasta de uploads temporários (rejeitar
+acima de X GB), rotação diária dos JSONL com retenção fixa, e rate limit por
+IP no endpoint de upload.
+
+### 2.7 · `order-media-preview.php` recalcula o SHA-256 do ficheiro inteiro em cada pedido
+
+Linha 100: `hash_file('sha256', $filePath)`. Para um PDF de 30 MB isso é lido e
+processado por completo **em cada pedido**, incluindo em cada pedido parcial
+com `Range` — um leitor de PDF que peça o ficheiro em 20 pedaços faz 20 hashes
+completos.
+
+**Solução:** verificar o hash só quando não há cabeçalho `Range` (ou só na
+primeira leitura), já que o objectivo é detectar corrupção do ficheiro guardado
+e não autenticar cada pedido.
+
+### 2.8 · `tools/gerador-cartoes.php` tem 5,1 MB
+
+Um único ficheiro PHP com um *bundle* JavaScript inteiro embutido (pako, entre
+outros). É maior do que o `app.js`. Torna a ferramenta impossível de rever ou
+de diferenciar em git, e qualquer `grep` no repositório tem de o excluir.
+
+**Solução:** extrair o JS para ficheiros próprios em `tools/assets/` e
+referenciá-los com `<script src>`.
+
+---
+
+## Tier 3 — precisa de decisão, não só de código
+
+> Aqui o difícil não é escrever a alteração; é decidir qual é a alteração
+> certa. Envolve o negócio, o conteúdo ou a arquitectura.
+
+### 3.1 · Quatro categorias estão à venda sem uma única fotografia
+
+| categoria | designs | fotos |
+|---|---|---|
+| Stickers | 6 | **0** |
+| Marcadores | 6 | **0** |
+| Ímanes recortados | 6 | **0** |
+| Bloquinhos | 6 | **0** |
+
+As quatro estão `available: true` e clicáveis na homepage. Um cliente que entre
+em `stickers.html` vê "Sticker 01 … Sticker 06" em caixas vazias e não tem
+como saber o que está a comprar. Confirmei no browser.
+
+Nenhuma tem também `image` nem `carouselSourceImages` no `content/home.json`,
+por isso o cartão da homepage aparece sem arte.
+
+**A decisão é de negócio, não técnica.** Três caminhos:
+
+1. **Tirar do ar até haver fotos** — `available: false` no `home.json`. É uma
+   linha por categoria e resolve hoje.
+2. **Deixar só o caminho da personalização** — remover o passo de designs e
+   encaminhar para `personalizacao.html`, onde o cliente traz a sua imagem. Faz
+   sentido para stickers e marcadores.
+3. **Fotografar e carregar pela `galeria.html`** — os 24 *slots* já estão
+   criados e identificados; é só substituir as imagens.
+
+Nota: os Bloquinhos que criei hoje entram nesta lista por construção — os
+*slots* estão prontos, faltam as fotos.
+
+### 3.2 · O deploy nunca apaga nada
+
+```
+git pull --ff-only origin main && /bin/cp -R site/. /home/currwkdi/miaandpaper.com/
+```
+
+`cp -R` copia e substitui, mas **não remove**. Tudo o que alguma vez foi
+publicado continua vivo no servidor, mesmo depois de sair do repositório. É
+quase de certeza a razão pela qual as três pastas de PDFs corrompidas (ponto
+1.1) sobrevivem: foram apagadas ou renomeadas localmente e nunca desapareceram
+lá.
+
+Isto significa que **o ponto 1.1 não se resolve só apagando ficheiros do
+repositório** — é preciso apagá-los também no servidor.
+
+**A decisão:** passar para `rsync --delete` é o correcto, mas é uma operação
+destrutiva num servidor que hoje tem ficheiros que não estão no repositório
+(uploads da galeria, `content/uploads/`, backups). Antes de trocar é preciso
+inventariar o que existe só no servidor e decidir o que passa a ser
+versionado e o que fica excluído. Feito às cegas, apaga uploads de clientes.
+
+### 3.3 · 1,1 MB de JS e CSS sem compressão declarada
+
+`app.js` (828 KB) e `styles.css` (270 KB) são carregados em todas as páginas,
+sem minificação — o que é coerente com a regra de não haver *build system*.
+
+O `.htaccess` **não configura compressão nem cabeçalhos de cache**. É possível
+que o cPanel tenha o "Optimize Website" ligado globalmente (não consigo
+confirmar daqui, só do servidor). Se não tiver, cada visita nova transfere
+1,1 MB em vez dos ~200 KB que o gzip daria.
+
+**Verificação:** `curl -sI -H "Accept-Encoding: gzip" https://miaandpaper.com/app.js | grep -i content-encoding`
+
+**Solução se faltar:** um bloco `mod_deflate` + `Expires` no `.htaccess` — 15
+linhas, sem tocar em código. Isto é Tier 1; o que é Tier 3 é a questão de fundo:
+828 KB de JS não minificado para uma papelaria mobile-first é muito, e dividir
+o `app.js` por página exigiria repensar como está organizado.
+
+### 3.4 · O histórico de git não serve para voltar atrás
+
+- **72 ficheiros** por commitar neste momento.
+- Os últimos commits são `chore: snapshot antes do novo fluxo de produtos`,
+  `chore: backup before produtos admin mockup`, `Snapshot local: …` — não
+  descrevem alterações, descrevem momentos.
+- O `.git` tem 168 MB, sinal de que os binários grandes já entraram no
+  histórico.
+
+Consequência prática: se uma alteração partir alguma coisa, não há forma de
+isolar e reverter só essa alteração — só de voltar ao "snapshot" anterior e
+perder tudo o resto que veio desde então. Com o deploy a fazer `git pull` no
+servidor, o commit *é* a unidade de publicação.
+
+**A decisão é de processo**, não de código: commits por alteração e com
+mensagem útil. Vale mais do que parece, dado que o deploy depende do git.
+
+---
+
+## Prioridades sugeridas
+
+| # | item | tier | porquê primeiro |
+|---|---|---|---|
+| 1 | 2.1 escrita sem autenticação | 2 | qualquer pessoa altera os preços do site |
+| 2 | 1.2 cache-busting | 1 | as alterações de hoje não chegam a quem já visitou |
+| 3 | 2.2 relé de email | 2 | risco de o domínio ir para listas negras |
+| 4 | 3.1 categorias sem fotos | 3 | quatro categorias não vendáveis à vista de todos |
+| 5 | 1.1 + 3.2 PDFs duplicados | 1+3 | 131 MB, mas precisa do deploy resolvido |
+| 6 | 2.3 personalização fora das allowlists | 2 | o wizard não limpa o estado depois da encomenda |
+| 7 | 2.4 divergência de preço | 2 | latente, mas é dinheiro |
+| 8 | 1.3 / 1.4 / 1.5 / 1.7 | 1 | rápidos, sem risco |
+
+---
+
+## Como foi verificado
+
+- `php -l` nos 31 PHP; `node --check` nos 11 JS.
+- Validação JSON dos 24 ficheiros de `content/`.
+- Cross-check dos modos de preço produto ↔ `pricing.json` para os 8 produtos
+  `main-v2` (`main_v2_pricing_is_valid` + `main_v2_pricing_modes_agree`).
+- Cross-check PHP ↔ JS das funções reais de preço, extraídas dos ficheiros de
+  produção, sobre 20 tabelas × 500 quantidades × 2 modos.
+- Verificação em disco das 631 referências de imagem e de todos os `href`
+  internos dos 31 HTML.
+- HTTP 200 em todas as páginas e em todos os recursos que referenciam, contra
+  o servidor local `127.0.0.1:8082`.
+- Navegação real no browser: homepage, checkout, stickers, personalização
+  (fluxo completo até ao passo dos produtos), bloquinhos, mini-cadernos e a
+  cápsula do congresso — sem erros de consola em nenhuma.
+- Comparação por MD5 dos ficheiros com mais de 1 MB em `ofertas/`.

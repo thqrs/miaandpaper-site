@@ -1,0 +1,428 @@
+{
+  "slug": "bloquinhos",
+  "name": "Bloquinhos",
+  "brand": "Mia & Paper",
+  "homeUrl": "index.html",
+  "instagramUrl": "https://www.instagram.com/miaandpaper/",
+  "form": {
+    "action": "send-order.php",
+    "returnTo": "bloquinhos.html"
+  },
+  "intro": {
+    "eyebrow": "Bloquinhos",
+    "title": "Escolhe um design",
+    "text": "Podes escolher um dos nossos designs."
+  },
+  "deliveryOptions": [
+    {
+      "id": "pickup",
+      "label": "Vou recolher na casa da Mia",
+      "text": "",
+      "feeCents": 0
+    },
+    {
+      "id": "shipping",
+      "label": "Envio CTT - até 2 Kg",
+      "text": "",
+      "feeCents": 540,
+      "priceText": "Valor mínimo:\n5,40 €"
+    },
+    {
+      "id": "join_orders",
+      "label": "Junta as minhas encomendas",
+      "text": "",
+      "feeCents": 0
+    }
+  ],
+  "templates": [
+    {
+      "id": "media-list",
+      "label": "Imagem + 2 linhas"
+    },
+    {
+      "id": "text-grid",
+      "label": "Texto em grelha"
+    },
+    {
+      "id": "price-pack-grid",
+      "label": "Packs/preços"
+    },
+    {
+      "id": "quantity-builder",
+      "label": "Pack + quantidades"
+    },
+    {
+      "id": "design-grid",
+      "label": "Grelha de designs"
+    },
+    {
+      "id": "details-form",
+      "label": "Formulário"
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmação"
+    }
+  ],
+  "defaultPriceKey": "Bloquinhos",
+  "prices": {
+    "Bloquinhos": {
+      "1": 450,
+      "3": 1250,
+      "5": 1950,
+      "10": 3600,
+      "24": 7800,
+      "48": 14500,
+      "96": 28000
+    }
+  },
+  "steps": [
+    {
+      "id": "designs",
+      "label": "Designs",
+      "title": "Escolhe os teus bloquinhos favoritos",
+      "text": "Seleciona os designs que queres",
+      "template": "design-grid",
+      "field": "designs[]",
+      "selection": "multi",
+      "items": [
+        {
+          "id": "bloquinho-01",
+          "value": "Bloquinho 01",
+          "title": "Bloquinho 01",
+          "subtitle": "",
+          "badge": "",
+          "visual": "neutral",
+          "image": "",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 1
+        },
+        {
+          "id": "bloquinho-02",
+          "value": "Bloquinho 02",
+          "title": "Bloquinho 02",
+          "subtitle": "",
+          "badge": "",
+          "visual": "neutral",
+          "image": "",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 2
+        },
+        {
+          "id": "bloquinho-03",
+          "value": "Bloquinho 03",
+          "title": "Bloquinho 03",
+          "subtitle": "",
+          "badge": "",
+          "visual": "neutral",
+          "image": "",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 3
+        },
+        {
+          "id": "bloquinho-04",
+          "value": "Bloquinho 04",
+          "title": "Bloquinho 04",
+          "subtitle": "",
+          "badge": "",
+          "visual": "neutral",
+          "image": "",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 4
+        },
+        {
+          "id": "bloquinho-05",
+          "value": "Bloquinho 05",
+          "title": "Bloquinho 05",
+          "subtitle": "",
+          "badge": "",
+          "visual": "neutral",
+          "image": "",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 5
+        },
+        {
+          "id": "bloquinho-06",
+          "value": "Bloquinho 06",
+          "title": "Bloquinho 06",
+          "subtitle": "",
+          "badge": "",
+          "visual": "neutral",
+          "image": "",
+          "imageFit": "contain",
+          "imageZoom": 100,
+          "imagePositionX": 0,
+          "imagePositionY": 0,
+          "imageRotation": 0,
+          "frameScale": 100,
+          "frameMarginX": 0,
+          "frameMarginY": 0,
+          "rectOrientation": "portrait",
+          "sectionId": "novidades",
+          "sectionOrder": 6
+        }
+      ],
+      "sections": [
+        {
+          "id": "novidades",
+          "title": "Novidades",
+          "labelPrefix": ""
+        }
+      ],
+      "orderFlowField": "order_flow",
+      "catalogFlowValue": "catalog",
+      "customPromo": {
+        "enabled": true,
+        "title": "Queres um bloquinho com uma foto tua?",
+        "text": "",
+        "actionLabel": "Personalizar o meu bloquinho",
+        "href": "personalizacao.html"
+      }
+    },
+    {
+      "id": "pack",
+      "label": "Pack",
+      "title": "Diz-me quantos bloquinhos queres",
+      "text": "Quanto maior o pack, melhor o preço por unidade",
+      "template": "quantity-builder",
+      "field": "pack_quantity",
+      "selection": "pack",
+      "items": [
+        {
+          "id": "pack-1",
+          "quantity": 1,
+          "title": "1",
+          "subtitle": "bloquinho"
+        },
+        {
+          "id": "pack-3",
+          "quantity": 3,
+          "title": "3",
+          "subtitle": "bloquinhos"
+        },
+        {
+          "id": "pack-5",
+          "quantity": 5,
+          "title": "5",
+          "subtitle": "bloquinhos"
+        },
+        {
+          "id": "pack-10",
+          "quantity": 10,
+          "title": "10",
+          "subtitle": "bloquinhos"
+        },
+        {
+          "id": "pack-24",
+          "quantity": 24,
+          "title": "24",
+          "subtitle": "bloquinhos"
+        },
+        {
+          "id": "pack-48",
+          "quantity": 48,
+          "title": "48",
+          "subtitle": "bloquinhos"
+        },
+        {
+          "id": "pack-96",
+          "quantity": 96,
+          "title": "96",
+          "subtitle": "bloquinhos"
+        }
+      ],
+      "minimumQuantity": 1,
+      "pricingMode": "pack-combination",
+      "allowUnitDiscounts": true,
+      "freeQuantity": true,
+      "adjustPerDesign": true
+    },
+    {
+      "id": "details",
+      "label": "Dados",
+      "title": "Dados para o cartão de apresentação",
+      "text": "Estes dados seguem no pedido para preparar a personalização",
+      "template": "details-form",
+      "fields": [
+        {
+          "name": "recipient_name",
+          "label": "Nome",
+          "placeholder": "Nome a colocar no cartão",
+          "required": false,
+          "autocomplete": "name",
+          "section": "Dados para o Cartão de Apresentação"
+        },
+        {
+          "name": "contact",
+          "label": "Telemóvel ou Email",
+          "placeholder": "Email e/ou telemóvel para o cartão",
+          "required": false,
+          "autocomplete": "off",
+          "section": "Dados para o Cartão de Apresentação"
+        },
+        {
+          "name": "congregation",
+          "label": "Congregação",
+          "placeholder": "Nome da congregação",
+          "required": false,
+          "autocomplete": "organization",
+          "section": "Dados para o Cartão de Apresentação"
+        }
+      ]
+    },
+    {
+      "id": "delivery_contact",
+      "label": "Entrega e contacto",
+      "title": "Entrega e contacto",
+      "text": "",
+      "template": "delivery-contact",
+      "delivery": {
+        "title": "Como queres receber a tua encomenda?",
+        "subtitle": "Caso já tenhas feito uma encomenda que ainda não foi enviada, escolhe \"Junta as minhas encomendas\" para receberes todas as tuas encomendas na mesma embalagem."
+      },
+      "contact": {
+        "title": "Dados de Contacto",
+        "notesAfter": [
+          "Se quiseres fatura com número de contribuinte, preenche este campo. Se deixares em branco, a fatura será emitida como consumidor final.",
+          "A fatura será emitida após confirmação do pagamento. Se indicares email, enviamos por email. Se indicares telemóvel, podemos enviar por WhatsApp."
+        ],
+        "fields": [
+          {
+            "name": "customer_name",
+            "label": "Nome",
+            "placeholder": "O teu nome",
+            "required": true,
+            "autocomplete": "name"
+          },
+          {
+            "name": "customer_contact",
+            "label": "Email ou Telemóvel",
+            "placeholder": "Email ou telemóvel",
+            "required": true,
+            "autocomplete": "email"
+          },
+          {
+            "name": "customer_nif",
+            "label": "Número de Contribuinte (NIF)",
+            "placeholder": "Se quiseres receber fatura com NIF",
+            "required": false,
+            "autocomplete": "off",
+            "inputmode": "numeric"
+          }
+        ]
+      }
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmar",
+      "title": "Confirma antes de enviar",
+      "text": "Se estiver tudo certo, envia o pedido",
+      "template": "confirm"
+    }
+  ],
+  "unitLabel": "bloquinhos",
+  "unitSingular": "bloquinho",
+  "unitShort": "bloquinho",
+  "imageShape": "rect",
+  "rectOrientation": "portrait",
+  "giftRequest": {
+    "label": "Penso oferecer estes artigos a pessoas da minha congregação.",
+    "text": "Escolhe esta opção se quiseres que a Mia te ajude a escolher designs únicos para a tua congregação."
+  },
+  "family": "bloquinhos",
+  "catalogContext": "main-v2",
+  "orderFlow": "catalog-or-custom",
+  "minimumQuantity": 1,
+  "pricingMode": "pack-combination",
+  "allowUnitDiscounts": true,
+  "quantityPricingSwitchByPriceKey": {
+    "Bloquinhos": {
+      "quantityTiers": true,
+      "sliderMaximum": 150
+    }
+  },
+  "customArtwork": {
+    "selectionField": "order_flow",
+    "catalogValue": "catalog",
+    "customValue": "custom",
+    "feePerFileCents": 300,
+    "feeLabel": "Preparação da imagem e testes",
+    "feeDescription": "Inclui a preparação do ficheiro e os testes necessários antes da produção.",
+    "quantityPerFile": true,
+    "minimumQuantityPerFile": 1,
+    "acceptedMimeTypes": [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+      "application/pdf"
+    ],
+    "acceptedExtensions": [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".webp",
+      ".heic",
+      ".heif",
+      ".pdf"
+    ],
+    "preserveOriginal": true,
+    "preserveOriginalFileName": true,
+    "compress": false,
+    "convert": false
+  },
+  "finishOptions": [
+    {
+      "value": "holografica",
+      "title": "Laminação holográfica",
+      "subtitle": "Brilho com reflexos coloridos",
+      "extraPriceCentsPerUnit": 25
+    }
+  ]
+}

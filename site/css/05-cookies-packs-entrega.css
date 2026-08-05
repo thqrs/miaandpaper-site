@@ -441,6 +441,22 @@ html[data-theme="dark"] .pack-disabled-message {
   background: #fffdf8;
 }
 
+/* QUANTITY_DISTRIBUTION_LAYOUT_V1: o ajuste por design no fluxo de quantidade
+   livre vive dentro deste bloco. Sem grelha, a dica e o "Distribuir por igual"
+   ficavam encostados à esquerda em vez de acompanharem a largura do passo. */
+.quantity-distribution {
+  display: grid;
+  gap: 12px;
+}
+
+.pack-price-overview + .quantity-distribution {
+  margin-top: 18px;
+}
+
+.quantity-distribution > .quantity-adjust-hint {
+  margin: 0;
+}
+
 .auto-distribute {
   min-height: 44px;
   border: 1px solid rgba(142, 103, 31, 0.24);

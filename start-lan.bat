@@ -62,6 +62,10 @@ echo.
 
 start "" powershell -NoProfile -WindowStyle Hidden -Command "Start-Sleep -Milliseconds 750; Start-Process 'http://127.0.0.1:%PORT%/'"
 
+rem O `php -S` usa o SAPI cli-server, que ignora o site\.user.ini por completo e
+rem fica com os defaults do php.ini (upload_max_filesize=2M, post_max_size=8M).
+rem Sem estes -d, qualquer foto acima de 2 MB e recusada aqui e passa em
+rem producao, que e onde o .user.ini manda. Manter em sincronia com site\.user.ini.
 pushd "%SITE_DIR%"
-php -S 0.0.0.0:%PORT%
+php -d upload_max_filesize=44M -d post_max_size=48M -d max_file_uploads=10 -d max_input_time=300 -S 0.0.0.0:%PORT%
 popd

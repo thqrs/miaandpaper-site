@@ -496,6 +496,7 @@
       '<span>Preço do pedido</span>',
       priceLineHtml,
       '<p>' + escapeHtml(productQuantityLabel(product, info.quantity) + ' · ' + info.size + ' · ' + info.perPin) + '</p>',
+      info.customizationFeeCents ? '<small class="price-panel-shipping-note">Preparação e testes dos designs: +' + escapeHtml(formatCents(info.customizationFeeCents)) + '.</small>' : '',
       info.discount > 0 ? '<em>Poupas ' + info.discount + '%</em>' : "",
       delivery,
       '</aside>'

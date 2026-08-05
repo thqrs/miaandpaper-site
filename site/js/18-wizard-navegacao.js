@@ -102,11 +102,15 @@
       });
     }
     if (step.id === "size" && freeQuantityStep(state.product)) {
-      state.selections.pack_quantity = minimumFreeQuantity(state.product);
+      var currentFreeQuantity = parseInt(state.selections.pack_quantity, 10) || 0;
+      state.selections.pack_quantity = isMainCatalogProduct(state.product) && usesFlatUnitPricing(state.product)
+        ? Math.max(effectiveMinimumFreeQuantity(state.product), currentFreeQuantity)
+        : minimumFreeQuantity(state.product);
       delete state.selections.free_quantity_mode;
       state.quantitySignature = "";
       state.quantitiesTouched = false;
       state.quantityPackBaseline = 0;
+      ensurePackAndQuantities(state.product);
     }
     if (step.id === "baby_animal" && input.value !== "Outro animal") {
       delete state.selections.baby_custom_animal;
@@ -143,6 +147,7 @@
     var attachments = step && step.mediaAttachments ? step.mediaAttachments : null;
     return !!(step && (
       step.template === "photo-upload" ||
+      step.template === "original-artwork-upload" ||
       (attachments && (attachments.photos || attachments.audio))
     ));
   }
@@ -160,7 +165,7 @@
       return state.orderAudioRecording ? "Solta o botão do áudio para terminar a gravação." : "Espera até o anexo terminar de enviar.";
     }
 
-    if (step.id === "designs" && selectedDesignItems(product).length === 0 && !isAssortedSelected(product)) {
+    if (step.id === "designs" && selectedDesignItems(product).length === 0 && !isAssortedSelected(product) && !isCustomArtworkSelected(product)) {
       if (isQuadrosProduct(product)) {
         return "Escolhe o tipo de moldura que queres criar.";
       }
@@ -170,11 +175,52 @@
       return "Escolhe pelo menos um design ou a opção Sortido";
     }
 
+    if (step.template === "custom-product-builder") {
+      return validateBuilderProductsStep(product);
+    }
+
+    if (step.template === "custom-quantity-builder") {
+      return validateBuilderStep(product);
+    }
+
+    if (step.template === "original-artwork-upload") {
+      var customConfig = customArtworkConfig(product);
+      var customItems = orderUploadItems(customConfig.uploadKey);
+      if (state.orderUploadBusy) {
+        return "Espera até todos os ficheiros terminarem de enviar.";
+      }
+      if (!customItems.length) {
+        state.invalidFields = [customConfig.uploadKey];
+        return "Carrega pelo menos uma imagem ou um PDF para continuar.";
+      }
+      // No construtor a quantidade e o minimo pertencem a cada linha do passo
+      // seguinte, que sabe qual e a tabela de precos de cada produto.
+      if (isArtworkBuilderProduct(product)) {
+        return "";
+      }
+      if (customItems.some(function (item) { return customArtworkItemQuantity(item) < 1; })) {
+        state.invalidFields = [customConfig.uploadKey];
+        return "Indica uma quantidade válida para cada design.";
+      }
+      if (!isCadernosProduct(product)) {
+        // O total vem dos ficheiros, mas o mínimo do produto continua a valer:
+        // abaixo do primeiro escalão não há preço, e o servidor recusaria.
+        var minimoCustom = effectiveMinimumFreeQuantity(product);
+        if (customArtworkTotalQuantity(product) < minimoCustom) {
+          state.invalidFields = [customConfig.uploadKey];
+          return "A encomenda mínima é de " + productQuantityLabel(product, minimoCustom) + ".";
+        }
+        state.selections.pack_quantity = customArtworkTotalQuantity(product);
+      }
+      return "";
+    }
+
     if (isCadernosProduct(product) && step.id === "pack") {
       if (!selectedCadernoPurchaseOption(product)) {
         return "Escolhe uma opção de compra.";
       }
-      if (cadernoOrderQuantityOptions(product).indexOf(cadernoOrderQuantity(product)) === -1) {
+      if ((isMainCatalogProduct(product) && cadernoOrderQuantity(product) < 1)
+          || (!isMainCatalogProduct(product) && cadernoOrderQuantityOptions(product).indexOf(cadernoOrderQuantity(product)) === -1)) {
         return "Escolhe uma quantidade válida.";
       }
       ensurePackAndQuantities(product);
@@ -206,9 +252,16 @@
 
     if (step.id === "pack") {
       if (step.freeQuantity === true) {
+        ensurePackAndQuantities(product);
         packQuantity = getPackQuantity(product);
         if (!packQuantity) {
-          return "Indica uma quantidade válida (mínimo " + minimumFreeQuantity(product) + ").";
+          return "Indica uma quantidade válida (mínimo " + effectiveMinimumFreeQuantity(product) + ").";
+        }
+        if (!isCustomArtworkSelected(product)
+            && !isAssortedSelected(product)
+            && selectedDesignItems(product).length
+            && quantityTotal(product) !== packQuantity) {
+          return "Confirma a quantidade atribuída a cada design.";
         }
         return "";
       }
@@ -265,6 +318,26 @@
 
       if (!validPalette && !validIndividuals) {
         return step.selectionError || "Escolhe uma combinação ou exatamente " + (selectionLimit === 1 ? "uma cor" : selectionLimit === 2 ? "duas cores" : selectionLimit === 3 ? "três cores" : selectionLimit + " cores") + ".";
+      }
+      return "";
+    }
+
+    if (step.template === "option-drawers") {
+      ensureOptionDrawerSelections(product);
+      for (i = 0; i < (step.drawers || []).length; i += 1) {
+        var optionDrawer = step.drawers[i];
+        var optionDrawerValue = optionDrawer && optionDrawer.field ? state.selections[optionDrawer.field] : "";
+        if (!optionDrawer || !optionDrawer.field) {
+          continue;
+        }
+        if (!optionDrawerValue && optionDrawer.required === true) {
+          state.invalidFields = [optionDrawer.field];
+          return "Escolhe " + String(optionDrawer.label || optionDrawer.title || "uma opção").toLowerCase() + ".";
+        }
+        if (optionDrawerValue && !optionDrawerItem(optionDrawer, optionDrawerValue)) {
+          state.invalidFields = [optionDrawer.field];
+          return "Uma das opções escolhidas deixou de estar disponível.";
+        }
       }
       return "";
     }
@@ -407,9 +480,77 @@
     rerenderProduct(product);
   }
 
-  function orderPhotoFileIsSupported(file) {
+  // ORDER_MEDIA_REJECT_LOG_V1 — o lado do browser do log de recusas. Metade das
+  // falhas de envio (tipo recusado, foto que não descodifica, ligação que
+  // desiste) nunca chegam ao servidor, por isso não aparecem em
+  // private/order-uploads/rejeicoes.log. Ficam aqui, com o `code` do servidor
+  // quando houve resposta, para os dois lados se cruzarem.
+  //
+  // Na consola: `MiaUploadDebug.dump()`. Como o problema costuma ser no
+  // telemóvel de outra pessoa, `MiaUploadDebug.copy()` devolve o texto pronto a
+  // colar.
+  function orderUploadFileInfo(file) {
+    if (!file) {
+      return null;
+    }
+    var bytes = Number(file.size) || 0;
+    return {
+      nome: String(file.name || "(sem nome)"),
+      tipo: String(file.type || "(o browser não disse)"),
+      bytes: bytes,
+      mb: Math.round(bytes / 10485.76) / 100,
+      modificado: file.lastModified ? new Date(file.lastModified).toISOString() : ""
+    };
+  }
+
+  function logOrderUploadRejection(code, entry) {
+    var record = Object.assign({
+      code: String(code || "desconhecido"),
+      quando: new Date().toISOString(),
+      pagina: window.location.pathname + window.location.search,
+      online: navigator.onLine !== false,
+      ligacao: navigator.connection && navigator.connection.effectiveType ? navigator.connection.effectiveType : ""
+    }, entry || {});
+
+    orderUploadRejectionLog.push(record);
+    if (orderUploadRejectionLog.length > 30) {
+      orderUploadRejectionLog.shift();
+    }
+    try {
+      if (window.console && window.console.error) {
+        window.console.error("[mia] ficheiro recusado: " + record.code, record);
+      }
+    } catch (error) {}
+    return record;
+  }
+
+  window.MiaUploadDebug = {
+    rejeicoes: function () {
+      return orderUploadRejectionLog.slice();
+    },
+    dump: function () {
+      if (window.console && window.console.table && orderUploadRejectionLog.length) {
+        window.console.table(orderUploadRejectionLog);
+      }
+      return orderUploadRejectionLog.slice();
+    },
+    copy: function () {
+      return JSON.stringify({
+        userAgent: navigator.userAgent,
+        rejeicoes: orderUploadRejectionLog
+      }, null, 2);
+    },
+    limpar: function () {
+      orderUploadRejectionLog = [];
+    }
+  };
+
+  function orderPhotoFileIsSupported(file, allowPdf) {
     var type = String(file && file.type || "").toLowerCase();
     var name = String(file && file.name || "").toLowerCase();
+    if (allowPdf && (type === "application/pdf" || /\.pdf$/.test(name))) {
+      return true;
+    }
     return /^image\/(?:jpeg|png|webp|heic|heif)$/.test(type) || /\.(?:jpe?g|png|webp|heic|heif)$/.test(name);
   }
 

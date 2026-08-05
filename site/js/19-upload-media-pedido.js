@@ -67,19 +67,28 @@
         var prepared = new File([result.blob], stem + "-web.webp", { type: "image/webp", lastModified: Date.now() });
         return { file: prepared, width: result.width, height: result.height };
       });
-    }).catch(function () {
+    }).catch(function (cause) {
+      var error;
       if (file.size <= targetBytes) {
         return { file: file, width: 0, height: 0 };
       }
-      throw new Error("Não foi possível preparar esta foto. Tenta escolhê-la novamente.");
+      // Só chega aqui uma foto pesada que o browser não conseguiu descodificar
+      // nem recomprimir — HEIC sem suporte, canvas sem memória, ficheiro roto.
+      error = new Error("Não foi possível preparar esta foto. Tenta escolhê-la novamente.");
+      error.code = cause && cause.message === "decode" ? "descodificacao_falhou" : "recompressao_falhou";
+      error.causa = cause && cause.message ? cause.message : "";
+      throw error;
     });
   }
 
-  function uploadOrderMediaFile(prepared, kind, operation) {
+  function uploadOrderMediaFile(prepared, kind, operation, config) {
     var formData = new FormData();
     var file = prepared.file;
     formData.append("media[]", file, file.name || (kind === "audio" ? "audio.webm" : "foto"));
     formData.append("kind", kind);
+    if (config && config.purpose) {
+      formData.append("purpose", String(config.purpose));
+    }
     if (prepared.width) {
       formData.append("width", prepared.width);
       formData.append("height", prepared.height);
@@ -128,18 +137,48 @@
 
       xhr.addEventListener("load", function () {
         var payload = {};
+        var resposta = String(xhr.responseText || "");
+        var recusa;
+        var parseOk = true;
+        var ultimoObjecto;
         try {
-          payload = JSON.parse(xhr.responseText || "{}");
-        } catch (error) {}
+          payload = JSON.parse(resposta || "{}");
+        } catch (error) {
+          // Um `post_max_size` excedido faz o PHP escrever um warning ANTES de
+          // o nosso ficheiro correr, e o JSON vem colado a seguir. Sem isto, a
+          // recusa mais informativa que temos era a única ilegível.
+          ultimoObjecto = resposta.slice(resposta.indexOf("{"));
+          try {
+            payload = JSON.parse(ultimoObjecto);
+          } catch (outro) {
+            parseOk = false;
+          }
+        }
         if (xhr.status < 200 || xhr.status >= 300 || !payload.ok
             || !Array.isArray(payload.uploads) || !payload.uploads[0]) {
-          finish(reject, new Error(payload.message || "Não foi possível enviar o ficheiro."));
+          recusa = new Error(payload.message || "Não foi possível enviar o ficheiro.");
+          // O `code` do servidor é o que liga este erro ao bloco em
+          // private/order-uploads/rejeicoes.log.
+          recusa.code = payload.code || (parseOk ? "resposta_inesperada" : "resposta_ilegivel");
+          recusa.status = xhr.status;
+          recusa.bytesEnviados = file.size || 0;
+          if (!parseOk) {
+            // Resposta não-JSON: normalmente é o servidor a cortar o pedido
+            // (413 do Apache/nginx) ou um erro do PHP em HTML.
+            recusa.corpo = resposta.slice(0, 400);
+          }
+          finish(reject, recusa);
           return;
         }
         finish(resolve, payload.uploads[0]);
       });
       xhr.addEventListener("error", function () {
-        finish(reject, new Error("Não foi possível enviar o ficheiro."));
+        var recusa = new Error("Não foi possível enviar o ficheiro.");
+        recusa.code = "rede_falhou";
+        recusa.status = xhr.status;
+        recusa.bytesEnviados = file.size || 0;
+        recusa.segundos = Math.round((Date.now() - startedAt) / 100) / 10;
+        finish(reject, recusa);
       });
       xhr.addEventListener("abort", function () {
         finish(reject, orderUploadCanceledError());
@@ -236,7 +275,7 @@
     });
   }
 
-  function withOrderUploadTimeout(promise, operation, timeoutMs, message) {
+  function withOrderUploadTimeout(promise, operation, timeoutMs, message, code) {
     if (!orderUploadOperationIsActive(operation)) {
       return Promise.reject(orderUploadCanceledError());
     }
@@ -261,6 +300,7 @@
         settle(reject, error || orderUploadCanceledError());
       };
       operation.timeoutId = window.setTimeout(function () {
+        var expirou;
         if (!orderUploadOperationIsActive(operation)) {
           return;
         }
@@ -275,7 +315,15 @@
           } catch (error) {}
           operation.xhr = null;
         }
-        settle(reject, new Error(message));
+        expirou = new Error(message);
+        expirou.code = code || "tempo_esgotado";
+        expirou.limiteSegundos = Math.round(timeoutMs / 1000);
+        // Quanto é que chegou a subir antes de desistirmos: distingue uma
+        // ligação lenta (percentagem alta) de uma ligação morta (0%).
+        if (state.orderUploadProgress && state.orderUploadProgress.operationId === operation.id) {
+          expirou.percentagem = Math.round(state.orderUploadProgress.percent || 0);
+        }
+        settle(reject, expirou);
       }, timeoutMs);
 
       Promise.resolve(promise).then(function (value) {
@@ -349,14 +397,40 @@
     var key = config.selectionKey || (kind === "audio" ? "quadro_audio_uploads" : "quadro_uploads");
     var maxFiles = orderUploadMaxFiles(config);
     var existing = orderUploadItems(key);
-    var candidates = Array.prototype.slice.call(files || []).filter(function (file) {
+    var escolhidos = Array.prototype.slice.call(files || []);
+    var candidates = escolhidos.filter(function (file) {
       return file && Number(file.size) > 0;
     });
     var remaining = isFinite(maxFiles) ? Math.max(0, maxFiles - (config.multiple === true ? existing.length : 0)) : candidates.length;
     var selected = candidates.slice(0, remaining || (config.multiple === true ? 0 : 1));
     var uploads = [];
     var chain = Promise.resolve();
+    var naoSuportados;
+    var acimaDoLimite;
     var operation;
+
+    // Ficheiros que o browser entregou vazios: pasta do iCloud por descarregar,
+    // ficheiro em uso, permissão negada. Desapareciam sem deixar rasto.
+    if (candidates.length < escolhidos.length) {
+      logOrderUploadRejection("ficheiro_vazio_no_browser", {
+        fase: "selecao",
+        kind: kind,
+        chave: key,
+        ficheiros: escolhidos.filter(function (file) {
+          return !file || !(Number(file.size) > 0);
+        }).map(orderUploadFileInfo)
+      });
+    }
+    if (selected.length < candidates.length) {
+      logOrderUploadRejection("acima_do_maximo_de_ficheiros", {
+        fase: "selecao",
+        kind: kind,
+        chave: key,
+        maximo: maxFiles,
+        jaEnviados: existing.length,
+        ficheiros: candidates.slice(selected.length).map(orderUploadFileInfo)
+      });
+    }
 
     if (!selected.length) {
       return;
@@ -364,13 +438,53 @@
     state.orderUploadError = "";
     state.orderUploadMessage = "";
     state.orderUploadFeedbackKind = kind;
-    if (kind === "photo" && selected.some(function (file) { return !orderPhotoFileIsSupported(file); })) {
-      state.orderUploadError = "Escolhe fotos JPG, PNG, WebP ou HEIC.";
+    naoSuportados = (kind === "photo" || kind === "artwork")
+      ? selected.filter(function (file) { return !orderPhotoFileIsSupported(file, config.allowPdf === true); })
+      : [];
+    if (naoSuportados.length) {
+      state.orderUploadError = config.allowPdf === true
+        ? "Escolhe imagens JPG, PNG, WebP ou HEIC, ou ficheiros PDF."
+        : "Escolhe fotos JPG, PNG, WebP ou HEIC.";
+      logOrderUploadRejection("tipo_recusado_no_browser", {
+        fase: "validacao-local",
+        kind: kind,
+        chave: key,
+        permitePdf: config.allowPdf === true,
+        ficheiros: naoSuportados.map(orderUploadFileInfo)
+      });
+      rerenderProduct(product);
+      return;
+    }
+
+    // Só trava o que o servidor ia recusar de certeza. O fluxo normal de fotos
+    // recomprime antes de subir, por isso aqui só apanha os originais que a
+    // personalização envia tal como estão.
+    acimaDoLimite = selected.filter(function (file) {
+      return Number(file.size) > ORDER_UPLOAD_MAX_BYTES && (kind !== "photo" || config.preserveOriginal === true);
+    });
+    if (acimaDoLimite.length) {
+      state.orderUploadError = "Este ficheiro é demasiado pesado (máximo "
+        + Math.round(ORDER_UPLOAD_MAX_BYTES / 1048576) + " MB).";
+      logOrderUploadRejection("acima_do_limite_no_browser", {
+        fase: "validacao-local",
+        kind: kind,
+        chave: key,
+        limiteBytes: ORDER_UPLOAD_MAX_BYTES,
+        ficheiros: acimaDoLimite.map(orderUploadFileInfo)
+      });
       rerenderProduct(product);
       return;
     }
 
     operation = beginOrderUploadOperation("upload", stepId);
+    if (kind === "artwork") {
+      try {
+        trackProductEvent(product, "artwork_upload_started", {
+          file_count: selected.length,
+          file_kind: selected.some(function (file) { return String(file.type || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(String(file.name || "")); }) ? "pdf-or-image" : "image"
+        });
+      } catch (e) {}
+    }
     operation.fileCount = selected.length;
     operation.fileIndex = 1;
     state.orderUploadProgress = {
@@ -392,6 +506,7 @@
           throw orderUploadCanceledError();
         }
         operation.fileIndex = fileIndex + 1;
+        operation.currentFile = file;
         state.orderUploadProgress = {
           operationId: operation.id,
           phase: "preparing",
@@ -402,27 +517,38 @@
           fileCount: operation.fileCount
         };
         updateOrderUploadProgressDom();
-        preparation = kind === "photo"
+        // A personalização usa preserveOriginal, por isso o ficheiro sobe tal
+        // como saiu da câmara — é aqui que os megabytes fazem diferença.
+        operation.currentPhase = kind === "photo" && config.preserveOriginal !== true ? "preparacao" : "sem-preparacao";
+        preparation = kind === "photo" && config.preserveOriginal !== true
           ? prepareOrderPhoto(file)
           : Promise.resolve({ file: file, width: 0, height: 0 });
         return withOrderUploadTimeout(
           preparation,
           operation,
           45000,
-          "A preparação do ficheiro demorou demasiado. Tenta escolhê-lo novamente."
+          "A preparação do ficheiro demorou demasiado. Tenta escolhê-lo novamente.",
+          "preparacao_demorou_demasiado"
         );
       }).then(function (prepared) {
         if (!orderUploadOperationIsActive(operation)) {
           throw orderUploadCanceledError();
         }
+        operation.currentPhase = "envio";
+        operation.currentPrepared = prepared.file;
         return withOrderUploadTimeout(
-          uploadOrderMediaFile(prepared, kind, operation),
+          uploadOrderMediaFile(prepared, kind, operation, config),
           operation,
           90000,
-          "O envio demorou demasiado. Confirma a ligação e tenta novamente."
+          "O envio demorou demasiado. Confirma a ligação e tenta novamente.",
+          "envio_demorou_demasiado"
         ).then(function (upload) {
           if (!orderUploadOperationIsActive(operation)) {
             throw orderUploadCanceledError();
+          }
+          if (kind === "artwork") {
+            upload.quantity = 1;
+            upload.feeCents = Math.max(0, parseInt(config.feePerFileCents, 10) || 0);
           }
           uploads.push(upload);
           orderUploadPreviews[upload.token] = URL.createObjectURL(prepared.file);
@@ -443,9 +569,24 @@
       if (kind === "photo" && key === "quadro_uploads") {
         resetQuadrosPhotoColorAnalysis();
       }
+      if (kind === "artwork" && !isCadernosProduct(product)) {
+        state.selections.pack_quantity = customArtworkTotalQuantity(product);
+      }
       state.invalidFields = state.invalidFields.filter(function (fieldName) { return fieldName !== key; });
       if (kind === "audio") {
         state.orderUploadMessage = uploads.length === 1 ? "Áudio enviado." : uploads.length + " áudios enviados.";
+      } else if (kind === "artwork") {
+        if (!isArtworkBuilderProduct(product)) {
+          state.orderUploadMessage = uploads.length === 1 ? "Design enviado sem alterações." : uploads.length + " designs enviados sem alterações.";
+        }
+        try {
+          trackProductEvent(product, "artwork_upload_completed", {
+            file_count: uploads.length,
+            artwork_count: customArtworkItems(product).length,
+            artwork_total_quantity: customArtworkTotalQuantity(product),
+            customization_fee_cents: customArtworkFeeCents(product)
+          });
+        } catch (e) {}
       } else {
         state.orderUploadMessage = uploads.length === 1 ? "Foto enviada." : uploads.length + " fotos enviadas.";
       }
@@ -460,6 +601,29 @@
         return;
       }
       state.orderUploadError = error && error.message ? error.message : "Não foi possível enviar o ficheiro.";
+      logOrderUploadRejection((error && error.code) || "envio_falhou", {
+        fase: operation.currentPhase || "envio",
+        kind: kind,
+        chave: key,
+        mensagem: state.orderUploadError,
+        estadoHttp: error && error.status ? error.status : 0,
+        ficheiro: orderUploadFileInfo(operation.currentFile),
+        // Só difere do original quando houve recompressão; é o que foi mesmo
+        // pela rede acima.
+        enviado: operation.currentPrepared && operation.currentPrepared !== operation.currentFile
+          ? orderUploadFileInfo(operation.currentPrepared)
+          : null,
+        ficheiroNumero: operation.fileIndex,
+        totalFicheiros: operation.fileCount,
+        limiteSegundos: error && error.limiteSegundos ? error.limiteSegundos : 0,
+        percentagem: error && typeof error.percentagem === "number" ? error.percentagem : null,
+        segundos: error && error.segundos ? error.segundos : 0,
+        causa: error && error.causa ? error.causa : "",
+        corpo: error && error.corpo ? error.corpo : ""
+      });
+      if (kind === "artwork") {
+        try { trackProductEvent(product, "artwork_upload_failed", { error_code: (error && error.code) || "upload_failed" }); } catch (e) {}
+      }
     }).then(function () {
       var shouldRender = orderUploadOperationIsActive(operation);
       endOrderUploadOperation(operation);
@@ -472,7 +636,21 @@
   function startOrderPhotoUpload(product, step, input, files) {
     var key = input.dataset.orderUploadKey || "quadro_uploads";
     var config = orderMediaConfigForStep(step, key, "photo");
-    startOrderMediaUpload(product, config, files || [], "photo", step && step.id);
+    var kind = String(config.purpose || "") === "custom-artwork" || step && step.template === "original-artwork-upload"
+      ? "artwork"
+      : "photo";
+    if (kind === "artwork") {
+      config = Object.assign({}, config, customArtworkConfig(product), {
+        selectionKey: key,
+        multiple: true,
+        maxFiles: 10,
+        allowPdf: true,
+        preserveOriginal: true,
+        showQuantity: true,
+        purpose: "custom-artwork"
+      });
+    }
+    startOrderMediaUpload(product, config, files || [], kind, step && step.id);
   }
 
   function stopOrderAudioTracks() {
@@ -558,17 +736,61 @@
     });
   }
 
+  function applyOrderMediaUploadRemoval(product, key, token) {
+    state.selections[key] = orderUploadItems(key).filter(function (item) { return item.token !== token; });
+    if (key === customArtworkConfig(product).uploadKey) {
+      if (!isCadernosProduct(product)) {
+        state.selections.pack_quantity = customArtworkTotalQuantity(product);
+      }
+      try {
+        trackProductEvent(product, "artwork_upload_removed", {
+          artwork_count: customArtworkItems(product).length,
+          artwork_total_quantity: customArtworkTotalQuantity(product),
+          customization_fee_cents: customArtworkFeeCents(product)
+        });
+      } catch (e) {}
+    }
+    if (key === "quadro_uploads" && !state.selections[key].length) {
+      resetQuadrosPhotoColorAnalysis();
+    }
+    if (orderUploadPreviews[token]) {
+      URL.revokeObjectURL(orderUploadPreviews[token]);
+      delete orderUploadPreviews[token];
+    }
+  }
+
+  function editingCartOriginalHasUpload(key, token) {
+    var selections = state.editingCartOriginalItem && state.editingCartOriginalItem.selections;
+    var items = selections && Array.isArray(selections[key]) ? selections[key] : [];
+    return !!state.editingCartItemId && items.some(function (item) {
+      return item && item.token === token;
+    });
+  }
+
   function removeOrderMediaUpload(product, key, token) {
     var formData = new FormData();
     var operation;
     var requestOptions;
     var request;
+
+    // Um ficheiro já guardado no item do carrinho tem de continuar disponível
+    // caso a pessoa cancele a edição. Retiramo-lo apenas do estado de edição;
+    // se guardar, o temporário órfão será removido pela limpeza automática.
+    if (editingCartOriginalHasUpload(key, token)) {
+      state.orderUploadError = "";
+      state.orderUploadMessage = "Ficheiro retirado desta edição. Guarda as alterações para confirmar.";
+      state.orderUploadFeedbackKind = key === "quadro_audio_uploads" ? "audio" : (key === customArtworkConfig(product).uploadKey ? "artwork" : "photo");
+      applyOrderMediaUploadRemoval(product, key, token);
+      rerenderProduct(product);
+      return;
+    }
+
     formData.append("action", "delete");
     formData.append("token", token);
     operation = beginOrderUploadOperation("delete", currentStep(product) && currentStep(product).id);
     state.orderUploadError = "";
     state.orderUploadMessage = "";
-    state.orderUploadFeedbackKind = key === "quadro_audio_uploads" ? "audio" : "photo";
+    state.orderUploadFeedbackKind = key === "quadro_audio_uploads" ? "audio" : (key === customArtworkConfig(product).uploadKey ? "artwork" : "photo");
     rerenderProduct(product);
 
     requestOptions = {
@@ -593,29 +815,7 @@
       if (!orderUploadOperationIsActive(operation)) {
         throw orderUploadCanceledError();
       }
-      state.selections[key] = orderUploadItems(key).filter(function (item) { return item.token !== token; });
-      if (key === "quadro_uploads" && !state.selections[key].length) {
-        resetQuadrosPhotoColorAnalysis();
-      }
-      if (state.editingCartItemId) {
-        var cart = loadCart();
-        var cartItem = cart.items.filter(function (item) { return item.id === state.editingCartItemId; })[0];
-        if (cartItem && cartItem.selections) {
-          cartItem.selections[key] = Array.isArray(cartItem.selections[key])
-            ? cartItem.selections[key].filter(function (item) { return item && item.token !== token; })
-            : [];
-          saveCart(cart);
-        }
-        if (state.editingCartOriginalItem && state.editingCartOriginalItem.selections) {
-          state.editingCartOriginalItem.selections[key] = Array.isArray(state.editingCartOriginalItem.selections[key])
-            ? state.editingCartOriginalItem.selections[key].filter(function (item) { return item && item.token !== token; })
-            : [];
-        }
-      }
-      if (orderUploadPreviews[token]) {
-        URL.revokeObjectURL(orderUploadPreviews[token]);
-        delete orderUploadPreviews[token];
-      }
+      applyOrderMediaUploadRemoval(product, key, token);
     }).catch(function (error) {
       if (!orderUploadOperationIsActive(operation) || operation.canceled) {
         return;

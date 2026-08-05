@@ -465,6 +465,8 @@ input.is-missing,
 /* Estados seleccionados: uma linguagem sÃ³ â€” border + outline, sem cartÃµes amarelos diferentes */
 .choice-card:has(input:checked),
 .pack-option.is-selected,
+.builder-option-choice:has(input:checked),
+.builder-finish-choice:has(input:checked),
 .delivery-option:has(input:checked),
 .dc-delivery-option.is-selected,
 .dc-delivery-option:has(input:checked) {
@@ -486,6 +488,9 @@ input.is-missing,
 .choice-card.text-grid:has(input:checked)::after,
 .choice-card.price-pack-grid:has(input:checked)::after,
 .choice-card.size-choice:has(input:checked)::after,
+.builder-variant:has(input:checked)::after,
+.builder-option-choice:has(input:checked)::after,
+.builder-finish-choice:has(input:checked)::after,
 .design-action-card.is-selected::after,
 .pack-option.is-selected::after {
   content: "✓";
@@ -522,6 +527,13 @@ input.is-missing,
   transform: var(--selection-check-transform);
 }
 
+.builder-variant:has(input:checked)::after,
+.builder-option-choice:has(input:checked)::after,
+.builder-finish-choice:has(input:checked)::after {
+  top: var(--selection-check-inset, 14px);
+  right: var(--selection-check-inset, 14px);
+}
+
 .choice-card.media-list:not(.crachas-size-card),
 .choice-card.text-grid,
 .choice-card.price-pack-grid,
@@ -529,6 +541,46 @@ input.is-missing,
 .design-action-card,
 .pack-option {
   padding-right: 46px;
+}
+
+/* PACK_COMBINATION_MARKS_V1: os packs que compõem o total escolhido levam um
+   visto por cada vez que entram no conjunto (10 = 5 + 5 mostra dois vistos no
+   pack de 5). Os vistos mantêm a posição original no canto superior direito.
+   O ::after da selecção é dispensado para não haver dois vistos a dizer o mesmo. */
+.pack-option.is-in-combination {
+  padding-right: 46px;
+}
+
+.pack-option.is-in-combination::after {
+  content: none;
+}
+
+.pack-option-marks {
+  position: absolute;
+  z-index: 5;
+  top: var(--selection-check-top);
+  right: var(--selection-check-right);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  transform: var(--selection-check-transform);
+  pointer-events: none;
+}
+
+.pack-option-marks i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #756026;
+  color: #fff;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .design-action-card[data-select-all-designs] {

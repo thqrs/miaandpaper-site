@@ -1,0 +1,407 @@
+{
+  "slug": "personalizacao",
+  "name": "Personalização",
+  "brand": "Mia & Paper",
+  "homeUrl": "index.html",
+  "instagramUrl": "https://www.instagram.com/miaandpaper/",
+  "artworkBuilder": true,
+  "catalogContext": "main-v2",
+  "orderFlow": "custom-only",
+  "form": {
+    "action": "send-order.php",
+    "returnTo": "personalizacao.html"
+  },
+  "intro": {
+    "eyebrow": "Personalização",
+    "title": "Os teus designs, feitos por nós",
+    "text": "Envia os teus ficheiros e escolhe em que produtos os queres."
+  },
+  "customArtwork": {
+    "selectionField": "order_flow",
+    "customValue": "custom",
+    "feePerFileCents": 300,
+    "feeLabel": "Ajuste do design ao produto",
+    "feeDescription": "Preço de ajuste do design ao formato do produto.",
+    "acceptedMimeTypes": [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+      "application/pdf"
+    ],
+    "acceptedExtensions": [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".webp",
+      ".heic",
+      ".heif",
+      ".pdf"
+    ],
+    "preserveOriginal": true,
+    "preserveOriginalFileName": true,
+    "compress": false,
+    "convert": false
+  },
+  "deliveryOptions": [
+    {
+      "id": "pickup",
+      "label": "Vou recolher na casa da Mia",
+      "text": "",
+      "feeCents": 0
+    },
+    {
+      "id": "shipping",
+      "label": "Envio CTT - até 2 Kg",
+      "text": "",
+      "feeCents": 540,
+      "priceText": "Valor mínimo:\n5,40 €"
+    },
+    {
+      "id": "join_orders",
+      "label": "Junta as minhas encomendas",
+      "text": "",
+      "feeCents": 0
+    }
+  ],
+  "steps": [
+    {
+      "id": "artwork_upload",
+      "label": "Designs",
+      "title": "Envia as tuas imagens",
+      "text": "",
+      "template": "original-artwork-upload",
+      "upload": {
+        "selectionKey": "custom_artwork_uploads",
+        "multiple": true,
+        "minimumFiles": 1,
+        "maxFiles": 10,
+        "buttonLabel": "Enviar imagem",
+        "uploadedButtonLabel": "Enviar outra imagem",
+        "helperTextByUploadCount": {
+          "empty": "Podes enviar até {maxFiles} imagens e criar vários produtos diferentes com cada uma delas",
+          "one": "Podes continuar para o próximo passo, ou adicionar mais imagens",
+          "multiple": "Ainda podes adicionar mais {remaining} imagens",
+          "full": "Já não podes adicionar mais imagens"
+        },
+        "showQuantity": false,
+        "acceptedMimeTypes": [
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          "image/heic",
+          "image/heif",
+          "application/pdf"
+        ],
+        "acceptedExtensions": [
+          ".jpg",
+          ".jpeg",
+          ".png",
+          ".webp",
+          ".heic",
+          ".heif",
+          ".pdf"
+        ],
+        "preserveOriginal": true,
+        "preserveOriginalFileName": true,
+        "compress": false,
+        "convert": false,
+        "purpose": "custom-artwork"
+      }
+    },
+    {
+      "id": "custom_products",
+      "label": "Produtos",
+      "title": "Seleciona todos os produtos que queres criar com esta imagem",
+      "titleByArtworkCount": {
+        "one": "Seleciona todos os produtos que queres criar com esta imagem",
+        "multiple": "Para cada imagem, escolhe o que queres criar"
+      },
+      "text": "",
+      "template": "custom-product-builder",
+      "products": [
+        {
+          "id": "crachas-pequenos",
+          "group": "Crachás",
+          "title": "Crachás pequenos",
+          "subtitle": "2,5 cm x 2,5 cm (25 mm)",
+          "slug": "crachas-loja",
+          "size": "25 mm",
+          "image": "content/designs/loja/crachas-loja/uploads/crachas-25-3d7d4ac2504c.webp",
+          "imageShape": "round",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "crachas-medios",
+          "group": "Crachás",
+          "title": "Crachás médios",
+          "subtitle": "3,2 cm x 3,2 cm (32 mm)",
+          "slug": "crachas-loja",
+          "size": "32 mm",
+          "image": "content/designs/loja/crachas-loja/uploads/crachas-32-accc814bd59f.webp",
+          "imageShape": "round",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "crachas-grandes",
+          "group": "Crachás",
+          "title": "Crachás grandes",
+          "subtitle": "5,8 cm x 5,8 cm (58 mm)",
+          "slug": "crachas-loja",
+          "size": "Grandes",
+          "image": "content/designs/loja/crachas-loja/uploads/crachas-32-accc814bd59f.webp",
+          "imageShape": "round",
+          "quoteOnly": true,
+          "quoteNote": "Preço a confirmar",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "imanes-finos",
+          "group": "Ímanes",
+          "title": "Ímanes finos",
+          "subtitle": "5,5 × 6,5 cm · 0,7 mm",
+          "slug": "imanes-loja",
+          "size": "Achatados",
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/tipo/iman-flexivel.webp",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "imanes-3mm",
+          "group": "Ímanes",
+          "title": "Ímanes grossos",
+          "subtitle": "5,5 × 6,5 cm · 3 mm",
+          "slug": "imanes-loja",
+          "size": "3 mm",
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/tipo/iman-2mm.webp",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "imanes-recortados",
+          "group": "Ímanes",
+          "title": "Ímanes recortados",
+          "subtitle": "Cortados à volta do desenho",
+          "slug": "imanes-recortados",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "cadernos-anuais",
+          "group": "Apontamentos",
+          "title": "Caderno Anual Argolas A5",
+          "subtitle": "Capa com o teu design",
+          "slug": "cadernos-anuais",
+          "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp",
+          "imageShape": "rect",
+          "quantityField": "caderno_order_quantity",
+          "fixedSelections": {
+            "cover_personalization": "no",
+            "cover_personalization_text": ""
+          },
+          "choices": [
+            {
+              "field": "purchase_option",
+              "label": "Opção de compra",
+              "required": true,
+              "isPriceKey": true,
+              "items": [
+                {
+                  "value": "caderno_normal",
+                  "title": "Caderno Normal",
+                  "subtitle": "Oferta: 1 crachá de 32 mm com o design da capa",
+                  "quantity": 1
+                },
+                {
+                  "value": "caderno_pioneiro",
+                  "title": "Caderno Pioneiro",
+                  "subtitle": "Oferta: 1 crachá de 32 mm com o design da capa",
+                  "quantity": 2
+                },
+                {
+                  "value": "pack_normal",
+                  "title": "Pack Normal",
+                  "subtitle": "1 Caderno Normal + 1 marcador + 5 crachás de 32 mm",
+                  "quantity": 3,
+                  "isPack": true
+                },
+                {
+                  "value": "pack_pioneiro",
+                  "title": "Pack Pioneiro",
+                  "subtitle": "1 Caderno Pioneiro + 1 marcador + 5 crachás de 32 mm",
+                  "quantity": 4,
+                  "isPack": true
+                }
+              ]
+            },
+            {
+              "field": "lamination",
+              "label": "Laminação",
+              "required": true,
+              "items": [
+                {
+                  "value": "matte",
+                  "title": "Matte",
+                  "subtitle": "Acabamento suave, sem brilho"
+                },
+                {
+                  "value": "normal",
+                  "title": "Glossy",
+                  "subtitle": "Acabamento brilhante normal"
+                },
+                {
+                  "value": "holografica",
+                  "title": "Holográfica",
+                  "subtitle": "Brilho com reflexos coloridos"
+                },
+                {
+                  "value": "glitter_branco",
+                  "title": "Glitter branco",
+                  "subtitle": "Brilho tipo purpurinas brancas"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "blocos-a6",
+          "group": "Apontamentos",
+          "title": "Bloco Argolas A6",
+          "subtitle": "Capa com o teu design",
+          "slug": "blocos-a6",
+          "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "bloquinhos",
+          "group": "Apontamentos",
+          "title": "Bloquinho A7",
+          "subtitle": "Capa com o teu design",
+          "slug": "bloquinhos",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "mini-cadernos",
+          "group": "Apontamentos",
+          "title": "Mini-Caderno Argolas",
+          "subtitle": "Capa com o teu design",
+          "slug": "mini-cadernos",
+          "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "stickers",
+          "group": "Papel",
+          "title": "Stickers",
+          "subtitle": "Autocolantes recortados",
+          "slug": "stickers",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
+          "id": "marcadores",
+          "group": "Papel",
+          "title": "Marcadores",
+          "subtitle": "Com opções de impressão e acabamento",
+          "slug": "marcadores",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica-marcador",
+            "dois-lados-marcador",
+            "buraquinho-marcador",
+            "margem-plastico-marcador"
+          ]
+        },
+        {
+          "id": "marcadores-magneticos",
+          "group": "Papel",
+          "title": "Marcadores magnéticos",
+          "subtitle": "Com acabamento glossy ou holográfico",
+          "slug": "marcadores-magneticos",
+          "image": "",
+          "imageShape": "rect",
+          "finishes": [
+            "holografica-marcador"
+          ]
+        }
+      ],
+      "finishes": [
+        {
+          "value": "holografica",
+          "title": "Laminação holográfica",
+          "subtitle": "Brilho com reflexos coloridos",
+          "extraPriceCentsPerUnit": 25
+        },
+        {
+          "value": "holografica-marcador",
+          "title": "Papel ou acabamento holográfico",
+          "subtitle": "Para marcadores",
+          "extraPriceCentsPerUnit": 15
+        },
+        {
+          "value": "dois-lados-marcador",
+          "title": "Impressão dos dois lados",
+          "subtitle": "Para marcadores",
+          "extraPriceCentsPerUnit": 15
+        },
+        {
+          "value": "buraquinho-marcador",
+          "title": "Buraquinho para pendente",
+          "subtitle": "Para pompom ou outro pendente",
+          "extraPriceCentsPerUnit": 25
+        },
+        {
+          "value": "margem-plastico-marcador",
+          "title": "Margem de plástico",
+          "subtitle": "Margem transparente à volta do marcador",
+          "extraPriceCentsPerUnit": 20
+        }
+      ]
+    },
+    {
+      "id": "custom_quantities",
+      "label": "Quantidades",
+      "title": "Quantos queres de cada um?",
+      "text": "",
+      "template": "custom-quantity-builder"
+    },
+    {
+      "id": "delivery_contact",
+      "label": "Entrega e contacto",
+      "title": "Entrega e contacto",
+      "text": "",
+      "template": "delivery-contact"
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmar",
+      "title": "Confirma o teu pedido",
+      "text": "",
+      "template": "confirm"
+    }
+  ]
+}

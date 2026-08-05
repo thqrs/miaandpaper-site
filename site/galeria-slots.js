@@ -5,7 +5,9 @@
 (function () {
   "use strict";
 
-  var IMAGE_RE = /\.(?:jpe?g|png|webp|gif|avif)$/i;
+  // Exige também um nome antes da extensão. Valores de configuração de
+  // uploads como ".jpg" e ".pdf" não são caminhos de imagens da página.
+  var IMAGE_RE = /(?:^|\/)[^\/.][^\/]*\.(?:jpe?g|png|webp|gif|avif)$/i;
 
   // Caminho relativo dentro do site. Aceita espaços (há imagens activas dos
   // cadernos com espaços no nome), mas não URLs, caminhos absolutos, query
@@ -68,6 +70,10 @@
   var PRODUCT_CODES = {
     quadros: "MOLDURA", cadernos: "CADERNO", caderninhos: "MINICADERNO",
     crachas: "CRACHA", imanes: "IMAN", lembrancas: "LEMBRANCA", pins: "PINS",
+    "cadernos-anuais": "CADERNO-ANUAL", "mini-cadernos": "MINICADERNO-LOJA",
+    agendas: "AGENDA",
+    "crachas-loja": "CRACHA-LOJA", "imanes-loja": "IMAN-LOJA",
+    stickers: "STICKER", marcadores: "MARCADOR", "marcadores-magneticos": "MARCADOR-MAGNETICO", bloquinhos: "BLOQUINHO",
     postais: "POSTAL", home: "HOMEPAGE"
   };
 
@@ -80,10 +86,19 @@
     cadernos: "CA",
     crachas: "CR",
     imanes: "IM",
+    "mini-cadernos": "ML",
+    "cadernos-anuais": "AL",
+    agendas: "AG",
+    "crachas-loja": "RL",
+    "imanes-loja": "IL",
     quadros: "MO",
     lembrancas: "LE",
     postais: "PO",
     pins: "PI",
+    stickers: "ST",
+    marcadores: "MK",
+    "marcadores-magneticos": "MG",
+    bloquinhos: "BQ",
     "congresso-2026|caderninhos": "QN",
     "congresso-2026|cadernos": "QA",
     "congresso-2026|crachas": "QR",
@@ -111,6 +126,14 @@
 
   function productCode(slug) {
     return PRODUCT_CODES[slug] || seg(slug);
+  }
+
+  // `slug` identifica a fonte concreta; `family` identifica apenas o renderer
+  // e as regras visuais partilhadas. Os catálogos novos têm slugs próprios para
+  // nunca colidirem com a cápsula do Congresso, mas um caderno anual continua
+  // a precisar dos contextos visuais especiais dos cadernos.
+  function productFamily(entry) {
+    return String(entry && entry.product && entry.product.family || entry && entry.slug || "");
   }
 
   function shortEntryCode(entry) {
@@ -144,6 +167,7 @@
     var last = t[t.length - 1];
     var i;
 
+    if (slot.interiorPreview) { return "INTERIOR-" + pad3(slot.interiorPreview.index + 1); }
     if (slot.gaveta) { return "GAVETA-" + pad3(slot.gaveta.index + 1); }
     if (slot.summaryKey) { return "ENCOMENDA-" + (ENCOMENDA_LABELS[slot.summaryKey] || seg(slot.summaryKey)); }
 
@@ -236,11 +260,18 @@
     var step = entry.product.steps && entry.product.steps[context.stepIndex];
     var item = context.itemTrail ? resolveTrail(entry.product, context.itemTrail) : null;
     var dynamicIndex = trail.indexOf("exampleByField");
+    var drawerIndex = trail.indexOf("drawers");
 
     // Vistas condicionais (gavetas das molduras, sideImage, etc.) precisam de
     // ter o item dono seleccionado para o site desenhar a imagem certa.
     if (step && step.id && item && item !== step && item.value != null) {
-      if (trail.indexOf("exampleImages") !== -1 && step.selectableExamples === true) {
+      if (drawerIndex !== -1 && step.drawers && step.drawers[Number(trail[drawerIndex + 1])]) {
+        var drawer = step.drawers[Number(trail[drawerIndex + 1])];
+        if (drawer.field) {
+          selections[String(drawer.field)] = item.value;
+          selections.order_flow = "catalog";
+        }
+      } else if (trail.indexOf("exampleImages") !== -1 && step.selectableExamples === true) {
         selections[String(step.exampleSelectionKey || "details_example")] = item.value;
       } else {
         selections[step.id] = step.selection === "multi" ? [item.value] : item.value;
@@ -367,7 +398,7 @@
     var packStep = product.steps && product.steps[packIndex];
     var expanded = [];
 
-    if (entry.slug !== "cadernos" || designsIndex < 0) { return slots; }
+    if (productFamily(entry) !== "cadernos" || designsIndex < 0) { return slots; }
 
     function summaryVariant(slot, expectedEditKey) {
       var summary = Object.assign({}, slot);
@@ -597,7 +628,8 @@
 
     function walk(node, trail) {
       if (typeof node === "string") {
-        if (isImagePath(node)) {
+        var prop = String(trail[trail.length - 1] || "");
+        if (isImagePath(node) || (node === "" && (prop === "image" || prop === "featureImage"))) {
           slots.push(makeHomeSlot(trail, node));
         }
         return;
@@ -748,7 +780,7 @@
         // e cover-personalization, por exemplo, têm items mas não usam imagens.
         var emptyImageTemplates = {
           "design-grid": true, "media-list": true, "text-grid": true,
-          "lamination-choice": true, "purchase-option": true
+          "lamination-choice": true, "purchase-option": true, "add-ons": true
         };
         var imageTrail = ["steps", index, "items", itemIndex, "image"];
         var alreadyCollected = slots.some(function (slot) {
@@ -767,6 +799,58 @@
         if (item && item.interiorFolder) { collectGaveta(step, index, item, itemIndex); }
       });
     });
+
+    // O catálogo novo dos cadernos mostra, no passo `pack`, um slideshow com
+    // as imagens globais de interior. Estes ficheiros vivem fora dos passos do
+    // JSON, por isso precisam de slots explícitos. A cápsula do Congresso não
+    // entra aqui: mantém o renderer e os contextos de galeria que já tinha.
+    if (entry.slug === "cadernos-anuais" && entry.context !== "congresso-2026") {
+      var packIndex = stepIndexById(product, "pack");
+      var packStep = product.steps && product.steps[packIndex];
+      var interiorImages = product.interiorPreview && Array.isArray(product.interiorPreview.images)
+        ? product.interiorPreview.images
+        : [];
+
+      if (packIndex >= 0 && packStep) {
+        interiorImages.forEach(function (image, imageIndex) {
+          var trail;
+          var sourceKey;
+          if (!(isImagePath(image) || image === "")) { return; }
+          trail = ["interiorPreview", "images", imageIndex];
+          sourceKey = entryKey(entry) + ":" + trail.join(".");
+          slots.push({
+            key: sourceKey,
+            sourceKey: sourceKey,
+            doneKey: entryKey(entry) + "|interiorPreview|" + imageIndex,
+            slug: entryKey(entry),
+            productSlug: entry.slug,
+            trail: trail,
+            itemTrail: null,
+            section: "Passo " + (packIndex + 1) + " — "
+              + (packStep.title || packStep.label || packStep.id || "") + " · interiores",
+            stepIndex: packIndex,
+            summaryKey: "",
+            itemLabel: "Interior " + (imageIndex + 1),
+            template: packStep.template,
+            prop: "interiorPreviewImages",
+            detail: "imagem do interior " + (imageIndex + 1),
+            adjustPrefix: null,
+            previewStepIndex: packIndex,
+            previewSelections: {},
+            renderItemTrail: null,
+            editItemTrail: null,
+            fitItemTrail: null,
+            itemId: "interior-preview-" + imageIndex,
+            ownerItemId: "interior-preview-" + imageIndex,
+            slotName: "interior-slide",
+            expectedEditKey: "",
+            slideIndex: null,
+            allowFit: false,
+            interiorPreview: { index: imageIndex }
+          });
+        });
+      }
+    }
 
     Object.keys(product.summaryPlaceholders || {}).forEach(function (key) {
       slots.push(makeSlot(entry, ["summaryPlaceholders", key], {

@@ -16,8 +16,36 @@
     return state.selections.designs ? [state.selections.designs] : [];
   }
 
+  function productFamily(product) {
+    var slug = String(product && product.slug || "");
+    var explicit = String(product && product.family || "");
+
+    if (explicit) {
+      return explicit;
+    }
+    if (slug === "crachas-loja" || slug === "crachas" || slug === "pins") {
+      return "crachas";
+    }
+    if (slug === "imanes-loja" || slug === "imanes") {
+      return "imanes";
+    }
+    if (slug === "mini-cadernos" || slug === "caderninhos") {
+      return "caderninhos";
+    }
+    if (slug === "cadernos-anuais" || slug === "cadernos") {
+      return "cadernos";
+    }
+    return slug;
+  }
+
+  function isMainCatalogProduct(product) {
+    return !!(product
+      && String(product.catalogContext || "") === "main-v2"
+      && String(product.orderFlow || "") === "catalog-or-custom");
+  }
+
   function supportsAssortedDesigns(product) {
-    return !!(product && ["crachas", "imanes", "caderninhos"].indexOf(product.slug) !== -1);
+    return !!(product && ["crachas", "imanes", "imanes-recortados", "caderninhos", "bloquinhos", "stickers", "marcadores", "marcadores-magneticos"].indexOf(productFamily(product)) !== -1);
   }
 
   function isAssortedSelected(product) {
@@ -25,7 +53,7 @@
   }
 
   function isCadernosProduct(product) {
-    return !!(product && product.slug === "cadernos");
+    return !!(product && productFamily(product) === "cadernos");
   }
 
   function isQuadrosProduct(product) {
@@ -74,6 +102,76 @@
     });
   }
 
+  // OPTION_DRAWERS_V1: opções por unidade definidas inteiramente no JSON do
+  // produto. Cada gaveta é uma escolha única e o servidor repete a mesma
+  // validação/cálculo, por isso os preços mostrados não dependem do browser.
+  function optionDrawerSteps(product) {
+    return product && Array.isArray(product.steps) ? product.steps.filter(function (step) {
+      return step && step.template === "option-drawers" && Array.isArray(step.drawers);
+    }) : [];
+  }
+
+  function optionDrawerRecords(product) {
+    var records = [];
+
+    optionDrawerSteps(product).forEach(function (step) {
+      step.drawers.forEach(function (drawer) {
+        if (drawer && drawer.field && Array.isArray(drawer.items)) {
+          records.push({ step: step, drawer: drawer });
+        }
+      });
+    });
+    return records;
+  }
+
+  function optionDrawerItem(drawer, value) {
+    return drawer && Array.isArray(drawer.items) ? drawer.items.filter(function (item) {
+      return item && String(item.value) === String(value == null ? "" : value);
+    })[0] || null : null;
+  }
+
+  function ensureOptionDrawerSelections(product) {
+    optionDrawerRecords(product).forEach(function (record) {
+      var drawer = record.drawer;
+      var field = String(drawer.field);
+      var current = state.selections[field];
+      var fallback = drawer.defaultValue != null ? String(drawer.defaultValue) : "";
+
+      if ((current == null || current === "") && fallback && optionDrawerItem(drawer, fallback)) {
+        state.selections[field] = fallback;
+      }
+    });
+  }
+
+  function selectedOptionDrawerRecords(product) {
+    ensureOptionDrawerSelections(product);
+    return optionDrawerRecords(product).map(function (record) {
+      var field = String(record.drawer.field);
+      var item = optionDrawerItem(record.drawer, state.selections[field]);
+      return item ? { step: record.step, drawer: record.drawer, item: item } : null;
+    }).filter(Boolean);
+  }
+
+  function optionDrawerExtraPerUnitCents(product) {
+    if (isMainCatalogProduct(product) && isCustomArtworkSelected(product)) {
+      return 0;
+    }
+    return selectedOptionDrawerRecords(product).reduce(function (total, record) {
+      return total + Math.max(0, parseInt(record.item.extraPriceCentsPerUnit, 10) || 0);
+    }, 0);
+  }
+
+  function optionDrawerSummaryRows(product) {
+    return selectedOptionDrawerRecords(product).map(function (record) {
+      var extra = Math.max(0, parseInt(record.item.extraPriceCentsPerUnit, 10) || 0);
+      var value = String(record.item.title || record.item.value || "");
+      if (extra) {
+        value += " (+" + formatCents(extra) + " por " + productUnitSingular(product) + ")";
+      }
+      return [String(record.drawer.label || record.drawer.title || "Opção") + ":", value];
+    });
+  }
+
   function selectedCadernosStepItem(product, stepId) {
     var step = product ? findStep(product, stepId) : null;
     var selected = step ? state.selections[step.id] : "";
@@ -88,6 +186,19 @@
   }
 
   function selectedCadernoCover(product) {
+    if (isCustomArtworkSelected(product)) {
+      var upload = customArtworkItems(product)[0] || null;
+      var isPdf = upload && (String(upload.mime || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(String(upload.name || "")));
+      return upload ? {
+        id: "custom-cover",
+        value: "custom-cover",
+        title: "Capa personalizada",
+        subtitle: isPdf ? "PDF enviado" : "Imagem enviada",
+        image: isPdf ? "" : orderUploadPreviewUrl(upload),
+        visual: "neutral",
+        imageFit: "cover"
+      } : null;
+    }
     return selectedDesignItems(product)[0] || null;
   }
 
@@ -122,6 +233,33 @@
     return state.selections.cover_personalization === "yes"
       ? Math.max(0, parseInt(step && step.extraPriceCents, 10) || 0)
       : 0;
+  }
+
+  function cadernoAddOnsStep(product) {
+    return product ? findStep(product, "add_ons") : null;
+  }
+
+  function selectedCadernoAddOns(product) {
+    var step = cadernoAddOnsStep(product);
+    var selected = step && Array.isArray(state.selections[step.id])
+      ? state.selections[step.id]
+      : [];
+
+    return step && Array.isArray(step.items) ? step.items.filter(function (item) {
+      return item && selected.indexOf(item.value) !== -1;
+    }) : [];
+  }
+
+  function cadernoAddOnsExtraCents(product) {
+    return selectedCadernoAddOns(product).reduce(function (total, item) {
+      return total + Math.max(0, parseInt(item && item.extraPriceCents, 10) || 0);
+    }, 0);
+  }
+
+  function cadernoAddOnsLabels(product) {
+    return selectedCadernoAddOns(product).map(function (item) {
+      return item.title || item.value;
+    });
   }
 
   function cadernoPersonalizationText() {
@@ -168,11 +306,17 @@
   }
 
   function cadernoOrderQuantity(product) {
+    if (isCustomArtworkSelected(product)) {
+      return customArtworkTotalQuantity(product);
+    }
     var options = cadernoOrderQuantityOptions(product);
-    var fallback = Math.max(1, parseInt(cadernoOrderQuantityConfig(product).default, 10) || options[0] || 1);
-    var selected = Math.max(1, parseInt(state.selections.caderno_order_quantity, 10) || fallback);
+    var config = cadernoOrderQuantityConfig(product);
+    var minimum = Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1);
+    var maximum = Math.max(minimum, parseInt(config.maximum, 10) || 9999);
+    var fallback = Math.max(minimum, parseInt(config.default, 10) || options[0] || minimum);
+    var selected = Math.max(minimum, Math.min(maximum, parseInt(state.selections.caderno_order_quantity, 10) || fallback));
 
-    return options.indexOf(selected) !== -1 ? selected : fallback;
+    return isMainCatalogProduct(product) ? selected : (options.indexOf(selected) !== -1 ? selected : fallback);
   }
 
   function multipliedPriceText(unitCents, quantity) {
@@ -195,9 +339,272 @@
     return step && step.freeQuantity === true ? step : null;
   }
 
+  // PRICING_MODE_BY_PRICE_KEY_V1: o modo de preço é do produto, mas cada tabela
+  // de preços pode ter o seu. Nos ímanes, os finos vendem-se ao escalão (o
+  // mínimo é 15, mas depois vale qualquer quantidade) enquanto os de 3 mm
+  // continuam a somar packs exactos. Tem de dar sempre o mesmo modo que
+  // `main_v2_effective_pricing_mode` no send-order.php.
+  function effectivePricingMode(product) {
+    var step = freeQuantityStep(product);
+    var byKey = (product && product.pricingModeByPriceKey)
+      || (step && step.pricingModeByPriceKey)
+      || null;
+    var priceKey = priceKeyForSize(product, state.selections.size);
+
+    if (byKey && priceKey && byKey[priceKey]) {
+      return String(byKey[priceKey]);
+    }
+    return String((product && product.pricingMode) || (step && step.pricingMode) || "");
+  }
+
+  // QUANTITY_PRICING_SWITCH_V1: a escolha do método altera apenas o cálculo.
+  // A grelha de packs, o slider e a quantidade continuam a usar a mesma fonte
+  // de dados e o mesmo estado, independentemente deste valor.
+  function quantityPricingSwitchConfig(product, priceKey) {
+    var step = freeQuantityStep(product);
+    var mapping = (product && product.quantityPricingSwitchByPriceKey)
+      || (step && step.quantityPricingSwitchByPriceKey)
+      || {};
+    var key = String(priceKey
+      || priceKeyForSize(product, state.selections.size)
+      || (product && product.defaultPriceKey)
+      || "");
+    var config = mapping[key];
+
+    return config && typeof config === "object" && config.quantityTiers === true
+      ? config
+      : null;
+  }
+
+  function supportsQuantityPricingSwitch(product, priceKey) {
+    return !!quantityPricingSwitchConfig(product, priceKey);
+  }
+
+  function selectedQuantityPricingMode(product, priceKey) {
+    if (!supportsQuantityPricingSwitch(product, priceKey)) {
+      return "packs";
+    }
+    if (!quantityPricingSwitchEnabled()) {
+      return "quantity_tiers";
+    }
+    return state.selections.quantity_pricing_mode === "packs"
+      ? "packs"
+      : "quantity_tiers";
+  }
+
+  function usesSelectedQuantityTierPricing(product, priceKey) {
+    return selectedQuantityPricingMode(product, priceKey) === "quantity_tiers";
+  }
+
   function usesLinearDiscountPricing(product) {
     var step = freeQuantityStep(product);
-    return !!(step && step.pricingMode === "linear-discount-interpolation");
+    return !!(step && effectivePricingMode(product) === "linear-discount-interpolation");
+  }
+
+  // TIER_UNIT_PRICING_V1: cada escalão fixa uma percentagem de desconto sobre o
+  // preço unitário do escalão mínimo. A partir do mínimo vale qualquer
+  // quantidade, e cada unidade extra é vendida com o desconto do escalão em
+  // vigor — 16 ímanes finos são 16 x o unitário do escalão de 15.
+  function usesTierUnitPricing(product) {
+    return effectivePricingMode(product) === "tier-unit";
+  }
+
+  // Preço por unidade do escalão em vigor, sem passar pelo total arredondado.
+  function tierUnitPriceCents(table, quantity) {
+    var tier = 0;
+
+    priceTiers(table).forEach(function (candidate) {
+      if (candidate <= quantity) {
+        tier = candidate;
+      }
+    });
+
+    return tier ? (Number(table[String(tier)]) || 0) / tier : 0;
+  }
+
+  function priceTiers(table) {
+    return Object.keys(table || {})
+      .map(function (key) { return parseInt(key, 10) || 0; })
+      .filter(function (quantity) { return quantity > 0 && Number(table[String(quantity)]) > 0; })
+      .sort(function (a, b) { return a - b; });
+  }
+
+  // PACK_COMBINATION_V1: sem descontos intermédios. O preço de N unidades é o da
+  // combinação de packs mais barata que dá exactamente N. Tem de dar sempre o
+  // mesmo cêntimo que `product_pack_combination_plan` no send-order.php, por
+  // isso o algoritmo e o desempate são iguais: troco por programação dinâmica.
+  // Por defeito ganha o pack mais pequeno; tabelas com `fewer-packs` usam menos
+  // packs quando o custo empata, sem alterar o comportamento dos outros produtos.
+  function usesPackCombinationPricing(product) {
+    return effectivePricingMode(product) === "pack-combination";
+  }
+
+  var packCombinationCache = {};
+
+  function packCombinationTablePacks(table) {
+    return Object.keys(table || {})
+      .map(function (key) { return { quantity: parseInt(key, 10), cents: parseInt(table[key], 10) }; })
+      .filter(function (pack) { return pack.quantity > 0 && pack.cents > 0; })
+      .sort(function (a, b) { return a.quantity - b.quantity; });
+  }
+
+  function packCombinationPrefersFewerPacks(product, priceKey) {
+    var step = freeQuantityStep(product);
+    var mapping = (product && product.combinationTieBreakByPriceKey)
+      || (step && step.combinationTieBreakByPriceKey)
+      || {};
+    var key = priceKey || priceKeyForSize(product, state.selections.size);
+
+    return String(mapping[key] || "") === "fewer-packs";
+  }
+
+  function packCombinationUsesNextPackUpgrade(product) {
+    var step = freeQuantityStep(product);
+    var mapping = (product && product.upgradeToNextPackByPriceKey)
+      || (step && step.upgradeToNextPackByPriceKey)
+      || {};
+    var key = priceKeyForSize(product, state.selections.size);
+
+    return mapping[key] === true;
+  }
+
+  // Devolve { cents, parts: [{quantity, count}] } ou null se os packs não
+  // conseguirem somar exactamente esta quantidade.
+  function packCombinationPlan(table, quantity, preferFewerPacks) {
+    var target = Math.max(0, parseInt(quantity, 10) || 0);
+    var packs = packCombinationTablePacks(table);
+    var chave;
+    var cost;
+    var packCount;
+    var pick;
+    var n;
+    var i;
+    var rest;
+    var candidate;
+    var candidateCount;
+    var parts;
+    var order;
+
+    if (!packs.length || target <= 0) {
+      return null;
+    }
+
+    chave = packs.map(function (p) { return p.quantity + ":" + p.cents; }).join(",") + "|" + target + "|" + (preferFewerPacks ? "few" : "small");
+    if (Object.prototype.hasOwnProperty.call(packCombinationCache, chave)) {
+      return packCombinationCache[chave];
+    }
+
+    cost = new Array(target + 1);
+    packCount = new Array(target + 1);
+    pick = new Array(target + 1);
+    cost[0] = 0;
+    packCount[0] = 0;
+    pick[0] = 0;
+
+    for (n = 1; n <= target; n += 1) {
+      cost[n] = null;
+      packCount[n] = null;
+      pick[n] = 0;
+      for (i = 0; i < packs.length; i += 1) {
+        if (packs[i].quantity > n) {
+          break;
+        }
+        rest = cost[n - packs[i].quantity];
+        if (rest === null) {
+          continue;
+        }
+        candidate = rest + packs[i].cents;
+        candidateCount = packCount[n - packs[i].quantity] + 1;
+        if (cost[n] === null
+          || candidate < cost[n]
+          || (preferFewerPacks && candidate === cost[n] && candidateCount < packCount[n])) {
+          cost[n] = candidate;
+          packCount[n] = candidateCount;
+          pick[n] = packs[i].quantity;
+        }
+      }
+    }
+
+    if (cost[target] === null) {
+      packCombinationCache[chave] = null;
+      return null;
+    }
+
+    parts = {};
+    n = target;
+    while (n > 0 && pick[n] > 0) {
+      parts[pick[n]] = (parts[pick[n]] || 0) + 1;
+      n -= pick[n];
+    }
+    order = Object.keys(parts).map(Number).sort(function (a, b) { return b - a; });
+
+    packCombinationCache[chave] = {
+      cents: cost[target],
+      parts: order.map(function (q) {
+        var pack = packs.filter(function (p) { return p.quantity === q; })[0];
+        return {
+          quantity: q,
+          count: parts[q],
+          unitCents: pack ? pack.cents : 0,
+          cents: pack ? pack.cents * parts[q] : 0
+        };
+      })
+    };
+    return packCombinationCache[chave];
+  }
+
+  function packCombinationCents(table, quantity, preferFewerPacks) {
+    var plan = packCombinationPlan(table, quantity, preferFewerPacks);
+    return plan ? plan.cents : 0;
+  }
+
+  // Quantidades que os packs conseguem somar. Nos crachás e mini-cadernos é
+  // tudo a partir de 1 (há preço de unidade); nos ímanes achatados, cujos packs
+  // são todos múltiplos de 15, é só 15, 30, 45...
+  function packCombinationReachable(table, quantity) {
+    return packCombinationPlan(table, quantity) !== null;
+  }
+
+  function packCombinationNextReachable(table, quantity, direction, limit) {
+    var step = direction < 0 ? -1 : 1;
+    var q = Math.max(1, parseInt(quantity, 10) || 1);
+    var ceiling = Math.max(1, parseInt(limit, 10) || 9999);
+    var guard = 0;
+
+    while (q >= 1 && q <= ceiling && guard < 10000) {
+      if (packCombinationReachable(table, q)) {
+        return q;
+      }
+      q += step;
+      guard += 1;
+    }
+    return 0;
+  }
+
+  function usesFlatUnitPricing(product) {
+    return effectivePricingMode(product) === "flat-unit";
+  }
+
+  // Packs visíveis no passo da quantidade: são os itens do passo que também
+  // têm entrada na tabela de preços ativa. Serve para decidir se vale a pena
+  // mostrar a grelha de packs num produto de preço unitário fixo — com um
+  // único pack de referência ("1+") não vale, e os produtos antigos ficam
+  // exatamente como estavam.
+  function packSelectorItemCount(product) {
+    var packStep = findStep(product, "pack");
+    var priceTable = activePriceTableForPackFilter(product);
+
+    if (!packStep || !Array.isArray(packStep.items)) {
+      return 0;
+    }
+
+    return packStep.items.filter(function (item) {
+      return !priceTable || priceTable[String(Number(item.quantity))] != null;
+    }).length;
+  }
+
+  function showsPackOptions(product) {
+    return !usesFlatUnitPricing(product) || packSelectorItemCount(product) > 1;
   }
 
   function freeQuantitySelectionMode(product) {
@@ -211,23 +618,29 @@
     return current && table && table[String(current)] != null ? "pack" : "custom";
   }
 
-  var FREE_QUANTITY_RANGE_MAXIMUM = 100;
+  // O limite de 150 é comum a todos os produtos com quantidade livre. Não deve
+  // depender de o produto usar packs combinados ou escalões por unidade.
+  var FREE_QUANTITY_RANGE_MAXIMUM = 150;
 
   function freeQuantityRangeMaximum(product) {
+    var config = quantityPricingSwitchConfig(product);
+    var configuredMaximum = Math.max(0, parseInt(config && config.sliderMaximum, 10) || 0);
+    var rangeLimit = configuredMaximum || FREE_QUANTITY_RANGE_MAXIMUM;
+
     return Math.max(
-      minimumFreeQuantity(product),
-      Math.min(maximumFreeQuantity(product), FREE_QUANTITY_RANGE_MAXIMUM)
+      effectiveMinimumFreeQuantity(product),
+      Math.min(maximumFreeQuantity(product), rangeLimit)
     );
   }
 
   function freeQuantityRangePosition(product, quantity) {
-    var minimum = minimumFreeQuantity(product);
+    var minimum = effectiveMinimumFreeQuantity(product);
     var maximum = freeQuantityRangeMaximum(product);
     return Math.max(minimum, Math.min(maximum, Math.round(Number(quantity) || minimum)));
   }
 
   function freeQuantityFromRangePosition(product, position) {
-    var minimum = minimumFreeQuantity(product);
+    var minimum = effectiveMinimumFreeQuantity(product);
     var maximum = freeQuantityRangeMaximum(product);
     return Math.max(minimum, Math.min(maximum, Math.round(Number(position) || minimum)));
   }
@@ -239,7 +652,11 @@
   }
 
   function isCustomArtworkProduct(product) {
-    return !!(product && findStep(product, "artwork_upload") && freeQuantityStep(product));
+    return !!(product && findStep(product, "artwork_upload"));
+  }
+
+  function isCustomArtworkSelected(product) {
+    return isCustomArtworkProduct(product) && String(state.selections.order_flow || "") === "custom";
   }
 
   function customArtworkConfig(product) {
@@ -254,8 +671,37 @@
       helpKey: String(upload.helpKey || "artwork_help"),
       cardField: String(field && field.name || "card_description"),
       cardPhotoKey: String(media.photos && media.photos.selectionKey || "card_reference_uploads"),
-      cardAudioKey: String(media.audio && media.audio.selectionKey || "card_audio_uploads")
+      cardAudioKey: String(media.audio && media.audio.selectionKey || "card_audio_uploads"),
+      feePerFileCents: Math.max(0, parseInt(product && product.customArtwork && product.customArtwork.feePerFileCents, 10) || parseInt(upload.feePerFileCents, 10) || 0),
+      feeTitle: String(product && product.customArtwork && (product.customArtwork.feeTitle || product.customArtwork.feeLabel) || upload.feeTitle || upload.feeLabel || "Preparação do design e testes"),
+      feeText: String(product && product.customArtwork && (product.customArtwork.feeText || product.customArtwork.feeDescription) || upload.feeText || upload.feeDescription || "Inclui a preparação do ficheiro e os testes necessários antes da produção."),
+      preserveOriginal: upload.preserveOriginal === true || !!(product && product.customArtwork && product.customArtwork.preserveOriginal === true),
+      allowPdf: upload.allowPdf === true || !!(product && product.customArtwork && Array.isArray(product.customArtwork.acceptedMimeTypes) && product.customArtwork.acceptedMimeTypes.indexOf("application/pdf") !== -1),
+      showQuantity: upload.showQuantity === true || upload.quantityPerFile === true,
+      purpose: String(upload.purpose || "custom-artwork")
     };
+  }
+
+  function customArtworkItems(product) {
+    if (!isCustomArtworkProduct(product)) {
+      return [];
+    }
+    return orderUploadItems(customArtworkConfig(product).uploadKey);
+  }
+
+  function customArtworkItemQuantity(item) {
+    return Math.max(1, Math.min(9999, parseInt(item && item.quantity, 10) || 1));
+  }
+
+  function customArtworkTotalQuantity(product) {
+    return customArtworkItems(product).reduce(function (total, item) {
+      return total + customArtworkItemQuantity(item);
+    }, 0);
+  }
+
+  function customArtworkFeeCents(product) {
+    var config = customArtworkConfig(product);
+    return isCustomArtworkSelected(product) ? config.feePerFileCents * customArtworkItems(product).length : 0;
   }
 
   function selectedSizeItem(product, size) {
@@ -279,6 +725,76 @@
   function maximumFreeQuantity(product) {
     var step = freeQuantityStep(product);
     return Math.max(minimumFreeQuantity(product), parseInt(step && step.maxQuantity, 10) || 9999);
+  }
+
+  function effectiveMinimumFreeQuantity(product) {
+    var minimum = minimumFreeQuantity(product);
+    var table;
+    var alcancavel;
+
+    if (isMainCatalogProduct(product)
+        && !isCustomArtworkSelected(product)
+        && !isAssortedSelected(product)) {
+      minimum = Math.max(minimum, selectedDesignItems(product).length);
+    }
+
+    // No modo escalão não há quantidades proibidas acima do mínimo, mas abaixo
+    // do primeiro escalão não há preço: os finos começam nos 15.
+    if (usesTierUnitPricing(product)) {
+      var tiers = priceTiers(activePriceTableForPackFilter(product));
+      return tiers.length ? Math.max(minimum, tiers[0]) : minimum;
+    }
+
+    // Com packs combinados o mínimo tem de ser uma quantidade que os packs
+    // consigam somar: nos ímanes achatados o primeiro é 15, não 1.
+    table = packCombinationTableFor(product);
+    if (table) {
+      alcancavel = packCombinationNextReachable(table, minimum, 1, maximumFreeQuantity(product));
+      if (alcancavel) {
+        minimum = alcancavel;
+      }
+    }
+    return minimum;
+  }
+
+  function packCombinationTableFor(product) {
+    if (!usesPackCombinationPricing(product)) {
+      return null;
+    }
+    var table = activePriceTableForPackFilter(product);
+    return table && Object.keys(table).length ? table : null;
+  }
+
+  // Encosta uma quantidade à quantidade alcançável mais próxima, preferindo a
+  // direcção em que o utilizador estava a andar.
+  function snapQuantityToPacks(product, quantity, direction) {
+    var table = packCombinationTableFor(product);
+    var minimum = effectiveMinimumFreeQuantity(product);
+    var maximum = freeQuantityRangeMaximum(product);
+    var pedido = Math.max(minimum, Math.min(maximum, Math.round(Number(quantity) || minimum)));
+    var acima;
+    var abaixo;
+
+    if (!table || packCombinationReachable(table, pedido)) {
+      return pedido;
+    }
+
+    acima = packCombinationNextReachable(table, pedido, 1, maximum);
+    abaixo = packCombinationNextReachable(table, pedido, -1, maximum);
+    if (abaixo && abaixo < minimum) {
+      abaixo = 0;
+    }
+
+    if (direction < 0) {
+      return abaixo || acima || pedido;
+    }
+    if (direction > 0) {
+      return acima || abaixo || pedido;
+    }
+    if (acima && abaixo) {
+      return (pedido - abaixo) <= (acima - pedido) ? abaixo : acima;
+    }
+    return acima || abaixo || pedido;
   }
 
   function tierPriceCents(priceTable, quantity) {
@@ -401,6 +917,14 @@
       return [];
     }
 
+    // Nos fluxos de quantidade livre, os itens do JSON servem apenas de
+    // referência visual/preço-base. A quantidade efetiva pode ser qualquer
+    // inteiro válido e, ao escolher vários designs, começa em uma unidade por
+    // design. Não escondas por isso a referência "1+".
+    if (packStep.freeQuantity === true) {
+      return packStep.items || [];
+    }
+
     return (packStep.items || []).filter(function (item) {
       var quantity = Number(item.quantity);
       if (quantity < selectedCount) {
@@ -413,8 +937,11 @@
 
   function getPackQuantity(product) {
     var pack = Number(state.selections.pack_quantity || 0);
+    if (isCustomArtworkSelected(product) && !isCadernosProduct(product)) {
+      return customArtworkTotalQuantity(product);
+    }
     if (freeQuantityStep(product)) {
-      return Number.isInteger(pack) && pack >= minimumFreeQuantity(product) && pack <= maximumFreeQuantity(product)
+      return Number.isInteger(pack) && pack >= effectiveMinimumFreeQuantity(product) && pack <= maximumFreeQuantity(product)
         ? pack
         : 0;
     }
@@ -549,6 +1076,17 @@
     var existing;
     var total;
 
+    if (isCustomArtworkSelected(product)) {
+      if (!isCadernosProduct(product)) {
+        state.selections.pack_quantity = customArtworkTotalQuantity(product);
+      }
+      state.selections.design_quantities = {};
+      state.quantitySignature = "__custom_artwork__";
+      state.quantitiesTouched = false;
+      state.quantityPackBaseline = customArtworkTotalQuantity(product);
+      return;
+    }
+
     if (!findStep(product, "pack")) {
       state.selections.design_quantities = {};
       state.quantitySignature = selectedItemsSignature(items);
@@ -569,11 +1107,17 @@
     }
 
     if (isAssortedSelected(product)) {
-      if (!current || allowedQuantities.indexOf(current) === -1) {
-        current = allowed[0] ? Number(allowed[0].quantity) : 0;
-        if (current) {
-          state.selections.pack_quantity = current;
+      if (freeQuantityStep(product)) {
+        if (!Number.isInteger(current)
+            || current < effectiveMinimumFreeQuantity(product)
+            || current > maximumFreeQuantity(product)) {
+          current = effectiveMinimumFreeQuantity(product);
         }
+      } else if (!current || allowedQuantities.indexOf(current) === -1) {
+        current = allowed[0] ? Number(allowed[0].quantity) : 0;
+      }
+      if (current) {
+        state.selections.pack_quantity = current;
       }
       state.selections.design_quantities = {};
       state.quantitySignature = "__assorted__";
@@ -591,8 +1135,17 @@
       return;
     }
 
-    if (!current || allowedQuantities.indexOf(current) === -1) {
-      current = Number(allowed[0].quantity);
+    if (freeQuantityStep(product)) {
+      var minimumForSelectedDesigns = effectiveMinimumFreeQuantity(product);
+      var maximumForSelectedDesigns = maximumFreeQuantity(product);
+      if (!Number.isInteger(current)
+          || current < minimumForSelectedDesigns
+          || current > maximumForSelectedDesigns) {
+        current = Math.min(maximumForSelectedDesigns, minimumForSelectedDesigns);
+        state.selections.pack_quantity = current;
+      }
+    } else if (!current || allowedQuantities.indexOf(current) === -1) {
+      current = allowed[0] ? Number(allowed[0].quantity) : 0;
       state.selections.pack_quantity = current;
     }
 
@@ -699,7 +1252,10 @@
   // designs escalam proporcionalmente em vez de fazer reset.
   function siteSettings() {
     if (!state.pricing) {
-      return { smartQuantities: true };
+      return {
+        smartQuantities: true,
+        quantityPricingSwitchVisible: true
+      };
     }
     if (!state.pricing.settings) {
       state.pricing.settings = {};
@@ -707,11 +1263,18 @@
     if (state.pricing.settings.smartQuantities === undefined) {
       state.pricing.settings.smartQuantities = true;
     }
+    if (state.pricing.settings.quantityPricingSwitchVisible === undefined) {
+      state.pricing.settings.quantityPricingSwitchVisible = true;
+    }
     return state.pricing.settings;
   }
 
   function smartQuantitiesEnabled() {
     return siteSettings().smartQuantities !== false;
+  }
+
+  function quantityPricingSwitchEnabled() {
+    return siteSettings().quantityPricingSwitchVisible !== false;
   }
 
   function applyPricingToProduct(product, pricing) {
@@ -748,6 +1311,12 @@
     var record;
 
     if (!product || !product.slug) {
+      return;
+    }
+
+    // O construtor nao tem tabela de precos propria: escreve-la aqui poluiria
+    // o content/pricing.json com um produto que nao existe.
+    if (isArtworkBuilderProduct(product)) {
       return;
     }
 
@@ -836,11 +1405,11 @@
   }
 
   function productUnit(product) {
-    return product.unitLabel || ((product.slug === "crachas" || product.slug === "pins") ? "crachás" : "unidades");
+    return product.unitLabel || (productFamily(product) === "crachas" ? "crachás" : "unidades");
   }
 
   function productUnitSingular(product) {
-    return product.unitSingular || ((product.slug === "crachas" || product.slug === "pins") ? "crachá" : "unidade");
+    return product.unitSingular || (productFamily(product) === "crachas" ? "crachá" : "unidade");
   }
 
   function productQuantityLabel(product, quantity) {
@@ -848,7 +1417,7 @@
   }
 
   function productUnitShort(product) {
-    return product.unitShort || ((product.slug === "crachas" || product.slug === "pins") ? "crachá" : "unid.");
+    return product.unitShort || (productFamily(product) === "crachas" ? "crachá" : "unid.");
   }
 
   function formatUnitPrice(cents, quantity, unit) {
@@ -930,30 +1499,56 @@
     var table = product.prices && product.prices[priceKey] ? product.prices[priceKey] : null;
     var cents = table && packQuantity
       ? (freeQuantityStep(product)
-        ? (usesLinearDiscountPricing(product)
-          ? linearDiscountPriceCents(table, packQuantity)
-          : tierPriceCents(table, packQuantity))
+        ? (usesSelectedQuantityTierPricing(product, priceKey)
+          ? tierPriceCents(table, packQuantity)
+          : (usesPackCombinationPricing(product)
+          ? packCombinationCents(table, packQuantity, packCombinationPrefersFewerPacks(product, priceKey))
+          : (usesFlatUnitPricing(product)
+            ? Math.round(baselineUnitCents(table) * packQuantity)
+            : (usesLinearDiscountPricing(product)
+              ? linearDiscountPriceCents(table, packQuantity)
+              : tierPriceCents(table, packQuantity)))))
         : Number(table[String(packQuantity)]))
       : 0;
     var unitCents = baselineUnitCents(table);
     var discount = 0;
+    var tierUnitCents = 0;
 
     if (unitCents && cents && packQuantity && cents < unitCents * packQuantity) {
-      discount = Math.round((1 - (cents / (unitCents * packQuantity))) * 100);
+      // No modo escalão o desconto é o do escalão, e é constante dentro dele.
+      // Tirá-lo do total arredondado fazia a percentagem saltar entre 7% e 8%
+      // de quantidade para quantidade, quando o desconto real não muda.
+      tierUnitCents = (usesTierUnitPricing(product) || usesSelectedQuantityTierPricing(product, priceKey))
+        ? tierUnitPriceCents(table, packQuantity)
+        : 0;
+      discount = tierUnitCents
+        ? Math.round((1 - (tierUnitCents / unitCents)) * 100)
+        : Math.round((1 - (cents / (unitCents * packQuantity))) * 100);
     }
+
+    var basePriceCents = cents;
+    var optionExtraPerUnitCents = optionDrawerExtraPerUnitCents(product);
+    var optionExtraCents = optionExtraPerUnitCents * packQuantity;
+    var productPriceCents = basePriceCents + optionExtraCents;
+    var artworkFeeCents = customArtworkFeeCents(product);
+    cents = productPriceCents + artworkFeeCents;
 
     return {
       size: size,
       quantity: packQuantity,
       cents: cents,
+      baseCents: Math.max(0, basePriceCents),
+      optionExtraPerUnitCents: optionExtraPerUnitCents,
+      optionExtraCents: optionExtraCents,
+      customizationFeeCents: artworkFeeCents,
       total: cents ? formatCents(cents) : "",
-      perPin: cents ? formatUnitPrice(cents, packQuantity, productUnitShort(product)) : "",
+      perPin: productPriceCents ? formatUnitPrice(productPriceCents, packQuantity, productUnitShort(product)) : "",
       discount: discount
     };
   }
 
   function priceDisplayName(product, size) {
-    if (product && (product.slug === "crachas" || product.slug === "pins")) {
+    if (product && productFamily(product) === "crachas") {
       if (size === "25 mm") {
         return "Crachás Pequenos";
       }
@@ -963,7 +1558,7 @@
       }
     }
 
-    if (product && product.slug === "imanes") {
+    if (product && productFamily(product) === "imanes") {
       if (size === "Achatados") {
         return "Ímanes finos";
       }
@@ -979,10 +1574,12 @@
   function cadernoPriceInfo(product) {
     var option = selectedCadernoPurchaseOption(product);
     var baseCents = cadernoPurchasePriceCents(product, option);
-    var extraCents = cadernoPersonalizationExtraCents(product);
+    var personalizationCents = cadernoPersonalizationExtraCents(product);
+    var addOnsCents = cadernoAddOnsExtraCents(product);
     var orderQuantity = cadernoOrderQuantity(product);
-    var unitCents = baseCents + extraCents;
-    var totalCents = unitCents * orderQuantity;
+    var unitCents = baseCents + personalizationCents + addOnsCents;
+    var customizationFeeCents = customArtworkFeeCents(product);
+    var totalCents = unitCents * orderQuantity + customizationFeeCents;
 
     return {
       size: option ? option.title : "",
@@ -990,13 +1587,18 @@
       orderQuantity: option ? orderQuantity : 0,
       cents: totalCents,
       baseCents: baseCents,
-      personalizationCents: extraCents,
+      personalizationCents: personalizationCents,
+      addOnsCents: addOnsCents,
+      customizationFeeCents: customizationFeeCents,
       unitCents: unitCents,
       total: totalCents ? formatCents(totalCents) : "",
       baseTotal: baseCents ? formatCents(baseCents) : "",
       baseSubtotal: baseCents ? multipliedPriceText(baseCents, orderQuantity) : "",
-      personalizationTotal: extraCents ? formatCents(extraCents) : "",
-      personalizationSubtotal: extraCents ? multipliedPriceText(extraCents, orderQuantity) : "",
+      personalizationTotal: personalizationCents ? formatCents(personalizationCents) : "",
+      personalizationSubtotal: personalizationCents ? multipliedPriceText(personalizationCents, orderQuantity) : "",
+      addOnsTotal: addOnsCents ? formatCents(addOnsCents) : "",
+      addOnsSubtotal: addOnsCents ? multipliedPriceText(addOnsCents, orderQuantity) : "",
+      productSubtotal: unitCents ? multipliedPriceText(unitCents, orderQuantity) : "",
       unitTotal: unitCents ? formatCents(unitCents) : "",
       perPin: "",
       discount: 0
@@ -1004,15 +1606,25 @@
   }
 
   function cadernoPriceEquation(info) {
+    var parts;
+
     if (!info || !info.baseTotal) {
       return "";
     }
 
-    if (info.personalizationTotal) {
-      return "Preço base: " + info.baseTotal + " + Personalização: " + info.personalizationTotal + " = " + info.unitTotal;
+    if (info.customizationFeeCents) {
+      return "Produtos: " + (info.productSubtotal || info.baseSubtotal || info.baseTotal) + " + Preparação dos designs: " + formatCents(info.customizationFeeCents) + " = " + info.total;
     }
 
-    return "Preço base: " + info.baseTotal;
+    parts = ["Preço base: " + info.baseTotal];
+    if (info.addOnsTotal) {
+      parts.push("Add-ons: " + info.addOnsTotal);
+    }
+    if (info.personalizationTotal) {
+      parts.push("Personalização: " + info.personalizationTotal);
+    }
+
+    return parts.join(" + ") + (parts.length > 1 ? " = " + info.unitTotal : "");
   }
 
   function selectedQuadroPackaging(product) {

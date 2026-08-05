@@ -12,6 +12,10 @@
   var ADMIN_API = "admin-api.php";
   var COLORS_API = "colors-api.php";
   var ORDER_UPLOAD_API = "upload-order-photo.php";
+  // Igual a ORDER_MEDIA_*_MAX_BYTES no upload-order-photo.php. Aqui serve só
+  // para não gastar a ligação de alguém a subir 200 MB que vão ser recusados no
+  // fim; quem manda continua a ser o servidor.
+  var ORDER_UPLOAD_MAX_BYTES = 40 * 1024 * 1024;
   var ORDER_MEDIA_PREVIEW_API = "order-media-preview.php";
   var CART_KEY = "miaandpaper_cart_v1";
   var CART_SCHEMA_VERSION = 1;
@@ -54,6 +58,7 @@
   var orderAudioContext = null;
   var orderUploadOperations = [];
   var orderUploadNextOperationId = 1;
+  var orderUploadRejectionLog = [];
   var orderFilePickerRevision = 0;
   var orderActiveFilePicker = null;
   var freeQuantityChartCleanup = function () {};
@@ -182,6 +187,14 @@
     selections: {},
     errors: "",
     invalidFields: [],
+    // Gavetas abertas no passo dos produtos da personalizacao: chave
+    // designToken::grupo. E estado de interface, por isso vive fora das
+    // selections (nao vai para o carrinho nem para o pedido).
+    builderOpenGroups: {},
+    // Gavetas de opções extra dos produtos. Tal como builderOpenGroups, é
+    // apenas estado de interface e nunca segue no pedido.
+    optionDrawerOpen: {},
+    builderRemovePendingId: "",
     quantitySignature: "",
     quantitiesTouched: false,
     quantityPackBaseline: 0,
@@ -238,6 +251,8 @@
   var ICON_INSTAGRAM = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="1.9"></rect><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle><circle cx="17.4" cy="6.6" r="1.2" fill="currentColor"></circle></svg>';
   var ICON_MAIL = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2.5" ry="2.5" fill="none" stroke="currentColor" stroke-width="1.9"></rect><path d="M4.5 7l7.5 6 7.5-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
   var ICON_CART = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 5.5h2.4l2 9.2a2 2 0 0 0 2 1.6h6.6a2 2 0 0 0 1.9-1.4l1.3-5.2H8.1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="10.8" cy="20" r="1.2" fill="currentColor"></circle><circle cx="17.6" cy="20" r="1.2" fill="currentColor"></circle></svg>';
+  var ICON_BACK = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5m0 0 5.5-5.5M5 12l5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+  var ICON_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12.5 4.3 4.3L19 7" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
   var ICON_MENU = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>';
   var ICON_CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>';
   var ICON_ZOOM = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="5.7" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M15 15l4.6 4.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>';
@@ -260,7 +275,10 @@
     "lamination-choice": "Laminação",
     "purchase-option": "Opções de compra",
     "cover-personalization": "Personalização da capa",
+    "option-drawers": "Gavetas de opções extra",
     "details-form": "Formulário",
+    "custom-product-builder": "Personalização: produtos",
+    "custom-quantity-builder": "Personalização: quantidades",
     "confirm": "Confirmação"
   };
 
@@ -268,6 +286,11 @@
   var wizardHistoryEntries = [];
   var wizardHistoryIndex = -1;
   var wizardHistoryNextId = 1;
+  // STEP_JUMP_CONFIRM_V1: passo pedido por um salto entregue ao histórico do
+  // browser. `history.go()` é assíncrono e pode não ir a lado nenhum quando a
+  // entrada já foi truncada, por isso guardamos o pedido e confirmamos.
+  var wizardPendingJumpStep = null;
+  var wizardPendingJumpTimer = null;
 
   function escapeHtml(value) {
     return String(value == null ? "" : value)

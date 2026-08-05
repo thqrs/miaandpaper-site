@@ -40,13 +40,13 @@
     if (!product || !step || step.id !== "designs") {
       return null;
     }
-    if (product.slug === "crachas") {
+    if (productFamily(product) === "crachas") {
       return { mode: "visible", defaults: CRACHAS_DEFAULT_SECTIONS };
     }
-    if (product.slug === "imanes") {
+    if (productFamily(product) === "imanes") {
       return { mode: "visible", defaults: IMANES_DEFAULT_SECTIONS };
     }
-    if (product.slug === "cadernos" || product.slug === "caderninhos") {
+    if (productFamily(product) === "cadernos" || productFamily(product) === "caderninhos") {
       return { mode: "mixed", defaults: CADERNOS_DEFAULT_SECTIONS };
     }
     if (product.slug === "lembrancas") {
@@ -171,6 +171,32 @@
     return byId;
   }
 
+  // PERSONALIZACAO_PROMO_V1: convite discreto ao flow de artwork proprio, no
+  // topo do passo dos designs. Vive no bloco `customPromo` do passo `designs`
+  // de cada produto: apagar o bloco tira o convite desse produto, e
+  // `"customPromoEnabled": false` no content/order-products.json tira-o de
+  // todos. Nao ha nada codificado por slug.
+  function renderCustomPromo(product, step) {
+    var promo = step && step.customPromo ? step.customPromo : null;
+
+    if (!promo || promo.enabled === false || state.customPromoEnabled === false) {
+      return "";
+    }
+
+    return [
+      '<a class="custom-promo" href="' + escapeHtml(promo.href || "personalizacao.html") + '" data-track="true" data-track-action="custom_promo_click" data-track-id="' + escapeHtml((product && product.slug) || "") + '">',
+      promo.image
+        ? '<span class="custom-promo-media" style="background-image:url(&quot;' + escapeHtml(promo.image) + '&quot;)" aria-hidden="true"></span>'
+        : '<span class="custom-promo-media is-icon" aria-hidden="true">' + ICON_UPLOAD + '</span>',
+      '<span class="custom-promo-copy">',
+      '<strong>' + escapeHtml(promo.title || "Queres um com uma imagem tua?") + '</strong>',
+      promo.text ? '<span>' + escapeHtml(promo.text) + '</span>' : "",
+      '</span>',
+      '<span class="custom-promo-action">' + escapeHtml(promo.actionLabel || "Personalizar") + ' <b aria-hidden="true">→</b></span>',
+      '</a>'
+    ].join("");
+  }
+
   function renderDesignActionControls(product, step) {
     var supported = supportsAssortedDesigns(product) && step && step.id === "designs" && step.selection === "multi";
     var items = step && Array.isArray(step.items) ? step.items : [];
@@ -179,11 +205,31 @@
     var assorted = isAssortedSelected(product);
     var selectAllLabel = !assorted && allSelected ? "Limpar Seleção" : "Selecionar tudo";
 
+    var uploadChoice = "";
+    // PERSONALIZACAO_BUILDER_V1: os wizards do catalogo deixaram de aceitar
+    // artwork proprio — quem traz o seu ficheiro vai por personalizacao.html.
+    // O cartao so aparece a quem ainda declara customUploadOption no JSON do
+    // passo, que hoje e apenas a capsula do Congresso 2026.
+    var uploadOption = step && step.customUploadOption ? step.customUploadOption : null;
+
+    if (uploadOption && isMainCatalogProduct(product) && step && step.id === "designs" && !state.admin) {
+      uploadChoice = [
+        '<button class="choice-card design-upload-choice' + (isCustomArtworkSelected(product) ? ' is-selected' : '') + '" type="button" data-custom-design-upload data-track="true" data-track-action="select_design_source" data-track-id="custom">',
+        '<span class="design-upload-choice-icon" aria-hidden="true">' + ICON_UPLOAD + '</span>',
+        '<span class="choice-copy">',
+        '<strong>' + escapeHtml(uploadOption.title || "Carregar o meu design") + '</strong>',
+        uploadOption.text ? '<span>' + escapeHtml(uploadOption.text) + '</span>' : '',
+        '</span>',
+        '</button>'
+      ].join("");
+    }
+
     if (!supported || state.admin) {
-      return "";
+      return uploadChoice + renderCustomPromo(product, step);
     }
 
     return [
+      uploadChoice,
       '<div class="design-action-grid" aria-label="Ações rápidas de seleção">',
       '<button class="choice-card design-action-card' + (!assorted && allSelected ? ' is-selected' : '') + '" type="button" data-select-all-designs data-track="true" data-track-action="select_all_designs" data-track-id="select_all_designs">',
       '<span class="design-action-icon" aria-hidden="true">✓</span>',
@@ -198,7 +244,8 @@
       '</span>',
       '</button>',
       '</div>',
-      assorted ? '<p class="open-order-hint design-action-message" role="status">Podes passar para o próximo passo. Nota: se escolheres algum design, a opção "Sortido" vai ser automaticamente desmarcada.</p>' : ""
+      assorted ? '<p class="open-order-hint design-action-message" role="status">Podes passar para o próximo passo. Nota: se escolheres algum design, a opção "Sortido" vai ser automaticamente desmarcada.</p>' : "",
+      renderCustomPromo(product, step)
     ].join("");
   }
 

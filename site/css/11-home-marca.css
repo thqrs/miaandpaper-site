@@ -292,6 +292,9 @@ html[data-theme="dark"] .quantity-adjust-hint {
 .choice-card.text-grid:has(input:checked)::after,
 .choice-card.price-pack-grid:has(input:checked)::after,
 .choice-card.size-choice:has(input:checked)::after,
+.builder-variant:has(input:checked)::after,
+.builder-option-choice:has(input:checked)::after,
+.builder-finish-choice:has(input:checked)::after,
 .design-action-card.is-selected::after,
 .pack-option.is-selected::after {
   box-shadow: none;
@@ -585,8 +588,7 @@ body.is-site-menu-open {
   border-bottom: 1px solid var(--line);
 }
 
-.site-menu-head p,
-.site-menu-nav > p {
+.site-menu-head p {
   margin: 0 0 5px;
   color: var(--moss);
   font-size: 0.72rem;
@@ -621,14 +623,81 @@ body.is-site-menu-open {
 
 .site-menu-nav {
   display: grid;
-  margin-top: 28px;
+  margin-top: 20px;
 }
 
-.site-menu-home-link {
-  width: max-content;
-  margin-bottom: 28px;
-  color: var(--moss);
-  font-weight: 850;
+.site-menu-home-link,
+.site-menu-group-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 54px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.16rem;
+  font-weight: 750;
+}
+
+.site-menu-entry-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.site-menu-icon {
+  display: grid;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.site-menu-icon img {
+  display: block;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.site-menu-icon--group {
+  background: color-mix(in srgb, var(--card) 88%, var(--gold));
+}
+
+.site-menu-group-summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.site-menu-group-summary::-webkit-details-marker {
+  display: none;
+}
+
+.site-menu-group-chevron {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  margin-right: 12px;
+  border-right: 2px solid var(--gold);
+  border-bottom: 2px solid var(--gold);
+  transform: rotate(-45deg);
+  transition: transform 160ms ease;
+}
+
+.site-menu-group[open] .site-menu-group-chevron {
+  transform: rotate(45deg);
+}
+
+.site-menu-group-links {
+  display: grid;
+  padding: 6px 0 12px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-stone);
 }
 
 .site-menu-category-link {
@@ -636,14 +705,41 @@ body.is-site-menu-open {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: 52px;
+  min-height: 44px;
+  padding: 0 14px 0 8px;
   border-bottom: 1px solid var(--line);
   color: var(--ink);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.22rem;
+  font-size: 0.94rem;
+  font-weight: 750;
+}
+
+.site-menu-category-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.site-menu-category-link .site-menu-icon {
+  flex-basis: 26px;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  background: transparent;
+}
+
+.site-menu-category-link .site-menu-icon img {
+  width: 25px;
+  height: 25px;
+}
+
+.site-menu-category-link:last-child {
+  border-bottom: 0;
 }
 
 .site-menu-category-link b {
+  flex: 0 0 auto;
+  margin-left: auto;
   color: var(--gold);
   font-family: Arial, sans-serif;
   font-size: 1rem;
@@ -651,6 +747,8 @@ body.is-site-menu-open {
 
 .site-menu-category-link:hover,
 .site-menu-category-link:focus-visible,
+.site-menu-group-summary:hover,
+.site-menu-group-summary:focus-visible,
 .site-menu-home-link:hover,
 .site-menu-home-link:focus-visible,
 .site-menu-secondary a:hover,
@@ -660,12 +758,20 @@ body.is-site-menu-open {
 
 .site-menu-secondary {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   margin-top: auto;
   padding-top: 32px;
   color: var(--moss);
   font-size: 0.9rem;
   font-weight: 750;
+}
+
+.site-menu-secondary a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  width: max-content;
 }
 
 .home-shell--brand {
@@ -1156,6 +1262,18 @@ html[data-theme="dark"] .home-products-section {
 
   .home-brand-hero__actions {
     margin-top: 22px;
+  }
+
+  .home-brand-hero__copy > .home-hero-carousel__dots {
+    position: static;
+    width: max-content;
+    max-width: 100%;
+    margin: 12px auto 0;
+    transform: none;
+  }
+
+  .home-brand-hero__copy > .home-brand-hero__actions + .home-hero-carousel__dots {
+    margin-top: 12px;
   }
 
   .home-hero-action {

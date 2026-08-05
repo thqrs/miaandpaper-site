@@ -707,12 +707,36 @@
       });
       input.addEventListener("change", function () {
         var picker = orderActiveFilePicker;
-        var files = Array.prototype.slice.call(input.files || []).filter(function (file) {
+        var escolhidos = Array.prototype.slice.call(input.files || []);
+        var files = escolhidos.filter(function (file) {
           return file && Number(file.size) > 0;
         });
         var revision;
 
+        // Um ficheiro que chega com 0 bytes (placeholder do iCloud/OneDrive por
+        // descarregar, permissão negada) era descartado aqui sem sinal nenhum:
+        // a pessoa escolhia a foto e não acontecia nada.
+        if (files.length < escolhidos.length) {
+          logOrderUploadRejection("ficheiro_vazio_no_picker", {
+            fase: "picker",
+            chave: input.dataset.orderUploadKey || "",
+            passo: step && step.id ? step.id : "",
+            ficheiros: escolhidos.filter(function (file) {
+              return !file || !(Number(file.size) > 0);
+            }).map(orderUploadFileInfo)
+          });
+        }
+
         if (!picker || picker.input !== input) {
+          logOrderUploadRejection("sessao_do_picker_perdida", {
+            fase: "picker",
+            chave: input.dataset.orderUploadKey || "",
+            passo: step && step.id ? step.id : "",
+            diagnostico: picker
+              ? "O change chegou de um input diferente do que abriu o picker."
+              : "Não havia sessão de picker aberta quando o change chegou.",
+            ficheiros: escolhidos.map(orderUploadFileInfo)
+          });
           input.value = "";
           return;
         }
@@ -729,6 +753,19 @@
             !activeStep ||
             activeStep.id !== step.id
           ) {
+            // Guarda contra escolhas de um passo que já não é o actual. Quando
+            // dispara sem o passo ter mudado é bug nosso, e sem registo não há
+            // maneira de saber que aconteceu.
+            logOrderUploadRejection("escolha_descartada", {
+              fase: "picker",
+              chave: input.dataset.orderUploadKey || "",
+              passo: step && step.id ? step.id : "",
+              passoActual: activeStep && activeStep.id ? activeStep.id : "(nenhum)",
+              revisaoEsperada: revision,
+              revisaoActual: orderFilePickerRevision,
+              inputNoDom: document.documentElement.contains(input),
+              ficheiros: files.map(orderUploadFileInfo)
+            });
             return;
           }
 
@@ -745,6 +782,47 @@
         var key = button.dataset.orderUploadKey || "quadro_uploads";
         var token = button.dataset.orderUploadRemove;
         removeOrderMediaUpload(product, key, token);
+      });
+    });
+
+    document.querySelectorAll("[data-artwork-upload-quantity]").forEach(function (input) {
+      function syncArtworkQuantity(commit) {
+        var key = input.dataset.orderUploadKey || customArtworkConfig(product).uploadKey;
+        var token = input.dataset.orderUploadToken || "";
+        var parsed = parseInt(input.value, 10);
+        var quantity;
+        var item = orderUploadItems(key).filter(function (candidate) {
+          return String(candidate.token || "") === token;
+        })[0] || null;
+        if (!item || (!commit && (!isFinite(parsed) || parsed < 1))) {
+          return;
+        }
+        quantity = Math.max(1, Math.min(9999, parsed || 1));
+        item.quantity = quantity;
+        if (commit) {
+          input.value = quantity;
+        }
+        if (!isCadernosProduct(product)) {
+          state.selections.pack_quantity = customArtworkTotalQuantity(product);
+        }
+        state.errors = "";
+        if (commit) {
+          try {
+            trackProductEvent(product, "artwork_quantity_changed", {
+              quantity: quantity,
+              artwork_count: customArtworkItems(product).length,
+              artwork_total_quantity: customArtworkTotalQuantity(product)
+            });
+          } catch (e) {}
+          rerenderProduct(product);
+        }
+      }
+
+      input.addEventListener("input", function () {
+        syncArtworkQuantity(false);
+      });
+      input.addEventListener("change", function () {
+        syncArtworkQuantity(true);
       });
     });
 
@@ -778,6 +856,20 @@
       });
     });
 
+    document.querySelectorAll("[data-custom-design-upload]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.selections.order_flow = "custom";
+        state.selections.design_source = "custom";
+        state.selections.designs = [];
+        state.selections.assorted_designs = "";
+        state.selections.congregation_gift = false;
+        resetQuantityState();
+        state.errors = "";
+        try { trackOptionSelected(product, "design_source", "custom", "Carregar o meu design"); } catch (e) {}
+        goNext(product);
+      });
+    });
+
     document.querySelectorAll("[data-select-all-designs]").forEach(function (button) {
       button.addEventListener("click", function () {
         var designStep = findStep(product, "designs");
@@ -786,6 +878,8 @@
         var allSelected = allValues.length > 0 && currentValues.length === allValues.length;
 
         state.selections.assorted_designs = "";
+        state.selections.order_flow = "catalog";
+        state.selections.design_source = "catalog";
         state.selections.designs = allSelected ? [] : allValues;
         if (!allSelected) {
           state.selections.congregation_gift = false;
@@ -804,6 +898,8 @@
 
         state.selections.assorted_designs = active ? "" : "1";
         if (!active) {
+          state.selections.order_flow = "catalog";
+          state.selections.design_source = "catalog";
           state.selections.designs = [];
           state.selections.congregation_gift = false;
         }
@@ -811,6 +907,28 @@
         // SEMANTIC_EVENTS_V1
         try { trackOptionSelected(product, 'assorted', active ? 'off' : 'on', ''); } catch (e) {}
         state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-option-drawer]").forEach(function (drawer) {
+      drawer.addEventListener("toggle", function () {
+        if (!state.optionDrawerOpen || typeof state.optionDrawerOpen !== "object") {
+          state.optionDrawerOpen = {};
+        }
+        state.optionDrawerOpen[drawer.dataset.optionDrawer] = drawer.open;
+      });
+    });
+
+    document.querySelectorAll("[data-option-drawer-choice]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        var field = String(input.dataset.optionDrawerField || "");
+        if (!field || !input.checked) {
+          return;
+        }
+        state.selections[field] = input.value;
+        state.errors = "";
+        try { trackOptionSelected(product, field, input.value, input.closest("label").textContent || ""); } catch (e) {}
         rerenderProduct(product);
       });
     });
@@ -844,6 +962,10 @@
         } catch (e) {}
 
         setSelection(step, input);
+        if (step && step.id === "designs" && input.checked) {
+          state.selections.order_flow = "catalog";
+          state.selections.design_source = "catalog";
+        }
         if (step && step.id === "cover_personalization" && input.value === "no") {
           state.selections.cover_personalization_text = "";
         }
@@ -917,13 +1039,55 @@
       });
     });
 
+    document.querySelectorAll("[data-caderno-order-quantity-change]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var config = cadernoOrderQuantityConfig(product);
+        var minimum = Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1);
+        var maximum = Math.max(minimum, parseInt(config.maximum, 10) || 9999);
+        var change = parseInt(button.dataset.cadernoOrderQuantityChange, 10) || 0;
+        var quantity = Math.max(minimum, Math.min(maximum, cadernoOrderQuantity(product) + change));
+        state.selections.caderno_order_quantity = quantity;
+        try { trackOptionSelected(product, "caderno_qty", quantity, ""); } catch (e) {}
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-caderno-order-quantity-input]").forEach(function (input) {
+      function syncCadernoOrderQuantity(commit) {
+        var config = cadernoOrderQuantityConfig(product);
+        var minimum = Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1);
+        var maximum = Math.max(minimum, parseInt(config.maximum, 10) || 9999);
+        var parsed = parseInt(input.value, 10);
+        var quantity;
+        if (!commit && (!isFinite(parsed) || parsed < minimum)) {
+          return;
+        }
+        quantity = Math.max(minimum, Math.min(maximum, parsed || minimum));
+        state.selections.caderno_order_quantity = quantity;
+        state.errors = "";
+        if (commit) {
+          input.value = quantity;
+          try { trackOptionSelected(product, "caderno_qty", quantity, ""); } catch (e) {}
+          rerenderProduct(product);
+        }
+      }
+
+      input.addEventListener("input", function () {
+        syncCadernoOrderQuantity(false);
+      });
+      input.addEventListener("change", function () {
+        syncCadernoOrderQuantity(true);
+      });
+    });
+
     document.querySelectorAll("[data-free-quantity-change]").forEach(function (button) {
       button.addEventListener("click", function () {
-        var current = getPackQuantity(product) || minimumFreeQuantity(product);
+        var current = getPackQuantity(product) || effectiveMinimumFreeQuantity(product);
         var change = Number(button.dataset.freeQuantityChange || 0);
         var rangeMaximum = freeQuantityRangeMaximum(product);
         var next = current > rangeMaximum && change < 0 ? rangeMaximum : current + change;
-        setFreeQuantity(product, next, "auto");
+        setFreeQuantity(product, next, "auto", true, change);
         rerenderProduct(product);
       });
     });
@@ -932,12 +1096,7 @@
       input.addEventListener("input", function () {
         var quantity = freeQuantityFromRangePosition(product, input.value);
 
-        state.selections.pack_quantity = quantity;
-        state.selections.free_quantity_mode = freeQuantityModeForValue(product, quantity);
-        state.quantitySignature = "";
-        state.quantitiesTouched = false;
-        state.quantityPackBaseline = 0;
-        state.errors = "";
+        setFreeQuantity(product, quantity, "auto", false);
         refreshFreeQuantityDraft(product, input);
       });
       input.addEventListener("change", function () {
@@ -946,44 +1105,23 @@
       });
     });
 
-    document.querySelectorAll("[data-quantity-plus]").forEach(function (button) {
+    document.querySelectorAll("[data-quantity-pricing-toggle]").forEach(function (button) {
       button.addEventListener("click", function () {
-        var value = button.dataset.quantityPlus;
-        var donor = donorFor(product, value);
-        var changed = selectedDesignItems(product).length >= 3
-          ? assignOnePin(product, value)
-          : moveOnePin(product, donor, value);
+        var priceKey = priceKeyForSize(product, state.selections.size);
 
-        if (changed) {
-          state.errors = "";
-          rerenderProduct(product);
+        if (!supportsQuantityPricingSwitch(product, priceKey)) {
+          return;
         }
-      });
-    });
 
-    document.querySelectorAll("[data-quantity-minus]").forEach(function (button) {
-      button.addEventListener("click", function () {
-        var value = button.dataset.quantityMinus;
-        var receiver = nextDesignValue(product, value);
-        var changed = selectedDesignItems(product).length >= 3
-          ? removeOnePin(product, value)
-          : moveOnePin(product, value, receiver);
-
-        if (changed) {
-          state.errors = "";
-          rerenderProduct(product);
-        }
-      });
-    });
-
-    document.querySelectorAll("[data-auto-distribute]").forEach(function (button) {
-      button.addEventListener("click", function () {
-        state.selections.design_quantities = distributeQuantities(selectedDesignItems(product), getPackQuantity(product));
-        state.quantitiesTouched = false;
+        state.selections.quantity_pricing_mode = selectedQuantityPricingMode(product, priceKey) === "quantity_tiers"
+          ? "packs"
+          : "quantity_tiers";
         state.errors = "";
         rerenderProduct(product);
       });
     });
+
+    bindQuantityDistributionEvents(product);
 
     document.querySelectorAll("[data-detail-field]").forEach(function (input) {
       input.addEventListener("input", function () {
@@ -1226,6 +1364,8 @@
         rerenderProduct(product);
       });
     });
+
+    bindCustomProductBuilder(product);
 
     document.querySelectorAll("[data-cart-add-another]").forEach(function (button) {
       button.addEventListener("click", function () {

@@ -177,6 +177,20 @@ if errorlevel 1 (
         pause
         exit /b 1
     )
+
+    REM O HTML servido ao Google e so um shell: o app.js e que escreve o conteudo
+    REM a partir dos JSON. Este gerador copia esse conteudo para dentro do HTML
+    REM (titulos, descriptions, h1, designs, links, sitemap.xml). Como le os JSON
+    REM no momento em que corre, tem de correr aqui, depois das validacoes e antes
+    REM do commit — senao o que vai para o servidor fica com a versao anterior.
+    echo.
+    echo A gerar SEO a partir dos JSON...
+    node site\tools\seo-build.js
+    if errorlevel 1 (
+        echo ERRO: Falhou a geracao de SEO.
+        pause
+        exit /b 1
+    )
 )
 
 echo.

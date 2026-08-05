@@ -30,6 +30,71 @@ if ($method !== 'POST') {
 // mp_funnel_classify_referrer e mp_tracking_client_ip são usados abaixo.
 require_once __DIR__ . '/lib/db.php';
 
+/**
+ * FUNNEL_RATE_LIMIT_V2 — o limite era 60 eventos/IP/60 s e apanhava clientes.
+ *
+ * Medição sobre order-funnel-events.jsonl (29 663 eventos, 2 594 minutos-IP):
+ * a mediana é 3 eventos por minuto, o p95 é 45, e o minuto mais cheio teve 274
+ * eventos de UMA ÚNICA sessão — uma pessoa a configurar um produto, em que cada
+ * clique gera ui_interaction + option_selected + selection_updated +
+ * step_selection_snapshot. Com 60, 2,5% dos minutos eram cortados, e eram
+ * precisamente os das pessoas mais interessadas: o funil ficava com buracos
+ * onde havia mais para ver.
+ *
+ * O travão existe para um ciclo de JS descontrolado ou um scraper, que fazem
+ * milhares por minuto. 600 fica muito acima de qualquer pessoa e muito abaixo
+ * de qualquer máquina.
+ */
+define('FUNNEL_RATE_LIMIT_PER_MINUTE', 600);
+
+/**
+ * Silêncio do aviso no error_log, em segundos. O comentário do V1 dizia
+ * "regista na primeira vez por janela", mas o código registava a TODOS os
+ * pedidos bloqueados — com o limite atingido, cada clique escrevia uma linha e
+ * o error_log deixava de servir para ver o resto (foi assim que os erros de
+ * upload se perderam).
+ */
+define('FUNNEL_RATE_LIMIT_LOG_SILENCE', 300);
+
+function funnel_rate_limit_should_log($ip)
+{
+    $path = mp_private_path('funnel-rate-limit-avisos.json');
+    if ($path === null || $ip === '') {
+        return true;
+    }
+
+    $agora = time();
+    $handle = @fopen($path, 'c+b');
+    if ($handle === false) {
+        return true;   // sem estado, é preferível avisar a mais
+    }
+    @flock($handle, LOCK_EX);
+    $estado = json_decode((string)stream_get_contents($handle), true);
+    if (!is_array($estado)) {
+        $estado = array();
+    }
+
+    $ultimo = isset($estado[$ip]) ? (int)$estado[$ip] : 0;
+    $deve = ($agora - $ultimo) >= FUNNEL_RATE_LIMIT_LOG_SILENCE;
+    if ($deve) {
+        $estado[$ip] = $agora;
+    }
+    foreach ($estado as $chave => $quando) {
+        if (($agora - (int)$quando) > 86400) {
+            unset($estado[$chave]);
+        }
+    }
+
+    ftruncate($handle, 0);
+    rewind($handle);
+    fwrite($handle, json_encode($estado));
+    @flock($handle, LOCK_UN);
+    fclose($handle);
+    @chmod($path, 0600);
+
+    return $deve;
+}
+
 $raw = file_get_contents('php://input');
 if ($raw === false || strlen($raw) === 0 || strlen($raw) > 12288) {
     http_response_code(204);
@@ -100,6 +165,16 @@ $stringFields = array(
     // Selected order context (não é PII):
     'selected_size'      => 60,
     'selected_delivery'  => 60,
+    // MAIN_CATALOG_V2: contexto e modo sem conteúdo introduzido pela pessoa.
+    'product_context'    => 32,
+    'catalog_context'    => 32,
+    'cart_context'       => 32,
+    'flow_mode'          => 24,
+    'design_source'      => 24,
+    'order_flow'         => 24,
+    'file_kind'          => 24,
+    'error_code'         => 60,
+    'cart_id'            => 80,
     // Phase 9 (ui_interaction / dead_tap):
     'interaction_type'   => 16,
     'target_type'        => 32,
@@ -169,6 +244,22 @@ $intFields = array(
     'clicked_back_button',
     'scroll_depth_percent',
     'opened_discount_explanation',
+    // MAIN_CATALOG_V2: apenas contagens e valores monetários em cêntimos.
+    'quantity',
+    'product_quantity',
+    'file_count',
+    'artwork_count',
+    'artwork_total_quantity',
+    'customization_file_count',
+    'customization_fee_cents',
+    'customization_fee_per_file_cents',
+    'unit_price_cents',
+    'artwork_attached',
+    'product_count',
+    'item_count',
+    'subtotal_cents',
+    'shipping_estimate_cents',
+    'total_estimate_cents',
     // TRANSITION_REASON_V1 + HEARTBEAT_V1 + SELECTION_SNAPSHOT_V1
     'validation_error_count',
     'selection_count',
@@ -317,15 +408,19 @@ try {
         $skipReason = 'ignore_list';
     }
 
-    // FUNNEL_RATE_LIMIT_V1: limite 60 eventos / IP / 60 s. Acima disso, drop
-    // silencioso (e regista no error_log a primeira vez por janela). Usa o
-    // índice idx_funnel_ip_created para o COUNT ser O(log n).
+    // FUNNEL_RATE_LIMIT_V2: ver as constantes no topo. Acima do limite, drop
+    // silencioso. Usa o índice idx_funnel_ip_created para o COUNT ser
+    // O(log n).
     if ($skipReason === '' && $ipNumber !== '') {
         $windowStart = gmdate('Y-m-d\TH:i:s\Z', time() - 60);
         $recentCount = mp_db_count_recent_funnel_events($ipNumber, $windowStart);
-        if ($recentCount >= 60) {
+        if ($recentCount >= FUNNEL_RATE_LIMIT_PER_MINUTE) {
             $skipReason = 'rate_limit';
-            @error_log('[miaandpaper] funnel rate-limit atingido para IP ' . $ipNumber . ' (' . $recentCount . ' eventos em 60s)');
+            if (funnel_rate_limit_should_log($ipNumber)) {
+                @error_log('[miaandpaper] funnel rate-limit atingido para IP ' . $ipNumber
+                    . ' (' . $recentCount . ' eventos em 60s, limite ' . FUNNEL_RATE_LIMIT_PER_MINUTE . ')'
+                    . ' — proximo aviso deste IP daqui a ' . FUNNEL_RATE_LIMIT_LOG_SILENCE . 's');
+            }
         }
     }
 
@@ -357,9 +452,13 @@ try {
 //   private/order-funnel-events.jsonl
 // — esse continua a ser escrito (não estraga ferramentas antigas), mas o
 // replay/dashboard usa preferencialmente os ficheiros por dia.
-// Skip se ignore list (não interessa nem como fallback). Em rate-limit
-// continuamos a escrever no JSONL para que o admin possa auditar abuso.
-if ($skipReason !== 'ignore_list') {
+// Skip para qualquer evento descartado. Antes, um evento travado pelo
+// rate-limit perdia a linha na base de dados mas continuava a escrever nos dois
+// JSONL — ou seja, o travão que existe para proteger o disco fazia o contrário
+// e um evento bloqueado gastava mais I/O do que um aceite. A auditoria de abuso
+// continua garantida: mp_tracking_log_skipped_event acima guarda IP, motivo,
+// nome do evento, sessão e user agent de cada drop.
+if ($skipReason === '') {
     $lineBase = array_merge(array('timestamp_iso' => $timestampIso, 'ip' => $ipNumber, 'skip_reason' => $skipReason), $cleaned);
     if ($selectionJsonClean !== null) {
         $sjsDecoded = json_decode($selectionJsonClean, true);

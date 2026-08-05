@@ -78,6 +78,15 @@
     ].join("");
   }
 
+  function renderAdminQuantityPricingSwitchSetting() {
+    return [
+      '<label class="admin-check admin-quantity-pricing-setting">',
+      '<input type="checkbox"' + (quantityPricingSwitchEnabled() ? " checked" : "") + ' data-admin-quantity-pricing-switch-visible> ',
+      'Mostrar escolha entre “Packs” e “Por quantidade”',
+      '</label>'
+    ].join("");
+  }
+
   function renderAdminPricePanel(product) {
     var prices;
     var sizeKeys;
@@ -165,7 +174,7 @@
   }
 
   function productShapeClass(product) {
-    return (product && product.imageShape === "round") || (product && product.slug === "crachas") || (product && product.slug === "pins")
+    return (product && product.imageShape === "round") || (product && productFamily(product) === "crachas")
       ? "product-shape-round"
       : "product-shape-rect";
   }
@@ -227,7 +236,7 @@
     var summaryLabel;
     var helpText;
     if (config.mode === "visible") {
-      summaryLabel = product.slug === "crachas" ? "Separadores dos crachás" : (product.slug === "imanes" ? "Separadores dos ímanes" : "Separadores deste passo");
+      summaryLabel = productFamily(product) === "crachas" ? "Separadores dos crachás" : (productFamily(product) === "imanes" ? "Separadores dos ímanes" : "Separadores deste passo");
       helpText = "Os " + sections.length + " títulos abaixo aparecem como secções no Passo 1. Cada item tem o seu separador, prefixo de nome e ordem.";
     } else {
       summaryLabel = "Grupos invisíveis (Passo 1)";
@@ -393,7 +402,7 @@
   function renderAdminProductPreviewPanel(product) {
     var preview = product && product.preview ? product.preview : {};
 
-    if (!product || (product.slug !== "cadernos" && !product.preview)) {
+    if (!product || (productFamily(product) !== "cadernos" && !product.preview)) {
       return "";
     }
 
@@ -446,7 +455,7 @@
   function renderAdminInteriorPanel(product) {
     var interior = product && product.interiorPreview ? product.interiorPreview : {};
 
-    if (!product || product.slug !== "cadernos") {
+    if (!isCadernosProduct(product)) {
       return "";
     }
 
@@ -516,7 +525,7 @@
       // TOOLS_INDEX_V1: link para as ferramentas internas (só admin; a página
       // valida a sessão no servidor, como admin-funnel.php).
       '<a class="admin-funnel-link" href="tools/index.php" target="_blank" rel="noopener">Ferramentas</a>',
-      '<a class="admin-funnel-link" href="cadernos.html">Cadernos</a>',
+      '<a class="admin-funnel-link" href="cadernos-anuais.html">Cadernos</a>',
       '<button type="button" data-admin-exit>Sair</button>',
       '</div>',
       message,
@@ -533,6 +542,7 @@
       currentProduct ? renderAdminRectOrientationPanel(currentProduct) : "",
       currentHome ? renderAdminHomeSettingsPanel(currentHome) : "",
       currentProduct ? renderAdminSiteSettingsPanel() : "",
+      currentProduct ? renderAdminQuantityPricingSwitchSetting() : "",
       currentProduct ? renderAdminPricePanel(currentProduct) : "",
       currentProduct ? renderAdminDeliveryPanel(currentProduct) : "",
       currentProduct ? renderAdminProductPreviewPanel(currentProduct) : "",
@@ -693,7 +703,7 @@
       input.addEventListener("change", function () {
         var step = currentProduct && visibleSteps(currentProduct)[state.currentStep];
 
-        if (!step || step.id !== "size" || currentProduct.slug !== "crachas") {
+        if (!step || step.id !== "size" || productFamily(currentProduct) !== "crachas") {
           return;
         }
 
@@ -711,6 +721,23 @@
           pushUndo(currentProduct);
         }
         siteSettings().smartQuantities = !!input.checked;
+        if (currentProduct) {
+          rerenderProduct(currentProduct);
+        } else {
+          rerender();
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-admin-quantity-pricing-switch-visible]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        if (currentProduct) {
+          pushUndo(currentProduct);
+        }
+        siteSettings().quantityPricingSwitchVisible = !!input.checked;
+        if (!input.checked) {
+          state.selections.quantity_pricing_mode = "quantity_tiers";
+        }
         if (currentProduct) {
           rerenderProduct(currentProduct);
         } else {
@@ -1408,6 +1435,7 @@
       var heroImage = hero.image || (menuCategories[0] && menuCategories[0].image) || "";
       var heroImages = homeHeroImages(hero);
       var heroCarouselHtml = renderHomeHeroCarousel(hero);
+      var heroCarouselDotsHtml = renderHomeHeroCarouselDots(hero);
       var heroPosition = String(hero.imagePosition || "center").trim();
       var heroStyle;
       var newsCards;
@@ -1449,6 +1477,7 @@
         '<h1 id="home-title">' + escapeHtml(home.intro.title) + '</h1>',
         '<p>' + escapeHtml(home.intro.text) + '</p>',
         heroActions,
+        heroCarouselDotsHtml,
         '</div>',
         '</div>',
         '</section>',

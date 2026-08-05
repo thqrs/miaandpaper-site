@@ -10,6 +10,45 @@
   gap: 10px;
 }
 
+.design-upload-choice {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  margin: 0 0 10px;
+  padding: 12px;
+  color: var(--ink);
+  text-align: left;
+}
+
+.design-upload-choice-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--linen);
+  color: var(--moss);
+}
+
+.design-upload-choice-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.design-upload-choice .choice-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.design-upload-choice .choice-copy span {
+  color: var(--muted);
+  font-size: .84rem;
+}
+
 .design-action-card {
   position: relative;
   display: grid;
@@ -110,6 +149,17 @@
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0) scale(1);
+}
+
+/* No telemovel o carrinho e o menu tapam o ecra: as reviews a rodar por cima
+   passam a estorvar quem esta a consultar o pedido. */
+@media (max-width: 900px) {
+  body.is-cart-panel-open .review-bubbles-host,
+  body.is-site-menu-open .review-bubbles-host {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(16px) scale(0.98);
+  }
 }
 
 .review-bubble-card {

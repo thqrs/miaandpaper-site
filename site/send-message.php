@@ -214,8 +214,34 @@ if ($errors) {
     render_page('Faltam alguns dados.', 'Revê o formulário e tenta novamente.', 'error', $errors);
 }
 
+// FORM_RATE_LIMIT_V1: só depois da validação, para uma submissão incompleta
+// não gastar quota. Ver mp_db_form_rate_limited() em lib/db.php.
+require_once __DIR__ . '/lib/db.php';
+require_once __DIR__ . '/lib/avisos.php';
+if (mp_db_form_rate_limited('contact', isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '', 5)) {
+    mp_aviso('guardrail', 'contacto-ritmo', 'Travão do formulário de contacto', array_merge(
+        array(
+            'Alguém passou as 5 mensagens por hora e está a ser recusado.',
+            '',
+            'O limite existe para o site não poder ser usado como relé de spam',
+            '(o campo "receber cópia" envia para um endereço à escolha de quem',
+            'submete). Se for uma pessoa real com pressa, o limite passa numa hora.',
+            '',
+        ),
+        mp_aviso_contexto()
+    ));
+    render_page(
+        'Já recebemos várias mensagens tuas.',
+        'Recebemos as mensagens que enviaste há pouco. Espera um bocado antes de enviar outra, ou fala connosco pelo Instagram.',
+        'error'
+    );
+}
+
 if (!$configPath || !is_file($configPath)) {
-    render_page('Falta configurar o envio.', 'O formulário está pronto, mas falta o ficheiro privado de configuração.', 'error', array('Ficheiro esperado: ' . $configPath));
+    // SAFE_ERROR_OUTPUT_V1: o caminho absoluto do servidor fica no error_log,
+    // nunca na página — senão qualquer visitante o vê quando o ficheiro falta.
+    @error_log('[miaandpaper] config de email em falta: ' . $configPath);
+    render_page('Falta configurar o envio.', 'O formulário está pronto, mas falta o ficheiro privado de configuração.', 'error');
 }
 
 $config = require $configPath;

@@ -69,10 +69,10 @@ Excepções tratadas à mão:
   também for a imagem de um destaque.
 - `individualColors` — ignorado (são cores, não imagens).
 - `interiorImages` — ignorado na varredura; as gavetas são geradas à parte (ver §5).
-- Itens **sem** imagem geram um slot vazio apenas nos templates que desenham
-  realmente `item.image` (`design-grid`, `media-list`, `text-grid`,
-  `lamination-choice` e `purchase-option`). Isto evita inventar imagens em
-  passos de quantidade ou personalização que não as usam.
+- Itens **sem** imagem geram um slot vazio quando o renderer desenha
+  `item.image`. Isto inclui itens aninhados nas gavetas `option-drawers`, além
+  dos templates de grelha/lista já suportados. Passos de quantidade ou campos
+  de texto continuam a não inventar imagens.
 - `summaryPlaceholders` (no topo do JSON do produto) — as imagens da caixa
   "O que vais encomendar".
 
@@ -188,7 +188,18 @@ Consequências a conhecer:
 
 ---
 
-## 5. Gavetas (interior dos cadernos)
+## 5. Gavetas
+
+Há dois mecanismos distintos:
+
+- `option-drawers` vive no JSON do produto. Cada gaveta tem o seu `field` e
+  `items`; imagens vazias nesses itens aparecem como placeholders normais na
+  Galeria. A preview selecciona o valor no `field` da gaveta, não no `id` do
+  passo.
+- As gavetas do interior dos cadernos são slides compostos a partir de pastas,
+  como descrito abaixo.
+
+### Interior dos cadernos
 
 As gavetas **não estão no JSON**. O site compõe cada caminho a partir de:
 

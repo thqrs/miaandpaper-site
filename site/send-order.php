@@ -7,6 +7,15 @@
 require_once __DIR__ . '/lib/private-paths.php';
 require_once __DIR__ . '/lib/db.php';
 
+// PERSONALIZACAO_BUILDER_V1: a taxa passou a ser cobrada por produto x imagem
+// no flow de personalizacao.html, e nao por imagem. Cada linha do carrinho traz
+// exactamente um ficheiro, por isso o valor aqui e o de uma linha.
+// Tem de coincidir com customArtworkFeePerFileCents no content/pricing.json e no
+// JSON de cada produto.
+if (!defined('MAIN_V2_ARTWORK_FEE_CENTS')) {
+    define('MAIN_V2_ARTWORK_FEE_CENTS', 300);
+}
+
 $configPath = mp_private_mail_config_path();
 
 function h($value)
@@ -72,7 +81,7 @@ function parse_email_recipients($value)
 function safe_return_to()
 {
     $returnTo = field('return_to');
-    $allowed = array('index.html', 'molduras.html', 'quadros.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'imanes.html', 'lembrancas.html', 'adicionar-produto.html', 'checkout.html');
+    $allowed = array('index.html', 'molduras.html', 'quadros.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'mini-cadernos.html', 'blocos-a6.html', 'bloquinhos.html', 'cadernos-anuais.html', 'agendas.html', 'imanes.html', 'imanes-recortados.html', 'stickers.html', 'marcadores.html', 'marcadores-magneticos.html', 'lembrancas.html', 'personalizacao.html', 'adicionar-produto.html', 'checkout.html');
 
     if (in_array($returnTo, $allowed, true)) {
         return $returnTo;
@@ -84,7 +93,7 @@ function safe_return_to()
 function safe_product_slug()
 {
     $slug = strtolower(field('product_slug'));
-    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'personalizacao');
 
     if (in_array($slug, $allowed, true)) {
         return $slug;
@@ -172,7 +181,11 @@ function parse_design_labels($values)
 
 function load_product_config($slug)
 {
-    $path = __DIR__ . '/content/products/' . $slug . '.json';
+    $congressSlugs = array('crachas', 'imanes', 'caderninhos', 'cadernos');
+    $base = in_array((string)$slug, $congressSlugs, true)
+        ? __DIR__ . '/congressos/2026/content/products/'
+        : __DIR__ . '/content/products/';
+    $path = $base . $slug . '.json';
 
     if (!is_file($path)) {
         return array();
@@ -181,6 +194,44 @@ function load_product_config($slug)
     $data = json_decode(file_get_contents($path), true);
 
     return is_array($data) ? $data : array();
+}
+
+function load_pricing_product($slug)
+{
+    $congressSlugs = array('crachas', 'imanes', 'caderninhos', 'cadernos');
+    $path = in_array((string)$slug, $congressSlugs, true)
+        ? __DIR__ . '/congressos/2026/content/pricing.json'
+        : __DIR__ . '/content/pricing.json';
+
+    if (!is_file($path)) {
+        return array();
+    }
+    $data = json_decode(file_get_contents($path), true);
+    return !empty($data['products'][$slug]) && is_array($data['products'][$slug])
+        ? $data['products'][$slug]
+        : array();
+}
+
+function load_main_pricing_settings()
+{
+    static $settings = null;
+
+    if ($settings !== null) {
+        return $settings;
+    }
+
+    $path = __DIR__ . '/content/pricing.json';
+    if (!is_file($path)) {
+        $settings = array();
+        return $settings;
+    }
+
+    $data = json_decode(file_get_contents($path), true);
+    $settings = !empty($data['settings']) && is_array($data['settings'])
+        ? $data['settings']
+        : array();
+
+    return $settings;
 }
 
 function product_step($product, $id)
@@ -306,19 +357,13 @@ function product_prices($product, $fallback)
 
 function load_pricing_prices($slug)
 {
-    $path = __DIR__ . '/content/pricing.json';
     $prices = array();
-
-    if (!is_file($path)) {
+    $product = load_pricing_product($slug);
+    if (empty($product['prices']) || !is_array($product['prices'])) {
         return array();
     }
 
-    $data = json_decode(file_get_contents($path), true);
-    if (empty($data['products'][$slug]['prices']) || !is_array($data['products'][$slug]['prices'])) {
-        return array();
-    }
-
-    foreach ($data['products'][$slug]['prices'] as $size => $packs) {
+    foreach ($product['prices'] as $size => $packs) {
         if (!is_array($packs)) {
             continue;
         }
@@ -359,8 +404,11 @@ function product_delivery_options($product, $fallback)
 
 function cart_allowed_product_slug($slug)
 {
+    // Slugs validos para uma LINHA do carrinho. `personalizacao` nao entra
+    // aqui de proposito: e a pagina de origem, nao um produto — cada linha
+    // que sai de la traz o slug do produto real (crachas-loja, marcadores...).
     $slug = strtolower(trim((string)$slug));
-    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos');
 
     return in_array($slug, $allowed, true) ? $slug : '';
 }
@@ -368,6 +416,12 @@ function cart_allowed_product_slug($slug)
 function cart_text($value)
 {
     return trim((string)$value);
+}
+
+function cart_clean_funnel_session_id($value)
+{
+    $value = trim((string)$value);
+    return preg_match('/^[A-Za-z0-9._:-]{8,64}$/', $value) ? $value : '';
 }
 
 function cart_bool($value)
@@ -584,6 +638,81 @@ function product_selected_size_item($product, $value)
     return product_step_item_by_value(product_step($product, 'size'), $value);
 }
 
+// PERSONALIZACAO_BUILDER_V1: acabamentos opcionais (ex.: laminacao holografica)
+// declarados em `finishOptions` no JSON do produto. O extra e por unidade e vem
+// do proprio JSON, tal como o `extraPriceCents` da personalizacao da capa dos
+// cadernos — o pricing.json continua a ser so a tabela de precos base.
+function product_finish_options($product)
+{
+    return isset($product['finishOptions']) && is_array($product['finishOptions'])
+        ? $product['finishOptions']
+        : array();
+}
+
+function product_finish_option($product, $value)
+{
+    foreach (product_finish_options($product) as $option) {
+        if (is_array($option) && isset($option['value']) && (string)$option['value'] === (string)$value) {
+            return $option;
+        }
+    }
+    return array();
+}
+
+// Variantes de producao sem impacto no preco (ex.: marcadores com/sem borda),
+// declaradas em `variantOptions`.
+function product_variant_options($product)
+{
+    return isset($product['variantOptions']) && is_array($product['variantOptions'])
+        ? $product['variantOptions']
+        : array();
+}
+
+function product_variant_item($variant, $value)
+{
+    $items = isset($variant['items']) && is_array($variant['items']) ? $variant['items'] : array();
+    foreach ($items as $item) {
+        if (is_array($item) && isset($item['value']) && (string)$item['value'] === (string)$value) {
+            return $item;
+        }
+    }
+    return array();
+}
+
+// Gavetas de opções do catálogo. Cada escolha pode acrescentar um valor por
+// unidade; o servidor volta a ler esse valor no JSON e nunca aceita o preço
+// enviado pelo browser.
+function product_option_drawers($product)
+{
+    $drawers = array();
+    $steps = isset($product['steps']) && is_array($product['steps']) ? $product['steps'] : array();
+    foreach ($steps as $step) {
+        if (!is_array($step) || !isset($step['template']) || (string)$step['template'] !== 'option-drawers') {
+            continue;
+        }
+        if (isset($step['drawers']) && is_array($step['drawers'])) {
+            foreach ($step['drawers'] as $drawer) {
+                if (is_array($drawer)) {
+                    $drawers[] = $drawer;
+                }
+            }
+        }
+    }
+    return $drawers;
+}
+
+function product_option_drawer_item($drawer, $value)
+{
+    $items = isset($drawer['items']) && is_array($drawer['items']) ? $drawer['items'] : array();
+    foreach ($items as $item) {
+        $itemValue = is_array($item) && isset($item['value']) ? (string)$item['value'] : '';
+        if ($itemValue !== '' && $itemValue === (string)$value) {
+            return $item;
+        }
+    }
+    return array();
+}
+
 function product_tier_price_cents($table, $quantity)
 {
     if (!is_array($table) || empty($table) || (int)$quantity <= 0) {
@@ -619,8 +748,14 @@ function product_tier_price_cents($table, $quantity)
         }
     }
 
+    // A ordem das operacoes tem de ser a mesma do tierPriceCents() em app.js:
+    // multiplicar primeiro (produto exacto em inteiros) e so depois dividir.
+    // Dividir primeiro introduz erro de virgula flutuante e faz o servidor
+    // cobrar menos 1 centimo do que a pagina mostrou — por exemplo 54 unidades
+    // sobre um escalao de 48 -> 14500: 54 * (14500/48) da 16312.499999999998
+    // e arredonda para 16312, enquanto 54 * 14500 / 48 da 16312.5 -> 16313.
     return $selectedQuantity > 0
-        ? (int)round($quantity * ($selectedTotal / $selectedQuantity))
+        ? (int)round($quantity * $selectedTotal / $selectedQuantity)
         : 0;
 }
 
@@ -730,6 +865,311 @@ function cart_assoc_text_selection($selections, $name)
     return $clean;
 }
 
+function cart_is_main_v2_slug($slug)
+{
+    return in_array((string)$slug, array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos'), true);
+}
+
+function cart_is_congress_slug($slug)
+{
+    return in_array((string)$slug, array('crachas', 'imanes', 'caderninhos', 'cadernos'), true);
+}
+
+function product_authoritative_design_labels($product, $designs)
+{
+    $step = product_step($product, 'designs');
+    $labels = array();
+    foreach ((array)$designs as $design) {
+        if ($design === '__sortido__') {
+            $labels[$design] = 'Sortido';
+            continue;
+        }
+        $item = product_step_item_by_value($step, $design);
+        if (!empty($item)) {
+            $labels[$design] = !empty($item['title']) ? cart_text($item['title']) : cart_text($design);
+        }
+    }
+    return $labels;
+}
+
+// MAIN_V2_PRICING_V3: o catálogo principal aceita três modos de preço.
+//
+//  - `flat-unit`: o preço por unidade é sempre o mesmo, sem descontos
+//    (stickers, marcadores, cadernos anuais).
+//  - `pack-combination`: não há descontos intermédios. O preço de N unidades é
+//    o da combinação de packs mais barata que dá exactamente N (crachás,
+//    ímanes, mini-cadernos). Só se pode encomendar quantidades que os packs
+//    consigam somar.
+//  - `linear-discount-interpolation`: escada de packs com o desconto a
+//    interpolar entre eles. Já não é usado por nenhum produto; fica aceite para
+//    não invalidar configurações antigas.
+//
+// `allowUnitDiscounts` tem de concordar com o modo, para não haver dois
+// sinais contraditórios sobre o mesmo produto.
+function main_v2_pricing_is_valid($source)
+{
+    if (!is_array($source) || !isset($source['pricingMode']) || !array_key_exists('allowUnitDiscounts', $source)) {
+        return false;
+    }
+
+    $mode = (string)$source['pricingMode'];
+    $discounts = $source['allowUnitDiscounts'];
+
+    if (isset($source['pricingModeByPriceKey'])) {
+        if (!is_array($source['pricingModeByPriceKey'])) {
+            return false;
+        }
+        foreach ($source['pricingModeByPriceKey'] as $keyMode) {
+            if (!in_array((string)$keyMode, array('pack-combination', 'tier-unit'), true)) {
+                return false;
+            }
+        }
+    }
+
+    if ($mode === 'flat-unit') {
+        return $discounts === false;
+    }
+    if ($mode === 'pack-combination' || $mode === 'linear-discount-interpolation' || $mode === 'tier-unit') {
+        return $discounts === true;
+    }
+
+    return false;
+}
+
+// PRICING_MODE_BY_PRICE_KEY_V1: cada tabela de preços pode ter o seu modo. Nos
+// ímanes, os finos vendem-se ao escalão e os de 3 mm continuam a somar packs
+// exactos. Tem de dar sempre o mesmo modo que `effectivePricingMode` no app.js.
+function main_v2_effective_pricing_mode($product, $priceKey)
+{
+    if (!is_array($product)) {
+        return '';
+    }
+
+    $priceKey = (string)$priceKey;
+    if ($priceKey !== ''
+        && isset($product['pricingModeByPriceKey'][$priceKey])
+        && (string)$product['pricingModeByPriceKey'][$priceKey] !== ''
+    ) {
+        return (string)$product['pricingModeByPriceKey'][$priceKey];
+    }
+
+    return isset($product['pricingMode']) ? (string)$product['pricingMode'] : '';
+}
+
+// O JSON do produto e a tabela central de preços têm de concordar no modo,
+// senão o cliente e o servidor podiam calcular totais diferentes.
+function main_v2_pricing_modes_agree($product, $pricingProduct)
+{
+    if (!is_array($product) || !is_array($pricingProduct)) {
+        return false;
+    }
+
+    if (!isset($product['pricingMode'], $pricingProduct['pricingMode'])
+        || (string)$product['pricingMode'] !== (string)$pricingProduct['pricingMode']
+    ) {
+        return false;
+    }
+
+    $byKey = isset($product['pricingModeByPriceKey']) && is_array($product['pricingModeByPriceKey'])
+        ? $product['pricingModeByPriceKey']
+        : array();
+    $pricingByKey = isset($pricingProduct['pricingModeByPriceKey']) && is_array($pricingProduct['pricingModeByPriceKey'])
+        ? $pricingProduct['pricingModeByPriceKey']
+        : array();
+
+    ksort($byKey);
+    ksort($pricingByKey);
+
+    $quantitySwitch = isset($product['quantityPricingSwitchByPriceKey']) && is_array($product['quantityPricingSwitchByPriceKey'])
+        ? $product['quantityPricingSwitchByPriceKey']
+        : array();
+    $pricingQuantitySwitch = isset($pricingProduct['quantityPricingSwitchByPriceKey']) && is_array($pricingProduct['quantityPricingSwitchByPriceKey'])
+        ? $pricingProduct['quantityPricingSwitchByPriceKey']
+        : array();
+
+    return array_map('strval', $byKey) === array_map('strval', $pricingByKey)
+        && $quantitySwitch == $pricingQuantitySwitch;
+}
+
+function main_v2_quantity_pricing_switch_enabled($product, $priceKey)
+{
+    if (!is_array($product) || !isset($product['quantityPricingSwitchByPriceKey'][$priceKey])) {
+        return false;
+    }
+    $config = $product['quantityPricingSwitchByPriceKey'][$priceKey];
+    return is_array($config) && !empty($config['quantityTiers']);
+}
+
+function main_v2_selected_pricing_mode($product, $priceKey, $selection)
+{
+    if ((string)$selection === 'quantity_tiers'
+        && main_v2_quantity_pricing_switch_enabled($product, $priceKey)
+    ) {
+        return 'tier-unit';
+    }
+    return main_v2_effective_pricing_mode($product, $priceKey);
+}
+
+function main_v2_uses_price_ladder($product, $priceKey = '')
+{
+    return main_v2_effective_pricing_mode($product, $priceKey) === 'linear-discount-interpolation';
+}
+
+function main_v2_uses_pack_combination($product, $priceKey = '')
+{
+    return main_v2_effective_pricing_mode($product, $priceKey) === 'pack-combination';
+}
+
+function main_v2_pack_combination_prefers_fewer_packs($product, $priceKey = '')
+{
+    $sources = array($product, product_step($product, 'pack'));
+    foreach ($sources as $source) {
+        if (!is_array($source) || empty($source['combinationTieBreakByPriceKey']) || !is_array($source['combinationTieBreakByPriceKey'])) {
+            continue;
+        }
+        if (isset($source['combinationTieBreakByPriceKey'][$priceKey])) {
+            return (string)$source['combinationTieBreakByPriceKey'][$priceKey] === 'fewer-packs';
+        }
+    }
+    return false;
+}
+
+// TIER_UNIT_PRICING_V1: cada escalão fixa uma percentagem de desconto sobre o
+// unitário do escalão mínimo. Acima do mínimo vale qualquer quantidade, e cada
+// unidade extra é vendida com o desconto do escalão em vigor — o mesmo que
+// `tierPriceCents` faz no app.js.
+function main_v2_uses_tier_unit($product, $priceKey = '')
+{
+    return main_v2_effective_pricing_mode($product, $priceKey) === 'tier-unit';
+}
+
+function product_lowest_tier_quantity($table)
+{
+    $lowest = 0;
+    foreach ((array)$table as $tierQuantity => $totalCents) {
+        $tierQuantity = (int)$tierQuantity;
+        if ($tierQuantity > 0 && (int)$totalCents > 0 && ($lowest === 0 || $tierQuantity < $lowest)) {
+            $lowest = $tierQuantity;
+        }
+    }
+    return $lowest;
+}
+
+// PACK_COMBINATION_V1: combinação de packs mais barata que dá exactamente
+// $quantity unidades. Sem descontos intermédios — quem pede 47 crachás paga
+// 1 pack de 24 + 4 packs de 5 + 1 pack de 3, e não uma interpolação.
+//
+// É um problema de troco, resolvido por programação dinâmica. Por defeito o
+// desempate continua a ser pelo pack mais pequeno. As tabelas que declaram
+// `fewer-packs` preferem a combinação com menos packs sem alterar as restantes.
+//
+// Devolve array('cents' => int, 'parts' => array(packQuantity => count)) ou
+// null quando os packs não conseguem somar exactamente $quantity (por exemplo
+// 20 ímanes achatados, cujos packs são todos múltiplos de 15).
+function product_pack_combination_plan($table, $quantity, $preferFewerPacks = false)
+{
+    $quantity = (int)$quantity;
+    if (!is_array($table) || empty($table) || $quantity <= 0) {
+        return null;
+    }
+
+    $packs = array();
+    foreach ($table as $packQuantity => $totalCents) {
+        $packQuantity = (int)$packQuantity;
+        $totalCents = (int)$totalCents;
+        if ($packQuantity > 0 && $totalCents > 0) {
+            $packs[$packQuantity] = $totalCents;
+        }
+    }
+    if (empty($packs)) {
+        return null;
+    }
+    ksort($packs, SORT_NUMERIC);
+
+    $custo = array(0 => 0);
+    $numeroPacks = array(0 => 0);
+    $escolha = array(0 => 0);
+    for ($n = 1; $n <= $quantity; $n++) {
+        $custo[$n] = null;
+        $numeroPacks[$n] = null;
+        $escolha[$n] = 0;
+        foreach ($packs as $packQuantity => $totalCents) {
+            if ($packQuantity > $n) {
+                break;
+            }
+            $resto = $custo[$n - $packQuantity];
+            if ($resto === null) {
+                continue;
+            }
+            $candidato = $resto + $totalCents;
+            $numeroCandidato = $numeroPacks[$n - $packQuantity] + 1;
+            if ($custo[$n] === null
+                || $candidato < $custo[$n]
+                || ($preferFewerPacks && $candidato === $custo[$n] && $numeroCandidato < $numeroPacks[$n])
+            ) {
+                $custo[$n] = $candidato;
+                $numeroPacks[$n] = $numeroCandidato;
+                $escolha[$n] = $packQuantity;
+            }
+        }
+    }
+
+    if ($custo[$quantity] === null) {
+        return null;
+    }
+
+    $partes = array();
+    $n = $quantity;
+    while ($n > 0 && $escolha[$n] > 0) {
+        $p = $escolha[$n];
+        $partes[$p] = isset($partes[$p]) ? $partes[$p] + 1 : 1;
+        $n -= $p;
+    }
+    krsort($partes, SORT_NUMERIC);
+
+    return array('cents' => (int)$custo[$quantity], 'parts' => $partes);
+}
+
+function product_pack_combination_cents($table, $quantity, $preferFewerPacks = false)
+{
+    $plano = product_pack_combination_plan($table, $quantity, $preferFewerPacks);
+    return $plano === null ? 0 : (int)$plano['cents'];
+}
+
+// "1 pack de 24 + 4 packs de 5 + 1 pack de 3", para o email e para o admin.
+function product_pack_combination_line($plano, $unitLabel, $unitSingular)
+{
+    if (!is_array($plano) || empty($plano['parts'])) {
+        return '';
+    }
+
+    $fora = array();
+    foreach ($plano['parts'] as $packQuantity => $count) {
+        if ($packQuantity === 1) {
+            $fora[] = $count . ' ' . ($count === 1 ? $unitSingular : $unitLabel);
+        } else {
+            $fora[] = $count . ($count === 1 ? ' pack de ' : ' packs de ') . $packQuantity;
+        }
+    }
+
+    return implode(' + ', $fora);
+}
+
+function product_flat_unit_price_cents($product, $pricingProduct, $priceKey)
+{
+    foreach (array($pricingProduct, $product) as $source) {
+        if (!empty($source['flatUnitPricesCents']) && is_array($source['flatUnitPricesCents']) && isset($source['flatUnitPricesCents'][$priceKey])) {
+            return max(0, (int)$source['flatUnitPricesCents'][$priceKey]);
+        }
+    }
+    foreach (array($pricingProduct, $product) as $source) {
+        if (!empty($source['prices'][$priceKey]) && is_array($source['prices'][$priceKey]) && isset($source['prices'][$priceKey]['1'])) {
+            return max(0, (int)$source['prices'][$priceKey]['1']);
+        }
+    }
+    return 0;
+}
+
 function cart_valid_contact($value)
 {
     $value = trim((string)$value);
@@ -750,6 +1190,28 @@ function cart_valid_nif($value)
 {
     $value = trim((string)$value);
     return $value === '' || (bool)preg_match('/^\d{9}$/', $value);
+}
+
+function order_upload_pdf_is_valid($path)
+{
+    $size = @filesize($path);
+    if ($size === false || $size < 12) {
+        return false;
+    }
+    $handle = @fopen($path, 'rb');
+    if ($handle === false) {
+        return false;
+    }
+    $header = (string)fread($handle, 16);
+    $tailLength = min(8192, (int)$size);
+    if (@fseek($handle, -$tailLength, SEEK_END) !== 0) {
+        fclose($handle);
+        return false;
+    }
+    $tail = (string)fread($handle, $tailLength);
+    fclose($handle);
+    return preg_match('/^%PDF-[12]\.[0-9]/', $header) === 1
+        && preg_match('/%%EOF[\x00\x09\x0A\x0C\x0D\x20]*$/s', $tail) === 1;
 }
 
 function order_upload_temp_info($token)
@@ -773,7 +1235,7 @@ function order_upload_temp_info($token)
         return null;
     }
     $storedName = basename((string)$metadata['stored_name']);
-    if (strpos($storedName, $token . '.') !== 0 || !preg_match('/\.(?:jpe?g|png|webp|heic|heif|webm|ogg|wav|mp3|m4a|mp4)$/i', $storedName)) {
+    if (strpos($storedName, $token . '.') !== 0 || !preg_match('/\.(?:jpe?g|png|webp|heic|heif|pdf|webm|ogg|wav|mp3|m4a|mp4)$/i', $storedName)) {
         return null;
     }
     $filePath = $dir . DIRECTORY_SEPARATOR . $storedName;
@@ -781,12 +1243,57 @@ function order_upload_temp_info($token)
         return null;
     }
 
+    $extension = strtolower(pathinfo($storedName, PATHINFO_EXTENSION));
+    $mime = isset($metadata['mime']) ? strtolower(cart_text($metadata['mime'])) : '';
+    $kind = isset($metadata['kind']) ? strtolower(cart_text($metadata['kind'])) : '';
+    $allowedMimes = array(
+        'jpg' => array('image/jpeg'),
+        'jpeg' => array('image/jpeg'),
+        'png' => array('image/png'),
+        'webp' => array('image/webp'),
+        'heic' => array('image/heic'),
+        'heif' => array('image/heif'),
+        'pdf' => array('application/pdf'),
+        'webm' => array('audio/webm', 'video/webm'),
+        'ogg' => array('audio/ogg'),
+        'wav' => array('audio/wav', 'audio/x-wav'),
+        'mp3' => array('audio/mpeg'),
+        'm4a' => array('audio/mp4', 'video/mp4'),
+        'mp4' => array('audio/mp4', 'video/mp4'),
+    );
+    if (!isset($allowedMimes[$extension]) || !in_array($mime, $allowedMimes[$extension], true) || !in_array($kind, array('photo', 'audio', 'artwork'), true)) {
+        return null;
+    }
+    if ($kind === 'artwork' && (!isset($metadata['purpose']) || $metadata['purpose'] !== 'custom-artwork')) {
+        return null;
+    }
+    if ($extension === 'pdf' && ($kind !== 'artwork' || !order_upload_pdf_is_valid($filePath))) {
+        return null;
+    }
+
+    $actualSize = @filesize($filePath);
+    if ($actualSize === false || $actualSize < 1 || (isset($metadata['size']) && (int)$metadata['size'] !== (int)$actualSize)) {
+        return null;
+    }
+    $sha256 = isset($metadata['sha256']) ? strtolower(cart_text($metadata['sha256'])) : '';
+    if ($kind === 'artwork' && !preg_match('/^[a-f0-9]{64}$/', $sha256)) {
+        return null;
+    }
+    if ($sha256 !== '') {
+        $actualSha256 = @hash_file('sha256', $filePath);
+        if (!preg_match('/^[a-f0-9]{64}$/', $sha256) || !is_string($actualSha256) || !hash_equals($sha256, $actualSha256)) {
+            return null;
+        }
+    }
+
     return array(
         'token' => $token,
         'name' => isset($metadata['name']) ? cart_text($metadata['name']) : 'foto',
-        'size' => isset($metadata['size']) ? max(0, (int)$metadata['size']) : (int)@filesize($filePath),
-        'mime' => isset($metadata['mime']) ? cart_text($metadata['mime']) : 'application/octet-stream',
-        'kind' => isset($metadata['kind']) && $metadata['kind'] === 'audio' ? 'audio' : 'photo',
+        'size' => (int)$actualSize,
+        'sha256' => $sha256,
+        'mime' => $mime,
+        'kind' => $kind,
+        'purpose' => isset($metadata['purpose']) ? cart_text($metadata['purpose']) : '',
         'width' => isset($metadata['width']) ? max(0, (int)$metadata['width']) : 0,
         'height' => isset($metadata['height']) ? max(0, (int)$metadata['height']) : 0,
         'dpi' => isset($metadata['dpi']) ? max(0, (int)$metadata['dpi']) : 0,
@@ -794,6 +1301,54 @@ function order_upload_temp_info($token)
         'temp_path' => $filePath,
         'metadata_path' => $metadataPath,
     );
+}
+
+function cart_artwork_upload_selection($selections, $name, &$invalid, $maxFiles = 10)
+{
+    $values = isset($selections[$name]) && is_array($selections[$name]) ? $selections[$name] : array();
+    $uploads = array();
+    $seen = array();
+    $invalid = count($values) > $maxFiles;
+
+    // Não faças hash/validação de uma lista arbitrariamente grande.
+    // O pedido continuará inválido, mas o trabalho fica limitado ao máximo
+    // documentado para este flow.
+    if ($maxFiles > 0 && count($values) > $maxFiles) {
+        $values = array_slice($values, 0, $maxFiles);
+    }
+
+    foreach ($values as $value) {
+        if (!is_array($value) || !isset($value['token']) || !array_key_exists('quantity', $value)) {
+            $invalid = true;
+            continue;
+        }
+        $rawQuantity = $value['quantity'];
+        $quantityText = is_scalar($rawQuantity) ? trim((string)$rawQuantity) : '';
+        if (!preg_match('/^[1-9][0-9]{0,3}$/', $quantityText)) {
+            $invalid = true;
+            continue;
+        }
+        $quantity = (int)$quantityText;
+        if ($quantity < 1 || $quantity > 9999) {
+            $invalid = true;
+            continue;
+        }
+        $info = order_upload_temp_info($value['token']);
+        if ($info === null || $info['kind'] !== 'artwork') {
+            $invalid = true;
+            continue;
+        }
+        if (isset($seen[$info['token']])) {
+            $invalid = true;
+            continue;
+        }
+        $seen[$info['token']] = true;
+        $info['quantity'] = $quantity;
+        $info['fee_cents'] = MAIN_V2_ARTWORK_FEE_CENTS;
+        $uploads[] = $info;
+    }
+
+    return $uploads;
 }
 
 function cart_upload_selection($selections, $name, &$invalid, $maxFiles = 5, $expectedKind = '')
@@ -879,11 +1434,24 @@ function order_upload_copy_to_order(&$items, $orderCode)
                     throw new RuntimeException('Não foi possível associar um anexo à encomenda.');
                 }
                 @chmod($destination, 0600);
+                $copiedSize = @filesize($destination);
+                $copiedSha256 = @hash_file('sha256', $destination);
+                $expectedSha256 = $info['sha256'] !== '' ? $info['sha256'] : @hash_file('sha256', $info['temp_path']);
+                if (
+                    (int)$copiedSize !== (int)$info['size']
+                    || !is_string($expectedSha256)
+                    || !is_string($copiedSha256)
+                    || !hash_equals($expectedSha256, $copiedSha256)
+                ) {
+                    @unlink($destination);
+                    throw new RuntimeException('Não foi possível confirmar a cópia de um anexo.');
+                }
                 $tokens[$info['token']] = $info;
-                $stored[] = array(
+                $storedUpload = array(
                     'id' => $info['token'],
                     'name' => $info['name'],
                     'size' => $info['size'],
+                    'sha256' => $expectedSha256,
                     'mime' => $info['mime'],
                     'kind' => $info['kind'],
                     'width' => $info['width'],
@@ -891,6 +1459,16 @@ function order_upload_copy_to_order(&$items, $orderCode)
                     'dpi' => $info['dpi'],
                     'relative_path' => $relativeDir . '/' . $filename,
                 );
+                if ($info['purpose'] !== '') {
+                    $storedUpload['purpose'] = $info['purpose'];
+                }
+                if (isset($upload['quantity'])) {
+                    $storedUpload['quantity'] = max(1, min(9999, (int)$upload['quantity']));
+                }
+                if (isset($upload['fee_cents'])) {
+                    $storedUpload['fee_cents'] = max(0, (int)$upload['fee_cents']);
+                }
+                $stored[] = $storedUpload;
             }
             $items[$itemIndex][$attachmentField] = $stored;
         }
@@ -936,10 +1514,14 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
 {
     $errors = array();
     $slug = isset($item['productSlug']) ? cart_allowed_product_slug($item['productSlug']) : '';
+    $selections = isset($item['selections']) && is_array($item['selections']) ? $item['selections'] : array();
     $productConfig = $slug !== '' ? load_product_config($slug) : array();
     $productName = isset($productConfig['name']) ? trim((string)$productConfig['name']) : '';
-    $selections = isset($item['selections']) && is_array($item['selections']) ? $item['selections'] : array();
-    $isCadernos = $slug === 'cadernos';
+    $isMainV2 = cart_is_main_v2_slug($slug);
+    $isCongress = cart_is_congress_slug($slug);
+    $catalogContext = cart_string_selection($selections, 'catalog_context');
+    $isCadernos = in_array($slug, array('cadernos', 'cadernos-anuais'), true)
+        || (!empty($productConfig['family']) && (string)$productConfig['family'] === 'cadernos');
     $isQuadros = $slug === 'quadros';
 
     if ($slug === '' || empty($productConfig)) {
@@ -950,6 +1532,30 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         $productName = isset($item['productName']) ? cart_text($item['productName']) : $slug;
     }
 
+    if ($isMainV2 && $catalogContext !== 'main-v2') {
+        $errors[] = 'O contexto do catálogo principal não é válido.';
+    }
+    if ($isMainV2 && (
+        !isset($productConfig['catalogContext'])
+        || $productConfig['catalogContext'] !== 'main-v2'
+        || !main_v2_pricing_is_valid($productConfig)
+    )) {
+        $errors[] = 'A configuração deste produto não pertence ao catálogo principal.';
+    }
+    if ($isCongress && $catalogContext !== '' && $catalogContext !== 'congress-2026') {
+        $errors[] = 'O contexto do produto de Congresso não é válido.';
+    }
+
+    $pricingProduct = load_pricing_product($slug);
+    if ($isMainV2 && (
+        empty($pricingProduct)
+        || !isset($pricingProduct['catalogContext'])
+        || $pricingProduct['catalogContext'] !== 'main-v2'
+        || !main_v2_pricing_is_valid($pricingProduct)
+        || !main_v2_pricing_modes_agree($productConfig, $pricingProduct)
+    )) {
+        $errors[] = 'A tabela de preços deste produto não é válida.';
+    }
     $centralPackPrices = load_pricing_prices($slug);
     $packPrices = !empty($centralPackPrices) ? $centralPackPrices : product_prices($productConfig, empty($productConfig) ? $defaultPackPrices : array());
     $allowedDesigns = product_design_values($productConfig, $defaultAllowedDesigns);
@@ -957,22 +1563,30 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $hasPackStep = !empty($packStep);
     $hasPrices = !empty($packPrices);
     $orderFlow = cart_string_selection($selections, 'order_flow');
-    $artworkUploadKey = $slug === 'crachas' ? 'cracha_artwork_uploads' : 'iman_artwork_uploads';
-    $artworkHelpKey = $slug === 'crachas' ? 'cracha_artwork_help' : 'iman_artwork_help';
-    $hasLegacyCustomArtworkSignal = $orderFlow === '' && (
+    $designSource = cart_string_selection($selections, 'design_source');
+    $artworkUploadKey = $isMainV2 ? 'custom_artwork_uploads' : ($slug === 'crachas' ? 'cracha_artwork_uploads' : 'iman_artwork_uploads');
+    $artworkHelpKey = $isMainV2 ? '' : ($slug === 'crachas' ? 'cracha_artwork_help' : 'iman_artwork_help');
+    $hasLegacyCustomArtworkSignal = !$isMainV2 && $orderFlow === '' && (
         !empty($selections[$artworkUploadKey])
-        || !empty($selections[$artworkHelpKey])
+        || ($artworkHelpKey !== '' && !empty($selections[$artworkHelpKey]))
     );
-    $isCustomArtwork = in_array($slug, array('crachas', 'imanes'), true)
+    $isLegacyCustomArtwork = in_array($slug, array('crachas', 'imanes'), true)
         && !empty(product_step($productConfig, 'artwork_upload'))
         && !empty($packStep['freeQuantity'])
         && ($orderFlow === 'custom-artwork' || $hasLegacyCustomArtworkSignal);
-    $usesLinearDiscountPricing = $isCustomArtwork
+    $isMainCustomArtwork = $isMainV2 && $orderFlow === 'custom' && $designSource === 'custom';
+    $isCustomArtwork = $isLegacyCustomArtwork || $isMainCustomArtwork;
+    $usesLinearDiscountPricing = $isLegacyCustomArtwork
         && isset($packStep['pricingMode'])
         && $packStep['pricingMode'] === 'linear-discount-interpolation';
 
+    if ($isMainV2 && (!in_array($orderFlow, array('catalog', 'custom'), true) || !in_array($designSource, array('catalog', 'custom'), true) || $orderFlow !== $designSource)) {
+        $errors[] = 'Escolhe apenas designs do catálogo ou ficheiros personalizados.';
+    }
+
     $size = cart_string_selection($selections, 'size');
     $packQuantity = (int)cart_selection($selections, 'pack_quantity', 0);
+    $quantityPricingMode = cart_string_selection($selections, 'quantity_pricing_mode');
     $designs = cart_list_selection($selections, 'designs');
     $designQuantities = cart_assoc_int_selection($selections, 'design_quantities');
     $designLabels = cart_assoc_text_selection($selections, 'design_labels');
@@ -981,19 +1595,98 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $contact = cart_string_selection($selections, 'contact');
     $congregation = cart_string_selection($selections, 'congregation');
     $congregationGift = cart_bool(cart_selection($selections, 'congregation_gift', false));
-    $selectedSizeItem = $isCustomArtwork ? product_selected_size_item($productConfig, $size) : array();
-    $priceKey = $isCustomArtwork && !empty($selectedSizeItem['priceKey'])
+    $sizeStep = product_step($productConfig, 'size');
+    $customUsesSize = $isCustomArtwork && !empty($sizeStep);
+    $selectedSizeItem = $customUsesSize ? product_selected_size_item($productConfig, $size) : array();
+    $defaultPriceKey = !empty($pricingProduct['defaultPriceKey'])
+        ? cart_text($pricingProduct['defaultPriceKey'])
+        : (!empty($productConfig['defaultPriceKey']) ? cart_text($productConfig['defaultPriceKey']) : '');
+    $priceKey = $customUsesSize && !empty($selectedSizeItem['priceKey'])
         ? cart_text($selectedSizeItem['priceKey'])
-        : $size;
-    $sizeLabel = $isCustomArtwork && !empty($selectedSizeItem['title'])
+        : ($isCustomArtwork && $defaultPriceKey !== '' ? $defaultPriceKey : $size);
+    $sizeLabel = $customUsesSize && !empty($selectedSizeItem['title'])
         ? cart_text($selectedSizeItem['title'])
-        : $size;
-    if ($isCustomArtwork && $sizeLabel !== '' && $size !== '' && strcasecmp($sizeLabel, $size) !== 0) {
+        : ($size !== '' ? $size : $priceKey);
+    if ($customUsesSize && $sizeLabel !== '' && $size !== '' && strcasecmp($sizeLabel, $size) !== 0) {
         $sizeLabel .= ' (' . $size . ')';
     }
-    $minimumQuantity = $isCustomArtwork && isset($selectedSizeItem['minQuantity'])
+    $minimumQuantity = $isLegacyCustomArtwork && isset($selectedSizeItem['minQuantity'])
         ? max(1, (int)$selectedSizeItem['minQuantity'])
         : 1;
+
+    // PERSONALIZACAO_BUILDER_V1: um tamanho pode existir sem tabela de precos
+    // (crachas grandes). Nesse caso a linha segue com o preco por confirmar em
+    // vez de ser recusada por falta de preco.
+    $sizeQuoteOnly = $customUsesSize && !empty($selectedSizeItem['quoteOnly']);
+
+    $selectedFinishes = $isMainCustomArtwork ? cart_list_selection($selections, 'finishes') : array();
+    $finishLabels = array();
+    $finishExtraPerUnitCents = 0;
+    foreach ($selectedFinishes as $finishValue) {
+        $finishOption = product_finish_option($productConfig, $finishValue);
+        if (empty($finishOption)) {
+            $errors[] = 'Um dos acabamentos escolhidos em ' . $productName . ' não é válido.';
+            continue;
+        }
+        $finishLabels[] = isset($finishOption['title']) ? cart_text($finishOption['title']) : $finishValue;
+        $finishExtraPerUnitCents += max(0, (int)(isset($finishOption['extraPriceCentsPerUnit']) ? $finishOption['extraPriceCentsPerUnit'] : 0));
+    }
+    $selections['finishes'] = $selectedFinishes;
+
+    $variantLabels = array();
+    foreach (product_variant_options($productConfig) as $variant) {
+        $variantField = isset($variant['field']) ? cart_text($variant['field']) : '';
+        $variantValue = $variantField !== '' ? cart_string_selection($selections, $variantField) : '';
+        $variantItem = $variantField !== '' ? product_variant_item($variant, $variantValue) : array();
+
+        if ($variantField === '') {
+            continue;
+        }
+        if ($variantValue === '') {
+            if (!empty($variant['required']) && $isMainCustomArtwork) {
+                $errors[] = 'Escolhe ' . strtolower(isset($variant['label']) ? cart_text($variant['label']) : $variantField) . ' em ' . $productName . '.';
+            }
+            continue;
+        }
+        if (empty($variantItem)) {
+            $errors[] = 'Uma das opções escolhidas em ' . $productName . ' não é válida.';
+            continue;
+        }
+        $variantLabels[] = (isset($variant['label']) ? cart_text($variant['label']) . ': ' : '')
+            . (isset($variantItem['title']) ? cart_text($variantItem['title']) : $variantValue);
+    }
+
+    $optionDrawerLabels = array();
+    $optionDrawerExtraPerUnitCents = 0;
+    if (!$isMainCustomArtwork) {
+        foreach (product_option_drawers($productConfig) as $drawer) {
+            $drawerField = isset($drawer['field']) ? cart_text($drawer['field']) : '';
+            $drawerValue = $drawerField !== '' ? cart_string_selection($selections, $drawerField) : '';
+            if ($drawerValue === '' && isset($drawer['defaultValue'])) {
+                $drawerValue = cart_text($drawer['defaultValue']);
+            }
+            $drawerItem = $drawerField !== '' ? product_option_drawer_item($drawer, $drawerValue) : array();
+
+            if ($drawerField === '') {
+                continue;
+            }
+            if ($drawerValue === '') {
+                if (!empty($drawer['required'])) {
+                    $errors[] = 'Escolhe ' . strtolower(isset($drawer['label']) ? cart_text($drawer['label']) : $drawerField) . ' em ' . $productName . '.';
+                }
+                continue;
+            }
+            if (empty($drawerItem)) {
+                $errors[] = 'Uma das opções extra escolhidas em ' . $productName . ' não é válida.';
+                continue;
+            }
+
+            $selections[$drawerField] = $drawerValue;
+            $optionDrawerLabels[] = (isset($drawer['label']) ? cart_text($drawer['label']) . ': ' : '')
+                . (isset($drawerItem['title']) ? cart_text($drawerItem['title']) : $drawerValue);
+            $optionDrawerExtraPerUnitCents += max(0, (int)(isset($drawerItem['extraPriceCentsPerUnit']) ? $drawerItem['extraPriceCentsPerUnit'] : 0));
+        }
+    }
 
     $cardDescriptionKey = $slug === 'crachas' ? 'cracha_card_description' : 'iman_card_description';
     $cardReferenceKey = $slug === 'crachas' ? 'cracha_card_reference_uploads' : 'iman_card_reference_uploads';
@@ -1001,17 +1694,43 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $artworkUploadInvalid = false;
     $cardReferenceUploadInvalid = false;
     $cardAudioUploadInvalid = false;
-    $artworkUploads = $isCustomArtwork
-        ? cart_upload_selection($selections, $artworkUploadKey, $artworkUploadInvalid, 1, 'photo')
-        : array();
-    $artworkHelp = $isCustomArtwork ? cart_bool(cart_selection($selections, $artworkHelpKey, false)) : false;
-    $cardDescription = $isCustomArtwork ? cart_string_selection($selections, $cardDescriptionKey) : '';
-    $cardReferenceUploads = $isCustomArtwork
+    if ($isMainCustomArtwork) {
+        $artworkUploads = cart_artwork_upload_selection($selections, $artworkUploadKey, $artworkUploadInvalid, 10);
+    } elseif ($isLegacyCustomArtwork) {
+        $artworkUploads = cart_upload_selection($selections, $artworkUploadKey, $artworkUploadInvalid, 1, 'photo');
+    } else {
+        $artworkUploads = array();
+    }
+    $artworkHelp = $isLegacyCustomArtwork && $artworkHelpKey !== '' ? cart_bool(cart_selection($selections, $artworkHelpKey, false)) : false;
+    $cardDescription = $isLegacyCustomArtwork ? cart_string_selection($selections, $cardDescriptionKey) : '';
+    $cardReferenceUploads = $isLegacyCustomArtwork
         ? cart_upload_selection($selections, $cardReferenceKey, $cardReferenceUploadInvalid, 0, 'photo')
         : array();
-    $cardAudioUploads = $isCustomArtwork
+    $cardAudioUploads = $isLegacyCustomArtwork
         ? cart_upload_selection($selections, $cardAudioKey, $cardAudioUploadInvalid, 0, 'audio')
         : array();
+    $artworkTotalQuantity = 0;
+    foreach ($artworkUploads as $artworkUpload) {
+        $artworkTotalQuantity += isset($artworkUpload['quantity']) ? (int)$artworkUpload['quantity'] : 0;
+    }
+    $hasUnexpectedMainArtworkUploads = $isMainV2 && !$isMainCustomArtwork && !empty($selections['custom_artwork_uploads']);
+    $hasUnexpectedCustomDesigns = $isMainCustomArtwork && (!empty($designs) || $assortedDesigns || !empty($designQuantities));
+    $customizationFileCount = $isMainCustomArtwork ? count($artworkUploads) : 0;
+    $customizationFeePerFileCents = $isMainCustomArtwork ? MAIN_V2_ARTWORK_FEE_CENTS : 0;
+    $customizationFeeCents = $customizationFileCount * $customizationFeePerFileCents;
+    if ($isMainCustomArtwork) {
+        if ($isCadernos) {
+            $selections['caderno_order_quantity'] = $artworkTotalQuantity;
+        } else {
+            $packQuantity = $artworkTotalQuantity;
+            $selections['pack_quantity'] = $packQuantity;
+        }
+        $selections['customization_file_count'] = $customizationFileCount;
+        $selections['customization_fee_cents'] = $customizationFeeCents;
+        $selections['artwork_total_quantity'] = $artworkTotalQuantity;
+    } elseif ($isMainV2) {
+        unset($selections['custom_artwork_uploads'], $selections['customization_file_count'], $selections['customization_fee_cents'], $selections['artwork_total_quantity']);
+    }
 
     $quadroType = $isQuadros && !empty($designs) ? (string)$designs[0] : '';
     $quadroTypeStep = $isQuadros ? product_step($productConfig, 'designs') : array();
@@ -1101,12 +1820,29 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $coverPersonalization = cart_string_selection($selections, 'cover_personalization');
     $coverPersonalizationText = cart_string_selection($selections, 'cover_personalization_text');
     $laminationStep = product_step($productConfig, 'lamination');
+    $addOnsStep = product_step($productConfig, 'add_ons');
     $purchaseStep = product_step($productConfig, 'pack');
     $personalizationStep = product_step($productConfig, 'cover_personalization');
+    $hasPersonalizationStep = !empty($personalizationStep);
     $laminationItem = $isCadernos ? product_step_item_by_value($laminationStep, $lamination) : array();
     $purchaseItem = $isCadernos ? product_step_item_by_quantity($purchaseStep, $packQuantity) : array();
     $cadernoOrderQuantityOptions = $isCadernos ? product_order_quantity_options($purchaseStep) : array(1);
     $cadernoOrderQuantity = $isCadernos ? (int)cart_selection($selections, 'caderno_order_quantity', 1) : 1;
+    $selectedAddOns = $isCadernos ? array_values(array_unique(cart_list_selection($selections, 'add_ons'))) : array();
+    $addOnLabels = array();
+    $addOnsExtraCents = 0;
+
+    foreach ($selectedAddOns as $addOnValue) {
+        $addOnItem = product_step_item_by_value($addOnsStep, $addOnValue);
+        if (empty($addOnItem)) {
+            $errors[] = 'Um dos add-ons escolhidos em ' . $productName . ' não é válido.';
+            continue;
+        }
+        $addOnLabels[] = !empty($addOnItem['title']) ? cart_text($addOnItem['title']) : $addOnValue;
+        $addOnsExtraCents += max(0, (int)(isset($addOnItem['extraPriceCents']) ? $addOnItem['extraPriceCents'] : 0));
+    }
+    $selections['add_ons'] = $selectedAddOns;
+    $selections['add_on_labels'] = $addOnLabels;
 
     if ($isCadernos && $cadernoOrderQuantity <= 0) {
         $cadernoOrderQuantity = product_order_quantity_default($purchaseStep, $cadernoOrderQuantityOptions);
@@ -1145,18 +1881,22 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         $sizeLabel = $size;
     }
 
-    if ($isCustomArtwork && empty($selectedSizeItem)) {
+    if ($customUsesSize && empty($selectedSizeItem)) {
         $errors[] = 'Escolhe um tipo válido para ' . $productName . '.';
-    } elseif ($hasPrices && !array_key_exists($priceKey, $packPrices)) {
+    } elseif (!$sizeQuoteOnly && $hasPrices && !array_key_exists($priceKey, $packPrices)) {
         $errors[] = 'Escolhe um tamanho válido para ' . $productName . '.';
     }
 
     if ($hasPackStep && $packQuantity <= 0) {
         $errors[] = $isCadernos ? 'Escolhe uma opção de compra para ' . $productName . '.' : ($isCustomArtwork ? 'Indica a quantidade para ' . $productName . '.' : 'Escolhe um pack para ' . $productName . '.');
-    } elseif ($isCustomArtwork && ($packQuantity < $minimumQuantity || $packQuantity > 9999)) {
+    } elseif (!$isCadernos && ($isCustomArtwork || $isMainV2) && ($packQuantity < $minimumQuantity || $packQuantity > 9999)) {
         $errors[] = 'A quantidade de ' . $productName . ' deve ser entre ' . $minimumQuantity . ' e 9999.';
-    } elseif ($hasPrices && $hasPackStep && !$isCustomArtwork && (!isset($packPrices[$priceKey]) || !isset($packPrices[$priceKey][$packQuantity]))) {
+    } elseif ($hasPrices && $hasPackStep && !$isCustomArtwork && !$isMainV2 && (!isset($packPrices[$priceKey]) || !isset($packPrices[$priceKey][$packQuantity]))) {
         $errors[] = $isCadernos ? 'Escolhe uma opção de compra válida para ' . $productName . '.' : 'Escolhe um pack válido para ' . $productName . '.';
+    }
+
+    if ($hasUnexpectedMainArtworkUploads) {
+        $errors[] = 'Não podes juntar ficheiros personalizados a uma escolha do catálogo.';
     }
 
     if (!$isCustomArtwork && empty($designs) && !$assortedDesigns) {
@@ -1169,8 +1909,11 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
             }
         }
     }
+    if ($isMainV2 && !$isCustomArtwork) {
+        $designLabels = product_authoritative_design_labels($productConfig, $designs);
+    }
 
-    if ($isCustomArtwork) {
+    if ($isLegacyCustomArtwork) {
         if ($artworkUploadInvalid || $cardReferenceUploadInvalid || $cardAudioUploadInvalid) {
             $errors[] = 'Um dos anexos deixou de estar disponível. Volta a enviá-lo.';
         }
@@ -1186,6 +1929,25 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         if ($cardDescriptionLength > 2000) {
             $errors[] = 'A descrição do cartão deve ter no máximo 2000 caracteres.';
         }
+    } elseif ($isMainCustomArtwork) {
+        if ($artworkUploadInvalid) {
+            $errors[] = 'Um dos ficheiros personalizados ou respetiva quantidade não é válido. Volta a enviá-lo.';
+        }
+        if (empty($artworkUploads)) {
+            $errors[] = 'Carrega pelo menos uma imagem ou PDF para personalizar este produto.';
+        }
+        if (count($artworkUploads) > 10) {
+            $errors[] = 'Podes carregar no máximo 10 ficheiros personalizados por produto.';
+        }
+        if ($artworkTotalQuantity < 1 || $artworkTotalQuantity > 99990) {
+            $errors[] = 'Confirma as quantidades dos ficheiros personalizados.';
+        }
+        if ($hasUnexpectedCustomDesigns) {
+            $errors[] = 'Não podes juntar designs do catálogo a ficheiros personalizados.';
+        }
+    }
+
+    if ($isCustomArtwork) {
         $designs = array();
         $designQuantities = array();
         $designLabels = array();
@@ -1424,15 +2186,20 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
             $errors[] = 'Escolhe uma opção de compra válida para ' . $productName . '.';
         }
 
-        if (!in_array($cadernoOrderQuantity, $cadernoOrderQuantityOptions, true)) {
+        if ($isMainV2 && ($cadernoOrderQuantity < 1 || $cadernoOrderQuantity > 9999)) {
+            $errors[] = 'Escolhe uma quantidade válida para ' . $productName . '.';
+        } elseif (!$isMainV2 && !in_array($cadernoOrderQuantity, $cadernoOrderQuantityOptions, true)) {
             $errors[] = 'Escolhe uma quantidade válida para ' . $productName . '.';
         }
 
-        if ($coverPersonalization !== 'yes' && $coverPersonalization !== 'no') {
+        // COVER_PERSONALIZATION_BY_DATA_V1: quem manda é o produto ter (ou não)
+        // o passo `cover_personalization`, não o contexto do catálogo. Assim o
+        // mesmo código serve os cadernos anuais e a cápsula do Congresso.
+        if ($hasPersonalizationStep && $coverPersonalization !== 'yes' && $coverPersonalization !== 'no') {
             $errors[] = 'Escolhe se queres personalizar a capa de ' . $productName . '.';
         }
 
-        if ($coverPersonalization === 'yes') {
+        if ($hasPersonalizationStep && $coverPersonalization === 'yes') {
             $personalizationLimit = isset($personalizationStep['maxLength']) ? (int)$personalizationStep['maxLength'] : 25;
             $personalizationLength = function_exists('mb_strlen')
                 ? mb_strlen($coverPersonalizationText, 'UTF-8')
@@ -1443,7 +2210,10 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
             } elseif ($personalizationLength > $personalizationLimit) {
                 $errors[] = 'O nome/frase da capa de ' . $productName . ' tem de ter no máximo ' . $personalizationLimit . ' caracteres.';
             }
+        } elseif ($hasPersonalizationStep) {
+            $coverPersonalizationText = '';
         } else {
+            $coverPersonalization = '';
             $coverPersonalizationText = '';
         }
     }
@@ -1483,20 +2253,113 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         $errors[] = 'Confirma a congregação opcional em ' . $productName . '.';
     }
 
+    $mainFlatPriceKey = $isMainV2 && $isCadernos && !empty($purchaseItem['value'])
+        ? cart_text($purchaseItem['value'])
+        : $priceKey;
+    // Nos produtos com packs o total vem da combinação de packs (ou da escada,
+    // no modo antigo) e não de unitário x quantidade: só assim os packs
+    // configurados dão exatamente o total configurado (96 crachás = 90,00 €).
+    // O unitário passa a ser derivado, apenas para as linhas de "x €/unidade".
+    // Um tamanho por orçamentar não tem tabela nenhuma: fica fora de todos os
+    // modos para não disparar os erros de "preço não confirmado".
+    $mainV2HasQuantityPricingSwitch = $isMainV2
+        && !$sizeQuoteOnly
+        && main_v2_quantity_pricing_switch_enabled($productConfig, $mainFlatPriceKey);
+    if ($isMainV2 && !in_array($quantityPricingMode, array('', 'packs', 'quantity_tiers'), true)) {
+        $errors[] = 'O método de cálculo do preço não é válido.';
+    } elseif ($isMainV2 && $quantityPricingMode === 'quantity_tiers' && !$mainV2HasQuantityPricingSwitch) {
+        $errors[] = 'O desconto por quantidade não está disponível para esta opção.';
+    }
+    $mainV2SelectedPricingMode = $isMainV2 && !$sizeQuoteOnly
+        ? main_v2_selected_pricing_mode($productConfig, $mainFlatPriceKey, $quantityPricingMode)
+        : '';
+    $mainV2UsesLadder = $mainV2SelectedPricingMode === 'linear-discount-interpolation';
+    $mainV2UsesPacks = $mainV2SelectedPricingMode === 'pack-combination';
+    $mainV2UsesTiers = $mainV2SelectedPricingMode === 'tier-unit';
+    $mainV2PriceTable = !empty($packPrices[$mainFlatPriceKey]) && is_array($packPrices[$mainFlatPriceKey])
+        ? $packPrices[$mainFlatPriceKey]
+        : array();
+    $mainV2PackPlan = $mainV2UsesPacks && !empty($mainV2PriceTable)
+        ? product_pack_combination_plan(
+            $mainV2PriceTable,
+            $packQuantity,
+            main_v2_pack_combination_prefers_fewer_packs($productConfig, $mainFlatPriceKey)
+        )
+        : null;
+    $mainV2LowestTier = $mainV2UsesTiers ? product_lowest_tier_quantity($mainV2PriceTable) : 0;
+    $mainV2LadderTotalCents = $mainV2UsesLadder && !empty($mainV2PriceTable)
+        ? product_linear_discount_price_cents($mainV2PriceTable, $packQuantity)
+        : ($mainV2UsesTiers && !empty($mainV2PriceTable) && $mainV2LowestTier > 0 && $packQuantity >= $mainV2LowestTier
+            ? product_tier_price_cents($mainV2PriceTable, $packQuantity)
+            : ($mainV2PackPlan !== null ? (int)$mainV2PackPlan['cents'] : 0));
+    $mainV2UsesTotalFromPacks = $mainV2UsesLadder || $mainV2UsesPacks || $mainV2UsesTiers;
+    $mainFlatUnitPriceCents = $isMainV2
+        ? ($mainV2UsesTotalFromPacks
+            ? ($packQuantity > 0 ? (int)round($mainV2LadderTotalCents / $packQuantity) : 0)
+            : product_flat_unit_price_cents($productConfig, $pricingProduct, $mainFlatPriceKey))
+        : 0;
+    // Sem combinação exacta não há preço: os packs não conseguem somar esta
+    // quantidade (ex. 20 ímanes achatados, cujos packs são múltiplos de 15).
+    if ($mainV2UsesPacks && $mainV2PackPlan === null) {
+        $errors[] = 'A quantidade de ' . $productName . ' não corresponde a nenhuma combinação de packs. Escolhe uma das quantidades disponíveis.';
+    }
+    // No modo escalão qualquer quantidade serve, desde o primeiro escalão para
+    // cima: abaixo dele não há preço configurado (15 ímanes finos, 12 recortados).
+    if ($mainV2UsesTiers && ($mainV2LowestTier <= 0 || $packQuantity < $mainV2LowestTier)) {
+        $errors[] = 'A quantidade de ' . $productName . ' é inferior ao mínimo. Escolhe uma quantidade a partir de ' . max(1, $mainV2LowestTier) . '.';
+    }
+    if ($mainV2UsesTotalFromPacks && $mainV2LadderTotalCents <= 0 && $mainV2PackPlan !== null) {
+        $errors[] = 'Não foi possível confirmar o preço de ' . $productName . '.';
+    }
+    if ($mainV2UsesLadder && $mainV2LadderTotalCents <= 0) {
+        $errors[] = 'Não foi possível confirmar o preço de ' . $productName . '.';
+    }
+    if ($isMainV2 && !$sizeQuoteOnly && !$mainV2UsesTotalFromPacks && $mainFlatUnitPriceCents <= 0) {
+        $errors[] = 'Não foi possível confirmar o preço unitário de ' . $productName . '.';
+    }
+    if ($isMainV2 && $isCadernos && $mainFlatPriceKey !== '') {
+        $priceKey = $mainFlatPriceKey;
+    }
+
+    $authoritativeCatalogContext = $isMainV2 ? 'main-v2' : ($isCongress ? 'congress-2026' : ($catalogContext !== '' ? $catalogContext : 'main'));
+    if ($isMainV2) {
+        $selections['catalog_context'] = 'main-v2';
+        $selections['order_flow'] = $orderFlow;
+        $selections['design_source'] = $designSource;
+        $selections['designs'] = $designs;
+        $selections['design_quantities'] = $designQuantities;
+        $selections['design_labels'] = $designLabels;
+        if ($mainV2HasQuantityPricingSwitch) {
+            $selections['quantity_pricing_mode'] = $quantityPricingMode === 'quantity_tiers' ? 'quantity_tiers' : 'packs';
+        } else {
+            unset($selections['quantity_pricing_mode']);
+        }
+        unset($selections['custom_artwork_uploads']);
+        if ($isMainCustomArtwork) {
+            $selections['customization_file_count'] = $customizationFileCount;
+            $selections['customization_fee_cents'] = $customizationFeeCents;
+            $selections['artwork_total_quantity'] = $artworkTotalQuantity;
+        }
+    } elseif ($isCongress) {
+        $selections['catalog_context'] = 'congress-2026';
+    }
+
     if (!empty($errors)) {
         return array('errors' => $errors);
     }
 
     $unitLabel = isset($productConfig['unitLabel']) && trim((string)$productConfig['unitLabel']) !== '' ? trim((string)$productConfig['unitLabel']) : (($slug === 'crachas' || $slug === 'pins') ? 'crachás' : 'unidades');
     $unitShort = isset($productConfig['unitShort']) && trim((string)$productConfig['unitShort']) !== '' ? trim((string)$productConfig['unitShort']) : (($slug === 'crachas' || $slug === 'pins') ? 'crachá' : 'unid.');
-    $basePriceCents = $isCustomArtwork
-        ? (isset($packPrices[$priceKey])
-            ? ($usesLinearDiscountPricing
-                ? product_linear_discount_price_cents($packPrices[$priceKey], $packQuantity)
-                : product_tier_price_cents($packPrices[$priceKey], $packQuantity))
-            : 0)
-        : (($hasPrices && isset($packPrices[$priceKey][$packQuantity])) ? $packPrices[$priceKey][$packQuantity] : 0);
-    if ($isCadernos && !empty($purchaseItem) && isset($purchaseItem['priceCents'])) {
+    $basePriceCents = $isMainV2
+        ? $mainFlatUnitPriceCents
+        : ($isCustomArtwork
+            ? (isset($packPrices[$priceKey])
+                ? ($usesLinearDiscountPricing
+                    ? product_linear_discount_price_cents($packPrices[$priceKey], $packQuantity)
+                    : product_tier_price_cents($packPrices[$priceKey], $packQuantity))
+                : 0)
+            : (($hasPrices && isset($packPrices[$priceKey][$packQuantity])) ? $packPrices[$priceKey][$packQuantity] : 0));
+    if (!$isMainV2 && $isCadernos && !empty($purchaseItem) && isset($purchaseItem['priceCents'])) {
         $basePriceCents = (int)$purchaseItem['priceCents'];
     } elseif ($isQuadros) {
         $quadroFixedPriceCents = isset($quadroTypeItem['priceCents'])
@@ -1506,15 +2369,37 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
             ? 0
             : ($quadroFixedPriceCents > 0 ? $quadroFixedPriceCents : $quadroFramePriceCents);
     }
-    $personalizationExtraCents = $isCadernos && $coverPersonalization === 'yes'
+    $personalizationExtraCents = $hasPersonalizationStep && $isCadernos && $coverPersonalization === 'yes'
         ? (isset($personalizationStep['extraPriceCents']) ? (int)$personalizationStep['extraPriceCents'] : 0)
         : 0;
     $packagingExtraCents = $isQuadros ? $quadroPackagingExtraCents : 0;
-    $unitPriceCents = $isQuadros && $quadroQuoteOnly
+    $quoteOnly = $quadroQuoteOnly || $sizeQuoteOnly;
+    $unitPriceCents = $quoteOnly
         ? 0
-        : $basePriceCents + $personalizationExtraCents + $packagingExtraCents;
-    $priceCents = $isCadernos ? $unitPriceCents * $cadernoOrderQuantity : $unitPriceCents;
+        : $basePriceCents + $addOnsExtraCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents + $optionDrawerExtraPerUnitCents;
+    $productQuantity = $isCadernos ? $cadernoOrderQuantity : $packQuantity;
+    $productSubtotalCents = $quoteOnly
+        ? 0
+        : ($isMainV2
+            ? ($mainV2UsesTotalFromPacks
+                ? $mainV2LadderTotalCents + (($addOnsExtraCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents + $optionDrawerExtraPerUnitCents) * $productQuantity)
+                : $unitPriceCents * $productQuantity)
+            : ($isCadernos ? $unitPriceCents * $cadernoOrderQuantity : $unitPriceCents));
+    // A preparação do design cobra-se mesmo quando o produto ainda não tem
+    // preço: o trabalho de ajustar o ficheiro é o mesmo.
+    $priceCents = $productSubtotalCents + ($isMainV2 ? $customizationFeeCents : 0);
+    $finishExtraLine = $finishExtraPerUnitCents && $productQuantity
+        ? format_euros($finishExtraPerUnitCents) . ' x ' . $productQuantity . ' = ' . format_euros($finishExtraPerUnitCents * $productQuantity)
+        : '';
+    $optionDrawerExtraLine = $optionDrawerExtraPerUnitCents && $productQuantity
+        ? format_euros($optionDrawerExtraPerUnitCents) . ' x ' . $productQuantity . ' = ' . format_euros($optionDrawerExtraPerUnitCents * $productQuantity)
+        : '';
     $priceRangeLine = '';
+    if ($sizeQuoteOnly && !$quadroQuoteOnly) {
+        $priceRangeLine = isset($selectedSizeItem['note']) && cart_text($selectedSizeItem['note']) !== ''
+            ? cart_text($selectedSizeItem['note'])
+            : 'Preço a confirmar';
+    }
     if ($quadroQuoteOnly) {
         if ($quadroPriceNote !== '') {
             $priceRangeLine = $quadroPriceNote;
@@ -1526,8 +2411,14 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     }
     $priceLine = $quadroQuoteOnly
         ? $priceRangeLine . ' (a confirmar)'
-        : ($priceCents ? format_euros($priceCents) : 'Não calculado');
-    $unitPriceLine = (!$isCadernos && $priceCents) ? format_unit_price($priceCents, $packQuantity, $unitShort) : '';
+        : ($sizeQuoteOnly
+            ? $priceRangeLine . ($customizationFeeCents ? ' + ' . format_euros($customizationFeeCents) . ' de preparação' : '')
+            : ($priceCents ? format_euros($priceCents) : 'Não calculado'));
+    $unitPriceLine = $quoteOnly
+        ? ''
+        : ($isMainV2 && $unitPriceCents
+            ? format_euros($unitPriceCents) . '/' . $unitShort
+            : ((!$isCadernos && $priceCents) ? format_unit_price($priceCents, $packQuantity, $unitShort) : ''));
 
     if ($isCadernos && !empty($laminationItem)) {
         $laminationLabel = isset($laminationItem['title']) ? (string)$laminationItem['title'] : $lamination;
@@ -1576,18 +2467,44 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         }
     }
 
-    $basePriceLine = $basePriceCents
-        ? ($isCadernos && $cadernoOrderQuantity > 1 ? format_euros($basePriceCents) . ' x ' . $cadernoOrderQuantity . ' = ' . format_euros($basePriceCents * $cadernoOrderQuantity) : format_euros($basePriceCents))
-        : 'Não calculado';
+    // Com packs combinados a linha do preço mostra a combinação, que é a única
+    // explicação honesta do total: "1 pack de 24 + 4 packs de 5 + 1 pack de 3".
+    $packCombinationLine = $mainV2PackPlan !== null
+        ? product_pack_combination_line($mainV2PackPlan, $unitLabel, $unitShort)
+        : '';
+    // O extra do acabamento tem linha propria (finish_extra_line), por isso a
+    // linha dos packs mostra so o preco dos produtos — senao a soma "1 pack de
+    // 24 + 4 packs de 5 = X" nao fecharia com o X apresentado.
+    $productBaseSubtotalCents = max(0, $productSubtotalCents - (($addOnsExtraCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents + $optionDrawerExtraPerUnitCents) * $productQuantity));
+    $basePriceLine = $quoteOnly
+        ? ($priceRangeLine !== '' ? $priceRangeLine : 'Preço a confirmar')
+        : ($basePriceCents
+            ? ($packCombinationLine !== ''
+                ? $packCombinationLine . ' = ' . format_euros($productBaseSubtotalCents)
+                : ($isMainV2
+                    ? format_euros($basePriceCents) . ' x ' . $productQuantity . ' = ' . format_euros($productBaseSubtotalCents)
+                    : ($isCadernos && $cadernoOrderQuantity > 1 ? format_euros($basePriceCents) . ' x ' . $cadernoOrderQuantity . ' = ' . format_euros($basePriceCents * $cadernoOrderQuantity) : format_euros($basePriceCents))))
+            : 'Não calculado');
     $personalizationExtraLine = $personalizationExtraCents
         ? ($isCadernos && $cadernoOrderQuantity > 1 ? format_euros($personalizationExtraCents) . ' x ' . $cadernoOrderQuantity . ' = ' . format_euros($personalizationExtraCents * $cadernoOrderQuantity) : format_euros($personalizationExtraCents))
         : '';
+    $addOnsExtraLine = $addOnsExtraCents
+        ? ($isCadernos && $cadernoOrderQuantity > 1 ? format_euros($addOnsExtraCents) . ' x ' . $cadernoOrderQuantity . ' = ' . format_euros($addOnsExtraCents * $cadernoOrderQuantity) : format_euros($addOnsExtraCents))
+        : '';
     $packagingExtraLine = $packagingExtraCents ? format_euros($packagingExtraCents) : 'Grátis';
+    $customizationFeeLine = $customizationFeeCents > 0
+        ? $customizationFileCount . ' ' . ($customizationFileCount === 1 ? 'ficheiro' : 'ficheiros') . ' x ' . format_euros($customizationFeePerFileCents) . ' = ' . format_euros($customizationFeeCents)
+        : '';
 
     return array(
         'errors' => array(),
         'product_slug' => $slug,
         'product_name' => $productName,
+        'catalog_context' => $authoritativeCatalogContext,
+        'order_flow' => $isMainV2 ? $orderFlow : ($isLegacyCustomArtwork ? 'custom-artwork' : ($orderFlow !== '' ? $orderFlow : 'catalog')),
+        'design_source' => $isMainV2 ? $designSource : '',
+        'is_main_v2' => $isMainV2,
+        'is_congress_2026' => $isCongress,
         'is_cadernos' => $isCadernos,
         'is_quadros' => $isQuadros,
         'is_custom_artwork' => $isCustomArtwork,
@@ -1640,7 +2557,15 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         'size_label' => $sizeLabel,
         'price_key' => $priceKey,
         'pack_quantity' => $packQuantity,
+        'product_quantity' => $productQuantity,
         'artwork_uploads' => $artworkUploads,
+        'artwork_total_quantity' => $artworkTotalQuantity,
+        'customization_file_count' => $customizationFileCount,
+        'customization_fee_per_file_cents' => $customizationFeePerFileCents,
+        'customization_fee_cents' => $customizationFeeCents,
+        'customization_fee_label' => $customizationFeeCents > 0 ? 'Preparação da imagem e testes' : '',
+        'customization_fee_description' => $customizationFeeCents > 0 ? 'Inclui a preparação de cada ficheiro e os testes necessários antes da produção.' : '',
+        'customization_fee_line' => $customizationFeeLine,
         'artwork_help' => $artworkHelp,
         'card_description' => $cardDescription,
         'card_reference_uploads' => $cardReferenceUploads,
@@ -1660,6 +2585,10 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         'show_congregation_gift_line' => $showCongregationGiftLine,
         'lamination' => $lamination,
         'lamination_label' => $laminationLabel,
+        'add_ons' => $selectedAddOns,
+        'add_on_labels' => $addOnLabels,
+        'add_ons_extra_cents' => $addOnsExtraCents,
+        'add_ons_extra_line' => $addOnsExtraLine,
         'purchase_option' => $purchaseOption,
         'purchase_option_label' => $purchaseOptionLabel,
         'purchase_includes' => $purchaseIncludes,
@@ -1667,6 +2596,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         'caderno_order_quantity' => $cadernoOrderQuantity,
         'base_price_cents' => $basePriceCents,
         'base_price_line' => $basePriceLine,
+        'pack_combination_line' => $packCombinationLine,
         'cover_line_owner' => $coverLineOwner,
         'cover_line_customer' => $coverLineCustomer,
         'cover_personalization' => $coverPersonalization,
@@ -1675,9 +2605,17 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         'personalization_extra_cents' => $personalizationExtraCents,
         'personalization_extra_line' => $personalizationExtraLine,
         'unit_price_cents' => $unitPriceCents,
+        'product_subtotal_cents' => $productSubtotalCents,
         'price_cents' => $priceCents,
         'price_line' => $priceLine,
-        'price_quote_only' => $quadroQuoteOnly,
+        'price_quote_only' => $quoteOnly,
+        'finish_labels' => $finishLabels,
+        'finish_extra_per_unit_cents' => $finishExtraPerUnitCents,
+        'finish_extra_line' => $finishExtraLine,
+        'variant_labels' => $variantLabels,
+        'option_drawer_labels' => $optionDrawerLabels,
+        'option_drawer_extra_per_unit_cents' => $optionDrawerExtraPerUnitCents,
+        'option_drawer_extra_line' => $optionDrawerExtraLine,
         'price_min_cents' => $quadroPriceMinCents,
         'price_max_cents' => $quadroPriceMaxCents,
         'price_range_line' => $priceRangeLine,
@@ -1692,6 +2630,36 @@ function cart_item_owner_lines($line)
     $rows = array();
 
     if (!empty($line['is_custom_artwork'])) {
+        if (!empty($line['is_main_v2'])) {
+            $rows[] = 'Produto: ' . $line['product_name'];
+            $rows[] = 'Contexto: catálogo principal (main-v2) — personalização com ficheiros próprios';
+            if (!empty($line['purchase_option_label'])) {
+                $rows[] = 'Opção: ' . $line['purchase_option_label'];
+            } elseif (!empty($line['size_label'])) {
+                $rows[] = 'Tipo/tamanho: ' . $line['size_label'];
+            }
+            foreach ($line['artwork_uploads'] as $index => $upload) {
+                $uploadName = isset($upload['name']) ? $upload['name'] : 'ficheiro';
+                $uploadQuantity = isset($upload['quantity']) ? (int)$upload['quantity'] : 0;
+                $rows[] = 'Ficheiro ' . ($index + 1) . ': ' . $uploadName . ' — ' . $uploadQuantity . ' ' . $line['unit_label'] . ' — +' . format_euros($line['customization_fee_per_file_cents']) . ' (preparação da imagem e testes; disponível no painel de encomendas)';
+            }
+            if (!empty($line['variant_labels'])) {
+                $rows[] = 'Opções: ' . implode(' · ', $line['variant_labels']);
+            }
+            if (!empty($line['finish_labels'])) {
+                $rows[] = 'Acabamento: ' . implode(' · ', $line['finish_labels'])
+                    . ($line['finish_extra_line'] !== '' ? ' — ' . $line['finish_extra_line'] : '');
+            }
+            $rows[] = 'Quantidade total: ' . $line['product_quantity'] . ' ' . $line['unit_label'];
+            $rows[] = 'Produtos sem taxa: ' . format_euros($line['product_subtotal_cents']) . ' (' . $line['base_price_line'] . ')';
+            $rows[] = 'Taxas de personalização: ' . $line['customization_fee_line'];
+            $rows[] = 'Razão da taxa: ' . $line['customization_fee_description'];
+            $rows[] = 'Preço total do produto: ' . $line['price_line'];
+            if (!empty($line['price_quote_only'])) {
+                $rows[] = 'Atenção: este produto ainda não tem preço de tabela. É preciso confirmar com o cliente.';
+            }
+            return $rows;
+        }
         $rows[] = 'Produto: ' . $line['product_name'];
         if (!empty($line['artwork_uploads'])) {
             $names = array();
@@ -1831,13 +2799,24 @@ function cart_item_owner_lines($line)
 
     if (!empty($line['is_cadernos'])) {
         $rows[] = 'Produto: ' . $line['product_name'];
+        if (!empty($line['is_main_v2'])) {
+            $rows[] = 'Contexto: catálogo principal (main-v2) — design do catálogo';
+        } elseif (!empty($line['is_congress_2026'])) {
+            $rows[] = 'Contexto: Congresso 2026';
+        }
         $rows[] = 'Capa escolhida: ' . $line['cover_line_owner'];
         $rows[] = 'Laminação escolhida: ' . $line['lamination_label'];
+        if (!empty($line['add_on_labels'])) {
+            $rows[] = 'Add-ons: ' . implode(', ', $line['add_on_labels']);
+            $rows[] = 'Acréscimo dos add-ons: ' . $line['add_ons_extra_line'];
+        }
         $rows[] = 'Opção escolhida: ' . $line['purchase_option_label'];
         $rows[] = 'Quantidade: ' . $line['caderno_order_quantity'] . ' x ' . $line['purchase_option_label'];
         $rows[] = 'Preço base: ' . $line['base_price_line'];
         $rows[] = 'Inclui: ' . $line['purchase_includes'];
-        $rows[] = 'Personalização da capa: ' . $line['cover_personalization_line'];
+        if ($line['cover_personalization'] !== '') {
+            $rows[] = 'Personalização da capa: ' . $line['cover_personalization_line'];
+        }
         if ($line['cover_personalization'] === 'yes') {
             $rows[] = 'Nome/frase: ' . $line['cover_personalization_text'];
             $rows[] = 'Acréscimo: ' . $line['personalization_extra_line'];
@@ -1850,8 +2829,19 @@ function cart_item_owner_lines($line)
     }
 
     $rows[] = 'Produto: ' . $line['product_name'];
-    $rows[] = 'Pack: ' . $line['pack_quantity'] . ' ' . $line['unit_label'];
+    if (!empty($line['is_main_v2'])) {
+        $rows[] = 'Contexto: catálogo principal (main-v2) — design do catálogo';
+    } elseif (!empty($line['is_congress_2026'])) {
+        $rows[] = 'Contexto: Congresso 2026';
+    }
+    $rows[] = (!empty($line['is_main_v2']) ? 'Quantidade: ' : 'Pack: ') . $line['pack_quantity'] . ' ' . $line['unit_label'];
     $rows[] = 'Tamanho: ' . $line['size'];
+    if (!empty($line['option_drawer_labels'])) {
+        $rows[] = 'Opções extra: ' . implode(' · ', $line['option_drawer_labels']);
+    }
+    if ($line['option_drawer_extra_line'] !== '') {
+        $rows[] = 'Acréscimo das opções: ' . $line['option_drawer_extra_line'];
+    }
     $rows[] = 'Preço do produto: ' . $line['price_line'] . ($line['unit_price_line'] !== '' ? ' (' . $line['unit_price_line'] . ')' : '');
     $rows[] = '';
     $rows[] = 'Designs e quantidades:';
@@ -1873,6 +2863,35 @@ function cart_item_customer_lines($line)
     $rows = array();
 
     if (!empty($line['is_custom_artwork'])) {
+        if (!empty($line['is_main_v2'])) {
+            $rows[] = 'Produto: ' . $line['product_name'];
+            $rows[] = 'Escolha: ficheiros personalizados';
+            if (!empty($line['purchase_option_label'])) {
+                $rows[] = 'Opção: ' . $line['purchase_option_label'];
+            } elseif (!empty($line['size_label'])) {
+                $rows[] = 'Tipo/tamanho: ' . $line['size_label'];
+            }
+            foreach ($line['artwork_uploads'] as $index => $upload) {
+                $uploadName = isset($upload['name']) ? $upload['name'] : 'ficheiro';
+                $uploadQuantity = isset($upload['quantity']) ? (int)$upload['quantity'] : 0;
+                $rows[] = 'Ficheiro ' . ($index + 1) . ': ' . $uploadName . ' — ' . $uploadQuantity . ' ' . $line['unit_label'] . ' — +' . format_euros($line['customization_fee_per_file_cents']) . ' (preparação da imagem e testes)';
+            }
+            if (!empty($line['variant_labels'])) {
+                $rows[] = 'Opções: ' . implode(' · ', $line['variant_labels']);
+            }
+            if (!empty($line['finish_labels'])) {
+                $rows[] = 'Acabamento: ' . implode(' · ', $line['finish_labels'])
+                    . ($line['finish_extra_line'] !== '' ? ' — ' . $line['finish_extra_line'] : '');
+            }
+            $rows[] = 'Quantidade total: ' . $line['product_quantity'] . ' ' . $line['unit_label'];
+            $rows[] = 'Produtos sem taxa: ' . format_euros($line['product_subtotal_cents']);
+            $rows[] = 'Taxas de personalização: ' . $line['customization_fee_line'];
+            $rows[] = 'Preço total do produto: ' . $line['price_line'];
+            if (!empty($line['price_quote_only'])) {
+                $rows[] = 'Este produto ainda não tem preço de tabela — a Mia confirma-o contigo antes de avançar.';
+            }
+            return $rows;
+        }
         $rows[] = 'Produto: ' . $line['product_name'];
         $rows[] = !empty($line['artwork_uploads'])
             ? 'Imagem para personalizar: recebida com o pedido'
@@ -1988,13 +3007,24 @@ function cart_item_customer_lines($line)
 
     if (!empty($line['is_cadernos'])) {
         $rows[] = 'Produto: ' . $line['product_name'];
+        if (!empty($line['is_main_v2'])) {
+            $rows[] = 'Contexto: catálogo principal (main-v2) — design do catálogo';
+        } elseif (!empty($line['is_congress_2026'])) {
+            $rows[] = 'Contexto: Congresso 2026';
+        }
         $rows[] = 'Capa escolhida: ' . $line['cover_line_customer'];
         $rows[] = 'Laminação escolhida: ' . $line['lamination_label'];
+        if (!empty($line['add_on_labels'])) {
+            $rows[] = 'Add-ons: ' . implode(', ', $line['add_on_labels']);
+            $rows[] = 'Acréscimo dos add-ons: ' . $line['add_ons_extra_line'];
+        }
         $rows[] = 'Opção escolhida: ' . $line['purchase_option_label'];
         $rows[] = 'Quantidade: ' . $line['caderno_order_quantity'] . ' x ' . $line['purchase_option_label'];
         $rows[] = 'Preço base: ' . $line['base_price_line'];
         $rows[] = 'Inclui: ' . $line['purchase_includes'];
-        $rows[] = 'Personalização da capa: ' . $line['cover_personalization_line'];
+        if ($line['cover_personalization'] !== '') {
+            $rows[] = 'Personalização da capa: ' . $line['cover_personalization_line'];
+        }
         if ($line['cover_personalization'] === 'yes') {
             $rows[] = 'Nome/frase: ' . $line['cover_personalization_text'];
             $rows[] = 'Acréscimo: ' . $line['personalization_extra_line'];
@@ -2007,8 +3037,19 @@ function cart_item_customer_lines($line)
     }
 
     $rows[] = 'Produto: ' . $line['product_name'];
-    $rows[] = 'Pack: ' . $line['pack_quantity'] . ' ' . $line['unit_label'];
+    if (!empty($line['is_main_v2'])) {
+        $rows[] = 'Contexto: catálogo principal (main-v2) — design do catálogo';
+    } elseif (!empty($line['is_congress_2026'])) {
+        $rows[] = 'Contexto: Congresso 2026';
+    }
+    $rows[] = (!empty($line['is_main_v2']) ? 'Quantidade: ' : 'Pack: ') . $line['pack_quantity'] . ' ' . $line['unit_label'];
     $rows[] = 'Tamanho: ' . $line['size'];
+    if (!empty($line['option_drawer_labels'])) {
+        $rows[] = 'Opções extra: ' . implode(' · ', $line['option_drawer_labels']);
+    }
+    if ($line['option_drawer_extra_line'] !== '') {
+        $rows[] = 'Acréscimo das opções: ' . $line['option_drawer_extra_line'];
+    }
     $rows[] = 'Preço do produto: ' . $line['price_line'] . ($line['unit_price_line'] !== '' ? ', ou seja: ' . $line['unit_price_line'] : '');
     $rows[] = '';
     $rows[] = 'Designs escolhidos:';
@@ -2224,7 +3265,14 @@ function result_slug_from_href($href)
     $clean = isset($clean[0]) ? $clean[0] : '';
 
     if (preg_match('/([^\/]+)\.html$/i', $clean, $matches)) {
-        return strtolower($matches[1]);
+        $slug = strtolower($matches[1]);
+        $mainAliases = array(
+            'crachas' => 'crachas-loja',
+            'imanes' => 'imanes-loja',
+            'cadernos' => 'cadernos-anuais',
+            'caderninhos' => 'mini-cadernos',
+        );
+        return isset($mainAliases[$slug]) ? $mainAliases[$slug] : $slug;
     }
 
     return '';
@@ -2554,6 +3602,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     $checkout = isset($payload['checkout']) && is_array($payload['checkout']) ? $payload['checkout'] : array();
     $cartId = isset($payload['cartId']) ? cart_text($payload['cartId']) : '';
     $schemaVersion = isset($payload['schemaVersion']) ? (int)$payload['schemaVersion'] : 0;
+    $funnelSessionId = cart_clean_funnel_session_id(isset($payload['funnel_session_id']) ? $payload['funnel_session_id'] : '');
 
     if (empty($items)) {
         $errors[] = 'O carrinho está vazio.';
@@ -2580,9 +3629,6 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     }
 
     $allowedDeliveryOptions = product_delivery_options(array(), $defaultDeliveryOptions);
-    if (!array_key_exists($deliveryOption, $allowedDeliveryOptions)) {
-        $errors[] = 'Escolhe a opção de entrega.';
-    }
 
     if ($sendCopy && !filter_var($copyEmail, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'Indica um email válido para receber a cópia.';
@@ -2599,6 +3645,31 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         }
         $preparedItems[] = $prepared;
     }
+
+    if (!empty($preparedItems)) {
+        $deliveryProduct = load_product_config($preparedItems[0]['product_slug']);
+        $allowedDeliveryOptions = product_delivery_options($deliveryProduct, $defaultDeliveryOptions);
+    }
+    if (!array_key_exists($deliveryOption, $allowedDeliveryOptions)) {
+        $errors[] = 'Escolhe a opção de entrega.';
+    }
+
+    $catalogContexts = array();
+    $orderCustomizationFileCount = 0;
+    $orderArtworkTotalQuantity = 0;
+    $orderCustomizationFeeCents = 0;
+    foreach ($preparedItems as $preparedLine) {
+        $lineContext = isset($preparedLine['catalog_context']) ? (string)$preparedLine['catalog_context'] : 'main';
+        if (!in_array($lineContext, $catalogContexts, true)) {
+            $catalogContexts[] = $lineContext;
+        }
+        $orderCustomizationFileCount += isset($preparedLine['customization_file_count']) ? (int)$preparedLine['customization_file_count'] : 0;
+        $orderArtworkTotalQuantity += isset($preparedLine['artwork_total_quantity']) ? (int)$preparedLine['artwork_total_quantity'] : 0;
+        $orderCustomizationFeeCents += isset($preparedLine['customization_fee_cents']) ? (int)$preparedLine['customization_fee_cents'] : 0;
+    }
+    $authoritativeCartContext = count($catalogContexts) > 1
+        ? 'mixed'
+        : (isset($catalogContexts[0]) ? $catalogContexts[0] : 'main');
 
     if (!empty($errors)) {
         render_page(
@@ -2664,6 +3735,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         '',
         'Resumo do pedido',
         'Produtos: ' . count($preparedItems),
+        'Contexto do carrinho: ' . $authoritativeCartContext,
         'Total dos produtos: ' . $productsTotalLine,
         'Entrega: ' . $deliveryLine,
         'Portes: ' . $deliveryFeeLine,
@@ -2685,6 +3757,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         '',
         'Resumo do pedido',
         'Produtos: ' . count($preparedItems),
+        'Contexto do carrinho: ' . $authoritativeCartContext,
         'Total dos produtos: ' . $productsTotalLine,
         'Entrega: ' . $deliveryLine,
         'Portes: ' . $deliveryFeeLine,
@@ -2748,6 +3821,9 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         'order_mode' => 'cart',
         'schema_version' => $schemaVersion,
         'cart_id' => $cartId,
+        'funnel_session_id' => $funnelSessionId,
+        'cart_context' => $authoritativeCartContext,
+        'catalog_contexts' => $catalogContexts,
         'items' => $preparedItems,
         'checkout' => array(
             'customer_name' => $customerName,
@@ -2759,6 +3835,9 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
             'copy_email' => $copyEmail,
         ),
         'subtotal_cents' => $subtotalCents,
+        'customization_file_count' => $orderCustomizationFileCount,
+        'artwork_total_quantity' => $orderArtworkTotalQuantity,
+        'customization_fee_cents' => $orderCustomizationFeeCents,
         'shipping_estimate_cents' => $deliveryFeeCents,
         'total_estimate_cents' => $totalEstimateCents,
         'has_price_to_confirm' => $hasQuoteOnly,
@@ -2804,6 +3883,36 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         $orderStored = true;
         order_upload_consume_temp($orderUploadTemps);
         mp_db_log_order_event($orderId, 'created', array('source' => 'site_cart'));
+        if ($funnelSessionId !== '') {
+            try {
+                $orderCreatedMetrics = mp_funnel_strip_pii(array(
+                    'event_name' => 'order_created',
+                    'cart_context' => $authoritativeCartContext,
+                    'product_count' => count($preparedItems),
+                    'subtotal_cents' => $subtotalCents,
+                    'shipping_estimate_cents' => $deliveryFeeCents,
+                    'total_estimate_cents' => $totalEstimateCents,
+                    'customization_file_count' => $orderCustomizationFileCount,
+                    'artwork_total_quantity' => $orderArtworkTotalQuantity,
+                    'customization_fee_cents' => $orderCustomizationFeeCents,
+                ));
+                mp_db_log_funnel_event(array(
+                    'created_at' => mp_db_now(),
+                    'session_id' => $funnelSessionId,
+                    'product_slug' => 'cart',
+                    'product_type' => 'cart',
+                    'event_name' => 'order_created',
+                    'step_id' => 'checkout',
+                    'step_index' => 2,
+                    'ip_number' => mp_tracking_client_ip(),
+                    'event_json' => json_encode($orderCreatedMetrics, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                ));
+            } catch (Exception $eventException) {
+                // A encomenda já está guardada. Uma falha analítica nunca
+                // deve transformar um checkout válido num aparente erro.
+                @error_log('[miaandpaper] order_created funnel falhou: ' . $eventException->getMessage());
+            }
+        }
     } catch (Exception $e) {
         if (!$orderStored) {
             order_upload_cleanup_order($orderCode);
@@ -2893,12 +4002,14 @@ if (field('website') !== '') {
 }
 
 if (!$configPath || !is_file($configPath)) {
+    @error_log('[miaandpaper] config de email em falta: ' . $configPath);
     render_page(
         'Falta configurar o envio.',
         'O formulário está pronto, mas falta criar o ficheiro privado de configuração.',
         'error',
+        // SAFE_ERROR_OUTPUT_V1: o caminho absoluto vai para o error_log, não
+        // para a página — a mensagem ao cliente não revela paths do servidor.
         array(
-            'Cria o ficheiro: ' . $configPath,
             'Depois volta a tentar enviar o pedido.',
         )
     );
@@ -2910,6 +4021,34 @@ if (!is_array($config)) {
     render_page(
         'Configuração inválida.',
         'O ficheiro privado existe, mas não devolve a configuração esperada.',
+        'error',
+        array()
+    );
+}
+
+// FORM_RATE_LIMIT_V1: aqui já sabemos que é um POST real, com o honeypot
+// limpo e o envio configurado. O limite é generoso — um cliente que corrija o
+// formulário e volte a submeter não chega lá perto — mas fecha a utilização do
+// domínio como relé de spam através do `copy_email`. Ver lib/db.php.
+require_once __DIR__ . '/lib/db.php';
+if (
+    field('order_action') !== 'send_order_copy'
+    && mp_db_form_rate_limited('order', isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '', 12)
+) {
+    require_once __DIR__ . '/lib/avisos.php';
+    mp_aviso('guardrail', 'encomenda-ritmo', 'Travão de encomendas: demasiados pedidos do mesmo dispositivo', array_merge(
+        array(
+            'Alguém passou o limite de 12 submissões por hora e está a ser recusado.',
+            '',
+            'Pode ser abuso, mas também pode ser uma cliente a corrigir o pedido',
+            'muitas vezes seguidas. Vale a pena olhar.',
+            '',
+        ),
+        mp_aviso_contexto()
+    ));
+    render_page(
+        'Recebemos vários pedidos deste dispositivo.',
+        'Já registámos os pedidos que enviaste há pouco. Espera um bocado antes de enviar outro, ou fala connosco pelo Instagram para confirmarmos o que falta.',
         'error',
         array()
     );
@@ -3543,6 +4682,23 @@ try {
     // fica só no error_log. O cliente recebe a mesma mensagem genérica de
     // sempre — sem pistas sobre schema/configuração do servidor.
     @error_log('[miaandpaper] mp_db_insert_order falhou: ' . $e->getMessage());
+    // AVISOS_ADMIN_V1: uma encomenda perdida é a falha mais cara do site.
+    // O cliente já preencheu tudo e já enviou ficheiros — se não fores
+    // avisada, ninguém sabe que aconteceu.
+    require_once __DIR__ . '/lib/avisos.php';
+    mp_aviso('encomenda_falhou', 'insert', 'URGENTE: uma encomenda não foi guardada', array_merge(
+        array(
+            'Um cliente carregou em "Enviar Pedido" e a gravação falhou.',
+            'Ele viu uma mensagem a pedir para tentar outra vez ou falar pelo Instagram.',
+            '',
+            'Código que tinha sido reservado: ' . ($orderCode !== '' ? $orderCode : '(nenhum)'),
+            'Erro técnico: ' . substr($e->getMessage(), 0, 300),
+            '',
+            'Se ele tinha enviado ficheiros, estão em private/order-uploads/.',
+            '',
+        ),
+        mp_aviso_contexto()
+    ));
     render_page(
         'Não foi possível guardar o teu pedido.',
         'Houve um problema ao guardar o pedido. Tenta de novo daqui a uns minutos ou envia mensagem pelo Instagram, ou pelo <a href="contacto.html">formulário de contacto</a>.',
@@ -3569,6 +4725,19 @@ if (!$sent) {
     // Encomenda já foi gravada — o admin vê-a no painel. Mas avisa o
     // cliente que houve problema no email para tentar contacto alternativo.
     mp_db_log_order_event($orderId, 'email_failed', array('to' => $recipient));
+    // Este aviso tenta sair pelo mesmo mail() que acabou de falhar. Vai
+    // falhar também na maioria dos casos — mas se a falha for do destinatário
+    // e não do servidor, chega. Fica sempre registado no error_log.
+    require_once __DIR__ . '/lib/avisos.php';
+    mp_aviso('email_falhou', 'encomenda', 'Encomenda guardada, mas o email não saiu', array(
+        'A encomenda ' . $orderCode . ' está guardada e aparece em admin-orders.php.',
+        'O que falhou foi a notificação por email — o mail() devolveu false.',
+        '',
+        'Destinatário que falhou: ' . $recipient,
+        '',
+        'Confirma a encomenda no painel; o cliente foi avisado para te',
+        'mandar também mensagem pelo Instagram.',
+    ));
     render_page(
         'Pedido guardado mas email falhou.',
         'O pedido (' . $orderCode . ') ficou guardado, mas houve um problema ao enviar a notificação à Mia por email. Por segurança, envia também uma mensagem pelo Instagram a confirmar.',

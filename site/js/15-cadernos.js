@@ -753,7 +753,8 @@
       html = '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list">' + html + '</div>';
     }
 
-    return html
+    return renderDesignActionControls(product, step)
+      + html
       + (state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : "")
       + renderCadernosBuildSummaryV2(product, step);
   }
@@ -789,9 +790,65 @@
       + (state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : "");
   }
 
+  function renderCadernoAddOnDrawer(item) {
+    var proof = renderCadernosProofPhoto(item, "Imagem ilustrativa");
+
+    return [
+      '<div class="cadernos-add-on-drawer">',
+      proof || [
+        '<span class="crachas-size-card-proof cadernos-proof cadernos-proof--adaptive">',
+        '<span class="crachas-size-card-proof-media cadernos-add-on-placeholder">',
+        '<strong>Imagem provisória</strong>',
+        '<span>Este espaço fica pronto para receber a fotografia final.</span>',
+        '</span>',
+        '</span>'
+      ].join(""),
+      item && item.drawerText ? '<p>' + escapeHtml(item.drawerText) + '</p>' : "",
+      '</div>'
+    ].join("");
+  }
+
+  function renderCadernosAddOnsStep(product, step) {
+    var selected = selectedValues(step);
+    var extraCents = cadernoAddOnsExtraCents(product);
+    var html = "";
+
+    (step.items || []).forEach(function (item) {
+      var checked = selected.indexOf(item.value) !== -1;
+      var priceCents = Math.max(0, parseInt(item.extraPriceCents, 10) || 0);
+
+      html += [
+        '<div class="cadernos-add-on-choice">',
+        '<label class="choice-card crachas-size-card cadernos-add-on-card' + (checked ? ' is-selected' : '') + '">',
+        '<input type="checkbox" name="' + escapeHtml(step.field) + '" value="' + escapeHtml(item.value) + '" data-choice-step="' + escapeHtml(step.id) + '"' + (checked ? ' checked' : '') + '>',
+        '<span class="crachas-size-card-visual">' + renderVisual(item, "media-list", step) + '</span>',
+        '<span class="choice-copy crachas-size-card-text">',
+        '<strong>' + escapeHtml(item.title || "") + '</strong>',
+        '<span>' + escapeHtml(item.subtitle || "") + '</span>',
+        '</span>',
+        '<span class="cadernos-purchase-price">+' + escapeHtml(formatCents(priceCents)) + '</span>',
+        '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+        adminItemControls(step, item),
+        '</label>',
+        checked ? renderCadernoAddOnDrawer(item) : "",
+        '</div>'
+      ].join("");
+    });
+
+    return [
+      '<div class="option-list size-choice-list crachas-size-card-list cadernos-add-on-list">' + html + '</div>',
+      '<p class="cadernos-add-ons-total" role="status" aria-live="polite">',
+      '<span>' + (selected.length ? selected.length + (selected.length === 1 ? ' add-on escolhido' : ' add-ons escolhidos') : 'Sem add-ons') + '</span>',
+      '<strong>+' + escapeHtml(formatCents(extraCents)) + ' por agenda</strong>',
+      '</p>',
+      state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : ""
+    ].join("");
+  }
+
   function renderCadernosPurchaseOptions(product, step) {
     var current = getPackQuantity(product);
     var promo = step && step.promoNote ? String(step.promoNote) : "";
+    var selectedOption;
     var html = "";
 
     (step.items || []).forEach(function (item) {
@@ -817,8 +874,11 @@
       ].join("");
     });
 
+    selectedOption = selectedCadernoPurchaseOption(product);
+
     return [
       '<div class="option-list size-choice-list crachas-size-card-list cadernos-purchase-list">' + html + '</div>',
+      selectedOption && !isCustomArtworkSelected(product) ? renderCadernoOrderQuantitySelector(product, step, cadernoOrderQuantity(product)) : "",
       promo ? '<p class="cadernos-info-note cadernos-info-note--promo" role="note">' + renderInlineText(promo) + '</p>' : "",
       state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : ""
     ].join("");
@@ -826,6 +886,35 @@
 
   function renderCadernoOrderQuantitySelector(product, step, selectedQuantity) {
     var config = cadernoOrderQuantityConfig(product);
+    var minimum;
+    var maximum;
+    var selectedOption;
+    var selectedLabel;
+
+    if (isMainCatalogProduct(product)) {
+      minimum = Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1);
+      maximum = Math.max(minimum, parseInt(config.maximum, 10) || 9999);
+      selectedOption = selectedCadernoPurchaseOption(product);
+      selectedLabel = selectedOption && selectedOption.isPack
+        ? (selectedQuantity === 1 ? "pack" : "packs")
+        : (selectedQuantity === 1 ? productUnitSingular(product) : productUnit(product));
+
+      return [
+        '<section class="cadernos-order-quantity" aria-label="' + escapeHtml(config.title || "Quantidade") + '">',
+        '<div class="cadernos-order-quantity-copy">',
+        '<strong>' + escapeHtml(config.title || "Quantidade") + '</strong>',
+        config.text ? '<span>' + escapeHtml(config.text) + '</span>' : "",
+        '</div>',
+        '<div class="cadernos-order-quantity-control">',
+        '<button type="button" data-caderno-order-quantity-change="-1" aria-label="Retirar uma unidade"' + (selectedQuantity <= minimum ? ' disabled' : '') + '>&minus;</button>',
+        '<label><span>Quantidade</span><input type="number" min="' + minimum + '" max="' + maximum + '" step="1" value="' + selectedQuantity + '" data-caderno-order-quantity-input></label>',
+        '<button type="button" data-caderno-order-quantity-change="1" aria-label="Acrescentar uma unidade"' + (selectedQuantity >= maximum ? ' disabled' : '') + '>+</button>',
+        '<small>' + escapeHtml(selectedLabel) + '</small>',
+        '</div>',
+        '</section>'
+      ].join("");
+    }
+
     var options = cadernoOrderQuantityOptions(product);
     var option = selectedCadernoPurchaseOption(product);
     var html = options.map(function (quantity) {
@@ -996,10 +1085,12 @@
     var steps = visibleSteps(product);
     var currentIndex = steps.indexOf(step);
     var laminationIndex = steps.indexOf(findStep(product, "lamination"));
+    var addOnsIndex = steps.indexOf(findStep(product, "add_ons"));
     var optionIndex = steps.indexOf(findStep(product, "pack"));
     var personalizationIndex = steps.indexOf(findStep(product, "cover_personalization"));
     var cover = selectedCadernoCover(product);
     var lamination = selectedCadernoLamination(product);
+    var addOns = selectedCadernoAddOns(product);
     var option = selectedCadernoPurchaseOption(product);
     var orderQuantity = cadernoOrderQuantity(product);
     var personalization = state.selections.cover_personalization || "";
@@ -1013,6 +1104,16 @@
 
     if (currentIndex >= laminationIndex && lamination) {
       parts += renderCadernosBuildPart("Laminação", lamination.title, cadernoSummaryLaminationPreviewItem(product, lamination), findStep(product, "lamination"), "cadernos-build-part--lamination");
+    }
+
+    if (addOnsIndex >= 0 && currentIndex >= addOnsIndex) {
+      addOns.forEach(function (addOn) {
+        parts += renderCadernosBuildTextPart(
+          "Add-on",
+          addOn.title || addOn.value,
+          "+" + formatCents(Math.max(0, parseInt(addOn.extraPriceCents, 10) || 0))
+        );
+      });
     }
 
     if (currentIndex >= optionIndex && option) {

@@ -301,6 +301,8 @@
     var data = {
       product_slug: product.slug || '',
       product_type: product.slug || '',
+      product_context: String(product.catalogContext || "main"),
+      flow_mode: isMainCatalogProduct(product) ? (isCustomArtworkSelected(product) ? "custom" : "catalog") : String(product.orderFlow || ""),
       selected_pack: state.selections.pack_quantity || undefined,
       selected_size: state.selections.size || '',
       selected_delivery: state.selections.delivery_option || ''
@@ -336,6 +338,14 @@
       if (sel.pack_quantity) snap.selected_pack = Number(sel.pack_quantity) || 0;
       if (sel.size) snap.selected_size = String(sel.size).slice(0, 60);
       if (sel.delivery_option) snap.selected_delivery = String(sel.delivery_option).slice(0, 60);
+      selectedOptionDrawerRecords(product).forEach(function (record) {
+        var key = "extra_" + String(record.drawer.field || record.drawer.id || "option").replace(/[^a-z0-9_]/gi, "_");
+        snap[key] = String(record.item.value || record.item.id || "").slice(0, 80);
+      });
+      if (isMainCatalogProduct(product)) {
+        snap.flow_mode = isCustomArtworkSelected(product) ? "custom" : "catalog";
+        snap.product_context = String(product.catalogContext || "main-v2");
+      }
 
       // Cores e variantes sem conteúdo pessoal. Mantém a posição dos tons —
       // num degradê, 0 é a cor inicial e 1 a final.
@@ -382,7 +392,7 @@
 
       // Novo fluxo de crachás/ímanes: só presença e contagens, nunca texto,
       // áudio, nomes de ficheiro ou outros dados enviados pela pessoa.
-      if (isCustomArtworkProduct(product)) {
+      if (isCustomArtworkSelected(product)) {
         var custom = customArtworkConfig(product);
         var artworkItems = Array.isArray(sel[custom.uploadKey]) ? sel[custom.uploadKey] : [];
         var cardPhotos = Array.isArray(sel[custom.cardPhotoKey]) ? sel[custom.cardPhotoKey] : [];
@@ -390,6 +400,8 @@
         if (artworkItems.length) {
           snap.artwork_attached = 1;
           snap.artwork_count = artworkItems.length;
+          snap.artwork_total_quantity = customArtworkTotalQuantity(product);
+          snap.customization_fee_cents = customArtworkFeeCents(product);
         }
         if (sel[custom.helpKey]) snap.artwork_help = 1;
         if (String(sel[custom.cardField] || "").trim()) snap.card_has_text = 1;
@@ -409,6 +421,10 @@
             if (opt && opt.id) snap.caderno_option = String(opt.id).slice(0, 60);
           }
           if (sel.caderno_order_quantity) snap.caderno_qty = Number(sel.caderno_order_quantity) || 0;
+          if (Array.isArray(sel.add_ons) && sel.add_ons.length) {
+            snap.add_ons = sel.add_ons.slice(0, 12).map(function (value) { return String(value).slice(0, 60); });
+            snap.add_on_count = sel.add_ons.length;
+          }
           // Personalização (yes/no) sem texto.
           if (sel.cover_personalization) snap.cover_personalization = sel.cover_personalization === 'yes' ? 1 : 0;
           // Cover title (se houver dados de produto) — label estático, não PII.

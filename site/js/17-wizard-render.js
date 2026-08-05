@@ -290,11 +290,11 @@
     // Reaproveita o componente "Designs que vais encomendar" — mas com o
     // título adaptado ao novo contexto ("Designs que vais receber").
     var items = selectedDesignItems(product);
-    var showQuantityBadges = product && product.slug === "crachas";
+    var showQuantityBadges = product && productFamily(product) === "crachas";
     var designsStep;
     var tilesHtml;
 
-    if (isCustomArtworkProduct(product)) {
+    if (isCustomArtworkSelected(product)) {
       var custom = customArtworkConfig(product);
       var uploads = orderUploadItems(custom.uploadKey);
       var visual = uploads.length
@@ -492,6 +492,7 @@
     if (isCadernosProduct(product)) {
       var cover = selectedCadernoCover(product);
       var lamination = selectedCadernoLamination(product);
+      var addOnLabels = cadernoAddOnsLabels(product);
       var option = selectedCadernoPurchaseOption(product);
       var personalization = state.selections.cover_personalization === "yes";
       var personalizationStep = cadernoPersonalizationStep(product);
@@ -508,10 +509,12 @@
       var cadernoOrderRows = [
         ["Capa escolhida:", cover ? displayItemTitle(cover) : ""],
         ["Laminação escolhida:", lamination ? lamination.title : ""],
+        ["Add-ons:", addOnLabels.join(", ")],
         ["Opção escolhida:", option ? option.title : ""]
       ];
       var cadernoPriceRows = [
         ["Preço:", cadernoPriceText],
+        ["Acréscimo dos add-ons:", info.addOnsSubtotal || ""],
         ["Inclui:", option && option.includes ? option.includes : ""],
         ["Personalização da capa:", personalization ? "Sim" : "Não"],
         ["Nome/frase:", personalization ? cadernoPersonalizationText() : ""],
@@ -558,15 +561,16 @@
 
     var orderRows = [
       ["Encomendaste:", getPackQuantity(product) ? productQuantityLabel(product, getPackQuantity(product)) : ""],
-      ["Tamanho:", selectedSizeLabel(product)],
+      ["Tamanho:", selectedSizeLabel(product)]
+    ].concat(optionDrawerSummaryRows(product), [
       ["Preço do produto:", priceLine],
       ["Portes:", shippingLine],
       [totalLabel, totalLine],
       ["Entrega:", deliveryText]
-    ];
+    ]);
 
     var cardRows;
-    if (isCustomArtworkProduct(product)) {
+    if (isCustomArtworkSelected(product)) {
       var custom = customArtworkConfig(product);
       var artworkUploads = orderUploadItems(custom.uploadKey);
       var cardPhotoUploads = orderUploadItems(custom.cardPhotoKey);
@@ -616,10 +620,10 @@
 
   function renderConfirmCard(product) {
     var hasPack = !!findStep(product, "pack");
-    var confirmTitle = product && product.slug === "crachas" ? '<h3 class="confirm-card-title">A tua encomenda:</h3>' : "";
+    var confirmTitle = product && productFamily(product) === "crachas" ? '<h3 class="confirm-card-title">A tua encomenda:</h3>' : "";
     var designs;
 
-    if (isCadernosProduct(product) || isQuadrosProduct(product) || isCustomArtworkProduct(product)) {
+    if (isCadernosProduct(product) || isQuadrosProduct(product) || isCustomArtworkSelected(product)) {
       designs = "";
     } else {
       designs = isAssortedSelected(product)
@@ -802,7 +806,7 @@
     var images = selectedInteriorImages(product);
     var speed = cadernoPreviewSpeedSeconds(product);
 
-    if (!product || product.slug !== "cadernos" || settings.enabled === false || !images.length) {
+    if (!isCadernosProduct(product) || settings.enabled === false || !images.length) {
       return "";
     }
 
@@ -810,7 +814,7 @@
       '<aside class="interior-slideshow" style="--interior-slide-count:' + images.length + ';--interior-slide-speed:' + speed + 's" aria-label="' + escapeHtml(settings.title || "Pré-visualização do interior") + '">',
       '<div class="interior-slideshow-frame">',
       images.map(function (image, index) {
-        return '<span class="interior-slide" style="background-image:url(&quot;' + escapeHtml(image) + '&quot;);--interior-slide-index:' + index + '"></span>';
+        return '<span class="interior-slide" data-mia-image="' + escapeHtml(image) + '" data-mia-item-id="interior-preview-' + index + '" data-mia-slot-name="interior-slide" style="background-image:url(&quot;' + escapeHtml(image) + '&quot;);--interior-slide-index:' + index + '"></span>';
       }).join(""),
       '</div>',
       '<div class="interior-slideshow-copy">',
@@ -819,6 +823,52 @@
       '</div>',
       '</aside>'
     ].join("");
+  }
+
+  function optionDrawerUiKey(step, drawer) {
+    return String(step && step.id || "opcoes") + "::" + String(drawer && (drawer.id || drawer.field) || "gaveta");
+  }
+
+  function renderOptionDrawerChoice(product, step, drawer, item) {
+    var selected = String(state.selections[drawer.field] || "") === String(item.value || "");
+    var extra = Math.max(0, parseInt(item.extraPriceCentsPerUnit, 10) || 0);
+
+    return [
+      '<label class="option-drawer-choice' + (selected ? ' is-selected' : '') + '">',
+      '<input type="radio" name="' + escapeHtml(drawer.field) + '" value="' + escapeHtml(item.value || "") + '" data-option-drawer-choice data-option-drawer-field="' + escapeHtml(drawer.field) + '"' + (selected ? ' checked' : '') + '>',
+      renderVisual(item, "media-list", step),
+      '<span class="option-drawer-choice-copy"><strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>' + (item.subtitle ? '<small>' + escapeHtml(item.subtitle) + '</small>' : '') + '</span>',
+      '<span class="option-drawer-choice-price">' + (extra ? '+ ' + escapeHtml(formatCents(extra)) + '<small>por ' + escapeHtml(productUnitSingular(product)) + '</small>' : '<small>Sem acréscimo</small>') + '</span>',
+      '<span class="option-drawer-choice-check" aria-hidden="true">' + ICON_CHECK + '</span>',
+      '</label>'
+    ].join("");
+  }
+
+  function renderOptionDrawers(product, step) {
+    ensureOptionDrawerSelections(product);
+
+    return '<div class="option-drawer-list">' + (step.drawers || []).map(function (drawer) {
+      var selected = optionDrawerItem(drawer, state.selections[drawer.field]);
+      var selectedExtra = selected ? Math.max(0, parseInt(selected.extraPriceCentsPerUnit, 10) || 0) : 0;
+      var key = optionDrawerUiKey(step, drawer);
+      var open = state.optionDrawerOpen && state.optionDrawerOpen[key] === true;
+
+      return [
+        '<details class="option-drawer' + (selected ? ' has-selection' : '') + '" data-option-drawer="' + escapeHtml(key) + '"' + (open ? ' open' : '') + '>',
+        '<summary class="option-drawer-summary">',
+        selected ? renderVisual(selected, "media-list", step) : '<span class="option-image neutral" aria-hidden="true"></span>',
+        '<span class="option-drawer-summary-copy"><strong>' + escapeHtml(drawer.title || drawer.label || "Opção") + '</strong><small>' + escapeHtml(selected ? (selected.title || selected.value) : "Escolhe uma opção") + '</small></span>',
+        '<span class="option-drawer-summary-price">' + (selectedExtra ? '+ ' + escapeHtml(formatCents(selectedExtra)) + '<small>por ' + escapeHtml(productUnitSingular(product)) + '</small>' : '<small>Incluído</small>') + '</span>',
+        '<span class="option-drawer-chevron" aria-hidden="true"></span>',
+        '</summary>',
+        '<div class="option-drawer-body" role="radiogroup" aria-label="' + escapeHtml(drawer.label || drawer.title || "Opção") + '">',
+        (drawer.items || []).map(function (item) {
+          return renderOptionDrawerChoice(product, step, drawer, item);
+        }).join(""),
+        '</div>',
+        '</details>'
+      ].join("");
+    }).join("") + '</div>';
   }
 
   function stepBody(product, step) {
@@ -834,8 +884,24 @@
       return renderCadernosLaminationStep(product, step) + renderCadernosBuildSummaryV2(product, step);
     }
 
+    if (isCadernosProduct(product) && step.template === "add-ons") {
+      return renderCadernosAddOnsStep(product, step) + renderCadernosBuildSummaryV2(product, step);
+    }
+
+    if (step.template === "original-artwork-upload") {
+      return renderOriginalArtworkUploadStep(product, step);
+    }
+
+    if (step.template === "custom-product-builder") {
+      return renderCustomProductBuilderStep(product);
+    }
+
+    if (step.template === "custom-quantity-builder") {
+      return renderCustomQuantityBuilderStep(product);
+    }
+
     if (isCadernosProduct(product) && step.id === "pack") {
-      return renderCadernosPurchaseOptions(product, step) + renderCadernosBuildSummaryV2(product, step);
+      return renderCadernosPurchaseOptions(product, step) + renderInteriorSlideshow(product) + renderCadernosBuildSummaryV2(product, step);
     }
 
     if (isCadernosProduct(product) && step.template === "cover-personalization") {
@@ -844,6 +910,10 @@
 
     if (step.template === "quantity-builder") {
       return renderInteriorSlideshow(product) + renderQuantityBuilder(product);
+    }
+
+    if (step.template === "option-drawers") {
+      return renderOptionDrawers(product, step);
     }
 
     if (step.template === "palette-grid") {
@@ -875,10 +945,10 @@
       // mas reaproveita o sumario "Designs que vais encomendar" dos crachas
       // (tiles em grelha 1-5 colunas conforme largura). Outros produtos
       // mantem o sumario antigo de pilulas.
-      if (product && product.slug === "crachas") {
+      if (product && productFamily(product) === "crachas") {
         return renderCrachasSizeStep(product, step);
       }
-      if (product && product.slug === "imanes") {
+      if (product && productFamily(product) === "imanes") {
         return renderSizeChoiceItems(product, step) + renderCrachasSelectedDesigns(product);
       }
       return renderSizeChoiceItems(product, step) + renderSelectedSummary(product);
@@ -921,6 +991,9 @@
     var steps = product && Array.isArray(product.steps) ? product.steps : [];
 
     return state.admin ? steps : steps.filter(function (step) {
+      if (isCustomArtworkSelected(product) && !isCadernosProduct(product) && step && step.id === "pack" && step.freeQuantity === true) {
+        return false;
+      }
       return !step.hidden && stepConditionMatches(step);
     });
   }
@@ -1058,6 +1131,9 @@
     ghost.removeAttribute("data-step-key");
     ghost.setAttribute("data-step-ghost", "");
     ghost.setAttribute("aria-hidden", "true");
+    // É um clone (`cloneNode` não copia listeners), portanto se apanhar o rato
+    // o clique morre ali. Fica sempre transparente ao ponteiro.
+    ghost.style.pointerEvents = "none";
     ghost.style.position = "absolute";
     ghost.style.margin = "0";
     ghost.style.zIndex = "0";
@@ -1287,8 +1363,23 @@
 
   function displayStepTitle(product, step) {
     var mapped = mappedStepCopy(step, "titleByField");
+    var artworkTitles;
+    var artworkCount;
     if (mapped) {
       return mapped;
+    }
+    if (step && step.template === "custom-quantity-builder" && isArtworkBuilderProduct(product)) {
+      return builderQuantityStepTitle(product);
+    }
+    artworkTitles = step && step.titleByArtworkCount;
+    if (artworkTitles && typeof artworkTitles === "object" && isArtworkBuilderProduct(product)) {
+      artworkCount = customArtworkItems(product).length;
+      if (artworkCount === 1 && artworkTitles.one) {
+        return String(artworkTitles.one);
+      }
+      if (artworkCount > 1 && artworkTitles.multiple) {
+        return String(artworkTitles.multiple);
+      }
     }
     if (step && step.template === "palette-grid" && paletteSelectionLimit(step) === 2) {
       return "Escolhe as cores do degradê";
@@ -1398,8 +1489,9 @@
       stepBody(product, step),
       renderQuadrosBuildSummary(product, step),
       '</div>',
-      cartEntry ? renderCartEntryActions(product) : [
+      cartEntry ? renderCartEntryActions(product, step) : [
       '<div class="step-actions">',
+      builderActionTotals(product, step),
       '<button class="button secondary" type="button" data-back data-track="true" data-track-action="back" data-track-id="back">Voltar</button>',
       '<div class="next-action-wrap">',
       state.errors ? '<p class="form-error action-error" id="step-action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
@@ -1559,6 +1651,28 @@
     funnelNextTransitionReason = 'browser_back';
 
     step = wizardHistoryStepFromState(event.state, product);
+
+    // STEP_JUMP_CONFIRM_V1: quando isto vem de um salto pedido nos números dos
+    // passos, o pedido do utilizador manda. O histórico do browser pode
+    // levar-nos para outro sítio — para uma entrada de outra página (sem estado
+    // de wizard) ou para uma entrada válida mas de outro passo, porque o
+    // espelho `wizardHistoryEntries` desalinha-se do stack real. Antes disso
+    // descartava o pedido em silêncio: o utilizador clicava e não acontecia
+    // nada.
+    if (wizardPendingJumpStep != null) {
+      var pedido = wizardPendingJumpStep;
+      wizardPendingJumpStep = null;
+
+      if (step !== pedido) {
+        state.errors = "";
+        syncOrderUploadBusy();
+        setCurrentStep(product, pedido);
+        replaceWizardHistory(product);
+        rerenderProduct(product);
+        return;
+      }
+    }
+
     if (step == null) {
       if (state.currentStep > 0) {
         // Old browsers or restored entries may not carry wizard state; keep the user inside the wizard until step 1.
@@ -1608,13 +1722,41 @@
     }
 
     state.errors = "";
-    historyDelta = wizardHistorySupported() ? wizardHistoryDeltaToStep(next) : 0;
+    // STEP_JUMP_CONFIRM_V1: só se entrega o salto ao histórico quando é para
+    // trás. `wizardHistoryEntries` é um espelho do stack do browser e um salto
+    // para a frente aponta para entradas que qualquer `pushState` entretanto
+    // truncou — `history.go(+n)` sobre uma entrada que já não existe não faz
+    // nada e, como isto retornava logo, o passo nunca mudava e o utilizador não
+    // via nada acontecer. Para a frente aplicamos o passo à mão, como quem
+    // carrega em "Continuar".
+    historyDelta = wizardHistorySupported() && next < previous ? wizardHistoryDeltaToStep(next) : 0;
 
-    if (historyDelta) {
+    if (historyDelta < 0) {
+      // Mesmo para trás a entrada pode não ser deste wizard (o carrinho e as
+      // outras páginas também empilham histórico). Guardamos o pedido e, se o
+      // `popstate` não o resolver, aplicamos o salto directamente.
+      wizardPendingJumpStep = next;
+      if (wizardPendingJumpTimer) {
+        window.clearTimeout(wizardPendingJumpTimer);
+      }
+      wizardPendingJumpTimer = window.setTimeout(function () {
+        wizardPendingJumpTimer = null;
+        if (wizardPendingJumpStep !== next) {
+          return;
+        }
+        wizardPendingJumpStep = null;
+        if (state.currentStep !== next) {
+          applyWizardStep(product, next, state.currentStep);
+        }
+      }, 150);
       window.history.go(historyDelta);
       return;
     }
 
+    applyWizardStep(product, next, previous);
+  }
+
+  function applyWizardStep(product, next, previous) {
     setCurrentStep(product, next);
 
     // Forward steps get new browser history entries; backward jumps replace the current one to avoid duplicates.
@@ -1636,6 +1778,7 @@
     var prevStepId = prevStepObj ? prevStepObj.id : '';
     if (next !== previous) {
       cancelOrderMediaActivityForStep(prevStepObj);
+      state.builderRemovePendingId = "";
       state.progressAnimationFromPercent = progressVisualPercent(product, previous);
     }
     state.currentStep = next;

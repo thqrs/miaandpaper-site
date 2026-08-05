@@ -1491,16 +1491,31 @@
     var key = config.selectionKey || (kind === "audio" ? "quadro_audio_uploads" : "quadro_uploads");
     return orderUploadItems(key).map(function (item) {
       var preview = orderUploadPreviewUrl(item);
+      var isPdf = String(item && item.mime || "").toLowerCase() === "application/pdf"
+        || /\.pdf$/i.test(String(item && item.name || ""));
       var media = kind === "audio"
         ? '<audio controls preload="metadata" src="' + escapeHtml(preview) + '"></audio>'
-        : '<img src="' + escapeHtml(preview) + '" alt="">';
-      var fallbackName = kind === "audio" ? "Áudio" : "Foto";
-      var removeLabel = kind === "audio" ? "Remover áudio" : "Remover foto";
+        : (isPdf ? '<span class="order-upload-pdf" aria-hidden="true">PDF</span>' : '<img src="' + escapeHtml(preview) + '" alt="">');
+      var fallbackName = kind === "audio" ? "Áudio" : (kind === "artwork" ? "Design" : "Foto");
+      var removeLabel = kind === "audio" ? "Remover áudio" : (kind === "artwork" ? "Remover design" : "Remover foto");
+      var quantity = customArtworkItemQuantity(item);
+      var feeCents = config.hideFee === true
+        ? 0
+        : Math.max(0, parseInt(config.feePerFileCents, 10) || parseInt(item && item.feeCents, 10) || 0);
+      var quantityControl = "";
+      var feeText = "";
+
+      if (config.showQuantity === true) {
+        quantityControl = '<label class="artwork-upload-quantity"><span>Quantidade com este design</span><input type="number" min="1" max="9999" step="1" value="' + quantity + '" data-artwork-upload-quantity data-order-upload-key="' + escapeHtml(key) + '" data-order-upload-token="' + escapeHtml(item.token) + '"></label>';
+      }
+      if (feeCents) {
+        feeText = '<small class="artwork-upload-fee"><strong>+' + escapeHtml(formatCents(feeCents)) + '</strong> — ' + escapeHtml(config.feeText || "Preparação do ficheiro e testes antes da produção.") + '</small>';
+      }
 
       return [
-        '<li class="order-upload-item order-upload-item--' + escapeHtml(kind) + '">',
+        '<li class="order-upload-item order-upload-item--' + escapeHtml(kind) + (isPdf ? ' is-pdf' : '') + '">',
         media,
-        '<span><strong>' + escapeHtml(item.name || fallbackName) + '</strong><small>' + escapeHtml(orderUploadMeta(item, kind)) + '</small></span>',
+        '<span><strong>' + escapeHtml(item.name || fallbackName) + '</strong><small>' + escapeHtml(orderUploadMeta(item, kind)) + '</small>' + feeText + quantityControl + '</span>',
         '<button type="button" data-order-upload-remove="' + escapeHtml(item.token) + '" data-order-upload-key="' + escapeHtml(key) + '" aria-label="' + escapeHtml(removeLabel) + '" title="' + escapeHtml(removeLabel) + '">×</button>',
         '</li>'
       ].join("");
@@ -1517,5 +1532,31 @@
       state.orderUploadError ? '<p class="form-error order-upload-error order-upload-popup" role="alert">' + escapeHtml(state.orderUploadError) + '</p>' : '',
       state.orderUploadMessage ? '<p class="order-upload-status" role="status">' + escapeHtml(state.orderUploadMessage) + '</p>' : ''
     ].join("");
+  }
+
+  function orderUploadHelperText(config, artworkMode, multiple, maxFiles, itemCount) {
+    var messages = config && config.helperTextByUploadCount;
+    var template = "";
+    var remaining = isFinite(maxFiles) ? Math.max(0, maxFiles - itemCount) : 0;
+
+    if (messages && typeof messages === "object") {
+      if (isFinite(maxFiles) && itemCount >= maxFiles && messages.full) {
+        template = messages.full;
+      } else if (itemCount === 1 && messages.one) {
+        template = messages.one;
+      } else if (itemCount > 1 && messages.multiple) {
+        template = messages.multiple;
+      } else if (!itemCount && messages.empty) {
+        template = messages.empty;
+      }
+    }
+    if (template) {
+      return String(template)
+        .replace(/\{maxFiles\}/g, isFinite(maxFiles) ? String(maxFiles) : "")
+        .replace(/\{remaining\}/g, String(remaining));
+    }
+    return itemCount
+      ? itemCount + (artworkMode ? (itemCount === 1 ? " design anexado" : " designs anexados") : (itemCount === 1 ? " foto anexada" : " fotos anexadas"))
+      : String(config.helperText || (multiple && isFinite(maxFiles) ? "Até " + maxFiles + (artworkMode ? " designs" : " fotos") : "")).trim();
   }
 
