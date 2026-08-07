@@ -21,7 +21,11 @@ Disallow: /admin-uploads.php
 Disallow: /admin-open.php
 Disallow: /admin-order-file.php
 Disallow: /admin-assisted-file.php
+Disallow: /precos.php
+Disallow: /homepage-menu-design.php
 Disallow: /galeria-api.php
+Disallow: /precos-api.php
+Disallow: /homepage-menu-api.php
 Disallow: /produtos-api.php
 Disallow: /reviews-api.php
 Disallow: /colors-api.php

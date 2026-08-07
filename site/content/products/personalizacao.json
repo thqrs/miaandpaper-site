@@ -249,7 +249,7 @@
             },
             {
               "field": "lamination",
-              "label": "Laminação",
+              "label": "Acabamento",
               "required": true,
               "items": [
                 {
@@ -274,6 +274,89 @@
                 }
               ]
             }
+          ],
+          "finishes": [
+            "capa-dura"
+          ]
+        },
+        {
+          "id": "agendas",
+          "group": "Apontamentos",
+          "title": "Agenda Anual Argolas A5",
+          "subtitle": "Capa com o teu design",
+          "slug": "agendas",
+          "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp",
+          "imageShape": "rect",
+          "quantityField": "caderno_order_quantity",
+          "fixedSelections": {
+            "cover_personalization": "no",
+            "cover_personalization_text": ""
+          },
+          "choices": [
+            {
+              "field": "purchase_option",
+              "label": "Opção de compra",
+              "required": true,
+              "isPriceKey": true,
+              "items": [
+                {
+                  "value": "agenda_normal",
+                  "title": "Agenda Normal",
+                  "subtitle": "29,90 €",
+                  "quantity": 1
+                },
+                {
+                  "value": "agenda_pioneiro",
+                  "title": "Agenda Pioneiro",
+                  "subtitle": "34,90 €",
+                  "quantity": 2
+                },
+                {
+                  "value": "pack_normal",
+                  "title": "Pack Normal",
+                  "subtitle": "37,90 €",
+                  "quantity": 3,
+                  "isPack": true
+                },
+                {
+                  "value": "pack_pioneiro",
+                  "title": "Pack Pioneiro",
+                  "subtitle": "42,90 €",
+                  "quantity": 4,
+                  "isPack": true
+                }
+              ]
+            },
+            {
+              "field": "lamination",
+              "label": "Acabamento",
+              "required": true,
+              "items": [
+                {
+                  "value": "matte",
+                  "title": "Matte",
+                  "subtitle": "Acabamento suave, sem brilho"
+                },
+                {
+                  "value": "normal",
+                  "title": "Glossy",
+                  "subtitle": "Acabamento brilhante normal"
+                },
+                {
+                  "value": "holografica",
+                  "title": "Holográfica",
+                  "subtitle": "Brilho com reflexos coloridos"
+                },
+                {
+                  "value": "glitter_branco",
+                  "title": "Glitter branco",
+                  "subtitle": "Brilho tipo purpurinas brancas"
+                }
+              ]
+            }
+          ],
+          "finishes": [
+            "capa-dura"
           ]
         },
         {
@@ -352,7 +435,7 @@
       "finishes": [
         {
           "value": "holografica",
-          "title": "Laminação holográfica",
+          "title": "Acabamento holográfico",
           "subtitle": "Brilho com reflexos coloridos",
           "extraPriceCentsPerUnit": 25
         },
@@ -379,6 +462,12 @@
           "title": "Margem de plástico",
           "subtitle": "Margem transparente à volta do marcador",
           "extraPriceCentsPerUnit": 20
+        },
+        {
+          "value": "capa-dura",
+          "title": "Capa dura",
+          "subtitle": "Mais resistente; sem isto vai capa mole",
+          "extraPriceCentsPerUnit": 400
         }
       ]
     },

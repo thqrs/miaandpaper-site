@@ -272,6 +272,18 @@ if errorlevel 1 (
     exit /b 1
 )
 
+rem CUSTOS_PRIVADOS_V1: o custos.json tem os custos do material e as margens.
+rem Nao esta no git (esta no .gitignore) e nunca pode ir para a raiz web, por
+rem isso viaja a parte, por scp, para a pasta privada irma do site.
+if exist "%REPO%\private\custos.json" (
+    echo A enviar os custos para a pasta privada do servidor...
+    "%SCP%" -i "%SSH_KEY%" -o UserKnownHostsFile="%KNOWN_HOSTS%" -o StrictHostKeyChecking=accept-new -P %SSH_PORT% "%REPO%\private\custos.json" "%SSH_USER%@%SSH_HOST%:/home/currwkdi/private/custos.json"
+    if errorlevel 1 (
+        echo AVISO: nao consegui enviar os custos. O site fica bom na mesma;
+        echo        so o painel de precos no servidor nao mostra as margens.
+    )
+)
+
 echo.
 echo ==========================================================
 echo 5/5 LOCAL ganhou. Deploy concluido.

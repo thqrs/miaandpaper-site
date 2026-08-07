@@ -534,9 +534,44 @@
     if (Object.prototype.hasOwnProperty.call(state.builderOpenGroups, key)) {
       return state.builderOpenGroups[key] === true;
     }
+    // PERSONALIZACAO_DE_ONDE_VIM_V1: quem chegou aqui pelo link de um produto
+    // encontra a gaveta desse produto ja aberta, em vez de ter de a procurar.
+    if (group.name === builderGrupoDeOrigem(product)) {
+      return true;
+    }
+
     // Sem decisao da pessoa, a gaveta fica aberta se ja la houver escolhas:
     // assim nada do que escolheu desaparece de vista ao voltar ao passo.
     return builderGroupSelectedEntries(product, designToken, group).length > 0;
+  }
+
+  // Qual o grupo do passo 2 que corresponde ao produto de onde a pessoa veio.
+  // O slug chega no `?de=` do link; o grupo e o do primeiro item do catalogo
+  // que aponte para esse produto.
+  var builderGrupoOrigemCache;
+
+  function builderGrupoDeOrigem(product) {
+    if (builderGrupoOrigemCache !== undefined) {
+      return builderGrupoOrigemCache;
+    }
+
+    var slug = "";
+    try {
+      slug = new URLSearchParams(window.location.search).get("de") || "";
+    } catch (erro) {
+      slug = "";
+    }
+
+    builderGrupoOrigemCache = "";
+    if (slug) {
+      var entrada = builderCatalog(product).filter(function (e) {
+        return e && String(e.slug) === slug;
+      })[0];
+      if (entrada && entrada.group) {
+        builderGrupoOrigemCache = String(entrada.group);
+      }
+    }
+    return builderGrupoOrigemCache;
   }
 
   // Linhas de uma imagem, pela ordem do catalogo (e nao pela ordem em que
@@ -1039,6 +1074,22 @@
     }
   }
 
+  // BUILDER_EMPTY_BACK_V1: leva de volta ao passo onde se escolhem os
+  // produtos. Usa o `id` do passo e nao um numero, porque a personalizacao tem
+  // passos condicionais e o indice visivel muda conforme o caminho.
+  function voltarAoPassoDeProdutos(product) {
+    var steps = visibleSteps(product);
+    var index = steps.findIndex(function (step) {
+      return step && step.id === "custom_products";
+    });
+
+    if (index >= 0) {
+      state.currentStep = index;
+      state.maxVisitedStep = Math.max(state.maxVisitedStep, index);
+    }
+    rerenderProduct(product);
+  }
+
   // Um design apagado no passo 1 deixa de existir: as linhas que apontavam
   // para esse ficheiro tem de desaparecer com ele.
   function builderPruneOrphanLines(product) {
@@ -1325,6 +1376,15 @@
         });
         state.builderRemovePendingId = "";
         state.errors = "";
+
+        // BUILDER_EMPTY_BACK_V1: sem produtos nenhuns, este passo nao tem o que
+        // mostrar — pedia "quantos queres de cada um?" sem haver nenhum. Volta
+        // ao passo da escolha, que e onde a pessoa tem de decidir a seguir.
+        if (!builderLines(product).length) {
+          voltarAoPassoDeProdutos(product);
+          return;
+        }
+
         rerenderProduct(product);
       });
     });

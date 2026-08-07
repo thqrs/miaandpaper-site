@@ -41,7 +41,7 @@
     },
     {
       "id": "lamination-choice",
-      "label": "Laminação"
+      "label": "Acabamento"
     },
     {
       "id": "add-ons",
@@ -315,9 +315,44 @@
       ]
     },
     {
+      "id": "cover_type",
+      "label": "Capa",
+      "title": "Escolhe a capa",
+      "text": "A capa dura é mais resistente e mantém-se direita.",
+      "template": "option-drawers",
+      "drawers": [
+        {
+          "id": "cover-type",
+          "title": "Capa",
+          "label": "Capa",
+          "field": "cover_type",
+          "required": true,
+          "defaultValue": "mole",
+          "items": [
+            {
+              "id": "cover-mole",
+              "value": "mole",
+              "title": "Capa mole",
+              "subtitle": "Opção por omissão",
+              "image": "",
+              "extraPriceCentsPerUnit": 0
+            },
+            {
+              "id": "cover-dura",
+              "value": "dura",
+              "title": "Capa dura",
+              "subtitle": "+4,00 € por unidade",
+              "image": "",
+              "extraPriceCentsPerUnit": 400
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "lamination",
-      "label": "Laminação",
-      "title": "Escolhe o tipo de laminação",
+      "label": "Acabamento",
+      "title": "Escolhe o acabamento",
       "text": "Escolhe o acabamento da capa.",
       "template": "lamination-choice",
       "field": "lamination",
@@ -452,7 +487,14 @@
         "minimum": 1,
         "maximum": 9999,
         "mode": "free",
-        "options": [1, 2, 3, 4, 5, 10]
+        "options": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          10
+        ]
       },
       "items": [
         {
@@ -664,7 +706,7 @@
   "finishOptions": [
     {
       "value": "holografica",
-      "title": "Laminação holográfica",
+      "title": "Acabamento holográfico",
       "subtitle": "Brilho com reflexos coloridos",
       "extraPriceCentsPerUnit": 25
     }

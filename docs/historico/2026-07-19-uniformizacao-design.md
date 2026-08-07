@@ -1,14 +1,19 @@
 # Relatório — Uniformização do design do site Mia & Paper
 
+> **Documento histórico — 2026-07-19.** Parte das propostas foi aplicada. As
+> decisões da secção 5 continuam por tomar — estão resumidas em
+> [09 · Pendentes](../09-pendentes.md). As referências a `app.js` e `styles.css`
+> correspondem hoje a `site/js/` e `site/css/`.
+
 **Data:** 2026-07-19
 **Âmbito:** páginas públicas do site (homepage, páginas de produto, checkout, páginas estáticas). Excluídos, conforme pedido: imagens/assets (placeholders), mockups e toda a área de administração.
-**Referências de design:** a homepage ([site/index.html](site/index.html), layout `brand-home`) e a página das molduras ([site/molduras.html](site/molduras.html)). O objetivo é pôr todas as páginas em harmonia com a homepage — incluindo a das molduras.
+**Referências de design:** a homepage ([site/index.html](../../site/index.html), layout `brand-home`) e a página das molduras ([site/molduras.html](../../site/molduras.html)). O objetivo é pôr todas as páginas em harmonia com a homepage — incluindo a das molduras.
 
 ---
 
 ## 1. Como o site está construído (contexto rápido)
 
-Quase todas as páginas são "shells" HTML pequenos; o conteúdo é gerado por [site/app.js](site/app.js) a partir dos JSON em `site/content/`:
+Quase todas as páginas são "shells" HTML pequenos; o conteúdo é gerado por `app.js` (hoje `site/js/`) a partir dos JSON em `site/content/`:
 
 | Tipo | Páginas | Renderização |
 |---|---|---|
@@ -23,7 +28,7 @@ Quase todas as páginas são "shells" HTML pequenos; o conteúdo é gerado por [
 
 A norma visual em vigor (a preservar):
 
-- **Tokens** em [styles.css:1-36](site/styles.css#L1) — paleta creme/dourado (`--paper`, `--moss`, `--gold`…), `--radius: 8px`, sombra suave.
+- **Tokens** em `styles.css:1-36` (hoje `css/01-tokens-agua.css`) — paleta creme/dourado (`--paper`, `--moss`, `--gold`…), `--radius: 8px`, sombra suave.
 - **Tipografia:** títulos Georgia serif peso 500 (styles.css:232), corpo Inter (styles.css:50), `.eyebrow` maiúsculas em `--moss` (styles.css:216).
 - **Header runtime:** logótipo + carrinho + menu hambúrguer + toggle de tema (oculto por defeito) — `renderBrand` (app.js:3392).
 - **Footer runtime:** Encomendar por Catálogo → Política de Privacidade → (Login de Administrador) → © — `renderFooter` (app.js:3443).
@@ -90,7 +95,7 @@ Página pública do fluxo do carrinho ("Acrescentar produto"). Usa `home-shell` 
 
 ### 3.3 agendas.html e postais.html
 Já usam o padrão `contact-card`/`category-entry` (alinhado com o funil), mas:
-- **Header pré-JS diferente:** os HTML têm `Início`/`Contacto` como links de texto ([agendas.html:21-24](site/agendas.html#L21)), sem os ícones nem a estrutura da marca com `brand-letter-r` usados em contacto/privacy. Em runtime o JS substitui pelo header padrão, mas há flash do header antigo e, sem JS, a página fica diferente do resto.
+- **Header pré-JS diferente:** os HTML têm `Início`/`Contacto` como links de texto ([agendas.html:21-24](../../site/agendas.html#L21)), sem os ícones nem a estrutura da marca com `brand-letter-r` usados em contacto/privacy. Em runtime o JS substitui pelo header padrão, mas há flash do header antigo e, sem JS, a página fica diferente do resto.
 - **Footer:** sem o item de admin presente no `renderFooter` (decisão de admin — ignorável), mas a ordem/conteúdo deve espelhar o footer padrão.
 - **Proposta:** copiar para o HTML estático o mesmo markup de header/footer usado em contacto.html (ou, melhor, gerar também o footer via JS como já acontece ao header).
 
@@ -115,7 +120,7 @@ O esqueleto é o mesmo (`product-shell` + `wizard-shell` + footer), portanto a h
 ### 3.7 Zonas com sistema de design próprio (decisão, não defeito)
 - **catalogo/** — "Catálogo simples", design próprio, linkado em todos os footers. É deliberado (enviado por link direto). Recomendo manter distinto, mas partilhar tokens de cor para não derivar.
 - **ofertas/** — usa o CSS do catálogo, mas está no **menu principal** do site ("Ofertas"). Quem navega do menu cai num design sem header/carrinho do site. A prazo: ou migrar as ofertas para o layout do site, ou pelo menos dar-lhes o header padrão.
-- **Defeito encontrado de passagem:** o [site/catalogo.html](site/catalogo.html) da raiz está corrompido — cinco linhas têm o prefixo `"rotation": -7` colado antes das tags do `<head>`, e esse texto é empurrado pelo browser para o topo do `<body>` (texto visível na página). Provavelmente resultado de um find‑and‑replace falhado. Corrigir mesmo que o catálogo fique fora do âmbito.
+- **Defeito encontrado de passagem:** o [site/catalogo.html](../../site/catalogo.html) da raiz está corrompido — cinco linhas têm o prefixo `"rotation": -7` colado antes das tags do `<head>`, e esse texto é empurrado pelo browser para o topo do `<body>` (texto visível na página). Provavelmente resultado de um find‑and‑replace falhado. Corrigir mesmo que o catálogo fique fora do âmbito.
 
 ### 3.8 styleguide.html desatualizado
 O guia visual documenta os componentes do wizard e a **grelha de categorias antiga** (cartões numerados), e não tem nada do `BRAND_HOME_V1` (hero, news cards, lista de produtos, menu lateral). Depois da uniformização, atualizar o styleguide para refletir a linguagem final — é a ferramenta que evita nova deriva.

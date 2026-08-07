@@ -42,7 +42,7 @@ function lr_json_array($raw) {
     return is_array($decoded) ? $decoded : array();
 }
 function lr_main_v2_slugs() {
-    return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'marcadores-magneticos', 'personalizacao');
+    return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'personalizacao');
 }
 function lr_congress_slugs() {
     return array('crachas', 'imanes', 'caderninhos', 'cadernos');
@@ -410,7 +410,7 @@ function lr_product_friendly_name($slug) {
         'crachas'=>'Crachás','crachas-loja'=>'Crachás',
         'imanes'=>'Ímanes','imanes-loja'=>'Ímanes',
         'caderninhos'=>'Mini-Cadernos','mini-cadernos'=>'Mini-Cadernos','blocos-a6'=>'Bloco Argolas A6',
-        'cadernos'=>'Cadernos','cadernos-anuais'=>'Cadernos anuais',
+        'cadernos'=>'Cadernos','cadernos-anuais'=>'Cadernos anuais','agendas'=>'Agendas',
         'bloquinhos'=>'Bloquinhos','imanes-recortados'=>'Ímanes recortados',
         'personalizacao'=>'Personalização',
         'stickers'=>'Stickers','marcadores'=>'Marcadores','marcadores-magneticos'=>'Marcadores magnéticos',
@@ -1091,7 +1091,15 @@ function lr_funnel_lines() {
         'cadernos-anuais' => array('label' => 'Cadernos anuais · site', 'color' => '#b68be8', 'stations' => array(
             array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
             array('id' => 'origem', 'label' => 'Catálogo / tua capa', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
-            array('id' => 'laminacao', 'label' => 'Laminação', 'steps' => array('lamination')),
+            array('id' => 'capa', 'label' => 'Capa', 'steps' => array('cover_type')),
+            array('id' => 'laminacao', 'label' => 'Acabamento', 'steps' => array('lamination')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+        )),
+        'agendas' => array('label' => 'Agendas · site', 'color' => '#7fc8a9', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
+            array('id' => 'origem', 'label' => 'Catálogo / tua capa', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
+            array('id' => 'capa', 'label' => 'Capa', 'steps' => array('cover_type')),
+            array('id' => 'laminacao', 'label' => 'Acabamento', 'steps' => array('lamination')),
             array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
         )),
         'stickers' => array('label' => 'Stickers · site', 'color' => '#e8a05a', 'stations' => array(
@@ -1259,7 +1267,7 @@ function lr_event_to_station($name, $stepId, $slug, $landing = '', $submitted = 
     if ($name === 'wizard_started' || $name === 'product_view') return 'split';
     if ($name === 'site_landed') {
         $lc = strtolower((string)$landing);
-        $pages = array('crachas-loja', 'imanes-loja', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'stickers', 'marcadores', 'marcadores-magneticos', 'crachas', 'imanes', 'caderninhos', 'cadernos', 'molduras', 'congressos/2026');
+        $pages = array('crachas-loja', 'imanes-loja', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'crachas', 'imanes', 'caderninhos', 'cadernos', 'molduras', 'congressos/2026');
         foreach ($pages as $page) {
             if (strpos($lc, $page) !== false) return 'split';
         }
@@ -2291,7 +2299,7 @@ $lrPayloadActivo = $dashboardView === 'teia' ? $teiaPayload : $replayPayload;
   var lineLabel = {
     home: 'Página inicial',
     'crachas-loja': 'Crachás · site', 'imanes-loja': 'Ímanes · site',
-    'mini-cadernos': 'Mini-Cadernos · site', 'blocos-a6': 'Bloco Argolas A6 · site', 'cadernos-anuais': 'Cadernos anuais · site',
+    'mini-cadernos': 'Mini-Cadernos · site', 'blocos-a6': 'Bloco Argolas A6 · site', 'cadernos-anuais': 'Cadernos anuais · site', agendas: 'Agendas · site',
     bloquinhos: 'Bloquinhos · site', 'imanes-recortados': 'Ímanes recortados · site',
     personalizacao: 'Personalização · site',
     stickers: 'Stickers · site', marcadores: 'Marcadores · site', 'marcadores-magneticos': 'Marcadores magnéticos · site',

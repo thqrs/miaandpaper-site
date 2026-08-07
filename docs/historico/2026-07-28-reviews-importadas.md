@@ -1,5 +1,8 @@
 # Reviews importadas dos screenshots de WhatsApp
 
+> **Documento histórico — 2026-07-28.** Registo de uma importação pontual, para
+> se saber de onde veio cada review. Não descreve comportamento do site.
+
 Importadas em 2026-07-28 a partir de `F:/Fotos_site_miaandpaper/Reviews/transcriptions.json`
 para `site/content/reviews.json`. As três reviews de exemplo (`review-exemplo-1..3`)
 foram removidas.

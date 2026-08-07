@@ -183,8 +183,17 @@
       return "";
     }
 
+    // PERSONALIZACAO_DE_ONDE_VIM_V1: o link leva o slug do produto de origem,
+    // para o passo 2 da personalizacao abrir logo a gaveta que o contem. Ver
+    // `builderGrupoDeOrigem()` em js/14-upload-quantidade.js.
+    var destino = promo.href || "personalizacao.html";
+    var origem = (product && product.slug) || "";
+    if (origem && destino.indexOf("de=") === -1) {
+      destino += (destino.indexOf("?") === -1 ? "?" : "&") + "de=" + encodeURIComponent(origem);
+    }
+
     return [
-      '<a class="custom-promo" href="' + escapeHtml(promo.href || "personalizacao.html") + '" data-track="true" data-track-action="custom_promo_click" data-track-id="' + escapeHtml((product && product.slug) || "") + '">',
+      '<a class="custom-promo" href="' + escapeHtml(destino) + '" data-track="true" data-track-action="custom_promo_click" data-track-id="' + escapeHtml(origem) + '">',
       promo.image
         ? '<span class="custom-promo-media" style="background-image:url(&quot;' + escapeHtml(promo.image) + '&quot;)" aria-hidden="true"></span>'
         : '<span class="custom-promo-media is-icon" aria-hidden="true">' + ICON_UPLOAD + '</span>',

@@ -746,9 +746,10 @@
         {
           "id": "grandes",
           "value": "Grandes",
+          "priceKey": "58 mm",
           "title": "Grandes",
           "subtitle": "5,8 cm x 5,8 cm (58 mm)",
-          "note": "Preço a confirmar",
+          "note": "Maior impacto",
           "visual": "pin-large",
           "quoteOnly": true,
           "personalizationOnly": true,
@@ -808,7 +809,7 @@
         }
       ],
       "minimumQuantity": 1,
-      "pricingMode": "pack-combination",
+      "pricingMode": "tier-unit",
       "allowUnitDiscounts": true,
       "freeQuantity": true,
       "adjustPerDesign": true
@@ -910,7 +911,7 @@
   "catalogContext": "main-v2",
   "orderFlow": "catalog-or-custom",
   "minimumQuantity": 1,
-  "pricingMode": "pack-combination",
+  "pricingMode": "tier-unit",
   "allowUnitDiscounts": true,
   "quantityPricingSwitchByPriceKey": {
     "25 mm": {
@@ -918,6 +919,10 @@
       "sliderMaximum": 150
     },
     "32 mm": {
+      "quantityTiers": true,
+      "sliderMaximum": 150
+    },
+    "58 mm": {
       "quantityTiers": true,
       "sliderMaximum": 150
     }
@@ -956,7 +961,7 @@
   "finishOptions": [
     {
       "value": "holografica",
-      "title": "Laminação holográfica",
+      "title": "Acabamento holográfico",
       "subtitle": "Brilho com reflexos coloridos",
       "extraPriceCentsPerUnit": 25
     }

@@ -414,7 +414,7 @@
         }
       ],
       "minimumQuantity": 1,
-      "pricingMode": "pack-combination",
+      "pricingMode": "tier-unit",
       "allowUnitDiscounts": true,
       "freeQuantity": true,
       "adjustPerDesign": true
@@ -514,7 +514,7 @@
   "catalogContext": "main-v2",
   "orderFlow": "catalog-or-custom",
   "minimumQuantity": 1,
-  "pricingMode": "pack-combination",
+  "pricingMode": "tier-unit",
   "allowUnitDiscounts": true,
   "quantityPricingSwitchByPriceKey": {
     "Mini-Cadernos": {
@@ -556,7 +556,7 @@
   "finishOptions": [
     {
       "value": "holografica",
-      "title": "Laminação holográfica",
+      "title": "Acabamento holográfico",
       "subtitle": "Brilho com reflexos coloridos",
       "extraPriceCentsPerUnit": 25
     }

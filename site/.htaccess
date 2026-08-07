@@ -13,8 +13,9 @@ DirectoryIndex index.html
     Require all denied
 </FilesMatch>
 
-# As copias de seguranca da galeria chamam-se "<produto>.json.galeria-bak".
-# O sufixo tem um hifen antes de "bak", por isso a regra acima nao as apanha.
+# As copias de seguranca da galeria e do editor de precos chamam-se
+# "<produto>.json.galeria-bak" e "<ficheiro>.json.precos-bak". O sufixo tem um
+# hifen antes de "bak", por isso a regra acima nao as apanha.
 <FilesMatch "-(bak|backup)$">
     Require all denied
 </FilesMatch>

@@ -7,7 +7,23 @@
     return href || "index.html";
   }
 
+  // MENU_ICONES_V1: `menuShowIcons` no content/home.json liga e desliga os
+  // icones do hamburguer. Por omissao ficam ligados, para nao mudar o menu de
+  // quem nunca tocou na definicao. Edita-se em homepage-menu-design.php.
+  function siteMenuIconsEnabled() {
+    return !(state.home && state.home.menuShowIcons === false);
+  }
+
+  // MENU_ACORDEAO_V1: por omissao fica desligado (as seccoes acumulam-se
+  // abertas), que e o comportamento menos surpreendente.
+  function siteMenuAccordionEnabled() {
+    return !!(state.home && state.home.menuAccordion);
+  }
+
   function renderSiteMenuIcon(iconName, modifier) {
+    if (!siteMenuIconsEnabled()) {
+      return "";
+    }
     var safeName = String(iconName || "catalogo").replace(/[^a-z0-9-]/gi, "");
     return '<span class="site-menu-icon' + (modifier ? ' ' + modifier : '') + '" aria-hidden="true">'
       + '<img src="content/brand/menu-icons/line-art/' + safeName + '.png" alt="" width="64" height="64">'
@@ -24,6 +40,14 @@
   }
 
   function siteMenuCategoryIcon(category) {
+    // MENU_ICONE_POR_ENTRADA_V1: `menuIcon` no content/home.json manda sobre os
+    // aliases, para se poder escolher o icone em homepage-menu-design.php sem
+    // mexer neste mapa. Sem `menuIcon`, o comportamento e o de sempre.
+    var escolhido = String(category && category.menuIcon ? category.menuIcon : "").trim();
+    if (escolhido !== "") {
+      return escolhido;
+    }
+
     var id = String(category && category.id ? category.id : "").trim();
     var aliases = {
       "cadernos-geral": "cadernos",
@@ -322,7 +346,11 @@
       }
       group.dataset.siteMenuBound = "1";
       group.addEventListener("toggle", function () {
-        if (!group.open) {
+        // MENU_ACORDEAO_V1: fechar as outras seccoes ao abrir uma so acontece
+        // se `menuAccordion` estiver ligado no content/home.json. Antes era
+        // sempre — o interruptor em homepage-menu-design.php nao fazia nada.
+        // Desligado, as seccoes ficam todas abertas a medida que se abrem.
+        if (!group.open || !siteMenuAccordionEnabled()) {
           return;
         }
         surface.querySelectorAll("[data-site-menu-group][open]").forEach(function (otherGroup) {

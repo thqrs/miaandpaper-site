@@ -198,7 +198,7 @@ foreach ($temaClaro as $nome => $valor) {
  * componentes.
  *
  * Por isso o painel tem de mostrar as duas camadas, senão mexer nas cores
- * parece não fazer nada. Está registado no RELATORIO-DESIGN-CSS.md.
+ * parece não fazer nada. Está registado em docs/03-modulos-css.md.
  */
 function mod_tokens_de_bloco($css, $seletor, $prefixo)
 {

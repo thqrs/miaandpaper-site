@@ -522,6 +522,10 @@
       '<a class="admin-funnel-link" href="multimedia.html" target="_blank" rel="noopener">Multimédia</a>',
       '<a class="admin-funnel-link" href="reviews.html" target="_blank" rel="noopener">Reviews</a>',
       '<a class="admin-funnel-link" href="produtos.html" target="_blank" rel="noopener">Produtos</a>',
+      // PRECOS_UI_V1: editor central de precos. Todos os valores monetarios do
+      // site num sitio so — packs, descontos, extras, portes e custos.
+      '<a class="admin-funnel-link" href="precos.php" target="_blank" rel="noopener">Preços</a>',
+      '<a class="admin-funnel-link" href="homepage-menu-design.php" target="_blank" rel="noopener">Homepage & Menu</a>',
       // TOOLS_INDEX_V1: link para as ferramentas internas (só admin; a página
       // valida a sessão no servidor, como admin-funnel.php).
       '<a class="admin-funnel-link" href="tools/index.php" target="_blank" rel="noopener">Ferramentas</a>',
@@ -1393,6 +1397,13 @@
         '<span class="category-art" aria-hidden="true"></span>',
         '<strong>' + escapeHtml(category.title || "") + '</strong>',
         '<span>' + escapeHtml(category.subtitle || "") + '</span>',
+        // ACTION_TEXT_V1: o "Ver opcoes ->" era um ::after do CSS, igual em
+        // todos os cartoes. Passou a ser texto a serio, editavel por cartao em
+        // homepage-menu-design.php. Sem `actionText` o CSS continua a por o
+        // texto por omissao, por isso nada muda em quem nao o definiu.
+        category.actionText
+          ? '<span class="category-action">' + escapeHtml(category.actionText) + '</span>'
+          : "",
         adminControls,
         '</' + tag + '>'
       ].join("");

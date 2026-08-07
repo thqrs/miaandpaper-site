@@ -1,8 +1,13 @@
 # Relatório de design — `site/styles.css`
 
+> **Documento histórico — 2026-07-31.** Escrito quando o CSS era um único
+> `styles.css`; hoje é `site/css/01→12`, mas as regras são as mesmas e os números
+> mantêm-se válidos. O resumo actual está em
+> [03 · Módulos CSS](../03-modulos-css.md).
+
 **Data:** 31 de Julho de 2026
 **Ficheiro:** 270 KB · 12 263 linhas · 1712 blocos de regras · 634 classes
-**Página companheira:** [`modulos.php`](site/modulos.php) — inventário visual
+**Página companheira:** [`modulos.php`](../../site/modulos.php) — inventário visual
 gerado a partir deste mesmo ficheiro, em tempo real.
 
 ---

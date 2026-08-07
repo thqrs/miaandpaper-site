@@ -5,6 +5,11 @@
         "smartQuantities": true,
         "quantityPricingSwitchVisible": false
     },
+    "delivery": {
+        "pickup": 0,
+        "shipping": 540,
+        "join_orders": 0
+    },
     "products": {
         "caderninhos": {
             "id": "caderninhos",
@@ -85,7 +90,7 @@
             "unitShort": "crachá",
             "defaultPriceKey": "25 mm",
             "minimumQuantity": 1,
-            "pricingMode": "pack-combination",
+            "pricingMode": "tier-unit",
             "allowUnitDiscounts": true,
             "quantityPricingSwitchByPriceKey": {
                 "25 mm": {
@@ -93,6 +98,10 @@
                     "sliderMaximum": 150
                 },
                 "32 mm": {
+                    "quantityTiers": true,
+                    "sliderMaximum": 150
+                },
+                "58 mm": {
                     "quantityTiers": true,
                     "sliderMaximum": 150
                 }
@@ -114,6 +123,14 @@
                     "24": 3200,
                     "48": 5800,
                     "96": 10500
+                },
+                "58 mm": {
+                    "1": 200,
+                    "3": 570,
+                    "5": 860,
+                    "24": 3660,
+                    "48": 6630,
+                    "96": 12000
                 }
             }
         },
@@ -127,7 +144,7 @@
             "unitShort": "íman",
             "defaultPriceKey": "Achatados",
             "minimumQuantity": 1,
-            "pricingMode": "pack-combination",
+            "pricingMode": "tier-unit",
             "allowUnitDiscounts": true,
             "quantityPricingSwitchByPriceKey": {
                 "Achatados": {
@@ -155,12 +172,6 @@
                     "30": 6000,
                     "60": 11250
                 }
-            },
-            "pricingModeByPriceKey": {
-                "Achatados": "tier-unit"
-            },
-            "combinationTieBreakByPriceKey": {
-                "3 mm": "fewer-packs"
             }
         },
         "imanes-recortados": {
@@ -202,7 +213,7 @@
             "unitShort": "mini-caderno",
             "defaultPriceKey": "Mini-Cadernos",
             "minimumQuantity": 1,
-            "pricingMode": "pack-combination",
+            "pricingMode": "tier-unit",
             "allowUnitDiscounts": true,
             "quantityPricingSwitchByPriceKey": {
                 "Mini-Cadernos": {
@@ -233,7 +244,7 @@
             "unitShort": "bloco",
             "defaultPriceKey": "Blocos A6",
             "minimumQuantity": 1,
-            "pricingMode": "pack-combination",
+            "pricingMode": "tier-unit",
             "allowUnitDiscounts": true,
             "quantityPricingSwitchByPriceKey": {
                 "Blocos A6": {
@@ -264,7 +275,7 @@
             "unitShort": "bloquinho",
             "defaultPriceKey": "Bloquinhos",
             "minimumQuantity": 1,
-            "pricingMode": "pack-combination",
+            "pricingMode": "tier-unit",
             "allowUnitDiscounts": true,
             "quantityPricingSwitchByPriceKey": {
                 "Bloquinhos": {

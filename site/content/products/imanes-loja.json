@@ -482,13 +482,10 @@
         }
       ],
       "minimumQuantity": 1,
-      "pricingMode": "pack-combination",
+      "pricingMode": "tier-unit",
       "allowUnitDiscounts": true,
       "freeQuantity": true,
       "adjustPerDesign": true,
-      "combinationTieBreakByPriceKey": {
-        "3 mm": "fewer-packs"
-      },
       "upgradeToNextPackByPriceKey": {
         "3 mm": true
       }
@@ -591,7 +588,7 @@
   "catalogContext": "main-v2",
   "orderFlow": "catalog-or-custom",
   "minimumQuantity": 1,
-  "pricingMode": "pack-combination",
+  "pricingMode": "tier-unit",
   "allowUnitDiscounts": true,
   "quantityPricingSwitchByPriceKey": {
     "Achatados": {
@@ -634,13 +631,10 @@
     "compress": false,
     "convert": false
   },
-  "pricingModeByPriceKey": {
-    "Achatados": "tier-unit"
-  },
   "finishOptions": [
     {
       "value": "holografica",
-      "title": "Laminação holográfica",
+      "title": "Acabamento holográfico",
       "subtitle": "Brilho com reflexos coloridos",
       "extraPriceCentsPerUnit": 25
     }

@@ -1,5 +1,11 @@
 # Mia & Paper — Code Review Report
 
+> **Documento histórico — 2026-06-11.** Anterior à modularização de `app.js` e
+> `styles.css`, por isso os ficheiros, tamanhos e números de linha aqui já não
+> existem. Muitos dos problemas foram resolvidos desde então. O estado actual
+> está em [`docs/`](../README.md); o que continua aberto, em
+> [09 · Pendentes](../09-pendentes.md).
+
 **Date:** 2026-06-11 · **Scope:** full repository review (read-only; no changes made)
 
 ---

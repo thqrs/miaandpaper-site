@@ -1303,8 +1303,28 @@
       product.unitShort = record.unitShort;
     }
 
+    applyCentralDeliveryFees(product, pricing);
     syncPackItemsFromPricing(product);
     return product;
+  }
+
+  // PORTES_CENTRAIS_V1: o valor dos portes vem do bloco `delivery` do
+  // pricing.json. O JSON do produto continua a dar a estrutura (id, etiqueta,
+  // texto) e serve de recurso se o central nao tiver a opcao. Tem de dar o
+  // mesmo que `central_delivery_fees()` no send-order.php.
+  function applyCentralDeliveryFees(product, pricing) {
+    var centrais = pricing && pricing.delivery ? pricing.delivery : null;
+
+    if (!centrais || !product || !Array.isArray(product.deliveryOptions)) {
+      return;
+    }
+
+    product.deliveryOptions.forEach(function (option) {
+      var id = option && option.id ? String(option.id) : "";
+      if (id && centrais[id] != null) {
+        option.feeCents = Math.max(0, parseInt(centrais[id], 10) || 0);
+      }
+    });
   }
 
   function syncPricingFromProduct(product) {

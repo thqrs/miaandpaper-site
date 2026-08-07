@@ -1,5 +1,9 @@
 # Duplicação de produtos entre contextos (site principal vs Congresso 2026)
 
+> **Documento histórico — 2026-07-28.** Levantamento; nada foi decidido nem
+> alterado por causa dele. Continua a ser a melhor descrição do problema — a
+> decisão está listada em [09 · Pendentes](../09-pendentes.md).
+
 Levantamento feito em 2026-07-28. **Nada foi decidido nem alterado** por causa
 disto — o ficheiro existe para a decisão ser tomada mais tarde com os factos à
 mão.
