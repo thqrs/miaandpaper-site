@@ -66,13 +66,34 @@
             "accent": "rose",
             "available": true,
             "carouselEnabled": true,
-            "carouselSourceImages": [
-                "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
-                "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-01.webp",
-                "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp"
-            ],
             "clickable": true,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": [
+                {
+                    "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-01.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                }
+            ]
         },
         {
             "id": "cadernos-geral",
@@ -88,13 +109,34 @@
             "accent": "gold",
             "available": true,
             "carouselEnabled": true,
-            "carouselSourceImages": [
-                "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.webp",
-                "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/vestido_verde/vestido_verde_matte.webp",
-                "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/cornfield/cornfield_matte.webp"
-            ],
             "clickable": true,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": [
+                {
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/vestido_verde/vestido_verde_matte.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/cornfield/cornfield_matte.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                }
+            ]
         },
         {
             "id": "mini-cadernos-geral",
@@ -110,13 +152,34 @@
             "accent": "rose",
             "available": true,
             "carouselEnabled": true,
-            "carouselSourceImages": [
-                "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
-                "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/o_jovem_cadeira_minicaderno.webp",
-                "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/idosa_jovem_minicaderno.webp"
-            ],
             "clickable": true,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": [
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/o_jovem_cadeira_minicaderno.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/idosa_jovem_minicaderno.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                }
+            ]
         },
         {
             "id": "blocos-a6",
@@ -133,7 +196,97 @@
             "available": true,
             "carouselEnabled": true,
             "clickable": true,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": [
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/o_jovem_cadeira_minicaderno.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/idosa_jovem_minicaderno.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/idoso_jovem_minicaderno.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/reencontro_minicaderno.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/vestido_verde_minicaderno.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/1000133037.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/1000133040.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/1000133041.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/1000133042.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/1000133043.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                }
+            ]
         },
         {
             "id": "bloquinhos",
@@ -149,7 +302,8 @@
             "available": true,
             "carouselEnabled": true,
             "clickable": true,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": []
         },
         {
             "id": "quadros",
@@ -165,17 +319,38 @@
             "accent": "sage",
             "available": true,
             "carouselEnabled": true,
-            "carouselSourceImages": [
-                "content/designs/quadros/fotos-reais/foto-flores-azul-amarelo-frontal.webp",
-                "content/designs/quadros/fotos-reais/bebe-elefante-dados.webp",
-                "content/designs/quadros/fotos-reais/amor-frontal.webp"
-            ],
             "clickable": true,
             "featureLabel": "Personalização",
             "featureTitle": "Molduras feitas à tua medida",
             "featureText": "Escolhe o estilo, as cores e o texto, e envia as fotos diretamente no pedido.",
             "featureCta": "Criar uma moldura",
-            "section": "novidades"
+            "section": "novidades",
+            "carouselSlides": [
+                {
+                    "image": "content/designs/quadros/fotos-reais/foto-flores-azul-amarelo-frontal.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/quadros/fotos-reais/bebe-elefante-dados.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/quadros/fotos-reais/amor-frontal.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                }
+            ]
         },
         {
             "id": "crachas-geral",
@@ -191,13 +366,34 @@
             "accent": "blue",
             "available": true,
             "carouselEnabled": true,
-            "carouselSourceImages": [
-                "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
-                "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-01.webp",
-                "content/designs/loja/crachas-loja/catalog/crachas/novidades/lingua-gestual-01.webp"
-            ],
             "clickable": true,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": [
+                {
+                    "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-01.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/lingua-gestual-01.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                }
+            ]
         },
         {
             "id": "postais",
@@ -213,13 +409,34 @@
             "accent": "rose",
             "available": true,
             "carouselEnabled": true,
-            "carouselSourceImages": [
-                "ofertas/convite-congresso/assets/modelo-casal.webp",
-                "ofertas/convite-congresso/assets/modelo-familia.webp",
-                "ofertas/convite-congresso/assets/modelo-mulher.webp"
-            ],
             "clickable": true,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": [
+                {
+                    "image": "ofertas/convite-congresso/assets/modelo-casal.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "ofertas/convite-congresso/assets/modelo-familia.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "ofertas/convite-congresso/assets/modelo-mulher.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                }
+            ]
         },
         {
             "id": "agendas",
@@ -235,9 +452,9 @@
             "accent": "sage",
             "available": true,
             "carouselEnabled": false,
-            "carouselSourceImages": [],
             "clickable": true,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": []
         },
         {
             "id": "imanes-geral",
@@ -253,13 +470,34 @@
             "accent": "blue",
             "available": true,
             "carouselEnabled": true,
-            "carouselSourceImages": [
-                "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-01.webp",
-                "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/cornfield/cornfield-01.webp",
-                "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132982.webp"
-            ],
             "clickable": true,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": [
+                {
+                    "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-01.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/cornfield/cornfield-01.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132982.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                }
+            ]
         },
         {
             "id": "imanes-recortados",
@@ -275,7 +513,8 @@
             "available": true,
             "carouselEnabled": true,
             "clickable": true,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": []
         },
         {
             "id": "stickers",
@@ -291,7 +530,8 @@
             "available": true,
             "carouselEnabled": true,
             "clickable": true,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": []
         },
         {
             "id": "marcadores",
@@ -307,7 +547,8 @@
             "available": true,
             "carouselEnabled": true,
             "clickable": true,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": []
         },
         {
             "id": "marcadores-magneticos",
@@ -324,7 +565,8 @@
             "available": true,
             "carouselEnabled": false,
             "clickable": true,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": []
         },
         {
             "id": "congressos",
@@ -337,11 +579,6 @@
             "href": "congressos.html",
             "menuHref": "congressos.html",
             "image": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_1.webp",
-            "carouselSourceImages": [
-                "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_1.webp",
-                "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_5.webp",
-                "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_9.webp"
-            ],
             "accent": "gold",
             "available": true,
             "carouselEnabled": true,
@@ -350,7 +587,33 @@
             "featureTitle": "Cadernos e lembranças",
             "featureText": "Consulta os packs disponíveis e prepara a tua encomenda para o congresso.",
             "featureCta": "Ver produtos do congresso",
-            "section": "novidades"
+            "section": "novidades",
+            "carouselSlides": [
+                {
+                    "image": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_1.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_5.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_9.webp",
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                }
+            ]
         },
         {
             "id": "ofertas",
@@ -365,7 +628,8 @@
             "available": true,
             "clickable": true,
             "showOnHome": false,
-            "section": "produtos"
+            "section": "produtos",
+            "carouselSlides": []
         }
     ],
     "theme": {
@@ -388,7 +652,9 @@
         "speedSeconds": 8,
         "zoomPercent": 120,
         "panPercent": 6,
-        "overlayOpacity": 20
+        "overlayOpacity": 20,
+        "intervalMs": 3500,
+        "randomizeOnLoad": true
     },
     "butterfly": {
         "enabled": true,

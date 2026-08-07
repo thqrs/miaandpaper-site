@@ -11,6 +11,7 @@ com `PRECOS_REQUIRE_ADMIN` e `HOMEPAGE_REQUIRE_ADMIN`.
 |---|---|---|
 | `precos.php` | todos os valores monetários | [04 · Preços](04-precos.md) |
 | `homepage-menu-design.php` | o menu e a homepage | abaixo |
+| `carrousel.php` | os carrosséis dos cartões da homepage | abaixo |
 
 ## `homepage-menu-design.php`
 
@@ -104,6 +105,57 @@ editor já não o escreve.
 
 O selector de ícones lista os PNG de `content/brand/menu-icons/line-art/`, por
 isso um ficheiro novo aparece sozinho.
+
+---
+
+## `carrousel.php`
+
+`CAROUSEL_SLIDES_V1`. Um separador **Global** e um por cartão da homepage.
+Escreve no mesmo `content/home.json`, por isso a leitura e a escrita atómica
+vivem na `lib/home-core.php`, partilhada com o `homepage-menu-api.php`.
+
+Cada imagem passou a ser um **slide** com os seus parâmetros:
+
+```json
+"carouselSlides": [
+  { "image": "content/…", "intervalMs": null, "speedSeconds": null,
+    "zoomPercent": null, "panPercent": null, "overlayOpacity": null }
+]
+```
+
+| parâmetro | o que faz | limites |
+|---|---|---|
+| `intervalMs` | quanto tempo a imagem fica no ecrã | 800–30000 |
+| `speedSeconds` | duração do movimento (ken burns) | 3–30 |
+| `zoomPercent` | quanto aproxima ao longo do movimento | 100–140 |
+| `panPercent` | quanto desliza | 0–18 |
+| `overlayOpacity` | quanto escurece, para o texto se ler | 0–80 |
+
+**Null herda do bloco `carousel` global** — é isso que faz com que mexer no
+separador Global chegue a todos os carrosséis de uma vez. O botão *Repor todas
+as imagens no global* limpa os valores próprios de tudo, quando se quer que uma
+mudança global chegue mesmo a toda a gente.
+
+A cascata é decidida num sítio só: `resolvedCarouselSlides()` em
+`js/03-conteudo-home.js`, com o par em `carousel_global()`/`carousel_slides()`
+na `lib/home-core.php`. Os valores saem em variáveis CSS **em cada moldura**
+(`--carousel-speed`, `--carousel-zoom-scale`, `--carousel-overlay`,
+`--carousel-pan-x/y`) em vez de uma vez no cartão, e o escurecimento mudou-se do
+`.category-card::before` para o `.category-carousel-frame::after`.
+
+O temporizador deixou de ser um `setInterval` fixo e passou a ser uma cadeia de
+timeouts, porque cada moldura diz quanto tempo fica.
+
+Outras coisas do separador de cada cartão: ligar/desligar o carrossel, baralhar
+a ordem, arrastar as imagens para as ordenar, e **puxar as imagens do produto** —
+que é o que o site fazia sozinho antes desta página (derivava do passo 1 do
+produto). Uma imagem só é aceite se o ficheiro existir mesmo dentro de
+`content/`; o selector lista os 800 e tal que lá estão.
+
+⚠️ Os controlos de carrossel **saíram do modo admin do site** (o painel global e
+os campos por cartão) para não haver dois sítios a escrever nos mesmos campos.
+O `carouselSourceImages` foi substituído pelo `carouselSlides` e é apagado
+quando esta página grava.
 
 ---
 

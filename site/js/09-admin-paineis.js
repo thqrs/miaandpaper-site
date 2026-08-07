@@ -354,7 +354,6 @@
 
   function renderAdminHomeSettingsPanel(home) {
     var theme;
-    var carousel;
 
     if (!home) {
       return "";
@@ -362,12 +361,11 @@
 
     ensureHomeSettings(home);
     theme = home.theme || {};
-    carousel = home.carousel || {};
 
     return [
       '<details class="admin-step-panel admin-global-panel">',
       '<summary>Configuração global</summary>',
-      '<p class="admin-price-help">Cores globais, fundo do site e carousel automático das imagens do Passo 1.</p>',
+      '<p class="admin-price-help">Cores globais e fundo do site.</p>',
       '<div class="admin-image-control-grid">',
       '<label><span>Fundo página</span><input type="text" value="' + escapeHtml(theme.paper || "") + '" data-admin-home-theme="paper" placeholder="#fff8df"></label>',
       '<label><span>Cartões</span><input type="text" value="' + escapeHtml(theme.card || "") + '" data-admin-home-theme="card" placeholder="#fffdf5"></label>',
@@ -388,13 +386,10 @@
       '<label class="admin-check"><input type="checkbox"' + (home.brandButterflyEnabled === true ? " checked" : "") + ' data-admin-home-toggle="brandButterflyEnabled"> Mostrar borboleta no texto da marca</label>',
       '<label class="admin-check"><input type="checkbox"' + (home.catalogFooterLinkVisible !== false ? " checked" : "") + ' data-admin-home-toggle="catalogFooterLinkVisible"> Mostrar link do catálogo no footer</label>',
       '<label class="admin-check"><input type="checkbox"' + (home.ordersSuspended === true ? " checked" : "") + ' data-admin-home-toggle="ordersSuspended"> encomendas suspensas</label>',
-      '<label class="admin-check"><input type="checkbox"' + (carousel.enabled !== false ? " checked" : "") + ' data-admin-home-carousel="enabled"> Carousel automático nos cartões (defaults globais)</label>',
-      '<div class="admin-image-control-grid">',
-      '<label><span>Velocidade (segundos)</span><input type="number" min="3" max="30" step="1" value="' + escapeHtml(carousel.speedSeconds || 8) + '" data-admin-home-carousel="speedSeconds"></label>',
-      '<label><span>Zoom movimento (%)</span><input type="number" min="100" max="140" step="1" value="' + escapeHtml(carousel.zoomPercent || 108) + '" data-admin-home-carousel="zoomPercent"></label>',
-      '<label><span>Pan movimento (%)</span><input type="number" min="0" max="18" step="1" value="' + escapeHtml(carousel.panPercent || 6) + '" data-admin-home-carousel="panPercent"></label>',
-      '<label><span>Escurecer imagem (%)</span><input type="number" min="0" max="80" step="1" value="' + escapeHtml(carousel.overlayOpacity || 36) + '" data-admin-home-carousel="overlayOpacity"></label>',
-      '</div>',
+      // CAROUSEL_SLIDES_V1: os carrosseis mudaram-se todos para o carrousel.php,
+      // onde cada imagem tem os seus parametros. Ter os dois sitios a escrever
+      // nos mesmos campos era pedir para divergirem.
+      '<p class="admin-price-help">Os carrosséis dos cartões editam-se em <a href="carrousel.php">carrousel.php</a>: imagens, velocidade, zoom, pan e escurecimento, por imagem ou de uma vez para todas.</p>',
       '</details>'
     ].join("");
   }
@@ -526,6 +521,9 @@
       // site num sitio so — packs, descontos, extras, portes e custos.
       '<a class="admin-funnel-link" href="precos.php" target="_blank" rel="noopener">Preços</a>',
       '<a class="admin-funnel-link" href="homepage-menu-design.php" target="_blank" rel="noopener">Homepage & Menu</a>',
+      // CARROUSEL_UI_V1: os carrosseis dos cartoes saem daqui e passam a ter
+      // pagina propria, com os parametros de cada imagem.
+      '<a class="admin-funnel-link" href="carrousel.php" target="_blank" rel="noopener">Carrosséis</a>',
       // TOOLS_INDEX_V1: link para as ferramentas internas (só admin; a página
       // valida a sessão no servidor, como admin-funnel.php).
       '<a class="admin-funnel-link" href="tools/index.php" target="_blank" rel="noopener">Ferramentas</a>',
@@ -954,21 +952,6 @@
       });
     });
 
-    document.querySelectorAll("[data-admin-home-carousel]").forEach(function (input) {
-      input.addEventListener("change", function () {
-        var key = input.dataset.adminHomeCarousel;
-
-        if (!currentHome) {
-          return;
-        }
-
-        ensureHomeSettings(currentHome);
-        pushUndo(currentHome);
-        currentHome.carousel[key] = input.type === "checkbox" ? input.checked : Number(input.value);
-        renderHome(currentHome);
-      });
-    });
-
     document.querySelectorAll("[data-admin-home-toggle]").forEach(function (input) {
       input.addEventListener("change", function () {
         var key = input.dataset.adminHomeToggle;
@@ -1171,45 +1154,38 @@
     return copy;
   }
 
-  // HOMEPAGE_CAROUSEL_DARKMODE_FIX_V2_OFFICIAL_SITE: overrides de carrossel
-  // por cartao (speed/zoom/pan/overlay) com fallback para os globais em
-  // home.carousel.*. Quando o campo na categoria for null/undefined, usa o
-  // global; quando for um numero finito, sobrepoe so esse cartao.
-  function effectiveCarouselValue(category, key, fallback) {
-    if (category && category[key] != null) {
-      var raw = Number(category[key]);
-      if (isFinite(raw)) {
-        return raw;
-      }
-    }
-    return Number(fallback);
-  }
-
+  // CAROUSEL_SLIDES_V1: os parâmetros deixaram de viver no cartão e passaram a
+  // ser de cada slide, por isso saem em variáveis CSS em cada moldura em vez de
+  // uma vez só no cartão. O que estiver a null herda do global — a cascata é
+  // decidida toda em `resolvedCarouselSlides()`.
   function renderHomeCarousel(category, carousel) {
-    var globalPan = Math.max(0, Math.min(18, Number(carousel && carousel.panPercent) || 6));
-    var pan = Math.max(0, Math.min(18, effectiveCarouselValue(category, "carouselPanPercent", globalPan)));
-    var rawImages = category.carouselImages || [];
-    var sourceImages = category.id === "cadernos" ? rawImages.slice() : rawImages.slice(0, 12);
-    var randomize = category.carouselRandomizeOnLoad !== false;
-    // Runtime-only shuffle: a ordem original em content/products/<slug>.json
-    // nao e tocada. Cada page-load embaralha localmente.
-    var images = randomize && sourceImages.length > 1 ? shuffleCopy(sourceImages) : sourceImages;
+    var slides = resolvedCarouselSlides(category, carousel);
+    var randomize = category.carouselRandomizeOnLoad !== false
+      && (!carousel || carousel.randomizeOnLoad !== false);
+    // Runtime-only shuffle: a ordem gravada no home.json nao e tocada. Cada
+    // page-load embaralha localmente.
+    var ordenados = randomize && slides.length > 1 ? shuffleCopy(slides) : slides;
 
-    if (!images.length) {
+    if (!ordenados.length) {
       return "";
     }
 
     return [
       '<span class="category-carousel" data-home-carousel aria-hidden="true">',
-      images.map(function (image, index) {
+      ordenados.map(function (slide, index) {
         var direction = index % 4;
-        var panX = direction === 0 || direction === 3 ? pan : -pan;
-        var panY = direction < 2 ? -pan : pan;
+        var panX = direction === 0 || direction === 3 ? slide.panPercent : -slide.panPercent;
+        var panY = direction < 2 ? -slide.panPercent : slide.panPercent;
         return '<span class="category-carousel-frame' + (index === 0 ? ' is-active' : '')
-          + '" data-mia-image="' + escapeHtml(image)
+          + '" data-mia-image="' + escapeHtml(slide.image)
           + '" data-mia-item-id="' + escapeHtml(category.id || "")
           + '" data-mia-slot-name="home-carousel" data-mia-slide-index="' + index
-          + '" style="background-image:url(&quot;' + escapeHtml(image) + '&quot;);--carousel-pan-x:' + panX + '%;--carousel-pan-y:' + panY + '%"></span>';
+          + '" data-carousel-interval="' + escapeHtml(slide.intervalMs)
+          + '" style="background-image:url(&quot;' + escapeHtml(slide.image) + '&quot;)'
+          + ';--carousel-pan-x:' + panX + '%;--carousel-pan-y:' + panY + '%'
+          + ';--carousel-speed:' + escapeHtml(slide.speedSeconds) + 's'
+          + ';--carousel-zoom-scale:' + escapeHtml((slide.zoomPercent / 100).toFixed(3))
+          + ';--carousel-overlay:' + escapeHtml((slide.overlayOpacity / 100).toFixed(2)) + '"></span>';
       }).join(""),
       '</span>'
     ].join("");
@@ -1425,16 +1401,9 @@
       var hasCarousel = carouselImages.length > 0;
       var hasStaticImage = category.image && !hasCarousel;
       var imageClass = hasCarousel ? " has-carousel" : (hasStaticImage ? " has-image" : "");
-      var globalSpeedSeconds = Number(home.carousel.speedSeconds) || 8;
-      var globalZoomPercent = Number(home.carousel.zoomPercent) || 108;
-      var globalOverlayOpacity = Number(home.carousel.overlayOpacity) || 36;
-      var globalPanPercent = Number(home.carousel.panPercent) || 6;
-      var effSpeed = Math.max(3, Math.min(30, effectiveCarouselValue(category, "carouselSpeedSeconds", globalSpeedSeconds)));
-      var effZoom = Math.max(100, Math.min(140, effectiveCarouselValue(category, "carouselZoomPercent", globalZoomPercent)));
-      var effOverlay = Math.max(0, Math.min(80, effectiveCarouselValue(category, "carouselOverlayOpacity", globalOverlayOpacity)));
-      var effPan = Math.max(0, Math.min(18, effectiveCarouselValue(category, "carouselPanPercent", globalPanPercent)));
-      var carouselStyle = hasCarousel ? ' style="--carousel-speed:' + escapeHtml(effSpeed) + 's;--carousel-zoom-scale:' + escapeHtml((effZoom / 100).toFixed(3)) + ';--carousel-overlay:' + escapeHtml((effOverlay / 100).toFixed(2)) + ';--carousel-pan:' + escapeHtml(effPan) + '%"' : "";
-      var imageStyle = hasStaticImage ? ' style="--category-image:url(&quot;' + escapeHtml(siteAssetUrl(category.image)) + '&quot;)"' : carouselStyle;
+      // CAROUSEL_SLIDES_V1: o cartão já não carrega parâmetros de carrossel —
+      // cada moldura traz os seus, do carrousel.php.
+      var imageStyle = hasStaticImage ? ' style="--category-image:url(&quot;' + escapeHtml(siteAssetUrl(category.image)) + '&quot;)"' : "";
       var isClickable = category.clickable !== false;
       var unavailableMessage = !adminEditing && !isClickable && category.unavailableMessage ? String(category.unavailableMessage) : "";
       var disabledClass = !isClickable ? " is-link-disabled" : "";
@@ -1467,13 +1436,6 @@
         category.image ? '<button type="button" data-admin-home-image-remove="' + originalIndex + '">Remover imagem</button>' : "",
         '<label class="admin-check"><input type="checkbox"' + (isVisible ? " checked" : "") + ' data-admin-home-category="' + originalIndex + '" data-admin-home-category-edit="available"> Visível</label>',
         '<label class="admin-check"><input type="checkbox"' + (category.clickable !== false ? " checked" : "") + ' data-admin-home-category="' + originalIndex + '" data-admin-home-category-edit="clickable"> Link ativo</label>',
-        '<label class="admin-check"><input type="checkbox"' + (category.carouselEnabled !== false ? " checked" : "") + ' data-admin-home-category="' + originalIndex + '" data-admin-home-category-edit="carouselEnabled"> Carrossel ativo</label>',
-        '<label><span>Intervalo carrossel (ms)</span><input type="number" min="800" max="30000" step="100" value="' + escapeHtml(category.carouselIntervalMs != null ? category.carouselIntervalMs : 3500) + '" data-admin-home-category="' + originalIndex + '" data-admin-home-category-edit="carouselIntervalMs"></label>',
-        '<label class="admin-check"><input type="checkbox"' + (category.carouselRandomizeOnLoad !== false ? " checked" : "") + ' data-admin-home-category="' + originalIndex + '" data-admin-home-category-edit="carouselRandomizeOnLoad"> Aleatório ao carregar</label>',
-        '<label><span>Velocidade (segundos) — global ' + escapeHtml(globalSpeedSeconds) + '</span><input type="number" min="3" max="30" step="1" placeholder="' + escapeHtml(globalSpeedSeconds) + '" value="' + escapeHtml(category.carouselSpeedSeconds != null ? category.carouselSpeedSeconds : "") + '" data-admin-home-category="' + originalIndex + '" data-admin-home-category-edit="carouselSpeedSeconds" data-admin-home-category-allow-empty="1"></label>',
-        '<label><span>Zoom movimento (%) — global ' + escapeHtml(globalZoomPercent) + '</span><input type="number" min="100" max="140" step="1" placeholder="' + escapeHtml(globalZoomPercent) + '" value="' + escapeHtml(category.carouselZoomPercent != null ? category.carouselZoomPercent : "") + '" data-admin-home-category="' + originalIndex + '" data-admin-home-category-edit="carouselZoomPercent" data-admin-home-category-allow-empty="1"></label>',
-        '<label><span>Pan movimento (%) — global ' + escapeHtml(globalPanPercent) + '</span><input type="number" min="0" max="18" step="1" placeholder="' + escapeHtml(globalPanPercent) + '" value="' + escapeHtml(category.carouselPanPercent != null ? category.carouselPanPercent : "") + '" data-admin-home-category="' + originalIndex + '" data-admin-home-category-edit="carouselPanPercent" data-admin-home-category-allow-empty="1"></label>',
-        '<label><span>Escurecer imagem (%) — global ' + escapeHtml(globalOverlayOpacity) + '</span><input type="number" min="0" max="80" step="1" placeholder="' + escapeHtml(globalOverlayOpacity) + '" value="' + escapeHtml(category.carouselOverlayOpacity != null ? category.carouselOverlayOpacity : "") + '" data-admin-home-category="' + originalIndex + '" data-admin-home-category-edit="carouselOverlayOpacity" data-admin-home-category-allow-empty="1"></label>',
         '</span>'
       ].join("") : "";
 

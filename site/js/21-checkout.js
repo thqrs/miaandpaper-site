@@ -108,16 +108,9 @@
     var hasCarousel = carouselImages.length > 0;
     var hasStaticImage = category.image && !hasCarousel;
     var imageClass = hasCarousel ? " has-carousel" : (hasStaticImage ? " has-image" : "");
-    var globalSpeedSeconds = Number(home.carousel && home.carousel.speedSeconds) || 8;
-    var globalZoomPercent = Number(home.carousel && home.carousel.zoomPercent) || 108;
-    var globalOverlayOpacity = Number(home.carousel && home.carousel.overlayOpacity) || 36;
-    var globalPanPercent = Number(home.carousel && home.carousel.panPercent) || 6;
-    var effSpeed = Math.max(3, Math.min(30, effectiveCarouselValue(category, "carouselSpeedSeconds", globalSpeedSeconds)));
-    var effZoom = Math.max(100, Math.min(140, effectiveCarouselValue(category, "carouselZoomPercent", globalZoomPercent)));
-    var effOverlay = Math.max(0, Math.min(80, effectiveCarouselValue(category, "carouselOverlayOpacity", globalOverlayOpacity)));
-    var effPan = Math.max(0, Math.min(18, effectiveCarouselValue(category, "carouselPanPercent", globalPanPercent)));
-    var carouselStyle = hasCarousel ? ' style="--carousel-speed:' + escapeHtml(effSpeed) + 's;--carousel-zoom-scale:' + escapeHtml((effZoom / 100).toFixed(3)) + ';--carousel-overlay:' + escapeHtml((effOverlay / 100).toFixed(2)) + ';--carousel-pan:' + escapeHtml(effPan) + '%"' : "";
-    var imageStyle = hasStaticImage ? ' style="--category-image:url(&quot;' + escapeHtml(siteAssetUrl(category.image)) + '&quot;)"' : carouselStyle;
+    // CAROUSEL_SLIDES_V1: cada moldura traz os seus parâmetros; o cartão já não
+    // precisa de os repetir.
+    var imageStyle = hasStaticImage ? ' style="--category-image:url(&quot;' + escapeHtml(siteAssetUrl(category.image)) + '&quot;)"' : "";
     var carouselHtml = hasCarousel ? renderHomeCarousel(category, home.carousel) : "";
     var numberHtml = home.showCategoryNumbers === true
       ? '<span class="category-number">' + String(index + 1).padStart(2, "0") + '</span>'

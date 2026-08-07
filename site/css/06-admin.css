@@ -110,11 +110,14 @@ body.has-site-background {
   background: var(--card);
 }
 
-.category-card.has-carousel::before {
+/* CAROUSEL_SLIDES_V1: o escurecimento passou do cartão para cada moldura,
+   porque agora é um parâmetro de cada imagem. Fica clipado pelo
+   `.category-carousel` (overflow: hidden), por isso continua a cobrir o cartão
+   todo mesmo com a moldura a sair 8% para fora. */
+.category-carousel-frame::after {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 0;
   background: rgba(46, 36, 19, var(--carousel-overlay, 0.36));
   pointer-events: none;
 }

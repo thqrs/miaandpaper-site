@@ -162,6 +162,45 @@
   }
 }
 
+/* REVIEW_DISMISS_V1: o X vive fora do cartão porque o cartão é um <a> e um
+   botão lá dentro seria HTML inválido. Discreto: quase transparente até se
+   passar o rato ou chegar lá com o teclado. O host já é `position: fixed`,
+   por isso serve de referência ao canto. */
+.review-bubble-dismiss {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid rgba(102, 123, 77, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.97);
+  color: #6f7264;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.42;
+  box-shadow: 0 4px 12px rgba(45, 52, 36, 0.14);
+  transition: opacity 0.18s ease, color 0.18s ease;
+}
+
+.review-bubbles-host:hover .review-bubble-dismiss,
+.review-bubble-dismiss:hover,
+.review-bubble-dismiss:focus-visible {
+  opacity: 1;
+  color: #3b3d35;
+}
+
+html[data-theme="dark"] .review-bubble-dismiss {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: #2b2e28;
+  color: #cfd2c6;
+}
+
 .review-bubble-card {
   --review-drag-x: 0px;
   position: relative;

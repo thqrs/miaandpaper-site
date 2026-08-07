@@ -76,6 +76,10 @@ if (empty($_SESSION['miaandpaper_admin'])) {
           <span class="catalog-product-thumb" aria-hidden="true">H</span>
           <span class="catalog-product-copy"><strong>Homepage &amp; Menu</strong><span>Ordem e agrupamento do menu, e os cartões da homepage.</span><span class="catalog-product-action">Abrir editor</span></span>
         </a>
+        <a class="catalog-product-card" href="../carrousel.php">
+          <span class="catalog-product-thumb" aria-hidden="true">▦</span>
+          <span class="catalog-product-copy"><strong>Carrosséis</strong><span>As imagens que rodam em cada cartão da homepage, e os parâmetros de cada uma.</span><span class="catalog-product-action">Abrir editor</span></span>
+        </a>
         <a class="catalog-product-card" href="../galeria.html">
           <span class="catalog-product-thumb" aria-hidden="true">G</span>
           <span class="catalog-product-copy"><strong>Galeria</strong><span>Enquadrar, substituir e organizar as imagens usadas nos produtos.</span><span class="catalog-product-action">Abrir gestão</span></span>

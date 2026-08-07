@@ -143,15 +143,18 @@ confirmar antes de correr.
    site/precos-api.php:23    define('PRECOS_REQUIRE_ADMIN', false);
    site/produtos-api.php:5   define('PRODUTOS_REQUIRE_ADMIN', false);
    site/reviews-api.php:6    define('REVIEWS_REQUIRE_ADMIN', false);
+   site/homepage-menu-api.php:14  define('HOMEPAGE_REQUIRE_ADMIN', false);
+   site/carrousel-api.php:16      define('CARROUSEL_REQUIRE_ADMIN', false);
    ```
 
-   O `galeria-api.php`, o `precos-api.php` e o `reviews-api.php` **escrevem
-   ficheiros** — com eles a `false`, qualquer pessoa pode reescrever
-   `content/products/*.json` e o `pricing.json`, incluindo os preços e os
-   ficheiros da cápsula. O `produtos-api.php` é só de leitura.
+   Todos menos o `produtos-api.php` **escrevem ficheiros** — com eles a `false`,
+   qualquer pessoa pode reescrever `content/products/*.json`, o `pricing.json` e
+   o `home.json`, incluindo os preços, a homepage e os ficheiros da cápsula. O
+   `produtos-api.php` é só de leitura.
 
-2. Confirmar que `galeria.html`, `precos.php`, `produtos.html` e `reviews.html`
-   continuam a funcionar com sessão iniciada. O CSRF e o `session_start()` já lá
+2. Confirmar que `galeria.html`, `precos.php`, `produtos.html`, `reviews.html`,
+   `homepage-menu-design.php` e `carrousel.php` continuam a funcionar com sessão
+   iniciada. O CSRF e o `session_start()` já lá
    estão — só estão a ser saltados pelo `if (!X_REQUIRE_ADMIN) return;`.
 
 3. **Regenerar os snapshots** ([07 · Backend](07-backend.md)) — este não é

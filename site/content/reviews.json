@@ -466,6 +466,22 @@
             "stars": 5,
             "icon": "default",
             "customIcon": ""
+        },
+        {
+            "id": "review-wa-33",
+            "enabled": true,
+            "order": 33,
+            "name": "Ana Nogueira",
+            "text": "Olá Mia boa tarde. Já recebi a encomenda, está tudo muito bonito, gostei. Obrigada pela linda lembrança. Gostei muito do livrinho, obrigada. Só amanhã é que eu vou oferecer. Beijinhos Mia, obrigada.",
+            "date": "",
+            "orderNote": "Encomenda de Ímanes Recortados",
+            "image": "",
+            "linkEnabled": false,
+            "link": "",
+            "ratingMode": "default",
+            "stars": 5,
+            "icon": "default",
+            "customIcon": ""
         }
     ]
 }

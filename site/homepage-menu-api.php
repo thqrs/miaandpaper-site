@@ -13,7 +13,12 @@ declare(strict_types=0);
 // ⚠️ ANTES DO DEPLOY pôr a true.
 define('HOMEPAGE_REQUIRE_ADMIN', false);
 
-const HOMEPAGE_FILE = __DIR__ . '/content/home.json';
+// HOME_CORE_V1: a leitura e a escrita do home.json vivem na lib, partilhadas
+// com o carrousel-api.php. Dois editores no mesmo ficheiro com duas cópias da
+// escrita atómica era o caminho certo para uma delas ficar para trás.
+require_once __DIR__ . '/lib/home-core.php';
+
+const HOMEPAGE_FILE = HOME_FILE;
 
 // Campos de uma categoria que este editor deixa mexer. `id` e `href` ficam de
 // fora: sao a identidade e o destino, e mexer neles parte links guardados.
@@ -51,80 +56,17 @@ function hm_exigir_admin()
 
 function hm_ler()
 {
-    $raw = @file_get_contents(HOMEPAGE_FILE);
-    if ($raw === false) {
-        hm_erro('Não consegui ler o home.json.', 500);
-    }
-    $data = json_decode($raw, true);
-    if (!is_array($data)) {
-        hm_erro('O home.json não é JSON válido.', 500);
+    list($data, $raw, $erro) = home_ler();
+    if ($erro !== '') {
+        hm_erro($erro, 500);
     }
     return array($data, $raw);
 }
 
-function hm_indentacao($raw)
-{
-    return preg_match('/\n( +)"/', (string)$raw, $m) ? strlen($m[1]) : 2;
-}
-
-function hm_reindentar($json, $unidade)
-{
-    if ($unidade === 4) {
-        return $json;
-    }
-    $linhas = explode("\n", $json);
-    foreach ($linhas as $i => $linha) {
-        $espacos = strlen($linha) - strlen(ltrim($linha, ' '));
-        if ($espacos > 0) {
-            $linhas[$i] = str_repeat(' ', intdiv($espacos, 4) * $unidade) . substr($linha, $espacos);
-        }
-    }
-    return implode("\n", $linhas);
-}
-
-// Escrita atómica e verificada, igual à do precos-api.php.
+// Escrita atómica e verificada: vive toda na lib partilhada.
 function hm_gravar($data, $revisaoEsperada)
 {
-    $actual = @file_get_contents(HOMEPAGE_FILE);
-    if ($actual === false) {
-        return 'Não consegui ler o home.json.';
-    }
-    if ($revisaoEsperada !== '' && !hash_equals(hash('sha256', $actual), $revisaoEsperada)) {
-        return 'O home.json mudou noutro separador. Recarrega antes de gravar.';
-    }
-
-    $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    if ($json === false) {
-        return 'Não consegui serializar o home.json.';
-    }
-    $json = hm_reindentar($json, hm_indentacao($actual)) . "\n";
-
-    if (@file_put_contents(HOMEPAGE_FILE . '.homepage-bak', $actual, LOCK_EX) === false) {
-        return 'Não consegui gravar a cópia de segurança.';
-    }
-
-    $tmp = HOMEPAGE_FILE . '.homepage-tmp';
-    if (@file_put_contents($tmp, $json, LOCK_EX) !== strlen($json)) {
-        @unlink($tmp);
-        return 'Não consegui escrever o ficheiro temporário.';
-    }
-    if (!@rename($tmp, HOMEPAGE_FILE)) {
-        @unlink(HOMEPAGE_FILE);
-        if (!@rename($tmp, HOMEPAGE_FILE)) {
-            @unlink($tmp);
-            @file_put_contents(HOMEPAGE_FILE, $actual, LOCK_EX);
-            return 'Não consegui substituir o home.json. Repus o original.';
-        }
-    }
-
-    clearstatcache(true, HOMEPAGE_FILE);
-    $confirmacao = @file_get_contents(HOMEPAGE_FILE);
-    if ($confirmacao === false || json_decode($confirmacao, true) === null) {
-        @file_put_contents(HOMEPAGE_FILE, $actual, LOCK_EX);
-        return 'O home.json ficou ilegível depois de gravar. Repus a versão anterior.';
-    }
-
-    return '';
+    return home_gravar($data, $revisaoEsperada, '.homepage-bak');
 }
 
 // ── Leitura ──────────────────────────────────────────────────────────────────

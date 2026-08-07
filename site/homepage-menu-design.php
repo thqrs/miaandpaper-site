@@ -221,6 +221,7 @@
   <a href="reviews.html">Reviews</a>
   <a href="precos.php">Preços</a>
   <a href="homepage-menu-design.php" class="activo">Homepage &amp; Menu</a>
+  <a href="carrousel.php">Carrosséis</a>
   <a href="admin-funnel.php">Funil</a>
   <a href="admin-orders.php">Encomendas</a>
   <a href="admin-colors.html">Cores</a>

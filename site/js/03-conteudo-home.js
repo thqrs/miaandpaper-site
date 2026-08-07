@@ -228,7 +228,13 @@
     if (typeof category.clickable !== "boolean") {
       category.clickable = true;
     }
-    category.carouselIntervalMs = clampNumber(category.carouselIntervalMs, 3500, 800, 30000);
+    // CAROUSEL_SLIDES_V1: o intervalo deixou de ser forçado aqui. Enquanto foi,
+    // punha 3500 em todos os cartões e isso batia sempre o valor global, que
+    // por isso nunca chegava a fazer nada. Agora vive no `carousel` global e em
+    // cada slide, e edita-se no carrousel.php.
+    if (category.carouselIntervalMs != null) {
+      category.carouselIntervalMs = clampNumber(category.carouselIntervalMs, 3500, 800, 30000);
+    }
   }
 
   function ensureHomeSettings(home) {
@@ -414,14 +420,82 @@
     return images.slice(0, 12);
   }
 
+  // CAROUSEL_SLIDES_V1: cada imagem do carrossel passou a ser um slide com os
+  // seus próprios parâmetros, editáveis no carrousel.php. Um valor a null herda
+  // do bloco `carousel` global. `carouselSlides` presente manda sempre — mesmo
+  // vazio, que é como se diz "este cartão não tem carrossel".
+  var CAROUSEL_CAMPOS = ["speedSeconds", "zoomPercent", "panPercent", "overlayOpacity", "intervalMs"];
+
+  function carouselSlideList(category) {
+    return category && Array.isArray(category.carouselSlides) ? category.carouselSlides : null;
+  }
+
+  function carouselSlideFrom(image) {
+    return { image: String(image || ""), speedSeconds: null, zoomPercent: null, panPercent: null, overlayOpacity: null, intervalMs: null };
+  }
+
+  // O valor que vale para este slide: o dele, senão o do cartão (campo antigo,
+  // mantido para um ficheiro por migrar), senão o global.
+  function carouselSlideValue(slide, category, campo, global) {
+    var doSlide = slide ? Number(slide[campo]) : NaN;
+    var doCartao;
+
+    if (slide && slide[campo] != null && isFinite(doSlide)) {
+      return doSlide;
+    }
+    doCartao = category ? Number(category["carousel" + campo.charAt(0).toUpperCase() + campo.slice(1)]) : NaN;
+    if (category && category["carousel" + campo.charAt(0).toUpperCase() + campo.slice(1)] != null && isFinite(doCartao)) {
+      return doCartao;
+    }
+    return Number(global);
+  }
+
+  // Devolve os slides já com todos os valores resolvidos, prontos a pintar. É
+  // o único sítio onde a cascata slide → cartão → global é decidida: o
+  // renderizador e o temporizador leem daqui os dois.
+  function resolvedCarouselSlides(category, carousel) {
+    var global = carousel || {};
+    var speedGlobal = Math.max(3, Math.min(30, Number(global.speedSeconds) || 8));
+    var intervaloGlobal = Number(global.intervalMs) || speedGlobal * 1000;
+    var slides = carouselSlideList(category);
+
+    if (!slides) {
+      slides = ((category && category.carouselImages) || []).map(carouselSlideFrom);
+    }
+
+    return slides.filter(function (slide) {
+      return slide && slide.image;
+    }).slice(0, 12).map(function (slide) {
+      return {
+        image: String(slide.image),
+        speedSeconds: Math.max(3, Math.min(30, carouselSlideValue(slide, category, "speedSeconds", speedGlobal))),
+        zoomPercent: Math.max(100, Math.min(140, carouselSlideValue(slide, category, "zoomPercent", Number(global.zoomPercent) || 108))),
+        panPercent: Math.max(0, Math.min(18, carouselSlideValue(slide, category, "panPercent", Number(global.panPercent) || 6))),
+        overlayOpacity: Math.max(0, Math.min(80, carouselSlideValue(slide, category, "overlayOpacity", Number(global.overlayOpacity) || 36))),
+        intervalMs: Math.max(800, Math.min(30000, carouselSlideValue(slide, category, "intervalMs", intervaloGlobal)))
+      };
+    });
+  }
+
   function enrichHomeWithCarousels(home) {
     ensureHomeSettings(home);
 
     return Promise.all((home.categories || []).map(function (category) {
-      var manualImages = Array.isArray(category.carouselSourceImages)
+      var slides = carouselSlideList(category);
+      var manualImages;
+      var slug;
+
+      if (slides) {
+        category.carouselImages = slides.map(function (slide) {
+          return slide && slide.image;
+        }).filter(Boolean).slice(0, 12);
+        return category;
+      }
+
+      manualImages = Array.isArray(category.carouselSourceImages)
         ? category.carouselSourceImages.filter(Boolean).slice(0, 12)
         : [];
-      var slug = slugFromHref(category.href);
+      slug = slugFromHref(category.href);
 
       if (manualImages.length) {
         category.carouselImages = manualImages;
@@ -491,6 +565,13 @@
         return;
       }
 
+      // CAROUSEL_SLIDES_V1: cada moldura diz quanto tempo fica no ecrã, por
+      // isso o ciclo é uma cadeia de timeouts e não um intervalo fixo.
+      function tempoDaMoldura(frame) {
+        var proprio = frame && frame.dataset ? Number(frame.dataset.carouselInterval) : NaN;
+        return isFinite(proprio) && proprio > 0 ? Math.max(800, Math.min(30000, proprio)) : speed;
+      }
+
       frames.forEach(function (frame, frameIndex) {
         frame.classList.toggle("is-active", frameIndex === 0);
       });
@@ -503,18 +584,15 @@
       phaseDelay = Math.round((speed / Math.max(1, carouselElements.length)) * carouselIndex + jitter);
       phaseDelay = Math.max(0, Math.min(speed - 250, phaseDelay));
 
-      timer = window.setTimeout(function () {
+      function avancar() {
         frames[index].classList.remove("is-active");
         index = (index + 1) % frames.length;
         frames[index].classList.add("is-active");
-
-        timer = window.setInterval(function () {
-          frames[index].classList.remove("is-active");
-          index = (index + 1) % frames.length;
-          frames[index].classList.add("is-active");
-        }, speed);
+        timer = window.setTimeout(avancar, tempoDaMoldura(frames[index]));
         state.homeCarouselTimers.push(timer);
-      }, phaseDelay);
+      }
+
+      timer = window.setTimeout(avancar, phaseDelay);
       state.homeCarouselTimers.push(timer);
     });
   }

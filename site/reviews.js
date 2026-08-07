@@ -90,6 +90,30 @@
   card.appendChild(content);
   host.appendChild(card);
 
+  // REVIEW_DISMISS_V1: fechar esconde as reviews até ao fim da sessão do
+  // separador. sessionStorage e não localStorage de propósito: quem fecha está
+  // a dizer "agora não", não "nunca mais".
+  var dismissKey = "miaandpaper:reviews-dismissed";
+
+  function reviewsDismissed() {
+    try { return window.sessionStorage.getItem(dismissKey) === "1"; } catch (error) { return false; }
+  }
+
+  var dismiss = createElement("button", "review-bubble-dismiss", "×");
+  dismiss.type = "button";
+  dismiss.setAttribute("aria-label", "Esconder as avaliações nesta visita");
+  dismiss.title = "Esconder as avaliações nesta visita";
+  dismiss.addEventListener("click", function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    window.clearTimeout(timer);
+    timer = null;
+    try { window.sessionStorage.setItem(dismissKey, "1"); } catch (error) {}
+    host.classList.remove("is-ready");
+    window.setTimeout(function () { host.hidden = true; }, 320);
+  });
+  host.appendChild(dismiss);
+
   productImage.addEventListener("error", function () {
     if (productImage.getAttribute("src") !== fallbackImage) productImage.src = fallbackImage;
   });
@@ -197,6 +221,7 @@
     .then(function (data) {
       settings = Object.assign({ enabled: true, intervalMs: 5500, position: "left", size: "normal", theme: "paper", imageShape: "rounded", showImage: true, showName: true, showText: true, defaultRatingMode: "stars", defaultStars: 5, defaultIcon: "heart", defaultCustomIcon: "✦", eggPumps: 7 }, data.settings || {});
       if (settings.enabled === false) return;
+      if (reviewsDismissed()) { host.hidden = true; return; }
       // Lido pelo reviews-egg.js: movimentos necessários até o balão saltar.
       host.setAttribute("data-egg-pumps", String(Math.max(0, Math.min(20, Number(settings.eggPumps) >= 0 ? Number(settings.eggPumps) : 7))));
       intervalMs = Math.max(2000, Math.min(60000, Number(settings.intervalMs) || 5500));
