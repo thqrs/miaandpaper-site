@@ -45,20 +45,45 @@ quer dizer que aquela entrada não tem `menuIcon` escolhido e o site decide pelo
 
 ### As secções da homepage
 
-A homepage tem **duas secções, fixas e escritas no código** (`renderHome` em
-`js/09-admin-paineis.js`): *Novidades*, com até 3 cartões, e *Produtos*, com o
-resto da grelha. Não são dados, por isso **não se acrescentam, removem nem
-reordenam** — só se lhes edita o texto (bloco "Blocos de texto", que escreve em
-`news` e `productsIntro`).
+`SECCOES_HOMEPAGE_V1`. As secções são **dados**, na lista `homeSections` do
+`home.json`, e o `renderHome` percorre-a. Acrescentam-se, removem-se, renomeiam-se
+e arrastam-se para reordenar; cada cartão grande do separador *Homepage* é uma
+secção, e arrastar um mini-cartão entre elas muda a secção onde aparece.
 
-O que se **pode** organizar é em que secção cada cartão vive: `DESTAQUES_HOMEPAGE_V1`
-mostra as duas secções como dois cartões grandes e arrastar um mini-cartão entre
-elas liga/desliga o `featured`. A operação `ordem-homepage` leva a ordem e os
-destaques juntos, e recusa mais de 3.
+```json
+"homeSections": [
+  { "id": "novidades", "layout": "feature", "maxCards": 3, "repeatInGrid": true,
+    "eyebrow": "", "title": "Novidades", "text": "" },
+  { "id": "produtos",  "layout": "grid", "eyebrow": "", "title": "Produtos", "text": "" }
+]
+```
 
-Tornar as secções editáveis obrigaria a pô-las no `home.json` e a fazer o
-`renderHome` percorrê-las em vez de as ter escritas — mudança real na homepage,
-não no editor.
+| campo | o que faz |
+|---|---|
+| `id` | âncora da secção (`#produtos`) **e** a chave do `section` de cada categoria. Sai do título ao criar; não se muda depois, senão partem-se links |
+| `layout` | `grid` (a grelha normal) ou `feature` (os cartões grandes das novidades) |
+| `maxCards` | só em `feature`: quantos cartões mostra |
+| `repeatInGrid` | só em `feature`: os cartões em destaque **também** aparecem na grelha. É o que a homepage sempre fez, por isso veio ligado na migração |
+
+Regras que evitam perder cartões:
+
+- Um cartão sem `section` — ou com uma que já não existe — cai na **primeira
+  secção em grelha**. Remover uma secção nunca faz desaparecer nada.
+- Tem de sobrar **pelo menos uma secção em grelha**. O editor e a API recusam
+  remover a última, e recusam pôr todas em `feature`.
+- Uma secção `feature` vazia esconde-se no site, mas fica visível em modo de
+  edição — senão não havia como lá arrastar nada de volta.
+
+Uma só operação (`ordem-homepage`) leva a ordem das secções, a ordem dos cartões
+e a secção de cada um: arrastar mexe nas três coisas ao mesmo tempo e separá-las
+deixaria estados intermédios inválidos. A forma antiga (só uma lista de `ids`)
+continua a valer e é o que o botão *herdar a ordem do menu* usa.
+
+Um `home.json` sem `homeSections` — ou com a lista vazia — dá as duas secções de
+sempre, montadas a partir do `news` e do `productsIntro`. `homeSectionList()` em
+`js/09-admin-paineis.js` e `hm_seccoes()` no `homepage-menu-api.php` têm de dar o
+mesmo. A cápsula do congresso **não** passa por aqui: tem o seu
+`app-congressos.js`, congelado e independente.
 
 ### Campos novos no `home.json`
 
@@ -69,8 +94,13 @@ não no editor.
 | `menuShowIcons` | mostrar ícones no menu. `MENU_ICONES_V1` | ligado |
 | `menuAccordion` | abrir uma secção fecha as outras. `MENU_ACORDEAO_V1` | desligado |
 | `menuHidden` | esconder do menu sem esconder da homepage | falso |
-| `featured` | pôr o cartão na secção *Novidades*. `DESTAQUES_HOMEPAGE_V1` | vai para *Produtos* |
-| `featureLabel` | etiqueta por cima do título, só usada em *Novidades* | sem etiqueta |
+| `section` | em que secção da homepage o cartão aparece. `SECCOES_HOMEPAGE_V1` | a primeira grelha |
+| `featureLabel` | etiqueta por cima do título, só usada em secções `feature` | sem etiqueta |
+| `homeSections` | as secções da homepage (ver acima) | as duas de sempre, do `news`/`productsIntro` |
+
+O `featured` que existia antes foi substituído pelo `section`. Continua a ser
+lido como "primeira secção de destaques" para um ficheiro por migrar, mas o
+editor já não o escreve.
 
 O selector de ícones lista os PNG de `content/brand/menu-icons/line-art/`, por
 isso um ficheiro novo aparece sozinho.

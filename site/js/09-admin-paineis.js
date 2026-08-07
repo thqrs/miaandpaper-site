@@ -1308,6 +1308,93 @@
     ].join("");
   }
 
+  // SECCOES_HOMEPAGE_V1: as secções da homepage passaram a ser dados. Um
+  // ficheiro sem `homeSections` — a cápsula do congresso — continua a dar as
+  // duas de sempre, montadas a partir do `news` e do `productsIntro`.
+  function homeSectionList(home) {
+    var lista = home && Array.isArray(home.homeSections) ? home.homeSections : null;
+    var news = (home && home.news) || {};
+    var produtos = (home && home.productsIntro) || {};
+
+    if (lista) {
+      lista = lista.filter(function (seccao) {
+        return seccao && String(seccao.id || "").trim();
+      });
+      if (lista.length) {
+        return lista;
+      }
+    }
+    return [
+      {
+        id: "novidades",
+        layout: "feature",
+        maxCards: 3,
+        repeatInGrid: true,
+        eyebrow: news.eyebrow || "",
+        title: news.title || "O que há de novo",
+        text: news.text || ""
+      },
+      {
+        id: "produtos",
+        layout: "grid",
+        eyebrow: produtos.eyebrow || "",
+        title: produtos.title || "Escolhe o que queres pedir",
+        text: produtos.text || ""
+      }
+    ];
+  }
+
+  function homeSectionIsFeature(seccao) {
+    return String((seccao && seccao.layout) || "grid") === "feature";
+  }
+
+  // Reparte os cartões pelas secções. Quem não tiver secção — ou tiver uma que
+  // já não existe — cai na primeira grelha, para nada desaparecer da homepage
+  // só por se ter apagado uma secção.
+  function splitHomeSections(seccoes, records) {
+    var porId = {};
+    var repetem = {};
+    var refugio = "";
+    var primeiroDestaque = "";
+
+    seccoes.forEach(function (seccao) {
+      var id = String(seccao.id);
+      porId[id] = [];
+      if (homeSectionIsFeature(seccao)) {
+        // `repeatInGrid`: o cartão aparece em destaque E continua na grelha.
+        // É o que a homepage sempre fez com os destaques, por isso vem ligado
+        // na migração — desligá-lo tira-os da grelha.
+        repetem[id] = seccao.repeatInGrid !== false;
+        if (!primeiroDestaque) { primeiroDestaque = id; }
+      } else if (!refugio) {
+        refugio = id;
+      }
+    });
+    if (!refugio && seccoes.length) {
+      refugio = String(seccoes[0].id);
+    }
+
+    records.forEach(function (record) {
+      var id = String(record.category.section || "");
+      // `featured` é o campo antigo e continua a valer como "primeira secção
+      // de destaques", para um ficheiro por migrar dar o mesmo que dava.
+      if (!id && record.category.featured === true && primeiroDestaque) {
+        id = primeiroDestaque;
+      }
+      if (!porId[id]) {
+        id = refugio;
+      }
+      if (!porId[id]) {
+        return;
+      }
+      porId[id].push(record);
+      if (repetem[id] && refugio && porId[refugio] && refugio !== id) {
+        porId[refugio].push(record);
+      }
+    });
+    return porId;
+  }
+
   function renderHome(home) {
     ensureHomeSettings(home);
     applySiteSettings(home);
@@ -1439,18 +1526,17 @@
       ].join(""));
     } else {
       var menuCategories = visibleCategories.map(function (record) { return record.category; });
-      var featuredCategories = menuCategories.filter(function (category) { return category.featured === true; });
+      var seccoes = homeSectionList(home);
+      var porSeccao = splitHomeSections(seccoes, displayCategories);
       var hero = home.hero || {};
-      var news = home.news || {};
-      var productsIntro = home.productsIntro || {};
       var heroImage = hero.image || (menuCategories[0] && menuCategories[0].image) || "";
       var heroImages = homeHeroImages(hero);
       var heroCarouselHtml = renderHomeHeroCarousel(hero);
       var heroCarouselDotsHtml = renderHomeHeroCarouselDots(hero);
       var heroPosition = String(hero.imagePosition || "center").trim();
       var heroStyle;
-      var newsCards;
       var heroActions;
+      var seccoesHtml;
 
       if (!/^[a-z0-9.%\s-]+$/i.test(heroPosition)) {
         heroPosition = "center";
@@ -1460,14 +1546,56 @@
           + '--home-hero-position:' + escapeHtml(heroPosition) + '"'
         : "";
 
-      if (!featuredCategories.length) {
-        featuredCategories = menuCategories.filter(function (category) {
-          return category.clickable !== false && String(category.href || "").trim();
-        }).slice(0, 2);
-      }
-      newsCards = featuredCategories.slice(0, 3).map(function (category) {
-        return renderHomeFeatureCard(category, adminEditing);
+      seccoesHtml = seccoes.map(function (seccao) {
+        var id = String(seccao.id);
+        var destaque = homeSectionIsFeature(seccao);
+        var registos = porSeccao[id] || [];
+        var tituloId = "home-section-title-" + id.replace(/[^a-z0-9-]/gi, "");
+        var limite;
+        var corpo;
+        var contagem;
+
+        if (destaque) {
+          limite = Math.max(1, parseInt(seccao.maxCards, 10) || 3);
+          // Sem nada atribuído, uma secção de destaques mostrava um título
+          // sozinho. No site esconde-se; em edição fica, senão não havia como
+          // lá arrastar nada de volta.
+          if (!registos.length) {
+            if (!adminEditing) {
+              return "";
+            }
+            corpo = '<div class="home-news-grid"></div>';
+          } else {
+            corpo = '<div class="home-news-grid">' + registos.slice(0, limite).map(function (record) {
+              return renderHomeFeatureCard(record.category, adminEditing);
+            }).join("") + '</div>';
+          }
+        } else {
+          contagem = Math.max(1, Math.min(7, registos.length));
+          corpo = '<nav class="category-grid category-grid-count-' + contagem
+            + (adminEditing ? ' is-admin-home-grid' : '') + '" aria-label="' + escapeHtml(seccao.title || "Categorias") + '">'
+            + registos.map(function (record, indice) {
+              return renderHomeCategoryCard(record, indice);
+            }).join("")
+            + '</nav>';
+        }
+
+        return [
+          '<section class="home-section ' + (destaque ? 'home-news-section' : 'home-products-section')
+            + '" id="' + escapeHtml(id) + '" aria-labelledby="' + escapeHtml(tituloId) + '">',
+          '<div class="home-section-inner">',
+          '<header class="home-section-heading">',
+          seccao.eyebrow ? '<p class="eyebrow">' + escapeHtml(seccao.eyebrow) + '</p>' : "",
+          '<h2 id="' + escapeHtml(tituloId) + '">' + escapeHtml(seccao.title || "") + '</h2>',
+          seccao.text ? '<p>' + escapeHtml(seccao.text) + '</p>' : "",
+          '</header>',
+          corpo,
+          !destaque && state.homeUnavailableMessage ? '<p class="open-order-hint home-unavailable-message" role="status" aria-live="polite">' + escapeHtml(state.homeUnavailableMessage) + '</p>' : "",
+          '</div>',
+          '</section>'
+        ].join("");
       }).join("");
+
       heroActions = [
         '<div class="home-brand-hero__actions">',
         hero.primaryLabel && hero.primaryHref ? '<a class="home-hero-action home-hero-action--primary" href="' + escapeHtml(hero.primaryHref) + '">' + escapeHtml(hero.primaryLabel) + '<span aria-hidden="true">→</span></a>' : "",
@@ -1493,29 +1621,7 @@
         '</div>',
         '</section>',
         adminIntroTools ? '<section class="home-admin-edit-band"><div class="home-section-inner">' + adminIntroTools + '</div></section>' : "",
-        '<section class="home-section home-news-section" id="novidades" aria-labelledby="home-news-title">',
-        '<div class="home-section-inner">',
-        '<header class="home-section-heading">',
-        news.eyebrow ? '<p class="eyebrow">' + escapeHtml(news.eyebrow) + '</p>' : "",
-        '<h2 id="home-news-title">' + escapeHtml(news.title || "O que há de novo") + '</h2>',
-        news.text ? '<p>' + escapeHtml(news.text) + '</p>' : "",
-        '</header>',
-        '<div class="home-news-grid">' + newsCards + '</div>',
-        '</div>',
-        '</section>',
-        '<section class="home-section home-products-section" id="produtos" aria-labelledby="home-products-title">',
-        '<div class="home-section-inner">',
-        '<header class="home-section-heading">',
-        productsIntro.eyebrow ? '<p class="eyebrow">' + escapeHtml(productsIntro.eyebrow) + '</p>' : "",
-        '<h2 id="home-products-title">' + escapeHtml(productsIntro.title || "Escolhe o que queres pedir") + '</h2>',
-        productsIntro.text ? '<p>' + escapeHtml(productsIntro.text) + '</p>' : "",
-        '</header>',
-        '<nav class="category-grid category-grid-count-' + gridCount + (adminEditing ? ' is-admin-home-grid' : '') + '" aria-label="Categorias">',
-        cards,
-        '</nav>',
-        state.homeUnavailableMessage ? '<p class="open-order-hint home-unavailable-message" role="status" aria-live="polite">' + escapeHtml(state.homeUnavailableMessage) + '</p>' : "",
-        '</div>',
-        '</section>',
+        seccoesHtml,
         renderHomeDeadlineNote(home),
         renderFooter(home.brand),
         '</main>'

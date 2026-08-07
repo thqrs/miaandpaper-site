@@ -28,16 +28,24 @@
         "secondaryLabel": "Explorar produtos",
         "secondaryHref": "#produtos"
     },
-    "news": {
-        "eyebrow": "",
-        "title": "Novidades",
-        "text": ""
-    },
-    "productsIntro": {
-        "eyebrow": "",
-        "title": "Produtos",
-        "text": ""
-    },
+    "homeSections": [
+        {
+            "id": "novidades",
+            "layout": "feature",
+            "maxCards": 3,
+            "repeatInGrid": true,
+            "eyebrow": "",
+            "title": "Novidades",
+            "text": ""
+        },
+        {
+            "id": "produtos",
+            "layout": "grid",
+            "eyebrow": "",
+            "title": "Produtos",
+            "text": ""
+        }
+    ],
     "showCategoryNumbers": false,
     "brandButterflyEnabled": false,
     "catalogFooterLinkVisible": true,
@@ -63,7 +71,8 @@
                 "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-01.webp",
                 "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp"
             ],
-            "clickable": true
+            "clickable": true,
+            "section": "produtos"
         },
         {
             "id": "cadernos-geral",
@@ -84,7 +93,8 @@
                 "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/vestido_verde/vestido_verde_matte.webp",
                 "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/cornfield/cornfield_matte.webp"
             ],
-            "clickable": true
+            "clickable": true,
+            "section": "produtos"
         },
         {
             "id": "mini-cadernos-geral",
@@ -105,7 +115,8 @@
                 "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/o_jovem_cadeira_minicaderno.webp",
                 "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/idosa_jovem_minicaderno.webp"
             ],
-            "clickable": true
+            "clickable": true,
+            "section": "produtos"
         },
         {
             "id": "blocos-a6",
@@ -121,7 +132,8 @@
             "accent": "gold",
             "available": true,
             "carouselEnabled": true,
-            "clickable": true
+            "clickable": true,
+            "section": "produtos"
         },
         {
             "id": "bloquinhos",
@@ -136,7 +148,8 @@
             "accent": "gold",
             "available": true,
             "carouselEnabled": true,
-            "clickable": true
+            "clickable": true,
+            "section": "produtos"
         },
         {
             "id": "quadros",
@@ -158,11 +171,11 @@
                 "content/designs/quadros/fotos-reais/amor-frontal.webp"
             ],
             "clickable": true,
-            "featured": true,
             "featureLabel": "Personalização",
             "featureTitle": "Molduras feitas à tua medida",
             "featureText": "Escolhe o estilo, as cores e o texto, e envia as fotos diretamente no pedido.",
-            "featureCta": "Criar uma moldura"
+            "featureCta": "Criar uma moldura",
+            "section": "novidades"
         },
         {
             "id": "crachas-geral",
@@ -183,7 +196,8 @@
                 "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-01.webp",
                 "content/designs/loja/crachas-loja/catalog/crachas/novidades/lingua-gestual-01.webp"
             ],
-            "clickable": true
+            "clickable": true,
+            "section": "produtos"
         },
         {
             "id": "postais",
@@ -204,7 +218,8 @@
                 "ofertas/convite-congresso/assets/modelo-familia.webp",
                 "ofertas/convite-congresso/assets/modelo-mulher.webp"
             ],
-            "clickable": true
+            "clickable": true,
+            "section": "produtos"
         },
         {
             "id": "agendas",
@@ -221,7 +236,8 @@
             "available": true,
             "carouselEnabled": false,
             "carouselSourceImages": [],
-            "clickable": true
+            "clickable": true,
+            "section": "produtos"
         },
         {
             "id": "imanes-geral",
@@ -242,7 +258,8 @@
                 "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/cornfield/cornfield-01.webp",
                 "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132982.webp"
             ],
-            "clickable": true
+            "clickable": true,
+            "section": "produtos"
         },
         {
             "id": "imanes-recortados",
@@ -257,7 +274,8 @@
             "accent": "blue",
             "available": true,
             "carouselEnabled": true,
-            "clickable": true
+            "clickable": true,
+            "section": "produtos"
         },
         {
             "id": "stickers",
@@ -272,7 +290,8 @@
             "accent": "rose",
             "available": true,
             "carouselEnabled": true,
-            "clickable": true
+            "clickable": true,
+            "section": "produtos"
         },
         {
             "id": "marcadores",
@@ -287,7 +306,8 @@
             "accent": "sage",
             "available": true,
             "carouselEnabled": true,
-            "clickable": true
+            "clickable": true,
+            "section": "produtos"
         },
         {
             "id": "marcadores-magneticos",
@@ -303,7 +323,8 @@
             "accent": "gold",
             "available": true,
             "carouselEnabled": false,
-            "clickable": true
+            "clickable": true,
+            "section": "produtos"
         },
         {
             "id": "congressos",
@@ -325,11 +346,11 @@
             "available": true,
             "carouselEnabled": true,
             "clickable": true,
-            "featured": true,
             "featureLabel": "Congresso 2026",
             "featureTitle": "Cadernos e lembranças",
             "featureText": "Consulta os packs disponíveis e prepara a tua encomenda para o congresso.",
-            "featureCta": "Ver produtos do congresso"
+            "featureCta": "Ver produtos do congresso",
+            "section": "novidades"
         },
         {
             "id": "ofertas",
@@ -343,7 +364,8 @@
             "menuHref": "ofertas/index.html",
             "available": true,
             "clickable": true,
-            "showOnHome": false
+            "showOnHome": false,
+            "section": "produtos"
         }
     ],
     "theme": {

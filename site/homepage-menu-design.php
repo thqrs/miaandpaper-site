@@ -161,6 +161,24 @@
   .mini-icone select { font-size: .72rem; padding: 2px 5px; }
   .mini-check { flex: none; display: grid; place-items: center; }
 
+  /* SECCOES_HOMEPAGE_V1: o cabeçalho de uma secção da homepage é editável,
+     por isso cresce para duas linhas e leva os seus próprios controlos. */
+  .grupo-seccao > header { flex-wrap: wrap; align-items: flex-start; cursor: default; }
+  .grupo-seccao > header .grupo-pega { cursor: grab; padding-top: 5px; }
+  .seccao-campos { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .seccao-campos input.titulo { font-size: .9rem; font-weight: 700; }
+  .seccao-campos input.secundario { font-size: .74rem; color: var(--texto-2); }
+  .seccao-opcoes {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    width: 100%; padding-top: 8px; border-top: 1px dashed var(--linha);
+    font-size: .74rem; color: var(--texto-3);
+  }
+  .seccao-opcoes label { display: flex; align-items: center; gap: 5px; }
+  .seccao-opcoes select, .seccao-opcoes input[type="number"] { font-size: .74rem; padding: 2px 5px; width: auto; }
+  .seccao-opcoes input[type="number"] { width: 54px; }
+  .seccao-remover { margin-left: auto; color: var(--rosa, #ff4d8d); }
+  .seccao-adicionar { margin-top: 12px; }
+
   .nota { font-size: .8rem; color: var(--texto-2); margin: 0 0 12px; }
   .faixa {
     border-radius: var(--raio); padding: 12px 15px; margin-bottom: 18px;
@@ -363,6 +381,54 @@
       + '</div>';
   }
 
+  // SECCOES_HOMEPAGE_V1: uma secção da homepage é um cartão grande com o
+  // cabeçalho editável. Arrasta-se para reordenar as secções na página, e os
+  // mini-cartões entram e saem dela como nos grupos do menu.
+  function campoSeccao(s, campoNome, classe, marcador) {
+    var valor = s[campoNome] == null ? "" : s[campoNome];
+    return '<input type="text" class="' + classe + '" value="' + esc(valor) + '"'
+      + (marcador ? ' placeholder="' + esc(marcador) + '"' : '')
+      + ' data-op="seccao" data-seccao="' + esc(s.id) + '" data-campo="' + campoNome + '"'
+      + ' data-original="' + esc(valor) + '">';
+  }
+
+  function cartaoSeccao(s, itens) {
+    var destaque = s.layout === "feature";
+
+    return '<section class="grupo grupo-seccao" data-grupo="' + esc(s.id) + '" data-ctx="home"'
+      + ' data-chave="' + esc(s.id) + '" draggable="true">'
+      + '<header>'
+      + '<span class="grupo-pega" aria-hidden="true">⠿</span>'
+      + '<span class="seccao-campos">'
+      + campoSeccao(s, "title", "titulo", "Título da secção")
+      + campoSeccao(s, "eyebrow", "secundario", "sobretítulo (opcional)")
+      + campoSeccao(s, "text", "secundario", "texto de apoio (opcional)")
+      + '</span>'
+      + '<span class="selo">' + itens.length + '</span>'
+      + '<span class="seccao-opcoes">'
+      + '<label>Aspecto'
+      + '<select data-op="seccao" data-seccao="' + esc(s.id) + '" data-campo="layout"'
+      + ' data-original="' + esc(s.layout) + '">'
+      + '<option value="grid"' + (destaque ? "" : " selected") + '>Grelha</option>'
+      + '<option value="feature"' + (destaque ? " selected" : "") + '>Destaques</option>'
+      + '</select></label>'
+      + (destaque
+          ? '<label>Máximo<input type="number" min="1" max="12" value="' + esc(s.maxCards || 3) + '"'
+            + ' data-op="seccao" data-seccao="' + esc(s.id) + '" data-campo="maxCards"'
+            + ' data-original="' + esc(s.maxCards || 3) + '"></label>'
+            + '<label title="Os cartões em destaque continuam a aparecer na grelha, como sempre fizeram">'
+            + '<input type="checkbox"' + (s.repeatInGrid ? " checked" : "")
+            + ' data-op="seccao" data-seccao="' + esc(s.id) + '" data-campo="repeatInGrid"'
+            + ' data-original="' + (s.repeatInGrid ? "1" : "") + '">repetir na grelha</label>'
+          : "")
+      + '<button class="leve seccao-remover" data-remover-seccao="' + esc(s.id) + '">Remover secção</button>'
+      + '</span>'
+      + '</header>'
+      + '<div class="grupo-itens" data-alvo="' + esc(s.id) + '">'
+      + itens.map(function (c) { return miniCartao(c, "home"); }).join('')
+      + '</div></section>';
+  }
+
   function cartaoGrupo(titulo, itens, contexto, arrastavel, chave) {
     return '<section class="grupo" data-grupo="' + esc(titulo) + '" data-ctx="' + contexto + '"'
       + (chave ? ' data-chave="' + esc(chave) + '"' : '')
@@ -408,39 +474,58 @@
   }
 
   function abaHomepage() {
-    var html = '<div class="faixa info"><strong>A homepage segue a ordem dos cartões aqui.</strong> '
-      + 'Arrasta para reordenar e para passar um cartão de uma secção para a outra. '
+    // SECCOES_HOMEPAGE_V1: as secções são dados, por isso acrescentam-se,
+    // removem-se e reordenam-se aqui. Cada cartão grande é uma secção da
+    // página; arrastar um mini-cartão entre elas muda a secção onde aparece.
+    var seccoes = dados.seccoes || [];
+    var refugio = "";
+    var porSeccao = {};
+
+    seccoes.forEach(function (s) {
+      porSeccao[s.id] = [];
+      if (!refugio && s.layout !== "feature") { refugio = s.id; }
+    });
+    if (!refugio && seccoes.length) { refugio = seccoes[0].id; }
+
+    dados.categorias.forEach(function (c) {
+      var id = porSeccao[c.section] ? c.section : refugio;
+      if (porSeccao[id]) { porSeccao[id].push(c); }
+    });
+
+    var html = '<div class="faixa info"><strong>Cada cartão grande é uma secção da homepage.</strong> '
+      + 'Arrasta as secções para as ordenar na página e os mini-cartões para os mudar de secção. '
       + 'É independente do menu.</div>';
 
-    html += '<section class="cartao"><header><h2>Blocos de texto</h2>'
-      + '<button class="leve" data-herdar="home">Herdar a ordem do menu</button></header><div class="corpo">';
-    ["news", "productsIntro"].forEach(function (bloco) {
-      var b = dados[bloco] || {};
-      html += '<h3 style="font-size:.8rem;color:var(--texto-3);margin:10px 0 6px">'
-        + (bloco === "news" ? "Novidades" : "Produtos") + '</h3><table><tbody>';
-      ["eyebrow", "title", "text"].forEach(function (campoNome) {
-        html += '<tr><th>' + campoNome + '</th><td><input type="text" value="' + esc(b[campoNome] || "")
-          + '" data-op="bloco" data-bloco="' + bloco + '" data-campo="' + campoNome
-          + '" data-original="' + esc(b[campoNome] || "") + '"></td></tr>';
-      });
-      html += '</tbody></table>';
-    });
-    html += '</div></section>';
-
-    // DESTAQUES_HOMEPAGE_V1: a homepage tem duas secções fixas e cada cartão
-    // vive numa delas. Aqui aparecem como dois cartões grandes, para se poder
-    // arrastar entre eles — antes só se via a grelha toda em bloco e não havia
-    // maneira de tirar ou pôr nada nas Novidades.
-    var destaques = dados.categorias.filter(function (c) { return c.featured; });
-    var restantes = dados.categorias.filter(function (c) { return !c.featured; });
-    var tituloNovidades = (dados.news && dados.news.title) || "Novidades";
-    var tituloProdutos = (dados.productsIntro && dados.productsIntro.title) || "Produtos";
+    html += '<section class="cartao"><header><h2>Ordem</h2>'
+      + '<button class="leve" data-herdar="home">Herdar a ordem do menu</button></header></section>';
 
     html += '<div class="grupos" data-ctx="home">'
-      + cartaoGrupo(tituloNovidades + " (até 3)", destaques, "home", false, "destaques")
-      + cartaoGrupo(tituloProdutos, restantes, "home", false, "resto")
-      + '</div>';
+      + seccoes.map(function (s) { return cartaoSeccao(s, porSeccao[s.id] || []); }).join('')
+      + '</div>'
+      + '<button class="leve seccao-adicionar" data-adicionar-seccao>+ Adicionar secção</button>';
     return html;
+  }
+
+  // Redesenhar reconstrói os campos a partir do `dados`, que não acompanha as
+  // edições por gravar — sem isto, acrescentar uma secção fazia as alterações
+  // pendentes desaparecerem do ecrã sem saírem da fila.
+  function reaplicarFila() {
+    Object.keys(fila).forEach(function (chave) {
+      var o = fila[chave];
+      var selector = "";
+
+      if (o.op === "categoria") {
+        selector = '[data-op="categoria"][data-indice="' + o.indice + '"][data-campo="' + o.campo + '"]';
+      } else if (o.op === "seccao") {
+        selector = '[data-op="seccao"][data-seccao="' + o.seccao + '"][data-campo="' + o.campo + '"]';
+      } else {
+        return;
+      }
+      [].forEach.call(document.querySelectorAll(selector), function (campo) {
+        if (campo.type === "checkbox") { campo.checked = !!o.valor; } else { campo.value = o.valor; }
+        campo.classList.add("sujo");
+      });
+    });
   }
 
   function desenhar() {
@@ -449,6 +534,7 @@
     [].forEach.call(document.querySelectorAll(".separadores button"), function (b) {
       b.classList.toggle("activo", b.dataset.aba === aba);
     });
+    reaplicarFila();
     actualizar();
   }
 
@@ -477,10 +563,20 @@
       enfileirar(chaveA, { op: "menu-accordion", valor: valor });
       return;
     }
-    if (op === "bloco") {
-      var chaveB = "bloco:" + alvo.dataset.bloco + ":" + alvo.dataset.campo;
-      if (igual) { delete fila[chaveB]; actualizar(); return; }
-      enfileirar(chaveB, { op: "bloco", bloco: alvo.dataset.bloco, campo: alvo.dataset.campo, valor: valor });
+    if (op === "seccao") {
+      var chaveS = "seccao:" + alvo.dataset.seccao + ":" + alvo.dataset.campo;
+      if (igual) { delete fila[chaveS]; actualizar(); return; }
+      enfileirar(chaveS, {
+        op: "seccao", seccao: alvo.dataset.seccao, campo: alvo.dataset.campo, valor: valor
+      });
+      // Mudar o aspecto muda os controlos que a secção mostra (máximo,
+      // repetir na grelha), por isso vale a pena redesenhar já.
+      if (alvo.dataset.campo === "layout") {
+        dados.seccoes.forEach(function (s) {
+          if (s.id === alvo.dataset.seccao) { s.layout = valor; }
+        });
+        desenhar();
+      }
       return;
     }
     if (op === "categoria") {
@@ -503,6 +599,12 @@
   var aArrastar = null;
 
   document.addEventListener("dragstart", function (evento) {
+    // Os cabeçalhos das secções têm campos de texto: seleccionar texto lá
+    // dentro não pode arrastar a secção inteira.
+    if (evento.target.closest && evento.target.closest("input, select, textarea, button")) {
+      evento.preventDefault();
+      return;
+    }
     var mini = evento.target.closest ? evento.target.closest(".mini") : null;
     var grupo = evento.target.closest ? evento.target.closest(".grupo") : null;
     aArrastar = mini || grupo;
@@ -549,16 +651,16 @@
   // Lê o DOM e enfileira a ordem completa — uma operação, não uma por linha.
   function guardarOrdemDoDom(contexto) {
     if (contexto === "home") {
-      var ids = [].map.call(document.querySelectorAll('.grupos[data-ctx="home"] .mini'),
-        function (m) { return m.dataset.id; });
-      // DESTAQUES_HOMEPAGE_V1: o cartão onde a mini ficou é que diz se ela vai
-      // para as Novidades. Vai tudo na mesma operação porque arrastar entre os
-      // dois cartões muda a secção e a ordem ao mesmo tempo.
-      var destaques = [].map.call(
-        document.querySelectorAll('.grupos[data-ctx="home"] .grupo[data-chave="destaques"] .mini'),
-        function (m) { return m.dataset.id; }
-      );
-      enfileirar("ordem-homepage", { op: "ordem-homepage", ids: ids, destaques: destaques });
+      // SECCOES_HOMEPAGE_V1: uma só operação leva a ordem das secções, a ordem
+      // dos cartões e a secção de cada um — arrastar mexe nas três coisas ao
+      // mesmo tempo, e separá-las deixaria estados intermédios inválidos.
+      var seccoes = [].map.call(document.querySelectorAll('.grupos[data-ctx="home"] .grupo'), function (g) {
+        return {
+          id: g.dataset.chave,
+          itens: [].map.call(g.querySelectorAll(".mini"), function (m) { return m.dataset.id; })
+        };
+      });
+      enfileirar("ordem-homepage", { op: "ordem-homepage", seccoes: seccoes });
       return;
     }
 
@@ -571,6 +673,49 @@
 
     enfileirar("ordem-menu", { op: "ordem-menu", grupos: grupos });
   }
+
+  // SECCOES_HOMEPAGE_V1: acrescentar e remover secções. Ambas mexem no
+  // `dados` local e redesenham, para o cartão aparecer/desaparecer já; a
+  // gravação continua a ser só no Save.
+  document.addEventListener("click", function (evento) {
+    var remover = evento.target.closest ? evento.target.closest("[data-remover-seccao]") : null;
+    var adicionar = evento.target.closest ? evento.target.closest("[data-adicionar-seccao]") : null;
+    var titulo;
+    var id;
+
+    if (remover) {
+      id = remover.dataset.removerSeccao;
+      if (dados.seccoes.filter(function (s) { return s.layout !== "feature"; }).length < 2
+          && (dados.seccoes.filter(function (s) { return s.id === id; })[0] || {}).layout !== "feature") {
+        alerta("Tem de sobrar uma secção em grelha: é para onde vão os cartões das secções removidas.", "erro");
+        return;
+      }
+      if (!window.confirm("Remover a secção? Os cartões dela passam para a primeira grelha.")) { return; }
+      dados.seccoes = dados.seccoes.filter(function (s) { return s.id !== id; });
+      enfileirar("seccao-remover:" + id, { op: "seccao-remover", seccao: id });
+      desenhar();
+      return;
+    }
+
+    if (adicionar) {
+      titulo = (window.prompt("Título da secção nova:") || "").trim();
+      if (!titulo) { return; }
+      // O id sai do título, mas tem de ser único: é ele a âncora (#id) e a
+      // chave que liga cada cartão à sua secção. Os acentos saem antes de
+      // limpar o resto, senão "Verão" dava "ver-o".
+      id = titulo.toLowerCase()
+        .replace(/[áàâãä]/g, "a").replace(/[éèêë]/g, "e").replace(/[íìîï]/g, "i")
+        .replace(/[óòôõö]/g, "o").replace(/[úùûü]/g, "u").replace(/ç/g, "c")
+        .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "seccao";
+      while (dados.seccoes.filter(function (s) { return s.id === id; }).length) {
+        id += "-2";
+      }
+      dados.seccoes.push({ id: id, layout: "grid", title: titulo, eyebrow: "", text: "" });
+      enfileirar("seccao-adicionar:" + id, { op: "seccao-adicionar", seccao: id, titulo: titulo });
+      desenhar();
+      return;
+    }
+  });
 
   // Herdar a ordem do outro separador.
   document.addEventListener("click", function (evento) {
