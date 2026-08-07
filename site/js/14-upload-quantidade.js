@@ -429,12 +429,33 @@
     return item ? Math.max(0, parseInt(item.quantity, 10) || 0) : 0;
   }
 
+  // FINISH_GROUPS_V1: um grupo de acabamentos e uma escolha obrigatoria, por
+  // isso a linha nasce com a primeira opcao de cada grupo ja marcada — e a capa
+  // mole, que nao acrescenta nada ao preco.
+  function builderDefaultFinishes(product, entry) {
+    var allowed = entry && Array.isArray(entry.finishes) ? entry.finishes : [];
+    var vistos = [];
+    var defaults = [];
+
+    allowed.forEach(function (value) {
+      var finish = builderFinishOption(product, value);
+      var grupo = finish && finish.group ? String(finish.group) : "";
+
+      if (!grupo || vistos.indexOf(grupo) !== -1) {
+        return;
+      }
+      vistos.push(grupo);
+      defaults.push(value);
+    });
+    return defaults;
+  }
+
   function builderApplyProduct(product, line, productId) {
     var entry = builderEntry(product, productId);
 
     line.productId = entry ? String(entry.id) : "";
     line.choices = {};
-    line.finishes = [];
+    line.finishes = builderDefaultFinishes(product, entry);
     builderEntryChoices(entry).forEach(function (choice) {
       var first = choice && Array.isArray(choice.items) ? choice.items[0] : null;
       if (choice && choice.required === true && first) {
@@ -734,37 +755,93 @@
     }).join("");
   }
 
+  function builderRenderFinishChoice(product, line, value, chosen, grouped) {
+    var finish = builderFinishOption(product, value);
+    var extra = finish ? Math.max(0, parseInt(finish.extraPriceCentsPerUnit, 10) || 0) : 0;
+    var checked = chosen.indexOf(value) !== -1;
+    var detail;
+
+    if (!finish) {
+      return "";
+    }
+    // Num grupo exclusivo a opcao sem acrescimo tambem precisa de dizer alguma
+    // coisa: senao a capa mole ficava sem legenda ao lado da dura com preco.
+    detail = extra
+      ? '<small>+' + escapeHtml(formatCents(extra)) + ' por unidade</small>'
+      : (grouped ? '<small>Incluído no preço</small>' : "");
+
+    return [
+      '<label class="builder-finish-choice' + (checked ? ' is-selected' : '') + '">',
+      '<input type="' + (grouped ? 'radio' : 'checkbox') + '"' + (grouped ? ' name="builder-finish-' + escapeHtml(line.id) + '-' + escapeHtml(finish.group) + '"' : '') + ' value="' + escapeHtml(value) + '" data-builder-finish data-builder-line="' + escapeHtml(line.id) + '"' + (checked ? ' checked' : '') + '>',
+      '<span><strong>' + escapeHtml(finish.title || value) + '</strong>' + detail + '</span>',
+      '</label>'
+    ].join("");
+  }
+
   function builderRenderFinishField(product, line) {
     var entry = builderEntry(product, line.productId);
     var allowed = entry && Array.isArray(entry.finishes) ? entry.finishes : [];
     var chosen = builderLineFinishes(product, line);
+    var soltos = [];
+    var grupos = [];
+    var html = "";
 
     if (!allowed.length) {
       return "";
     }
 
-    return [
-      '<div class="builder-field">',
-      '<span class="builder-field-label">Acabamento</span>',
-      '<div class="builder-finish-list">',
-      allowed.map(function (value) {
-        var finish = builderFinishOption(product, value);
-        var extra = finish ? Math.max(0, parseInt(finish.extraPriceCentsPerUnit, 10) || 0) : 0;
-        var checked = chosen.indexOf(value) !== -1;
+    // FINISH_GROUPS_V1: acabamentos com `group` sao alternativas entre si
+    // (capa mole ou dura), por isso saem em radios e num campo proprio; os
+    // restantes continuam a ser caixas que se acumulam.
+    allowed.forEach(function (value) {
+      var finish = builderFinishOption(product, value);
+      var grupo = finish && finish.group ? String(finish.group) : "";
+      var registado;
 
-        if (!finish) {
-          return "";
-        }
-        return [
-          '<label class="builder-finish-choice' + (checked ? ' is-selected' : '') + '">',
-          '<input type="checkbox" value="' + escapeHtml(value) + '" data-builder-finish data-builder-line="' + escapeHtml(line.id) + '"' + (checked ? ' checked' : '') + '>',
-          '<span><strong>' + escapeHtml(finish.title || value) + '</strong>' + (extra ? '<small>+' + escapeHtml(formatCents(extra)) + ' por unidade</small>' : "") + '</span>',
-          '</label>'
-        ].join("");
-      }).join(""),
-      '</div>',
-      '</div>'
-    ].join("");
+      if (!finish) {
+        return;
+      }
+      if (!grupo) {
+        soltos.push(value);
+        return;
+      }
+      registado = grupos.filter(function (candidato) {
+        return candidato.id === grupo;
+      })[0];
+      if (!registado) {
+        registado = { id: grupo, label: finish.groupLabel || finish.group, values: [] };
+        grupos.push(registado);
+      }
+      registado.values.push(value);
+    });
+
+    grupos.forEach(function (grupo) {
+      html += [
+        '<div class="builder-field">',
+        '<span class="builder-field-label">' + escapeHtml(grupo.label) + '</span>',
+        '<div class="builder-finish-list">',
+        grupo.values.map(function (value) {
+          return builderRenderFinishChoice(product, line, value, chosen, true);
+        }).join(""),
+        '</div>',
+        '</div>'
+      ].join("");
+    });
+
+    if (soltos.length) {
+      html += [
+        '<div class="builder-field">',
+        '<span class="builder-field-label">Acabamento</span>',
+        '<div class="builder-finish-list">',
+        soltos.map(function (value) {
+          return builderRenderFinishChoice(product, line, value, chosen, false);
+        }).join(""),
+        '</div>',
+        '</div>'
+      ].join("");
+    }
+
+    return html;
   }
 
   // O titulo do passo 3 diz o que a pessoa escolheu no passo 2: com um produto
@@ -1453,9 +1530,26 @@
       input.addEventListener("change", function () {
         withLine(input, function (line) {
           var value = String(input.value || "");
+          var escolhido = builderFinishOption(product, value);
+          var grupo = escolhido && escolhido.group ? String(escolhido.group) : "";
           var current = Array.isArray(line.finishes) ? line.finishes.slice() : [];
-          var index = current.indexOf(value);
+          var index;
 
+          // Num grupo exclusivo marcar um desmarca o irmao; fora de grupo cada
+          // acabamento continua a somar-se aos outros.
+          if (grupo) {
+            current = current.filter(function (outro) {
+              var finish = builderFinishOption(product, outro);
+              return !(finish && String(finish.group || "") === grupo);
+            });
+            if (input.checked) {
+              current.push(value);
+            }
+            line.finishes = current;
+            return;
+          }
+
+          index = current.indexOf(value);
           if (input.checked && index === -1) {
             current.push(value);
           } else if (!input.checked && index !== -1) {

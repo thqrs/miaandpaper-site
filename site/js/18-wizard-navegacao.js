@@ -332,7 +332,10 @@
         }
         if (!optionDrawerValue && optionDrawer.required === true) {
           state.invalidFields = [optionDrawer.field];
-          return "Escolhe " + String(optionDrawer.label || optionDrawer.title || "uma opção").toLowerCase() + ".";
+          // A frase automatica sai do rotulo da gaveta e nem sempre soa bem
+          // ("Escolhe capa."); com `selectionError` o JSON escreve a sua.
+          return optionDrawer.selectionError
+            || ("Escolhe " + String(optionDrawer.label || optionDrawer.title || "uma opção").toLowerCase() + ".");
         }
         if (optionDrawerValue && !optionDrawerItem(optionDrawer, optionDrawerValue)) {
           state.invalidFields = [optionDrawer.field];

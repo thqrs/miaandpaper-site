@@ -17,7 +17,7 @@ const HOMEPAGE_FILE = __DIR__ . '/content/home.json';
 
 // Campos de uma categoria que este editor deixa mexer. `id` e `href` ficam de
 // fora: sao a identidade e o destino, e mexer neles parte links guardados.
-const HOMEPAGE_CAMPOS_TEXTO = array('title', 'menuTitle', 'subtitle', 'menuGroup', 'actionText', 'image', 'menuHref', 'menuIcon');
+const HOMEPAGE_CAMPOS_TEXTO = array('title', 'menuTitle', 'subtitle', 'menuGroup', 'actionText', 'image', 'menuHref', 'menuIcon', 'featureLabel');
 const HOMEPAGE_CAMPOS_NUMERO = array('menuOrder', 'menuGroupOrder');
 const HOMEPAGE_CAMPOS_BOOL = array('available', 'clickable', 'carouselEnabled', 'menuHidden');
 
@@ -161,6 +161,8 @@ function hm_recolher()
             'menuOrder' => isset($c['menuOrder']) ? (int)$c['menuOrder'] : 0,
             'menuHref' => isset($c['menuHref']) ? (string)$c['menuHref'] : '',
             'menuIcon' => isset($c['menuIcon']) ? (string)$c['menuIcon'] : '',
+            'featured' => !empty($c['featured']),
+            'featureLabel' => isset($c['featureLabel']) ? (string)$c['featureLabel'] : '',
             'available' => !empty($c['available']),
             'clickable' => !isset($c['clickable']) || !empty($c['clickable']),
             'carouselEnabled' => !empty($c['carouselEnabled']),
@@ -253,6 +255,12 @@ function hm_aplicar()
         // ordens independentes de propósito — arrastar numa não mexe na outra.
         if ($op === 'ordem-homepage') {
             $ids = isset($a['ids']) && is_array($a['ids']) ? $a['ids'] : array();
+            // DESTAQUES_HOMEPAGE_V1: quem esta no cartao "Novidades" fica com
+            // `featured`. E a mesma operacao porque arrastar entre os dois
+            // cartoes muda as duas coisas ao mesmo tempo: a seccao e a ordem.
+            $destaques = isset($a['destaques']) && is_array($a['destaques'])
+                ? array_flip(array_map('strval', $a['destaques']))
+                : null;
             $porId = array();
             foreach ((array)$data['categories'] as $c) {
                 if (isset($c['id'])) {
@@ -262,12 +270,24 @@ function hm_aplicar()
             if (count($ids) !== count($porId)) {
                 hm_erro('A ordem da homepage não bate certo com as categorias existentes.');
             }
+            if ($destaques !== null && count($destaques) > 3) {
+                hm_erro('A secção Novidades mostra no máximo 3 cartões.');
+            }
             $nova = array();
             foreach ($ids as $id) {
-                if (!isset($porId[(string)$id])) {
+                $id = (string)$id;
+                if (!isset($porId[$id])) {
                     hm_erro('Categoria desconhecida na ordem: ' . $id . '.');
                 }
-                $nova[] = $porId[(string)$id];
+                $categoria = $porId[$id];
+                if ($destaques !== null) {
+                    if (isset($destaques[$id])) {
+                        $categoria['featured'] = true;
+                    } else {
+                        unset($categoria['featured']);
+                    }
+                }
+                $nova[] = $categoria;
             }
             $data['categories'] = $nova;
             continue;

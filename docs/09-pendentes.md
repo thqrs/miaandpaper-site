@@ -136,20 +136,41 @@ de clientes. Antes de trocar é preciso inventariar o que existe só no servidor
 
 ### Valores monetários ainda duplicados entre ficheiros
 
-O `precos.php` já dá um sítio único para os **editar**, mas continuam a viver em
-cópias separadas, o que os deixa divergir se alguém editar à mão:
+Porque é que o mesmo preço aparecia em vários sítios: cada **percurso de venda**
+declarava as suas próprias opções. A loja lê os `steps` do produto, a
+personalização lê o catálogo do `personalizacao.json`, e o servidor cobra pelo
+`finishOptions` do produto de destino. Não havia a noção de «esta opção custa
+isto» — só «neste ecrã mostra-se isto», repetida uma vez por ecrã. O acabamento
+holográfico chegou a estar escrito em **dez** ficheiros.
 
-| valor | onde | cópias |
+Já está resolvido para as três famílias grandes:
+
+| valor | fonte única | desde |
 |---|---|---|
-| Taxa de artwork | `pricing.json` **e** a constante `MAIN_V2_ARTWORK_FEE_CENTS` em `send-order.php:15` | **2** |
-| Acabamentos, extras, tamanhos | `finishOptions`, gavetas e passos de cada produto | por produto |
+| Tabelas de preços | `products` do `pricing.json` | — |
+| Portes | bloco `delivery` do `pricing.json` | 2026-08-06 |
+| Acabamentos e extras por unidade | bloco `optionExtras` do `pricing.json` | 2026-08-07 |
 
-Os portes **já foram centralizados** (bloco `delivery` do `pricing.json`, ver
-[04 · Preços](04-precos.md)).
+O `optionExtras` é indexado pelo `value` da opção (ou pelo `id`, quando é um
+passo inteiro como a personalização da capa). Quem o aplica: `applyCentralOptionExtras()`
+em `js/10-produto-precos.js` e `apply_central_option_extras()` no `send-order.php`
+— os dois têm de andar a par. O JSON do produto continua a dar a estrutura e
+serve de recurso quando o central não conhece a chave, e o `precos.php` replica
+qualquer edição pelo central **e** por todas as cópias, para nenhuma ficar a
+mostrar um número que já não é o cobrado.
 
-A taxa de artwork é mais simples e mais urgente: o PHP tem o `300` escrito à mão
-e nada valida que coincide com o `pricing.json`. Fazer o PHP lê-lo do
-`pricing.json` fecha a divergência sem tocar em cálculo nenhum.
+**O que falta:** a taxa de artwork, com o `300` escrito à mão em
+`MAIN_V2_ARTWORK_FEE_CENTS` (`send-order.php:15`) e nada a validar que coincide
+com o `pricing.json`. Fazer o PHP lê-lo do `pricing.json` fecha a última
+divergência sem tocar em cálculo nenhum.
+
+Cuidado com um caso que **não** é só um número errado no ecrã: um acabamento que
+exista no `personalizacao.json` mas **não** no `finishOptions` do produto de
+destino faz o `send-order.php` **recusar a encomenda inteira** com «Um dos
+acabamentos escolhidos não é válido». Foi o que aconteceu com a capa dura das
+agendas e dos cadernos até 2026-08-07. O `optionExtras` alinha os valores, mas
+não cria a entrada em falta — vale a pena um teste que percorra os `finishes` da
+personalização e confirme que cada valor existe no destino.
 
 ### Lixo que vai para produção
 

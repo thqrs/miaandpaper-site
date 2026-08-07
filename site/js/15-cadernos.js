@@ -1081,9 +1081,22 @@
     ].join("");
   }
 
+  // COVER_TYPE_SUMMARY_V1: o tipo de capa (mole/dura) vive numa gaveta de
+  // opcoes, e nao num passo com items, por isso o resumo tem de o ir buscar a
+  // mesma escolha que fixa o preco — assim diz sempre o que vai ser cobrado.
+  function selectedCadernoCoverType(product) {
+    return selectedOptionDrawerRecords(product).filter(function (record) {
+      return record.step && record.step.id === "cover_type";
+    })[0] || null;
+  }
+
   function renderCadernosBuildSummaryV2(product, step) {
     var steps = visibleSteps(product);
     var currentIndex = steps.indexOf(step);
+    var coverTypeStep = findStep(product, "cover_type");
+    var coverTypeIndex = steps.indexOf(coverTypeStep);
+    var coverType = coverTypeStep ? selectedCadernoCoverType(product) : null;
+    var coverTypeExtra = coverType ? Math.max(0, parseInt(coverType.item.extraPriceCentsPerUnit, 10) || 0) : 0;
     var laminationIndex = steps.indexOf(findStep(product, "lamination"));
     var addOnsIndex = steps.indexOf(findStep(product, "add_ons"));
     var optionIndex = steps.indexOf(findStep(product, "pack"));
@@ -1102,8 +1115,16 @@
 
     parts += renderCadernosBuildPart("Capa", displayItemTitle(cover), cadernoSummaryCoverPreviewItem(product, cover), findStep(product, "designs"), "cadernos-build-part--cover");
 
+    if (coverTypeIndex >= 0 && currentIndex >= coverTypeIndex && coverType) {
+      parts += renderCadernosBuildTextPart(
+        "Tipo de capa",
+        coverType.item.title || coverType.item.value,
+        coverTypeExtra ? "+" + formatCents(coverTypeExtra) + " por unidade" : "Incluído no preço"
+      );
+    }
+
     if (currentIndex >= laminationIndex && lamination) {
-      parts += renderCadernosBuildPart("Laminação", lamination.title, cadernoSummaryLaminationPreviewItem(product, lamination), findStep(product, "lamination"), "cadernos-build-part--lamination");
+      parts += renderCadernosBuildPart("Acabamento", lamination.title, cadernoSummaryLaminationPreviewItem(product, lamination), findStep(product, "lamination"), "cadernos-build-part--lamination");
     }
 
     if (addOnsIndex >= 0 && currentIndex >= addOnsIndex) {

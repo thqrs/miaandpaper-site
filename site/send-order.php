@@ -197,7 +197,72 @@ function load_product_config($slug)
 
     $data = json_decode(file_get_contents($path), true);
 
-    return is_array($data) ? $data : array();
+    if (!is_array($data)) {
+        return array();
+    }
+
+    apply_central_option_extras($data, central_option_extras($base));
+    return $data;
+}
+
+// EXTRAS_CENTRAIS_V1: o mesmo acabamento aparece no `finishOptions` de dez
+// produtos, na gaveta de outros e ainda no catalogo da personalizacao — sempre
+// pelo mesmo nome e sempre pelo mesmo valor. O bloco `optionExtras` do
+// pricing.json passa a mandar em todos, aqui como no browser. O par disto em JS
+// e `applyCentralOptionExtras()` em js/10-produto-precos.js.
+//
+// A capsula do congresso le o seu proprio pricing.json: se la nao houver bloco
+// nenhum, nada e substituido e ela fica exatamente como esta.
+function central_option_extras($base)
+{
+    static $cache = array();
+
+    $path = rtrim(str_replace('content/products/', 'content/', $base), '/') . '/pricing.json';
+    if (isset($cache[$path])) {
+        return $cache[$path];
+    }
+
+    $extras = array();
+    $raw = @file_get_contents($path);
+    if ($raw !== false) {
+        $data = json_decode($raw, true);
+        if (is_array($data) && !empty($data['optionExtras']) && is_array($data['optionExtras'])) {
+            foreach ($data['optionExtras'] as $chave => $cents) {
+                $extras[(string)$chave] = max(0, (int)$cents);
+            }
+        }
+    }
+    $cache[$path] = $extras;
+    return $extras;
+}
+
+function apply_central_option_extras(&$node, $extras)
+{
+    if (empty($extras) || !is_array($node)) {
+        return;
+    }
+
+    // A chave e o `value` da opcao; um passo inteiro (a personalizacao da capa)
+    // nao tem `value`, por isso vale tambem o `id`.
+    $chave = '';
+    if (isset($node['value']) && is_scalar($node['value'])) {
+        $chave = (string)$node['value'];
+    } elseif (isset($node['id']) && is_scalar($node['id'])) {
+        $chave = (string)$node['id'];
+    }
+    if ($chave !== '' && isset($extras[$chave])) {
+        foreach (array('extraPriceCents', 'extraPriceCentsPerUnit') as $campo) {
+            if (isset($node[$campo]) && is_numeric($node[$campo])) {
+                $node[$campo] = $extras[$chave];
+            }
+        }
+    }
+
+    foreach ($node as $k => $filho) {
+        if (is_array($filho)) {
+            apply_central_option_extras($node[$k], $extras);
+        }
+    }
 }
 
 function load_pricing_product($slug)

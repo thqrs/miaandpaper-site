@@ -347,6 +347,10 @@
             + ' placeholder="Ver opções →" title="Texto do botão do cartão"'
             + ' data-op="categoria" data-indice="' + c.indice + '" data-campo="actionText"'
             + ' data-original="' + esc(c.actionText) + '">'
+            + '<input type="text" class="secundario" value="' + esc(c.featureLabel) + '"'
+            + ' placeholder="etiqueta (só em Novidades)" title="Etiqueta por cima do título, só usada na secção Novidades"'
+            + ' data-op="categoria" data-indice="' + c.indice + '" data-campo="featureLabel"'
+            + ' data-original="' + esc(c.featureLabel) + '">'
           : selectorIcone(c))
       + '</span>'
       + (contexto === "home"
@@ -359,8 +363,9 @@
       + '</div>';
   }
 
-  function cartaoGrupo(titulo, itens, contexto, arrastavel) {
+  function cartaoGrupo(titulo, itens, contexto, arrastavel, chave) {
     return '<section class="grupo" data-grupo="' + esc(titulo) + '" data-ctx="' + contexto + '"'
+      + (chave ? ' data-chave="' + esc(chave) + '"' : '')
       + (arrastavel ? ' draggable="true"' : '') + '>'
       + '<header>' + (arrastavel ? '<span class="grupo-pega" aria-hidden="true">⠿</span>' : '')
       + '<h3>' + esc(titulo) + '</h3>'
@@ -404,7 +409,8 @@
 
   function abaHomepage() {
     var html = '<div class="faixa info"><strong>A homepage segue a ordem dos cartões aqui.</strong> '
-      + 'Arrasta para reordenar. É independente do menu.</div>';
+      + 'Arrasta para reordenar e para passar um cartão de uma secção para a outra. '
+      + 'É independente do menu.</div>';
 
     html += '<section class="cartao"><header><h2>Blocos de texto</h2>'
       + '<button class="leve" data-herdar="home">Herdar a ordem do menu</button></header><div class="corpo">';
@@ -421,8 +427,18 @@
     });
     html += '</div></section>';
 
+    // DESTAQUES_HOMEPAGE_V1: a homepage tem duas secções fixas e cada cartão
+    // vive numa delas. Aqui aparecem como dois cartões grandes, para se poder
+    // arrastar entre eles — antes só se via a grelha toda em bloco e não havia
+    // maneira de tirar ou pôr nada nas Novidades.
+    var destaques = dados.categorias.filter(function (c) { return c.featured; });
+    var restantes = dados.categorias.filter(function (c) { return !c.featured; });
+    var tituloNovidades = (dados.news && dados.news.title) || "Novidades";
+    var tituloProdutos = (dados.productsIntro && dados.productsIntro.title) || "Produtos";
+
     html += '<div class="grupos" data-ctx="home">'
-      + cartaoGrupo("Cartões da homepage", dados.categorias, "home", false)
+      + cartaoGrupo(tituloNovidades + " (até 3)", destaques, "home", false, "destaques")
+      + cartaoGrupo(tituloProdutos, restantes, "home", false, "resto")
       + '</div>';
     return html;
   }
@@ -535,7 +551,14 @@
     if (contexto === "home") {
       var ids = [].map.call(document.querySelectorAll('.grupos[data-ctx="home"] .mini'),
         function (m) { return m.dataset.id; });
-      enfileirar("ordem-homepage", { op: "ordem-homepage", ids: ids });
+      // DESTAQUES_HOMEPAGE_V1: o cartão onde a mini ficou é que diz se ela vai
+      // para as Novidades. Vai tudo na mesma operação porque arrastar entre os
+      // dois cartões muda a secção e a ordem ao mesmo tempo.
+      var destaques = [].map.call(
+        document.querySelectorAll('.grupos[data-ctx="home"] .grupo[data-chave="destaques"] .mini'),
+        function (m) { return m.dataset.id; }
+      );
+      enfileirar("ordem-homepage", { op: "ordem-homepage", ids: ids, destaques: destaques });
       return;
     }
 

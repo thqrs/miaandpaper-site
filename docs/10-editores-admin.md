@@ -36,6 +36,30 @@ envia a ordem completa numa operação — não uma por linha.
 Campos por entrada: nome, subtítulo, **texto de acção** (o "Ver opções →"),
 visibilidade, e no menu o **ícone**.
 
+A caixa de cada mini-cartão muda conforme o separador: na homepage é o
+`available` (o cartão fica clicável ou não — desligado, mostra o
+`unavailableMessage` a quem lhe toca); no menu é o `menuHidden` (esconde a
+entrada do hamburguer sem a esconder da homepage). O `auto` no lugar do ícone
+quer dizer que aquela entrada não tem `menuIcon` escolhido e o site decide pelo
+`id` — é o comportamento de sempre.
+
+### As secções da homepage
+
+A homepage tem **duas secções, fixas e escritas no código** (`renderHome` em
+`js/09-admin-paineis.js`): *Novidades*, com até 3 cartões, e *Produtos*, com o
+resto da grelha. Não são dados, por isso **não se acrescentam, removem nem
+reordenam** — só se lhes edita o texto (bloco "Blocos de texto", que escreve em
+`news` e `productsIntro`).
+
+O que se **pode** organizar é em que secção cada cartão vive: `DESTAQUES_HOMEPAGE_V1`
+mostra as duas secções como dois cartões grandes e arrastar um mini-cartão entre
+elas liga/desliga o `featured`. A operação `ordem-homepage` leva a ordem e os
+destaques juntos, e recusa mais de 3.
+
+Tornar as secções editáveis obrigaria a pô-las no `home.json` e a fazer o
+`renderHome` percorrê-las em vez de as ter escritas — mudança real na homepage,
+não no editor.
+
 ### Campos novos no `home.json`
 
 | campo | efeito | omissão |
@@ -45,6 +69,8 @@ visibilidade, e no menu o **ícone**.
 | `menuShowIcons` | mostrar ícones no menu. `MENU_ICONES_V1` | ligado |
 | `menuAccordion` | abrir uma secção fecha as outras. `MENU_ACORDEAO_V1` | desligado |
 | `menuHidden` | esconder do menu sem esconder da homepage | falso |
+| `featured` | pôr o cartão na secção *Novidades*. `DESTAQUES_HOMEPAGE_V1` | vai para *Produtos* |
+| `featureLabel` | etiqueta por cima do título, só usada em *Novidades* | sem etiqueta |
 
 O selector de ícones lista os PNG de `content/brand/menu-icons/line-art/`, por
 isso um ficheiro novo aparece sozinho.

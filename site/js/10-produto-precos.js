@@ -1284,6 +1284,10 @@
     record = pricing && pricing.products ? pricing.products[product.slug] : null;
     siteSettings();
 
+    // Antes da saida antecipada: um produto sem tabela central continua a ter
+    // acabamentos e extras, e esses tem de vir do mesmo sitio na mesma.
+    applyCentralOptionExtras(product, pricing);
+
     if (!record) {
       syncPricingFromProduct(product);
       return product;
@@ -1324,6 +1328,54 @@
       if (id && centrais[id] != null) {
         option.feeCents = Math.max(0, parseInt(centrais[id], 10) || 0);
       }
+    });
+  }
+
+  // EXTRAS_CENTRAIS_V1: o mesmo acabamento aparece no `finishOptions` de dez
+  // produtos, na gaveta de outros e ainda no catalogo da personalizacao —
+  // sempre pelo mesmo nome e sempre pelo mesmo valor. O bloco `optionExtras`
+  // do pricing.json passa a mandar em todos: o JSON do produto continua a dar
+  // a estrutura (nome, texto, imagem) e serve de recurso quando o central nao
+  // conhece a chave. Tem de dar o mesmo que `apply_central_option_extras()` no
+  // send-order.php.
+  var EXTRA_CAMPOS = ["extraPriceCents", "extraPriceCentsPerUnit"];
+
+  function applyCentralOptionExtras(product, pricing) {
+    var centrais = pricing && pricing.optionExtras ? pricing.optionExtras : null;
+
+    if (!centrais || !product) {
+      return;
+    }
+    walkCentralOptionExtras(product, centrais);
+  }
+
+  function walkCentralOptionExtras(node, centrais) {
+    var chave;
+    var i;
+
+    if (Array.isArray(node)) {
+      node.forEach(function (filho) {
+        walkCentralOptionExtras(filho, centrais);
+      });
+      return;
+    }
+    if (!node || typeof node !== "object") {
+      return;
+    }
+
+    // A chave e o `value` da opcao; um passo inteiro (a personalizacao da capa)
+    // nao tem `value`, por isso vale tambem o `id`.
+    chave = node.value != null ? String(node.value) : (node.id != null ? String(node.id) : "");
+    if (chave && centrais[chave] != null) {
+      for (i = 0; i < EXTRA_CAMPOS.length; i += 1) {
+        if (typeof node[EXTRA_CAMPOS[i]] === "number") {
+          node[EXTRA_CAMPOS[i]] = Math.max(0, parseInt(centrais[chave], 10) || 0);
+        }
+      }
+    }
+
+    Object.keys(node).forEach(function (k) {
+      walkCentralOptionExtras(node[k], centrais);
     });
   }
 

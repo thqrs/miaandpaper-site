@@ -362,10 +362,12 @@
     });
   }
 
+  // PRODUCT_IMAGE_ZOOM_V1: a lupa vive no passo da escolha do design — o passo 1
+  // de todos os produtos — e mais lado nenhum. Deixou de estar limitada a quatro
+  // familias: qualquer produto com fotografia real no passo 1 passa a te-la.
   function shouldShowDesignZoom(product, step, item) {
     return !state.admin
       && product
-      && ["crachas", "imanes", "caderninhos", "cadernos"].indexOf(productFamily(product)) !== -1
       && step
       && step.id === "designs"
       && item

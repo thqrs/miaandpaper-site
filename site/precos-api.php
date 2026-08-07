@@ -340,6 +340,51 @@ function precos_definir_por_trail(&$data, $trail, $cents)
     return true;
 }
 
+// EXTRAS_CENTRAIS_V1 ─────────────────────────────────────────────────────────
+// O mesmo acabamento vive em varios ficheiros ao mesmo tempo (o `finishOptions`
+// de cada produto, a gaveta de outros, o catalogo da personalizacao). O bloco
+// `optionExtras` do pricing.json e quem manda em runtime; estas funcoes fazem
+// com que uma edicao no editor va la parar E seja replicada por todas as
+// copias, para nenhuma delas ficar a dizer um numero que ja nao e cobrado.
+function precos_chave_central($node)
+{
+    if (!is_array($node)) {
+        return '';
+    }
+    if (isset($node['value']) && is_scalar($node['value'])) {
+        return (string)$node['value'];
+    }
+    if (isset($node['id']) && is_scalar($node['id'])) {
+        return (string)$node['id'];
+    }
+    return '';
+}
+
+// Reescreve todas as ocorrencias da chave dentro de uma arvore. Devolve quantas
+// mudou, para o chamador saber se vale a pena gravar o ficheiro.
+function precos_replicar_extra(&$node, $chave, $cents)
+{
+    $mudou = 0;
+
+    if (!is_array($node)) {
+        return 0;
+    }
+    if (precos_chave_central($node) === $chave) {
+        foreach (array('extraPriceCents', 'extraPriceCentsPerUnit') as $campo) {
+            if (isset($node[$campo]) && is_numeric($node[$campo]) && (int)$node[$campo] !== $cents) {
+                $node[$campo] = $cents;
+                $mudou += 1;
+            }
+        }
+    }
+    foreach ($node as $k => $filho) {
+        if (is_array($filho)) {
+            $mudou += precos_replicar_extra($node[$k], $chave, $cents);
+        }
+    }
+    return $mudou;
+}
+
 // Devolve uma referencia ao no do trail. $criar=false nunca inventa chaves.
 function &precos_no_por_trail(&$data, $trail, &$ok)
 {
@@ -1019,6 +1064,38 @@ function precos_gravar()
             $abrir($ficheiro);
             if (!precos_definir_por_trail($produtos[$ficheiro]['data'], $trail, $cents)) {
                 precos_erro('Não encontrei ' . implode(' → ', $trail) . ' em ' . $ficheiro . '.json.');
+            }
+
+            // EXTRAS_CENTRAIS_V1: se o valor editado for um extra com chave no
+            // bloco central, a mesma edicao vai ao pricing.json e a todas as
+            // outras copias. Sem isto o editor mudava uma copia e o site
+            // continuava a cobrar pelo central — exactamente a confusao que
+            // este bloco existe para acabar.
+            $trailNo = $trail;
+            array_pop($trailNo);
+            $okNo = false;
+            $noEditado = precos_no_por_trail($produtos[$ficheiro]['data'], $trailNo, $okNo);
+            $chaveCentral = $okNo ? precos_chave_central($noEditado) : '';
+
+            if ($chaveCentral !== '' && isset($pricing['optionExtras'][$chaveCentral])) {
+                if ((int)$pricing['optionExtras'][$chaveCentral] !== $cents) {
+                    $pricing['optionExtras'][$chaveCentral] = $cents;
+                    $pricingMudou = true;
+                }
+                foreach (glob(PRECOS_PRODUCTS_DIR . '/*.json') as $outroPath) {
+                    $outroSlug = basename($outroPath, '.json');
+                    if (!preg_match('/^[a-z0-9-]+$/', $outroSlug)) {
+                        continue;
+                    }
+                    // Um ficheiro que nao tenha esta chave nao chega a ser
+                    // aberto: so gravamos o que muda mesmo.
+                    $jaAberto = isset($produtos[$outroSlug]);
+                    $abrir($outroSlug);
+                    $replicadas = precos_replicar_extra($produtos[$outroSlug]['data'], $chaveCentral, $cents);
+                    if ($replicadas === 0 && !$jaAberto) {
+                        unset($produtos[$outroSlug]);
+                    }
+                }
             }
             continue;
         }

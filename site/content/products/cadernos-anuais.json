@@ -829,8 +829,9 @@
       "id": "cover_type",
       "label": "Capa",
       "title": "Escolhe a capa",
-      "text": "A capa dura é mais resistente e mantém-se direita.",
+      "text": "A capa dura é mais resistente e mantém-se direita. A capa mole já está incluída no preço e é mais versátil.",
       "template": "option-drawers",
+      "display": "cards",
       "drawers": [
         {
           "id": "cover-type",
@@ -838,21 +839,23 @@
           "label": "Capa",
           "field": "cover_type",
           "required": true,
-          "defaultValue": "mole",
+          "selectionError": "Escolhe um tipo de capa.",
           "items": [
             {
               "id": "cover-mole",
-              "value": "mole",
+              "value": "capa-mole",
               "title": "Capa mole",
-              "subtitle": "Opção por omissão",
+              "subtitle": "Mais leve e mais versátil",
+              "drawerText": "A capa mole já está incluída no preço.",
               "image": "",
               "extraPriceCentsPerUnit": 0
             },
             {
               "id": "cover-dura",
-              "value": "dura",
+              "value": "capa-dura",
               "title": "Capa dura",
-              "subtitle": "+4,00 € por unidade",
+              "subtitle": "Mais resistente e mantém-se direita",
+              "drawerText": "A capa dura é mais resistente e mantém-se direita.",
               "image": "",
               "extraPriceCentsPerUnit": 400
             }
@@ -3040,6 +3043,18 @@
       "title": "Acabamento holográfico",
       "subtitle": "Brilho com reflexos coloridos",
       "extraPriceCentsPerUnit": 25
+    },
+    {
+      "value": "capa-mole",
+      "title": "Capa mole",
+      "subtitle": "Mais leve e mais versátil",
+      "extraPriceCentsPerUnit": 0
+    },
+    {
+      "value": "capa-dura",
+      "title": "Capa dura",
+      "subtitle": "Mais resistente e mantém-se direita",
+      "extraPriceCentsPerUnit": 400
     }
   ]
 }

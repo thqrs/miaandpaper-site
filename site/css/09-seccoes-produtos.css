@@ -490,6 +490,19 @@ html[data-theme="dark"] .crachas-size-card-proof-note {
   border-radius: 12px;
 }
 
+/* OPTION_DRAWERS_CARDS_V1: cabecalho de cada grupo quando o passo tem mais do
+   que uma gaveta. Com uma so, o titulo do passo chega e isto nao aparece. */
+.option-drawer-cards-title {
+  margin: 18px 8px 8px;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.option-drawer-cards-title:first-child {
+  margin-top: 0;
+}
+
 .cadernos-add-on-drawer {
   display: grid;
   gap: 10px;

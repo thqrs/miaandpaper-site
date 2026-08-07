@@ -10,6 +10,17 @@
         "shipping": 540,
         "join_orders": 0
     },
+    "optionExtras": {
+        "holografica": 25,
+        "holografica-marcador": 15,
+        "holographic": 15,
+        "dois-lados-marcador": 15,
+        "buraquinho-marcador": 25,
+        "margem-plastico-marcador": 20,
+        "capa-mole": 0,
+        "capa-dura": 400,
+        "cover_personalization": 200
+    },
     "products": {
         "caderninhos": {
             "id": "caderninhos",

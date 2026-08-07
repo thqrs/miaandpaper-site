@@ -844,6 +844,49 @@
     ].join("");
   }
 
+  // OPTION_DRAWERS_CARDS_V1: a mesma gaveta de opcoes, mas apresentada como os
+  // passos do acabamento e do tamanho — um cartao por opcao e uma gaveta que
+  // abre por baixo do escolhido com a imagem. Liga-se com "display": "cards"
+  // no passo, para as gavetas dos marcadores ficarem como estavam.
+  function renderOptionDrawerCard(product, step, drawer, item) {
+    var selected = String(state.selections[drawer.field] || "") === String(item.value || "");
+    var extra = Math.max(0, parseInt(item.extraPriceCentsPerUnit, 10) || 0);
+
+    return [
+      '<div class="cadernos-add-on-choice option-drawer-card-choice">',
+      '<label class="choice-card crachas-size-card cadernos-add-on-card' + (selected ? ' is-selected' : '') + '">',
+      '<input type="radio" name="' + escapeHtml(drawer.field) + '" value="' + escapeHtml(item.value || "") + '" data-option-drawer-choice data-option-drawer-field="' + escapeHtml(drawer.field) + '"' + (selected ? ' checked' : '') + '>',
+      '<span class="crachas-size-card-visual">' + renderVisual(item, "media-list", step) + '</span>',
+      '<span class="choice-copy crachas-size-card-text">',
+      '<strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>',
+      item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : "",
+      '</span>',
+      '<span class="cadernos-purchase-price">' + (extra ? '+' + escapeHtml(formatCents(extra)) : 'Incluído') + '</span>',
+      '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+      '</label>',
+      selected ? renderCadernoAddOnDrawer(item) : "",
+      '</div>'
+    ].join("");
+  }
+
+  function renderOptionDrawerCards(product, step) {
+    ensureOptionDrawerSelections(product);
+
+    return (step.drawers || []).map(function (drawer) {
+      // Com uma gaveta so, o titulo do passo ja diz o que se escolhe; com
+      // varias, cada grupo precisa do seu cabecalho para nao se misturarem.
+      var heading = (step.drawers || []).length > 1
+        ? '<h3 class="option-drawer-cards-title">' + escapeHtml(drawer.title || drawer.label || "Opção") + '</h3>'
+        : "";
+
+      return heading + '<div class="option-list size-choice-list crachas-size-card-list cadernos-add-on-list">'
+        + (drawer.items || []).map(function (item) {
+          return renderOptionDrawerCard(product, step, drawer, item);
+        }).join("")
+        + '</div>';
+    }).join("");
+  }
+
   function renderOptionDrawers(product, step) {
     ensureOptionDrawerSelections(product);
 
@@ -910,6 +953,11 @@
 
     if (step.template === "quantity-builder") {
       return renderInteriorSlideshow(product) + renderQuantityBuilder(product);
+    }
+
+    if (step.template === "option-drawers" && step.display === "cards") {
+      return renderOptionDrawerCards(product, step)
+        + (isCadernosProduct(product) ? renderCadernosBuildSummaryV2(product, step) : "");
     }
 
     if (step.template === "option-drawers") {

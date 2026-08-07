@@ -77,6 +77,32 @@ a opção, cai para o `feeCents` do produto.
 Antes eram 13 cópias e já tinham divergido uma vez (5,55 € contra 8,50 €). O
 editor mostra-os uma só vez, na tab *Produtos*.
 
+### Acabamentos e extras — um valor para o site todo
+
+`EXTRAS_CENTRAIS_V1`. Mesmo princípio dos portes, para os acréscimos **por
+unidade**. O acabamento holográfico estava escrito em dez ficheiros porque cada
+percurso de venda declarava as suas opções: a loja lê os `steps` do produto, a
+personalização lê o catálogo do `personalizacao.json`, e o servidor cobra pelo
+`finishOptions` do destino.
+
+```json
+"optionExtras": { "holografica": 25, "capa-mole": 0, "capa-dura": 400 }
+```
+
+Indexado pelo `value` da opção — ou pelo `id`, quando o extra pertence a um passo
+inteiro (`cover_personalization`). Sobrepõe-se ao `extraPriceCents` e ao
+`extraPriceCentsPerUnit` **onde quer que apareçam**: `finishOptions`, gavetas,
+passos, catálogo da personalização.
+
+O par é `apply_central_option_extras()` no `send-order.php` e
+`applyCentralOptionExtras()` em `js/10-produto-precos.js`. Uma chave que o bloco
+não conheça fica com o valor do produto, e a cápsula do congresso lê o seu
+próprio `pricing.json` — sem bloco lá, nada muda nela.
+
+Ao gravar, o `precos.php` escreve no `optionExtras` **e** replica por todas as
+cópias, para nenhuma ficar a mostrar um número que já não é o cobrado. Só grava
+os ficheiros que a chave toca.
+
 ### Custos e margens — ficam fora da raiz web
 
 O custo por unidade **não vai para o `content/pricing.json`**, que é servido

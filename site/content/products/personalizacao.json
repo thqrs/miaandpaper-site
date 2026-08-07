@@ -276,6 +276,7 @@
             }
           ],
           "finishes": [
+            "capa-mole",
             "capa-dura"
           ]
         },
@@ -356,6 +357,7 @@
             }
           ],
           "finishes": [
+            "capa-mole",
             "capa-dura"
           ]
         },
@@ -464,9 +466,19 @@
           "extraPriceCentsPerUnit": 20
         },
         {
+          "value": "capa-mole",
+          "title": "Capa mole",
+          "subtitle": "Mais leve e mais versátil",
+          "group": "capa",
+          "groupLabel": "Capa",
+          "extraPriceCentsPerUnit": 0
+        },
+        {
           "value": "capa-dura",
           "title": "Capa dura",
-          "subtitle": "Mais resistente; sem isto vai capa mole",
+          "subtitle": "Mais resistente e mantém-se direita",
+          "group": "capa",
+          "groupLabel": "Capa",
           "extraPriceCentsPerUnit": 400
         }
       ]
