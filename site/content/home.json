@@ -71,6 +71,7 @@
             "carouselSlides": [
                 {
                     "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
@@ -79,6 +80,7 @@
                 },
                 {
                     "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-01.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
@@ -87,13 +89,15 @@
                 },
                 {
                     "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
                     "overlayOpacity": null,
                     "intervalMs": null
                 }
-            ]
+            ],
+            "carouselRandomizeOnLoad": true
         },
         {
             "id": "cadernos-geral",
@@ -114,6 +118,7 @@
             "carouselSlides": [
                 {
                     "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
@@ -122,6 +127,7 @@
                 },
                 {
                     "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/vestido_verde/vestido_verde_matte.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
@@ -130,13 +136,96 @@
                 },
                 {
                     "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/cornfield/cornfield_matte.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/o_jovem_cadeira/o_jovem_cadeira_matte.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/idosa_jovem/idosa_jovem_matte.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/idoso_jovem/idoso_jovem_matte.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/reencontro/reencontro_matte.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (1)/img (27).webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (2)/img (21).webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (3)/img (22).webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (4)/img (28).webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (5)/img (26).webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
                     "overlayOpacity": null,
                     "intervalMs": null
                 }
-            ]
+            ],
+            "carouselRandomizeOnLoad": true
         },
         {
             "id": "mini-cadernos-geral",
@@ -157,6 +246,7 @@
             "carouselSlides": [
                 {
                     "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
@@ -165,6 +255,7 @@
                 },
                 {
                     "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/o_jovem_cadeira_minicaderno.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
@@ -173,13 +264,87 @@
                 },
                 {
                     "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/idosa_jovem_minicaderno.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/idoso_jovem_minicaderno.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/reencontro_minicaderno.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/vestido_verde_minicaderno.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/1000133037.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/1000133040.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/1000133041.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/1000133042.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/1000133043.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
                     "overlayOpacity": null,
                     "intervalMs": null
                 }
-            ]
+            ],
+            "carouselRandomizeOnLoad": true
         },
         {
             "id": "blocos-a6",
@@ -328,6 +493,7 @@
             "carouselSlides": [
                 {
                     "image": "content/designs/quadros/fotos-reais/foto-flores-azul-amarelo-frontal.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
@@ -336,6 +502,7 @@
                 },
                 {
                     "image": "content/designs/quadros/fotos-reais/bebe-elefante-dados.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
@@ -344,13 +511,51 @@
                 },
                 {
                     "image": "content/designs/quadros/fotos-reais/amor-frontal.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/quadros/fotos-reais/coracao-flores-frontal.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/quadros/fotos-reais/jardim-flores-pasteis.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/quadros/fotos-reais/silhueta-bodas-frontal.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/quadros/fotos-reais/silhueta-pessoa.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
                     "overlayOpacity": null,
                     "intervalMs": null
                 }
-            ]
+            ],
+            "carouselRandomizeOnLoad": true
         },
         {
             "id": "crachas-geral",
@@ -371,6 +576,7 @@
             "carouselSlides": [
                 {
                     "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
@@ -379,6 +585,7 @@
                 },
                 {
                     "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-01.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
@@ -387,13 +594,96 @@
                 },
                 {
                     "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/lingua-gestual-01.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-02.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-03.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-04.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/lingua-gestual-02.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/crachas-loja/catalog/pins/pin-01.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/crachas-loja/catalog/pins/pin-02.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/crachas-loja/catalog/pins/pin-03.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/crachas-loja/catalog/pins/pin-04.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/crachas-loja/catalog/pins/pin-05.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
                     "overlayOpacity": null,
                     "intervalMs": null
                 }
-            ]
+            ],
+            "carouselRandomizeOnLoad": true
         },
         {
             "id": "postais",
@@ -475,6 +765,7 @@
             "carouselSlides": [
                 {
                     "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-01.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
@@ -483,6 +774,7 @@
                 },
                 {
                     "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/cornfield/cornfield-01.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
@@ -491,13 +783,96 @@
                 },
                 {
                     "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132982.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-02.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-03.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-04.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-05.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132974.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132976.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132978.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132980.webp",
+                    "visible": true,
+                    "speedSeconds": null,
+                    "zoomPercent": null,
+                    "panPercent": null,
+                    "overlayOpacity": null,
+                    "intervalMs": null
+                },
+                {
+                    "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132984.webp",
+                    "visible": true,
                     "speedSeconds": null,
                     "zoomPercent": null,
                     "panPercent": null,
                     "overlayOpacity": null,
                     "intervalMs": null
                 }
-            ]
+            ],
+            "carouselRandomizeOnLoad": true
         },
         {
             "id": "imanes-recortados",

@@ -245,6 +245,24 @@
   tbody tr:hover { background: rgba(255,255,255,.032); }
   td.numerico { font-variant-numeric: tabular-nums; color: var(--texto-2); }
   .col-estreita { width: 112px; }
+  /* DESCONTOS_COLUNAS_V1: a coluna que está a vender destaca-se; as outras são
+     rascunhos e ficam esbatidas para não se confundirem com o preço a sério. */
+  th.col-desconto { text-align: center; white-space: nowrap; }
+  th.col-desconto label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+  th.col-desconto input { width: auto; margin: 0; accent-color: var(--azul); }
+  td.col-desconto input { opacity: .5; }
+  th.col-desconto.activa { color: var(--azul); }
+  td.col-desconto.activa input { opacity: 1; border-color: var(--linha-forte); }
+
+  .nota-corpo { margin: 0 0 12px; font-size: .84rem; color: var(--texto-2); }
+  .coluna-global { display: flex; gap: 8px; flex-wrap: wrap; }
+  .coluna-global button { display: inline-flex; align-items: center; gap: 7px; }
+  .coluna-global button.activa { border-color: var(--azul); color: var(--azul); }
+  .coluna-global .conta {
+    font-size: .66rem; padding: 1px 6px; border-radius: 999px;
+    background: var(--campo); border: 1px solid var(--linha); color: var(--texto-3);
+  }
+
   .col-accao { width: 42px; text-align: right; }
 
   input[type="text"] {
@@ -616,6 +634,81 @@
     return Math.round(q * base * (1 - pct / 100));
   }
 
+  // DESCONTOS_COLUNAS_V1: quatro escadas de desconto por tabela — D1 a D4 — com
+  // uma activa. Os preços continuam a ser a `prices`: escolher uma coluna
+  // converte-a em totais, porque é a `prices` que o site lê. As percentagens
+  // ficam gravadas para se poder voltar atrás sem as reescrever à mão.
+  var COLUNAS = ["D1", "D2", "D3", "D4"];
+
+  function quantidadesDe(tabela) {
+    return Object.keys(tabela).map(Number).filter(function (n) { return n > 0; })
+      .sort(function (a, b) { return a - b; });
+  }
+
+  // Devolve o bloco vivo. Se ainda não existir, nasce com as quatro colunas
+  // iguais ao desconto que a tabela já tem — é o que põe os descontos actuais
+  // em D1 sem mudar nada no site.
+  function descontosDe(slug, priceKey, tabela) {
+    var registo = dados.pricing.products[slug];
+    var actuais;
+
+    if (!registo.discountsByPriceKey) { registo.discountsByPriceKey = {}; }
+    if (!registo.discountsByPriceKey[priceKey]) {
+      actuais = {};
+      quantidadesDe(tabela).forEach(function (q) {
+        actuais[String(q)] = Math.round(descontoDe(tabela, q) * 10) / 10;
+      });
+      registo.discountsByPriceKey[priceKey] = { activo: "D1" };
+      COLUNAS.forEach(function (coluna) {
+        registo.discountsByPriceKey[priceKey][coluna] = JSON.parse(JSON.stringify(actuais));
+      });
+    }
+
+    // Uma quantidade acrescentada depois entra nas quatro colunas.
+    quantidadesDe(tabela).forEach(function (q) {
+      COLUNAS.forEach(function (coluna) {
+        var bloco = registo.discountsByPriceKey[priceKey];
+        if (!bloco[coluna]) { bloco[coluna] = {}; }
+        if (bloco[coluna][String(q)] == null) {
+          bloco[coluna][String(q)] = Math.round(descontoDe(tabela, q) * 10) / 10;
+        }
+      });
+    });
+    return registo.discountsByPriceKey[priceKey];
+  }
+
+  function enfileirarDescontos(slug, priceKey, tabela) {
+    enfileirar("descontos:" + slug + ":" + priceKey, {
+      op: "descontos", slug: slug, priceKey: priceKey,
+      bloco: descontosDe(slug, priceKey, tabela)
+    });
+  }
+
+  // Passa a tabela a seguir esta coluna: cada quantidade fica com o total que a
+  // percentagem manda. O primeiro escalão é a referência e não se mexe.
+  function aplicarColuna(slug, priceKey, coluna) {
+    var tabela = dados.pricing.products[slug].prices[priceKey];
+    var bloco = descontosDe(slug, priceKey, tabela);
+    var qs = quantidadesDe(tabela);
+
+    bloco.activo = coluna;
+    qs.forEach(function (q, i) {
+      if (i === 0) { return; }
+      var pct = Number(bloco[coluna][String(q)]) || 0;
+      // A percentagem é guardada a uma casa decimal, e reconstruir o total a
+      // partir dela perde cêntimos: 30,6% de 48 unidades dá 49,97 € e não os
+      // 50,00 € que lá estão. Se a coluna diz o mesmo que a tabela já diz, não
+      // se lhe toca — mudar de coluna nunca pode mexer num preço por si.
+      if (Math.abs(pct - descontoDe(tabela, q)) < 0.05) { return; }
+      var cents = centsParaDesconto(tabela, q, pct);
+      var trail = ["products", slug, "prices", priceKey, String(q)];
+      tabela[String(q)] = cents;
+      enfileirar("valor:pricing:" + JSON.stringify(trail),
+        { op: "valor", ficheiro: "pricing", trail: trail, cents: cents });
+    });
+    enfileirarDescontos(slug, priceKey, tabela);
+  }
+
   // ── Curva de preço por unidade ───────────────────────────────────────────
   // Serve para ver de relance se a escada é monótona. Uma subida assinala que
   // uma quantidade custa mais do que a seguinte — acontece de propósito no
@@ -869,8 +962,19 @@
       + '<span class="custo-nota">' + (custo ? "lucro calculado por linha" : "põe o custo para veres o lucro") + "</span>"
       + "</div>";
 
+    var blocoD = mostraDesconto ? descontosDe(produto.slug, priceKey, tabela) : null;
+
     html += "<table><thead><tr><th>Quantidade</th><th>Total</th><th>Por unidade</th>"
-      + (mostraDesconto ? "<th>Desconto</th>" : "")
+      + (mostraDesconto
+          ? COLUNAS.map(function (coluna) {
+              return '<th class="col-desconto' + (blocoD.activo === coluna ? " activa" : "") + '"'
+                + ' title="' + (blocoD.activo === coluna ? "Esta é a escada que está a vender" : "Marca para passar a usar esta escada") + '">'
+                + '<label><input type="radio" name="coluna-' + esc(produto.slug + "-" + priceKey) + '"'
+                + (blocoD.activo === coluna ? " checked" : "") + ' data-op="desconto-coluna"'
+                + ' data-contexto="' + attr({ slug: produto.slug, priceKey: priceKey, coluna: coluna }) + '">'
+                + coluna + "</label></th>";
+            }).join("")
+          : "")
       + '<th title="Quanto ganhas em cada unidade que fazes, já com o desconto deste pack">Lucro/un</th>'
       + "<th>Lucro</th><th>Margem</th>"
       + '<th class="col-accao"></th></tr></thead><tbody>';
@@ -893,12 +997,20 @@
         + ' data-contexto="' + attr(contexto) + '" data-original="' + Math.round(cents / q) + '"></td>';
 
       if (mostraDesconto) {
-        var d = descontoDe(tabela, q);
-        html += '<td class="col-estreita"><input type="text" inputmode="decimal" class="dinheiro campo-desconto"'
-          + ' value="' + d.toFixed(1).replace(".", ",") + '" data-op="desconto"'
-          + ' data-contexto="' + attr(contexto) + '" data-original="' + d.toFixed(1) + '"'
-          + (q === qs[0] ? " disabled title=\"É o escalão de referência: o desconto conta-se a partir daqui\"" : "")
-          + "></td>";
+        COLUNAS.forEach(function (coluna) {
+          var activa = blocoD.activo === coluna;
+          // A coluna activa mostra sempre o desconto que a tabela tem mesmo, e
+          // não o que está guardado: são a mesma coisa, mas se alguém mexer no
+          // total à mão é o total que manda.
+          var d = activa ? descontoDe(tabela, q) : Number(blocoD[coluna][String(q)]) || 0;
+          html += '<td class="col-estreita col-desconto' + (activa ? " activa" : "") + '">'
+            + '<input type="text" inputmode="decimal" class="dinheiro campo-desconto"'
+            + ' value="' + d.toFixed(1).replace(".", ",") + '" data-op="desconto"'
+            + ' data-coluna="' + coluna + '"'
+            + ' data-contexto="' + attr(contexto) + '" data-original="' + d.toFixed(1) + '"'
+            + (q === qs[0] ? " disabled title=\"É o escalão de referência: o desconto conta-se a partir daqui\"" : "")
+            + "></td>";
+        });
       }
 
       html += celulasLucro(cents, q, custo);
@@ -1111,6 +1223,38 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  // DESCONTOS_COLUNAS_V1: pôr o catálogo inteiro na mesma escada de uma vez.
+  // É o que se quer numa campanha: mudar todos e depois voltar atrás.
+  function contagemColunas() {
+    var contas = { D1: 0, D2: 0, D3: 0, D4: 0 };
+    dados.produtos.forEach(function (produto) {
+      var registo = dados.pricing.products ? dados.pricing.products[produto.slug] : null;
+      if (!registo || !registo.prices) { return; }
+      Object.keys(registo.prices).forEach(function (priceKey) {
+        var bloco = (registo.discountsByPriceKey || {})[priceKey];
+        var activo = bloco && bloco.activo ? bloco.activo : "D1";
+        if (contas[activo] != null) { contas[activo] += 1; }
+      });
+    });
+    return contas;
+  }
+
+  function seccaoColunaGlobal() {
+    var contas = contagemColunas();
+
+    return '<section class="cartao"><header><h2>Escada de descontos</h2>'
+      + '<span class="selo">todas as tabelas de uma vez</span></header><div class="corpo">'
+      + '<p class="nota-corpo">Cada tabela guarda quatro escadas de desconto — D1 a D4 — e usa uma. '
+      + 'Isto põe todas as tabelas do catálogo na mesma, para uma campanha começar e acabar num clique.</p>'
+      + '<div class="coluna-global">'
+      + COLUNAS.map(function (coluna) {
+          return '<button class="' + (contas[coluna] ? "activa" : "") + '" data-op="desconto-coluna-global"'
+            + ' data-coluna="' + coluna + '">' + coluna
+            + '<span class="conta">' + (contas[coluna] || 0) + "</span></button>";
+        }).join("")
+      + "</div></div></section>";
+  }
+
   function desenhar() {
     el("faixaAberto").hidden = !dados.aberto;
 
@@ -1158,7 +1302,8 @@
           + "quem não estiver lá não aparece, sem dar erro.</div>"
         : "";
 
-      el("conteudo").innerHTML = avisoPers + seccaoPortes() + '<section class="cartao"><header><h2>Produtos</h2>'
+      el("conteudo").innerHTML = avisoPers + seccaoPortes() + seccaoColunaGlobal()
+        + '<section class="cartao"><header><h2>Produtos</h2>'
         + '<span class="selo">clica para abrir</span></header>'
         + '<div class="corpo"><div class="grelha-produtos">'
         + ordemTabs.filter(function (s) { return s !== "__capsula__"; }).map(function (slug) {
@@ -1399,6 +1544,15 @@
       return;
     }
 
+    // Escolher a coluna que manda: passa a tabela toda a seguir aquela escada.
+    if (op === "desconto-coluna") {
+      var ctxCol = JSON.parse(alvo.dataset.contexto);
+      aplicarColuna(ctxCol.slug, ctxCol.priceKey, ctxCol.coluna);
+      desenhar();
+      alerta("A tabela " + ctxCol.priceKey + " passou a usar " + ctxCol.coluna + ". Falta gravar.", "ok");
+      return;
+    }
+
     // Unitário e desconto não são guardados: convertem-se no total do pack,
     // que é o único número que o site lê.
     if (op === "unitario" || op === "desconto") {
@@ -1413,8 +1567,18 @@
         novos = unit * ctx.quantidade;
       } else {
         var pct = percent(alvo.value);
+        var coluna = alvo.dataset.coluna || "D1";
+        var bloco = descontosDe(ctx.slug, ctx.priceKey, tabela);
+
         alvo.classList.toggle("mau", pct === null);
         if (pct === null) { return; }
+
+        // A percentagem fica sempre guardada na sua coluna. Só a coluna activa
+        // é que mexe no preço — as outras estão a ser preparadas.
+        bloco[coluna][String(ctx.quantidade)] = Math.round(pct * 10) / 10;
+        alvo.classList.add("sujo");
+        enfileirarDescontos(ctx.slug, ctx.priceKey, tabela);
+        if (bloco.activo !== coluna) { return; }
         novos = centsParaDesconto(tabela, ctx.quantidade, pct);
       }
 
@@ -1441,6 +1605,7 @@
       unitario.value = euros(Math.round(cents / ctx.quantidade));
       unitario.classList.add("sujo");
     }
+    desconto = linha.querySelector(".col-desconto.activa .campo-desconto") || desconto;
     if (desconto && op !== "desconto" && !desconto.disabled) {
       // O desconto conta-se sobre a tabela como está gravada; enquanto não se
       // grava, usa-se o valor novo desta linha.
@@ -1542,6 +1707,25 @@
     var alvo = evento.target.closest("[data-op]");
     if (!alvo || alvo.tagName !== "BUTTON") { return; }
     var op = alvo.dataset.op;
+
+    // Pôr o catálogo inteiro na mesma escada de descontos. Vive aqui e não no
+    // handler dos campos porque um <button> não dispara `change`.
+    if (op === "desconto-coluna-global") {
+      var colunaG = alvo.dataset.coluna;
+      var tabelas = 0;
+      if (!window.confirm("Pôr TODAS as tabelas do catálogo na escada " + colunaG + "?")) { return; }
+      dados.produtos.forEach(function (produto) {
+        var registo = dados.pricing.products ? dados.pricing.products[produto.slug] : null;
+        if (!registo || !registo.prices) { return; }
+        Object.keys(registo.prices).forEach(function (priceKey) {
+          aplicarColuna(produto.slug, priceKey, colunaG);
+          tabelas += 1;
+        });
+      });
+      desenhar();
+      alerta(tabelas + " tabelas passaram a usar " + colunaG + ". Falta gravar.", "ok");
+      return;
+    }
 
     if (op === "pack-adicionar") {
       var ctx = JSON.parse(alvo.dataset.contexto);

@@ -148,10 +148,20 @@ O temporizador deixou de ser um `setInterval` fixo e passou a ser uma cadeia de
 timeouts, porque cada moldura diz quanto tempo fica.
 
 Outras coisas do separador de cada cartão: ligar/desligar o carrossel, baralhar
-a ordem, arrastar as imagens para as ordenar, e **puxar as imagens do produto** —
-que é o que o site fazia sozinho antes desta página (derivava do passo 1 do
-produto). Uma imagem só é aceite se o ficheiro existir mesmo dentro de
-`content/`; o selector lista os 800 e tal que lá estão.
+a ordem, arrastar as imagens para as ordenar, um **visto por imagem** (sem ele a
+imagem fica na lista mas sai do carrossel — é para experimentar sem perder o
+caminho do ficheiro), e **puxar as imagens do produto**, que **acrescenta** as
+que faltam em vez de substituir.
+
+Para escolher uma imagem: escrever o caminho, ou deixar o campo vazio e carregar
+em *Adicionar imagem* para abrir o selector com miniaturas e filtro. Dois cliques
+no caminho de uma imagem já lá posta abrem o mesmo selector para a trocar. Uma
+imagem só é aceite se o ficheiro existir mesmo dentro de `content/`.
+
+`PRODUTO_DO_CARTAO_V1`: o produto por trás de um cartão sai do `data-product` do
+`<body>` da página ligada, e não do nome do ficheiro — `crachas.html` serve o
+`crachas-loja`, `molduras.html` serve o `quadros`. Enquanto se adivinhou pelo
+nome, esses cartões nunca conseguiam ir buscar imagem nenhuma ao produto.
 
 ⚠️ Os controlos de carrossel **saíram do modo admin do site** (o painel global e
 os campos por cartão) para não haver dois sítios a escrever nos mesmos campos.

@@ -90,28 +90,73 @@
   card.appendChild(content);
   host.appendChild(card);
 
-  // REVIEW_DISMISS_V1: fechar esconde as reviews até ao fim da sessão do
-  // separador. sessionStorage e não localStorage de propósito: quem fecha está
-  // a dizer "agora não", não "nunca mais".
+  // REVIEW_DISMISS_V2: fechar esconde as reviews até ao fim da sessão do
+  // separador, e deixa no lugar uma pega para as voltar a chamar.
+  // sessionStorage e não localStorage de propósito: quem fecha está a dizer
+  // "agora não", não "nunca mais".
   var dismissKey = "miaandpaper:reviews-dismissed";
 
   function reviewsDismissed() {
     try { return window.sessionStorage.getItem(dismissKey) === "1"; } catch (error) { return false; }
   }
 
-  var dismiss = createElement("button", "review-bubble-dismiss", "×");
+  var dismiss = createElement("button", "review-bubble-dismiss", "⌄");
   dismiss.type = "button";
   dismiss.setAttribute("aria-label", "Esconder as avaliações nesta visita");
   dismiss.title = "Esconder as avaliações nesta visita";
+
+  // A pega vive fora do host: o host é escondido inteiro e ela tem de ficar.
+  var restore = createElement("button", "review-bubble-restore", "⌃");
+  restore.type = "button";
+  restore.hidden = true;
+  restore.setAttribute("aria-label", "Mostrar as avaliações");
+  restore.title = "Mostrar as avaliações";
+  document.body.appendChild(restore);
+
+  // O easter egg lê o `data-egg-pumps` para saber quantos movimentos precisa.
+  // Sem balão não há bola para saltar, por isso tira-se o atributo enquanto as
+  // reviews estão escondidas e repõe-se quando voltam.
+  var eggPumps = "";
+
+  function esconderReviews() {
+    window.clearTimeout(timer);
+    timer = null;
+    eggPumps = host.getAttribute("data-egg-pumps") || eggPumps;
+    host.removeAttribute("data-egg-pumps");
+    host.classList.remove("is-ready");
+    window.setTimeout(function () {
+      host.hidden = true;
+      restore.hidden = false;
+    }, 320);
+  }
+
+  function mostrarReviews() {
+    restore.hidden = true;
+    host.hidden = false;
+    if (eggPumps) { host.setAttribute("data-egg-pumps", eggPumps); }
+    // Um instante antes da classe, senão a transição não pega e o balão
+    // aparece de repente. setTimeout e não requestAnimationFrame: o rAF não
+    // corre quando o separador não está a compor, e o balão ficaria preso.
+    window.setTimeout(function () {
+      host.classList.add("is-ready");
+      syncReviewOffset();
+      scheduleNext();
+    }, 16);
+  }
+
   dismiss.addEventListener("click", function (event) {
     event.preventDefault();
     event.stopPropagation();
-    window.clearTimeout(timer);
-    timer = null;
     try { window.sessionStorage.setItem(dismissKey, "1"); } catch (error) {}
-    host.classList.remove("is-ready");
-    window.setTimeout(function () { host.hidden = true; }, 320);
+    esconderReviews();
   });
+
+  restore.addEventListener("click", function (event) {
+    event.preventDefault();
+    try { window.sessionStorage.removeItem(dismissKey); } catch (error) {}
+    mostrarReviews();
+  });
+
   host.appendChild(dismiss);
 
   productImage.addEventListener("error", function () {
@@ -221,9 +266,8 @@
     .then(function (data) {
       settings = Object.assign({ enabled: true, intervalMs: 5500, position: "left", size: "normal", theme: "paper", imageShape: "rounded", showImage: true, showName: true, showText: true, defaultRatingMode: "stars", defaultStars: 5, defaultIcon: "heart", defaultCustomIcon: "✦", eggPumps: 7 }, data.settings || {});
       if (settings.enabled === false) return;
-      if (reviewsDismissed()) { host.hidden = true; return; }
       // Lido pelo reviews-egg.js: movimentos necessários até o balão saltar.
-      host.setAttribute("data-egg-pumps", String(Math.max(0, Math.min(20, Number(settings.eggPumps) >= 0 ? Number(settings.eggPumps) : 7))));
+      eggPumps = String(Math.max(0, Math.min(20, Number(settings.eggPumps) >= 0 ? Number(settings.eggPumps) : 7)));
       intervalMs = Math.max(2000, Math.min(60000, Number(settings.intervalMs) || 5500));
       reviews = (Array.isArray(data.reviews) ? data.reviews : []).filter(function (review) { return review && review.enabled !== false && review.text; }).sort(function (a, b) { return (Number(a.order) || 0) - (Number(b.order) || 0); });
       if (!reviews.length) return;
@@ -231,6 +275,18 @@
       card.classList.add("review-size-" + settings.size, "review-theme-" + settings.theme, "review-image-" + settings.imageShape);
       if (settings.showImage === false) card.classList.add("without-image");
       showReview(0, "next");
+
+      // Escondidas de propósito: prepara-se tudo na mesma, para a pega as
+      // trazer de volta sem ter de recarregar nada.
+      if (reviewsDismissed()) {
+        window.clearTimeout(timer);
+        timer = null;
+        host.hidden = true;
+        restore.hidden = false;
+        return;
+      }
+
+      host.setAttribute("data-egg-pumps", eggPumps);
       syncReviewOffset();
       host.classList.add("is-ready");
     })

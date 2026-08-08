@@ -103,6 +103,32 @@ Ao gravar, o `precos.php` escreve no `optionExtras` **e** replica por todas as
 cópias, para nenhuma ficar a mostrar um número que já não é o cobrado. Só grava
 os ficheiros que a chave toca.
 
+### Quatro escadas de desconto
+
+`DESCONTOS_COLUNAS_V1`. Cada tabela guarda **quatro** conjuntos de descontos —
+D1 a D4 — em `discountsByPriceKey`, e usa um. Serve para preparar uma campanha
+sem perder a escada que está a vender.
+
+```json
+"discountsByPriceKey": {
+  "32 mm": { "activo": "D1", "D1": { "3": 4.8, "5": 14.3 }, "D2": { … } }
+}
+```
+
+Quem manda no preço continua a ser a `prices`: marcar uma coluna converte as
+percentagens em totais e escreve-os lá, porque é a `prices` que o site lê. As
+percentagens ficam guardadas só para se poder voltar atrás.
+
+Duas regras que evitam surpresas:
+
+- Editar uma coluna que **não** está marcada não mexe em preço nenhum.
+- Marcar uma coluna **não** reescreve as quantidades cuja percentagem já bate
+  certo com a tabela. Sem isto, trocar D1→D1 mexia nos preços por arredondamento:
+  30,6% de 48 unidades dá 49,97 € e não os 50,00 € que lá estavam.
+
+Na tab das fotografias do `precos.php` há um selector que põe **todas** as
+tabelas na mesma coluna de uma vez, com a contagem de quantas estão em cada uma.
+
 ### Custos e margens — ficam fora da raiz web
 
 O custo por unidade **não vai para o `content/pricing.json`**, que é servido

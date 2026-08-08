@@ -215,26 +215,6 @@ function &cr_categoria(&$data, $id, &$ok)
     return $nulo;
 }
 
-// Garante que a categoria tem a lista de slides materializada. A ausência da
-// chave quer dizer "ainda não migrado"; a partir do momento em que se edita,
-// passa a ser a lista que manda.
-function &cr_slides(&$categoria)
-{
-    if (!isset($categoria['carouselSlides']) || !is_array($categoria['carouselSlides'])) {
-        $categoria['carouselSlides'] = array();
-    }
-    return $categoria['carouselSlides'];
-}
-
-function cr_slide_novo($imagem)
-{
-    $slide = array('image' => (string)$imagem);
-    foreach (CAROUSEL_CAMPOS as $campo) {
-        $slide[$campo] = null;
-    }
-    return $slide;
-}
-
 function cr_gravar()
 {
     $body = json_decode((string)file_get_contents('php://input'), true);
@@ -297,104 +277,47 @@ function cr_gravar()
             cr_erro('O cartão "' . $id . '" não existe.');
         }
 
-        if ($op === 'cartao') {
-            $campo = isset($a['campo']) ? (string)$a['campo'] : '';
-            if (!in_array($campo, array('carouselEnabled', 'carouselRandomizeOnLoad'), true)) {
-                cr_erro('O campo "' . $campo . '" não é editável no cartão.');
+        // ESTADO_COMPLETO_V1: o cartão viaja inteiro, não em operações de
+        // índice. Com índices, remover duas imagens na mesma gravação apagava a
+        // errada — a segunda já contava com a primeira fora. Assim a página
+        // mostra a alteração no momento e o que se grava é o que se vê.
+        if ($op === 'cartao-definir') {
+            if (isset($a['activo'])) {
+                $categoria['carouselEnabled'] = !empty($a['activo']);
             }
-            $categoria[$campo] = !empty($a['valor']);
+            if (isset($a['aleatorio'])) {
+                $categoria['carouselRandomizeOnLoad'] = !empty($a['aleatorio']);
+            }
+
+            $slides = array();
+            $vistos = array();
+            foreach ((isset($a['slides']) && is_array($a['slides']) ? $a['slides'] : array()) as $bruto) {
+                if (!is_array($bruto)) {
+                    continue;
+                }
+                $imagem = trim((string)(isset($bruto['image']) ? $bruto['image'] : ''));
+                if (!cr_imagem_valida($imagem)) {
+                    cr_erro('Não encontrei o ficheiro "' . $imagem . '" dentro de content/.');
+                }
+                // A mesma imagem duas vezes no mesmo carrossel é sempre engano.
+                if (isset($vistos[$imagem])) {
+                    continue;
+                }
+                $vistos[$imagem] = true;
+                $slide = carousel_slide($bruto);
+                if ($slide !== null) {
+                    $slides[] = $slide;
+                }
+            }
+            if (count($slides) > CARROUSEL_MAX_SLIDES) {
+                cr_erro('Um carrossel mostra no máximo ' . CARROUSEL_MAX_SLIDES . ' imagens.');
+            }
+            $categoria['carouselSlides'] = $slides;
             unset($categoria);
             continue;
         }
 
-        $slides = &cr_slides($categoria);
-
-        if ($op === 'slide') {
-            $indice = isset($a['indice']) ? (int)$a['indice'] : -1;
-            $campo = isset($a['campo']) ? (string)$a['campo'] : '';
-            if (!isset($slides[$indice])) {
-                cr_erro('A imagem ' . ($indice + 1) . ' de "' . $id . '" já não existe. Recarrega a página.');
-            }
-            if ($campo === 'image') {
-                $imagem = trim((string)(isset($a['valor']) ? $a['valor'] : ''));
-                if (!cr_imagem_valida($imagem)) {
-                    cr_erro('Não encontrei o ficheiro "' . $imagem . '" dentro de content/.');
-                }
-                $slides[$indice]['image'] = $imagem;
-            } else {
-                $limites = carousel_limites($campo);
-                if ($limites === null) {
-                    cr_erro('O campo "' . $campo . '" não existe no carrossel.');
-                }
-                $valor = isset($a['valor']) ? $a['valor'] : '';
-                // Vazio quer dizer "herda do global" — é assim que se desfaz um
-                // valor próprio sem apagar o slide.
-                $slides[$indice][$campo] = ($valor === '' || $valor === null)
-                    ? null
-                    : max($limites[0], min($limites[1], (float)$valor + 0));
-            }
-            unset($slides, $categoria);
-            continue;
-        }
-
-        if ($op === 'slide-adicionar') {
-            $imagem = trim((string)(isset($a['imagem']) ? $a['imagem'] : ''));
-            if (!cr_imagem_valida($imagem)) {
-                cr_erro('Não encontrei o ficheiro "' . $imagem . '" dentro de content/.');
-            }
-            if (count($slides) >= CARROUSEL_MAX_SLIDES) {
-                cr_erro('Um carrossel mostra no máximo ' . CARROUSEL_MAX_SLIDES . ' imagens.');
-            }
-            $slides[] = cr_slide_novo($imagem);
-            unset($slides, $categoria);
-            continue;
-        }
-
-        if ($op === 'slide-remover') {
-            $indice = isset($a['indice']) ? (int)$a['indice'] : -1;
-            if (!isset($slides[$indice])) {
-                cr_erro('A imagem ' . ($indice + 1) . ' de "' . $id . '" já não existe. Recarrega a página.');
-            }
-            array_splice($slides, $indice, 1);
-            unset($slides, $categoria);
-            continue;
-        }
-
-        if ($op === 'slide-ordem') {
-            $ordem = isset($a['ordem']) && is_array($a['ordem']) ? $a['ordem'] : array();
-            if (count($ordem) !== count($slides)) {
-                cr_erro('A ordem das imagens de "' . $id . '" não bate certo. Recarrega a página.');
-            }
-            $nova = array();
-            $vistos = array();
-            foreach ($ordem as $posicao) {
-                $posicao = (int)$posicao;
-                if (!isset($slides[$posicao]) || isset($vistos[$posicao])) {
-                    cr_erro('A ordem das imagens de "' . $id . '" está inválida.');
-                }
-                $vistos[$posicao] = true;
-                $nova[] = $slides[$posicao];
-            }
-            $slides = $nova;
-            unset($slides, $categoria);
-            continue;
-        }
-
-        if ($op === 'puxar-do-produto') {
-            $imagens = cr_imagens_do_produto(isset($categoria['href']) ? $categoria['href'] : '');
-            if (!$imagens) {
-                cr_erro('O produto de "' . $id . '" não tem imagens no passo dos designs.');
-            }
-            $novos = array();
-            foreach ($imagens as $imagem) {
-                $novos[] = cr_slide_novo($imagem);
-            }
-            $slides = $novos;
-            unset($slides, $categoria);
-            continue;
-        }
-
-        unset($slides, $categoria);
+        unset($categoria);
         cr_erro('Operação desconhecida: ' . $op . '.');
     }
 

@@ -227,6 +227,7 @@
 
   var API = "materiais-api.php";
   var dados = null;
+  var original = null;   // cópia do que está gravado, para saber o que ainda não foi
   var aba = "materiais";
   var fila = {};
   var pilhaUndo = [];
@@ -278,11 +279,64 @@
   function entradaDoCatalogo(chave) {
     return (dados.catalogo || []).filter(function (c) { return c.chave === chave; })[0] || null;
   }
-  function calculoDe(chave) {
-    return (dados.calculos || {})[chave] || { linhas: [], materiaisCents: 0, maoDeObraCents: 0, totalCents: 0, minutosPorUnidade: 0 };
-  }
   function materialPorId(id) {
     return (dados.materiais || []).filter(function (m) { return m.id === id; })[0] || null;
+  }
+
+  // Resolve "100*10*10". Igual ao mat_rendimento() do PHP — só dígitos, ponto,
+  // x e *. Zero quer dizer "isto não é um número".
+  function rendimentoDe(expressao) {
+    var limpo = String(expressao == null ? "" : expressao)
+      .replace(/[\s,]/g, function (c) { return c === "," ? "." : ""; })
+      .replace(/[xX×]/g, "*");
+    var total = 1;
+    var partes;
+    var i;
+    var n;
+
+    if (!limpo || !/^[0-9.]+(\*[0-9.]+)*$/.test(limpo)) { return 0; }
+    partes = limpo.split("*");
+    for (i = 0; i < partes.length; i += 1) {
+      n = parseFloat(partes[i]);
+      if (!(n > 0)) { return 0; }
+      total *= n;
+    }
+    return total;
+  }
+
+  // As contas fazem-se aqui, com o `dados` que está no ecrã, para o resultado
+  // acompanhar o que se escreve. Quem manda no que fica gravado continua a ser
+  // o mat_calcular() do PHP, que faz o mesmo.
+  function calculoDe(chave) {
+    var produto = (dados.produtos || {})[chave] || {};
+    var minutos = Math.max(0, Number(produto.minutosPorUnidade) || 0);
+    var linhas = [];
+    var materiaisCents = 0;
+
+    (produto.linhas || []).forEach(function (linha) {
+      var material = materialPorId(linha.materialId);
+      var rendimento = rendimentoDe(linha.rendimento);
+      var custoMaterial = material ? custoUnidadeMaterial(material) : 0;
+      var porUnidade = material && rendimento > 0 ? custoMaterial / rendimento : 0;
+
+      materiaisCents += porUnidade;
+      linhas.push({
+        materialId: linha.materialId,
+        nome: material ? material.nome : "(material apagado)",
+        existe: !!material,
+        rendimento: linha.rendimento == null ? "" : String(linha.rendimento),
+        rendimentoResolvido: rendimento,
+        nota: linha.nota || "",
+        custoMaterialCents: custoMaterial,
+        porUnidadeCents: porUnidade
+      });
+    });
+
+    var maoDeObraCents = dados.custoHoraCents > 0 && minutos > 0 ? (dados.custoHoraCents * minutos / 60) : 0;
+    return {
+      minutosPorUnidade: minutos, linhas: linhas, materiaisCents: materiaisCents,
+      maoDeObraCents: maoDeObraCents, totalCents: materiaisCents + maoDeObraCents
+    };
   }
 
   // ── Separador dos materiais ──────────────────────────────────────────────
@@ -518,24 +572,68 @@
     el("separadores").innerHTML = html;
   }
 
-  // Redesenhar reconstrói os campos a partir do `dados`, que não acompanha as
-  // edições por gravar — sem isto, mudar de separador fazia as alterações
-  // pendentes desaparecerem do ecrã sem saírem da fila.
-  function reaplicarFila() {
-    Object.keys(fila).forEach(function (chave) {
-      var o = fila[chave];
-      var selector = "";
+  // ESTADO_COMPLETO_V1: as alterações mexem já no `dados` e vêem-se no ecrã;
+  // a fila leva o estado inteiro do que mudou, não operações de índice. Antes,
+  // acrescentar um material só aparecia depois do Save — parecia que o botão
+  // estava morto — e remover duas linhas de uma vez apagava a errada, porque a
+  // segunda já contava com a primeira fora.
 
-      if (o.op === "custo-hora") { selector = '[data-op="custo-hora"]'; }
-      else if (o.op === "material") { selector = '[data-op="material"][data-id="' + o.id + '"][data-campo="' + o.campo + '"]'; }
-      else if (o.op === "minutos") { selector = '[data-op="minutos"][data-produto="' + o.produto + '"]'; }
-      else if (o.op === "linha") { selector = '[data-op="linha"][data-produto="' + o.produto + '"][data-indice="' + o.indice + '"][data-campo="' + o.campo + '"]'; }
-      else { return; }
+  function instantaneo() {
+    return { dados: JSON.parse(JSON.stringify(dados)), fila: JSON.parse(JSON.stringify(fila)) };
+  }
 
-      [].forEach.call(document.querySelectorAll(selector), function (campo) {
-        campo.value = o.valor;
-        campo.classList.add("sujo");
-      });
+  function guardarUndo() {
+    pilhaUndo.push(instantaneo());
+    if (pilhaUndo.length > 60) { pilhaUndo.shift(); }
+  }
+
+  function marcarMateriais() {
+    fila["materiais"] = { op: "materiais-definir", materiais: dados.materiais };
+  }
+
+  function marcarProduto(chave) {
+    var p = dados.produtos[chave] || { minutosPorUnidade: 0, linhas: [] };
+    fila["produto:" + chave] = {
+      op: "produto-definir", produto: chave,
+      minutosPorUnidade: p.minutosPorUnidade || 0, linhas: p.linhas || []
+    };
+  }
+
+  function produtoLocal(chave) {
+    if (!dados.produtos[chave]) { dados.produtos[chave] = { minutosPorUnidade: 0, linhas: [] }; }
+    if (!Array.isArray(dados.produtos[chave].linhas)) { dados.produtos[chave].linhas = []; }
+    return dados.produtos[chave];
+  }
+
+  // Marca a amarelo o que difere do que está gravado. O `original` é a cópia
+  // que veio do servidor; comparar contra ele é o que diz o que ainda não foi.
+  function marcarSujos() {
+    if (!original) { return; }
+    [].forEach.call(document.querySelectorAll("[data-op]"), function (campo) {
+      var d = campo.dataset;
+      var antes = null;
+      var m;
+      var p;
+      var l;
+
+      if (d.op === "custo-hora") {
+        antes = (original.custoHoraCents / 100).toFixed(2);
+      } else if (d.op === "material") {
+        m = (original.materiais || []).filter(function (x) { return x.id === d.id; })[0];
+        if (!m) { campo.classList.add("sujo"); return; }
+        antes = d.campo === "precoCents" ? (m.precoCents / 100).toFixed(2) : String(m[d.campo] == null ? "" : m[d.campo]);
+      } else if (d.op === "minutos") {
+        p = original.produtos[d.produto];
+        antes = String((p && p.minutosPorUnidade) || 0);
+      } else if (d.op === "linha") {
+        p = original.produtos[d.produto];
+        l = p && p.linhas ? p.linhas[Number(d.indice)] : null;
+        if (!l) { campo.classList.add("sujo"); return; }
+        antes = String(l[d.campo] == null ? "" : l[d.campo]);
+      } else {
+        return;
+      }
+      campo.classList.toggle("sujo", String(campo.value) !== String(antes));
     });
   }
 
@@ -544,59 +642,52 @@
     desenharSeparadores();
     el("conteudoAba").innerHTML = aba === "materiais" ? abaMateriais()
       : (aba === "llm" ? abaLlm() : abaProduto(aba));
-    reaplicarFila();
+    marcarSujos();
     actualizar();
   }
 
   // ── Edição ───────────────────────────────────────────────────────────────
 
-  document.addEventListener("input", tratar);
-  document.addEventListener("change", tratar);
+  // `input` só mexe nos dados (escrever não pode redesenhar, senão perde-se o
+  // cursor); `change` — que dispara ao sair do campo — redesenha para as contas
+  // acompanharem.
+  document.addEventListener("input", function (e) { tratar(e, false); });
+  document.addEventListener("change", function (e) { tratar(e, true); });
 
-  function tratar(evento) {
+  function tratar(evento, redesenhar) {
     var alvo = evento.target;
     if (!alvo.dataset || !alvo.dataset.op) { return; }
 
-    var op = alvo.dataset.op;
+    var d = alvo.dataset;
     var valor = alvo.value;
-    var igual = String(alvo.dataset.original) === String(valor);
-    var chave;
+    var linha;
 
-    alvo.classList.toggle("sujo", !igual);
+    guardarUndo();
 
-    if (op === "custo-hora") {
-      chave = "custo-hora";
-      if (igual) { delete fila[chave]; actualizar(); return; }
-      // O ficheiro guarda cêntimos; o ecrã mostra euros.
-      enfileirar(chave, { op: "custo-hora", valor: Math.round((parseFloat(valor) || 0) * 100) });
-      return;
-    }
-
-    if (op === "material") {
-      chave = "material:" + alvo.dataset.id + ":" + alvo.dataset.campo;
-      if (igual) { delete fila[chave]; actualizar(); return; }
-      enfileirar(chave, {
-        op: "material", id: alvo.dataset.id, campo: alvo.dataset.campo,
-        valor: alvo.dataset.campo === "precoCents" ? Math.round((parseFloat(valor) || 0) * 100) : valor
+    if (d.op === "custo-hora") {
+      dados.custoHoraCents = Math.round((parseFloat(valor) || 0) * 100);
+      fila["custo-hora"] = { op: "custo-hora", valor: dados.custoHoraCents };
+    } else if (d.op === "material") {
+      (dados.materiais || []).forEach(function (m) {
+        if (m.id !== d.id) { return; }
+        if (d.campo === "precoCents") { m.precoCents = Math.round((parseFloat(valor) || 0) * 100); }
+        else if (d.campo === "quantidade" || d.campo === "estragosPercent") { m[d.campo] = parseFloat(valor) || 0; }
+        else { m[d.campo] = valor; }
       });
+      marcarMateriais();
+    } else if (d.op === "minutos") {
+      produtoLocal(d.produto).minutosPorUnidade = parseFloat(valor) || 0;
+      marcarProduto(d.produto);
+    } else if (d.op === "linha") {
+      linha = produtoLocal(d.produto).linhas[Number(d.indice)];
+      if (linha) { linha[d.campo] = valor; }
+      marcarProduto(d.produto);
+    } else {
+      pilhaUndo.pop();
       return;
     }
 
-    if (op === "minutos") {
-      chave = "minutos:" + alvo.dataset.produto;
-      if (igual) { delete fila[chave]; actualizar(); return; }
-      enfileirar(chave, { op: "minutos", produto: alvo.dataset.produto, valor: valor });
-      return;
-    }
-
-    if (op === "linha") {
-      chave = "linha:" + alvo.dataset.produto + ":" + alvo.dataset.indice + ":" + alvo.dataset.campo;
-      if (igual) { delete fila[chave]; actualizar(); return; }
-      enfileirar(chave, {
-        op: "linha", produto: alvo.dataset.produto,
-        indice: parseInt(alvo.dataset.indice, 10), campo: alvo.dataset.campo, valor: valor
-      });
-    }
+    if (redesenhar) { desenhar(); } else { alvo.classList.add("sujo"); actualizar(); }
   }
 
   document.addEventListener("click", function (evento) {
@@ -608,48 +699,70 @@
     var remLinha = alvo.closest ? alvo.closest("[data-linha-remover]") : null;
     var enviar = alvo.closest ? alvo.closest("[data-enviar]") : null;
     var copiar = alvo.id === "copiarLlm" ? alvo : null;
+    var nome;
+    var id;
+    var escolhido;
 
     if (separador) { aba = separador.dataset.aba; desenhar(); return; }
 
     if (addMaterial) {
-      var nome = (window.prompt("Nome do material:") || "").trim();
+      nome = (window.prompt("Nome do material:") || "").trim();
       if (!nome) { return; }
-      enfileirar("material-adicionar:" + nome, { op: "material-adicionar", nome: nome });
-      alerta("Material por acrescentar. Falta gravar.", "ok");
+      guardarUndo();
+      // O id só conta como definitivo depois de gravar: o servidor aceita este
+      // se tiver a forma certa e inventa um novo se não tiver.
+      dados.materiais.push({
+        id: "m" + Math.random().toString(36).slice(2, 12),
+        nome: nome, quantidade: 1, unidade: "unidades",
+        precoCents: 0, estragosPercent: 0, nota: ""
+      });
+      marcarMateriais();
+      desenhar();
+      alerta("Material acrescentado. Falta gravar.", "ok");
       return;
     }
 
     if (remMaterial) {
       if (!window.confirm("Remover este material? Sai também de todos os produtos onde esteja.")) { return; }
-      enfileirar("material-remover:" + remMaterial.dataset.materialRemover,
-        { op: "material-remover", id: remMaterial.dataset.materialRemover });
-      remMaterial.closest("tr").style.opacity = ".4";
-      alerta("Material marcado para remover. Falta gravar.", "ok");
+      guardarUndo();
+      id = remMaterial.dataset.materialRemover;
+      dados.materiais = dados.materiais.filter(function (m) { return m.id !== id; });
+      Object.keys(dados.produtos).forEach(function (chave) {
+        var p = dados.produtos[chave];
+        if (!p || !Array.isArray(p.linhas)) { return; }
+        p.linhas = p.linhas.filter(function (l) { return l.materialId !== id; });
+        marcarProduto(chave);
+      });
+      marcarMateriais();
+      desenhar();
+      alerta("Material removido. Falta gravar.", "ok");
       return;
     }
 
     if (addLinha) {
-      var escolhido = el("materialNovo").value;
+      escolhido = el("materialNovo").value;
       if (!escolhido) { return; }
-      enfileirar("linha-adicionar:" + addLinha.dataset.linhaAdicionar + ":" + escolhido + ":" + Date.now(),
-        { op: "linha-adicionar", produto: addLinha.dataset.linhaAdicionar, materialId: escolhido });
-      alerta("Material por acrescentar a este produto. Falta gravar.", "ok");
+      guardarUndo();
+      produtoLocal(addLinha.dataset.linhaAdicionar).linhas.push({ materialId: escolhido, rendimento: "1", nota: "" });
+      marcarProduto(addLinha.dataset.linhaAdicionar);
+      desenhar();
+      alerta("Material acrescentado a este produto. Falta gravar.", "ok");
       return;
     }
 
     if (remLinha) {
-      // As operações de estrutura só se resolvem no servidor, por isso a lista
-      // no ecrã só muda depois do Save: mostrar já a linha fora daria uma
-      // numeração diferente da que o servidor vai ver.
-      enfileirar("linha-remover:" + remLinha.dataset.produto + ":" + remLinha.dataset.linhaRemover,
-        { op: "linha-remover", produto: remLinha.dataset.produto, indice: parseInt(remLinha.dataset.linhaRemover, 10) });
-      remLinha.closest("tr").style.opacity = ".4";
-      alerta("Linha marcada para remover. Falta gravar.", "ok");
+      guardarUndo();
+      produtoLocal(remLinha.dataset.produto).linhas.splice(Number(remLinha.dataset.linhaRemover), 1);
+      marcarProduto(remLinha.dataset.produto);
+      desenhar();
+      alerta("Linha removida. Falta gravar.", "ok");
       return;
     }
 
     if (enviar) {
-      enfileirar("enviar:" + enviar.dataset.enviar, { op: "enviar-para-precos", produto: enviar.dataset.enviar });
+      guardarUndo();
+      fila["enviar:" + enviar.dataset.enviar] = { op: "enviar-para-precos", produto: enviar.dataset.enviar };
+      actualizar();
       alerta("Custo por enviar para os preços. Falta gravar.", "ok");
       return;
     }
@@ -666,13 +779,15 @@
   el("desfazer").addEventListener("click", function () {
     var passo = pilhaUndo.pop();
     if (!passo) { return; }
-    if (passo.anterior) { fila[passo.chave] = passo.anterior; } else { delete fila[passo.chave]; }
+    dados = passo.dados;
+    fila = passo.fila;
     desenhar();
     alerta("Alteração desfeita.", "ok");
   });
 
   el("descartar").addEventListener("click", function () {
     if (!nPendentes() || !window.confirm("Descartar todas as alterações por gravar?")) { return; }
+    dados = JSON.parse(JSON.stringify(original));
     fila = {};
     pilhaUndo = [];
     desenhar();
@@ -695,6 +810,7 @@
       .then(function (res) {
         if (!res.ok || !res.d.ok) { throw new Error(res.d.erro || "Não consegui gravar."); }
         dados = res.d;
+        original = JSON.parse(JSON.stringify(res.d));
         fila = {};
         pilhaUndo = [];
         desenhar();
@@ -713,6 +829,7 @@
     .then(function (d) {
       if (!d.ok) { throw new Error(d.erro || "Não consegui carregar."); }
       dados = d;
+      original = JSON.parse(JSON.stringify(d));
       desenhar();
       alerta((d.materiais || []).length + " materiais · " + (d.catalogo || []).length + " produtos.", "ok");
     })

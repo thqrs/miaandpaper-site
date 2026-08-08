@@ -174,6 +174,47 @@
   #alerta.ok { color: var(--verde); }
   #alerta.erro { color: var(--rosa); }
 
+  /* Selector de imagens: a mesma ideia da galeria — vê-se a imagem antes de
+     se escolher, em vez de se escrever um caminho de cor. */
+  .escolher-fundo {
+    position: fixed; inset: 0; z-index: 60; display: grid; place-items: center;
+    background: rgba(8,9,26,.72); backdrop-filter: blur(3px); padding: 24px;
+  }
+  .escolher {
+    width: min(1000px, 100%); max-height: 84vh; display: flex; flex-direction: column;
+    background: var(--cartao); border: 1px solid var(--linha-forte);
+    border-radius: var(--raio); box-shadow: var(--sombra); overflow: hidden;
+  }
+  .escolher > header {
+    display: flex; gap: 10px; align-items: center; padding: 13px 16px;
+    border-bottom: 1px solid var(--linha);
+  }
+  .escolher > header h2 { font-size: 1rem; }
+  .escolher-grelha {
+    padding: 14px; overflow: auto;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(122px, 1fr)); gap: 10px;
+  }
+  .escolher-item {
+    border: 1px solid var(--linha); border-radius: 10px; background: var(--campo);
+    padding: 0; overflow: hidden; cursor: pointer; text-align: left;
+  }
+  .escolher-item:hover { border-color: var(--azul); }
+  .escolher-item img {
+    display: block; width: 100%; height: 84px; object-fit: cover; background: var(--fundo-2);
+  }
+  .escolher-item span {
+    display: block; padding: 5px 7px; font-size: .64rem; color: var(--texto-3);
+    font-family: var(--mono); word-break: break-all; line-height: 1.35;
+  }
+  .escolher-vazio { padding: 24px; color: var(--texto-3); font-size: .85rem; }
+
+  .slide-visto {
+    display: flex; align-items: center; gap: 6px; font-size: .7rem; color: var(--texto-3);
+    white-space: nowrap;
+  }
+  .slide.desligado .slide-preview,
+  .slide.desligado .slide-corpo { opacity: .4; }
+
   @media (max-width: 720px) {
     .slide { grid-template-columns: 1fr; }
     .slide-preview { width: 100%; height: 120px; }
@@ -218,6 +259,18 @@
 
 <datalist id="imagensDisponiveis"></datalist>
 
+<div class="escolher-fundo" id="escolherFundo" hidden>
+  <div class="escolher" role="dialog" aria-modal="true" aria-label="Escolher imagem">
+    <header>
+      <h2>Escolher imagem</h2>
+      <input type="text" id="escolherFiltro" placeholder="filtrar por nome…" style="flex:1;max-width:320px">
+      <span class="selo" id="escolherConta"></span>
+      <button class="leve" id="escolherFechar">Fechar</button>
+    </header>
+    <div class="escolher-grelha" id="escolherGrelha"></div>
+  </div>
+</div>
+
 <div class="rodape" id="rodape">
   <span class="resumo" id="resumo"></span>
   <span class="rodape-nota">Nada disto toca no site até carregares em <strong>Save</strong>.</span>
@@ -241,6 +294,7 @@
   ];
 
   var dados = null;
+  var original = null;   // cópia do que está gravado, para saber o que ainda não foi
   var aba = "global";
   var fila = {};
   var pilhaUndo = [];
@@ -361,7 +415,7 @@
       + '</div>';
 
     html += '<div style="display:flex;gap:8px;align-items:center;margin-top:12px">'
-      + '<input type="text" id="novaImagem" list="imagensDisponiveis" placeholder="content/designs/..." style="flex:1">'
+      + '<input type="text" id="novaImagem" list="imagensDisponiveis" placeholder="deixa vazio para escolher da lista" style="flex:1">'
       + '<button data-adicionar="' + esc(c.id) + '">Adicionar imagem</button>'
       + '</div>';
 
@@ -372,7 +426,7 @@
   function linhaSlide(c, slide, i, g) {
     var attrs = ' data-op="slide" data-cartao="' + esc(c.id) + '" data-indice="' + i + '"';
 
-    return '<div class="slide" draggable="true" data-indice="' + i + '">'
+    return '<div class="slide' + (slide.visible === false ? ' desligado' : '') + '" draggable="true" data-indice="' + i + '">'
       + '<span class="slide-preview" style="background-image:url(' + ASPA + esc(slide.image) + ASPA + ')"></span>'
       + '<span class="slide-corpo">'
       + '<span class="slide-num">Imagem ' + (i + 1) + '</span>'
@@ -386,6 +440,9 @@
       + '</span>'
       + '<span class="slide-accoes">'
       + '<span class="slide-pega" title="Arrastar para reordenar">⠿</span>'
+      + '<label class="slide-visto" title="Sem o visto, a imagem fica na lista mas sai do carrossel">'
+      + '<input type="checkbox"' + (slide.visible === false ? '' : ' checked')
+      + attrs + ' data-campo="visible">no carrossel</label>'
       + '<button class="leve perigo" data-remover="' + i + '">Remover</button>'
       + '</span>'
       + '</div>';
@@ -406,27 +463,53 @@
     el("separadores").innerHTML = html;
   }
 
-  // Redesenhar reconstrói os campos a partir do `dados`, que não acompanha as
-  // edições por gravar — sem isto, mudar de separador fazia as alterações
-  // pendentes desaparecerem do ecrã sem saírem da fila.
-  function reaplicarFila() {
-    Object.keys(fila).forEach(function (chave) {
-      var o = fila[chave];
-      var selector = "";
+  // ESTADO_COMPLETO_V1: as alterações mexem já no `dados` e vêem-se no ecrã; a
+  // fila leva o cartão inteiro, não operações de índice. Antes, acrescentar ou
+  // puxar imagens só aparecia depois do Save — parecia que o botão estava
+  // morto — e remover duas de uma vez apagava a errada.
 
-      if (o.op === "global") {
-        selector = '[data-op="global"][data-campo="' + o.campo + '"]';
-      } else if (o.op === "cartao") {
-        selector = '[data-op="cartao"][data-cartao="' + o.cartao + '"][data-campo="' + o.campo + '"]';
-      } else if (o.op === "slide") {
-        selector = '[data-op="slide"][data-cartao="' + o.cartao + '"][data-indice="' + o.indice + '"][data-campo="' + o.campo + '"]';
+  function guardarUndo() {
+    pilhaUndo.push({ dados: JSON.parse(JSON.stringify(dados)), fila: JSON.parse(JSON.stringify(fila)) });
+    if (pilhaUndo.length > 60) { pilhaUndo.shift(); }
+  }
+
+  function marcarCartao(id) {
+    var c = cartaoPorId(id);
+    if (!c) { return; }
+    fila["cartao:" + id] = {
+      op: "cartao-definir", cartao: id,
+      activo: c.activo, aleatorio: c.aleatorio, slides: c.slides
+    };
+  }
+
+  // Marca a amarelo o que difere do que está gravado.
+  function marcarSujos() {
+    if (!original) { return; }
+    [].forEach.call(document.querySelectorAll("[data-op]"), function (campo) {
+      var d = campo.dataset;
+      var antes;
+      var c;
+      var slide;
+
+      if (d.op === "global") {
+        antes = original.global[d.campo];
+      } else if (d.op === "cartao") {
+        c = (original.cartoes || []).filter(function (x) { return x.id === d.cartao; })[0];
+        antes = c ? (d.campo === "carouselEnabled" ? c.activo : c.aleatorio) : null;
+      } else if (d.op === "slide") {
+        c = (original.cartoes || []).filter(function (x) { return x.id === d.cartao; })[0];
+        slide = c ? c.slides[Number(d.indice)] : null;
+        if (!slide) { campo.classList.add("sujo"); return; }
+        antes = d.campo === "visible" ? slide.visible !== false : slide[d.campo];
       } else {
         return;
       }
-      [].forEach.call(document.querySelectorAll(selector), function (campo) {
-        if (campo.type === "checkbox") { campo.checked = !!o.valor; } else { campo.value = o.valor; }
-        campo.classList.add("sujo");
-      });
+
+      if (campo.type === "checkbox") {
+        campo.classList.toggle("sujo", campo.checked !== !!antes);
+      } else {
+        campo.classList.toggle("sujo", String(campo.value) !== String(antes == null ? "" : antes));
+      }
     });
   }
 
@@ -434,56 +517,132 @@
     el("faixaAberto").hidden = !dados.aberto;
     desenharSeparadores();
     el("conteudoAba").innerHTML = aba === "global" ? abaGlobal() : abaCartao(aba);
-    reaplicarFila();
+    marcarSujos();
     actualizar();
   }
 
   // ── Edição ───────────────────────────────────────────────────────────────
 
-  function tratar(evento) {
+  // `input` só mexe nos dados (escrever não pode redesenhar, senão perde-se o
+  // cursor); `change` — que dispara ao sair do campo — redesenha.
+  document.addEventListener("input", function (e) { tratar(e, false); });
+  document.addEventListener("change", function (e) { tratar(e, true); });
+
+  function tratar(evento, redesenhar) {
     var alvo = evento.target;
     if (!alvo.dataset || !alvo.dataset.op) { return; }
 
-    var op = alvo.dataset.op;
+    var d = alvo.dataset;
     var eBool = alvo.type === "checkbox";
     var valor = eBool ? alvo.checked : alvo.value;
-    var original = alvo.dataset.original;
-    var igual = eBool ? ((original === "1") === valor) : (String(original) === String(valor));
-    var chave;
+    var c;
+    var slide;
 
-    alvo.classList.toggle("sujo", !igual);
+    guardarUndo();
 
-    if (op === "global") {
-      chave = "global:" + alvo.dataset.campo;
-      if (igual) { delete fila[chave]; actualizar(); return; }
-      enfileirar(chave, { op: "global", campo: alvo.dataset.campo, valor: valor });
-      return;
-    }
-
-    if (op === "cartao") {
-      chave = "cartao:" + alvo.dataset.cartao + ":" + alvo.dataset.campo;
-      if (igual) { delete fila[chave]; actualizar(); return; }
-      enfileirar(chave, { op: "cartao", cartao: alvo.dataset.cartao, campo: alvo.dataset.campo, valor: valor });
-      return;
-    }
-
-    if (op === "slide") {
-      chave = "slide:" + alvo.dataset.cartao + ":" + alvo.dataset.indice + ":" + alvo.dataset.campo;
-      if (igual) { delete fila[chave]; actualizar(); return; }
-      enfileirar(chave, {
-        op: "slide", cartao: alvo.dataset.cartao,
-        indice: parseInt(alvo.dataset.indice, 10), campo: alvo.dataset.campo, valor: valor
-      });
-      // A pré-visualização acompanha o caminho novo, para se ver logo se está certo.
-      if (alvo.dataset.campo === "image") {
-        var caixa = alvo.closest(".slide").querySelector(".slide-preview");
-        caixa.style.backgroundImage = "url(" + ASPA + valor + ASPA + ")";
+    if (d.op === "global") {
+      dados.global[d.campo] = eBool ? valor : (valor === "" ? dados.global[d.campo] : parseFloat(valor));
+      fila["global:" + d.campo] = { op: "global", campo: d.campo, valor: dados.global[d.campo] };
+    } else if (d.op === "cartao") {
+      c = cartaoPorId(d.cartao);
+      if (c) {
+        if (d.campo === "carouselEnabled") { c.activo = valor; } else { c.aleatorio = valor; }
       }
+      marcarCartao(d.cartao);
+    } else if (d.op === "slide") {
+      c = cartaoPorId(d.cartao);
+      slide = c ? c.slides[Number(d.indice)] : null;
+      if (slide) {
+        if (d.campo === "visible") { slide.visible = valor; }
+        else if (d.campo === "image") { slide.image = valor; }
+        else { slide[d.campo] = valor === "" ? null : parseFloat(valor); }
+      }
+      marcarCartao(d.cartao);
+    } else {
+      pilhaUndo.pop();
+      return;
+    }
+
+    if (redesenhar) {
+      desenhar();
+    } else {
+      alvo.classList.add("sujo");
+      // A pré-visualização acompanha o caminho novo, para se ver logo se está certo.
+      if (d.op === "slide" && d.campo === "image") {
+        alvo.closest(".slide").querySelector(".slide-preview").style.backgroundImage = "url(" + ASPA + valor + ASPA + ")";
+      }
+      actualizar();
     }
   }
 
-  document.addEventListener("input", tratar);
-  document.addEventListener("change", tratar);
+  // ── Selector de imagens ──────────────────────────────────────────────────
+  // Escrever um caminho de cor é convidar a erros de dedo; aqui vê-se a imagem
+  // antes de se escolher, como na galeria.
+
+  var escolherDestino = null;   // { cartao } para acrescentar, ou { cartao, indice } para trocar
+
+  function abrirEscolher(destino) {
+    escolherDestino = destino;
+    el("escolherFiltro").value = "";
+    desenharEscolher();
+    el("escolherFundo").hidden = false;
+    el("escolherFiltro").focus();
+  }
+
+  function fecharEscolher() {
+    escolherDestino = null;
+    el("escolherFundo").hidden = true;
+  }
+
+  function desenharEscolher() {
+    var filtro = (el("escolherFiltro").value || "").trim().toLowerCase();
+    var lista = (dados.imagens || []).filter(function (i) {
+      return !filtro || i.toLowerCase().indexOf(filtro) !== -1;
+    });
+    var mostrar = lista.slice(0, 240);
+
+    el("escolherConta").textContent = lista.length + (lista.length > mostrar.length ? " (a mostrar " + mostrar.length + ")" : "");
+    el("escolherGrelha").innerHTML = mostrar.length
+      ? mostrar.map(function (i) {
+          return '<button type="button" class="escolher-item" data-escolher-imagem="' + esc(i) + '">'
+            + '<img src="' + esc(i) + '" alt="" loading="lazy">'
+            + '<span>' + esc(i.replace("content/", "")) + '</span></button>';
+        }).join("")
+      : '<p class="escolher-vazio">Nenhuma imagem com esse nome.</p>';
+  }
+
+  el("escolherFiltro").addEventListener("input", desenharEscolher);
+  el("escolherFechar").addEventListener("click", fecharEscolher);
+  el("escolherFundo").addEventListener("click", function (evento) {
+    if (evento.target === el("escolherFundo")) { fecharEscolher(); }
+  });
+  document.addEventListener("keydown", function (evento) {
+    if (evento.key === "Escape" && !el("escolherFundo").hidden) { fecharEscolher(); }
+  });
+
+  // Devolve "" quando acrescentou, ou o motivo por que não. Quem chama é que
+  // decide o que dizer — o "puxar" acrescenta muitas de uma vez e não pode
+  // gritar a cada uma que já lá estava.
+  function acrescentarImagem(idCartao, caminho) {
+    var c = cartaoPorId(idCartao);
+
+    if (!c) { return "cartão desconhecido"; }
+    if (c.slides.length >= dados.maxSlides) {
+      return "este carrossel já tem o máximo de " + dados.maxSlides + " imagens";
+    }
+    if (c.slides.some(function (s) { return s.image === caminho; })) {
+      return "essa imagem já está neste carrossel";
+    }
+    c.slides.push({
+      image: caminho, visible: true,
+      intervalMs: null, speedSeconds: null, zoomPercent: null, panPercent: null, overlayOpacity: null
+    });
+    return "";
+  }
+
+  function primeiraMaiuscula(texto) {
+    return texto ? texto.charAt(0).toUpperCase() + texto.slice(1) + "." : "";
+  }
 
   // ── Botões ───────────────────────────────────────────────────────────────
 
@@ -494,41 +653,108 @@
     var remover = alvo.closest ? alvo.closest("[data-remover]") : null;
     var puxar = alvo.closest ? alvo.closest("[data-puxar]") : null;
     var repor = alvo.closest ? alvo.closest("[data-repor-globais]") : null;
+    var escolhida = alvo.closest ? alvo.closest("[data-escolher-imagem]") : null;
+    var caminho;
+    var c;
+    var novas;
+    var motivo;
 
     if (separador) { aba = separador.dataset.aba; desenhar(); return; }
 
+    if (escolhida) {
+      caminho = escolhida.dataset.escolherImagem;
+      guardarUndo();
+      if (escolherDestino && escolherDestino.indice != null) {
+        c = cartaoPorId(escolherDestino.cartao);
+        if (c && c.slides[escolherDestino.indice]) { c.slides[escolherDestino.indice].image = caminho; }
+        marcarCartao(escolherDestino.cartao);
+      } else {
+        motivo = acrescentarImagem(escolherDestino ? escolherDestino.cartao : "", caminho);
+        if (motivo) {
+          pilhaUndo.pop();
+          alerta(primeiraMaiuscula(motivo), "erro");
+          fecharEscolher();
+          return;
+        }
+        marcarCartao(escolherDestino.cartao);
+      }
+      fecharEscolher();
+      desenhar();
+      alerta("Imagem escolhida. Falta gravar.", "ok");
+      return;
+    }
+
     if (adicionar) {
-      var caminho = (el("novaImagem").value || "").trim();
-      if (!caminho) { alerta("Escreve ou escolhe o caminho da imagem.", "erro"); return; }
-      enfileirar("adicionar:" + adicionar.dataset.adicionar + ":" + caminho,
-        { op: "slide-adicionar", cartao: adicionar.dataset.adicionar, imagem: caminho });
-      alerta("Imagem por acrescentar. Falta gravar.", "ok");
+      caminho = (el("novaImagem").value || "").trim();
+      // Sem caminho escrito, abre o selector em vez de reclamar.
+      if (!caminho) { abrirEscolher({ cartao: adicionar.dataset.adicionar }); return; }
+      guardarUndo();
+      motivo = acrescentarImagem(adicionar.dataset.adicionar, caminho);
+      if (motivo) {
+        pilhaUndo.pop();
+        alerta(primeiraMaiuscula(motivo), "erro");
+        return;
+      }
+      marcarCartao(adicionar.dataset.adicionar);
+      desenhar();
+      alerta("Imagem acrescentada. Falta gravar.", "ok");
       return;
     }
 
     if (remover) {
-      // As operações de estrutura só se resolvem no servidor, por isso a lista
-      // no ecrã só muda depois do Save: mostrar já a linha fora daria uma
-      // numeração diferente da que o servidor vai ver.
-      enfileirar("remover:" + aba + ":" + remover.dataset.remover,
-        { op: "slide-remover", cartao: aba, indice: parseInt(remover.dataset.remover, 10) });
-      remover.closest(".slide").style.opacity = ".4";
-      alerta("Imagem marcada para remover. Falta gravar.", "ok");
+      guardarUndo();
+      c = cartaoPorId(aba);
+      if (c) { c.slides.splice(Number(remover.dataset.remover), 1); }
+      marcarCartao(aba);
+      desenhar();
+      alerta("Imagem removida. Falta gravar.", "ok");
       return;
     }
 
     if (puxar) {
-      if (!window.confirm("Substituir as imagens deste cartão pelas do produto?")) { return; }
-      enfileirar("puxar:" + puxar.dataset.puxar, { op: "puxar-do-produto", cartao: puxar.dataset.puxar });
-      alerta("Imagens do produto por aplicar. Falta gravar.", "ok");
+      // Acrescenta as que faltam em vez de substituir: quem já tratou de um
+      // carrossel à mão não quer perder esse trabalho por carregar aqui.
+      c = cartaoPorId(puxar.dataset.puxar);
+      if (!c) { return; }
+      guardarUndo();
+      novas = 0;
+      motivo = "";
+      c.doProduto.forEach(function (imagem) {
+        var falhou = acrescentarImagem(c.id, imagem);
+        if (falhou) { motivo = falhou; } else { novas += 1; }
+      });
+      if (!novas) {
+        pilhaUndo.pop();
+        alerta(primeiraMaiuscula(motivo) || "Já lá estão todas as imagens do produto.", "ok");
+        return;
+      }
+      marcarCartao(c.id);
+      desenhar();
+      alerta(novas + (novas === 1 ? " imagem acrescentada" : " imagens acrescentadas") + ". Falta gravar.", "ok");
       return;
     }
 
     if (repor) {
       if (!window.confirm("Limpar os valores próprios de todas as imagens de todos os cartões?")) { return; }
-      enfileirar("repor-globais", { op: "repor-globais" });
-      alerta("Reposição por aplicar. Falta gravar.", "ok");
+      guardarUndo();
+      (dados.cartoes || []).forEach(function (cartao) {
+        cartao.slides.forEach(function (slide) {
+          ["intervalMs", "speedSeconds", "zoomPercent", "panPercent", "overlayOpacity"].forEach(function (campo) {
+            slide[campo] = null;
+          });
+        });
+        marcarCartao(cartao.id);
+      });
+      desenhar();
+      alerta("Todas as imagens voltaram ao global. Falta gravar.", "ok");
     }
+  });
+
+  // Trocar a imagem de um slide: dois cliques no campo abrem o selector.
+  document.addEventListener("dblclick", function (evento) {
+    var campo = evento.target.closest ? evento.target.closest('[data-op="slide"][data-campo="image"]') : null;
+    if (!campo) { return; }
+    abrirEscolher({ cartao: campo.dataset.cartao, indice: Number(campo.dataset.indice) });
   });
 
   // ── Arrastar para ordenar ────────────────────────────────────────────────
@@ -565,11 +791,14 @@
     aArrastar.classList.remove("a-arrastar");
     aArrastar = null;
     var lista = el("listaSlides");
-    if (!lista) { return; }
-    var ordem = [].map.call(lista.querySelectorAll(".slide"), function (s) {
-      return parseInt(s.dataset.indice, 10);
+    var c = lista ? cartaoPorId(lista.dataset.cartao) : null;
+    if (!lista || !c) { return; }
+    guardarUndo();
+    c.slides = [].map.call(lista.querySelectorAll(".slide"), function (linha) {
+      return c.slides[Number(linha.dataset.indice)];
     });
-    enfileirar("ordem:" + lista.dataset.cartao, { op: "slide-ordem", cartao: lista.dataset.cartao, ordem: ordem });
+    marcarCartao(c.id);
+    desenhar();
   });
 
   // ── Undo, descartar, gravar ──────────────────────────────────────────────
@@ -577,13 +806,15 @@
   el("desfazer").addEventListener("click", function () {
     var passo = pilhaUndo.pop();
     if (!passo) { return; }
-    if (passo.anterior) { fila[passo.chave] = passo.anterior; } else { delete fila[passo.chave]; }
+    dados = passo.dados;
+    fila = passo.fila;
     desenhar();
     alerta("Alteração desfeita.", "ok");
   });
 
   el("descartar").addEventListener("click", function () {
     if (!nPendentes() || !window.confirm("Descartar todas as alterações por gravar?")) { return; }
+    dados = JSON.parse(JSON.stringify(original));
     fila = {};
     pilhaUndo = [];
     desenhar();
@@ -606,6 +837,7 @@
       .then(function (res) {
         if (!res.ok || !res.d.ok) { throw new Error(res.d.erro || "Não consegui gravar."); }
         dados = res.d;
+        original = JSON.parse(JSON.stringify(res.d));
         fila = {};
         pilhaUndo = [];
         if (aba !== "global" && !cartaoPorId(aba)) { aba = "global"; }
@@ -625,6 +857,7 @@
     .then(function (d) {
       if (!d.ok) { throw new Error(d.erro || "Não consegui carregar."); }
       dados = d;
+      original = JSON.parse(JSON.stringify(d));
       el("imagensDisponiveis").innerHTML = (d.imagens || []).map(function (i) {
         return '<option value="' + esc(i) + '"></option>';
       }).join("");

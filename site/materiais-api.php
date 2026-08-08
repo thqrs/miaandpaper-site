@@ -329,30 +329,37 @@ function mat_gravar_pedido()
             continue;
         }
 
-        // ── Catálogo de materiais ────────────────────────────────────────────
-        if ($op === 'material-adicionar') {
-            $data['materiais'][] = array(
-                'id' => 'm' . substr(bin2hex(random_bytes(6)), 0, 10),
-                'nome' => mat_texto(isset($a['nome']) ? $a['nome'] : 'Material novo'),
-                'quantidade' => 1,
-                'unidade' => 'unidades',
-                'precoCents' => 0,
-                'estragosPercent' => 0,
-                'nota' => '',
-            );
-            continue;
-        }
+        // ESTADO_COMPLETO_V1: o catálogo e cada produto viajam inteiros, não em
+        // operações de índice. Com índices, remover duas linhas na mesma gravação
+        // apagava a errada — a segunda já contava com a primeira fora. Assim a
+        // página mostra a alteração no momento e o que se grava é o que se vê.
+        if ($op === 'materiais-definir') {
+            $lista = isset($a['materiais']) && is_array($a['materiais']) ? $a['materiais'] : array();
+            $materiais = array();
+            $vistos = array();
 
-        if ($op === 'material-remover') {
-            $id = (string)(isset($a['id']) ? $a['id'] : '');
-            $restantes = array();
-            foreach ($data['materiais'] as $m) {
-                if (is_array($m) && (string)$m['id'] !== $id) {
-                    $restantes[] = $m;
+            foreach ($lista as $m) {
+                if (!is_array($m)) {
+                    continue;
                 }
+                $id = isset($m['id']) ? (string)$m['id'] : '';
+                if ($id === '' || !preg_match('/^m[a-z0-9]{4,20}$/', $id) || isset($vistos[$id])) {
+                    $id = 'm' . substr(bin2hex(random_bytes(6)), 0, 10);
+                }
+                $vistos[$id] = true;
+                $materiais[] = array(
+                    'id' => $id,
+                    'nome' => mat_texto(isset($m['nome']) ? $m['nome'] : 'Material novo'),
+                    'quantidade' => max(0, min(10000000, (float)(isset($m['quantidade']) ? $m['quantidade'] : 0))),
+                    'unidade' => mat_texto(isset($m['unidade']) ? $m['unidade'] : '', 40),
+                    'precoCents' => max(0, min(100000000, (int)round((float)(isset($m['precoCents']) ? $m['precoCents'] : 0)))),
+                    'estragosPercent' => max(0, min(90, (float)(isset($m['estragosPercent']) ? $m['estragosPercent'] : 0))),
+                    'nota' => mat_texto(isset($m['nota']) ? $m['nota'] : ''),
+                );
             }
-            $data['materiais'] = $restantes;
-            // Apagar um material tem de o tirar de todos os produtos, senão
+            $data['materiais'] = $materiais;
+
+            // Um material que saiu do catálogo tem de sair dos produtos, senão
             // ficavam linhas a apontar para coisa nenhuma.
             foreach ($data['produtos'] as $chave => $produto) {
                 if (!isset($produto['linhas']) || !is_array($produto['linhas'])) {
@@ -360,7 +367,7 @@ function mat_gravar_pedido()
                 }
                 $linhas = array();
                 foreach ($produto['linhas'] as $linha) {
-                    if (is_array($linha) && (string)(isset($linha['materialId']) ? $linha['materialId'] : '') !== $id) {
+                    if (is_array($linha) && mat_material($data, isset($linha['materialId']) ? $linha['materialId'] : '') !== null) {
                         $linhas[] = $linha;
                     }
                 }
@@ -369,90 +376,42 @@ function mat_gravar_pedido()
             continue;
         }
 
-        if ($op === 'material') {
-            $id = (string)(isset($a['id']) ? $a['id'] : '');
-            $campo = (string)(isset($a['campo']) ? $a['campo'] : '');
-            $encontrado = false;
-            foreach ($data['materiais'] as $i => $m) {
-                if (!is_array($m) || (string)$m['id'] !== $id) {
+        if ($op === 'produto-definir') {
+            $chave = (string)(isset($a['produto']) ? $a['produto'] : '');
+            if ($chave === '') {
+                mat_erro('Operação sem produto.');
+            }
+            $linhas = array();
+            foreach ((isset($a['linhas']) && is_array($a['linhas']) ? $a['linhas'] : array()) as $linha) {
+                if (!is_array($linha)) {
                     continue;
                 }
-                $encontrado = true;
-                if ($campo === 'nome' || $campo === 'unidade' || $campo === 'nota') {
-                    $data['materiais'][$i][$campo] = mat_texto(isset($a['valor']) ? $a['valor'] : '');
-                } elseif ($campo === 'quantidade') {
-                    $data['materiais'][$i][$campo] = max(0, min(10000000, (float)(isset($a['valor']) ? $a['valor'] : 0)));
-                } elseif ($campo === 'precoCents') {
-                    $data['materiais'][$i][$campo] = max(0, min(100000000, (int)round((float)(isset($a['valor']) ? $a['valor'] : 0))));
-                } elseif ($campo === 'estragosPercent') {
-                    $data['materiais'][$i][$campo] = max(0, min(90, (float)(isset($a['valor']) ? $a['valor'] : 0)));
-                } else {
-                    mat_erro('O campo "' . $campo . '" não existe num material.');
+                $materialId = (string)(isset($linha['materialId']) ? $linha['materialId'] : '');
+                if (mat_material($data, $materialId) === null) {
+                    continue;
                 }
+                $rendimento = mat_texto(isset($linha['rendimento']) ? $linha['rendimento'] : '1', 60);
+                if ($rendimento !== '' && mat_rendimento($rendimento) <= 0) {
+                    mat_erro('"' . $rendimento . '" não é um número nem uma multiplicação (ex.: 100*10*10).');
+                }
+                $linhas[] = array(
+                    'materialId' => $materialId,
+                    'rendimento' => $rendimento,
+                    'nota' => mat_texto(isset($linha['nota']) ? $linha['nota'] : ''),
+                );
             }
-            if (!$encontrado) {
-                mat_erro('O material já não existe. Recarrega a página.');
-            }
-            continue;
-        }
-
-        // ── Produtos ─────────────────────────────────────────────────────────
-        $chave = (string)(isset($a['produto']) ? $a['produto'] : '');
-        if ($chave === '') {
-            mat_erro('Operação sem produto: ' . $op . '.');
-        }
-        if (!isset($data['produtos'][$chave]) || !is_array($data['produtos'][$chave])) {
-            $data['produtos'][$chave] = array('minutosPorUnidade' => 0, 'linhas' => array());
-        }
-
-        if ($op === 'minutos') {
-            $data['produtos'][$chave]['minutosPorUnidade'] = max(0, min(10000, (float)(isset($a['valor']) ? $a['valor'] : 0)));
-            continue;
-        }
-
-        if ($op === 'linha-adicionar') {
-            $materialId = (string)(isset($a['materialId']) ? $a['materialId'] : '');
-            if (mat_material($data, $materialId) === null) {
-                mat_erro('Esse material não existe no catálogo.');
-            }
-            $data['produtos'][$chave]['linhas'][] = array(
-                'materialId' => $materialId,
-                'rendimento' => '1',
-                'nota' => '',
+            $data['produtos'][$chave] = array(
+                'minutosPorUnidade' => max(0, min(10000, (float)(isset($a['minutosPorUnidade']) ? $a['minutosPorUnidade'] : 0))),
+                'linhas' => $linhas,
             );
             continue;
         }
 
-        if ($op === 'linha-remover') {
-            $indice = (int)(isset($a['indice']) ? $a['indice'] : -1);
-            if (!isset($data['produtos'][$chave]['linhas'][$indice])) {
-                mat_erro('Essa linha já não existe. Recarrega a página.');
-            }
-            array_splice($data['produtos'][$chave]['linhas'], $indice, 1);
-            continue;
-        }
-
-        if ($op === 'linha') {
-            $indice = (int)(isset($a['indice']) ? $a['indice'] : -1);
-            $campo = (string)(isset($a['campo']) ? $a['campo'] : '');
-            if (!isset($data['produtos'][$chave]['linhas'][$indice])) {
-                mat_erro('Essa linha já não existe. Recarrega a página.');
-            }
-            if ($campo === 'rendimento') {
-                $bruto = mat_texto(isset($a['valor']) ? $a['valor'] : '', 60);
-                if ($bruto !== '' && mat_rendimento($bruto) <= 0) {
-                    mat_erro('"' . $bruto . '" não é um número nem uma multiplicação (ex.: 100*10*10).');
-                }
-                $data['produtos'][$chave]['linhas'][$indice]['rendimento'] = $bruto;
-            } elseif ($campo === 'nota') {
-                $data['produtos'][$chave]['linhas'][$indice]['nota'] = mat_texto(isset($a['valor']) ? $a['valor'] : '');
-            } else {
-                mat_erro('O campo "' . $campo . '" não existe numa linha.');
-            }
-            continue;
-        }
-
         if ($op === 'enviar-para-precos') {
+            $chave = (string)(isset($a['produto']) ? $a['produto'] : '');
+            if ($chave === '') {
+                mat_erro('Operação sem produto.');
+            }
             $enviarParaPrecos[] = $chave;
             continue;
         }

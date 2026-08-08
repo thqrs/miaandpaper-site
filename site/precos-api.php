@@ -62,6 +62,9 @@ const PRECOS_TEXTOS = array('title', 'subtitle', 'label', 'text', 'priceText');
 // Modos aceites, iguais aos de lib/precos-core.php.
 const PRECOS_MODOS = array('flat-unit', 'pack-combination', 'tier-unit', 'linear-discount-interpolation');
 
+// DESCONTOS_COLUNAS_V1: quatro escadas de desconto por tabela, uma activa.
+const PRECOS_COLUNAS_DESCONTO = array('D1', 'D2', 'D3', 'D4');
+
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate');
 
@@ -1244,6 +1247,49 @@ function precos_gravar()
                     $produtos[$slug]['data']['steps'][$indicePack]['allowUnitDiscounts'] = $descontos;
                 }
             }
+            continue;
+        }
+
+        // ── Colunas de desconto ──────────────────────────────────────────────
+        // DESCONTOS_COLUNAS_V1: quatro conjuntos de descontos por tabela — D1 a
+        // D4 — com um deles activo. Guardar os quatro deixa experimentar uma
+        // escada nova sem perder a que está a vender.
+        //
+        // Os preços continuam a ser a `prices`: quem escolhe a coluna converte-a
+        // em totais e manda-os como operações `valor`, porque é a `prices` que o
+        // site lê. Isto só grava as percentagens, para não se perderem.
+        if ($op === 'descontos') {
+            $slug = isset($alteracao['slug']) ? (string)$alteracao['slug'] : '';
+            $priceKey = isset($alteracao['priceKey']) ? (string)$alteracao['priceKey'] : '';
+            $bloco = isset($alteracao['bloco']) && is_array($alteracao['bloco']) ? $alteracao['bloco'] : array();
+
+            if (!isset($pricing['products'][$slug]['prices'][$priceKey])) {
+                precos_erro('Não encontrei a tabela ' . $priceKey . ' de ' . $slug . '.');
+            }
+            $activo = isset($bloco['activo']) ? (string)$bloco['activo'] : 'D1';
+            if (!in_array($activo, PRECOS_COLUNAS_DESCONTO, true)) {
+                precos_erro('Coluna de desconto desconhecida: ' . $activo . '.');
+            }
+
+            $limpo = array('activo' => $activo);
+            foreach (PRECOS_COLUNAS_DESCONTO as $coluna) {
+                $valores = isset($bloco[$coluna]) && is_array($bloco[$coluna]) ? $bloco[$coluna] : array();
+                $limpo[$coluna] = array();
+                foreach ($pricing['products'][$slug]['prices'][$priceKey] as $q => $_) {
+                    $pct = isset($valores[(string)$q]) && is_numeric($valores[(string)$q])
+                        ? (float)$valores[(string)$q]
+                        : 0.0;
+                    $limpo[$coluna][(string)$q] = round(max(-500, min(99, $pct)), 1);
+                }
+            }
+
+            if (!isset($pricing['products'][$slug]['discountsByPriceKey'])
+                || !is_array($pricing['products'][$slug]['discountsByPriceKey'])
+            ) {
+                $pricing['products'][$slug]['discountsByPriceKey'] = array();
+            }
+            $pricing['products'][$slug]['discountsByPriceKey'][$priceKey] = $limpo;
+            $pricingMudou = true;
             continue;
         }
 

@@ -146,7 +146,13 @@ function carousel_slide($bruto)
         return null;
     }
 
-    $slide = array('image' => $imagem);
+    // CAROUSEL_VISIBLE_V1: desligar o visto tira a imagem do carrossel sem a
+    // apagar da lista — é para experimentar sem perder o caminho do ficheiro.
+    // A ausência do campo quer dizer visível: os slides migrados não o têm.
+    $slide = array(
+        'image' => $imagem,
+        'visible' => !isset($bruto['visible']) || !empty($bruto['visible']),
+    );
     foreach (CAROUSEL_CAMPOS as $campo) {
         list($min, $max) = carousel_limites($campo);
         $slide[$campo] = isset($bruto[$campo]) && is_numeric($bruto[$campo])

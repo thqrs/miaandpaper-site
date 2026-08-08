@@ -464,7 +464,9 @@
     }
 
     return slides.filter(function (slide) {
-      return slide && slide.image;
+      // CAROUSEL_VISIBLE_V1: sem o visto, a imagem fica na lista mas fora do
+      // carrossel. Ausente quer dizer visível — os slides migrados não o têm.
+      return slide && slide.image && slide.visible !== false;
     }).slice(0, 12).map(function (slide) {
       return {
         image: String(slide.image),
@@ -486,8 +488,10 @@
       var slug;
 
       if (slides) {
-        category.carouselImages = slides.map(function (slide) {
-          return slide && slide.image;
+        category.carouselImages = slides.filter(function (slide) {
+          return slide && slide.visible !== false;
+        }).map(function (slide) {
+          return slide.image;
         }).filter(Boolean).slice(0, 12);
         return category;
       }
