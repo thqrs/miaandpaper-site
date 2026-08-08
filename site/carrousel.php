@@ -190,6 +190,7 @@
   <a href="multimedia.html">Multimédia</a>
   <a href="reviews.html">Reviews</a>
   <a href="precos.php">Preços</a>
+  <a href="materiais.php">Materiais</a>
   <a href="homepage-menu-design.php">Homepage &amp; Menu</a>
   <a href="carrousel.php" class="activo">Carrosséis</a>
   <a href="admin-funnel.php">Funil</a>
@@ -332,9 +333,11 @@
 
     html += '<section class="cartao"><header><h2>Este cartão</h2>'
       + '<span class="selo mono">' + esc(c.id) + '</span>'
+      // O botão aparece sempre: escondê-lo quando não há nada para puxar só
+      // deixava a pensar que faltava alguma coisa. Desligado, diz porquê.
       + (c.doProduto.length
           ? '<button class="leve" data-puxar="' + esc(c.id) + '">Puxar as ' + c.doProduto.length + ' imagens do produto</button>'
-          : '')
+          : '<button class="leve" disabled title="Este cartão não aponta para uma página de produto com imagens no passo dos designs.">Puxar do produto</button>')
       + '</header><div class="corpo" style="display:flex;flex-direction:column;gap:10px">'
       + '<label class="linha-flex"><input type="checkbox"' + (c.activo ? " checked" : "")
       + ' data-op="cartao" data-cartao="' + esc(c.id) + '" data-campo="carouselEnabled"'

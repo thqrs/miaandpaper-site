@@ -220,6 +220,7 @@
   <a href="multimedia.html">Multimédia</a>
   <a href="reviews.html">Reviews</a>
   <a href="precos.php">Preços</a>
+  <a href="materiais.php">Materiais</a>
   <a href="homepage-menu-design.php" class="activo">Homepage &amp; Menu</a>
   <a href="carrousel.php">Carrosséis</a>
   <a href="admin-funnel.php">Funil</a>

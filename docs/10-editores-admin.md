@@ -12,6 +12,7 @@ com `PRECOS_REQUIRE_ADMIN` e `HOMEPAGE_REQUIRE_ADMIN`.
 | `precos.php` | todos os valores monetários | [04 · Preços](04-precos.md) |
 | `homepage-menu-design.php` | o menu e a homepage | abaixo |
 | `carrousel.php` | os carrosséis dos cartões da homepage | abaixo |
+| `materiais.php` | quanto custa mesmo fazer uma unidade | abaixo |
 
 ## `homepage-menu-design.php`
 
@@ -156,6 +157,42 @@ produto). Uma imagem só é aceite se o ficheiro existir mesmo dentro de
 os campos por cartão) para não haver dois sítios a escrever nos mesmos campos.
 O `carouselSourceImages` foi substituído pelo `carouselSlides` e é apagado
 quando esta página grava.
+
+---
+
+## `materiais.php`
+
+`MATERIAIS_UI_V1`. Calcula o custo real de uma unidade. A ideia toda cabe em
+duas frases: há um **catálogo de materiais** (o que se compra e por quanto) e, em
+cada produto, diz-se **quantas unidades saem de um material**. O resto é
+aritmética.
+
+```
+custo de 1 unidade do material = preço pago ÷ quantidade comprada × (1 + estragos%)
+custo por unidade de produto   = custo de 1 unidade do material ÷ quantas unidades saem de 1
+tempo                          = minutos por unidade ÷ 60 × custo da hora
+custo total por unidade        = soma dos materiais + tempo
+```
+
+O campo do rendimento aceita uma **multiplicação** — `100*10*10` — e mostra o
+resultado por baixo. É de propósito: pensa-se nestas coisas como «100 cortes, 10
+folhas por corte, 10 crachás por folha», e obrigar a fazer a conta de cabeça é
+onde se erra. A coluna do lado guarda a frase que explica a conta.
+
+Os separadores dos produtos são as **tabelas de preços do `pricing.json`** (uma
+por `slug::priceKey`), para baterem certo com as do `precos.php` — é para lá que
+o custo vai.
+
+**O resultado não fica parado.** O botão *Enviar para os preços* escreve o custo
+por unidade no `private/custos.json`, que é de onde o `precos.php` tira o
+`Lucro/un` e a linha do custo no gráfico. Sem isso, o custo passava a existir em
+dois sítios com hipótese de discordarem — o mesmo problema que o `optionExtras`
+resolveu para os extras (ver [04 · Preços](04-precos.md)).
+
+Guarda em `private/materiais.json`, **fora da raiz web**, pelo mesmo motivo que
+os custos: são as margens do negócio e o `content/` é servido publicamente. Não
+está no git; viaja por scp no `[2]upload-or-download.bat`, junto com o
+`custos.json`.
 
 ---
 

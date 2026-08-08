@@ -520,6 +520,9 @@
       // PRECOS_UI_V1: editor central de precos. Todos os valores monetarios do
       // site num sitio so — packs, descontos, extras, portes e custos.
       '<a class="admin-funnel-link" href="precos.php" target="_blank" rel="noopener">Preços</a>',
+      // MATERIAIS_UI_V1: o custo real de uma unidade, que alimenta o lucro
+      // que o precos.php mostra.
+      '<a class="admin-funnel-link" href="materiais.php" target="_blank" rel="noopener">Materiais</a>',
       '<a class="admin-funnel-link" href="homepage-menu-design.php" target="_blank" rel="noopener">Homepage & Menu</a>',
       // CARROUSEL_UI_V1: os carrosseis dos cartoes saem daqui e passam a ter
       // pagina propria, com os parametros de cada imagem.

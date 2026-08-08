@@ -99,9 +99,26 @@ function cr_imagem_valida($caminho)
     return $alvo !== false && $base !== false && strpos($alvo, $base) === 0 && is_file($alvo);
 }
 
-function cr_slug_do_href($href)
+// PRODUTO_DO_CARTAO_V1: o nome da página nem sempre é o nome do produto —
+// crachas.html serve o crachas-loja, molduras.html serve o quadros. Quem sabe a
+// verdade é a própria página, no `data-product` do <body>; o nome do ficheiro
+// só serve de recurso. Enquanto se adivinhou pelo nome, estes cartões nunca
+// conseguiam ir buscar imagem nenhuma ao produto.
+function cr_produto_do_href($href)
 {
     $limpo = explode('#', explode('?', (string)$href)[0])[0];
+    if ($limpo === '' || strpos($limpo, '..') !== false || strpos($limpo, '//') !== false) {
+        return '';
+    }
+
+    $pagina = __DIR__ . '/' . ltrim($limpo, '/');
+    if (is_file($pagina)) {
+        $html = (string)@file_get_contents($pagina, false, null, 0, 8192);
+        if (preg_match('/data-product="([a-z0-9-]+)"/i', $html, $m)) {
+            return $m[1];
+        }
+    }
+
     return preg_match('/([^\/]+)\.html$/i', $limpo, $m) ? $m[1] : '';
 }
 
@@ -111,7 +128,7 @@ function cr_slug_do_href($href)
 // js/03-conteudo-home.js.
 function cr_imagens_do_produto($href)
 {
-    $slug = cr_slug_do_href($href);
+    $slug = cr_produto_do_href($href);
     if ($slug === '' || !preg_match('/^[a-z0-9-]+$/', $slug)) {
         return array();
     }
