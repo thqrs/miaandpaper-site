@@ -1,6 +1,5 @@
 <?php
 
-session_start();
 require_once __DIR__ . '/admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 
 if (empty($_SESSION['miaandpaper_admin'])) {
@@ -11,6 +10,7 @@ if (empty($_SESSION['miaandpaper_admin'])) {
 }
 
 require_once __DIR__ . '/lib/db.php';
+require_once __DIR__ . '/lib/http-range.php';
 
 function admin_order_file_not_found()
 {
@@ -162,7 +162,7 @@ if ($isPdf && (
 )) {
     admin_order_file_not_found();
 }
-if (!empty($matched['sha256'])) {
+if (!empty($matched['sha256']) && !isset($_SERVER['HTTP_RANGE'])) {
     $expectedSha256 = strtolower(trim((string)$matched['sha256']));
     $actualSha256 = @hash_file('sha256', $fileReal);
     if (!preg_match('/^[a-f0-9]{64}$/', $expectedSha256) || !is_string($actualSha256) || !hash_equals($expectedSha256, $actualSha256)) {
@@ -183,15 +183,13 @@ while (ob_get_level() > 0) {
 }
 $inline = !empty($_GET['inline']) && !$isPdf;
 $fileSize = (int)filesize($fileReal);
-$start = 0;
-$end = max(0, $fileSize - 1);
-if ($inline && isset($_SERVER['HTTP_RANGE']) && preg_match('/bytes=(\d*)-(\d*)/', (string)$_SERVER['HTTP_RANGE'], $matches)) {
-    if ($matches[1] !== '') {
-        $start = min($end, max(0, (int)$matches[1]));
-    }
-    if ($matches[2] !== '') {
-        $end = min($end, max($start, (int)$matches[2]));
-    }
+$range = $inline ? mp_http_byte_range(isset($_SERVER['HTTP_RANGE']) ? $_SERVER['HTTP_RANGE'] : '', $fileSize) : null;
+if ($range === false) {
+    mp_http_reject_invalid_range($fileSize);
+}
+$start = $range === null ? 0 : $range[0];
+$end = $range === null ? max(0, $fileSize - 1) : $range[1];
+if ($range !== null) {
     http_response_code(206);
     header('Content-Range: bytes ' . $start . '-' . $end . '/' . $fileSize);
 }

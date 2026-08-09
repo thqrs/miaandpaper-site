@@ -251,7 +251,7 @@
 <div class="conteudo">
   <div class="faixa aviso" id="faixaAberto" hidden>
     Editor aberto sem autenticação, nos mesmos termos da galeria, dos preços e do editor da homepage.
-    Antes do deploy, pôr <code>CARROUSEL_REQUIRE_ADMIN</code> a <code>true</code> em <code>carrousel-api.php</code>.
+    Antes do deploy, pôr <code>MIA_ADMIN_OPEN</code> a <code>false</code> em <code>admin-open.php</code>.
   </div>
   <div class="separadores" id="separadores"></div>
   <div id="conteudoAba"></div>
@@ -294,6 +294,7 @@
   ];
 
   var dados = null;
+  var csrf = "";
   var original = null;   // cópia do que está gravado, para saber o que ainda não foi
   var aba = "global";
   var fila = {};
@@ -830,12 +831,14 @@
 
     fetch(API + "?action=save", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "X-Admin-CSRF": csrf },
       body: JSON.stringify({ alteracoes: lista })
     })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (res) {
         if (!res.ok || !res.d.ok) { throw new Error(res.d.erro || "Não consegui gravar."); }
+        csrf = res.d.csrf || csrf;
         dados = res.d;
         original = JSON.parse(JSON.stringify(res.d));
         fila = {};
@@ -852,10 +855,11 @@
 
   // ── Arranque ─────────────────────────────────────────────────────────────
 
-  fetch(API + "?action=data", { cache: "no-store" })
+  fetch(API + "?action=data", { cache: "no-store", credentials: "same-origin" })
     .then(function (r) { return r.json(); })
     .then(function (d) {
       if (!d.ok) { throw new Error(d.erro || "Não consegui carregar."); }
+      csrf = d.csrf || "";
       dados = d;
       original = JSON.parse(JSON.stringify(d));
       el("imagensDisponiveis").innerHTML = (d.imagens || []).map(function (i) {

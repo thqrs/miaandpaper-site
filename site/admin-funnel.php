@@ -17,7 +17,6 @@
  *   - sessões recentes com viewport/orientation/origem
  */
 
-session_start();
 require_once __DIR__ . '/admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 
 if (empty($_SESSION['miaandpaper_admin'])) {
@@ -35,15 +34,12 @@ require_once __DIR__ . '/lib/db.php';
 
 // FUNNEL_ADMIN_CSRF_V1: reutiliza o token gerado por admin-orders.php (mesma
 // sessão). Cria um próprio se ainda não existir.
-if (empty($_SESSION['mp_admin_csrf'])) {
-    $_SESSION['mp_admin_csrf'] = bin2hex(random_bytes(16));
-}
-$csrf = $_SESSION['mp_admin_csrf'];
+$csrf = mp_admin_csrf_token();
 
 function admin_funnel_check_csrf()
 {
     $sent = isset($_POST['csrf']) ? (string)$_POST['csrf'] : '';
-    if ($sent === '' || !hash_equals((string)$_SESSION['mp_admin_csrf'], $sent)) {
+    if (!mp_admin_csrf_is_valid($sent)) {
         http_response_code(403);
         echo 'CSRF inválido. Recarrega a página e tenta novamente.';
         exit;
@@ -105,16 +101,26 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
     // O flash é renderizado abaixo.
 }
 
+// PARAMETROS_V1: os períodos são declarados uma vez em lib/parametros.php e
+// lidos aqui. Sem isto havia duas listas — esta e a do manifesto — a divergir
+// em silêncio. Ver lib/parametros.php.
+require_once __DIR__ . '/lib/parametros.php';
+
 $period = isset($_GET['period']) ? (string)$_GET['period'] : '30d';
-$periodLabels = array(
-    '7d'  => 'últimos 7 dias',
-    '30d' => 'últimos 30 dias',
-    '90d' => 'últimos 90 dias',
-    'all' => 'todos os eventos',
-);
+$periodLabels = mp_parametros_valores('admin-funnel.php', 'period');
 if (!isset($periodLabels[$period])) {
     $period = '30d';
 }
+
+// O tipo de conteúdo é declarado aqui, antes de sair um único byte: a barra
+// de parâmetros e a do snapshot já são saída, e depois delas nenhum header()
+// pega.
+header('Content-Type: text/html; charset=utf-8');
+
+// A barra de parâmetros sai ANTES do snapshot, de propósito: os seus links
+// dependem do URL deste pedido, e um snapshot congelado devolveria os links
+// do pedido que o gravou.
+echo mp_parametros_barra('admin-funnel.php');
 
 // SNAPSHOT_V1: tão cedo quanto possível — antes de qualquer ida à base de
 // dados. Se houver snapshot para este período, o pedido termina aqui e nem
@@ -2273,7 +2279,6 @@ foreach ($ipLookupCache as $info) {
     if (!empty($info['country_code']) || !empty($info['country_name'])) $ipLookupResolved++;
 }
 
-header('Content-Type: text/html; charset=utf-8');
 ?>
 <!doctype html>
 <html lang="pt-PT">
@@ -3563,8 +3568,8 @@ details.report-collapse > summary:hover { color: var(--ink); }
 </main>
 <?php if (!empty($mapPoints)): ?>
 <!-- LEAFLET_MAP_PHASE_2: Leaflet carregado apenas no admin, com SRI quando possível. -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="" defer></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" defer></script>
 <?php endif; ?>
 <script>
   // VISITANTES_TEMPO_REAL_V1: auto-refresh leve a 30 s. Controlado pela

@@ -1,16 +1,22 @@
 <?php
 
-// REVIEWS_ADMIN_V1
-// Durante a preparação esta página/API pode ficar aberta. Antes do deploy,
-// muda a constante para true para exigir a sessão criada pelo admin-api.php.
-define('REVIEWS_REQUIRE_ADMIN', false);
+// REVIEWS_ADMIN_V1. ADMIN_OPEN_DEV_V1 é a única configuração: em
+// desenvolvimento pode abrir os editores; com MIA_ADMIN_OPEN=false esta API
+// exige sempre sessão de admin.
+require_once __DIR__ . '/admin-open.php';
+define('REVIEWS_REQUIRE_ADMIN', !MIA_ADMIN_OPEN);
 define('REVIEWS_FILE', __DIR__ . '/content/reviews.json');
 define('REVIEWS_UPLOAD_DIR', __DIR__ . '/content/uploads/reviews');
 define('REVIEWS_UPLOAD_PREFIX', 'content/uploads/reviews/');
 define('REVIEWS_MAX_UPLOAD_BYTES', 12 * 1024 * 1024);
 
+require_once __DIR__ . '/lib/pedido.php';   // COMANDOS_V1: a API tambem se chama de dentro
+
 function reviews_respond($status, $payload)
 {
+    if (mp_modo_embutido()) {
+        mp_responder_embutido($payload, $status);
+    }
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -182,8 +188,20 @@ function reviews_upload_webp($tmp, $target)
     return $ok;
 }
 
+// COMANDOS_V1: incluida so pelas funcoes. Sem router, sem guarda, sem resposta.
+if (mp_modo_embutido()) {
+    return;
+}
+
 $action = isset($_GET['action']) ? (string)$_GET['action'] : 'load';
 $isPost = isset($_SERVER['REQUEST_METHOD']) && strtoupper($_SERVER['REQUEST_METHOD']) === 'POST';
+
+// PARAMETROS_V1: esquema desta API, na forma do manifesto geral.
+if ($action === 'parametros' && !$isPost) {
+    reviews_guard(false);
+    require_once __DIR__ . '/lib/parametros.php';
+    reviews_respond(200, array('ok' => true, 'recurso' => mp_parametros_manifesto_recurso('reviews-api.php')));
+}
 
 if ($action === 'load' && !$isPost) {
     reviews_guard(false);
@@ -197,11 +215,16 @@ if ($action === 'load' && !$isPost) {
     ));
 }
 
-if (!$isPost) reviews_respond(405, array('ok' => false, 'message' => 'Método não permitido.'));
+if (!$isPost) {
+    // Sem sessão, um pedido GET dirigido a uma ação de escrita deve ser negado
+    // por autorização antes de revelar sequer a semântica do endpoint.
+    if (in_array($action, array('save', 'upload'), true)) reviews_guard(false);
+    reviews_respond(405, array('ok' => false, 'message' => 'Método não permitido.'));
+}
 reviews_guard(true);
 
 if ($action === 'save') {
-    $body = json_decode((string)file_get_contents('php://input'), true);
+    $body = mp_corpo_pedido();
     if (!is_array($body) || !isset($body['data']) || !is_array($body['data'])) {
         reviews_respond(400, array('ok' => false, 'message' => 'Dados de reviews inválidos.'));
     }

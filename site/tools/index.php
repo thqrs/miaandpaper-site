@@ -1,7 +1,6 @@
 <?php
 // TOOLS_INDEX_V1: página interna de ferramentas. Mesmo guard de sessão que
 // admin-funnel.php / admin-orders.php — só acessível em modo admin.
-session_start();
 require_once __DIR__ . '/../admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 
 if (empty($_SESSION['miaandpaper_admin'])) {
@@ -104,9 +103,9 @@ if (empty($_SESSION['miaandpaper_admin'])) {
           <span class="catalog-product-thumb" aria-hidden="true">M</span>
           <span class="catalog-product-copy"><strong>Módulos de CSS</strong><span>Inventário visual de tudo o que existe no styles.css, claro e escuro.</span><span class="catalog-product-action">Abrir inventário</span></span>
         </a>
-        <a class="catalog-product-card" href="../modulos-temp.html">
-          <span class="catalog-product-thumb" aria-hidden="true">T</span>
-          <span class="catalog-product-copy"><strong>Módulos · sandbox</strong><span>Cópia estática para mexer à vontade. Não toca no site.</span><span class="catalog-product-action">Abrir sandbox</span></span>
+        <a class="catalog-product-card" href="parametros.php">
+          <span class="catalog-product-thumb" aria-hidden="true">?=</span>
+          <span class="catalog-product-copy"><strong>Parâmetros</strong><span>Tudo o que se pode pedir ao site por URL, com um link por valor. Em JSON, é o manifesto.</span><span class="catalog-product-action">Abrir inventário</span></span>
         </a>
         <a class="catalog-product-card" href="../admin-snapshots.php">
           <span class="catalog-product-thumb" aria-hidden="true">S</span>

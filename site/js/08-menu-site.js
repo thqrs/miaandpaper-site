@@ -26,7 +26,7 @@
     }
     var safeName = String(iconName || "catalogo").replace(/[^a-z0-9-]/gi, "");
     return '<span class="site-menu-icon' + (modifier ? ' ' + modifier : '') + '" aria-hidden="true">'
-      + '<img src="content/brand/menu-icons/line-art/' + safeName + '.png" alt="" width="64" height="64">'
+      + '<img src="content/brand/menu-icons/line-art/' + safeName + '.webp" alt="" width="64" height="64">'
       + '</span>';
   }
 
@@ -445,4 +445,3 @@
   function centsToEuroInput(cents) {
     return (Math.max(0, Number(cents) || 0) / 100).toFixed(2).replace(".", ",");
   }
-

@@ -79,6 +79,28 @@ function main_v2_effective_pricing_mode($product, $priceKey)
     return isset($product['pricingMode']) ? (string)$product['pricingMode'] : '';
 }
 
+// Mesmo fallback que `baseUnitaria()` + `precoDe(..., "flat-unit")` no editor:
+// a quantidade mais baixa define o valor unitario, mesmo quando nao existe a
+// chave "1" na tabela.
+function product_flat_table_price_cents($table, $quantity)
+{
+    $quantity = (int)$quantity;
+    if (!is_array($table) || empty($table) || $quantity <= 0) {
+        return 0;
+    }
+    $lowest = null;
+    foreach ($table as $pack => $cents) {
+        $pack = (int)$pack;
+        if ($pack > 0 && is_numeric($cents) && ($lowest === null || $pack < $lowest)) {
+            $lowest = $pack;
+        }
+    }
+    if ($lowest === null) {
+        return 0;
+    }
+    return (int)round(((float)$table[(string)$lowest] / $lowest) * $quantity);
+}
+
 // O JSON do produto e a tabela central de preços têm de concordar no modo,
 // senão o cliente e o servidor podiam calcular totais diferentes.
 function main_v2_pricing_modes_agree($product, $pricingProduct)

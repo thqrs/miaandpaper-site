@@ -204,7 +204,9 @@ function mp_aviso($tipo, $chave, $assunto, array $linhas)
 /** Contexto comum a todos os avisos: quem, de onde, em que página. */
 function mp_aviso_contexto()
 {
-    $ip = isset($_SERVER['REMOTE_ADDR']) ? (string)$_SERVER['REMOTE_ADDR'] : '(desconhecido)';
+    require_once __DIR__ . '/client-ip.php';
+    $ip = mp_client_ip();
+    if ($ip === '') $ip = '(desconhecido)';
     $ref = isset($_SERVER['HTTP_REFERER']) ? (string)$_SERVER['HTTP_REFERER'] : '';
     $ua = isset($_SERVER['HTTP_USER_AGENT']) ? substr((string)$_SERVER['HTTP_USER_AGENT'], 0, 120) : '';
     $linhas = array('IP: ' . $ip);

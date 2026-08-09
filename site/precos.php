@@ -453,7 +453,7 @@
       <div class="faixa aviso" id="faixaAberto" hidden>
         <strong>Editor aberto sem autenticação</strong>, nos mesmos termos da galeria.
         Quem alcançar o servidor consegue alterar todos os preços.
-        Antes do deploy, pôr <code>PRECOS_REQUIRE_ADMIN</code> a <code>true</code> em <code>precos-api.php</code>.
+        Antes do deploy, pôr <code>MIA_ADMIN_OPEN</code> a <code>false</code> em <code>admin-open.php</code>.
       </div>
 
       <div class="kpis" id="kpis"></div>
@@ -2053,7 +2053,6 @@
         var linhas = [], divergencias = 0, comparadas = 0;
 
         d.tabelas.forEach(function (t) {
-          if (t.modo !== "tier-unit" && t.modo !== "pack-combination") { return; }
           var registo = dados.pricing.products[t.slug] || {};
           var tabela = registo.prices ? registo.prices[t.priceKey] : null;
           if (!tabela) { return; }
@@ -2063,9 +2062,11 @@
             var php = t.valores[n], js;
             if (t.modo === "tier-unit") {
               js = motor.tierPriceCents(tabela, n);
-            } else {
+            } else if (t.modo === "pack-combination") {
               var plano = motor.packCombinationPlan(tabela, n, t.preferFewerPacks);
               js = plano ? plano.cents : null;
+            } else {
+              js = precoDe(tabela, t.modo, n, t.preferFewerPacks);
             }
             var iguais = (php === null || php === undefined)
               ? (js === null || js === undefined || js === 0)

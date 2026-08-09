@@ -77,26 +77,11 @@ http://127.0.0.1:8082/modulos.php
 escolhidas por alguém. O `modulos.php` é exaustivo e não tem opinião: responde a
 "que peças de interface é que este site tem, e como estão hoje".
 
-### O sandbox — `modulos-temp.html`
+### Experiências de CSS
 
-Ficheiro **estático** de 500 KB com os mesmos módulos, sem iframes e sem os
-módulos JS: a marcação e uma **cópia** do CSS estão lá dentro. Serve para
-experimentar sem risco — não partilha ficheiro nenhum com o site.
-
-|  | `modulos.php` | `modulos-temp.html` |
-|---|---|---|
-| origem | lê os JSON e desenha a sério | cópia congelada |
-| actualiza-se | sozinho | nunca |
-| editar | mexe no site a sério | não afecta nada |
-
-As regras de modo escuro estão reescritas de `html[data-theme="dark"]` para
-`.tema-escuro`, para os dois temas caberem na mesma página. O painel de cores
-mexe nos 40 tokens e **exporta o CSS das alterações** já com os selectores
-certos — é assim que uma experiência passa do sandbox para o site.
-
-**Refazer** não é automático: o ficheiro foi montado a extrair o
-`#app.innerHTML` de cada `modulos-preview.html` num browser. Refazer **apaga as
-experiências que lá estiverem** — exportar o CSS primeiro.
+O antigo sandbox estático foi retirado da raiz pública: duplicava cerca de
+500 KB de CSS e marcação e envelhecia sem aviso. Para experiências locais,
+usar as ferramentas do browser sobre `modulos.php` sem gravar os ficheiros.
 
 ## Estado do CSS
 

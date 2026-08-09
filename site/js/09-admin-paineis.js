@@ -88,81 +88,19 @@
   }
 
   function renderAdminPricePanel(product) {
-    var prices;
-    var sizeKeys;
-    var quantities;
-    var html = "";
-
-    ensureAdminPriceShell(product);
-
-    prices = product && product.prices ? product.prices : {};
-    sizeKeys = Object.keys(prices);
-    quantities = allPriceQuantities(prices);
-
-    if (!sizeKeys.length || !quantities.length) {
-      return [
-        '<details class="admin-step-panel admin-price-panel">',
-        '<summary>Preços</summary>',
-        '<p>Este produto ainda não tem packs suficientes para criar uma tabela de preços.</p>',
-        '</details>'
-      ].join("");
-    }
-
-    html += [
-      '<p class="admin-price-help">Fonte central: <code>content/pricing.json</code>. Podes editar o total do pack ou o valor unitário; o outro campo é recalculado.</p>',
-      '<div class="admin-price-table-wrap">',
-      '<table class="admin-price-table">',
-      '<thead><tr>',
-      '<th>Subtipo</th>',
-      '<th>Pack/unidades</th>',
-      '<th>Total do pack</th>',
-      '<th>Preço unitário</th>',
-      '</tr></thead>',
-      '<tbody>'
+    return [
+      '<details class="admin-step-panel admin-price-panel">',
+      '<summary>Preços e packs</summary>',
+      '<p class="admin-price-help">Os preços, packs, descontos e modos de cálculo editam-se apenas no editor central.</p>',
+      '<p><a class="button secondary" href="precos.php">Abrir editor de preços</a></p>',
+      '</details>'
     ].join("");
-
-    sizeKeys.forEach(function (size) {
-      quantities.forEach(function (quantity) {
-        var cents = prices[size] && prices[size][quantity] != null ? Number(prices[size][quantity]) : 0;
-        var unitCents = Number(quantity) ? cents / Number(quantity) : 0;
-
-        if (prices[size] && prices[size][quantity] == null) {
-          return;
-        }
-
-        html += [
-          '<tr>',
-          '<td><strong>' + escapeHtml(priceDisplayName(product, size)) + '</strong><small>' + escapeHtml(size) + '</small></td>',
-          '<td><input type="number" min="1" step="1" value="' + escapeHtml(quantity) + '" data-admin-price-pack-edit data-admin-price-size="' + escapeHtml(size) + '" data-admin-price-pack="' + escapeHtml(quantity) + '"><small>' + escapeHtml(productQuantityLabel(product, quantity)) + '</small></td>',
-          '<td><input type="text" inputmode="decimal" value="' + escapeHtml(centsToEuroInput(cents)) + '" data-admin-price-kind="total" data-admin-price-size="' + escapeHtml(size) + '" data-admin-price-pack="' + escapeHtml(quantity) + '"></td>',
-          '<td><input type="text" inputmode="decimal" value="' + escapeHtml(centsToEuroInput(unitCents)) + '" data-admin-price-kind="unit" data-admin-price-size="' + escapeHtml(size) + '" data-admin-price-pack="' + escapeHtml(quantity) + '"></td>',
-          '</tr>'
-        ].join("");
-      });
-    });
-
-    html += '</tbody></table></div>';
-
-    return '<details class="admin-step-panel admin-price-panel"><summary>Preços</summary>' + html + '</details>';
   }
 
   function renderAdminDeliveryPanel(product) {
-    var options = product && product.deliveryOptions ? product.deliveryOptions : [];
-    var html = "";
-
-    options.forEach(function (option, index) {
-      html += [
-        '<section>',
-        '<strong>Entrega ' + (index + 1) + '</strong>',
-        '<label><span>Texto principal</span><input type="text" value="' + escapeHtml(option.label || "") + '" data-admin-delivery-index="' + index + '" data-admin-delivery-edit="label"></label>',
-        '<label><span>Linha 2</span><input type="text" value="' + escapeHtml(option.text || "") + '" data-admin-delivery-index="' + index + '" data-admin-delivery-edit="text"></label>',
-        '<label><span>Texto do preço</span><input type="text" value="' + escapeHtml(option.priceText || "") + '" data-admin-delivery-index="' + index + '" data-admin-delivery-edit="priceText" placeholder="Ex.: Valor mínimo 10 €, preço a combinar"></label>',
-        '<label><span>Preço técnico em cêntimos</span><input type="number" min="0" step="1" value="' + escapeHtml(option.feeCents || 0) + '" data-admin-delivery-index="' + index + '" data-admin-delivery-edit="feeCents"></label>',
-        '</section>'
-      ].join("");
-    });
-
-    return html ? '<details class="admin-step-panel admin-price-panel"><summary>Editar entrega</summary>' + html + '</details>' : "";
+    return product && product.deliveryOptions
+      ? '<details class="admin-step-panel admin-price-panel"><summary>Entrega</summary><p class="admin-price-help">Os portes e respectivos textos monetários editam-se no <a href="precos.php">editor de preços</a>.</p></details>'
+      : "";
   }
 
   function renderAdminRectOrientationPanel(product) {
@@ -1597,4 +1535,3 @@
     startHomeCarousels(home);
     startHomeDeadlineCountdown();
   }
-

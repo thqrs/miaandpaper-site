@@ -21,7 +21,6 @@
  * Não expõe a base SQLite directamente. Filtros e edição via formulários.
  */
 
-session_start();
 require_once __DIR__ . '/admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 
 if (empty($_SESSION['miaandpaper_admin'])) {
@@ -37,16 +36,28 @@ if (empty($_SESSION['miaandpaper_admin'])) {
 
 require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/lib/mail.php';
+require_once __DIR__ . '/lib/parametros.php';   // PARAMETROS_V1: vistas e filtros declarados uma vez
 
 // CSRF token simples — gera + valida na mesma sessão.
-if (empty($_SESSION['mp_admin_csrf'])) {
-    $_SESSION['mp_admin_csrf'] = bin2hex(random_bytes(16));
-}
-$csrf = $_SESSION['mp_admin_csrf'];
+$csrf = mp_admin_csrf_token();
 
 function admin_orders_h($value)
 {
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * As etiquetas do registo de parâmetros vêm em minúsculas, porque servem para
+ * frases ("filtro de estado: por pagar"). Nos botões da página querem-se com
+ * maiúscula inicial — e `ucfirst` não chega em "Em preparação" acentuado.
+ */
+function admin_orders_rotulo($label)
+{
+    $label = (string)$label;
+    if ($label === '' || !function_exists('mb_substr')) {
+        return ucfirst($label);
+    }
+    return mb_strtoupper(mb_substr($label, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($label, 1, null, 'UTF-8');
 }
 
 function admin_orders_moldura_text($value)
@@ -198,7 +209,7 @@ function admin_orders_friendly_status($payment, $fulfillment)
 function admin_orders_check_csrf()
 {
     $sent = isset($_POST['csrf']) ? (string)$_POST['csrf'] : '';
-    if ($sent === '' || !hash_equals((string)$_SESSION['mp_admin_csrf'], $sent)) {
+    if (!mp_admin_csrf_is_valid($sent)) {
         http_response_code(403);
         echo 'CSRF inválido. Recarrega a página e tenta novamente.';
         exit;
@@ -220,6 +231,16 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
             $fulfillmentStatus = isset($_POST['fulfillment_status']) ? (string)$_POST['fulfillment_status'] : 'new';
             $tracking = isset($_POST['tracking_number']) ? trim((string)$_POST['tracking_number']) : '';
             $notes = isset($_POST['admin_notes']) ? trim((string)$_POST['admin_notes']) : '';
+
+            if (!in_array($paymentStatus, array('unpaid', 'paid'), true)
+                || !in_array($fulfillmentStatus, array('new', 'preparing', 'shipped', 'cancelled'), true)
+                || strlen($tracking) > 255
+                || strlen($notes) > 20000
+            ) {
+                http_response_code(400);
+                echo 'Estado ou texto inválido. Recarrega a encomenda e tenta novamente.';
+                exit;
+            }
 
             $stmt = $pdo->prepare('UPDATE orders SET payment_status=?, paid=?, fulfillment_status=?, tracking_number=?, admin_notes=?, updated_at=? WHERE id=?');
             $stmt->execute(array(
@@ -260,8 +281,13 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                 exit;
             }
 
-            $pdo->prepare('UPDATE orders SET payment_status=?, paid=1, paid_at=?, updated_at=? WHERE id=?')
-                ->execute(array('paid', $now, $now, $orderId));
+            $claim = $pdo->prepare("UPDATE orders SET payment_status=?, paid=1, paid_at=?, updated_at=? WHERE id=? AND COALESCE(payment_status, '') <> 'paid'");
+            $claim->execute(array('paid', $now, $now, $orderId));
+            if ($claim->rowCount() !== 1) {
+                mp_db_log_order_event($orderId, 'mark_paid_skipped_already_paid', null);
+                header('Location: admin-orders.php?view=detail&id=' . $orderId . '&email=already');
+                exit;
+            }
             mp_db_log_order_event($orderId, 'marked_paid', null);
 
             // Re-fetch para garantir paid_at actualizado antes do email.
@@ -326,8 +352,15 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                 exit;
             }
 
-            $pdo->prepare('UPDATE orders SET fulfillment_status=?, shipped_at=?, tracking_number=?, updated_at=? WHERE id=?')
-                ->execute(array('shipped', $now, $tracking, $now, $orderId));
+            $claim = $pdo->prepare("UPDATE orders SET fulfillment_status=?, shipped_at=?, tracking_number=?, updated_at=? WHERE id=? AND COALESCE(fulfillment_status, '') <> 'shipped'");
+            $claim->execute(array('shipped', $now, $tracking, $now, $orderId));
+            if ($claim->rowCount() !== 1) {
+                mp_db_log_order_event($orderId, 'mark_shipped_skipped_already_shipped', array(
+                    'tracking_attempted' => $tracking,
+                ));
+                header('Location: admin-orders.php?view=detail&id=' . $orderId . '&email=already');
+                exit;
+            }
             mp_db_log_order_event($orderId, 'marked_shipped', array(
                 'tracking_number' => $tracking,
             ));
@@ -395,7 +428,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
             }
             mp_db_log_admin_login_attempt(array(
                 'attempt_type' => 'BACKUP_DOWNLOADED',
-                'ip_number' => isset($_SERVER['REMOTE_ADDR']) ? (string)$_SERVER['REMOTE_ADDR'] : '',
+                'ip_number' => mp_client_ip(),
                 'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? (string)$_SERVER['HTTP_USER_AGENT'] : '',
                 'input_text' => basename($dbPath),
             ));
@@ -581,6 +614,7 @@ button.btn.success { background: var(--moss); border-color: var(--moss); }
 </style>
 </head>
 <body>
+<?= mp_parametros_barra('admin-orders.php') ?>
 <header class="page-header">
   <div>
     <h1>Encomendas</h1>
@@ -689,8 +723,8 @@ if ($view === 'list') :
     $productSlugs = $productsStmt ? $productsStmt->fetchAll(PDO::FETCH_COLUMN) : array();
 ?>
   <div class="filters">
-    <?php foreach (array('all'=>'Todas','new'=>'Novas','unpaid'=>'Por pagar','paid'=>'Pagas','preparing'=>'Em preparação','shipped'=>'Enviadas','cancelled'=>'Canceladas') as $key => $label): ?>
-      <a href="<?= admin_orders_h(admin_orders_build_query(array('f'=>$key,'page'=>1))) ?>" class="<?= $filter === $key ? 'is-active' : '' ?>"><?= admin_orders_h($label) ?></a>
+    <?php foreach (mp_parametros_valores('admin-orders.php', 'f') as $key => $label): ?>
+      <a href="<?= admin_orders_h(admin_orders_build_query(array('f'=>$key,'page'=>1))) ?>" class="<?= $filter === $key ? 'is-active' : '' ?>"><?= admin_orders_h(admin_orders_rotulo($label)) ?></a>
     <?php endforeach; ?>
     <form method="get" action="admin-orders.php" style="display:inline-flex;gap:8px;margin-left:auto;align-items:center;">
       <input type="hidden" name="view" value="list">

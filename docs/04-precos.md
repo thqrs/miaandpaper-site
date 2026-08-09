@@ -214,8 +214,8 @@ Além disso: revisão SHA-256 para detectar edições concorrentes, cópia
 `.precos-bak` antes de escrever, e recusa de remover a última linha de uma
 colecção ou o último pack de uma tabela.
 
-⚠️ **Está aberto sem autenticação**, como a galeria. Pôr
-`PRECOS_REQUIRE_ADMIN` a `true` em `precos-api.php` antes do deploy — escrever
+⚠️ **Está aberto sem autenticação** enquanto `MIA_ADMIN_OPEN` estiver activo.
+Antes do deploy, pôr `MIA_ADMIN_OPEN` a `false` em `site/admin-open.php`;
 preços é mais perigoso do que trocar imagens.
 
 ### Porque é que não está tudo no `pricing.json`

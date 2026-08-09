@@ -240,7 +240,7 @@
 <div class="conteudo">
   <div class="faixa aviso" id="faixaAberto" hidden>
     <strong>Editor aberto sem autenticação</strong>, nos mesmos termos da galeria e dos preços.
-    Antes do deploy, pôr <code>HOMEPAGE_REQUIRE_ADMIN</code> a <code>true</code> em <code>homepage-menu-api.php</code>.
+    Antes do deploy, pôr <code>MIA_ADMIN_OPEN</code> a <code>false</code> em <code>admin-open.php</code>.
   </div>
 
   <div class="separadores">
@@ -263,6 +263,7 @@
 
   var API = "homepage-menu-api.php";
   var dados = null;
+  var csrf = "";
   var fila = Object.create(null);
   var pilhaUndo = [];
   var ultimaChave = "";
@@ -336,7 +337,7 @@
     var actual = c.menuIcon || "";
     return '<span class="mini-icone">'
       + (actual
-          ? '<img src="content/brand/menu-icons/line-art/' + esc(actual) + '.png" alt="">'
+          ? '<img src="content/brand/menu-icons/line-art/' + esc(actual) + '.webp" alt="">'
           : '<span class="mini-icone-auto" title="Escolhido pelo site">auto</span>')
       + '<select data-op="categoria" data-indice="' + c.indice + '" data-campo="menuIcon"'
       + ' data-original="' + esc(actual) + '">'
@@ -769,10 +770,12 @@
     alerta("A gravar…");
 
     fetch(API + "?action=save", {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "X-Admin-CSRF": csrf },
       body: JSON.stringify({ alteracoes: lista })
     }).then(function (r) { return r.json(); }).then(function (d) {
       if (!d.ok) { alerta(d.erro || "Não gravou.", "erro"); actualizar(); return; }
+      csrf = d.csrf || csrf;
       dados = d; fila = Object.create(null); pilhaUndo = []; ultimaChave = "";
       desenhar();
       alerta("Gravado.", "ok");
@@ -804,10 +807,11 @@
 
   function carregar() {
     alerta("A carregar…");
-    return fetch(API + "?action=data", { cache: "no-store" })
+    return fetch(API + "?action=data", { cache: "no-store", credentials: "same-origin" })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d.ok) { throw new Error(d.erro || "Falha a carregar."); }
+        csrf = d.csrf || "";
         dados = d; fila = Object.create(null); ultimaChave = "";
         desenhar();
         alerta(dados.categorias.length + " categorias carregadas.", "ok");

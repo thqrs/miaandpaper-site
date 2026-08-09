@@ -13,17 +13,26 @@
 
 declare(strict_types=0);
 
-// Aberto até ao deploy, nos mesmos termos dos outros editores.
-// ⚠️ ANTES DO DEPLOY pôr a true.
-define('MATERIAIS_REQUIRE_ADMIN', false);
+// ADMIN_OPEN_DEV_V1 é a única configuração: em desenvolvimento pode abrir os
+// editores; com MIA_ADMIN_OPEN=false esta API exige sempre sessão de admin.
+require_once __DIR__ . '/admin-open.php';
+define('MATERIAIS_REQUIRE_ADMIN', !MIA_ADMIN_OPEN);
 
 require_once __DIR__ . '/lib/private-paths.php';
+require_once __DIR__ . '/lib/pedido.php';   // COMANDOS_V1: a API tambem se chama de dentro
 
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store, no-cache, must-revalidate');
+// COMANDOS_V1: em modo embutido quem manda nos cabecalhos e a pagina que
+// incluiu esta API.
+if (!mp_modo_embutido()) {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+}
 
 function mat_responder($payload, $status = 200)
 {
+    if (mp_modo_embutido()) {
+        mp_responder_embutido($payload, $status);
+    }
     http_response_code($status);
     echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
@@ -31,6 +40,9 @@ function mat_responder($payload, $status = 200)
 
 function mat_erro($mensagem, $status = 400)
 {
+    if (mp_modo_embutido()) {
+        mp_responder_embutido(array('ok' => false, 'erro' => $mensagem), $status);
+    }
     mat_responder(array('ok' => false, 'erro' => $mensagem), $status);
 }
 
@@ -108,24 +120,36 @@ function mat_gravar($data)
 
 // O rendimento aceita uma multiplicação — "100*10*10" — porque é assim que se
 // pensa nestas coisas ("100 cortes de 10 folhas, 10 crachás por folha") e obrigar
-// a fazer a conta de cabeça é onde se erra. Só dígitos, ponto, x e *.
+// a fazer a conta de cabeça é onde se erra. Só decimais finitos, ponto, x e *.
+const MAT_MAX_RENDIMENTO = 100000000;
 function mat_rendimento($expressao)
 {
     $limpo = str_replace(array(' ', ','), array('', '.'), (string)$expressao);
     $limpo = str_replace(array('x', 'X', '×'), '*', $limpo);
 
-    if ($limpo === '' || !preg_match('/^[0-9.]+(\*[0-9.]+)*$/', $limpo)) {
+    if ($limpo === '' || !preg_match('/^(?:\d+(?:\.\d+)?|\.\d+)(?:\*(?:\d+(?:\.\d+)?|\.\d+))*$/D', $limpo)) {
         return 0.0;
     }
     $total = 1.0;
     foreach (explode('*', $limpo) as $parte) {
         $n = (float)$parte;
-        if ($n <= 0) {
+        if (!is_finite($n) || $n <= 0 || $n > MAT_MAX_RENDIMENTO) {
             return 0.0;
         }
         $total *= $n;
+        if (!is_finite($total) || $total > MAT_MAX_RENDIMENTO) {
+            return 0.0;
+        }
     }
     return $total;
+}
+
+function mat_exigir_csrf()
+{
+    $sent = isset($_SERVER['HTTP_X_ADMIN_CSRF']) ? (string)$_SERVER['HTTP_X_ADMIN_CSRF'] : '';
+    if (!mp_admin_csrf_is_valid($sent)) {
+        mat_erro('Pedido bloqueado por CSRF. Recarrega o editor.', 403);
+    }
 }
 
 function mat_material($data, $id)
@@ -294,6 +318,7 @@ function mat_recolher()
         'catalogo' => $catalogo,
         'calculos' => $calculos,
         'aberto' => !MATERIAIS_REQUIRE_ADMIN,
+        'csrf' => mp_admin_csrf_token(),
     );
 }
 
@@ -313,7 +338,7 @@ function mat_texto($valor, $max = 160)
 
 function mat_gravar_pedido()
 {
-    $body = json_decode((string)file_get_contents('php://input'), true);
+    $body = mp_corpo_pedido();
     if (!is_array($body) || empty($body['alteracoes']) || !is_array($body['alteracoes'])) {
         mat_erro('Não há nada para gravar.');
     }
@@ -452,7 +477,18 @@ function mat_gravar_pedido()
 // ── Router ───────────────────────────────────────────────────────────────────
 
 mat_exigir_admin();
+// COMANDOS_V1: incluida so pelas funcoes. Sem router, sem guarda, sem resposta.
+if (mp_modo_embutido()) {
+    return;
+}
+
 $action = isset($_GET['action']) ? (string)$_GET['action'] : 'data';
+
+// PARAMETROS_V1: esquema desta API, na forma do manifesto geral.
+if ($action === 'parametros') {
+    require_once __DIR__ . '/lib/parametros.php';
+    mat_responder(array('ok' => true, 'recurso' => mp_parametros_manifesto_recurso('materiais-api.php')));
+}
 
 if ($action === 'data') {
     mat_responder(mat_recolher());
@@ -462,6 +498,7 @@ if ($action === 'save') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         mat_erro('Usa POST para gravar.', 405);
     }
+    mat_exigir_csrf();
     mat_gravar_pedido();
 }
 

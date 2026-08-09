@@ -135,28 +135,22 @@ confirmar antes de correr.
 
 ### ⚠️ Antes de publicar
 
-1. **Fechar os endpoints de escrita.** Pôr a `true`:
+1. **Fechar os endpoints de escrita.** Pôr a `false` numa única linha:
 
    ```php
-   site/admin-open.php:18    define('MIA_ADMIN_OPEN', true);
-   site/galeria-api.php:10   define('GALERIA_REQUIRE_ADMIN', false);
-   site/precos-api.php:23    define('PRECOS_REQUIRE_ADMIN', false);
-   site/produtos-api.php:5   define('PRODUTOS_REQUIRE_ADMIN', false);
-   site/reviews-api.php:6    define('REVIEWS_REQUIRE_ADMIN', false);
-   site/homepage-menu-api.php:14  define('HOMEPAGE_REQUIRE_ADMIN', false);
-   site/carrousel-api.php:16      define('CARROUSEL_REQUIRE_ADMIN', false);
-   site/materiais-api.php:18      define('MATERIAIS_REQUIRE_ADMIN', false);
+   site/admin-open.php    define('MIA_ADMIN_OPEN', false);
    ```
 
-   Todos menos o `produtos-api.php` **escrevem ficheiros** — com eles a `false`,
-   qualquer pessoa pode reescrever `content/products/*.json`, o `pricing.json` e
-   o `home.json`, incluindo os preços, a homepage e os ficheiros da cápsula. O
-   `produtos-api.php` é só de leitura.
+   Com este interruptor a `true`, as APIs administrativas de escrita ficam
+   abertas; com ele a `false`, todas exigem a sessão de administração. O
+   `produtos-api.php` continua só de leitura. As APIs protegidas não aceitam
+   escrita anónima em `content/products/*.json`, no `pricing.json` ou no
+   `home.json`, incluindo os preços, a homepage e os ficheiros da cápsula.
 
 2. Confirmar que `galeria.html`, `precos.php`, `produtos.html`, `reviews.html`,
    `homepage-menu-design.php`, `carrousel.php` e `materiais.php` continuam a
-   funcionar com sessão iniciada. O CSRF e o `session_start()` já lá
-   estão — só estão a ser saltados pelo `if (!X_REQUIRE_ADMIN) return;`.
+   funcionar com sessão iniciada. As APIs com confirmação por POST continuam a
+   aplicar os seus controlos de sessão e CSRF onde já eram exigidos.
 
 3. **Regenerar os snapshots** ([07 · Backend](07-backend.md)) — este não é
    automático, e sem ele os painéis mostram a estrutura antiga sem dar erro.

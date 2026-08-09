@@ -3,7 +3,6 @@
 // pasta pública (private/miaandpaper-nomes.txt via mp_private_path) e só é
 // lido/escrito com sessão admin — inacessível por URL direto, sem precisar
 // de encriptação no cliente.
-session_start();
 require_once __DIR__ . '/../admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 
 if (empty($_SESSION['miaandpaper_admin'])) {

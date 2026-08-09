@@ -1,1 +1,0 @@
-python image_rename_tagger_gui.py

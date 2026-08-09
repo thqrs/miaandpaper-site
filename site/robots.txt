@@ -11,7 +11,6 @@ Disallow: /reviews.html
 Disallow: /admin-colors.html
 Disallow: /styleguide.html
 Disallow: /modulos.php
-Disallow: /modulos-temp.html
 Disallow: /modulos-preview.html
 Disallow: /admin-orders.php
 Disallow: /admin-funnel.php

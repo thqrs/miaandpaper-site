@@ -105,6 +105,7 @@ Nenhuma destas dá erro quando se esquece:
 | **criar** um ficheiro em `site/js/` ou `site/css/` | **tu**: acrescentar a tag em todas as cascas |
 | mudar qualquer conteúdo | `node site/tools/seo-build.js` — automático no deploy (passo 2/5) |
 | mudar a estrutura (produto, passo, classe, evento) | **tu**: `admin-snapshots.php` → Criar todos os snapshots |
+| ler um `$_GET` novo num .php | **tu**: declarar em `site/lib/parametros.php` |
 
 O `?v=` é regenerado pelo `tools/update-cache-version.ps1`, que o
 `[2]upload-or-download.bat` corre antes do commit — mas **só reescreve tags que
@@ -112,6 +113,10 @@ já existam**. Um módulo novo continua a ter de ser declarado à mão em todas 
 cascas; ver [02 · Módulos JS](docs/02-modulos-js.md).
 
 Sem os snapshots, os painéis continuam a mostrar a estrutura antiga.
+
+Um parâmetro que não está declarado não aparece na barra de links da página nem
+no manifesto — fica a existir só para quem souber escrevê-lo à mão. Ver
+[11 · Parâmetros de URL](docs/11-parametros-de-url.md).
 
 ---
 

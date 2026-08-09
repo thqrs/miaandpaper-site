@@ -27,6 +27,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const ROOT = path.resolve(__dirname, "..");
 const CONFIG = JSON.parse(
@@ -36,6 +37,7 @@ const CONFIG = JSON.parse(
 const SITE = CONFIG.site;
 const BRAND = CONFIG.brand;
 const PAGES = CONFIG.pages;
+const STATE_PATH = path.join(__dirname, "seo-state.json");
 
 const HEAD_START = "<!-- seo:head:start -->";
 const HEAD_END = "<!-- seo:head:end -->";
@@ -294,6 +296,29 @@ function replaceBetween(html, startMarker, endMarker, replacement) {
   return html.slice(0, start) + replacement + html.slice(end + endMarker.length);
 }
 
+function withoutGeneratedBlock(html, startMarker, endMarker) {
+  const start = html.indexOf(startMarker);
+  const end = html.indexOf(endMarker);
+  if (start === -1 || end === -1 || end < start) return html;
+  return html.slice(0, start) + startMarker + endMarker + html.slice(end + endMarker.length);
+}
+
+function pageFingerprint(page, html) {
+  let source = withoutGeneratedBlock(html, HEAD_START, HEAD_END);
+  source = withoutGeneratedBlock(source, BODY_START, BODY_END);
+  let content = "";
+  if (page.product) {
+    const productPath = path.join(ROOT, "content", "products", page.product + ".json");
+    if (fs.existsSync(productPath)) content = fs.readFileSync(productPath, "utf8");
+  } else if (page.homeContent) {
+    const homePath = path.join(ROOT, page.homeContent);
+    if (fs.existsSync(homePath)) content = fs.readFileSync(homePath, "utf8");
+  }
+  return crypto.createHash("sha256")
+    .update(JSON.stringify(page)).update("\n").update(source).update("\n").update(content)
+    .digest("hex");
+}
+
 function applyHead(html, headBlock) {
   const replaced = replaceBetween(html, HEAD_START, HEAD_END, headBlock);
   if (replaced) return replaced;
@@ -319,8 +344,7 @@ function applyPrerender(html, block) {
   });
 }
 
-function buildSitemap() {
-  const now = new Date().toISOString().slice(0, 10);
+function buildSitemap(lastmods) {
   // As paginas de congressos/2026 e as ofertas nao passam por este gerador (a
   // capsula de 2026 nao se toca), mas queremos que o Google as descubra.
   const extras = Array.isArray(CONFIG.extraSitemapUrls)
@@ -335,7 +359,7 @@ function buildSitemap() {
       return [
         "  <url>",
         `    <loc>${SITE}${page.url}</loc>`,
-        `    <lastmod>${now}</lastmod>`,
+        `    <lastmod>${lastmods[page.url]}</lastmod>`,
         `    <changefreq>${page.changefreq}</changefreq>`,
         `    <priority>${page.priority}</priority>`,
         "  </url>"
@@ -352,6 +376,16 @@ function buildSitemap() {
 
 function main() {
   let touched = 0;
+  const today = new Date().toISOString().slice(0, 10);
+  let previousState = { version: 1, pages: {} };
+  try {
+    const parsed = JSON.parse(fs.readFileSync(STATE_PATH, "utf8"));
+    if (parsed && parsed.pages) previousState = parsed;
+  } catch (error) {
+    // Primeira execucao com estado: as paginas entram com a data de hoje.
+  }
+  const nextState = { version: 1, pages: {} };
+  const lastmods = Object.create(null);
 
   PAGES.forEach(function (page) {
     const full = path.join(ROOT, page.file);
@@ -361,6 +395,14 @@ function main() {
     }
 
     let html = fs.readFileSync(full, "utf8");
+    const originalHtml = html;
+    const fingerprint = pageFingerprint(page, originalHtml);
+    const previous = previousState.pages[page.url];
+    const lastmod = previous && previous.fingerprint === fingerprint
+      ? previous.lastmod
+      : today;
+    nextState.pages[page.url] = { fingerprint: fingerprint, lastmod: lastmod };
+    lastmods[page.url] = lastmod;
     let jsonLd = null;
     let product = null;
 
@@ -386,14 +428,28 @@ function main() {
       }
     }
 
-    fs.writeFileSync(full, html, "utf8");
-    touched += 1;
-    console.log(`  + ${page.file}`);
+    if (html !== originalHtml) {
+      fs.writeFileSync(full, html, "utf8");
+      touched += 1;
+      console.log(`  + ${page.file}`);
+    } else {
+      console.log(`  = ${page.file}`);
+    }
   });
 
-  fs.writeFileSync(path.join(ROOT, "sitemap.xml"), buildSitemap(), "utf8");
+  const extras = Array.isArray(CONFIG.extraSitemapUrls) ? CONFIG.extraSitemapUrls : [];
+  extras.forEach(function (page) {
+    const fingerprint = crypto.createHash("sha256").update(JSON.stringify(page)).digest("hex");
+    const previous = previousState.pages[page.url];
+    const lastmod = previous && previous.fingerprint === fingerprint ? previous.lastmod : today;
+    nextState.pages[page.url] = { fingerprint: fingerprint, lastmod: lastmod };
+    lastmods[page.url] = lastmod;
+  });
+
+  fs.writeFileSync(path.join(ROOT, "sitemap.xml"), buildSitemap(lastmods), "utf8");
+  fs.writeFileSync(STATE_PATH, JSON.stringify(nextState, null, 2) + "\n", "utf8");
   console.log("  + sitemap.xml");
-  console.log(`\n${touched} paginas escritas.`);
+  console.log(`\n${touched} paginas alteradas.`);
 }
 
 main();

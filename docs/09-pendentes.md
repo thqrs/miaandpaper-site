@@ -1,58 +1,39 @@
 # 09 · Pendentes
 
 O que continua por fazer ou por decidir. **Verificado contra o código a
-2026-08-06** — os itens dos relatórios antigos que já foram resolvidos não
+2026-08-09** — os itens dos relatórios antigos que já foram resolvidos não
 aparecem aqui.
 
 Os relatórios completos, com os números e o método, estão em
 [`historico/`](historico/).
+Os nove pontos adiados na auditoria mais recente estão no
+[log de 2026-08-09](historico/2026-08-09-auditoria-pendentes.md).
 
 ---
 
 ## Bloqueiam o deploy
 
-### Endpoints de escrita abertos ao público
+### Fechar a administração antes do deploy
 
 ```php
-site/admin-open.php:18    define('MIA_ADMIN_OPEN', true);
-site/galeria-api.php:10   define('GALERIA_REQUIRE_ADMIN', false);
-site/precos-api.php:23    define('PRECOS_REQUIRE_ADMIN', false);
-site/produtos-api.php:5   define('PRODUTOS_REQUIRE_ADMIN', false);
-site/reviews-api.php:6    define('REVIEWS_REQUIRE_ADMIN', false);
+site/admin-open.php    define('MIA_ADMIN_OPEN', false);
 ```
 
-Não é "a página de admin está visível" — o `galeria-api.php`, o `precos-api.php`
-e o `reviews-api.php` **escrevem ficheiros**. Qualquer pessoa na Internet pode
-reescrever `content/products/*.json` (incluindo preços e a cápsula do congresso)
-e enviar imagens. O `save` exige a revisão SHA-256 do conteúdo actual, mas
-obtém-se pedindo `?action=data`, que também está aberto.
+Não é preciso alterar uma constante por API: `MIA_ADMIN_OPEN` é a fonte única
+para materiais, preços, homepage, carrosséis, galeria, reviews e `comando.php`.
+Com `false`, as escritas anónimas são recusadas; os testes HTTP cobrem todas as
+seis APIs e o override de comandos.
 
-O `precos-api.php` é o mais sensível dos três: pôr um preço a zero é pior do que
-trocar uma imagem. Foi aberto por decisão explícita, para ter os mesmos termos
-da galeria até ao deploy.
-
-É dívida assumida enquanto as fotos reais estão a ser carregadas. O CSRF e o
-`session_start()` já estão implementados nos quatro ficheiros — só estão a ser
-saltados. O `produtos-api.php` é só de leitura de dados já públicos.
+O `precos-api.php` é particularmente sensível: pôr um preço a zero é pior do
+que trocar uma imagem. Em desenvolvimento pode ficar aberto pelo interruptor
+central, mas não deve seguir assim para produção. O `produtos-api.php` é só de
+leitura de dados já públicos.
 
 **Não há caminho para execução de código:** os uploads validam com
 `getimagesize()`, exigem que a extensão corresponda ao MIME real e convertem
 tudo para WebP. O risco é integridade de conteúdo e preços.
 
 Checklist completa em [08 · Deploy](08-deploy-e-ambiente.md).
-
-### Compressão e cabeçalhos de cache
-
-O `.htaccess` não configura `mod_deflate` nem `mod_expires`. São ~1,3 MB de JS e
-CSS não minificados em cada visita nova, contra os ~250 KB que o gzip daria. É
-possível que o cPanel tenha o "Optimize Website" ligado globalmente — confirmar
-no servidor:
-
-```bash
-curl -sI -H "Accept-Encoding: gzip" https://miaandpaper.com/js/01-nucleo.js | grep -i content-encoding
-```
-
-Se faltar, são ~15 linhas no `.htaccess`, sem tocar em código.
 
 ---
 
@@ -150,6 +131,7 @@ Já está resolvido para as três famílias grandes:
 | Tabelas de preços | `products` do `pricing.json` | — |
 | Portes | bloco `delivery` do `pricing.json` | 2026-08-06 |
 | Acabamentos e extras por unidade | bloco `optionExtras` do `pricing.json` | 2026-08-07 |
+| Taxa de arte final | produto do `pricing.json` | 2026-08-09 |
 
 O `optionExtras` é indexado pelo `value` da opção (ou pelo `id`, quando é um
 passo inteiro como a personalização da capa). Quem o aplica: `applyCentralOptionExtras()`
@@ -159,11 +141,6 @@ serve de recurso quando o central não conhece a chave, e o `precos.php` replica
 qualquer edição pelo central **e** por todas as cópias, para nenhuma ficar a
 mostrar um número que já não é o cobrado.
 
-**O que falta:** a taxa de artwork, com o `300` escrito à mão em
-`MAIN_V2_ARTWORK_FEE_CENTS` (`send-order.php:15`) e nada a validar que coincide
-com o `pricing.json`. Fazer o PHP lê-lo do `pricing.json` fecha a última
-divergência sem tocar em cálculo nenhum.
-
 Cuidado com um caso que **não** é só um número errado no ecrã: um acabamento que
 exista no `personalizacao.json` mas **não** no `finishOptions` do produto de
 destino faz o `send-order.php` **recusar a encomenda inteira** com «Um dos
@@ -172,35 +149,11 @@ agendas e dos cadernos até 2026-08-07. O `optionExtras` alinha os valores, mas
 não cria a entrada em falta — vale a pena um teste que percorra os `finishes` da
 personalização e confirme que cada valor existe no destino.
 
-### Lixo que vai para produção
-
-| item | peso |
-|---|---|
-| `site/catalogo/` (inclui um `.docx` de 7,6 MB) | 17 MB |
-| `site/media_tiago/` | 2,1 MB |
-| `site/mockups/` | 232 KB |
-| `site/content/products-legacy/` | 224 KB |
-| `site/local-test-data/` | 4 KB |
-| `site/log_css_mods.txt`, `biscoito.txt`, `reviews.txt` | — |
-
-Nenhum é servido a clientes. O `catalogo/` são páginas antigas substituídas pelo
-catálogo actual. Decidir o que é histórico (fica no repositório, sai do deploy) e
-o que é lixo (apaga-se). Um `.deployignore` respeitado pelo script resolve o
-primeiro caso — mas ver "o deploy nunca apaga" acima.
-
 ### `tools/gerador-cartoes.php` tem 5,1 MB
 
 Um único PHP com um bundle JavaScript inteiro embutido. É impossível de rever ou
 de diferenciar em git, e obriga a excluí-lo de qualquer `grep`. Extrair o JS para
 `tools/assets/` e referenciá-lo com `<script src>`.
-
-### `order-media-preview.php` recalcula o SHA-256 a cada pedido
-
-`hash_file('sha256', $filePath)` num PDF de 30 MB é lido por completo em **cada**
-pedido, incluindo cada pedido parcial com `Range` — um leitor de PDF que peça o
-ficheiro em 20 pedaços faz 20 hashes completos. Verificar o hash só quando não há
-cabeçalho `Range`: o objectivo é detectar corrupção do ficheiro guardado, não
-autenticar cada pedido.
 
 ### CSS: breakpoints, `!important` e selectores repetidos
 

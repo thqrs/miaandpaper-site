@@ -12,19 +12,28 @@
 
 declare(strict_types=0);
 
-// Aberto até ao deploy, nos mesmos termos da galeria, dos preços e do editor da
-// homepage. ⚠️ ANTES DO DEPLOY pôr a true.
-define('CARROUSEL_REQUIRE_ADMIN', false);
+// ADMIN_OPEN_DEV_V1 é a única configuração: em desenvolvimento pode abrir os
+// editores; com MIA_ADMIN_OPEN=false esta API exige sempre sessão de admin.
+require_once __DIR__ . '/admin-open.php';
+define('CARROUSEL_REQUIRE_ADMIN', !MIA_ADMIN_OPEN);
 
 require_once __DIR__ . '/lib/home-core.php';
+require_once __DIR__ . '/lib/pedido.php';   // COMANDOS_V1: a API tambem se chama de dentro
 
 const CARROUSEL_MAX_SLIDES = 12;
 
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store, no-cache, must-revalidate');
+// COMANDOS_V1: em modo embutido quem manda nos cabecalhos e a pagina que
+// incluiu esta API.
+if (!mp_modo_embutido()) {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+}
 
 function cr_responder($payload, $status = 200)
 {
+    if (mp_modo_embutido()) {
+        mp_responder_embutido($payload, $status);
+    }
     http_response_code($status);
     echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
@@ -32,6 +41,9 @@ function cr_responder($payload, $status = 200)
 
 function cr_erro($mensagem, $status = 400)
 {
+    if (mp_modo_embutido()) {
+        mp_responder_embutido(array('ok' => false, 'erro' => $mensagem), $status);
+    }
     cr_responder(array('ok' => false, 'erro' => $mensagem), $status);
 }
 
@@ -45,6 +57,14 @@ function cr_exigir_admin()
     }
     if (empty($_SESSION['miaandpaper_admin'])) {
         cr_erro('Precisas de sessão de administradora.', 403);
+    }
+}
+
+function cr_exigir_csrf()
+{
+    $sent = isset($_SERVER['HTTP_X_ADMIN_CSRF']) ? (string)$_SERVER['HTTP_X_ADMIN_CSRF'] : '';
+    if (!mp_admin_csrf_is_valid($sent)) {
+        cr_erro('Pedido bloqueado por CSRF. Recarrega o editor.', 403);
     }
 }
 
@@ -196,6 +216,7 @@ function cr_recolher()
         'cartoes' => $cartoes,
         'imagens' => cr_imagens_disponiveis(),
         'maxSlides' => CARROUSEL_MAX_SLIDES,
+        'csrf' => mp_admin_csrf_token(),
         'aberto' => !CARROUSEL_REQUIRE_ADMIN,
     );
 }
@@ -217,7 +238,7 @@ function &cr_categoria(&$data, $id, &$ok)
 
 function cr_gravar()
 {
-    $body = json_decode((string)file_get_contents('php://input'), true);
+    $body = mp_corpo_pedido();
     if (!is_array($body) || empty($body['alteracoes']) || !is_array($body['alteracoes'])) {
         cr_erro('Não há nada para gravar.');
     }
@@ -340,7 +361,18 @@ function cr_gravar()
 // ── Router ───────────────────────────────────────────────────────────────────
 
 cr_exigir_admin();
+// COMANDOS_V1: incluida so pelas funcoes. Sem router, sem guarda, sem resposta.
+if (mp_modo_embutido()) {
+    return;
+}
+
 $action = isset($_GET['action']) ? (string)$_GET['action'] : 'data';
+
+// PARAMETROS_V1: esquema desta API, na forma do manifesto geral.
+if ($action === 'parametros') {
+    require_once __DIR__ . '/lib/parametros.php';
+    cr_responder(array('ok' => true, 'recurso' => mp_parametros_manifesto_recurso('carrousel-api.php')));
+}
 
 if ($action === 'data') {
     cr_responder(cr_recolher());
@@ -350,6 +382,7 @@ if ($action === 'save') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         cr_erro('Usa POST para gravar.', 405);
     }
+    cr_exigir_csrf();
     cr_gravar();
 }
 

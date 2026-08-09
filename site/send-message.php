@@ -40,6 +40,11 @@ function clean_header($value)
     return trim(str_replace(array("\r", "\n"), '', (string)$value));
 }
 
+function text_length($value)
+{
+    return function_exists('mb_strlen') ? mb_strlen((string)$value, 'UTF-8') : strlen((string)$value);
+}
+
 function render_home_cards()
 {
     $path = __DIR__ . '/content/home.json';
@@ -197,14 +202,23 @@ $errors = array();
 if ($name === '') {
     $errors[] = 'Indica o teu nome.';
 }
+if (text_length($name) > 120) {
+    $errors[] = 'O nome deve ter no máximo 120 caracteres.';
+}
 if ($contact === '') {
     $errors[] = 'Indica um contacto.';
+}
+if (text_length($contact) > 160) {
+    $errors[] = 'O contacto deve ter no máximo 160 caracteres.';
 }
 if (!in_array($subjectType, $allowedSubjects, true)) {
     $errors[] = 'Escolhe um assunto válido.';
 }
 if ($message === '') {
     $errors[] = 'Escreve a mensagem.';
+}
+if (strlen($message) > 20000 || text_length($message) > 10000) {
+    $errors[] = 'A mensagem deve ter no máximo 10 000 caracteres.';
 }
 if ($sendCopy && !filter_var($contact, FILTER_VALIDATE_EMAIL)) {
     $errors[] = 'Para receberes uma cópia, o contacto tem de ser um email válido.';
@@ -218,7 +232,7 @@ if ($errors) {
 // não gastar quota. Ver mp_db_form_rate_limited() em lib/db.php.
 require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/lib/avisos.php';
-if (mp_db_form_rate_limited('contact', isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '', 5)) {
+if (mp_db_form_rate_limited('contact', mp_client_ip(), 5)) {
     mp_aviso('guardrail', 'contacto-ritmo', 'Travão do formulário de contacto', array_merge(
         array(
             'Alguém passou as 5 mensagens por hora e está a ser recusado.',

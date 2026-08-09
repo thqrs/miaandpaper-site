@@ -1,6 +1,5 @@
 <?php
 
-session_start();
 require_once __DIR__ . '/admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 if (empty($_SESSION['miaandpaper_admin'])) {
     http_response_code(403);
@@ -9,10 +8,7 @@ if (empty($_SESSION['miaandpaper_admin'])) {
 }
 
 require_once __DIR__ . '/lib/db.php';
-if (empty($_SESSION['mp_assisted_upload_csrf'])) {
-    $_SESSION['mp_assisted_upload_csrf'] = bin2hex(random_bytes(16));
-}
-$csrf = $_SESSION['mp_assisted_upload_csrf'];
+$csrf = mp_admin_csrf_token();
 
 if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $sent = isset($_POST['csrf']) ? (string)$_POST['csrf'] : '';

@@ -47,7 +47,12 @@ if (strlen(trim($customerName)) < 3 || strlen(trim($customerContact)) < 4) {
 
 require_once __DIR__ . '/lib/db.php';
 
-$ip = isset($_SERVER['REMOTE_ADDR']) ? (string)$_SERVER['REMOTE_ADDR'] : '';
+$ip = mp_client_ip();
+if (mp_db_form_rate_limited('open-order-check', $ip, 60)) {
+    header('Retry-After: 3600');
+    echo json_encode(array('has_possible_open_order' => false));
+    exit;
+}
 
 try {
     $row = mp_db_find_open_order($customerName, $customerContact, $ip);

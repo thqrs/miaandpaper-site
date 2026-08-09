@@ -34,6 +34,11 @@
 header('Content-Type: text/html; charset=utf-8');
 header('X-Robots-Tag: noindex, nofollow');
 
+// PARAMETROS_V1: a barra sai antes do snapshot, para os links não ficarem
+// congelados no HTML gravado. Ver lib/parametros.php.
+require_once __DIR__ . '/lib/parametros.php';
+echo mp_parametros_barra('modulos.php');
+
 require_once __DIR__ . '/lib/snapshot.php';
 mp_snapshot_start('modulos', array());
 
@@ -440,13 +445,6 @@ body.md-um-tema .md-tema--escuro { display: none; }
       dos produtos, em claro e escuro lado a lado. Descobertos a ler
       <code>content/products/*.json</code> e agrupados pelo <code>template</code>
       de cada passo — passo novo ou produto novo aparecem aqui sozinhos.
-    </p>
-    <p class="md-intro">
-      Para experimentar sem risco nenhum, há o
-      <a href="modulos-temp.html"><strong>sandbox</strong></a>: uma cópia estática
-      desta página, com o CSS e a marcação dentro do próprio ficheiro. Mexe-se à
-      vontade e o site não dá por nada. Esta página é a que está sempre certa;
-      a outra é a que se pode partir.
     </p>
     <ul class="md-stats">
       <li><strong><?= count($modulos) ?></strong>módulos</li>

@@ -9,14 +9,16 @@
 
 declare(strict_types=0);
 
-// Aberto até ao deploy, nos mesmos termos da galeria e dos preços.
-// ⚠️ ANTES DO DEPLOY pôr a true.
-define('HOMEPAGE_REQUIRE_ADMIN', false);
+// ADMIN_OPEN_DEV_V1 é a única configuração: em desenvolvimento pode abrir os
+// editores; com MIA_ADMIN_OPEN=false esta API exige sempre sessão de admin.
+require_once __DIR__ . '/admin-open.php';
+define('HOMEPAGE_REQUIRE_ADMIN', !MIA_ADMIN_OPEN);
 
 // HOME_CORE_V1: a leitura e a escrita do home.json vivem na lib, partilhadas
 // com o carrousel-api.php. Dois editores no mesmo ficheiro com duas cópias da
 // escrita atómica era o caminho certo para uma delas ficar para trás.
 require_once __DIR__ . '/lib/home-core.php';
+require_once __DIR__ . '/lib/pedido.php';   // COMANDOS_V1: a API tambem se chama de dentro
 
 const HOMEPAGE_FILE = HOME_FILE;
 
@@ -26,11 +28,18 @@ const HOMEPAGE_CAMPOS_TEXTO = array('title', 'menuTitle', 'subtitle', 'menuGroup
 const HOMEPAGE_CAMPOS_NUMERO = array('menuOrder', 'menuGroupOrder');
 const HOMEPAGE_CAMPOS_BOOL = array('available', 'clickable', 'carouselEnabled', 'menuHidden');
 
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store, no-cache, must-revalidate');
+// COMANDOS_V1: em modo embutido quem manda nos cabecalhos e a pagina que
+// incluiu esta API.
+if (!mp_modo_embutido()) {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+}
 
 function hm_responder($payload, $status = 200)
 {
+    if (mp_modo_embutido()) {
+        mp_responder_embutido($payload, $status);
+    }
     http_response_code($status);
     echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
@@ -38,6 +47,9 @@ function hm_responder($payload, $status = 200)
 
 function hm_erro($mensagem, $status = 400)
 {
+    if (mp_modo_embutido()) {
+        mp_responder_embutido(array('ok' => false, 'erro' => $mensagem), $status);
+    }
     hm_responder(array('ok' => false, 'erro' => $mensagem), $status);
 }
 
@@ -51,6 +63,14 @@ function hm_exigir_admin()
     }
     if (empty($_SESSION['miaandpaper_admin'])) {
         hm_erro('Precisas de sessão de administradora.', 403);
+    }
+}
+
+function hm_exigir_csrf()
+{
+    $sent = isset($_SERVER['HTTP_X_ADMIN_CSRF']) ? (string)$_SERVER['HTTP_X_ADMIN_CSRF'] : '';
+    if (!mp_admin_csrf_is_valid($sent)) {
+        hm_erro('Pedido bloqueado por CSRF. Recarrega o editor.', 403);
     }
 }
 
@@ -76,8 +96,8 @@ function hm_gravar($data, $revisaoEsperada)
 function hm_icones_disponiveis()
 {
     $nomes = array();
-    foreach ((array)glob(__DIR__ . '/content/brand/menu-icons/line-art/*.png') as $f) {
-        $nomes[] = basename($f, '.png');
+    foreach ((array)glob(__DIR__ . '/content/brand/menu-icons/line-art/*.webp') as $f) {
+        $nomes[] = basename($f, '.webp');
     }
     sort($nomes);
     return $nomes;
@@ -116,6 +136,7 @@ function hm_recolher()
     return array(
         'ok' => true,
         'revisao' => hash('sha256', $raw),
+        'csrf' => mp_admin_csrf_token(),
         'categorias' => $categorias,
         'seccoes' => hm_seccoes($data),
         'menuAccordion' => !empty($data['menuAccordion']),
@@ -215,7 +236,7 @@ function hm_seccao_refugio($seccoes)
 
 function hm_aplicar()
 {
-    $body = json_decode((string)file_get_contents('php://input'), true);
+    $body = mp_corpo_pedido();
     if (!is_array($body) || empty($body['alteracoes']) || !is_array($body['alteracoes'])) {
         hm_erro('Não há nada para gravar.');
     }
@@ -441,7 +462,18 @@ function hm_aplicar()
 // ── Router ───────────────────────────────────────────────────────────────────
 
 hm_exigir_admin();
+// COMANDOS_V1: incluida so pelas funcoes. Sem router, sem guarda, sem resposta.
+if (mp_modo_embutido()) {
+    return;
+}
+
 $action = isset($_GET['action']) ? (string)$_GET['action'] : 'data';
+
+// PARAMETROS_V1: esquema desta API, na forma do manifesto geral.
+if ($action === 'parametros') {
+    require_once __DIR__ . '/lib/parametros.php';
+    hm_responder(array('ok' => true, 'recurso' => mp_parametros_manifesto_recurso('homepage-menu-api.php')));
+}
 
 if ($action === 'data') {
     hm_responder(hm_recolher());
@@ -450,6 +482,7 @@ if ($action === 'save') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         hm_erro('Usa POST para gravar.', 405);
     }
+    hm_exigir_csrf();
     hm_aplicar();
 }
 hm_erro('Acção desconhecida.', 404);

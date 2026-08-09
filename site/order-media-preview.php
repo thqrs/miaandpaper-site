@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/lib/private-paths.php';
+require_once __DIR__ . '/lib/http-range.php';
 
 function order_media_preview_not_found()
 {
@@ -112,16 +113,13 @@ if (!empty($metadata['size']) && (int)@filesize($filePath) !== (int)$metadata['s
 
 $mime = $isPdf ? 'application/pdf' : $metadataMime;
 $size = (int)filesize($filePath);
-$start = 0;
-$end = max(0, $size - 1);
-
-if (isset($_SERVER['HTTP_RANGE']) && preg_match('/bytes=(\d*)-(\d*)/', (string)$_SERVER['HTTP_RANGE'], $matches)) {
-    if ($matches[1] !== '') {
-        $start = min($end, max(0, (int)$matches[1]));
-    }
-    if ($matches[2] !== '') {
-        $end = min($end, max($start, (int)$matches[2]));
-    }
+$range = mp_http_byte_range(isset($_SERVER['HTTP_RANGE']) ? $_SERVER['HTTP_RANGE'] : '', $size);
+if ($range === false) {
+    mp_http_reject_invalid_range($size);
+}
+$start = $range === null ? 0 : $range[0];
+$end = $range === null ? max(0, $size - 1) : $range[1];
+if ($range !== null) {
     http_response_code(206);
     header('Content-Range: bytes ' . $start . '-' . $end . '/' . $size);
 }

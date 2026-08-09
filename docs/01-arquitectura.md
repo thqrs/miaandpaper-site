@@ -64,8 +64,8 @@ Cinco páginas antigas são só `<meta http-equiv="refresh">`. Não têm design 
 | `quadros.html` | `molduras.html` |
 | `catalogo.html` | `catalogo/index.html` |
 
-Os JSON dos produtos que elas serviam estão em `content/products-legacy/`, que
-não é servido.
+Os JSON antigos que as serviam foram retirados da raiz pública. O historial
+continua disponível no Git.
 
 ---
 
@@ -82,7 +82,6 @@ site/
 │   ├── pricing.json           ⚠️ fonte central de preços
 │   ├── order-products.json    grelha do "adicionar outro produto"
 │   ├── products/<slug>.json   um por produto: passos, designs, preços
-│   ├── products-legacy/       versões antigas — não são servidas
 │   └── designs/               as imagens
 ├── send-order.php             ⚠️ recebe encomendas. A autoridade dos preços.
 ├── send-message.php           formulário de contacto

@@ -2,12 +2,10 @@
 
 // GALERIA_V1 — API da página galeria.html.
 //
-// ATENÇÃO: esta API está deliberadamente aberta ao público enquanto a galeria
-// é usada para carregar as fotos reais dos produtos. Quem souber o endereço
-// consegue trocar imagens e enviar ficheiros. Para fechar, muda a constante
-// abaixo para true — passa a exigir sessão de administradora, tal como o
-// admin-api.php.
-define('GALERIA_REQUIRE_ADMIN', false);
+// ADMIN_OPEN_DEV_V1 é a única configuração: em desenvolvimento pode abrir os
+// editores; com MIA_ADMIN_OPEN=false esta API exige sempre sessão de admin.
+require_once __DIR__ . '/admin-open.php';
+define('GALERIA_REQUIRE_ADMIN', !MIA_ADMIN_OPEN);
 
 define('GALERIA_ROOT', __DIR__);
 define('GALERIA_PRODUCT_DIR', __DIR__ . '/content/products');
@@ -25,6 +23,8 @@ define('GALERIA_DIMENSION_CACHE', __DIR__ . '/content/.galeria-dimensoes.json');
 $GALERIA_LIBRARY_DIRS = array('content/designs', 'content/uploads', 'content/brand');
 $GALERIA_IMAGE_EXTENSIONS = array('jpg', 'jpeg', 'png', 'webp', 'gif', 'avif');
 
+require_once __DIR__ . '/lib/pedido.php';   // COMANDOS_V1: a API tambem se chama de dentro
+
 function galeria_status($code)
 {
     if (function_exists('http_response_code')) {
@@ -36,6 +36,9 @@ function galeria_status($code)
 
 function galeria_respond($code, $payload)
 {
+    if (mp_modo_embutido()) {
+        mp_responder_embutido($payload, $code);
+    }
     galeria_status($code);
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -495,7 +498,7 @@ function galeria_extra_usage()
     foreach (glob(GALERIA_ROOT . '/content/*.json') as $file) {
         $name = basename($file);
         if ($name === 'home.json') {
-            continue; // Ã‰ uma entrada editÃ¡vel da galeria, nÃ£o um uso externo.
+            continue; // É uma entrada editável da galeria, não um uso externo.
         }
         $decoded = json_decode((string)file_get_contents($file), true);
         if (!is_array($decoded)) {
@@ -636,13 +639,100 @@ function galeria_add_big_image_usage(&$usage, $inventory)
 
 function galeria_payload()
 {
-    $raw = file_get_contents('php://input');
-    $data = json_decode((string)$raw, true);
+    $data = mp_corpo_pedido();
 
     return is_array($data) ? $data : array();
 }
 
+// COMANDOS_V1: a gravacao de uma entrada vive numa funcao para o comando.php
+// a poder chamar sem passar por HTTP. O router continua a ser o unico caminho
+// publico, e a validacao e exactamente a mesma nos dois casos.
+function galeria_gravar_entrada(array $payload)
+{
+    $key = isset($payload['key']) ? (string)$payload['key'] : '';
+    $slug = isset($payload['slug']) ? (string)$payload['slug'] : '';
+    $product = isset($payload['product']) && is_array($payload['product']) ? $payload['product'] : null;
+    $revision = isset($payload['revision']) ? strtolower((string)$payload['revision']) : '';
+    $isHome = $key === 'home' || ($key === '' && $slug === 'home');
+    $parsed = $isHome ? array('context' => 'principal', 'slug' => 'home') : galeria_parse_entry_key($key, $slug);
+    $actualSlug = $parsed ? $parsed['slug'] : '';
+    $path = galeria_entry_path($key, $slug);
+
+    if (!$path || !$product) {
+        galeria_respond(400, array('ok' => false, 'message' => 'Conteúdo desconhecido.'));
+    }
+    if (!$isHome && (!isset($product['slug']) || (string)$product['slug'] !== $actualSlug)) {
+        galeria_respond(400, array('ok' => false, 'message' => 'O slug do produto não corresponde ao ficheiro.'));
+    }
+    if (!$isHome && (empty($product['steps']) || !is_array($product['steps']))) {
+        galeria_respond(400, array('ok' => false, 'message' => 'O produto não tem passos — recusei gravar.'));
+    }
+    if ($isHome && (empty($product['categories']) || !is_array($product['categories']) || empty($product['hero']) || !is_array($product['hero']))) {
+        galeria_respond(400, array('ok' => false, 'message' => 'A homepage não tem a estrutura esperada — recusei gravar.'));
+    }
+    if (!preg_match('/^[a-f0-9]{64}$/', $revision)) {
+        galeria_respond(400, array('ok' => false, 'message' => 'Falta a revisão do produto. Recarrega a galeria.'));
+    }
+
+    $encoded = json_encode($product, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    if ($encoded === false) {
+        galeria_respond(500, array('ok' => false, 'message' => 'Não consegui codificar o JSON.'));
+    }
+
+    $next = $encoded . "\n";
+    $handle = @fopen($path, 'r+b');
+    if (!$handle || !@flock($handle, LOCK_EX)) {
+        if ($handle) { fclose($handle); }
+        galeria_respond(500, array('ok' => false, 'message' => 'Não consegui bloquear o ficheiro do produto.'));
+    }
+    rewind($handle);
+    $current = stream_get_contents($handle);
+    if (!hash_equals(hash('sha256', (string)$current), $revision)) {
+        @flock($handle, LOCK_UN);
+        fclose($handle);
+        galeria_respond(409, array(
+            'ok' => false,
+            'message' => 'Este produto foi alterado noutro separador. Recarrega a galeria antes de guardar.',
+        ));
+    }
+
+    // A cópia de segurança é obrigatória: se falhar, o original não é tocado.
+    if (@file_put_contents($path . '.galeria-bak', (string)$current, LOCK_EX) === false) {
+        @flock($handle, LOCK_UN);
+        fclose($handle);
+        galeria_respond(500, array('ok' => false, 'message' => 'Não consegui criar a cópia de segurança. Não gravei o produto.'));
+    }
+
+    if (!galeria_stream_replace($handle, $next)) {
+        galeria_stream_replace($handle, (string)$current);
+        @flock($handle, LOCK_UN);
+        fclose($handle);
+        galeria_respond(500, array('ok' => false, 'message' => 'Não consegui gravar o ficheiro do produto.'));
+    }
+    @flock($handle, LOCK_UN);
+    fclose($handle);
+
+    galeria_respond(200, array(
+        'ok' => true,
+        'key' => $isHome ? 'home' : galeria_entry_key($parsed['context'], $actualSlug),
+        'slug' => $actualSlug,
+        'revision' => hash('sha256', $next),
+    ));
+}
+
+// COMANDOS_V1: incluida so pelas funcoes. Sem router, sem guarda, sem resposta.
+if (mp_modo_embutido()) {
+    return;
+}
+
 $action = isset($_GET['action']) ? (string)$_GET['action'] : '';
+
+// PARAMETROS_V1: esquema desta API, na forma do manifesto geral.
+if ($action === 'parametros') {
+    galeria_guard();
+    require_once __DIR__ . '/lib/parametros.php';
+    galeria_respond(200, array('ok' => true, 'recurso' => mp_parametros_manifesto_recurso('galeria-api.php')));
+}
 
 if ($action === 'done') {
     galeria_guard();
@@ -741,6 +831,7 @@ if ($action === 'data') {
 }
 
 if ($action === 'upload') {
+    galeria_guard(false);
     galeria_require_post();
     galeria_guard(true);
 
@@ -830,82 +921,14 @@ if ($action === 'upload') {
 }
 
 if ($action === 'save') {
+    galeria_guard(false);
     galeria_require_post();
     galeria_guard(true);
-
-    $payload = galeria_payload();
-    $key = isset($payload['key']) ? (string)$payload['key'] : '';
-    $slug = isset($payload['slug']) ? (string)$payload['slug'] : '';
-    $product = isset($payload['product']) && is_array($payload['product']) ? $payload['product'] : null;
-    $revision = isset($payload['revision']) ? strtolower((string)$payload['revision']) : '';
-    $isHome = $key === 'home' || ($key === '' && $slug === 'home');
-    $parsed = $isHome ? array('context' => 'principal', 'slug' => 'home') : galeria_parse_entry_key($key, $slug);
-    $actualSlug = $parsed ? $parsed['slug'] : '';
-    $path = galeria_entry_path($key, $slug);
-
-    if (!$path || !$product) {
-        galeria_respond(400, array('ok' => false, 'message' => 'Conteúdo desconhecido.'));
-    }
-    if (!$isHome && (!isset($product['slug']) || (string)$product['slug'] !== $actualSlug)) {
-        galeria_respond(400, array('ok' => false, 'message' => 'O slug do produto não corresponde ao ficheiro.'));
-    }
-    if (!$isHome && (empty($product['steps']) || !is_array($product['steps']))) {
-        galeria_respond(400, array('ok' => false, 'message' => 'O produto não tem passos — recusei gravar.'));
-    }
-    if ($isHome && (empty($product['categories']) || !is_array($product['categories']) || empty($product['hero']) || !is_array($product['hero']))) {
-        galeria_respond(400, array('ok' => false, 'message' => 'A homepage não tem a estrutura esperada — recusei gravar.'));
-    }
-    if (!preg_match('/^[a-f0-9]{64}$/', $revision)) {
-        galeria_respond(400, array('ok' => false, 'message' => 'Falta a revisão do produto. Recarrega a galeria.'));
-    }
-
-    $encoded = json_encode($product, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-    if ($encoded === false) {
-        galeria_respond(500, array('ok' => false, 'message' => 'Não consegui codificar o JSON.'));
-    }
-
-    $next = $encoded . "\n";
-    $handle = @fopen($path, 'r+b');
-    if (!$handle || !@flock($handle, LOCK_EX)) {
-        if ($handle) { fclose($handle); }
-        galeria_respond(500, array('ok' => false, 'message' => 'Não consegui bloquear o ficheiro do produto.'));
-    }
-    rewind($handle);
-    $current = stream_get_contents($handle);
-    if (!hash_equals(hash('sha256', (string)$current), $revision)) {
-        @flock($handle, LOCK_UN);
-        fclose($handle);
-        galeria_respond(409, array(
-            'ok' => false,
-            'message' => 'Este produto foi alterado noutro separador. Recarrega a galeria antes de guardar.',
-        ));
-    }
-
-    // A cópia de segurança é obrigatória: se falhar, o original não é tocado.
-    if (@file_put_contents($path . '.galeria-bak', (string)$current, LOCK_EX) === false) {
-        @flock($handle, LOCK_UN);
-        fclose($handle);
-        galeria_respond(500, array('ok' => false, 'message' => 'Não consegui criar a cópia de segurança. Não gravei o produto.'));
-    }
-
-    if (!galeria_stream_replace($handle, $next)) {
-        galeria_stream_replace($handle, (string)$current);
-        @flock($handle, LOCK_UN);
-        fclose($handle);
-        galeria_respond(500, array('ok' => false, 'message' => 'Não consegui gravar o ficheiro do produto.'));
-    }
-    @flock($handle, LOCK_UN);
-    fclose($handle);
-
-    galeria_respond(200, array(
-        'ok' => true,
-        'key' => $isHome ? 'home' : galeria_entry_key($parsed['context'], $actualSlug),
-        'slug' => $actualSlug,
-        'revision' => hash('sha256', $next),
-    ));
+    galeria_gravar_entrada(galeria_payload());
 }
 
 if ($action === 'save-done') {
+    galeria_guard(false);
     galeria_require_post();
     galeria_guard(true);
 

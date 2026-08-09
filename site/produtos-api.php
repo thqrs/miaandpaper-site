@@ -169,6 +169,12 @@ function produtos_home_source($id, $label, $file, $page)
 produtos_guard();
 $action = isset($_GET['action']) ? (string)$_GET['action'] : 'data';
 
+// PARAMETROS_V1: esquema desta API, na forma do manifesto geral.
+if ($action === 'parametros') {
+    require_once __DIR__ . '/lib/parametros.php';
+    produtos_respond(200, array('ok' => true, 'recurso' => mp_parametros_manifesto_recurso('produtos-api.php')));
+}
+
 if ($action === 'gallery-state') {
     produtos_respond(200, array('ok' => true, 'done' => produtos_gallery_done()));
 }

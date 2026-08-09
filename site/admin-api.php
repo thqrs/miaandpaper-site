@@ -1,9 +1,10 @@
 <?php
 
-session_start();
 require_once __DIR__ . '/admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 
 require_once __DIR__ . '/lib/private-paths.php';
+require_once __DIR__ . '/lib/client-ip.php';
+require_once __DIR__ . '/lib/home-core.php';
 
 $configPath = mp_private_admin_config_path();
 
@@ -31,6 +32,7 @@ function admin_set_status($code)
         404 => 'Not Found',
         405 => 'Method Not Allowed',
         413 => 'Payload Too Large',
+        429 => 'Too Many Requests',
         500 => 'Internal Server Error',
         503 => 'Service Unavailable',
     );
@@ -203,10 +205,7 @@ function admin_require_post()
  */
 function admin_csrf_token()
 {
-    if (empty($_SESSION['miaandpaper_admin_csrf'])) {
-        $_SESSION['miaandpaper_admin_csrf'] = bin2hex(random_bytes(16));
-    }
-    return $_SESSION['miaandpaper_admin_csrf'];
+    return mp_admin_csrf_token();
 }
 
 function admin_require_csrf()
@@ -219,7 +218,7 @@ function admin_require_csrf()
     if ($sent === '' && isset($_POST['csrf'])) {
         $sent = (string)$_POST['csrf'];
     }
-    if ($sent === '' || !hash_equals($expected, $sent)) {
+    if (!mp_admin_csrf_is_valid($sent)) {
         admin_respond(403, array(
             'ok' => false,
             'message' => 'Pedido bloqueado por CSRF. Recarrega a página de admin.',
@@ -270,10 +269,67 @@ function admin_private_dir()
  * como fallback para o caso da base não estar disponível. Nunca grava a
  * palavra-passe correta. Falha silenciosa em ambos os caminhos.
  */
-function admin_log_login_attempt($enteredPassword, $isEmpty)
+function admin_scrub_legacy_login_log()
+{
+    $dir = admin_private_dir();
+    if ($dir === null) {
+        return;
+    }
+    $logPath = $dir . '/admin-login-attempts.txt';
+    $raw = @file_get_contents($logPath);
+    if ($raw === false || $raw === '') {
+        return;
+    }
+    $changed = false;
+    $lines = preg_split('/\r\n|\r|\n/', $raw);
+    foreach ($lines as $index => $line) {
+        if ($line === '') {
+            continue;
+        }
+        $parts = explode("\t", $line);
+        if (count($parts) >= 6 && $parts[4] !== '[redacted]') {
+            $parts[4] = '[redacted]';
+            $lines[$index] = implode("\t", $parts);
+            $changed = true;
+        }
+    }
+    if ($changed) {
+        $tmp = $logPath . '.scrub-tmp';
+        $clean = rtrim(implode(PHP_EOL, $lines)) . PHP_EOL;
+        if (@file_put_contents($tmp, $clean, LOCK_EX) === strlen($clean)) {
+            @chmod($tmp, 0600);
+            if (!@rename($tmp, $logPath)) {
+                @unlink($tmp);
+            }
+        } else {
+            @unlink($tmp);
+        }
+    }
+}
+
+function admin_login_rate_limited($ip, $limit = 8, $windowSeconds = 900)
+{
+    $ip = mp_client_ip_normalize($ip);
+    if ($ip === '') {
+        return false;
+    }
+    try {
+        require_once __DIR__ . '/lib/db.php';
+        $stmt = mp_db()->prepare(
+            'SELECT COUNT(*) FROM admin_login_attempts WHERE ip_number = ? AND created_at >= ?'
+        );
+        $stmt->execute(array($ip, gmdate('Y-m-d\TH:i:s\Z', time() - max(60, (int)$windowSeconds))));
+        return (int)$stmt->fetchColumn() >= max(1, (int)$limit);
+    } catch (Exception $error) {
+        @error_log('[miaandpaper] verificacao do limite de login falhou: ' . $error->getMessage());
+        return false;
+    }
+}
+
+function admin_log_login_attempt($isEmpty)
 {
     $timestamp = gmdate('Y-m-d\TH:i:s\Z');
-    $ip = isset($_SERVER['REMOTE_ADDR']) ? (string)$_SERVER['REMOTE_ADDR'] : '';
+    $ip = mp_client_ip();
     $ua = isset($_SERVER['HTTP_USER_AGENT']) ? (string)$_SERVER['HTTP_USER_AGENT'] : '';
     $attemptType = $isEmpty ? 'EMPTY' : 'WRONG';
 
@@ -288,8 +344,6 @@ function admin_log_login_attempt($enteredPassword, $isEmpty)
 
     $cleanIp = $sanitize($ip);
     $cleanUa = $sanitize($ua);
-    $cleanPwd = $sanitize($enteredPassword);
-
     // 1) Tenta SQLite (fonte principal).
     $sqliteOk = false;
     $dbPath = __DIR__ . '/lib/db.php';
@@ -301,7 +355,7 @@ function admin_log_login_attempt($enteredPassword, $isEmpty)
                 'ip_number'    => $cleanIp,
                 'user_agent'   => $cleanUa,
                 'attempt_type' => $attemptType,
-                'input_text'   => $cleanPwd,
+                'input_text'   => null,
             ));
             $sqliteOk = ($id !== false);
         } catch (Exception $e) {
@@ -309,7 +363,8 @@ function admin_log_login_attempt($enteredPassword, $isEmpty)
         }
     }
 
-    // 2) Fallback .txt (sempre, para auditoria redundante simples).
+    // 2) Fallback .txt sem guardar o que foi escrito no campo da password.
+    admin_scrub_legacy_login_log();
     $dir = admin_private_dir();
     if ($dir !== null) {
         $logPath = $dir . '/admin-login-attempts.txt';
@@ -318,7 +373,7 @@ function admin_log_login_attempt($enteredPassword, $isEmpty)
             $cleanIp,
             $cleanUa,
             $attemptType,
-            $cleanPwd,
+            '[redacted]',
             $sqliteOk ? 'sqlite=ok' : 'sqlite=fail',
         )) . PHP_EOL;
         $written = @file_put_contents($logPath, $line, FILE_APPEND | LOCK_EX);
@@ -626,15 +681,86 @@ function admin_process_item_image_field(&$item, $slug, $field)
 
     $filename = $slug . '-' . $itemId . $fieldSuffix . '-' . substr(sha1($data), 0, 12) . '.webp';
 
-    if (!admin_write_webp_image($data, MIAANDPAPER_UPLOAD_DIR . '/' . $filename, $ext)) {
+    $finalPath = MIAANDPAPER_UPLOAD_DIR . '/' . $filename;
+    $alreadyExisted = is_file($finalPath);
+    if (!admin_write_webp_image($data, $finalPath, $ext)) {
         admin_respond(500, array(
             'ok' => false,
             'message' => 'Nao foi possivel converter e guardar uma imagem em WebP.',
         ));
     }
 
-    chmod(MIAANDPAPER_UPLOAD_DIR . '/' . $filename, 0644);
+    if (!$alreadyExisted) {
+        admin_track_pending_image($finalPath);
+    }
+
+    chmod($finalPath, 0644);
     $item[$field] = MIAANDPAPER_UPLOAD_PREFIX . $filename;
+}
+
+function admin_track_pending_image($path)
+{
+    if (!isset($GLOBALS['admin_pending_images']) || !is_array($GLOBALS['admin_pending_images'])) {
+        $GLOBALS['admin_pending_images'] = array();
+        register_shutdown_function(function () {
+            foreach ((array)(isset($GLOBALS['admin_pending_images']) ? $GLOBALS['admin_pending_images'] : array()) as $pending) {
+                if (is_string($pending) && is_file($pending)) {
+                    @unlink($pending);
+                }
+            }
+        });
+    }
+    $GLOBALS['admin_pending_images'][$path] = $path;
+}
+
+function admin_commit_pending_images()
+{
+    $GLOBALS['admin_pending_images'] = array();
+}
+
+function admin_preserve_central_pricing_fields(&$product, $existingProduct)
+{
+    if (!is_array($existingProduct)) {
+        return;
+    }
+
+    $fields = array(
+        'prices', 'pricingMode', 'pricingModeByPriceKey',
+        'quantityPricingSwitchByPriceKey', 'allowUnitDiscounts',
+        'combinationTieBreakByPriceKey', 'defaultPriceKey',
+        'deliveryOptions'
+    );
+    foreach ($fields as $field) {
+        if (array_key_exists($field, $existingProduct)) {
+            $product[$field] = $existingProduct[$field];
+        } else {
+            unset($product[$field]);
+        }
+    }
+
+    $oldPack = null;
+    foreach ((array)(isset($existingProduct['steps']) ? $existingProduct['steps'] : array()) as $step) {
+        if (is_array($step) && isset($step['id']) && $step['id'] === 'pack') {
+            $oldPack = $step;
+            break;
+        }
+    }
+    if ($oldPack === null || empty($product['steps']) || !is_array($product['steps'])) {
+        return;
+    }
+    foreach ($product['steps'] as $index => $step) {
+        if (!is_array($step) || !isset($step['id']) || $step['id'] !== 'pack') {
+            continue;
+        }
+        foreach (array('items', 'pricingMode', 'allowUnitDiscounts') as $field) {
+            if (array_key_exists($field, $oldPack)) {
+                $product['steps'][$index][$field] = $oldPack[$field];
+            } else {
+                unset($product['steps'][$index][$field]);
+            }
+        }
+        break;
+    }
 }
 
 function admin_process_item_image(&$item, $slug)
@@ -730,6 +856,7 @@ function admin_process_home_images(&$home)
 
 function admin_write_product($product, $force = false)
 {
+    unset($product['_backup_created']);
     $slug = isset($product['slug']) ? admin_safe_slug($product['slug']) : '';
     $path = '';
     $tmp = '';
@@ -756,6 +883,10 @@ function admin_write_product($product, $force = false)
     $existingJson = @file_get_contents($path);
     $existingProduct = is_string($existingJson) ? json_decode($existingJson, true) : null;
 
+    // O precos.php é a única autoridade destes campos. Um separador antigo
+    // do editor geral nunca pode repor preços, packs ou portes desactualizados.
+    admin_preserve_central_pricing_fields($product, $existingProduct);
+
     $validation = admin_validate_product_save($product, $slug, is_array($existingProduct) ? $existingProduct : null, $force);
     if (empty($validation['ok'])) {
         $code = isset($validation['code']) && $validation['code'] === 'partial_payload' ? 409 : 400;
@@ -767,9 +898,13 @@ function admin_write_product($product, $force = false)
         ));
     }
 
-    // Backup antes de qualquer escrita destrutiva. Não-bloqueante se falhar
-    // (regista no error_log); preferimos avisar a perder uma alteração.
     $backupPath = admin_backup_product_file($slug, $path);
+    if (!is_string($backupPath)) {
+        admin_respond(500, array(
+            'ok' => false,
+            'message' => 'Não foi possível criar a cópia de segurança do produto. Nada foi alterado.',
+        ));
+    }
 
     admin_process_product_images($product, $slug);
 
@@ -802,6 +937,7 @@ function admin_write_product($product, $force = false)
     }
 
     chmod($path, 0644);
+    admin_commit_pending_images();
 
     // Anexa metadata do backup para o cliente, caso queira mostrar.
     if (is_string($backupPath)) {
@@ -865,12 +1001,8 @@ function admin_write_pricing($pricing)
     return $pricing;
 }
 
-function admin_write_home($home)
+function admin_write_home($home, $revision)
 {
-    $tmp = '';
-    $json = '';
-    $options = admin_json_options();
-
     if (empty($home['brand']) || empty($home['categories']) || !is_array($home['categories'])) {
         admin_respond(400, array(
             'ok' => false,
@@ -878,37 +1010,15 @@ function admin_write_home($home)
         ));
     }
 
-    if (defined('JSON_PRETTY_PRINT')) {
-        $options |= JSON_PRETTY_PRINT;
-    }
-
     admin_process_home_images($home);
-
-    $json = json_encode($home, $options);
-    if ($json === false) {
-        admin_respond(400, array(
+    $error = home_gravar($home, (string)$revision, '.admin-home-bak');
+    if ($error !== '') {
+        admin_respond(strpos($error, 'noutro separador') !== false ? 409 : 500, array(
             'ok' => false,
-            'message' => 'Nao foi possivel converter a homepage para JSON.',
+            'message' => $error,
         ));
     }
-
-    $tmp = MIAANDPAPER_HOME_FILE . '.tmp.' . getmypid();
-    if (file_put_contents($tmp, $json . "\n", LOCK_EX) === false) {
-        admin_respond(500, array(
-            'ok' => false,
-            'message' => 'Nao foi possivel escrever o JSON da homepage.',
-        ));
-    }
-
-    if (!rename($tmp, MIAANDPAPER_HOME_FILE)) {
-        @unlink($tmp);
-        admin_respond(500, array(
-            'ok' => false,
-            'message' => 'Nao foi possivel substituir o JSON da homepage.',
-        ));
-    }
-
-    chmod(MIAANDPAPER_HOME_FILE, 0644);
+    admin_commit_pending_images();
 
     return $home;
 }
@@ -1049,7 +1159,18 @@ function admin_write_offers($offers)
 
 $action = isset($_GET['action']) ? (string)$_GET['action'] : '';
 
+// PARAMETROS_V1: esquema desta API, na forma do manifesto geral. Ao contrário
+// de `status`, exige sessão: a lista de acções descreve a estrutura interna.
+if ($action === 'parametros') {
+    if (!admin_is_logged_in()) {
+        admin_respond(403, array('ok' => false, 'message' => 'Sessão de administração necessária.'));
+    }
+    require_once __DIR__ . '/lib/parametros.php';
+    admin_respond(200, array('ok' => true, 'recurso' => mp_parametros_manifesto_recurso('admin-api.php')));
+}
+
 if ($action === 'status') {
+    admin_scrub_legacy_login_log();
     $syncFlag = admin_sync_flag();
     $ipInfo = admin_current_ip_info();
     $payload = array(
@@ -1059,6 +1180,11 @@ if ($action === 'status') {
         'syncNeeded' => !empty($syncFlag['needed']),
         'csrf' => admin_csrf_token(),
     );
+
+    if (admin_is_logged_in()) {
+        $homeRaw = @file_get_contents(MIAANDPAPER_HOME_FILE);
+        $payload['homeRevision'] = $homeRaw === false ? '' : home_revisao($homeRaw);
+    }
 
     if (is_array($ipInfo)) {
         $payload['adminIp'] = $ipInfo['ip'];
@@ -1081,12 +1207,20 @@ if ($action === 'login') {
     // Ao mudar MIA_ADMIN_OPEN para false, o fluxo seguro abaixo volta a ser o
     // único caminho de autenticação.
     if (defined('MIA_ADMIN_OPEN') && MIA_ADMIN_OPEN) {
-        $_SESSION['miaandpaper_admin'] = true;
-        $_SESSION['miaandpaper_admin_csrf'] = bin2hex(random_bytes(16));
+        mp_admin_authenticate_session();
         admin_respond(200, array(
             'ok' => true,
             'loggedIn' => true,
             'csrf' => admin_csrf_token(),
+        ));
+    }
+
+    $loginIp = mp_client_ip();
+    if (admin_login_rate_limited($loginIp)) {
+        header('Retry-After: 900');
+        admin_respond(429, array(
+            'ok' => false,
+            'message' => 'Houve demasiadas tentativas. Espera 15 minutos antes de voltar a tentar.',
         ));
     }
 
@@ -1098,9 +1232,7 @@ if ($action === 'login') {
         && password_verify($password, admin_password_hash_from_config());
 
     if ($passwordOk) {
-        $_SESSION['miaandpaper_admin'] = true;
-        // Roda o token CSRF ao login para evitar fixation.
-        $_SESSION['miaandpaper_admin_csrf'] = bin2hex(random_bytes(16));
+        mp_admin_authenticate_session();
         admin_respond(200, array(
             'ok' => true,
             'loggedIn' => true,
@@ -1109,7 +1241,7 @@ if ($action === 'login') {
     }
 
     // Tentativa errada/vazia → registar e devolver mensagem PT-PT distinta.
-    admin_log_login_attempt($passwordTrimmed, $isEmpty);
+    admin_log_login_attempt($isEmpty);
 
     if ($isEmpty) {
         admin_respond(403, array(
@@ -1129,9 +1261,7 @@ if ($action === 'logout') {
     if (admin_is_logged_in()) {
         admin_require_csrf();
     }
-    $_SESSION['miaandpaper_admin'] = false;
-    unset($_SESSION['miaandpaper_admin']);
-    unset($_SESSION['miaandpaper_admin_csrf']);
+    mp_admin_logout_session();
     admin_respond(200, array(
         'ok' => true,
         'loggedIn' => false,
@@ -1289,18 +1419,11 @@ if ($action === 'save-product') {
 
     $force = isset($payload['force']) && $payload['force'] === true;
     $product = admin_write_product($payload['product'], $force);
-    $pricing = null;
-
-    if (!empty($payload['pricing']) && is_array($payload['pricing'])) {
-        $pricing = admin_write_pricing($payload['pricing']);
-    }
-
     $syncFlagCreated = admin_mark_sync_needed(isset($product['slug']) ? $product['slug'] : 'unknown');
 
     admin_respond(200, array(
         'ok' => true,
         'product' => $product,
-        'pricing' => $pricing,
         'syncNeeded' => true,
         'syncFlagCreated' => $syncFlagCreated,
     ));
@@ -1318,13 +1441,21 @@ if ($action === 'save-home') {
             'message' => 'Falta a homepage para guardar.',
         ));
     }
+    if (empty($payload['revision']) || !is_string($payload['revision'])) {
+        admin_respond(409, array(
+            'ok' => false,
+            'message' => 'Falta a revisão da homepage. Recarrega antes de gravar.',
+        ));
+    }
 
-    $home = admin_write_home($payload['home']);
+    $home = admin_write_home($payload['home'], $payload['revision']);
+    $homeRaw = @file_get_contents(MIAANDPAPER_HOME_FILE);
     $syncFlagCreated = admin_mark_sync_needed('home');
 
     admin_respond(200, array(
         'ok' => true,
         'home' => $home,
+        'homeRevision' => $homeRaw === false ? '' : home_revisao($homeRaw),
         'syncNeeded' => true,
         'syncFlagCreated' => $syncFlagCreated,
     ));

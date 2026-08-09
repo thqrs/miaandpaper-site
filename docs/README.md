@@ -17,8 +17,11 @@ está a ficar desactualizado.
 | 08 | [Deploy e ambiente](08-deploy-e-ambiente.md) | correr localmente, publicar, SEO |
 | 09 | [Pendentes](09-pendentes.md) | o que falta fazer e decidir |
 | 10 | [Editores de admin](10-editores-admin.md) | `precos.php` e `homepage-menu-design.php`; a personalização |
+| 11 | [Parâmetros de URL](11-parametros-de-url.md) | tudo o que muda numa página através da query string |
 
 ## Histórico
+
+- [Auditoria de 2026-08-09 — pontos por resolver](historico/2026-08-09-auditoria-pendentes.md)
 
 [`historico/`](historico/) tem os relatórios datados, tal como foram escritos.
 São o registo de como se chegou aqui e o método de verificação — **não** são

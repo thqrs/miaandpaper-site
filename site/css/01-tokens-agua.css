@@ -37,7 +37,7 @@
   --hero-action-bg: rgba(35, 28, 17, 0.46);
   --hero-action-shadow: 0 10px 24px rgba(20, 15, 8, 0.2);
   /* STYLE_TOKENS_V1 â€” superfÃ­cies cremes uniformes para reduzir variantes
-     de amarelo. Ver log_css_mods.txt para histÃ³rico de substituiÃ§Ãµes.
+     de amarelo. O historial relevante fica no controlo de versões.
        --surface-cream         â†’ wrapper geral (dc-block, banners discretos)
        --surface-cream-soft    â†’ caixas com mais Ãªnfase (price-panel)
        --surface-cream-strong  â†’ caixas com saturaÃ§Ã£o extra (resumos)
@@ -244,4 +244,3 @@ button {
   line-height: 1.1;
   transition: opacity 0.3s ease;
 }
-

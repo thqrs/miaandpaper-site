@@ -14,7 +14,6 @@
  * Sem novas regras de segurança: usa o mesmo session check de admin-funnel.php.
  */
 
-session_start();
 require_once __DIR__ . '/admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 
 if (empty($_SESSION['miaandpaper_admin'])) {
@@ -172,17 +171,15 @@ function lr_normalize_events_product_context(&$events) {
 // ------------------------------------------------------------------
 // Date range / period selection
 // ------------------------------------------------------------------
+// PARAMETROS_V1: períodos e vistas vêm do registo em lib/parametros.php, que é
+// também o que alimenta a barra de links e o manifesto.
+require_once __DIR__ . '/lib/parametros.php';
+
 $period = isset($_GET['period']) ? (string)$_GET['period'] : 'today';
 $dashboardView = isset($_GET['view']) ? (string)$_GET['view'] : 'metro';
-if (!in_array($dashboardView, array('metro', 'teia'), true)) $dashboardView = 'metro';
-$periodLabels = array(
-    'today'  => 'hoje',
-    'yesterday' => 'ontem',
-    '7d'     => 'últimos 7 dias',
-    '30d'    => 'últimos 30 dias',
-    '90d'    => 'últimos 90 dias',
-    'custom' => 'intervalo personalizado',
-);
+$viewLabels = mp_parametros_valores('admin-live-dashboard.php', 'view');
+if (!isset($viewLabels[$dashboardView])) $dashboardView = 'metro';
+$periodLabels = mp_parametros_valores('admin-live-dashboard.php', 'period');
 if (!isset($periodLabels[$period])) $period = 'today';
 
 $todayUtc = gmdate('Y-m-d');
@@ -201,6 +198,15 @@ switch ($period) {
     case 'custom':    $startDate = $customStart; $endDate = $customEnd; break;
     default:          $startDate = $todayUtc; $endDate = $todayUtc; break;
 }
+
+// O tipo de conteúdo é declarado aqui, antes de sair um único byte: a barra
+// de parâmetros e a do snapshot já são saída, e depois delas nenhum header()
+// pega.
+header('Content-Type: text/html; charset=utf-8');
+
+// A barra de parâmetros sai ANTES do snapshot: os links dependem do URL deste
+// pedido, e um snapshot congelado devolveria os links do pedido que o gravou.
+echo mp_parametros_barra('admin-live-dashboard.php');
 
 // SNAPSHOT_V1: daqui para baixo a página lê e agrega todos os eventos do
 // período. Se houver snapshot para esta combinação de período e vista, é
@@ -1514,7 +1520,6 @@ $teiaPayload = array(
     'meta' => $replayPayload['meta'],
 );
 
-header('Content-Type: text/html; charset=utf-8');
 ?>
 <!doctype html>
 <html lang="pt-PT">
@@ -2260,8 +2265,8 @@ $lrPayloadActivo = $dashboardView === 'teia' ? $teiaPayload : $replayPayload;
 </script>
 
 <?php if (!empty($mapPoints)): ?>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="" defer></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" defer></script>
 <?php endif; ?>
 
 <script>

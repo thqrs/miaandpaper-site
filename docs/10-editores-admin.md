@@ -5,7 +5,7 @@ escuro próprio (não usam os tokens da marca, de propósito — são ferramenta
 Save e Undo, e **nada toca no site antes do Save**.
 
 Ambas estão **abertas sem autenticação** até ao deploy, como a galeria. Fechar
-com `PRECOS_REQUIRE_ADMIN` e `HOMEPAGE_REQUIRE_ADMIN`.
+com `MIA_ADMIN_OPEN=false` em `site/admin-open.php`.
 
 | página | edita | ver |
 |---|---|---|

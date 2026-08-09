@@ -31,7 +31,7 @@ if (is_dir($absoluteDir)) {
                 continue;
             }
 
-            if (!preg_match('/\.jpe?g$/i', $file)) {
+            if (!preg_match('/\.(?:jpe?g|webp)$/i', $file)) {
                 continue;
             }
 

@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/lib/private-paths.php';
+require_once __DIR__ . '/lib/client-ip.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -194,7 +195,7 @@ function order_media_log_rejection($code, $message, array $detalhes)
     $linhas = array(
         '=== ' . gmdate('Y-m-d H:i:s') . ' UTC  ficheiro recusado: ' . $code . ' ===',
         'mensagem ao cliente: ' . $message,
-        'IP: ' . (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '(desconhecido)'),
+        'IP: ' . (mp_client_ip() !== '' ? mp_client_ip() : '(desconhecido)'),
         'página: ' . (isset($_SERVER['HTTP_REFERER']) ? substr((string)$_SERVER['HTTP_REFERER'], 0, 200) : '(sem referer)'),
         'dispositivo: ' . (isset($_SERVER['HTTP_USER_AGENT']) ? substr((string)$_SERVER['HTTP_USER_AGENT'], 0, 200) : '(desconhecido)'),
         'purpose: ' . (isset($_POST['purpose']) ? (string)$_POST['purpose'] : '(não veio)'),
@@ -502,14 +503,15 @@ function order_media_temp_dir()
  * `$delta` soma o que se acabou de gravar, para o cache não ficar a mentir
  * durante vários uploads seguidos.
  */
-function order_media_area_bytes($areaDir, $delta = 0)
+function order_media_area_bytes($areaDir, $delta = 0, $force = false)
 {
     $cachePath = $areaDir . DIRECTORY_SEPARATOR . '.tamanho.json';
     $cache = json_decode((string)@file_get_contents($cachePath), true);
     $agora = time();
 
     if (
-        is_array($cache)
+        !$force
+        && is_array($cache)
         && isset($cache['bytes'], $cache['at'])
         && ($agora - (int)$cache['at']) < ORDER_MEDIA_AREA_CACHE_SECONDS
     ) {
@@ -630,7 +632,7 @@ if (count($files) > 10) {
 require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/lib/avisos.php';
 
-if (mp_db_form_rate_limited('upload', isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '', ORDER_MEDIA_UPLOADS_PER_IP_PER_HOUR)) {
+if (mp_db_form_rate_limited('upload', mp_client_ip(), ORDER_MEDIA_UPLOADS_PER_IP_PER_HOUR, count($files))) {
     mp_aviso('guardrail', 'upload-ritmo', 'Travão de uploads: demasiados ficheiros do mesmo dispositivo', array_merge(
         array(
             'Alguém passou o limite de ' . ORDER_MEDIA_UPLOADS_PER_IP_PER_HOUR . ' uploads por hora.',
@@ -650,71 +652,7 @@ if (mp_db_form_rate_limited('upload', isset($_SERVER['REMOTE_ADDR']) ? $_SERVER[
     );
 }
 
-$incomingBytes = 0;
-foreach ($files as $file) {
-    $incomingBytes += max(0, (int)$file['size']);
-}
-
-$areaBytes = order_media_area_bytes($areaDir);
-if ($areaBytes + $incomingBytes > ORDER_MEDIA_AREA_BUDGET_BYTES) {
-    // Nunca se apaga para abrir espaço — os ficheiros dos clientes ficam até
-    // o Tiago decidir. Recusa-se o novo e regista-se para ele saber.
-    @error_log(sprintf(
-        '[miaandpaper] uploads recusados: area em %.2f GiB, tecto %.2f GiB. Libertar espaco em private/order-uploads/.',
-        $areaBytes / 1073741824,
-        ORDER_MEDIA_AREA_BUDGET_BYTES / 1073741824
-    ));
-    mp_aviso('guardrail', 'upload-espaco-cheio', 'URGENTE: o site já não aceita ficheiros de clientes', array_merge(
-        array(
-            'A pasta de uploads chegou ao tecto e os envios estão a ser RECUSADOS.',
-            '',
-            'Ocupado: ' . mp_aviso_tamanho($areaBytes),
-            'Tecto:    ' . mp_aviso_tamanho(ORDER_MEDIA_AREA_BUDGET_BYTES),
-            '',
-            'Nada foi apagado — os ficheiros dos clientes só saem quando tu quiseres.',
-            'Para libertar espaço, em private/order-uploads/:',
-            '  tmp/            uploads que nunca chegaram a virar encomenda',
-            '                  (cada ficheiro tem um .json ao lado a dizer o que é)',
-            '  orders/CODIGO/  anexos de uma encomenda — confirma em admin-orders.php',
-            '',
-            'Enquanto isto não for resolvido, quem tentar enviar uma foto vê uma',
-            'mensagem a pedir para falar contigo pelo Instagram.',
-            '',
-        ),
-        mp_aviso_contexto()
-    ));
-    order_media_reject(
-        507,
-        'area_cheia',
-        'Não conseguimos guardar mais ficheiros neste momento. Fala connosco pelo Instagram que resolvemos já.',
-        array(
-            'ocupado' => order_media_bytes_human($areaBytes),
-            'tecto' => order_media_bytes_human(ORDER_MEDIA_AREA_BUDGET_BYTES),
-            'a_entrar' => order_media_bytes_human($incomingBytes),
-        )
-    );
-}
-if ($areaBytes >= ORDER_MEDIA_AREA_WARN_BYTES) {
-    @error_log(sprintf(
-        '[miaandpaper] AVISO: area de uploads em %.2f GiB de %.2f GiB. Convem libertar espaco em private/order-uploads/.',
-        $areaBytes / 1073741824,
-        ORDER_MEDIA_AREA_BUDGET_BYTES / 1073741824
-    ));
-    mp_aviso('guardrail', 'upload-espaco-aviso', 'A pasta de uploads está a encher', array(
-        'Ainda aceita ficheiros, mas convém libertar espaço antes de chegar ao tecto.',
-        '',
-        'Ocupado: ' . mp_aviso_tamanho($areaBytes)
-            . ' de ' . mp_aviso_tamanho(ORDER_MEDIA_AREA_BUDGET_BYTES)
-            . ' (' . round(100 * $areaBytes / ORDER_MEDIA_AREA_BUDGET_BYTES) . '%)',
-        'Falta:   ' . mp_aviso_tamanho(ORDER_MEDIA_AREA_BUDGET_BYTES - $areaBytes),
-        '',
-        'Quando chegar ao tecto, o site deixa de aceitar fotos dos clientes.',
-        'Nada é apagado automaticamente — a limpeza é sempre tua, em',
-        'private/order-uploads/.',
-    ));
-}
-
-$uploads = array();
+$plans = array();
 foreach ($files as $file) {
     $actualSize = @filesize($file['tmp_name']);
     $maxBytes = $customArtwork ? ORDER_MEDIA_ARTWORK_MAX_BYTES : ORDER_MEDIA_LEGACY_MAX_BYTES;
@@ -828,35 +766,94 @@ foreach ($files as $file) {
         $metadata['purpose'] = 'custom-artwork';
     }
 
+    $plans[] = array(
+        'file' => $file,
+        'diagnostic' => $diagnostico,
+        'stored_path' => $storedPath,
+        'metadata_path' => $metadataPath,
+        'metadata' => $metadata,
+    );
+}
+
+// Todos os ficheiros passaram a validacao antes da primeira escrita. O lock
+// torna a verificacao do tecto e a reserva do espaco uma operacao unica entre
+// pedidos concorrentes.
+$budgetLockPath = $areaDir . DIRECTORY_SEPARATOR . '.budget.lock';
+$budgetLock = @fopen($budgetLockPath, 'c+');
+if (!$budgetLock || !@flock($budgetLock, LOCK_EX)) {
+    if ($budgetLock) @fclose($budgetLock);
+    order_media_reject(503, 'lock_indisponivel', 'Não foi possível reservar espaço para os ficheiros. Tenta novamente.');
+}
+
+$incomingBytes = 0;
+foreach ($plans as $plan) {
+    $incomingBytes += max(0, (int)$plan['metadata']['size']);
+}
+$areaBytes = order_media_area_bytes($areaDir, 0, true);
+if ($areaBytes + $incomingBytes > ORDER_MEDIA_AREA_BUDGET_BYTES) {
+    @flock($budgetLock, LOCK_UN);
+    @fclose($budgetLock);
+    mp_aviso('guardrail', 'upload-espaco-cheio', 'URGENTE: o site já não aceita ficheiros de clientes', array_merge(array(
+        'Ocupado: ' . mp_aviso_tamanho($areaBytes),
+        'Tecto: ' . mp_aviso_tamanho(ORDER_MEDIA_AREA_BUDGET_BYTES),
+        'Nada foi apagado.',
+    ), mp_aviso_contexto()));
+    order_media_reject(507, 'area_cheia', 'Não conseguimos guardar mais ficheiros neste momento. Fala connosco pelo Instagram que resolvemos já.', array(
+        'ocupado' => order_media_bytes_human($areaBytes),
+        'tecto' => order_media_bytes_human(ORDER_MEDIA_AREA_BUDGET_BYTES),
+        'a_entrar' => order_media_bytes_human($incomingBytes),
+    ));
+}
+
+$created = array();
+$uploads = array();
+foreach ($plans as $plan) {
+    $file = $plan['file'];
+    $metadata = $plan['metadata'];
+    $storedPath = $plan['stored_path'];
+    $metadataPath = $plan['metadata_path'];
+    $metadataTmp = $metadataPath . '.tmp.' . getmypid();
+
     if (!move_uploaded_file($file['tmp_name'], $storedPath)) {
-        order_media_reject(500, 'gravacao_falhou', 'Não foi possível guardar o ficheiro.', array(
-            'ficheiro' => $diagnostico,
-            'destino' => $storedPath,
+        foreach ($created as $createdPath) @unlink($createdPath);
+        @flock($budgetLock, LOCK_UN);
+        @fclose($budgetLock);
+        order_media_reject(500, 'gravacao_falhou', 'Não foi possível guardar os ficheiros. Nenhum ficou associado ao pedido.', array(
+            'ficheiro' => $plan['diagnostic'],
             'destino_escrevivel' => is_writable($privateDir) ? 'sim' : 'não',
         ));
     }
+    $created[] = $storedPath;
     @chmod($storedPath, 0600);
     $storedSize = @filesize($storedPath);
     $storedSha256 = @hash_file('sha256', $storedPath);
-    if ((int)$storedSize !== (int)$actualSize || !is_string($storedSha256) || !hash_equals($sha256, $storedSha256)) {
-        @unlink($storedPath);
-        order_media_reject(500, 'gravacao_incompleta', 'Não foi possível confirmar o ficheiro guardado.', array(
-            'ficheiro' => $diagnostico,
-            'bytes_esperados' => (int)$actualSize,
+    if ((int)$storedSize !== (int)$metadata['size'] || !is_string($storedSha256) || !hash_equals($metadata['sha256'], $storedSha256)) {
+        foreach ($created as $createdPath) @unlink($createdPath);
+        @flock($budgetLock, LOCK_UN);
+        @fclose($budgetLock);
+        order_media_reject(500, 'gravacao_incompleta', 'Não foi possível confirmar os ficheiros guardados. Nenhum ficou associado ao pedido.', array(
+            'ficheiro' => $plan['diagnostic'],
+            'bytes_esperados' => (int)$metadata['size'],
             'bytes_gravados' => (int)$storedSize,
-            'diagnostico' => 'Disco cheio ou quota do alojamento é a causa habitual.',
         ));
     }
-    if (@file_put_contents($metadataPath, json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX) === false) {
-        @unlink($storedPath);
-        order_media_reject(500, 'metadados_falharam', 'Não foi possível concluir o envio.', array(
-            'ficheiro' => $diagnostico,
-            'destino' => $metadataPath,
+
+    $metadataJson = json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($metadataJson === false || @file_put_contents($metadataTmp, $metadataJson, LOCK_EX) !== strlen($metadataJson)
+        || !@rename($metadataTmp, $metadataPath)
+    ) {
+        @unlink($metadataTmp);
+        foreach ($created as $createdPath) @unlink($createdPath);
+        @flock($budgetLock, LOCK_UN);
+        @fclose($budgetLock);
+        order_media_reject(500, 'metadados_falharam', 'Não foi possível concluir o envio. Nenhum ficheiro ficou associado ao pedido.', array(
+            'ficheiro' => $plan['diagnostic'],
         ));
     }
+    $created[] = $metadataPath;
     @chmod($metadataPath, 0600);
     $uploads[] = array(
-        'token' => $token,
+        'token' => $metadata['token'],
         'name' => $metadata['name'],
         'size' => $metadata['size'],
         'mime' => $metadata['mime'],
@@ -867,13 +864,16 @@ foreach ($files as $file) {
     );
 }
 
-// Mantém o cache de tamanho honesto entre varreduras completas.
-$gravado = 0;
-foreach ($uploads as $upload) {
-    $gravado += max(0, (int)$upload['size']);
-}
-if ($gravado > 0) {
-    order_media_area_bytes($areaDir, $gravado);
+// Actualiza o cache por contagem real ainda sob o mesmo lock.
+$areaBytes = order_media_area_bytes($areaDir, 0, true);
+@flock($budgetLock, LOCK_UN);
+@fclose($budgetLock);
+
+if ($areaBytes >= ORDER_MEDIA_AREA_WARN_BYTES) {
+    mp_aviso('guardrail', 'upload-espaco-aviso', 'A pasta de uploads está a encher', array(
+        'Ocupado: ' . mp_aviso_tamanho($areaBytes) . ' de ' . mp_aviso_tamanho(ORDER_MEDIA_AREA_BUDGET_BYTES),
+        'Nada é apagado automaticamente.',
+    ));
 }
 
 // AVISOS_ADMIN_V1: um cliente enviou ficheiros. A janela de silêncio é de 15
@@ -904,7 +904,7 @@ if (!empty($uploads)) {
 
     mp_aviso(
         'upload',
-        'ficheiros-' . (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'sem-ip'),
+        'ficheiros-' . (mp_client_ip() !== '' ? mp_client_ip() : 'sem-ip'),
         count($uploads) === 1 ? 'Um cliente enviou um ficheiro' : 'Um cliente enviou ' . count($uploads) . ' ficheiros',
         array_merge($linhas, mp_aviso_contexto())
     );

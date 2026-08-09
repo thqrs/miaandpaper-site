@@ -14,7 +14,6 @@
  * de cada deploy.
  */
 
-session_start();
 require_once __DIR__ . '/admin-open.php';   // ADMIN_OPEN_DEV_V1: sem password até ao deploy
 
 if (empty($_SESSION['miaandpaper_admin'])) {
@@ -30,10 +29,7 @@ require_once __DIR__ . '/lib/snapshot.php';
 header('Content-Type: text/html; charset=utf-8');
 header('X-Robots-Tag: noindex, nofollow');
 
-if (empty($_SESSION['mp_admin_csrf'])) {
-    $_SESSION['mp_admin_csrf'] = bin2hex(random_bytes(16));
-}
-$csrf = $_SESSION['mp_admin_csrf'];
+$csrf = mp_admin_csrf_token();
 
 function snap_h($v)
 {

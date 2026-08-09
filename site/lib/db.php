@@ -30,6 +30,7 @@
  */
 
 require_once __DIR__ . '/private-paths.php';
+require_once __DIR__ . '/client-ip.php';
 
 if (!defined('MIAANDPAPER_DB_LOADED')) {
     define('MIAANDPAPER_DB_LOADED', true);
@@ -332,6 +333,7 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
             )",
             '2026-07-31_idx_form_submissions' => "CREATE INDEX IF NOT EXISTS idx_form_submissions_ip_created
                 ON form_submissions (ip_number, kind, created_at DESC)",
+            '2026-08-09_scrub_admin_login_passwords' => "UPDATE admin_login_attempts SET input_text = NULL WHERE input_text IS NOT NULL",
             // FUNNEL_CREATED_INDEX_V1: os quatro índices de funnel_events têm
             // todos `created_at` como SEGUNDA coluna, o que não serve para a
             // pergunta que o funil e o dashboard fazem sempre — "todos os
@@ -663,11 +665,12 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
      * indisponível, é preferível deixar passar uma encomenda legítima do que
      * bloquear toda a gente.
      */
-    function mp_db_form_rate_limited($kind, $ip, $maxPerHour)
+    function mp_db_form_rate_limited($kind, $ip, $maxPerHour, $units = 1)
     {
         $ip = trim((string)$ip);
         $kind = (string)$kind;
         $maxPerHour = max(1, (int)$maxPerHour);
+        $units = max(1, min(100, (int)$units));
 
         if ($ip === '') {
             return false;
@@ -676,6 +679,7 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
         try {
             $pdo = mp_db();
             $windowStart = gmdate('Y-m-d\TH:i:s\Z', time() - 3600);
+            $pdo->exec('BEGIN IMMEDIATE');
 
             $stmt = $pdo->prepare(
                 'SELECT COUNT(*) FROM form_submissions
@@ -683,13 +687,17 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
             );
             $stmt->execute(array($ip, $kind, $windowStart));
             $recent = (int)$stmt->fetchColumn();
+            $blocked = ($recent + $units) > $maxPerHour;
 
             // Regista sempre — incluindo as tentativas bloqueadas, para que a
             // janela não reabra só por a pessoa continuar a insistir.
             $insert = $pdo->prepare(
                 'INSERT INTO form_submissions (created_at, kind, ip_number) VALUES (?, ?, ?)'
             );
-            $insert->execute(array(mp_db_now(), $kind, $ip));
+            $toRecord = $blocked ? 1 : $units;
+            for ($i = 0; $i < $toRecord; $i++) {
+                $insert->execute(array(mp_db_now(), $kind, $ip));
+            }
 
             // Limpeza oportunista do que já não conta para nenhuma janela.
             if ($recent === 0) {
@@ -697,12 +705,19 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
                 $purge->execute(array(gmdate('Y-m-d\TH:i:s\Z', time() - 7 * 24 * 3600)));
             }
 
-            if ($recent >= $maxPerHour) {
+            // A transacção foi aberta por SQL para obter IMMEDIATE; fecha-se
+            // pelo mesmo mecanismo (PDO nem sempre a marca em inTransaction()).
+            $pdo->exec('COMMIT');
+
+            if ($blocked) {
                 @error_log('[miaandpaper] rate-limit do formulário "' . $kind . '" atingido para IP ' . $ip . ' (' . $recent . '/h)');
                 return true;
             }
             return false;
         } catch (Exception $e) {
+            if (isset($pdo) && $pdo instanceof PDO) {
+                try { $pdo->exec('ROLLBACK'); } catch (Exception $ignored) { /* sem transacção activa */ }
+            }
             @error_log('[miaandpaper] mp_db_form_rate_limited falhou: ' . $e->getMessage());
             return false;
         }
@@ -883,15 +898,9 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
     // apresenta o IP do proxy (ex.: edge da Cloudflare) e todos os visitantes
     // aparecem com o mesmo IP — o que partia a ignore list e o rate limit.
     //
-    // mp_tracking_client_ip() é a fonte única de verdade do IP "efectivo" do
-    // visitante. Conservadora por defeito: REMOTE_ADDR a não ser que haja um
-    // sinal forte de proxy. Só usa headers de proxy quando seguro:
-    //   - CF-Connecting-IP é populado pela Cloudflare e dificilmente spoofável
-    //     se houver Cloudflare à frente (e nós já vemos o REMOTE_ADDR do edge);
-    //   - X-Real-IP / X-Forwarded-For só quando REMOTE_ADDR for privado ou
-    //     loopback, indicando reverse proxy local.
-    //   - HTTP_CLIENT_IP é trivial de spoofar; só fallback final, e ainda assim
-    //     mantemos REMOTE_ADDR à frente quando não há outro sinal.
+    // mp_tracking_client_ip() delega na fonte unica de lib/client-ip.php.
+    // Headers de proxy so contam quando REMOTE_ADDR pertence explicitamente a
+    // MIA_TRUSTED_PROXY_CIDRS; de outro modo podem ser forjados pelo cliente.
 
     function mp_tracking_ip_is_public($ip)
     {
@@ -934,42 +943,7 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
      */
     function mp_tracking_client_ip()
     {
-        static $cached = null;
-        if ($cached !== null) return $cached;
-
-        $headers = mp_tracking_collect_raw_ip_headers();
-        $remote = $headers['REMOTE_ADDR'];
-
-        // Cloudflare: o header só existe quando o request passou pelo edge.
-        // Se for um IP público válido, usa-o (preferimos sobre o IP do edge).
-        if (mp_tracking_ip_is_public($headers['HTTP_CF_CONNECTING_IP'])) {
-            return $cached = $headers['HTTP_CF_CONNECTING_IP'];
-        }
-
-        // X-Real-IP / X-Forwarded-For: só seguros quando REMOTE_ADDR é
-        // privado/loopback (i.e., há um proxy na frente da nossa origem).
-        if (mp_tracking_ip_is_private($remote) || $remote === '') {
-            if (mp_tracking_ip_is_public($headers['HTTP_X_REAL_IP'])) {
-                return $cached = $headers['HTTP_X_REAL_IP'];
-            }
-            if ($headers['HTTP_X_FORWARDED_FOR'] !== '') {
-                foreach (explode(',', $headers['HTTP_X_FORWARDED_FOR']) as $part) {
-                    $candidate = trim((string)$part);
-                    if (mp_tracking_ip_is_public($candidate)) {
-                        return $cached = $candidate;
-                    }
-                }
-            }
-            if (mp_tracking_ip_is_public($headers['HTTP_CLIENT_IP'])) {
-                return $cached = $headers['HTTP_CLIENT_IP'];
-            }
-        }
-
-        // Default: REMOTE_ADDR validado (se inválido devolve "").
-        if (filter_var($remote, FILTER_VALIDATE_IP)) {
-            return $cached = $remote;
-        }
-        return $cached = '';
+        return mp_client_ip();
     }
 
     /**
@@ -980,43 +954,21 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
      */
     function mp_tracking_ip_diagnostics()
     {
-        $headers = mp_tracking_collect_raw_ip_headers();
-        $effective = mp_tracking_client_ip();
-        $remote = $headers['REMOTE_ADDR'];
-
-        $suspicious = false;
-        $reasons = array();
-
-        if ($remote !== '' && mp_tracking_ip_is_private($remote)) {
-            $suspicious = true;
-            $reasons[] = 'REMOTE_ADDR é privado/loopback (' . $remote . ').';
-        }
-        if ($headers['HTTP_CF_CONNECTING_IP'] !== '' && $headers['HTTP_CF_CONNECTING_IP'] !== $remote) {
-            $suspicious = true;
-            $reasons[] = 'CF-Connecting-IP difere de REMOTE_ADDR.';
-        }
-        if ($headers['HTTP_X_FORWARDED_FOR'] !== '') {
-            $reasons[] = 'X-Forwarded-For presente.';
-            // só conta como suspicious se for diferente de REMOTE_ADDR
-            $first = trim((string)strtok($headers['HTTP_X_FORWARDED_FOR'], ','));
-            if ($first !== '' && $first !== $remote) $suspicious = true;
-        }
-        if ($effective !== '' && $effective !== $remote) {
-            // já assinalado acima por uma das razões; deixa explícito
-            $suspicious = true;
-        }
-
+        $safe = mp_client_ip_diagnostics();
+        $raw = mp_tracking_collect_raw_ip_headers();
         return array(
-            'effective'             => $effective,
-            'effective_is_public'   => mp_tracking_ip_is_public($effective),
-            'remote_addr'           => $remote,
-            'cf_connecting_ip'      => $headers['HTTP_CF_CONNECTING_IP'],
-            'x_real_ip'             => $headers['HTTP_X_REAL_IP'],
-            'x_forwarded_for'       => $headers['HTTP_X_FORWARDED_FOR'],
-            'client_ip'             => $headers['HTTP_CLIENT_IP'],
-            'suspicious'            => $suspicious,
-            'reasons'               => $reasons,
+            'effective' => $safe['effective'],
+            'effective_is_public' => mp_tracking_ip_is_public($safe['effective']),
+            'remote_addr' => $safe['remote_addr'],
+            'cf_connecting_ip' => $safe['cf_connecting_ip'],
+            'x_real_ip' => $safe['x_real_ip'],
+            'x_forwarded_for' => $safe['x_forwarded_for'],
+            'client_ip' => isset($raw['HTTP_CLIENT_IP']) ? $raw['HTTP_CLIENT_IP'] : '',
+            'suspicious' => $safe['proxy_suspected'],
+            'remote_trusted' => $safe['remote_trusted'],
+            'reasons' => $safe['reasons'],
         );
+
     }
 
     /**

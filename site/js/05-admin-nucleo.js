@@ -28,6 +28,9 @@
       if (data && data.csrf) {
         adminCsrfToken = String(data.csrf);
       }
+      if (data && data.homeRevision) {
+        state.homeRevision = String(data.homeRevision);
+      }
       return adminCsrfToken;
     }).catch(function () {
       return adminCsrfToken;
@@ -124,6 +127,9 @@
       if (data && data.csrf) {
         adminCsrfToken = String(data.csrf);
       }
+      if (data && data.homeRevision) {
+        state.homeRevision = String(data.homeRevision);
+      }
       changed = updateAdminIpState(data);
       if (data && data.loggedIn === false) {
         state.admin = false;
@@ -151,6 +157,9 @@
     }).then(function (data) {
       if (data && data.csrf) {
         adminCsrfToken = String(data.csrf);
+      }
+      if (data && data.homeRevision) {
+        state.homeRevision = String(data.homeRevision);
       }
       if (data && data.loggedIn === true) {
         state.admin = true;
@@ -186,10 +195,9 @@
     var payload;
 
     if (isProduct) {
-      syncPricingFromProduct(content);
-      payload = { product: content, pricing: state.pricing };
+      payload = { product: content };
     } else {
-      payload = { home: cleanHomeForSave(content) };
+      payload = { home: cleanHomeForSave(content), revision: state.homeRevision || "" };
     }
 
     if (button) {
@@ -204,14 +212,12 @@
         state.product = data.product || content;
       } else {
         state.home = data.home || content;
+        state.homeRevision = data.homeRevision || state.homeRevision;
       }
       state.adminMessage = data.syncFlagCreated === false
         ? "Guardado no servidor, mas nao consegui marcar a flag Git."
         : "Guardado no servidor. Flag Git marcada para sincronizar.";
       if (isProduct) {
-        if (data.pricing) {
-          state.pricing = data.pricing;
-        }
         rerenderProduct(state.product);
       } else {
         enrichHomeWithCarousels(state.home).then(renderHome).catch(function () {
@@ -227,4 +233,3 @@
       rerender();
     });
   }
-

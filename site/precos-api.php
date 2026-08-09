@@ -16,12 +16,13 @@
 
 declare(strict_types=0);
 
-// Igual ao GALERIA_REQUIRE_ADMIN: aberto ate ao deploy, por decisao do Tiago.
-// ⚠️ ANTES DO DEPLOY pôr a true. Escrever precos e mais perigoso do que trocar
-// imagens — com isto a false, quem alcancar o servidor poe os precos a zero.
-define('PRECOS_REQUIRE_ADMIN', false);
+// ADMIN_OPEN_DEV_V1 é a única configuração: em desenvolvimento pode abrir os
+// editores; com MIA_ADMIN_OPEN=false esta API exige sempre sessão de admin.
+require_once __DIR__ . '/admin-open.php';
+define('PRECOS_REQUIRE_ADMIN', !MIA_ADMIN_OPEN);
 
 require_once __DIR__ . '/lib/precos-core.php';
+require_once __DIR__ . '/lib/pedido.php';   // COMANDOS_V1: a API tambem se chama de dentro
 require_once __DIR__ . '/lib/private-paths.php';
 
 const PRECOS_PRODUCTS_DIR = __DIR__ . '/content/products';
@@ -65,11 +66,18 @@ const PRECOS_MODOS = array('flat-unit', 'pack-combination', 'tier-unit', 'linear
 // DESCONTOS_COLUNAS_V1: quatro escadas de desconto por tabela, uma activa.
 const PRECOS_COLUNAS_DESCONTO = array('D1', 'D2', 'D3', 'D4');
 
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store, no-cache, must-revalidate');
+// COMANDOS_V1: em modo embutido quem manda nos cabecalhos e a pagina que
+// incluiu esta API.
+if (!mp_modo_embutido()) {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+}
 
 function precos_responder($payload, $status = 200)
 {
+    if (mp_modo_embutido()) {
+        mp_responder_embutido($payload, $status);
+    }
     http_response_code($status);
     echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
@@ -77,6 +85,9 @@ function precos_responder($payload, $status = 200)
 
 function precos_erro($mensagem, $status = 400)
 {
+    if (mp_modo_embutido()) {
+        mp_responder_embutido(array('ok' => false, 'erro' => $mensagem), $status);
+    }
     precos_responder(array('ok' => false, 'erro' => $mensagem), $status);
 }
 
@@ -809,6 +820,121 @@ function precos_gravar_prefs($prefs)
     return '';
 }
 
+// Prepara todos os JSON antes de substituir o primeiro. Se qualquer rename ou
+// verificacao falhar, todos os caminhos voltam exactamente aos bytes iniciais.
+function precos_gravar_transacao($entradas)
+{
+    if (empty($entradas)) {
+        return '';
+    }
+
+    $lockPath = mp_private_path('precos-write.lock');
+    if ($lockPath === '') {
+        return 'Não consegui resolver o lock privado dos preços.';
+    }
+    $lockDir = dirname($lockPath);
+    if (!is_dir($lockDir) && !@mkdir($lockDir, 0700, true) && !is_dir($lockDir)) {
+        return 'Não consegui criar a pasta privada dos preços.';
+    }
+    $lock = @fopen($lockPath, 'c+');
+    if (!$lock || !@flock($lock, LOCK_EX)) {
+        if ($lock) @fclose($lock);
+        return 'Não consegui bloquear a gravação concorrente dos preços.';
+    }
+
+    $preparadas = array();
+    $erro = '';
+    try {
+        foreach ($entradas as $indice => $entrada) {
+            $path = (string)$entrada['path'];
+            $nome = basename($path);
+            $existed = is_file($path);
+            $actual = $existed ? @file_get_contents($path) : '';
+            if ($existed && $actual === false) {
+                throw new RuntimeException('Não consegui ler ' . $nome . '.');
+            }
+            if (!$existed && empty($entrada['allowCreate'])) {
+                throw new RuntimeException('Não encontrei ' . $nome . '.');
+            }
+            $esperada = isset($entrada['revision']) ? (string)$entrada['revision'] : '';
+            if ($esperada !== '' && !hash_equals(precos_revisao($actual), $esperada)) {
+                throw new RuntimeException('O ficheiro ' . $nome . ' mudou noutro separador. Recarrega antes de gravar.');
+            }
+
+            $json = json_encode($entrada['data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            if ($json === false) {
+                throw new RuntimeException('Não consegui serializar ' . $nome . '.');
+            }
+            $json = precos_reindentar($json, $existed ? precos_detectar_indentacao($actual) : 4) . "\n";
+            if (json_decode($json, true) === null) {
+                throw new RuntimeException('O JSON preparado para ' . $nome . ' não é válido.');
+            }
+
+            $dir = dirname($path);
+            if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) {
+                throw new RuntimeException('Não consegui criar a pasta de ' . $nome . '.');
+            }
+            if ($existed && @file_put_contents($path . '.precos-bak', $actual, LOCK_EX) !== strlen($actual)) {
+                throw new RuntimeException('Não consegui gravar a cópia de segurança de ' . $nome . '.');
+            }
+            $tmp = $path . '.precos-tmp.' . getmypid() . '.' . $indice;
+            if (@file_put_contents($tmp, $json, LOCK_EX) !== strlen($json)) {
+                @unlink($tmp);
+                throw new RuntimeException('Não consegui preparar ' . $nome . '.');
+            }
+            $preparadas[] = array(
+                'path' => $path,
+                'tmp' => $tmp,
+                'actual' => $actual,
+                'existed' => $existed,
+            );
+        }
+
+        foreach ($preparadas as $entrada) {
+            if (!@rename($entrada['tmp'], $entrada['path'])) {
+                if ($entrada['existed']) {
+                    @unlink($entrada['path']);
+                }
+                if (!@rename($entrada['tmp'], $entrada['path'])) {
+                    throw new RuntimeException('Não consegui substituir ' . basename($entrada['path']) . '.');
+                }
+            }
+            $confirmacao = @file_get_contents($entrada['path']);
+            if ($confirmacao === false || json_decode($confirmacao, true) === null) {
+                throw new RuntimeException('A confirmação de ' . basename($entrada['path']) . ' falhou.');
+            }
+            @chmod($entrada['path'], 0644);
+        }
+    } catch (Throwable $e) {
+        $erro = $e->getMessage();
+        foreach ($preparadas as $entrada) {
+            @unlink($entrada['tmp']);
+            if ($entrada['existed']) {
+                @file_put_contents($entrada['path'], $entrada['actual'], LOCK_EX);
+            } else {
+                @unlink($entrada['path']);
+            }
+        }
+    }
+
+    @flock($lock, LOCK_UN);
+    @fclose($lock);
+    return $erro;
+}
+
+/** Normalização única usada tanto pelo endpoint curto como pelo batch interno. */
+function precos_limpar_ordem_tabs($ordem)
+{
+    $limpa = array();
+    foreach ((array)$ordem as $slug) {
+        $slug = (string)$slug;
+        if ($slug === '__capsula__' || preg_match('/^[a-z0-9-]+$/', $slug)) {
+            $limpa[] = $slug;
+        }
+    }
+    return $limpa;
+}
+
 // ── Leitura ──────────────────────────────────────────────────────────────────
 
 function precos_recolher()
@@ -971,6 +1097,13 @@ function precos_calcular($pricing, $ate)
                 continue;
             }
             $modo = main_v2_effective_pricing_mode($registo, (string)$priceKey);
+            // As tabelas legacy anteriores ao main-v2 não declaram o modo.
+            // O cliente sempre lhes aplicou o fallback flat-unit; o PHP do
+            // cross-check tem de fazer o mesmo para as comparar, em vez de
+            // devolver null para todas as quantidades.
+            if ($modo === '') {
+                $modo = 'flat-unit';
+            }
             $preferFewer = isset($registo['combinationTieBreakByPriceKey'][$priceKey])
                 && (string)$registo['combinationTieBreakByPriceKey'][$priceKey] === 'fewer-packs';
 
@@ -981,8 +1114,10 @@ function precos_calcular($pricing, $ate)
                 } elseif ($modo === 'pack-combination') {
                     $plano = product_pack_combination_plan($tabela, $n, $preferFewer);
                     $valores[$n] = $plano === null ? null : $plano['cents'];
+                } elseif ($modo === 'flat-unit') {
+                    $valores[$n] = product_flat_table_price_cents($tabela, $n);
                 } else {
-                    $valores[$n] = null; // flat-unit e resolvido pela tabela directa
+                    $valores[$n] = null;
                 }
             }
 
@@ -1003,7 +1138,7 @@ function precos_calcular($pricing, $ate)
 
 function precos_gravar()
 {
-    $body = json_decode((string)file_get_contents('php://input'), true);
+    $body = mp_corpo_pedido();
     if (!is_array($body)) {
         precos_erro('Pedido inválido.');
     }
@@ -1024,6 +1159,7 @@ function precos_gravar()
     $produtos = array();       // slug => array('path','data','revisao')
     $custosPendentes = array();   // slug => priceKey => cents
     $capsulaPendente = array();   // slug da capsula => slug do catalogo a copiar
+    $ordemTabsPendente = null;
 
     // Carrega um produto uma vez só e devolve-o por referência.
     $abrir = function ($slug) use (&$produtos) {
@@ -1045,6 +1181,14 @@ function precos_gravar()
         $op = isset($alteracao['op']) ? (string)$alteracao['op'] : 'valor';
         $ficheiro = isset($alteracao['ficheiro']) ? (string)$alteracao['ficheiro'] : '';
         $trail = isset($alteracao['trail']) && is_array($alteracao['trail']) ? $alteracao['trail'] : array();
+
+        if ($op === 'ordem-tabs') {
+            if (!isset($alteracao['ordem']) || !is_array($alteracao['ordem'])) {
+                precos_erro('Falta a ordem das tabs.');
+            }
+            $ordemTabsPendente = precos_limpar_ordem_tabs($alteracao['ordem']);
+            continue;
+        }
 
         // ── Valor monetário ──────────────────────────────────────────────────
         if ($op === 'valor') {
@@ -1391,25 +1535,17 @@ function precos_gravar()
         ), 422);
     }
 
-    // 3. Escrever. O pricing.json primeiro; se falhar, nada mais e tocado.
+    // 3. Preparar uma unica transacao. Nenhum ficheiro fica adiantado ou
+    // atrasado se a escrita de outro falhar.
+    $entradas = array();
+    $gravados = array();
     if ($pricingMudou) {
-        $erroEscrita = precos_gravar_json(PRECOS_PRICING_FILE, $pricing, $pricingRevisao);
-        if ($erroEscrita !== '') {
-            precos_erro($erroEscrita, 409);
-        }
+        $entradas[] = array('path' => PRECOS_PRICING_FILE, 'data' => $pricing, 'revision' => $pricingRevisao);
+        $gravados[] = 'pricing';
     }
 
-    $gravados = array();
     foreach ($produtos as $slug => $info) {
-        $erroEscrita = precos_gravar_json($info['path'], $info['data'], $info['revisao']);
-        if ($erroEscrita !== '') {
-            precos_responder(array(
-                'ok' => false,
-                'erro' => $erroEscrita,
-                'gravadosAntes' => $gravados,
-                'aviso' => 'Alguns ficheiros já tinham sido gravados. Recarrega a página para ver o estado real.',
-            ), 409);
-        }
+        $entradas[] = array('path' => $info['path'], 'data' => $info['data'], 'revision' => $info['revisao']);
         $gravados[] = $slug;
     }
 
@@ -1434,10 +1570,7 @@ function precos_gravar()
             }
         }
         if ($copiadas > 0) {
-            $erroEscrita = precos_gravar_json(PRECOS_CAPSULA_FILE, $capsulaData, precos_revisao($capsulaRaw));
-            if ($erroEscrita !== '') {
-                precos_erro($erroEscrita, 409);
-            }
+            $entradas[] = array('path' => PRECOS_CAPSULA_FILE, 'data' => $capsulaData, 'revision' => precos_revisao($capsulaRaw));
             $gravados[] = 'congressos/2026';
         }
     }
@@ -1457,11 +1590,38 @@ function precos_gravar()
                 unset($custos['produtos'][$slug]);
             }
         }
-        $erroCustos = precos_gravar_custos($custos);
-        if ($erroCustos !== '') {
-            precos_erro($erroCustos, 500);
-        }
+        $custosPath = precos_custos_path();
+        if ($custosPath === '') precos_erro('Não consegui resolver a pasta privada para gravar os custos.', 500);
+        $custosRaw = is_file($custosPath) ? @file_get_contents($custosPath) : '';
+        if ($custosRaw === false) precos_erro('Não consegui ler os custos.', 500);
+        $entradas[] = array(
+            'path' => $custosPath,
+            'data' => $custos,
+            'revision' => $custosRaw === '' ? '' : precos_revisao($custosRaw),
+            'allowCreate' => true,
+        );
         $gravados[] = 'custos';
+    }
+
+    if ($ordemTabsPendente !== null) {
+        $prefs = precos_ler_prefs();
+        $prefs['ordemTabs'] = $ordemTabsPendente;
+        $prefsPath = precos_prefs_path();
+        if ($prefsPath === '') precos_erro('Não consegui resolver a pasta privada.', 500);
+        $prefsRaw = is_file($prefsPath) ? @file_get_contents($prefsPath) : '';
+        if ($prefsRaw === false) precos_erro('Não consegui ler as preferências.', 500);
+        $entradas[] = array(
+            'path' => $prefsPath,
+            'data' => $prefs,
+            'revision' => $prefsRaw === '' ? '' : precos_revisao($prefsRaw),
+            'allowCreate' => true,
+        );
+        $gravados[] = 'ordem-tabs';
+    }
+
+    $erroEscrita = precos_gravar_transacao($entradas);
+    if ($erroEscrita !== '') {
+        precos_erro($erroEscrita . ' Nenhum dos ficheiros da alteração ficou gravado.', 409);
     }
 
     precos_responder(array_merge(array('ok' => true, 'gravados' => $gravados), precos_recolher()));
@@ -1524,9 +1684,20 @@ function precos_validar($pricing, $produtosTocados)
 
 // ── Router ───────────────────────────────────────────────────────────────────
 
+// COMANDOS_V1: incluida so pelas funcoes. Sem router, sem guarda, sem resposta.
+if (mp_modo_embutido()) {
+    return;
+}
+
 precos_exigir_admin();
 
 $action = isset($_GET['action']) ? (string)$_GET['action'] : 'data';
+
+// PARAMETROS_V1: esquema desta API, na forma do manifesto geral.
+if ($action === 'parametros') {
+    require_once __DIR__ . '/lib/parametros.php';
+    precos_responder(array('ok' => true, 'recurso' => mp_parametros_manifesto_recurso('precos-api.php')));
+}
 
 if ($action === 'data') {
     precos_responder(precos_recolher());
@@ -1545,18 +1716,12 @@ if ($action === 'ordem-tabs') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         precos_erro('Usa POST.', 405);
     }
-    $body = json_decode((string)file_get_contents('php://input'), true);
+    $body = mp_corpo_pedido();
     $ordem = is_array($body) && isset($body['ordem']) && is_array($body['ordem']) ? $body['ordem'] : null;
     if ($ordem === null) {
         precos_erro('Falta a ordem.');
     }
-    $limpa = array();
-    foreach ($ordem as $slug) {
-        $slug = (string)$slug;
-        if ($slug === '__capsula__' || preg_match('/^[a-z0-9-]+$/', $slug)) {
-            $limpa[] = $slug;
-        }
-    }
+    $limpa = precos_limpar_ordem_tabs($ordem);
     $prefs = precos_ler_prefs();
     $prefs['ordemTabs'] = $limpa;
     $erro = precos_gravar_prefs($prefs);

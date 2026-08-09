@@ -200,6 +200,7 @@
     quantityPackBaseline: 0,
     undoStack: [],
     home: null,
+    homeRevision: "",
     pricing: null,
     homeCarouselTimers: [],
     homeDeadlineTimer: null,
@@ -326,4 +327,3 @@
   var miaSlotDebugSideFlatKeys = ["sideImageZoom", "sideImagePositionX", "sideImagePositionY", "sideImageRotation"];
   var miaSlotDebugFrameKeys = ["frameScale", "frameWidth", "frameHeight", "frameMarginX", "frameMarginY"];
   var miaSlotDebugSideFrameKeys = ["sideFrameScale", "sideFrameWidth", "sideFrameHeight", "sideFrameMarginX", "sideFrameMarginY"];
-

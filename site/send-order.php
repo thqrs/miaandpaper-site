@@ -11,15 +11,6 @@ require_once __DIR__ . '/lib/db.php';
 // mesmo codigo que aqui recusa a encomenda. Nao redefinir nenhuma delas aqui.
 require_once __DIR__ . '/lib/precos-core.php';
 
-// PERSONALIZACAO_BUILDER_V1: a taxa passou a ser cobrada por produto x imagem
-// no flow de personalizacao.html, e nao por imagem. Cada linha do carrinho traz
-// exactamente um ficheiro, por isso o valor aqui e o de uma linha.
-// Tem de coincidir com customArtworkFeePerFileCents no content/pricing.json e no
-// JSON de cada produto.
-if (!defined('MAIN_V2_ARTWORK_FEE_CENTS')) {
-    define('MAIN_V2_ARTWORK_FEE_CENTS', 300);
-}
-
 $configPath = mp_private_mail_config_path();
 
 function h($value)
@@ -1175,7 +1166,7 @@ function order_upload_temp_info($token)
     );
 }
 
-function cart_artwork_upload_selection($selections, $name, &$invalid, $maxFiles = 10)
+function cart_artwork_upload_selection($selections, $name, &$invalid, $feeCents, $maxFiles = 10)
 {
     $values = isset($selections[$name]) && is_array($selections[$name]) ? $selections[$name] : array();
     $uploads = array();
@@ -1216,7 +1207,7 @@ function cart_artwork_upload_selection($selections, $name, &$invalid, $maxFiles 
         }
         $seen[$info['token']] = true;
         $info['quantity'] = $quantity;
-        $info['fee_cents'] = MAIN_V2_ARTWORK_FEE_CENTS;
+        $info['fee_cents'] = max(0, (int)$feeCents);
         $uploads[] = $info;
     }
 
@@ -1566,8 +1557,11 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $artworkUploadInvalid = false;
     $cardReferenceUploadInvalid = false;
     $cardAudioUploadInvalid = false;
+    $customizationFeePerFileCents = $isMainCustomArtwork
+        ? max(0, (int)(isset($pricingProduct['customArtworkFeePerFileCents']) ? $pricingProduct['customArtworkFeePerFileCents'] : 0))
+        : 0;
     if ($isMainCustomArtwork) {
-        $artworkUploads = cart_artwork_upload_selection($selections, $artworkUploadKey, $artworkUploadInvalid, 10);
+        $artworkUploads = cart_artwork_upload_selection($selections, $artworkUploadKey, $artworkUploadInvalid, $customizationFeePerFileCents, 10);
     } elseif ($isLegacyCustomArtwork) {
         $artworkUploads = cart_upload_selection($selections, $artworkUploadKey, $artworkUploadInvalid, 1, 'photo');
     } else {
@@ -1588,7 +1582,6 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $hasUnexpectedMainArtworkUploads = $isMainV2 && !$isMainCustomArtwork && !empty($selections['custom_artwork_uploads']);
     $hasUnexpectedCustomDesigns = $isMainCustomArtwork && (!empty($designs) || $assortedDesigns || !empty($designQuantities));
     $customizationFileCount = $isMainCustomArtwork ? count($artworkUploads) : 0;
-    $customizationFeePerFileCents = $isMainCustomArtwork ? MAIN_V2_ARTWORK_FEE_CENTS : 0;
     $customizationFeeCents = $customizationFileCount * $customizationFeePerFileCents;
     if ($isMainCustomArtwork) {
         if ($isCadernos) {
@@ -3458,7 +3451,15 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     global $returnToPath;
 
     $rawJson = field('cart_json');
-    $payload = json_decode($rawJson, true);
+    if (strlen($rawJson) > 524288) {
+        render_page(
+            'Confirma os dados.',
+            'O carrinho ultrapassa o tamanho máximo aceite.',
+            'error',
+            array('Reduz o número de produtos ou ficheiros e tenta novamente.')
+        );
+    }
+    $payload = json_decode($rawJson, true, 64);
     $errors = array();
 
     if (!is_array($payload)) {
@@ -3478,6 +3479,10 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
 
     if (empty($items)) {
         $errors[] = 'O carrinho está vazio.';
+    }
+    if (count($items) > 30) {
+        $errors[] = 'O carrinho tem mais de 30 produtos.';
+        $items = array_slice($items, 0, 30);
     }
 
     $customerName = cart_text(isset($checkout['customer_name']) ? $checkout['customer_name'] : '');
@@ -3684,7 +3689,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         'X-Mailer: PHP/' . phpversion(),
     );
 
-    $ipNumber = isset($_SERVER['REMOTE_ADDR']) ? (string)$_SERVER['REMOTE_ADDR'] : '';
+    $ipNumber = mp_client_ip();
     $referrerLine = isset($_SERVER['HTTP_REFERER']) ? (string)$_SERVER['HTTP_REFERER'] : '';
     $landingLine = $returnToPath !== '' ? $returnToPath : 'checkout.html';
     $firstProductSlug = isset($preparedItems[0]['product_slug']) ? $preparedItems[0]['product_slug'] : 'cart';
@@ -3905,7 +3910,7 @@ if (!is_array($config)) {
 require_once __DIR__ . '/lib/db.php';
 if (
     field('order_action') !== 'send_order_copy'
-    && mp_db_form_rate_limited('order', isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '', 12)
+    && mp_db_form_rate_limited('order', mp_client_ip(), 12)
 ) {
     require_once __DIR__ . '/lib/avisos.php';
     mp_aviso('guardrail', 'encomenda-ritmo', 'Travão de encomendas: demasiados pedidos do mesmo dispositivo', array_merge(
@@ -4468,7 +4473,7 @@ $subtotalCents = (int)$priceCents;
 $shippingEstimateCents = (int)$deliveryFeeCents;
 $totalEstimateCents = $subtotalCents + $shippingEstimateCents;
 
-$ipNumber = isset($_SERVER['REMOTE_ADDR']) ? (string)$_SERVER['REMOTE_ADDR'] : '';
+$ipNumber = mp_client_ip();
 $referrerLine = isset($_SERVER['HTTP_REFERER']) ? (string)$_SERVER['HTTP_REFERER'] : '';
 $landingLine = $returnToPath !== '' ? $returnToPath : '';
 

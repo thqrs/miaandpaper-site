@@ -272,7 +272,7 @@
       state.revision = response.revision || "";
       state.csrf = response.csrf || "";
       markDirty(false);
-      setStatus(response.requiresAdmin ? "Editor protegido por sessão de administração." : "Editor aberto. Antes do deploy, ativa REVIEWS_REQUIRE_ADMIN em reviews-api.php.");
+      setStatus(response.requiresAdmin ? "Editor protegido por sessão de administração." : "Editor aberto. Antes do deploy, põe MIA_ADMIN_OPEN a false em admin-open.php.");
       render();
     }).catch(function (error) {
       if (error.status === 403) {

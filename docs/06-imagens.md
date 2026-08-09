@@ -235,5 +235,6 @@ acontece em ficheiros de produto que já existem; o slug é validado; as respost
 não ficam em cache; a gravação usa revisão e locks. **Não há caminho para
 execução de código** — o risco é integridade de conteúdo e preços.
 
-Fechar antes do deploy: `define('GALERIA_REQUIRE_ADMIN', true);`. Ver
+Fechar antes do deploy: `define('MIA_ADMIN_OPEN', false);` em
+`site/admin-open.php`. Ver
 [08 · Deploy e ambiente](08-deploy-e-ambiente.md).

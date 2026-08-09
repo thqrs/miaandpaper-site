@@ -148,12 +148,14 @@ echo Versao de cache aplicada: %CACHE_VERSION%
 
 echo.
 echo ==========================================================
-echo 2/5 A validar JavaScript e JSON, se Node estiver disponivel...
+echo 2/5 A validar PHP, JavaScript, JSON e testes de seguranca...
 echo ==========================================================
 
 where node >nul 2>nul
 if errorlevel 1 (
-    echo Node nao encontrado. Vou saltar validacoes locais.
+    echo ERRO: Node e obrigatorio para validar e gerar o site.
+    pause
+    exit /b 1
 ) else (
     rem O antigo app.js esta dividido em modulos site\js\*.js (escopo global partilhado).
     set "JS_CHECK_FAILED="
@@ -171,7 +173,7 @@ if errorlevel 1 (
         exit /b 1
     )
 
-    node -e "const fs=require('fs'); const files=['site/content/home.json',...fs.readdirSync('site/content/products').filter(x=>x.endsWith('.json')).map(x=>'site/content/products/'+x)]; for (const f of files) JSON.parse(fs.readFileSync(f,'utf8')); console.log('json ok');"
+    node -e "const fs=require('fs'),path=require('path'); function walk(d){for(const n of fs.readdirSync(d)){const p=path.join(d,n),s=fs.statSync(p); if(s.isDirectory())walk(p); else if(n.endsWith('.json'))JSON.parse(fs.readFileSync(p,'utf8'));}} walk('site/content'); console.log('json ok');"
     if errorlevel 1 (
         echo ERRO: Algum JSON tem erro.
         pause
@@ -191,6 +193,40 @@ if errorlevel 1 (
         pause
         exit /b 1
     )
+)
+
+where php >nul 2>nul
+if errorlevel 1 (
+    echo ERRO: PHP e obrigatorio para validar o backend.
+    pause
+    exit /b 1
+)
+
+set "PHP_CHECK_FAILED="
+for /R "%SITE%" %%F in (*.php) do (
+    php -l "%%F" >nul
+    if errorlevel 1 (
+        php -l "%%F"
+        set "PHP_CHECK_FAILED=1"
+    )
+)
+if defined PHP_CHECK_FAILED (
+    echo ERRO: um ficheiro PHP tem erro de sintaxe.
+    pause
+    exit /b 1
+)
+
+php site\tools\test-comandos.php
+if errorlevel 1 (
+    echo ERRO: falharam os testes dos comandos.
+    pause
+    exit /b 1
+)
+php site\tools\test-seguranca-admin.php
+if errorlevel 1 (
+    echo ERRO: falharam os testes de seguranca administrativa.
+    pause
+    exit /b 1
 )
 
 echo.
@@ -263,7 +299,7 @@ echo ==========================================================
 echo Commit: !COMMIT_HASH!
 echo.
 
-"%SSH%" -i "%SSH_KEY%" -o UserKnownHostsFile="%KNOWN_HOSTS%" -o StrictHostKeyChecking=accept-new -p %SSH_PORT% %SSH_USER%@%SSH_HOST% "cd %SERVER_REPO% && git pull --ff-only origin main && /bin/cp -R site/. %LIVE_PATH%/ && php -l %LIVE_PATH%/send-order.php && php -l %LIVE_PATH%/admin-api.php && rm -f %SYNC_FLAG% && curl -sS 'https://miaandpaper.com/admin-api.php?action=status'"
+"%SSH%" -i "%SSH_KEY%" -o UserKnownHostsFile="%KNOWN_HOSTS%" -o StrictHostKeyChecking=accept-new -p %SSH_PORT% %SSH_USER%@%SSH_HOST% "cd %SERVER_REPO% && git pull --ff-only origin main && find site -name '*.php' -type f -exec php -l {} \; >/dev/null && find site/content -name '*.json' -type f -exec php -r 'json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);' {} \; && /bin/cp -R site/. %LIVE_PATH%/ && curl -fSs 'https://miaandpaper.com/' >/dev/null && curl -fSs 'https://miaandpaper.com/stickers.html' >/dev/null && curl -fSs 'https://miaandpaper.com/admin-api.php?action=status' >/dev/null && rm -f %SYNC_FLAG%"
 
 if errorlevel 1 (
     echo.
@@ -397,12 +433,14 @@ if errorlevel 8 (
 
 echo.
 echo ==========================================================
-echo 5/5 Validacao local, se Node estiver disponivel
+echo 5/5 Validacao local
 echo ==========================================================
 
 where node >nul 2>nul
 if errorlevel 1 (
-    echo Node nao encontrado. Vou saltar validacoes locais.
+    echo ERRO: Node nao encontrado; nao posso validar o que veio do cPanel.
+    pause
+    exit /b 1
 ) else (
     rem Valida os modulos site\js\*.js (e um site\app.js legacy, se existir).
     set "JS_CHECK_FAILED="
@@ -422,7 +460,7 @@ if errorlevel 1 (
         exit /b 1
     )
 
-    node -e "const fs=require('fs'); const files=['site/content/home.json',...fs.readdirSync('site/content/products').filter(x=>x.endsWith('.json')).map(x=>'site/content/products/'+x)]; for (const f of files) JSON.parse(fs.readFileSync(f,'utf8')); console.log('json ok');"
+    node -e "const fs=require('fs'),path=require('path'); function walk(d){for(const n of fs.readdirSync(d)){const p=path.join(d,n),s=fs.statSync(p); if(s.isDirectory())walk(p); else if(n.endsWith('.json'))JSON.parse(fs.readFileSync(p,'utf8'));}} walk('site/content'); console.log('json ok');"
     if errorlevel 1 (
         echo ATENCAO: Algum JSON copiado do cPanel tem erro.
         echo O backup local continua em:
@@ -430,6 +468,27 @@ if errorlevel 1 (
         pause
         exit /b 1
     )
+)
+
+where php >nul 2>nul
+if errorlevel 1 (
+    echo ERRO: PHP nao encontrado; nao posso validar o backend copiado.
+    pause
+    exit /b 1
+)
+set "PHP_CHECK_FAILED="
+for /R "%SITE%" %%F in (*.php) do (
+    php -l "%%F" >nul
+    if errorlevel 1 (
+        php -l "%%F"
+        set "PHP_CHECK_FAILED=1"
+    )
+)
+if defined PHP_CHECK_FAILED (
+    echo ATENCAO: PHP copiado do cPanel tem erro de sintaxe.
+    echo O backup local continua em: !BACKUP!\site
+    pause
+    exit /b 1
 )
 
 del /Q "!LOCAL_ARCHIVE!" >nul 2>nul
