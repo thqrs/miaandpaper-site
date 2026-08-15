@@ -180,6 +180,18 @@ if errorlevel 1 (
         exit /b 1
     )
 
+    rem Os custos e materiais viajam fora do git, mas tambem têm de ser JSON
+    rem valido. Se existir um pricing.json na pasta privada (por exemplo, vindo
+    rem de uma folha de calculo), ele e apenas uma copia de preparacao: o site
+    rem publica site/content/pricing.json. Bloquear o deploy quando divergem
+    rem impede que uma alteracao de precos fique esquecida na pasta privada.
+    node -e "const fs=require('fs'); for(const p of ['private/custos.json','private/materiais.json']){if(!fs.existsSync(p))throw new Error('Falta '+p); JSON.parse(fs.readFileSync(p,'utf8'));} const canon=v=>Array.isArray(v)?v.map(canon):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canon(v[k])])):v; if(fs.existsSync('private/pricing.json')){const a=canon(JSON.parse(fs.readFileSync('private/pricing.json','utf8'))),b=canon(JSON.parse(fs.readFileSync('site/content/pricing.json','utf8'))); if(JSON.stringify(a)!==JSON.stringify(b))throw new Error('private/pricing.json diverge de site/content/pricing.json; importa os precos pelo editor antes do deploy');} console.log('json privado ok');"
+    if errorlevel 1 (
+        echo ERRO: Os JSON privados estao em falta, invalidos ou incoerentes.
+        pause
+        exit /b 1
+    )
+
     REM O HTML servido ao Google e so um shell: o app.js e que escreve o conteudo
     REM a partir dos JSON. Este gerador copia esse conteudo para dentro do HTML
     REM (titulos, descriptions, h1, designs, links, sitemap.xml). Como le os JSON
@@ -267,7 +279,7 @@ if not defined HAS_CHANGES (
         exit /b 0
     )
 
-    git add -A site
+    git add -A site "[2]upload-or-download.bat"
     git diff --check --cached
     if errorlevel 1 (
         echo ERRO: git diff --check encontrou problemas.
@@ -317,8 +329,10 @@ for %%F in (custos.json materiais.json) do (
         echo A enviar %%F para a pasta privada do servidor...
         "%SCP%" -i "%SSH_KEY%" -o UserKnownHostsFile="%KNOWN_HOSTS%" -o StrictHostKeyChecking=accept-new -P %SSH_PORT% "%REPO%\private\%%F" "%SSH_USER%@%SSH_HOST%:/home/currwkdi/private/%%F"
         if errorlevel 1 (
-            echo AVISO: nao consegui enviar %%F. O site fica bom na mesma;
-            echo        so os paineis de custos no servidor ficam desactualizados.
+            echo ERRO: nao consegui enviar %%F para a pasta privada.
+            echo O deploy nao pode ser dado como concluido com custos desactualizados.
+            pause
+            exit /b 1
         )
     )
 )

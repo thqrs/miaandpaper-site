@@ -21,6 +21,7 @@ novos ficam em `.webp`.
 | `site/multimedia.html` | inventário em tabela de todas as imagens do disco: dimensões, tamanho, onde são usadas |
 | `site/galeria-api.php` | backend: lista, recebe uploads, grava JSON de produto e o estado "finalizadas" |
 | `site/produtos.html` | a Teia incorpora a Galeria no inspector, filtrada pelo contexto e pelo node |
+| `site/produtos.php` | inventário dos designs do passo 1; clicar num cartão abre a Galeria incorporada nesse item |
 | `content/galeria-estado.json` | as imagens marcadas como terminadas |
 | `content/.galeria-dimensoes.json` | cache de dimensões (gerada; está no `.gitignore`) |
 | `tools/generate-image-prompts.js` | gera prompts de imagem para os slots ainda por finalizar |

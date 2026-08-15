@@ -1,6 +1,6 @@
 /* css/10-entrega-uniformizacao.css — parte 10/12 do antigo styles.css (codigo intacto, so dividido).
    A ordem dos <link> nos HTML segue 01 → 12 e a cascata depende dela.
-   Conteudo: passo de entrega/contacto, nota de encomendas abertas, e a camada CSS_UNIFORMITY_LAYER_V1 (superficies, titulos, texto secundario, inputs, estados seleccionados, checkmarks, botoes; + mobile + dark). */
+   Conteudo: passo de entrega/contacto, nota de encomendas abertas, aviso de antecedencia, ecrã final de pagamento, e a camada CSS_UNIFORMITY_LAYER_V1 (superficies, titulos, texto secundario, inputs, estados seleccionados, checkmarks, botoes; + mobile + dark). */
 /* DELIVERY_CONTACT_STEP_V1
    Estilos para o novo passo "Entrega e contacto". ComposiÃ§Ã£o:
    - .delivery-contact-step â†’ wrapper com gap entre blocos
@@ -820,4 +820,129 @@ html[data-theme="dark"] .contact-form select {
   color: var(--ink);
 }
 
+/* ORDER_LEAD_TIME_V1: aviso editável do primeiro passo, imediatamente abaixo
+   do progresso para ser visto antes de a pessoa começar as escolhas. */
+.order-lead-time-notice {
+  margin: 4px 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-border-warm, var(--line));
+  border-radius: var(--ui-radius, var(--radius));
+  background: var(--ui-card-highlight, var(--gold-soft));
+  color: var(--ink);
+  font-size: .92rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
 
+/* PAYMENT_SUCCESS_V1: confirmação focada no pagamento imediato por MB WAY. */
+.payment-success-card {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--ui-border-warm, var(--line));
+  border-radius: var(--ui-radius-lg, var(--radius));
+  background: var(--ui-card, var(--card));
+  box-shadow: var(--ui-shadow-card, var(--shadow));
+}
+
+.payment-success-card p,
+.payment-success-summary h2,
+.payment-success-summary ul {
+  margin: 0;
+}
+
+.payment-success-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.payment-success-summary h2 {
+  font-size: 1.05rem;
+}
+
+.payment-success-summary ul {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.payment-success-summary li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ui-border, var(--line));
+}
+
+.payment-success-summary li span {
+  color: var(--muted);
+}
+
+.payment-success-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.payment-success-values p {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--ui-success-border, var(--line));
+  border-radius: var(--ui-radius, var(--radius));
+  background: var(--ui-success-bg, var(--linen));
+  text-align: center;
+}
+
+.payment-success-values span {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.payment-success-values strong {
+  color: var(--moss);
+  font-size: clamp(1.35rem, 5vw, 2rem);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.payment-success-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.payment-success-note {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-left: 4px solid var(--gold);
+  border-radius: var(--ui-radius, var(--radius));
+  background: var(--ui-card-highlight, var(--gold-soft));
+}
+
+@media (max-width: 540px) {
+  .payment-success-card {
+    padding: 16px;
+  }
+
+  .payment-success-values {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-success-actions {
+    display: grid;
+  }
+}
+
+html[data-theme="dark"] .order-lead-time-notice,
+html[data-theme="dark"] .payment-success-card,
+html[data-theme="dark"] .payment-success-note {
+  border-color: var(--ui-border-warm);
+  background: var(--ui-card);
+}

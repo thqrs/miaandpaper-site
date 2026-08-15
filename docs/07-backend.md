@@ -32,6 +32,14 @@ O **código de encomenda** é reservado atomicamente numa tabela própria
 um `SELECT`, e dois pedidos simultâneos podiam receber o mesmo código — o
 `INSERT` falhava e uma encomenda perdia-se.
 
+Depois de a encomenda ficar guardada e o email da Mia sair, `send-order.php`
+pode mostrar logo os dados de pagamento por MB WAY. Isso só acontece quando o
+preço está totalmente definido, a entrega é por CTT (ou junta a uma encomenda
+CTT ainda aberta) e o país do IP pertence à União Europeia. Qualquer falha na
+geolocalização ou na confirmação destes dados cai no ecrã normal. O URL
+`send-order.php?checkout_debug=true` mostra a mesma vista com dados fictícios,
+sem gravar nem enviar nada.
+
 Os formulários de email têm rate limiting por IP em SQLite: contacto 5/hora,
 encomenda 12/hora, upload 60/hora. Sem isso, o domínio arriscava listas negras
 por ser usado como relé.
@@ -190,6 +198,10 @@ segue. Um aviso que falha não pode estragar uma encomenda.
 ## Base de dados
 
 SQLite em `private/miaandpaper.sqlite`, acedida **só** por `lib/db.php`.
+
+O chatbot é deliberadamente separado: conversas, mensagens e configuração do
+Míu vivem em `private/miu.sqlite`, acedido só por `lib/miu-bot.php`. Não juntar
+as tabelas à base de encomendas. O painel é `bot.php`; ver [12 · Míu](12-miu.md).
 
 Tabelas: `orders`, `order_events`, `order_code_reservations`, `email_log`,
 `funnel_events`, `funnel_events_archive`, `form_submissions`,

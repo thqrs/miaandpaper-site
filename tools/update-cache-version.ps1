@@ -1,5 +1,6 @@
 # Actualiza o ?v= (cache-busting) das referencias a css/*.css e js/*.js
-# nos shells da raiz de site\ (+ send-message.php e send-order.php).
+# nas cascas HTML públicas, incluindo subpastas (+ send-message.php e
+# send-order.php).
 # Chamado pelo [2]upload-or-download.bat no passo 1/5 do deploy.
 # Interface: le as variaveis de ambiente CACHE_VERSION e SITE.
 
@@ -16,7 +17,7 @@ if ([string]::IsNullOrWhiteSpace($site) -or -not (Test-Path -LiteralPath $site))
 }
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-$files = @(Get-ChildItem -LiteralPath $site -Filter '*.html' -File)
+$files = @(Get-ChildItem -LiteralPath $site -Filter '*.html' -File -Recurse)
 foreach ($php in @('send-message.php', 'send-order.php')) {
     $p = Join-Path $site $php
     if (Test-Path -LiteralPath $p) { $files += Get-Item -LiteralPath $p }
@@ -26,19 +27,23 @@ foreach ($f in $files) {
     $t = [System.IO.File]::ReadAllText($f.FullName)
     $old = $t
 
-    # Modulos JS: src="js/qualquer-coisa.js" com ou sem ?v= existente.
+    # Modulos JS: aceita a raiz e subpastas (../js ou ../../js).
     $t = [regex]::Replace(
         $t,
-        'src="(js/[^"?]+\.js)(?:\?v=[^"]*)?"',
+        'src="((?:\.\./)*js/[^"?]+\.js)(?:\?v=[^"]*)?"',
         ('src="$1?v=' + $v + '"')
     )
 
-    # Modulos CSS: href="css/qualquer-coisa.css" com ou sem ?v= existente.
+    # Modulos CSS: aceita a raiz e subpastas (../css ou ../../css).
     $t = [regex]::Replace(
         $t,
-        'href="(css/[^"?]+\.css)(?:\?v=[^"]*)?"',
+        'href="((?:\.\./)*css/[^"?]+\.css)(?:\?v=[^"]*)?"',
         ('href="$1?v=' + $v + '"')
     )
+
+    # A pesquisa é recursiva, mas só as cascas com referências alteradas devem
+    # ser regravadas. Assim, HTML alheio aos módulos fica rigorosamente intacto.
+    if ($t -eq $old) { continue }
 
     # Remove linhas em branco no fim criadas por versoes anteriores do BAT.
     # Depois escreve o ficheiro sem acrescentar newline automatica.

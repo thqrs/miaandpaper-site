@@ -501,8 +501,8 @@ header('Content-Type: text/html; charset=utf-8');
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Encomendas · Mia &amp; Paper admin</title>
-<link rel="stylesheet" href="admin-nav.css?v=2026072801">
-<script src="admin-nav.js?v=2026072801" defer></script>
+<link rel="stylesheet" href="admin-nav.css?v=2026081001">
+<script src="admin-nav.js?v=2026081001" defer></script>
 <style>
 :root {
   --ink: #3b2f1f;

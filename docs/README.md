@@ -1,6 +1,6 @@
 # Documentação — Mia & Paper
 
-Numerada como os módulos do site (`site/js/01→23`, `site/css/01→12`). Cada
+Numerada como os módulos do site (`site/js/01→24`, `site/css/01→13`). Cada
 assunto vive **num** documento: se um facto aparece em dois sítios, um deles
 está a ficar desactualizado.
 
@@ -8,8 +8,8 @@ está a ficar desactualizado.
 |---|---|---|
 | — | [`../AGENTS.md`](../AGENTS.md) | **primeiro**, sempre — as regras e as proibições |
 | 01 | [Arquitectura](01-arquitectura.md) | perceber como o site está feito e onde vive cada coisa |
-| 02 | [Módulos JS](02-modulos-js.md) | antes de mexer em `site/js/` — mapa dos 23 módulos |
-| 03 | [Módulos CSS](03-modulos-css.md) | antes de mexer em `site/css/` — mapa dos 12 módulos, tokens, `modulos.php` |
+| 02 | [Módulos JS](02-modulos-js.md) | antes de mexer em `site/js/` — mapa dos 24 módulos |
+| 03 | [Módulos CSS](03-modulos-css.md) | antes de mexer em `site/css/` — mapa dos 13 módulos, tokens, `modulos.php` |
 | 04 | [Preços](04-precos.md) | **antes de tocar em qualquer preço** |
 | 05 | [Produto novo](05-produto-novo.md) | checklist completa para acrescentar uma categoria |
 | 06 | [Imagens](06-imagens.md) | galeria, multimedia, slots, enquadramento |
@@ -18,6 +18,7 @@ está a ficar desactualizado.
 | 09 | [Pendentes](09-pendentes.md) | o que falta fazer e decidir |
 | 10 | [Editores de admin](10-editores-admin.md) | `precos.php` e `homepage-menu-design.php`; a personalização |
 | 11 | [Parâmetros de URL](11-parametros-de-url.md) | tudo o que muda numa página através da query string |
+| 12 | [Míu](12-miu.md) | chatbot: configuração, fornecedores, filtros, SQLite e painel |
 
 ## Histórico
 

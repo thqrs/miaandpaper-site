@@ -165,7 +165,8 @@ teste($limitesRecusados && $estrelasValidas['ok'] && $estrelasCinco['ok'] && $ma
 // usam valores reais, ou ids únicos quando a própria operação é uma criação.
 $previews = array(
     array('op' => 'preco', 'produto' => 'imanes-loja', 'chave' => '3 mm', 'qtd' => '30', 'euros' => '60'),
-    array('op' => 'ordem-tabs', 'ordem' => 'imanes-loja,agendas,__capsula__'),
+    array('op' => 'preco', 'produto' => 'congresso-2026-crachas', 'chave' => '25 mm', 'qtd' => '24', 'euros' => '27'),
+    array('op' => 'ordem-tabs', 'ordem' => 'imanes-loja,agendas,congresso-2026-imanes'),
     array('op' => 'pack-adicionar', 'produto' => 'imanes-recortados', 'chave' => 'Recortados', 'qtd' => '8', 'euros' => '18'),
     array('op' => 'pack-remover', 'produto' => 'imanes-recortados', 'chave' => 'Recortados', 'qtd' => '12'),
     array('op' => 'desconto', 'produto' => 'imanes-loja', 'chave' => '3 mm', 'qtd' => '3', 'percent' => '6'),
@@ -273,7 +274,7 @@ teste($okCarrossel && abs((float)$previewIntervalo - (float)$homeDepois['carouse
 $prefsPath = precos_prefs_path();
 $prefsAntesExiste = $prefsPath !== '' && is_file($prefsPath);
 $prefsAntes = $prefsAntesExiste ? (string)file_get_contents($prefsPath) : '';
-$ordemTeste = array('imanes-loja', 'agendas', '__capsula__');
+$ordemTeste = array('imanes-loja', 'agendas', 'congresso-2026-imanes');
 $ordemAnalise = analisar_teste(array(array('op' => 'ordem-tabs', 'ordem' => implode(',', $ordemTeste))));
 $ordemRelatorio = $ordemAnalise['ok'] ? cmd_aplicar($ordemAnalise['nativas']) : array();
 $ordemAplicada = !empty($ordemRelatorio);

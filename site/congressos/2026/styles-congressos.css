@@ -53,6 +53,225 @@
   --selection-check-top: var(--selection-check-inset, 14px);
   --selection-check-right: var(--selection-check-inset, 14px);
   --selection-check-transform: none;
+  --admin-edit-accent: #c74438;
+}
+
+/* ADMIN_OVERLAY_EDITOR_V1: o modo admin conserva a geometria pública. */
+.is-admin-editable {
+  position: relative;
+  isolation: isolate;
+  outline: 2px solid var(--admin-edit-accent);
+  outline-offset: 3px;
+}
+
+.admin-edit-target {
+  position: absolute;
+  inset: 5px 5px auto auto;
+  z-index: 20;
+  display: inline-flex;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--admin-edit-accent);
+  cursor: pointer;
+}
+
+.admin-edit-target > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 2px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: var(--surface-panel);
+  box-shadow: var(--shadow-header);
+  font-size: .68rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.admin-edit-target:hover > span,
+.admin-edit-target:focus-visible > span {
+  background: var(--admin-edit-accent);
+  color: var(--hero-foreground);
+}
+
+.admin-edit-target:focus-visible {
+  outline: 3px solid var(--admin-edit-accent);
+  outline-offset: 2px;
+}
+
+.admin-edit-target--compact {
+  inset: 8px 8px auto auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}
+
+.admin-edit-target--compact > span {
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 1.15rem;
+}
+
+.admin-edit-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.admin-edit-layer.is-open {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.admin-edit-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: var(--menu-backdrop);
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+
+.admin-edit-layer.is-open .admin-edit-backdrop { opacity: 1; }
+
+.admin-edit-dialog {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(620px, calc(100vw - 24px));
+  max-height: min(78vh, 760px);
+  box-sizing: border-box;
+  overflow: auto;
+  border: 2px solid var(--admin-edit-accent);
+  border-radius: var(--radius);
+  background: var(--surface-panel);
+  box-shadow: var(--shadow-menu);
+  color: var(--ink);
+  transform: translate(-50%, -50%);
+}
+
+.admin-edit-dialog[hidden] { display: none; }
+
+.admin-edit-dialog__head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-panel);
+}
+
+.admin-edit-dialog__head h2 {
+  margin: 0;
+  color: var(--admin-edit-accent);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.admin-edit-dialog__close {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  box-sizing: border-box;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-edit-dialog__body { padding: 14px; }
+
+.admin-edit-dialog .admin-card-tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  text-align: left;
+}
+
+.admin-edit-dialog .admin-card-tools label,
+.admin-edit-dialog .admin-step-panel label {
+  display: grid;
+  gap: 5px;
+  color: var(--admin-edit-accent);
+  font-size: .76rem;
+  font-weight: 850;
+}
+
+.admin-edit-dialog .admin-card-tools input,
+.admin-edit-dialog .admin-card-tools textarea,
+.admin-edit-dialog .admin-card-tools select,
+.admin-edit-dialog .admin-step-panel input,
+.admin-edit-dialog .admin-step-panel textarea,
+.admin-edit-dialog .admin-step-panel select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-edit-dialog .admin-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-edit-dialog .admin-check input {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+}
+
+.admin-edit-dialog .admin-step-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-edit-dialog .admin-add {
+  position: static;
+  width: 100%;
+}
+
+body.is-admin-edit-dialog-open { overflow: hidden; }
+
+@media (max-width: 559px) {
+  .admin-edit-dialog {
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    max-height: 84vh;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: var(--radius) var(--radius) 0 0;
+    transform: translateX(-50%);
+  }
+
+  .admin-edit-dialog .admin-card-tools { grid-template-columns: 1fr; }
 }
 
 /* FLOW_REFINEMENTS_20260720 */
@@ -7541,6 +7760,62 @@ html[data-theme="dark"] .crachas-size-card-proof-note {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.cadernos-order-quantity-control {
+  display: grid;
+  grid-template-columns: 44px minmax(96px, 150px) 44px auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.cadernos-order-quantity-control > button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(126, 93, 22, 0.24);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--moss);
+  font: inherit;
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.cadernos-order-quantity-control > button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.cadernos-order-quantity-control label {
+  display: block;
+}
+
+.cadernos-order-quantity-control label > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.cadernos-order-quantity-control input {
+  width: 100%;
+  height: 44px;
+  box-sizing: border-box;
+  border: 1px solid rgba(126, 93, 22, 0.24);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  text-align: center;
+}
+
+.cadernos-order-quantity-control > small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
 .cadernos-info-note {
   display: inline-block;
   max-width: 100%;
@@ -7748,6 +8023,15 @@ html[data-theme="dark"] .cadernos-info-note {
 
   .cadernos-order-quantity-options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cadernos-order-quantity-control {
+    grid-template-columns: 42px minmax(82px, 1fr) 42px;
+  }
+
+  .cadernos-order-quantity-control > small {
+    grid-column: 1 / -1;
+    text-align: center;
   }
 }
 
@@ -11092,4 +11376,22 @@ html[data-theme="dark"] .home-products-section .category-grid:not(.is-admin-home
   font-size: 1.25rem;
   font-weight: 850;
   text-align: center;
+}
+
+/* ORDER_LEAD_TIME_V1: aviso editável do primeiro passo, abaixo do progresso. */
+.order-lead-time-notice {
+  margin: 4px 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--gold-soft);
+  color: var(--ink);
+  font-size: .92rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+html[data-theme="dark"] .order-lead-time-notice {
+  border-color: var(--line);
+  background: var(--card);
 }

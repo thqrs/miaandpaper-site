@@ -1,5 +1,7 @@
 {
   "slug": "imanes",
+  "pricingMode": "tier-unit",
+  "allowUnitDiscounts": true,
   "name": "Ímanes",
   "brand": "Mia & Paper",
   "homeUrl": "index.html",
@@ -469,7 +471,12 @@
           "title": "105",
           "subtitle": "ímanes"
         }
-      ]
+      ],
+      "minimumQuantity": 1,
+      "pricingMode": "tier-unit",
+      "allowUnitDiscounts": true,
+      "freeQuantity": true,
+      "adjustPerDesign": true
     },
     {
       "id": "details",

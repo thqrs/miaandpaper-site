@@ -1,5 +1,7 @@
 {
     "slug": "cadernos",
+    "pricingMode": "flat-unit",
+    "allowUnitDiscounts": false,
     "name": "Cadernos de Apontamentos",
     "brand": "Mia & Paper",
     "homeUrl": "index.html",
@@ -2116,6 +2118,9 @@
                 "title": "Quantidade",
                 "text": "Podes encomendar mais do que um caderno ou pack com a mesma capa, laminação e personalização.",
                 "default": 1,
+                "minimum": 1,
+                "maximum": 9999,
+                "mode": "free",
                 "options": [
                     1,
                     2,
@@ -2826,7 +2831,12 @@
                         }
                     }
                 }
-            ]
+            ],
+            "minimumQuantity": 1,
+            "pricingMode": "flat-unit",
+            "allowUnitDiscounts": false,
+            "allowOrderQuantity": true,
+            "minimumOrderQuantity": 1
         },
         {
             "id": "cover_personalization",

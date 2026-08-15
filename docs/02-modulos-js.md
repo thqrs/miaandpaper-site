@@ -1,7 +1,7 @@
 # 02 · Módulos JS — `site/js/`
 
-O antigo `app.js` está dividido em 23 ficheiros. **O código é o mesmo, só foi
-partido.**
+O antigo `app.js` está dividido nos módulos 01→23. O módulo 24 acrescenta o
+chatbot autónomo Míu, sem alterar o renderer existente.
 
 ## As três regras que governam a pasta
 
@@ -14,10 +14,11 @@ partido.**
    funções e variáveis têm de continuar globais para os outros módulos as verem;
    qualquer um dos dois parte o site inteiro em silêncio.
 
-2. **A ordem importa.** Carregam pela ordem dos `<script>` nas cascas, 01 → 23.
+2. **A ordem importa.** Carregam pela ordem dos `<script>` nas cascas, 01 → 24.
    Código executado durante a carga só pode usar o que veio antes. O
-   `23-arranque.js` é o último de propósito: é ele que chama o render inicial, e
-   nessa altura tudo o resto já tem de estar definido.
+   `23-arranque.js` é o último módulo do renderer: chama o render inicial quando
+   tudo o que ele usa já está definido. O `24-miu.js` vem depois porque é
+   autónomo e arranca pela sua própria API.
 
 3. **Um ficheiro novo tem de ser declarado em todo o lado.** O `?v=` é
    regenerado automaticamente no deploy, mas a tag em si não: acrescentar o
@@ -44,7 +45,7 @@ que contém. **Ao mover código entre módulos, actualizar esse cabeçalho** —
 | 06 | `06-chrome-tema.js` | 160 | `renderChrome` (header/footer), banner de encomendas suspensas, tema claro/escuro |
 | 07 | `07-carrinho.js` | 1227 | carrinho: `loadCart`, badge, drawer, editar e remover linhas |
 | 08 | `08-menu-site.js` | 420 | menu do site: `bindSiteMenu`, hrefs de categorias, gestos |
-| 09 | `09-admin-paineis.js` | 1518 | painéis de admin embutidos: entregas, secções, settings da home, `renderAdminSurface` |
+| 09 | `09-admin-paineis.js` | 1791 | painéis de admin embutidos e camada sobreposta de edição: entregas, secções, aviso de antecedência, settings da home, `renderAdminSurface` |
 | 10 | `10-produto-precos.js` | 1783 | **modelo do produto e preços**: `findStep`, tabelas e packs, resumo de preço |
 | 11 | `11-designs-media.js` | 426 | media dos cartões de design, visualizador de imagem, `renderDesignCardMedia` |
 | 12 | `12-crachas-imanes.js` | 440 | secções por defeito de crachás/ímanes/cadernos e render de designs por secção |
@@ -52,13 +53,19 @@ que contém. **Ao mover código entre módulos, actualizar esse cabeçalho** —
 | 14 | `14-upload-quantidade.js` | 3262 | acções de foto do pedido, descontos de pack, gráfico de preço, `renderQuantityBuilder` |
 | 15 | `15-cadernos.js` | 1144 | fluxo dos cadernos: proof photo, imagens interiores, opções de compra |
 | 16 | `16-quadros-resumo.js` | 570 | "o que vais encomendar" de quadros/molduras: placeholders e tiles |
-| 17 | `17-wizard-render.js` | 1834 | render dos passos: composer de media, slideshow do interior, numeração, histórico do browser |
+| 17 | `17-wizard-render.js` | 1901 | render dos passos: composer de media, slideshow do interior, numeração, aviso de antecedência, histórico do browser |
 | 18 | `18-wizard-navegacao.js` | 593 | `currentStep`, validações, `goNext` |
 | 19 | `19-upload-media-pedido.js` | 832 | upload: compressão de fotos, timeouts, file picker, gravação de áudio |
 | 20 | `20-quadros-anim-bind.js` | 1448 | animações dos quadros (FLIP) e `bindProduct` (liga todos os handlers) |
 | 21 | `21-checkout.js` | 878 | **envio**: `addHiddenFields`, totais, sessão de checkout, `bindCheckoutPage` |
-| 22 | `22-admin-imagem.js` | 835 | ajuste de imagens no admin por teclado |
+| 22 | `22-admin-imagem.js` | 901 | ajuste de imagens no admin por teclado e pelos campos do popup, com actualização em tempo real |
 | 23 | `23-arranque.js` | 1193 | `initProduct`, água da paleta (`MiaWater`), banner de cookies, `window.MiaPreview`, bootstrap |
+| 24 | `24-miu.js` | — | chatbot Míu: interface, filtros locais, estado da conversa e links internos seguros |
+
+O `24-miu.js` é também carregado no resultado da encomenda e nas cascas
+públicas do catálogo, ofertas e Congresso. Detecta previews e iframes e não
+desenha nada neles. A API e a configuração estão documentadas em
+[12 · Míu](12-miu.md).
 
 ## Onde procurar o quê
 

@@ -95,12 +95,12 @@ casos em que a diferença é acidental, e comentar os casos em que é intenciona
 Precisa de comparação antes/depois com cuidado: a camada foi criada exactamente
 para corrigir variações de amarelo.
 
-### Duplicação entre catálogo e cápsula
+### Produtos do catálogo e do Congresso — decidido
 
-Crachás, ímanes, cadernos e mini-cadernos existem em duas cópias quase idênticas
-(principal e Congresso 2026), que já divergiram sozinhas. Três caminhos —
-manter, fundir só na vista da Teia, ou uma fonte única com variações por
-contexto. O levantamento com os factos está em
+Crachás, ímanes, cadernos e mini-cadernos mantêm-se como produtos inteiramente
+separados entre o catálogo principal e o Congresso 2026, mesmo quando usam a
+mesma imagem. O `precos.php` edita os dois contextos, mas grava cada um nos seus
+próprios JSON. O levantamento original fica em
 [histórico/2026-07-28-duplicacao-contextos](historico/2026-07-28-duplicacao-contextos.md).
 
 ### O deploy nunca apaga

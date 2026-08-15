@@ -29,29 +29,20 @@ Não pôr segredos, passwords, chaves de API ou dados de clientes no repositóri
 
 ---
 
-## As cinco regras que custam dinheiro ou trabalho
+## As quatro regras que custam dinheiro ou trabalho
 
-### 1 · A cápsula do Congresso 2026 nunca se edita
+### 1 · Gatilhos por dados, não por slug
 
-`site/congressos/2026/` é um snapshot congelado do que foi vendido em 2026, com
-cópias próprias dos JSON de produto, do `pricing.json` e das cascas HTML.
-
-**Nunca editar nada lá dentro.** Nem para "manter sincronizado", nem para
-corrigir um bug que se viu de passagem, nem para aplicar um refactor global. Se
-parece errado, está errado *de propósito*. É referência de leitura para as
-escadas de preços antigas.
-
-### 2 · Gatilhos por dados, não por slug
-
-Os módulos de `site/js/` são partilhados entre o catálogo e a cápsula. Uma
+O catálogo e o Congresso têm produtos e código de interface independentes. Uma
 alteração de comportamento **nunca** deve ser condicionada por uma lista de slugs
 no código — deve ser uma flag no JSON do produto que a quer (como
-`"adjustPerDesign": true`).
+`"adjustPerDesign": true`) e portada para o outro contexto quando também se
+pretende lá.
 
-Depois de mexer em `site/js/`, verificar **um produto do catálogo e um da
-cápsula**.
+Quando o mesmo comportamento existir nos dois contextos, verificar **um produto
+do catálogo e um do Congresso** depois de mexer numa das implementações.
 
-### 3 · Preços editam-se no `precos.php`, não à mão
+### 2 · Preços editam-se no `precos.php`, não à mão
 
 Há um editor central em `site/precos.php` com **todos** os valores monetários do
 site — e não só os valores: quantidades e número de packs, descontos, extras,
@@ -80,7 +71,7 @@ cópia é o problema que a biblioteca resolve.
 
 Detalhes, modos e armadilhas: [04 · Preços](docs/04-precos.md).
 
-### 4 · O deploy nunca apaga
+### 3 · O deploy nunca apaga
 
 O deploy é o `[2]upload-or-download.bat` — `git pull` no servidor seguido de
 `cp -R site/. LIVE_PATH/`. **Não existe `.cpanel.yml`**, nunca existiu.
@@ -95,7 +86,7 @@ Confirmar a direcção antes de correr.
 
 Não mudar o caminho de destino sem o Tiago pedir.
 
-### 5 · Coisas que ficam velhas em silêncio
+### 4 · Coisas que ficam velhas em silêncio
 
 Nenhuma destas dá erro quando se esquece:
 
@@ -133,6 +124,41 @@ aconteceu três vezes.
 Em particular: o slug do JSON tem de bater certo com o `data-product` da página,
 e **não** se cria um registo manual de imagens — a descoberta da galeria é
 genérica.
+
+## Antes de alterar o PASSO 1 de um produto
+
+O editor `site/produtos.php` só pode criar ou remover designs quando existir uma
+receita explícita para esse slug em `site/lib/produtos-passo1.php`. **Não criar
+fallbacks genéricos.** Cada receita declara o `stepId`, os defaults visuais, as
+imagens obrigatórias, a estratégia de criação, se a remoção isolada é segura e
+os campos exactos actualizados pelo upload directo em `directUploadTargets`.
+
+Ao acrescentar um JSON a `site/content/products/`, ou ao mudar a estrutura dos
+`items` do primeiro passo de um produto existente, actualizar a receita na
+**mesma alteração**. Confirmar ainda que `produtos.php` abre sem aviso de
+contrato e que criar/remover fica bloqueado quando o produto exige alterações
+noutros passos. Molduras são o exemplo: um item novo implica preço, gaveta e
+condições pelo seu `value`, portanto não é uma simples entrada nova.
+
+Depois de qualquer criação ou remoção, recriar os snapshots. A checklist maior
+de produto novo continua a aplicar-se quando se trata de uma categoria
+comercial nova, não apenas de um design dentro de um produto existente.
+
+## Antes de criar uma página de backend
+
+Todas as páginas internas de backend têm de nascer prontas para fechar antes do
+deploy, mas permanecer abertas durante o desenvolvimento. Em PHP, incluir
+`site/admin-open.php` e recusar o acesso quando não existir a sessão
+`miaandpaper_admin`; **não criar outro interruptor nem outro sistema de login**.
+Com `MIA_ADMIN_OPEN=true`, o ficheiro central autentica a sessão automaticamente;
+antes do deploy muda-se apenas esse valor para `false`. Os endpoints de escrita
+continuam sempre a validar CSRF.
+
+Cada página de backend tem também de carregar `site/admin-nav.css` e
+`site/admin-nav.js`, e ganhar o seu link na lista central de `site/admin-nav.js`
+na mesma alteração. Não copiar a barra nem manter uma segunda lista de links na
+página. Para ferramentas dentro de `site/tools/`, usar `data-prefix="../"` como
+nas páginas existentes.
 
 ## Antes de mexer em imagens
 

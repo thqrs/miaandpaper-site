@@ -206,6 +206,17 @@
       "h1": "Falar com a Mia"
     },
     {
+      "file": "perguntasfrequentes.html",
+      "url": "/perguntasfrequentes.html",
+      "priority": "0.5",
+      "changefreq": "monthly",
+      "headOnly": true,
+      "title": "Perguntas frequentes | Mia & Paper",
+      "description": "Respostas às perguntas frequentes sobre encomendas, personalização e entrega na Mia & Paper.",
+      "ogDescription": "Dúvidas comuns sobre encomendas, personalização e entrega.",
+      "h1": "Perguntas frequentes"
+    },
+    {
       "file": "privacy.html",
       "url": "/privacy.html",
       "priority": "0.2",

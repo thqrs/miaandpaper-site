@@ -23,8 +23,8 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="../catalogo/catalogo.css?v=2026072601">
   <link rel="stylesheet" href="../ofertas/ofertas.css?v=2026062809">
-  <link rel="stylesheet" href="../admin-nav.css?v=2026072801">
-  <script src="../admin-nav.js?v=2026072801" data-prefix="../" defer></script>
+  <link rel="stylesheet" href="../admin-nav.css?v=2026081001">
+  <script src="../admin-nav.js?v=2026081001" data-prefix="../" defer></script>
   <style>
     /* O card tem dois destinos, por isso deixa de ser um <a>: o título estica-se
        sobre o card inteiro e o segundo link fica por cima, na sua área. */
@@ -75,6 +75,14 @@ if (empty($_SESSION['miaandpaper_admin'])) {
           <span class="catalog-product-thumb" aria-hidden="true">H</span>
           <span class="catalog-product-copy"><strong>Homepage &amp; Menu</strong><span>Ordem e agrupamento do menu, e os cartões da homepage.</span><span class="catalog-product-action">Abrir editor</span></span>
         </a>
+        <a class="catalog-product-card" href="../faqs.php">
+          <span class="catalog-product-thumb" aria-hidden="true">?</span>
+          <span class="catalog-product-copy"><strong>FAQs</strong><span>Perguntas e respostas da página de perguntas frequentes.</span><span class="catalog-product-action">Abrir editor</span></span>
+        </a>
+        <a class="catalog-product-card" href="../bot.php">
+          <span class="catalog-product-thumb" aria-hidden="true">M</span>
+          <span class="catalog-product-copy"><strong>Míu</strong><span>Conversas, system prompt, base de informação, fornecedor e limites do chatbot.</span><span class="catalog-product-action">Abrir painel</span></span>
+        </a>
         <a class="catalog-product-card" href="../materiais.php">
           <span class="catalog-product-thumb" aria-hidden="true">€/un</span>
           <span class="catalog-product-copy"><strong>Materiais e custos</strong><span>Quanto custa mesmo fazer uma unidade: materiais, estragos e tempo.</span><span class="catalog-product-action">Abrir calculadora</span></span>
@@ -90,6 +98,10 @@ if (empty($_SESSION['miaandpaper_admin'])) {
         <a class="catalog-product-card" href="../multimedia.html">
           <span class="catalog-product-thumb" aria-hidden="true">M</span>
           <span class="catalog-product-copy"><strong>Multimédia</strong><span>Inventário dos ficheiros de imagem e dos locais onde são usados.</span><span class="catalog-product-action">Abrir inventário</span></span>
+        </a>
+        <a class="catalog-product-card" href="../photo-wizard.php">
+          <span class="catalog-product-thumb" aria-hidden="true">W</span>
+          <span class="catalog-product-copy"><strong>Photo Wizard</strong><span>Resolver, uma de cada vez e com sugestões, as imagens por concluir na Galeria.</span><span class="catalog-product-action">Continuar escolhas</span></span>
         </a>
         <a class="catalog-product-card" href="../reviews.html">
           <span class="catalog-product-thumb" aria-hidden="true">★</span>

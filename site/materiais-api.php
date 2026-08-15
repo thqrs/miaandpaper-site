@@ -240,14 +240,29 @@ function mat_catalogo()
             continue;
         }
         foreach ($produto['prices'] as $priceKey => $tabela) {
+            $primeiraQuantidade = 0;
+            $primeiroTotalCents = 0;
+            foreach ((array)$tabela as $quantidade => $totalCents) {
+                $q = (int)$quantidade;
+                if ($q > 0 && ($primeiraQuantidade === 0 || $q < $primeiraQuantidade)) {
+                    $primeiraQuantidade = $q;
+                    $primeiroTotalCents = (int)$totalCents;
+                }
+            }
+            $precoUnidadeCents = $primeiraQuantidade > 0
+                ? $primeiroTotalCents / $primeiraQuantidade
+                : 0;
             $lista[] = array(
                 'chave' => $slug . '::' . $priceKey,
                 'slug' => (string)$slug,
                 'priceKey' => (string)$priceKey,
                 'etiqueta' => (isset($produto['label']) ? (string)$produto['label'] : (string)$slug) . ' · ' . $priceKey,
                 'unidade' => isset($produto['unitSingular']) ? (string)$produto['unitSingular'] : 'unidade',
-                // O preço de uma unidade solta, para se ver logo a margem.
-                'precoUnidadeCents' => isset($tabela['1']) ? (int)$tabela['1'] : 0,
+                // Referência comparável por unidade. Quando não há escalão 1,
+                // usa o unitário do menor escalão em vez de inventar 0 €.
+                'precoUnidadeCents' => $precoUnidadeCents,
+                'primeiroEscalaoQuantidade' => $primeiraQuantidade,
+                'primeiroEscalaoTotalCents' => $primeiroTotalCents,
             );
         }
     }

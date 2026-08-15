@@ -4,6 +4,7 @@
 // Conteudo: renderChrome (estrutura header/footer), banner de encomendas suspensas, tema claro/escuro (currentTheme/applyTheme/setTheme/bindThemeToggle).
   function renderChrome(innerHtml, currentProduct) {
     app.innerHTML = renderOrdersSuspendedBanner() + innerHtml + renderAdminSurface(currentProduct) + renderCartSurface();
+    prepareAdminEditingLayer(currentProduct);
     if (state.home) {
       applyThemeToggleVisibility(state.home.showThemeToggle === true);
     }
@@ -157,4 +158,3 @@
       items: Array.isArray(source.items) ? source.items.map(normalizeCartItem) : []
     };
   }
-

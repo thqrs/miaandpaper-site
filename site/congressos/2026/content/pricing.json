@@ -8,6 +8,8 @@
         "caderninhos": {
             "id": "caderninhos",
             "label": "caderninhos",
+            "pricingMode": "tier-unit",
+            "allowUnitDiscounts": true,
             "unitLabel": "mini-cadernos",
             "unitSingular": "mini-caderno",
             "unitShort": "mini-caderno",
@@ -27,6 +29,8 @@
         "imanes": {
             "id": "imanes",
             "label": "imanes",
+            "pricingMode": "tier-unit",
+            "allowUnitDiscounts": true,
             "unitLabel": "ímanes",
             "unitSingular": "íman",
             "unitShort": "íman",
@@ -51,6 +55,8 @@
         "crachas": {
             "id": "crachas",
             "label": "crachas",
+            "pricingMode": "tier-unit",
+            "allowUnitDiscounts": true,
             "unitLabel": "crachás",
             "unitSingular": "crachá",
             "unitShort": "crachá",
@@ -74,35 +80,11 @@
                 }
             }
         },
-        "pins": {
-            "id": "pins",
-            "label": "Pins",
-            "unitLabel": "crachás",
-            "unitSingular": "crachá",
-            "unitShort": "crachá",
-            "defaultPriceKey": null,
-            "prices": {
-                "25 mm": {
-                    "1": 150,
-                    "3": 420,
-                    "5": 650,
-                    "24": 2700,
-                    "48": 5000,
-                    "96": 9000
-                },
-                "32 mm": {
-                    "1": 175,
-                    "3": 500,
-                    "5": 750,
-                    "24": 3200,
-                    "48": 5800,
-                    "96": 10500
-                }
-            }
-        },
         "cadernos": {
             "id": "cadernos",
             "label": "cadernos",
+            "pricingMode": "flat-unit",
+            "allowUnitDiscounts": false,
             "unitLabel": "cadernos",
             "unitSingular": "caderno",
             "unitShort": "caderno",
@@ -114,22 +96,12 @@
                     "3": 3790,
                     "4": 4290
                 }
-            }
-        },
-        "lembrancas": {
-            "id": "lembrancas",
-            "label": "Lembrancas",
-            "unitLabel": "lembranças",
-            "unitSingular": "lembrança",
-            "unitShort": "lembrança",
-            "defaultPriceKey": "lembrança",
-            "prices": {
-                "lembrança": {
-                    "1": 0,
-                    "3": 0,
-                    "5": 0,
-                    "10": 0
-                }
+            },
+            "flatUnitPricesCents": {
+                "caderno_normal": 2990,
+                "caderno_pioneiro": 3490,
+                "pack_normal": 3790,
+                "pack_pioneiro": 4290
             }
         }
     }

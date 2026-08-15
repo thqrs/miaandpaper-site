@@ -158,7 +158,10 @@
 
   var state = {
     admin: safeStorageGetItem(ADMIN_KEY) === "1",
-    adminPanelHidden: safeStorageGetItem(ADMIN_PANEL_HIDDEN_KEY) === "1",
+    // O painel completo fica fechado por omissão: a página pública é a
+    // pré-visualização e os editores abrem por cima dela quando são pedidos.
+    adminPanelHidden: safeStorageGetItem(ADMIN_PANEL_HIDDEN_KEY) !== "0",
+    adminEditDialogKey: "",
     loginOpen: false,
     adminMessage: "",
     cartPanelOpen: false,

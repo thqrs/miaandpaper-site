@@ -130,6 +130,138 @@ function format_unit_price($cents, $quantity, $unit)
     return number_format(((int)$cents) / 100 / (int)$quantity, 2, ',', '') . ' €/' . $unit;
 }
 
+function payment_debug_requested()
+{
+    $value = isset($_GET['checkout_debug']) ? strtolower(trim((string)$_GET['checkout_debug'])) : '';
+    return in_array($value, array('1', 'true', 'yes', 'sim', 'on'), true);
+}
+
+function payment_country_code_from_server()
+{
+    $geoip = isset($_SERVER['GEOIP_COUNTRY_CODE']) ? strtoupper(trim((string)$_SERVER['GEOIP_COUNTRY_CODE'])) : '';
+    if (preg_match('/^[A-Z]{2}$/', $geoip)) {
+        return $geoip;
+    }
+
+    $remote = isset($_SERVER['REMOTE_ADDR']) ? mp_client_ip_normalize($_SERVER['REMOTE_ADDR']) : '';
+    if ($remote === '' || !mp_client_ip_remote_is_trusted($remote)) {
+        return '';
+    }
+
+    foreach (array('HTTP_CF_IPCOUNTRY', 'HTTP_X_COUNTRY_CODE') as $header) {
+        $value = isset($_SERVER[$header]) ? strtoupper(trim((string)$_SERVER[$header])) : '';
+        if (preg_match('/^[A-Z]{2}$/', $value)) {
+            return $value;
+        }
+    }
+
+    return '';
+}
+
+function payment_country_code_for_ip($ip)
+{
+    $serverCode = payment_country_code_from_server();
+    if ($serverCode !== '') {
+        return $serverCode;
+    }
+
+    $ip = mp_db_normalize_ip($ip);
+    if ($ip === '' || !mp_tracking_ip_is_public($ip)) {
+        return '';
+    }
+
+    $cached = mp_ip_lookup_get($ip);
+    $cachedCode = is_array($cached) && !empty($cached['country_code'])
+        ? strtoupper(trim((string)$cached['country_code']))
+        : '';
+    if (preg_match('/^[A-Z]{2}$/', $cachedCode)) {
+        return $cachedCode;
+    }
+
+    // CHECKOUT_COUNTRY_V1: consulta mínima, só para decidir se as instruções
+    // de MB WAY podem ser mostradas. Não pede cidade, operador, coordenadas
+    // nem guarda a resposta completa usada pelo enriquecimento do painel.
+    $body = mp_ip_lookup_http_get(
+        'https://ipwho.is/' . rawurlencode($ip) . '?fields=success,country_code,is_eu',
+        array('Accept: application/json'),
+        2
+    );
+    $data = is_string($body) ? json_decode($body, true) : null;
+    $countryCode = is_array($data) && !empty($data['success']) && !empty($data['country_code'])
+        ? strtoupper(trim((string)$data['country_code']))
+        : '';
+
+    if (!preg_match('/^[A-Z]{2}$/', $countryCode)) {
+        return '';
+    }
+
+    mp_ip_lookup_save($ip, array(
+        'country_code' => $countryCode,
+        'country_name' => '',
+        'source' => 'ipwho.is-country',
+        'raw_json' => null,
+        'lookup_error' => '',
+        'last_checked_at' => mp_db_now(),
+    ));
+
+    return $countryCode;
+}
+
+function payment_country_is_eu($countryCode)
+{
+    return in_array(strtoupper(trim((string)$countryCode)), array(
+        'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI',
+        'FR', 'GR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL',
+        'PT', 'RO', 'SE', 'SI', 'SK',
+    ), true);
+}
+
+function payment_delivery_is_eligible($deliveryOption, $customerName, $customerContact, $ipNumber)
+{
+    if ($deliveryOption === 'shipping') {
+        return true;
+    }
+    if ($deliveryOption !== 'join_orders') {
+        return false;
+    }
+
+    return (bool)mp_db_find_open_shipping_order($customerName, $customerContact, $ipNumber);
+}
+
+function payment_instagram_url()
+{
+    $fallback = 'https://www.instagram.com/miaandpaper/';
+    $path = __DIR__ . '/content/home.json';
+    if (!is_file($path)) {
+        return $fallback;
+    }
+    $home = json_decode(file_get_contents($path), true);
+    $url = is_array($home) && !empty($home['instagramUrl']) ? trim((string)$home['instagramUrl']) : '';
+    return preg_match('#^https://#i', $url) ? $url : $fallback;
+}
+
+function payment_success_details($totalCents, $customerContact, $items, $shippingCents, $deliveryEligible, $hasPriceToConfirm, $ipNumber)
+{
+    if ($hasPriceToConfirm || !$deliveryEligible || (int)$totalCents <= 0) {
+        return null;
+    }
+
+    $countryCode = payment_country_code_for_ip($ipNumber);
+    if (!payment_country_is_eu($countryCode)) {
+        return null;
+    }
+
+    return array(
+        'total_cents' => (int)$totalCents,
+        'contact' => trim((string)$customerContact),
+        'items' => is_array($items) ? $items : array(),
+        'shipping_cents' => max(0, (int)$shippingCents),
+        'mbway_number' => '96 300 16 05',
+        'instagram_url' => payment_instagram_url(),
+        'country_code' => $countryCode,
+    );
+}
+
 function parse_design_quantities($values)
 {
     $quantities = array();
@@ -1382,6 +1514,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $productName = isset($productConfig['name']) ? trim((string)$productConfig['name']) : '';
     $isMainV2 = cart_is_main_v2_slug($slug);
     $isCongress = cart_is_congress_slug($slug);
+    $usesConfiguredPricing = $isMainV2 || $isCongress;
     $catalogContext = cart_string_selection($selections, 'catalog_context');
     $isCadernos = in_array($slug, array('cadernos', 'cadernos-anuais'), true)
         || (!empty($productConfig['family']) && (string)$productConfig['family'] === 'cadernos');
@@ -1418,6 +1551,13 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         || !main_v2_pricing_modes_agree($productConfig, $pricingProduct)
     )) {
         $errors[] = 'A tabela de preços deste produto não é válida.';
+    }
+    if ($isCongress && (
+        empty($pricingProduct)
+        || !main_v2_pricing_is_valid($pricingProduct)
+        || !main_v2_pricing_modes_agree($productConfig, $pricingProduct)
+    )) {
+        $errors[] = 'A tabela de preços deste produto do Congresso não é válida.';
     }
     $centralPackPrices = load_pricing_prices($slug);
     $packPrices = !empty($centralPackPrices) ? $centralPackPrices : product_prices($productConfig, empty($productConfig) ? $defaultPackPrices : array());
@@ -1754,9 +1894,9 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
 
     if ($hasPackStep && $packQuantity <= 0) {
         $errors[] = $isCadernos ? 'Escolhe uma opção de compra para ' . $productName . '.' : ($isCustomArtwork ? 'Indica a quantidade para ' . $productName . '.' : 'Escolhe um pack para ' . $productName . '.');
-    } elseif (!$isCadernos && ($isCustomArtwork || $isMainV2) && ($packQuantity < $minimumQuantity || $packQuantity > 9999)) {
+    } elseif (!$isCadernos && ($isCustomArtwork || $usesConfiguredPricing) && ($packQuantity < $minimumQuantity || $packQuantity > 9999)) {
         $errors[] = 'A quantidade de ' . $productName . ' deve ser entre ' . $minimumQuantity . ' e 9999.';
-    } elseif ($hasPrices && $hasPackStep && !$isCustomArtwork && !$isMainV2 && (!isset($packPrices[$priceKey]) || !isset($packPrices[$priceKey][$packQuantity]))) {
+    } elseif ($hasPrices && $hasPackStep && !$isCustomArtwork && !$usesConfiguredPricing && (!isset($packPrices[$priceKey]) || !isset($packPrices[$priceKey][$packQuantity]))) {
         $errors[] = $isCadernos ? 'Escolhe uma opção de compra válida para ' . $productName . '.' : 'Escolhe um pack válido para ' . $productName . '.';
     }
 
@@ -2051,9 +2191,9 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
             $errors[] = 'Escolhe uma opção de compra válida para ' . $productName . '.';
         }
 
-        if ($isMainV2 && ($cadernoOrderQuantity < 1 || $cadernoOrderQuantity > 9999)) {
+        if ($usesConfiguredPricing && ($cadernoOrderQuantity < 1 || $cadernoOrderQuantity > 9999)) {
             $errors[] = 'Escolhe uma quantidade válida para ' . $productName . '.';
-        } elseif (!$isMainV2 && !in_array($cadernoOrderQuantity, $cadernoOrderQuantityOptions, true)) {
+        } elseif (!$usesConfiguredPricing && !in_array($cadernoOrderQuantity, $cadernoOrderQuantityOptions, true)) {
             $errors[] = 'Escolhe uma quantidade válida para ' . $productName . '.';
         }
 
@@ -2118,7 +2258,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         $errors[] = 'Confirma a congregação opcional em ' . $productName . '.';
     }
 
-    $mainFlatPriceKey = $isMainV2 && $isCadernos && !empty($purchaseItem['value'])
+    $mainFlatPriceKey = $usesConfiguredPricing && $isCadernos && !empty($purchaseItem['value'])
         ? cart_text($purchaseItem['value'])
         : $priceKey;
     // Nos produtos com packs o total vem da combinação de packs (ou da escada,
@@ -2127,15 +2267,15 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     // O unitário passa a ser derivado, apenas para as linhas de "x €/unidade".
     // Um tamanho por orçamentar não tem tabela nenhuma: fica fora de todos os
     // modos para não disparar os erros de "preço não confirmado".
-    $mainV2HasQuantityPricingSwitch = $isMainV2
+    $mainV2HasQuantityPricingSwitch = $usesConfiguredPricing
         && !$sizeQuoteOnly
         && main_v2_quantity_pricing_switch_enabled($productConfig, $mainFlatPriceKey);
-    if ($isMainV2 && !in_array($quantityPricingMode, array('', 'packs', 'quantity_tiers'), true)) {
+    if ($usesConfiguredPricing && !in_array($quantityPricingMode, array('', 'packs', 'quantity_tiers'), true)) {
         $errors[] = 'O método de cálculo do preço não é válido.';
-    } elseif ($isMainV2 && $quantityPricingMode === 'quantity_tiers' && !$mainV2HasQuantityPricingSwitch) {
+    } elseif ($usesConfiguredPricing && $quantityPricingMode === 'quantity_tiers' && !$mainV2HasQuantityPricingSwitch) {
         $errors[] = 'O desconto por quantidade não está disponível para esta opção.';
     }
-    $mainV2SelectedPricingMode = $isMainV2 && !$sizeQuoteOnly
+    $mainV2SelectedPricingMode = $usesConfiguredPricing && !$sizeQuoteOnly
         ? main_v2_selected_pricing_mode($productConfig, $mainFlatPriceKey, $quantityPricingMode)
         : '';
     $mainV2UsesLadder = $mainV2SelectedPricingMode === 'linear-discount-interpolation';
@@ -2158,7 +2298,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
             ? product_tier_price_cents($mainV2PriceTable, $packQuantity)
             : ($mainV2PackPlan !== null ? (int)$mainV2PackPlan['cents'] : 0));
     $mainV2UsesTotalFromPacks = $mainV2UsesLadder || $mainV2UsesPacks || $mainV2UsesTiers;
-    $mainFlatUnitPriceCents = $isMainV2
+    $mainFlatUnitPriceCents = $usesConfiguredPricing
         ? ($mainV2UsesTotalFromPacks
             ? ($packQuantity > 0 ? (int)round($mainV2LadderTotalCents / $packQuantity) : 0)
             : product_flat_unit_price_cents($productConfig, $pricingProduct, $mainFlatPriceKey))
@@ -2179,10 +2319,10 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     if ($mainV2UsesLadder && $mainV2LadderTotalCents <= 0) {
         $errors[] = 'Não foi possível confirmar o preço de ' . $productName . '.';
     }
-    if ($isMainV2 && !$sizeQuoteOnly && !$mainV2UsesTotalFromPacks && $mainFlatUnitPriceCents <= 0) {
+    if ($usesConfiguredPricing && !$sizeQuoteOnly && !$mainV2UsesTotalFromPacks && $mainFlatUnitPriceCents <= 0) {
         $errors[] = 'Não foi possível confirmar o preço unitário de ' . $productName . '.';
     }
-    if ($isMainV2 && $isCadernos && $mainFlatPriceKey !== '') {
+    if ($usesConfiguredPricing && $isCadernos && $mainFlatPriceKey !== '') {
         $priceKey = $mainFlatPriceKey;
     }
 
@@ -2215,7 +2355,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
 
     $unitLabel = isset($productConfig['unitLabel']) && trim((string)$productConfig['unitLabel']) !== '' ? trim((string)$productConfig['unitLabel']) : (($slug === 'crachas' || $slug === 'pins') ? 'crachás' : 'unidades');
     $unitShort = isset($productConfig['unitShort']) && trim((string)$productConfig['unitShort']) !== '' ? trim((string)$productConfig['unitShort']) : (($slug === 'crachas' || $slug === 'pins') ? 'crachá' : 'unid.');
-    $basePriceCents = $isMainV2
+    $basePriceCents = $usesConfiguredPricing
         ? $mainFlatUnitPriceCents
         : ($isCustomArtwork
             ? (isset($packPrices[$priceKey])
@@ -2224,7 +2364,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
                     : product_tier_price_cents($packPrices[$priceKey], $packQuantity))
                 : 0)
             : (($hasPrices && isset($packPrices[$priceKey][$packQuantity])) ? $packPrices[$priceKey][$packQuantity] : 0));
-    if (!$isMainV2 && $isCadernos && !empty($purchaseItem) && isset($purchaseItem['priceCents'])) {
+    if (!$usesConfiguredPricing && $isCadernos && !empty($purchaseItem) && isset($purchaseItem['priceCents'])) {
         $basePriceCents = (int)$purchaseItem['priceCents'];
     } elseif ($isQuadros) {
         $quadroFixedPriceCents = isset($quadroTypeItem['priceCents'])
@@ -2245,7 +2385,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $productQuantity = $isCadernos ? $cadernoOrderQuantity : $packQuantity;
     $productSubtotalCents = $quoteOnly
         ? 0
-        : ($isMainV2
+        : ($usesConfiguredPricing
             ? ($mainV2UsesTotalFromPacks
                 ? $mainV2LadderTotalCents + (($addOnsExtraCents + $personalizationExtraCents + $packagingExtraCents + $finishExtraPerUnitCents + $optionDrawerExtraPerUnitCents) * $productQuantity)
                 : $unitPriceCents * $productQuantity)
@@ -2281,7 +2421,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
             : ($priceCents ? format_euros($priceCents) : 'Não calculado'));
     $unitPriceLine = $quoteOnly
         ? ''
-        : ($isMainV2 && $unitPriceCents
+        : ($usesConfiguredPricing && $unitPriceCents
             ? format_euros($unitPriceCents) . '/' . $unitShort
             : ((!$isCadernos && $priceCents) ? format_unit_price($priceCents, $packQuantity, $unitShort) : ''));
 
@@ -2346,7 +2486,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         : ($basePriceCents
             ? ($packCombinationLine !== ''
                 ? $packCombinationLine . ' = ' . format_euros($productBaseSubtotalCents)
-                : ($isMainV2
+                : ($usesConfiguredPricing
                     ? format_euros($basePriceCents) . ' x ' . $productQuantity . ' = ' . format_euros($productBaseSubtotalCents)
                     : ($isCadernos && $cadernoOrderQuantity > 1 ? format_euros($basePriceCents) . ' x ' . $cadernoOrderQuantity . ' = ' . format_euros($basePriceCents * $cadernoOrderQuantity) : format_euros($basePriceCents))))
             : 'Não calculado');
@@ -3277,9 +3417,11 @@ function render_result_categories()
     <?php
 }
 
-function render_page($title, $message, $kind, $details, $orderCode = '', $customerName = '', $messageHtml = false, $successMode = '', $postSuccessCopy = null)
+function render_page($title, $message, $kind, $details, $orderCode = '', $customerName = '', $messageHtml = false, $successMode = '', $postSuccessCopy = null, $paymentDetails = null)
 {
     global $returnToPath, $productSlug;
+
+    $isPaymentSuccess = $kind === 'success' && is_array($paymentDetails);
 
     if (!$returnToPath) {
         $returnToPath = 'index.html';
@@ -3305,6 +3447,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   <link rel="stylesheet" href="css/10-entrega-uniformizacao.css?v=2026080501">
   <link rel="stylesheet" href="css/11-home-marca.css?v=2026080501">
   <link rel="stylesheet" href="css/12-composer-glitter-chart.css?v=2026080501">
+  <link rel="stylesheet" href="css/13-miu.css?v=2026081501">
 </head>
 <body class="result-body">
   <main class="result-card <?php echo h($kind); ?>">
@@ -3314,12 +3457,67 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
     </a>
 
     <div>
-      <p class="eyebrow"><?php echo $kind === 'success' ? 'Pedido enviado' : 'Pedido não enviado'; ?></p>
+      <p class="eyebrow"><?php echo $isPaymentSuccess ? 'Pagamento' : ($kind === 'success' ? 'Pedido enviado' : 'Pedido não enviado'); ?></p>
       <h1><?php echo h($title); ?></h1>
       <p class="lead"><?php echo $messageHtml ? $message : h($message); ?></p>
     </div>
 
-    <?php if ($kind === 'success' && $orderCode !== '') : ?>
+    <?php if ($isPaymentSuccess) : ?>
+      <section class="payment-success-card" aria-label="Dados para pagamento por MB WAY">
+        <?php if (!empty($paymentDetails['items'])) : ?>
+          <div class="payment-success-summary">
+            <h2>A tua encomenda</h2>
+            <ul>
+              <?php foreach ($paymentDetails['items'] as $item) : ?>
+                <li>
+                  <span><?php echo h(isset($item['label']) ? $item['label'] : 'Produto'); ?></span>
+                  <strong><?php echo format_euros(isset($item['price_cents']) ? (int)$item['price_cents'] : 0); ?></strong>
+                </li>
+              <?php endforeach; ?>
+              <?php if (!empty($paymentDetails['shipping_cents'])) : ?>
+                <li>
+                  <span>Portes CTT</span>
+                  <strong><?php echo format_euros((int)$paymentDetails['shipping_cents']); ?></strong>
+                </li>
+              <?php endif; ?>
+            </ul>
+          </div>
+        <?php endif; ?>
+
+        <p>
+          Podes pagar já por MB WAY. Enviaremos a confirmação do pagamento para
+          <strong><?php echo h($paymentDetails['contact']); ?></strong>; esta confirmação pode demorar até 24 horas.
+        </p>
+
+        <div class="payment-success-values">
+          <p><span>Total a pagar</span><strong><?php echo format_euros((int)$paymentDetails['total_cents']); ?></strong></p>
+          <p><span>Número MB WAY</span><strong><?php echo h($paymentDetails['mbway_number']); ?></strong></p>
+        </div>
+
+        <p>
+          Se tiveres dificuldade em pagar desta forma, ou se preferires pagar
+          pessoalmente em numerário, entra em contacto connosco.
+        </p>
+        <div class="payment-success-actions">
+          <a class="button primary" href="contacto.html">Formulário de contacto</a>
+          <a class="button secondary" href="<?php echo h($paymentDetails['instagram_url']); ?>" target="_blank" rel="noopener">Mensagem no Instagram</a>
+        </div>
+
+        <aside class="payment-success-note">
+          <strong>Nota importante</strong>
+          <p>Dependendo do peso final da encomenda, o preço dos portes pode sofrer um pequeno ajuste. Se isso acontecer, entraremos em contacto contigo para pedir ou devolver a diferença. Na maioria dos casos, o valor apresentado é o valor final.</p>
+        </aside>
+
+        <?php if ($orderCode !== '') : ?>
+          <p class="order-success-code">
+            <span class="order-success-code-label">Código da encomenda:</span>
+            <code><?php echo h($orderCode); ?></code>
+          </p>
+        <?php endif; ?>
+      </section>
+    <?php endif; ?>
+
+    <?php if ($kind === 'success' && !$isPaymentSuccess && $orderCode !== '') : ?>
       <?php
         // FINAL_MESSAGE_V1: nova mensagem rica após pedido bem sucedido.
         // Inclui nome (se preenchido), código da encomenda gerado em
@@ -3369,8 +3567,10 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
     <?php endif; ?>
 
     <?php if ($kind === 'success') : ?>
-      <?php render_result_categories(); ?>
-      <p class="open-order-hint home-unavailable-message" role="status" aria-live="polite" data-home-unavailable-inline hidden></p>
+      <?php if (!$isPaymentSuccess) : ?>
+        <?php render_result_categories(); ?>
+        <p class="open-order-hint home-unavailable-message" role="status" aria-live="polite" data-home-unavailable-inline hidden></p>
+      <?php endif; ?>
     <?php else : ?>
       <?php render_retry_email_form(); ?>
       <div class="actions">
@@ -3386,7 +3586,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   </main>
   <?php if ($kind === 'success') : ?>
     <script>
-      <?php if ($successMode !== 'cart' && $successMode !== 'copy') : ?>
+      <?php if ($successMode !== 'cart' && $successMode !== 'cart-payment' && $successMode !== 'copy' && $successMode !== 'payment-debug') : ?>
       window.sessionStorage.setItem("miaandpaper-reset-<?php echo h($productSlug ? $productSlug : 'crachas'); ?>", "1");
       <?php endif; ?>
       var unavailableInlineMessage = document.querySelector("[data-home-unavailable-inline]");
@@ -3432,7 +3632,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
       });
     </script>
   <?php endif; ?>
-  <?php if ($kind === 'success' && $successMode === 'cart') : ?>
+  <?php if ($kind === 'success' && ($successMode === 'cart' || $successMode === 'cart-payment')) : ?>
     <script>
       try {
         window.localStorage.removeItem('miaandpaper_cart_v1');
@@ -3440,6 +3640,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
       } catch (error) {}
     </script>
   <?php endif; ?>
+  <script src="js/24-miu.js?v=2026081501"></script>
 </body>
 </html>
     <?php
@@ -3690,6 +3891,12 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     );
 
     $ipNumber = mp_client_ip();
+    $paymentDeliveryEligible = payment_delivery_is_eligible(
+        $deliveryOption,
+        $customerName,
+        $customerContactTrim,
+        $ipNumber
+    );
     $referrerLine = isset($_SERVER['HTTP_REFERER']) ? (string)$_SERVER['HTTP_REFERER'] : '';
     $landingLine = $returnToPath !== '' ? $returnToPath : 'checkout.html';
     $firstProductSlug = isset($preparedItems[0]['product_slug']) ? $preparedItems[0]['product_slug'] : 'cart';
@@ -3844,25 +4051,78 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         ));
     }
 
+    $paymentItems = array();
+    foreach ($preparedItems as $line) {
+        $paymentItems[] = array(
+            'label' => isset($line['product_name']) ? (string)$line['product_name'] : 'Produto',
+            'price_cents' => isset($line['price_cents']) ? (int)$line['price_cents'] : 0,
+        );
+    }
+    $paymentDetails = payment_success_details(
+        $totalEstimateCents,
+        $customerContactTrim,
+        $paymentItems,
+        $deliveryFeeCents,
+        $paymentDeliveryEligible,
+        $hasQuoteOnly,
+        $ipNumber
+    );
+    if (is_array($paymentDetails)) {
+        mp_db_log_order_event($orderId, 'payment_instructions_shown', array(
+            'method' => 'mbway',
+            'country_code' => $paymentDetails['country_code'],
+            'total_cents' => $totalEstimateCents,
+        ));
+    }
+
     render_page(
-        'Pedido feito com sucesso!',
-        'O teu pedido foi recebido. A Mia vai entrar em contacto contigo com os próximos passos.',
+        is_array($paymentDetails) ? 'Obrigado pela tua encomenda.' : 'Pedido feito com sucesso!',
+        is_array($paymentDetails)
+            ? 'Vamos começar a prepará-la assim que o pagamento estiver confirmado.'
+            : 'O teu pedido foi recebido. A Mia vai entrar em contacto contigo com os próximos passos.',
         'success',
         array(),
         $orderCode,
         $customerName,
         false,
-        'cart',
+        is_array($paymentDetails) ? 'cart-payment' : 'cart',
         !$sendCopy ? array(
             'order_code' => $orderCode,
             'copy_token' => $postSuccessCopyToken,
             'email' => $contactEmail,
-        ) : null
+        ) : null,
+        $paymentDetails
     );
 }
 
 $returnToPath = safe_return_to();
 $productSlug = safe_product_slug();
+
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'GET' && payment_debug_requested()) {
+    render_page(
+        'Obrigado pela tua encomenda.',
+        'Vamos começar a prepará-la assim que o pagamento estiver confirmado.',
+        'success',
+        array(),
+        'MP-DEBUG',
+        'Cliente de teste',
+        false,
+        'payment-debug',
+        null,
+        array(
+            'total_cents' => 3250,
+            'contact' => 'cliente.teste@example.com',
+            'items' => array(
+                array('label' => 'Crachás personalizados', 'price_cents' => 1250),
+                array('label' => 'Mini-cadernos personalizados', 'price_cents' => 1460),
+            ),
+            'shipping_cents' => 540,
+            'mbway_number' => '96 300 16 05',
+            'instagram_url' => payment_instagram_url(),
+            'country_code' => 'PT',
+        )
+    );
+}
 
 if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: index.html', true, 303);
@@ -4474,6 +4734,12 @@ $shippingEstimateCents = (int)$deliveryFeeCents;
 $totalEstimateCents = $subtotalCents + $shippingEstimateCents;
 
 $ipNumber = mp_client_ip();
+$paymentDeliveryEligible = payment_delivery_is_eligible(
+    $deliveryOption,
+    $customerName,
+    $customerContactTrim,
+    $ipNumber
+);
 $referrerLine = isset($_SERVER['HTTP_REFERER']) ? (string)$_SERVER['HTTP_REFERER'] : '';
 $landingLine = $returnToPath !== '' ? $returnToPath : '';
 
@@ -4641,18 +4907,38 @@ if ($sendCopy && $copyEmail !== '') {
     ));
 }
 
+$paymentDetails = payment_success_details(
+    $totalEstimateCents,
+    $customerContactTrim,
+    array(array('label' => $productName, 'price_cents' => $subtotalCents)),
+    $shippingEstimateCents,
+    $paymentDeliveryEligible,
+    false,
+    $ipNumber
+);
+if (is_array($paymentDetails)) {
+    mp_db_log_order_event($orderId, 'payment_instructions_shown', array(
+        'method' => 'mbway',
+        'country_code' => $paymentDetails['country_code'],
+        'total_cents' => $totalEstimateCents,
+    ));
+}
+
 render_page(
-    'Pedido feito com sucesso!',
-    'O teu pedido foi recebido. A Mia vai entrar em contacto contigo com os próximos passos.',
+    is_array($paymentDetails) ? 'Obrigado pela tua encomenda.' : 'Pedido feito com sucesso!',
+    is_array($paymentDetails)
+        ? 'Vamos começar a prepará-la assim que o pagamento estiver confirmado.'
+        : 'O teu pedido foi recebido. A Mia vai entrar em contacto contigo com os próximos passos.',
     'success',
     array(),
     $orderCode,
     $customerName,
     false,
-    '',
+    is_array($paymentDetails) ? 'payment' : '',
     !$sendCopy ? array(
         'order_code' => $orderCode,
         'copy_token' => $postSuccessCopyToken,
         'email' => $contactEmail,
-    ) : null
+    ) : null,
+    $paymentDetails
 );

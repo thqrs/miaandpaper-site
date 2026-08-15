@@ -1043,5 +1043,6 @@
         "bodyColor": "#8a7058"
     },
     "showThemeToggle": false,
-    "deadlineNoticeEnabled": false
+    "deadlineNoticeEnabled": false,
+    "menuShowIcons": false
 }

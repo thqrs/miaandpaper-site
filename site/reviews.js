@@ -100,13 +100,13 @@
     try { return window.sessionStorage.getItem(dismissKey) === "1"; } catch (error) { return false; }
   }
 
-  var dismiss = createElement("button", "review-bubble-dismiss", "⌄");
+  var dismiss = createElement("button", "review-bubble-dismiss");
   dismiss.type = "button";
   dismiss.setAttribute("aria-label", "Esconder as avaliações nesta visita");
   dismiss.title = "Esconder as avaliações nesta visita";
 
   // A pega vive fora do host: o host é escondido inteiro e ela tem de ficar.
-  var restore = createElement("button", "review-bubble-restore", "⌃");
+  var restore = createElement("button", "review-bubble-restore");
   restore.type = "button";
   restore.hidden = true;
   restore.setAttribute("aria-label", "Mostrar as avaliações");

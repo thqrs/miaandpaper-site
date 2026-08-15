@@ -29,7 +29,7 @@ http://127.0.0.1:8082/precos.php
 | **Extras, acabamentos, opções de entrega, tamanhos** | qualquer lista cujos elementos tenham um campo monetário vira uma tabela com nome, detalhe, valor e `+ Linha` / `✕` |
 | **Modo de preço** | selector no cabeçalho de cada produto; escreve nos **três** sítios que têm de concordar (produto, passo `pack`, `pricing.json`) |
 | **Custo do material** | um campo por tabela, que faz aparecer o **lucro por unidade**, o lucro total e a margem em cada linha |
-| **Cápsula do Congresso 2026** | secção própria que compara com o catálogo e sincroniza os preços |
+| **Congresso 2026** | quatro produtos próprios, editáveis como os restantes e gravados nos ficheiros do Congresso |
 
 O desconto aparece em **todas** as tabelas, incluindo as `flat-unit`. Numa
 `flat-unit` correcta dá 0% em todas as linhas — uma linha que não dê zero é logo
@@ -49,16 +49,16 @@ Isto importa por dois motivos:
 
 1. Mostrá-las como quantidades faria o editor dizer *"2 agendas = 34,90 €"*, que
    não é verdade.
-2. **O número que cobra é o `priceCents` do item**, não a tabela — ver
-   `purchaseOptionCents()` em `js/10-produto-precos.js` e
-   `product_flat_unit_price_cents()` no `send-order.php`, onde a tabela é só o
-   recurso.
+2. **O servidor cobra o `flatUnitPricesCents` da variante** em `pricing.json`.
+   O `priceCents` do item é o espelho usado pela interface; o editor mantém os
+   dois alinhados — ver `cadernoPurchasePriceCents()` no browser e
+   `product_flat_unit_price_cents()` no `send-order.php`.
 
 O mesmo valor vive em **três** sítios: `steps[pack].items[].priceCents`,
 `pricing.json → prices` (indexado pelo índice) e `pricing.json →
 flatUnitPricesCents` (indexado pelo `value` da variante). O editor detecta estas
 tabelas, mostra-as pelo nome da variante e **escreve nos três de uma vez** —
-editar só um deles mudaria um número que não cobra nada.
+editar só um deles faria o browser e o checkout mostrarem valores diferentes.
 
 ### Portes — um valor para o site todo
 
@@ -143,27 +143,17 @@ do git. O site público nunca o lê — só o editor. O deploy envia-o à parte,
 Formato: `{ "produtos": { "<slug>": { "<tabela>": custoPorUnidadeEmCentimos } } }`.
 Pôr o custo a zero apaga a entrada.
 
-### A cápsula do Congresso 2026
+### Os produtos do Congresso 2026
 
-A regra de não mexer na cápsula é sobre **imagens e design** — os preços podem e
-devem acompanhar o catálogo, senão divergem sozinhos (já aconteceu com os
-portes, 5,55 € contra 8,50 €).
+O editor apresenta `congresso-2026-crachas`, `congresso-2026-imanes`,
+`congresso-2026-caderninhos` e `congresso-2026-cadernos` como produtos próprios.
+Esse prefixo só existe no editor para impedir colisões; a gravação vai para
+`congressos/2026/content/pricing.json` e para o JSON de produto correspondente.
 
-O editor mostra a tabela da cápsula, compara-a com o produto do catálogo que a
-espelha e oferece um botão para sincronizar:
-
-| cápsula | espelha |
-|---|---|
-| `crachas`, `pins` | `crachas-loja` |
-| `imanes` | `imanes-loja` |
-| `caderninhos` | `mini-cadernos` |
-| `cadernos` | `cadernos-anuais` |
-| `lembrancas` | nenhum — é oferta, está tudo a zero |
-
-Sincronizar copia **só as tabelas que existem nos dois lados**. Nunca acrescenta
-nem remove tabelas, para não inventar na cápsula um tamanho que ela nunca
-vendeu — é por isso que os crachás de 58 mm existem no catálogo e não na
-cápsula.
+Os modos de cálculo começaram alinhados com `crachas-loja`, `imanes-loja`,
+`mini-cadernos` e `cadernos-anuais`, mas as tabelas e opções continuam
+independentes. Por isso o crachá de 58 mm do catálogo principal não aparece no
+Congresso e uma alteração futura num dos lados não altera o outro.
 
 **Nada toca no site antes do Save**, incluindo as alterações estruturais: são
 aplicadas a uma cópia local para a página mostrar o resultado, e só seguem para

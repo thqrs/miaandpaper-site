@@ -463,9 +463,21 @@
           "subtitle": "ímanes"
         },
         {
+          "id": "pack-24",
+          "quantity": 24,
+          "title": "24",
+          "subtitle": "ímanes"
+        },
+        {
           "id": "pack-30",
           "quantity": 30,
           "title": "30",
+          "subtitle": "ímanes"
+        },
+        {
+          "id": "pack-48",
+          "quantity": 48,
+          "title": "48",
           "subtitle": "ímanes"
         },
         {

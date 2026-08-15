@@ -1,5 +1,7 @@
 {
     "slug": "crachas",
+    "pricingMode": "tier-unit",
+    "allowUnitDiscounts": true,
     "name": "Crachás",
     "brand": "Mia & Paper",
     "homeUrl": "index.html",
@@ -780,7 +782,12 @@
                     "title": "96",
                     "subtitle": "crachás"
                 }
-            ]
+            ],
+            "minimumQuantity": 1,
+            "pricingMode": "tier-unit",
+            "allowUnitDiscounts": true,
+            "freeQuantity": true,
+            "adjustPerDesign": true
         },
         {
             "id": "details",

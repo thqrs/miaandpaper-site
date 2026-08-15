@@ -5,6 +5,9 @@ set "PORT=8082"
 if not "%~1"=="" set "PORT=%~1"
 set "ROOT_DIR=%~dp0"
 set "SITE_DIR=%ROOT_DIR%site"
+set "MIAANDPAPER_PRIVATE_DIR=%ROOT_DIR%private-local"
+
+if not exist "%MIAANDPAPER_PRIVATE_DIR%" mkdir "%MIAANDPAPER_PRIVATE_DIR%"
 
 if not exist "%SITE_DIR%\index.html" (
     echo Nao foi possivel encontrar a pasta do site:
@@ -67,5 +70,5 @@ rem fica com os defaults do php.ini (upload_max_filesize=2M, post_max_size=8M).
 rem Sem estes -d, qualquer foto acima de 2 MB e recusada aqui e passa em
 rem producao, que e onde o .user.ini manda. Manter em sincronia com site\.user.ini.
 pushd "%SITE_DIR%"
-php -d upload_max_filesize=44M -d post_max_size=48M -d max_file_uploads=10 -d max_input_time=300 -S 0.0.0.0:%PORT%
+php -d extension=openssl -d extension=curl -d upload_max_filesize=44M -d post_max_size=48M -d max_file_uploads=10 -d max_input_time=300 -S 0.0.0.0:%PORT%
 popd

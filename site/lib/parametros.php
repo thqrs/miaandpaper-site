@@ -309,6 +309,58 @@ function mp_parametros_registo()
             ),
         ),
 
+        'bot.php' => array(
+            'titulo' => 'Míu',
+            'tipo' => 'pagina',
+            'guarda' => 'admin',
+            'metodos' => array('GET', 'POST'),
+            'descricao' => 'Conversas, system prompt, base de informação e configuração do chatbot Míu.',
+            'documento' => 'docs/12-miu.md',
+            'parametros' => array(
+                'tab' => array(
+                    'tipo' => 'enum',
+                    'omissao' => 'conversations',
+                    'descricao' => 'Área do painel do Míu a abrir.',
+                    'valores' => array(
+                        'conversations' => 'conversas',
+                        'settings' => 'configuração',
+                        'contexts' => 'contexto por passo',
+                    ),
+                    'invalido' => 'omissao',
+                    'lido' => 'bot.php:70',
+                ),
+                'id' => array(
+                    'tipo' => 'inteiro',
+                    'omissao' => 0,
+                    'minimo' => 1,
+                    'descricao' => 'Conversa a abrir. Sem id, mostra apenas a lista.',
+                    'invalido' => 'omissao',
+                    'lido' => 'bot.php:119',
+                ),
+                'page' => array(
+                    'tipo' => 'inteiro',
+                    'omissao' => 1,
+                    'minimo' => 1,
+                    'descricao' => 'Página da lista, com 30 conversas por página.',
+                    'invalido' => 'omissao',
+                    'lido' => 'bot.php:118',
+                ),
+                'notice' => array(
+                    'tipo' => 'enum',
+                    'omissao' => '',
+                    'descricao' => 'Confirmação depois de uma escrita administrativa.',
+                    'valores' => array(
+                        'saved' => 'configuração guardada',
+                        'context-saved' => 'contexto guardado',
+                        'deleted' => 'conversa apagada',
+                    ),
+                    'grupo' => 'aviso',
+                    'invalido' => 'omissao',
+                    'lido' => 'bot.php:70',
+                ),
+            ),
+        ),
+
         // ── Páginas de admin sem parâmetros ─────────────────────────────────
         //
         // Estão aqui para o inventário ficar completo: quem lê o manifesto
@@ -740,18 +792,32 @@ function mp_parametros_registo()
             ),
         ),
 
-        // ── Endpoints só de POST ────────────────────────────────────────────
+        // ── Formulários e endpoints públicos ───────────────────────────────
 
         'send-order.php' => array(
             'titulo' => 'Envio de encomenda',
-            'tipo' => 'api', 'guarda' => 'publico', 'metodos' => array('POST'),
-            'descricao' => 'Recebe o formulário de encomenda. Não lê nada do URL.',
-            'parametros' => array(),
+            'tipo' => 'api', 'guarda' => 'publico', 'metodos' => array('GET', 'POST'),
+            'descricao' => 'Recebe o formulário de encomenda; em GET pode mostrar a pré-visualização segura do ecrã de pagamento.',
+            'parametros' => array(
+                'checkout_debug' => array(
+                    'tipo' => 'flag',
+                    'omissao' => false,
+                    'descricao' => 'Mostra o ecrã final de pagamento com produtos e valores fictícios, sem criar encomenda nem enviar email.',
+                    'invalido' => 'omissao',
+                    'lido' => 'send-order.php:135',
+                ),
+            ),
         ),
         'send-message.php' => array(
             'titulo' => 'Envio de mensagem',
             'tipo' => 'api', 'guarda' => 'publico', 'metodos' => array('POST'),
             'descricao' => 'Recebe o formulário de contacto. Não lê nada do URL.',
+            'parametros' => array(),
+        ),
+        'bot-api.php' => array(
+            'titulo' => 'API do Míu',
+            'tipo' => 'api', 'guarda' => 'publico', 'metodos' => array('GET', 'POST'),
+            'descricao' => 'Configuração pública e mensagens do Míu. A acção vem do método HTTP e do corpo JSON; não lê nada do URL.',
             'parametros' => array(),
         ),
         'upload-order-photo.php' => array(

@@ -1,0 +1,10 @@
+<?php
+/**
+ * Copiar para private/miu-config.php no servidor, fora da raiz publica.
+ * Em desenvolvimento local, copiar para private-local/miu-config.php.
+ * Nunca preencher nem guardar este exemplo no repositorio com chaves reais.
+ */
+return array(
+    'openrouter_api_key' => 'COLOCA_A_CHAVE_OPENROUTER_AQUI',
+    'gemini_api_key' => 'COLOCA_A_CHAVE_GEMINI_AQUI',
+);

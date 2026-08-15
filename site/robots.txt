@@ -24,6 +24,9 @@ Disallow: /precos.php
 Disallow: /homepage-menu-design.php
 Disallow: /carrousel.php
 Disallow: /materiais.php
+Disallow: /faqs.php
+Disallow: /bot.php
+Disallow: /bot-api.php
 Disallow: /galeria-api.php
 Disallow: /precos-api.php
 Disallow: /homepage-menu-api.php

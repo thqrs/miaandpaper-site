@@ -8,7 +8,7 @@ Como o site está feito. As regras do que **não** fazer estão no
 ## A ideia central
 
 As páginas HTML estão **vazias**. Cada uma é uma casca de ~60 linhas que carrega
-os módulos `css/01→12` e `js/01→23` e declara, no `<body>`, o que é e que
+os módulos `css/01→13` e `js/01→24` e declara, no `<body>`, o que é e que
 produto mostra. Os módulos JS lêem um JSON de `content/` e desenham a página
 inteira no browser.
 
@@ -34,7 +34,7 @@ Duas consequências práticas:
 | `home` | `index.html`, `congressos.html` | grelha de categorias a partir de `content/home.json` |
 | `checkout` | `checkout.html` | carrinho e finalização |
 | `add-product` | `adicionar-produto.html` | grelha de `content/order-products.json` |
-| `contact` / `static` | `contacto.html`, `privacy.html`, `postais.html`, `ajuda-upload.html` | páginas simples |
+| `contact` / `static` | `contacto.html`, `privacy.html`, `perguntasfrequentes.html`, `postais.html`, `ajuda-upload.html` | páginas simples |
 | `preview` | `galeria-preview.html`, `modulos-preview.html` | superfícies internas de ferramentas |
 
 `data-product` **tem de coincidir exactamente** com o nome do ficheiro em
@@ -74,11 +74,12 @@ continua disponível no Git.
 ```
 site/
 ├── *.html                     cascas (~60 linhas cada)
-├── js/01→23                   todo o renderer do site público  (964 KB)
-├── css/01→12                  todo o CSS                        (328 KB)
+├── js/01→24                   renderer público + chatbot Míu
+├── css/01→13                  interface pública + chatbot Míu
 ├── reviews.js, reviews-egg.js  bolhas de avaliações da homepage
 ├── content/
 │   ├── home.json              categorias da homepage, tema, carrossel
+│   ├── faqs.json              perguntas e respostas da página pública
 │   ├── pricing.json           ⚠️ fonte central de preços
 │   ├── order-products.json    grelha do "adicionar outro produto"
 │   ├── products/<slug>.json   um por produto: passos, designs, preços
@@ -88,17 +89,21 @@ site/
 ├── upload-order-photo.php     recebe ficheiros dos clientes
 ├── track-order-event.php      funil analítico
 ├── lib/db.php                 SQLite: schema, migrações, todos os acessos
+├── lib/miu-bot.php            SQLite separado, filtros e fornecedores do Míu
 ├── lib/precos-core.php        ⚠️ cálculo e validação de preços, partilhado
 ├── lib/snapshot.php           HTML congelado das páginas pesadas
 ├── lib/avisos.php             emails de aviso à Mia
 ├── admin-*.php                painéis (encomendas, funil, dashboard)
+├── bot.php + bot-api.php      painel e endpoint público do Míu
 ├── precos.php + precos-api.php        editor central de preços
 ├── homepage-menu-design.php           editor do menu e da homepage
 │   + homepage-menu-api.php
+├── faqs.php                    editor das perguntas frequentes
 ├── galeria.html + galeria-api.php     gestão de imagens
+├── produtos.php                       designs seleccionáveis do passo 1; acrescenta/remove items
 ├── produtos.html + produtos-api.php   vista de produtos e "teia"
 ├── modulos.php                inventário visual do CSS (gerado)
-└── congressos/2026/           ⚠️ cápsula do tempo — nunca editar
+└── congressos/2026/           contexto independente do Congresso 2026
 ```
 
 Fora de `site/` (não é publicado): `private/` no servidor, irmã da raiz web, com
@@ -135,41 +140,39 @@ Um `template` novo aparece sozinho no `modulos.php` — ver
 
 ## Regra de ouro: gatilhos por dados, não por slug
 
-Os módulos JS são partilhados entre o catálogo actual e a cápsula do Congresso
-2026. Uma alteração de comportamento **nunca** deve ser condicionada por uma
-lista de slugs no código — deve ser uma **flag no JSON** do produto que a quer.
+O catálogo actual e o Congresso 2026 têm ficheiros de interface e produtos
+independentes. Uma alteração de comportamento **nunca** deve ser condicionada
+por uma lista de slugs no código — deve ser uma **flag no JSON** do produto que
+a quer e portada para o outro contexto quando for intencional.
 
-Exemplo real: `"adjustPerDesign": true` no passo `pack`. Os produtos que a têm
-ganham o ajuste de quantidade por design; os da cápsula, que não a têm, ficam
-exactamente como estavam.
+Exemplo real: `"adjustPerDesign": true` no passo `pack`. Só os produtos que a
+têm ganham o ajuste de quantidade por design.
 
-Sempre que se mexe em `site/js/`, verificar **um produto do catálogo e um da
-cápsula**.
+Quando o mesmo comportamento existir nos dois contextos, verificar **um produto
+do catálogo e um do Congresso** depois de mexer numa das implementações.
 
-### A cápsula do Congresso 2026
+### O contexto do Congresso 2026
 
-`site/congressos/2026/` é um snapshot congelado dos wizards como estavam para a
-convenção de 2026. Tem cópias próprias de tudo: quatro JSON de produto
+`site/congressos/2026/` tem cópias próprias de tudo: quatro JSON de produto
 (`crachas`, `imanes`, `caderninhos`, `cadernos`), o seu `pricing.json` e as suas
-cascas HTML.
+cascas HTML. O `app-congressos.js` e o CSS também são próprios.
 
-**Nunca editar nada lá dentro.** Nem para "manter sincronizado", nem para
-corrigir um bug, nem para aplicar um refactor global. Se parece errado, está
-errado *de propósito* — regista o que foi vendido em 2026. É referência de
-leitura para as escadas de preços antigas.
-
-A divergência entre as duas cópias está levantada em
-[histórico/2026-07-28-duplicacao-contextos](historico/2026-07-28-duplicacao-contextos.md)
-— continua por decidir.
+Estes produtos são identidades comerciais independentes dos equivalentes do
+catálogo principal. Podem usar a mesma imagem, mas não partilham ficheiro de
+produto, tabela de preços nem opções de venda. No `precos.php` aparecem com o
+prefixo `congresso-2026-`, que é apenas a identidade do editor; o site e o
+checkout continuam a usar os slugs próprios do Congresso.
 
 ---
 
 ## Armadilhas conhecidas
 
-1. **`congressos/2026/` é uma cápsula do tempo.** Nunca editar, por motivo nenhum.
+1. **Fundir produtos do Congresso com os do catálogo por terem a mesma imagem.**
+   São produtos independentes e podem vender opções diferentes.
 2. **Alterar preços num só ficheiro** faz o checkout recusar a encomenda em
    silêncio. São sempre dois — ver [04 · Preços](04-precos.md).
-3. **Editar `site/js/` sem verificar a cápsula** — o renderer é partilhado.
+3. **Portar comportamento entre contextos sem testar os dois lados** — os
+   renderers são independentes e podem ter diferenças intencionais.
 4. **Esquecer o `?v=`** depois de mexer em `site/js/` ou `site/css/`.
 5. **Apagar do repositório e julgar que saiu do servidor** — o deploy nunca
    apaga; ver [08 · Deploy](08-deploy-e-ambiente.md).

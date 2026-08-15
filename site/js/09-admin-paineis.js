@@ -404,6 +404,264 @@
     ].join("");
   }
 
+  // ADMIN_OVERLAY_EDITOR_V1: os formulários deixam de participar no layout do
+  // site. Cada bloco é movido para um diálogo fixo e o elemento real recebe
+  // apenas um contorno sobreposto, sem mudar largura, altura ou grelha.
+  function adminEditBlockKey(block, index) {
+    var input;
+
+    if (block.classList.contains("home-intro-tools")) {
+      return "home:intro";
+    }
+
+    input = block.querySelector("[data-admin-home-category]");
+    if (input) {
+      return "home:category:" + input.dataset.adminHomeCategory;
+    }
+
+    input = block.querySelector("[data-admin-field-step][data-admin-field-index]");
+    if (input) {
+      return "field:" + input.dataset.adminFieldStep + ":" + input.dataset.adminFieldIndex;
+    }
+
+    input = block.querySelector("[data-step-id][data-item-id]");
+    if (input) {
+      return "item:" + input.dataset.stepId + ":" + input.dataset.itemId + ":"
+        + (input.dataset.miaEditKey || "main") + ":" + (block.className || "");
+    }
+
+    return "block:" + index;
+  }
+
+  function adminEditBlockTitle(block, host) {
+    var title;
+
+    if (block.classList.contains("home-intro-tools")) {
+      return "Editar apresentação da homepage";
+    }
+    if (block.classList.contains("field-admin-tools")) {
+      return "Editar campo";
+    }
+    if (block.classList.contains("palette-admin-tools")) {
+      return "Editar combinação de cores";
+    }
+    if (block.classList.contains("admin-card-tools-image-slot")) {
+      return "Editar imagem";
+    }
+
+    title = host && host.querySelector("strong");
+    return title && String(title.textContent || "").trim()
+      ? "Editar “" + String(title.textContent).trim() + "”"
+      : "Editar conteúdo";
+  }
+
+  function adminEditBlockHost(block) {
+    if (block.classList.contains("home-intro-tools")) {
+      return document.querySelector(".home-brand-hero__copy")
+        || document.querySelector(".home-section-heading");
+    }
+
+    return block.closest([
+      ".choice-card",
+      ".category-card",
+      ".cadernos-build-part",
+      ".palette-family-choice",
+      ".individual-color-choice",
+      ".builder-design-card",
+      ".details-grid > label",
+      ".field-control",
+      ".step-card"
+    ].join(", ")) || block.parentElement;
+  }
+
+  function adminCreateEditDialog(layer, block, host, key, title, compact) {
+    var id = "admin-edit-dialog-" + layer.querySelectorAll(".admin-edit-dialog").length;
+    var dialog = document.createElement("section");
+    var headingId = id + "-title";
+    var target;
+
+    dialog.className = "admin-edit-dialog";
+    dialog.id = id;
+    dialog.hidden = true;
+    dialog.setAttribute("role", "dialog");
+    dialog.setAttribute("aria-modal", "true");
+    dialog.setAttribute("aria-labelledby", headingId);
+    dialog.dataset.adminEditKey = key;
+    dialog.innerHTML = [
+      '<header class="admin-edit-dialog__head">',
+      '<h2 id="' + headingId + '">' + escapeHtml(title) + '</h2>',
+      '<button type="button" class="admin-edit-dialog__close" data-admin-edit-close aria-label="Fechar editor">×</button>',
+      '</header>',
+      '<div class="admin-edit-dialog__body"></div>'
+    ].join("");
+    dialog.querySelector(".admin-edit-dialog__body").appendChild(block);
+    layer.appendChild(dialog);
+
+    if (host) {
+      target = document.createElement("span");
+      target.className = "admin-edit-target" + (compact ? " admin-edit-target--compact" : "");
+      target.dataset.adminEditOpen = id;
+      target.setAttribute("role", "button");
+      target.tabIndex = 0;
+      target.setAttribute("aria-label", title);
+      target.innerHTML = '<span aria-hidden="true">' + (compact ? "+" : "Editar") + '</span>';
+      host.classList.add("is-admin-editable");
+      host.appendChild(target);
+    }
+
+    return dialog;
+  }
+
+  function adminSetActiveImageFromHost(host) {
+    var visual;
+
+    if (!state.product || !host) {
+      return;
+    }
+
+    visual = host.querySelector("[data-admin-image-visual], [data-admin-side-image-visual]");
+    if (!visual) {
+      return;
+    }
+
+    state.adminActiveImage = {
+      stepId: visual.dataset.adminImageStep,
+      itemId: visual.dataset.adminImageItem,
+      side: visual.hasAttribute("data-admin-side-image-visual"),
+      editKey: visual.dataset.miaEditKey || "",
+      fallbackEditKey: visual.dataset.miaFallbackEditKey || "",
+      imageStoreItemId: visual.dataset.adminImageStoreItem || visual.dataset.adminImageItem
+    };
+    state.adminImageKeyboardUndoFor = "";
+  }
+
+  function adminOpenEditDialog(layer, dialog, target, restoreFocus) {
+    var host = target && target.closest(".is-admin-editable");
+    var firstField;
+
+    layer.querySelectorAll(".admin-edit-dialog").forEach(function (candidate) {
+      candidate.hidden = candidate !== dialog;
+    });
+    adminSetActiveImageFromHost(host);
+    layer.classList.add("is-open");
+    document.body.classList.add("is-admin-edit-dialog-open");
+    dialog.hidden = false;
+    dialog._adminRestoreFocus = restoreFocus || target || null;
+    state.adminEditDialogKey = dialog.dataset.adminEditKey || "";
+
+    firstField = dialog.querySelector(".admin-edit-dialog__body input:not([type=file]), .admin-edit-dialog__body textarea, .admin-edit-dialog__body select, .admin-edit-dialog__body button");
+    if (firstField) {
+      window.requestAnimationFrame(function () { firstField.focus(); });
+    }
+  }
+
+  function adminCloseEditDialogs(layer) {
+    var dialog = layer.querySelector(".admin-edit-dialog:not([hidden])");
+    var restoreFocus = dialog && dialog._adminRestoreFocus;
+
+    layer.classList.remove("is-open");
+    document.body.classList.remove("is-admin-edit-dialog-open");
+    layer.querySelectorAll(".admin-edit-dialog").forEach(function (candidate) {
+      candidate.hidden = true;
+    });
+    state.adminEditDialogKey = "";
+    if (restoreFocus && document.contains(restoreFocus)) {
+      restoreFocus.focus();
+    }
+  }
+
+  function prepareAdminEditingLayer(currentProduct) {
+    var toolbar;
+    var layer;
+    var stepPanel;
+    var previous;
+    var previousTarget;
+
+    if (!state.admin) {
+      return;
+    }
+
+    toolbar = document.querySelector(".admin-toolbar");
+    if (!toolbar) {
+      return;
+    }
+
+    layer = document.createElement("div");
+    layer.className = "admin-edit-layer";
+    layer.innerHTML = '<button type="button" class="admin-edit-backdrop" data-admin-edit-close aria-label="Fechar editor"></button>';
+    app.appendChild(layer);
+
+    Array.prototype.slice.call(document.querySelectorAll(".admin-card-tools")).forEach(function (block, index) {
+      var host = adminEditBlockHost(block);
+      var key = adminEditBlockKey(block, index);
+      var wrapper = block.closest(".home-admin-edit-band");
+
+      adminCreateEditDialog(layer, block, host, key, adminEditBlockTitle(block, host), false);
+      if (wrapper && !wrapper.querySelector(".admin-card-tools")) {
+        wrapper.remove();
+      }
+    });
+
+    Array.prototype.slice.call(document.querySelectorAll(".admin-add")).forEach(function (button, index) {
+      var host = button.closest(".step-card") || button.parentElement;
+      adminCreateEditDialog(layer, button, host, "add:" + index, "Adicionar opção", true);
+    });
+
+    stepPanel = toolbar.querySelector(".admin-step-copy-panel");
+    if (stepPanel) {
+      adminCreateEditDialog(
+        layer,
+        stepPanel,
+        document.querySelector(".step-card > h2"),
+        "step:" + (currentProduct && currentProduct.steps[state.currentStep] ? currentProduct.steps[state.currentStep].id : state.currentStep),
+        "Editar título e texto do passo",
+        false
+      );
+    }
+
+    layer.addEventListener("click", function (event) {
+      var closer = event.target.closest("[data-admin-edit-close]");
+      if (closer) {
+        event.preventDefault();
+        adminCloseEditDialogs(layer);
+      }
+    });
+
+    layer.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && layer.classList.contains("is-open")) {
+        event.preventDefault();
+        adminCloseEditDialogs(layer);
+      }
+    });
+
+    document.querySelectorAll("[data-admin-edit-open]").forEach(function (opener) {
+      opener.addEventListener("click", function (event) {
+        var dialog = document.getElementById(opener.dataset.adminEditOpen);
+        event.preventDefault();
+        event.stopPropagation();
+        if (dialog) {
+          adminOpenEditDialog(layer, dialog, opener, opener);
+        }
+      });
+      opener.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          opener.click();
+        }
+      });
+    });
+
+    if (state.adminEditDialogKey) {
+      previous = Array.prototype.slice.call(layer.querySelectorAll(".admin-edit-dialog")).filter(function (dialog) {
+        return dialog.dataset.adminEditKey === state.adminEditDialogKey;
+      })[0];
+      previousTarget = previous ? document.querySelector('[data-admin-edit-open="' + previous.id + '"]') : null;
+      if (previous) {
+        adminOpenEditDialog(layer, previous, previousTarget, previousTarget);
+      }
+    }
+  }
+
   function renderAdminSurface(currentProduct) {
     var currentHome = !currentProduct && page === "home" ? state.home : null;
     var content = currentProduct || currentHome;
@@ -473,9 +731,10 @@
       '</div>',
       message,
       renderBasicAdminTrackingPanel(),
-      step ? '<details class="admin-step-panel"><summary>Editar passo</summary><label><span>Template</span><select data-admin-template>' + options + '</select></label>' : "",
+      step ? '<details class="admin-step-panel admin-step-copy-panel" open><summary>Editar passo</summary><label><span>Template</span><select data-admin-template>' + options + '</select></label>' : "",
       step ? '<label><span>Título</span><input type="text" value="' + escapeHtml(step.title || "") + '" data-admin-step-edit="title"></label>' : "",
       step ? '<label><span>Texto</span><textarea data-admin-step-edit="text">' + escapeHtml(step.text || "") + '</textarea></label>' : "",
+      step && state.currentStep === 0 ? '<label><span>Aviso de antecedência</span><textarea data-admin-step-edit="leadTimeNotice">' + escapeHtml(stepLeadTimeNotice(currentProduct, step)) + '</textarea><small>Este aviso aparece logo abaixo do progresso. Deixa o campo vazio para o esconder neste produto.</small></label>' : "",
       step ? '<label class="admin-check"><input type="checkbox"' + (step.hidden ? "" : " checked") + (step.id === "confirm" ? " disabled" : "") + ' data-admin-step-visible> Passo visível para clientes</label>' : "",
       step ? '<button type="button" data-admin-add-step>Adicionar passo novo</button></details>' : "",
       step ? renderAdminStepImagePanel(step) : "",
@@ -1204,7 +1463,7 @@
   }
 
   function renderHomeFeatureCard(category, adminEditing) {
-    var isClickable = !adminEditing && category.clickable !== false && String(category.href || "").trim();
+    var isClickable = category.clickable !== false && String(category.href || "").trim();
     var tag = isClickable ? "a" : "article";
     var href = isClickable ? ' href="' + escapeHtml(category.href) + '"' : "";
     var image = category.featureImage || category.image || "";
@@ -1327,9 +1586,7 @@
     var homeCategories = visibleCategories.filter(function (record) {
       return record.category.showOnHome !== false;
     });
-    var displayCategories = adminEditing ? allCategories.filter(function (record) {
-      return record.category.showOnHome !== false;
-    }) : homeCategories;
+    var displayCategories = homeCategories;
     var gridCount = Math.max(1, Math.min(7, displayCategories.length));
 
     function renderHomeCategoryCard(record, displayIndex) {
@@ -1349,7 +1606,7 @@
       var unavailableMessage = !adminEditing && !isClickable && category.unavailableMessage ? String(category.unavailableMessage) : "";
       var disabledClass = !isClickable ? " is-link-disabled" : "";
       var messageClass = unavailableMessage ? " has-unavailable-message" : "";
-      var tag = !adminEditing && isVisible && isClickable ? "a" : "span";
+      var tag = isVisible && isClickable ? "a" : "span";
       var href = tag === "a"
         ? ' href="' + escapeHtml(category.href) + '"'
         : ' aria-disabled="' + (!isClickable ? "true" : "false") + '"' + (unavailableMessage ? ' role="button" tabindex="0" data-home-unavailable-message="' + escapeHtml(unavailableMessage) + '"' : "");
@@ -1417,7 +1674,7 @@
         '<p>' + escapeHtml(home.intro.text) + '</p>',
         '</header>',
         adminIntroTools ? '<div class="home-admin-edit-band">' + adminIntroTools + '</div>' : "",
-        '<nav class="category-grid category-grid-count-' + gridCount + (adminEditing ? ' is-admin-home-grid' : '') + '" aria-label="Categorias">',
+        '<nav class="category-grid category-grid-count-' + gridCount + '" aria-label="Categorias">',
         cards,
         '</nav>',
         state.homeUnavailableMessage ? '<p class="open-order-hint home-unavailable-message" role="status" aria-live="polite">' + escapeHtml(state.homeUnavailableMessage) + '</p>' : "",
@@ -1464,10 +1721,7 @@
           // sozinho. No site esconde-se; em edição fica, senão não havia como
           // lá arrastar nada de volta.
           if (!registos.length) {
-            if (!adminEditing) {
-              return "";
-            }
-            corpo = '<div class="home-news-grid"></div>';
+            return "";
           } else {
             corpo = '<div class="home-news-grid">' + registos.slice(0, limite).map(function (record) {
               return renderHomeFeatureCard(record.category, adminEditing);
@@ -1476,7 +1730,7 @@
         } else {
           contagem = Math.max(1, Math.min(7, registos.length));
           corpo = '<nav class="category-grid category-grid-count-' + contagem
-            + (adminEditing ? ' is-admin-home-grid' : '') + '" aria-label="' + escapeHtml(seccao.title || "Categorias") + '">'
+            + '" aria-label="' + escapeHtml(seccao.title || "Categorias") + '">'
             + registos.map(function (record, indice) {
               return renderHomeCategoryCard(record, indice);
             }).join("")

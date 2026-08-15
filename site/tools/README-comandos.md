@@ -70,10 +70,11 @@ Alterar um preço existente:
 comando.php?op=preco&produto=imanes-loja&chave=3%20mm&qtd=30&euros=60
 ```
 
-Definir a ordem das tabs do editor de preços (`__capsula__` é o separador da cápsula Congresso):
+Definir a ordem das tabs do editor de preços; os produtos do Congresso usam
+slugs próprios e independentes:
 
 ```text
-comando.php?op=ordem-tabs&ordem=imanes-loja%2Cagendas%2C__capsula__
+comando.php?op=ordem-tabs&ordem=imanes-loja%2Cagendas%2Ccongresso-2026-imanes
 ```
 
 Criar um pack, depois definir o desconto da escada activa:
@@ -120,4 +121,6 @@ Na comparação das actions mutáveis das APIs cobertas, `ordem-tabs` era a úni
 
 Também ficam de fora os `save-catalog`, `save-offers`, `save-product` e `save-home` antigos de `admin-api.php`, bem como o catálogo inteiro de cores: recebem documentos completos ou uma árvore SQLite sem uma operação granular equivalente e seriam fáceis de sobrepor por engano. Usar os editores próprios até existir uma operação específica e validada.
 
-A cápsula `congressos/2026/` é imutável. A action nativa `capsula-sincronizar` de preços não é exposta no registry; nem ela, nem `imagem`, nem outro comando podem alterar a cápsula.
+Os produtos do Congresso 2026 são entradas próprias no editor de preços, com
+slugs `congresso-2026-*`; não herdam nem sincronizam preços ou catálogos dos
+produtos principais.

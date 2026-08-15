@@ -90,8 +90,14 @@
   "catalogContext": "main-v2",
   "orderFlow": "catalog-or-custom",
   "minimumQuantity": 1,
-  "pricingMode": "flat-unit",
-  "allowUnitDiscounts": false,
+  "pricingMode": "tier-unit",
+  "allowUnitDiscounts": true,
+  "quantityPricingSwitchByPriceKey": {
+    "Marcadores": {
+      "quantityTiers": true,
+      "sliderMaximum": 150
+    }
+  },
   "flatUnitPricesCents": {
     "Marcadores": 150
   },
@@ -423,11 +429,29 @@
           "quantity": 20,
           "title": "20",
           "subtitle": "marcadores"
+        },
+        {
+          "id": "pack-25",
+          "quantity": 25,
+          "title": "25",
+          "subtitle": "marcadores"
+        },
+        {
+          "id": "pack-40",
+          "quantity": 40,
+          "title": "40",
+          "subtitle": "marcadores"
+        },
+        {
+          "id": "pack-75",
+          "quantity": 75,
+          "title": "75",
+          "subtitle": "marcadores"
         }
       ],
       "minimumQuantity": 1,
-      "pricingMode": "flat-unit",
-      "allowUnitDiscounts": false,
+      "pricingMode": "tier-unit",
+      "allowUnitDiscounts": true,
       "freeQuantity": true,
       "adjustPerDesign": true
     },

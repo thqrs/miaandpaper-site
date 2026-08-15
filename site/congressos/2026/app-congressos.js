@@ -163,7 +163,8 @@
 
   var state = {
     admin: safeStorageGetItem(ADMIN_KEY) === "1",
-    adminPanelHidden: safeStorageGetItem(ADMIN_PANEL_HIDDEN_KEY) === "1",
+    adminPanelHidden: safeStorageGetItem(ADMIN_PANEL_HIDDEN_KEY) !== "0",
+    adminEditDialogKey: "",
     loginOpen: false,
     adminMessage: "",
     cartPanelOpen: false,
@@ -2209,7 +2210,7 @@
 
     if (isProduct) {
       syncPricingFromProduct(content);
-      payload = { product: content, pricing: state.pricing };
+      payload = { product: content, pricing: state.pricing, context: "congress-2026" };
     } else {
       payload = { home: cleanHomeForSave(content) };
     }
@@ -2252,6 +2253,7 @@
 
   function renderChrome(innerHtml, currentProduct) {
     app.innerHTML = renderOrdersSuspendedBanner() + innerHtml + renderAdminSurface(currentProduct) + renderCartSurface();
+    prepareAdminEditingLayer(currentProduct);
     if (state.home) {
       applyThemeToggleVisibility(state.home.showThemeToggle === true);
     }
@@ -4299,6 +4301,192 @@
     ].join("");
   }
 
+  // ADMIN_OVERLAY_EDITOR_V1: os formulários de edição saem das grelhas do
+  // produto e passam para diálogos fixos. No site fica apenas o contorno e o
+  // pequeno botão Editar, sem alterar dimensões ou posições.
+  function adminEditBlockKey(block, index) {
+    var input = block.querySelector("[data-step-id][data-item-id]");
+    if (input) {
+      return "item:" + input.dataset.stepId + ":" + input.dataset.itemId + ":"
+        + (input.dataset.miaEditKey || "main") + ":" + (block.className || "");
+    }
+    input = block.querySelector("[data-admin-field-step][data-admin-field-index]");
+    if (input) {
+      return "field:" + input.dataset.adminFieldStep + ":" + input.dataset.adminFieldIndex;
+    }
+    return "block:" + index;
+  }
+
+  function adminEditBlockTitle(block, host) {
+    var title;
+    if (block.classList.contains("field-admin-tools")) return "Editar campo";
+    if (block.classList.contains("palette-admin-tools")) return "Editar combinação de cores";
+    if (block.classList.contains("admin-card-tools-image-slot")) return "Editar imagem";
+    title = host && host.querySelector("strong");
+    return title && String(title.textContent || "").trim()
+      ? "Editar “" + String(title.textContent).trim() + "”"
+      : "Editar conteúdo";
+  }
+
+  function adminEditBlockHost(block) {
+    return block.closest([
+      ".choice-card",
+      ".cadernos-build-part",
+      ".palette-family-choice",
+      ".individual-color-choice",
+      ".builder-design-card",
+      ".details-grid > label",
+      ".field-control",
+      ".step-card"
+    ].join(", ")) || block.parentElement;
+  }
+
+  function adminCreateEditDialog(layer, block, host, key, title, compact) {
+    var id = "admin-edit-dialog-" + layer.querySelectorAll(".admin-edit-dialog").length;
+    var dialog = document.createElement("section");
+    var headingId = id + "-title";
+    var target;
+    dialog.className = "admin-edit-dialog";
+    dialog.id = id;
+    dialog.hidden = true;
+    dialog.setAttribute("role", "dialog");
+    dialog.setAttribute("aria-modal", "true");
+    dialog.setAttribute("aria-labelledby", headingId);
+    dialog.dataset.adminEditKey = key;
+    dialog.innerHTML = [
+      '<header class="admin-edit-dialog__head">',
+      '<h2 id="' + headingId + '">' + escapeHtml(title) + '</h2>',
+      '<button type="button" class="admin-edit-dialog__close" data-admin-edit-close aria-label="Fechar editor">×</button>',
+      '</header>',
+      '<div class="admin-edit-dialog__body"></div>'
+    ].join("");
+    dialog.querySelector(".admin-edit-dialog__body").appendChild(block);
+    layer.appendChild(dialog);
+
+    if (host) {
+      target = document.createElement("span");
+      target.className = "admin-edit-target" + (compact ? " admin-edit-target--compact" : "");
+      target.dataset.adminEditOpen = id;
+      target.setAttribute("role", "button");
+      target.tabIndex = 0;
+      target.setAttribute("aria-label", title);
+      target.innerHTML = '<span aria-hidden="true">' + (compact ? "+" : "Editar") + '</span>';
+      host.classList.add("is-admin-editable");
+      host.appendChild(target);
+    }
+    return dialog;
+  }
+
+  function adminSetActiveImageFromHost(host) {
+    var visual;
+    if (!state.product || !host) return;
+    visual = host.querySelector("[data-admin-image-visual], [data-admin-side-image-visual]");
+    if (!visual) return;
+    state.adminActiveImage = {
+      stepId: visual.dataset.adminImageStep,
+      itemId: visual.dataset.adminImageItem,
+      side: visual.hasAttribute("data-admin-side-image-visual"),
+      editKey: visual.dataset.miaEditKey || "",
+      fallbackEditKey: visual.dataset.miaFallbackEditKey || "",
+      imageStoreItemId: visual.dataset.adminImageStoreItem || visual.dataset.adminImageItem
+    };
+    state.adminImageKeyboardUndoFor = "";
+  }
+
+  function adminOpenEditDialog(layer, dialog, target, restoreFocus) {
+    var host = target && target.closest(".is-admin-editable");
+    var firstField;
+    layer.querySelectorAll(".admin-edit-dialog").forEach(function (candidate) {
+      candidate.hidden = candidate !== dialog;
+    });
+    adminSetActiveImageFromHost(host);
+    layer.classList.add("is-open");
+    document.body.classList.add("is-admin-edit-dialog-open");
+    dialog.hidden = false;
+    dialog._adminRestoreFocus = restoreFocus || target || null;
+    state.adminEditDialogKey = dialog.dataset.adminEditKey || "";
+    firstField = dialog.querySelector(".admin-edit-dialog__body input:not([type=file]), .admin-edit-dialog__body textarea, .admin-edit-dialog__body select, .admin-edit-dialog__body button");
+    if (firstField) window.requestAnimationFrame(function () { firstField.focus(); });
+  }
+
+  function adminCloseEditDialogs(layer) {
+    var dialog = layer.querySelector(".admin-edit-dialog:not([hidden])");
+    var restoreFocus = dialog && dialog._adminRestoreFocus;
+    layer.classList.remove("is-open");
+    document.body.classList.remove("is-admin-edit-dialog-open");
+    layer.querySelectorAll(".admin-edit-dialog").forEach(function (candidate) { candidate.hidden = true; });
+    state.adminEditDialogKey = "";
+    if (restoreFocus && document.contains(restoreFocus)) restoreFocus.focus();
+  }
+
+  function prepareAdminEditingLayer(currentProduct) {
+    var toolbar;
+    var layer;
+    var stepPanel;
+    var previous;
+    var previousTarget;
+    if (!state.admin) return;
+    toolbar = document.querySelector(".admin-toolbar");
+    if (!toolbar) return;
+    layer = document.createElement("div");
+    layer.className = "admin-edit-layer";
+    layer.innerHTML = '<button type="button" class="admin-edit-backdrop" data-admin-edit-close aria-label="Fechar editor"></button>';
+    app.appendChild(layer);
+
+    Array.prototype.slice.call(document.querySelectorAll(".admin-card-tools")).forEach(function (block, index) {
+      var host = adminEditBlockHost(block);
+      adminCreateEditDialog(layer, block, host, adminEditBlockKey(block, index), adminEditBlockTitle(block, host), false);
+    });
+    Array.prototype.slice.call(document.querySelectorAll(".admin-add")).forEach(function (button, index) {
+      adminCreateEditDialog(layer, button, button.closest(".step-card") || button.parentElement, "add:" + index, "Adicionar opção", true);
+    });
+    stepPanel = toolbar.querySelector(".admin-step-copy-panel");
+    if (stepPanel) {
+      adminCreateEditDialog(
+        layer,
+        stepPanel,
+        document.querySelector(".step-card > h2"),
+        "step:" + (currentProduct && currentProduct.steps[state.currentStep] ? currentProduct.steps[state.currentStep].id : state.currentStep),
+        "Editar título e texto do passo",
+        false
+      );
+    }
+
+    layer.addEventListener("click", function (event) {
+      if (event.target.closest("[data-admin-edit-close]")) {
+        event.preventDefault();
+        adminCloseEditDialogs(layer);
+      }
+    });
+    layer.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && layer.classList.contains("is-open")) {
+        event.preventDefault();
+        adminCloseEditDialogs(layer);
+      }
+    });
+    document.querySelectorAll("[data-admin-edit-open]").forEach(function (opener) {
+      opener.addEventListener("click", function (event) {
+        var dialog = document.getElementById(opener.dataset.adminEditOpen);
+        event.preventDefault();
+        event.stopPropagation();
+        if (dialog) adminOpenEditDialog(layer, dialog, opener, opener);
+      });
+      opener.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          opener.click();
+        }
+      });
+    });
+    if (state.adminEditDialogKey) {
+      previous = Array.prototype.slice.call(layer.querySelectorAll(".admin-edit-dialog")).filter(function (dialog) {
+        return dialog.dataset.adminEditKey === state.adminEditDialogKey;
+      })[0];
+      previousTarget = previous ? document.querySelector('[data-admin-edit-open="' + previous.id + '"]') : null;
+      if (previous) adminOpenEditDialog(layer, previous, previousTarget, previousTarget);
+    }
+  }
+
   function renderAdminSurface(currentProduct) {
     var currentHome = !currentProduct && page === "home" ? state.home : null;
     var content = currentProduct || currentHome;
@@ -4357,9 +4545,10 @@
       '</div>',
       message,
       renderBasicAdminTrackingPanel(),
-      step ? '<details class="admin-step-panel"><summary>Editar passo</summary><label><span>Template</span><select data-admin-template>' + options + '</select></label>' : "",
+      step ? '<details class="admin-step-panel admin-step-copy-panel" open><summary>Editar passo</summary><label><span>Template</span><select data-admin-template>' + options + '</select></label>' : "",
       step ? '<label><span>Título</span><input type="text" value="' + escapeHtml(step.title || "") + '" data-admin-step-edit="title"></label>' : "",
       step ? '<label><span>Texto</span><textarea data-admin-step-edit="text">' + escapeHtml(step.text || "") + '</textarea></label>' : "",
+      step && state.currentStep === 0 ? '<label><span>Aviso de antecedência</span><textarea data-admin-step-edit="leadTimeNotice">' + escapeHtml(stepLeadTimeNotice(currentProduct, step)) + '</textarea><small>Este aviso aparece logo abaixo do progresso. Deixa o campo vazio para o esconder neste produto.</small></label>' : "",
       step ? '<label class="admin-check"><input type="checkbox"' + (step.hidden ? "" : " checked") + (step.id === "confirm" ? " disabled" : "") + ' data-admin-step-visible> Passo visível para clientes</label>' : "",
       step ? '<button type="button" data-admin-add-step>Adicionar passo novo</button></details>' : "",
       step ? renderAdminStepImagePanel(step) : "",
@@ -5444,11 +5633,18 @@
   }
 
   function cadernoPurchasePriceCents(product, option) {
+    var record = pricingRecordFor(product);
+    var flatPrices = record && record.flatUnitPricesCents ? record.flatUnitPricesCents : null;
+    var value = option && option.value != null ? String(option.value) : "";
     var prices = product && product.prices ? product.prices : {};
     var table = product && product.defaultPriceKey && prices[product.defaultPriceKey]
       ? prices[product.defaultPriceKey]
       : null;
     var quantity = option ? Number(option.quantity) : 0;
+
+    if (flatPrices && value && flatPrices[value] != null) {
+      return Math.max(0, Number(flatPrices[value]) || 0);
+    }
 
     if (option && option.priceCents != null) {
       return Math.max(0, Number(option.priceCents) || 0);
@@ -5484,10 +5680,13 @@
 
   function cadernoOrderQuantity(product) {
     var options = cadernoOrderQuantityOptions(product);
-    var fallback = Math.max(1, parseInt(cadernoOrderQuantityConfig(product).default, 10) || options[0] || 1);
-    var selected = Math.max(1, parseInt(state.selections.caderno_order_quantity, 10) || fallback);
+    var config = cadernoOrderQuantityConfig(product);
+    var minimum = Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1);
+    var maximum = Math.max(minimum, parseInt(config.maximum, 10) || 9999);
+    var fallback = Math.max(minimum, parseInt(config.default, 10) || options[0] || minimum);
+    var selected = Math.max(minimum, Math.min(maximum, parseInt(state.selections.caderno_order_quantity, 10) || fallback));
 
-    return options.indexOf(selected) !== -1 ? selected : fallback;
+    return selected;
   }
 
   function multipliedPriceText(unitCents, quantity) {
@@ -10482,12 +10681,14 @@
   function renderCadernosPurchaseOptions(product, step) {
     var current = getPackQuantity(product);
     var promo = step && step.promoNote ? String(step.promoNote) : "";
+    var selectedOption;
     var html = "";
 
     (step.items || []).forEach(function (item) {
       var quantity = Number(item.quantity);
       var selected = quantity === current;
-      var priceText = item.priceCents != null ? formatCents(item.priceCents) : (item.subtitle || "");
+      var priceCents = cadernoPurchasePriceCents(product, item);
+      var priceText = priceCents ? formatCents(priceCents) : (item.subtitle || "");
       var previewItem = cadernoPurchasePreviewItem(product, item);
 
       html += [
@@ -10507,8 +10708,11 @@
       ].join("");
     });
 
+    selectedOption = selectedCadernoPurchaseOption(product);
+
     return [
       '<div class="option-list size-choice-list crachas-size-card-list cadernos-purchase-list">' + html + '</div>',
+      selectedOption ? renderCadernoOrderQuantitySelector(product, step, cadernoOrderQuantity(product)) : "",
       promo ? '<p class="cadernos-info-note cadernos-info-note--promo" role="note">' + renderInlineText(promo) + '</p>' : "",
       state.admin ? '<button class="admin-add" type="button" data-admin-add-item data-step-id="' + escapeHtml(step.id) + '">Adicionar opção</button>' : ""
     ].join("");
@@ -10516,19 +10720,12 @@
 
   function renderCadernoOrderQuantitySelector(product, step, selectedQuantity) {
     var config = cadernoOrderQuantityConfig(product);
-    var options = cadernoOrderQuantityOptions(product);
+    var minimum = Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1);
+    var maximum = Math.max(minimum, parseInt(config.maximum, 10) || 9999);
     var option = selectedCadernoPurchaseOption(product);
-    var html = options.map(function (quantity) {
-      var label = option && option.isPack
-        ? (quantity === 1 ? "pack" : "packs")
-        : (quantity === 1 ? productUnitSingular(product) : productUnit(product));
-      return [
-        '<button class="pack-option cadernos-order-quantity-option' + (quantity === selectedQuantity ? ' is-selected' : '') + '" type="button" data-caderno-order-quantity="' + quantity + '">',
-        '<strong>' + quantity + '</strong>',
-        '<span>' + escapeHtml(label) + '</span>',
-        '</button>'
-      ].join("");
-    }).join("");
+    var selectedLabel = option && option.isPack
+      ? (selectedQuantity === 1 ? "pack" : "packs")
+      : (selectedQuantity === 1 ? productUnitSingular(product) : productUnit(product));
 
     return [
       '<section class="cadernos-order-quantity" aria-label="' + escapeHtml(config.title || "Quantidade") + '">',
@@ -10536,7 +10733,12 @@
       '<strong>' + escapeHtml(config.title || "Quantidade") + '</strong>',
       config.text ? '<span>' + escapeHtml(config.text) + '</span>' : "",
       '</div>',
-      '<div class="pack-options cadernos-order-quantity-options">' + html + '</div>',
+      '<div class="cadernos-order-quantity-control">',
+      '<button type="button" data-caderno-order-quantity-change="-1" aria-label="Retirar uma unidade"' + (selectedQuantity <= minimum ? ' disabled' : '') + '>&minus;</button>',
+      '<label><span>Quantidade</span><input type="number" min="' + minimum + '" max="' + maximum + '" step="1" value="' + selectedQuantity + '" data-caderno-order-quantity-input></label>',
+      '<button type="button" data-caderno-order-quantity-change="1" aria-label="Acrescentar uma unidade"' + (selectedQuantity >= maximum ? ' disabled' : '') + '>+</button>',
+      '<small>' + escapeHtml(selectedLabel) + '</small>',
+      '</div>',
       '</section>'
     ].join("");
   }
@@ -12492,6 +12694,25 @@
     return activeIndex === 0 ? 5 : percent;
   }
 
+  function stepLeadTimeNotice(product, step) {
+    var defaultText = "Os pedidos devem ser feitos com, pelo menos, 7 dias de antecedência em relação à data em que pretendes que sejam enviados.";
+
+    if (state.currentStep !== 0 || !step) {
+      return "";
+    }
+    if (Object.prototype.hasOwnProperty.call(step, "leadTimeNotice")) {
+      return String(step.leadTimeNotice || "").trim();
+    }
+    return defaultText;
+  }
+
+  function renderStepLeadTimeNotice(product, step) {
+    var notice = stepLeadTimeNotice(product, step);
+    return notice
+      ? '<p class="order-lead-time-notice">' + escapeHtml(notice) + '</p>'
+      : "";
+  }
+
   function renderProgress(product) {
     var visible = visibleSteps(product);
     var steps = progressSteps(product);
@@ -12687,6 +12908,7 @@
       '<p class="eyebrow">Passo ' + stepNumber + (state.admin && step.hidden ? ' · oculto' : '') + '</p>',
       '<h2 id="step-title">' + escapeHtml(displayStepTitle(product, step)) + '</h2>',
       renderProgress(product),
+      renderStepLeadTimeNotice(product, step),
       displayStepText(product, step) ? '<p class="step-help">' + escapeHtml(displayStepText(product, step)) + '</p>' : '',
       state.currentStep === 0 ? renderProductPreview(product) + renderProductGallery(product) : "",
       stepBody(product, step),
@@ -12984,7 +13206,12 @@
   }
 
   function currentStep(product) {
-    return visibleSteps(product)[state.currentStep];
+    var step = visibleSteps(product)[state.currentStep];
+    if (document.body && product && step) {
+      document.body.dataset.miuProduct = product.slug || productSlug || "";
+      document.body.dataset.miuStep = step.id || "";
+    }
+    return step;
   }
 
   function setSelection(step, input) {
@@ -14966,6 +15193,49 @@
       });
     });
 
+    document.querySelectorAll("[data-caderno-order-quantity-change]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var config = cadernoOrderQuantityConfig(product);
+        var minimum = Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1);
+        var maximum = Math.max(minimum, parseInt(config.maximum, 10) || 9999);
+        var change = parseInt(button.dataset.cadernoOrderQuantityChange, 10) || 0;
+        var quantity = Math.max(minimum, Math.min(maximum, cadernoOrderQuantity(product) + change));
+        state.selections.caderno_order_quantity = quantity;
+        try { trackOptionSelected(product, "caderno_qty", quantity, ""); } catch (e) {}
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-caderno-order-quantity-input]").forEach(function (input) {
+      function syncCadernoOrderQuantity(commit) {
+        var config = cadernoOrderQuantityConfig(product);
+        var minimum = Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1);
+        var maximum = Math.max(minimum, parseInt(config.maximum, 10) || 9999);
+        var parsed = parseInt(input.value, 10);
+        var quantity;
+
+        if (!commit && (!isFinite(parsed) || parsed < minimum)) {
+          return;
+        }
+        quantity = Math.max(minimum, Math.min(maximum, parsed || minimum));
+        state.selections.caderno_order_quantity = quantity;
+        state.errors = "";
+        if (commit) {
+          input.value = quantity;
+          try { trackOptionSelected(product, "caderno_qty", quantity, ""); } catch (e) {}
+          rerenderProduct(product);
+        }
+      }
+
+      input.addEventListener("input", function () {
+        syncCadernoOrderQuantity(false);
+      });
+      input.addEventListener("change", function () {
+        syncCadernoOrderQuantity(true);
+      });
+    });
+
     document.querySelectorAll("[data-free-quantity-change]").forEach(function (button) {
       button.addEventListener("click", function () {
         var current = getPackQuantity(product) || minimumFreeQuantity(product);
@@ -16672,8 +16942,38 @@
     });
 
     document.querySelectorAll("[data-admin-edit]").forEach(function (input) {
+      var liveImageKeys = ["frameScale", "frameWidth", "frameHeight", "frameMarginX", "frameMarginY", "imageZoom", "imagePositionX", "imagePositionY", "imageRotation"];
+
       input.addEventListener("click", function (event) {
         event.stopPropagation();
+      });
+
+      input.addEventListener("input", function () {
+        var step;
+        var item;
+        var imageStoreItem;
+        var editKey;
+
+        if (liveImageKeys.indexOf(input.dataset.adminEdit) === -1 || String(input.value).trim() === "") {
+          return;
+        }
+        step = product.steps.filter(function (candidate) {
+          return candidate.id === input.dataset.stepId;
+        })[0];
+        item = stepItemById(step, input.dataset.itemId);
+        imageStoreItem = stepItemById(step, input.dataset.adminImageStoreItemId || input.dataset.itemId);
+        editKey = input.dataset.miaEditKey || "";
+        if (!item) return;
+        if (input.dataset.adminLiveUndo !== "1") {
+          pushUndo(product);
+          input.dataset.adminLiveUndo = "1";
+        }
+        if (miaSlotDebugFlatKeys.indexOf(input.dataset.adminEdit) !== -1 || miaSlotDebugFrameKeys.indexOf(input.dataset.adminEdit) !== -1) {
+          writeImageEditSlot(imageStoreItem || item, editKey || miaSlotDebugEditKey(item, step, false), input.dataset.adminEdit, Number(input.value) || 0);
+        } else {
+          item[input.dataset.adminEdit] = Number(input.value) || 0;
+        }
+        refreshAdminImageAdjustment(step.id, item.id, item, false);
       });
 
       input.addEventListener("change", function () {
@@ -16685,15 +16985,23 @@
         var editKey = input.dataset.miaEditKey || "";
 
         if (item) {
-          pushUndo(product);
-          if (input.dataset.adminEdit === "quantity") {
-            item[input.dataset.adminEdit] = Math.max(1, parseInt(input.value, 10) || 1);
-          } else if (["frameScale", "frameWidth", "frameHeight", "frameMarginX", "frameMarginY", "imageZoom", "imagePositionX", "imagePositionY", "imageRotation"].indexOf(input.dataset.adminEdit) !== -1) {
+          if (liveImageKeys.indexOf(input.dataset.adminEdit) !== -1) {
+            if (input.dataset.adminLiveUndo !== "1") {
+              pushUndo(product);
+            }
             if (miaSlotDebugFlatKeys.indexOf(input.dataset.adminEdit) !== -1 || miaSlotDebugFrameKeys.indexOf(input.dataset.adminEdit) !== -1) {
               writeImageEditSlot(imageStoreItem || item, editKey || miaSlotDebugEditKey(item, step, false), input.dataset.adminEdit, Number(input.value) || 0);
             } else {
               item[input.dataset.adminEdit] = Number(input.value) || 0;
             }
+            delete input.dataset.adminLiveUndo;
+            refreshAdminImageAdjustment(step.id, item.id, item, false);
+            return;
+          }
+
+          pushUndo(product);
+          if (input.dataset.adminEdit === "quantity") {
+            item[input.dataset.adminEdit] = Math.max(1, parseInt(input.value, 10) || 1);
           } else if (input.dataset.adminEdit === "rectOrientation") {
             item.rectOrientation = input.value === "landscape" ? "landscape" : "portrait";
           } else if (input.dataset.adminEdit === "sectionOrder") {
@@ -16864,6 +17172,26 @@
         event.stopPropagation();
       });
 
+      input.addEventListener("input", function () {
+        var step = product.steps.filter(function (candidate) {
+          return candidate.id === input.dataset.stepId;
+        })[0];
+        var item = stepItemById(step, input.dataset.itemId);
+        var key = input.dataset.adminSideEdit;
+
+        if (!item || String(input.value).trim() === "") return;
+        if (input.dataset.adminLiveUndo !== "1") {
+          pushUndo(product);
+          input.dataset.adminLiveUndo = "1";
+        }
+        if (miaSlotDebugSideFlatKeys.indexOf(key) !== -1 || miaSlotDebugSideFrameKeys.indexOf(key) !== -1) {
+          writeImageEditSlot(item, miaSlotDebugEditKey(item, step, true), key, Number(input.value) || 0);
+        } else {
+          item[key] = Number(input.value) || 0;
+        }
+        refreshAdminImageAdjustment(step.id, item.id, item, true);
+      });
+
       input.addEventListener("change", function () {
         var step = product.steps.filter(function (candidate) {
           return candidate.id === input.dataset.stepId;
@@ -16878,7 +17206,9 @@
         }
 
         key = input.dataset.adminSideEdit;
-        pushUndo(product);
+        if (input.dataset.adminLiveUndo !== "1") {
+          pushUndo(product);
+        }
         if (["sideFrameScale", "sideFrameWidth", "sideFrameHeight", "sideFrameMarginX", "sideFrameMarginY", "sideImageZoom", "sideImagePositionX", "sideImagePositionY", "sideImageRotation"].indexOf(key) !== -1) {
           if (miaSlotDebugSideFlatKeys.indexOf(key) !== -1 || miaSlotDebugSideFrameKeys.indexOf(key) !== -1) {
             writeImageEditSlot(item, miaSlotDebugEditKey(item, step, true), key, Number(input.value) || 0);
@@ -16888,7 +17218,8 @@
         } else {
           item[key] = input.value;
         }
-        rerenderProduct(product);
+        delete input.dataset.adminLiveUndo;
+        refreshAdminImageAdjustment(step.id, item.id, item, true);
       });
     });
 

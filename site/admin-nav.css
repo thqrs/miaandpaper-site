@@ -4,13 +4,13 @@
   z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   min-height: 46px;
-  padding: 6px clamp(12px, 2.6vw, 34px);
+  padding: 6px clamp(10px, 1.6vw, 22px);
   border-bottom: 1px solid rgba(255, 255, 255, .14);
   background: #243f3b;
   color: #fffdf8;
-  font: 700 13px/1.2 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 700 12px/1.2 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   box-shadow: 0 5px 18px rgba(38, 49, 44, .13);
 }
 
@@ -45,7 +45,7 @@
 
 .admin-global-nav-links a {
   flex: 0 0 auto;
-  padding: 7px 9px;
+  padding: 7px 6px;
   border-radius: 7px;
   color: rgba(255, 253, 248, .78);
   text-decoration: none;
@@ -64,10 +64,12 @@
   color: #243f3b;
 }
 
-/* As duas ferramentas com barras próprias continuam fixas imediatamente por
+/* As ferramentas com uma segunda barra continuam fixas imediatamente por
    baixo da navegação administrativa. */
 .admin-global-nav + .products-header,
-.admin-global-nav + .bar {
+.admin-global-nav + .bar,
+.admin-global-nav + .admin-secondary-bar,
+.admin-global-nav ~ * .admin-secondary-bar {
   top: 46px;
 }
 

@@ -30,6 +30,14 @@
       + '</span>';
   }
 
+  function renderSiteMenuTextIcon(text) {
+    if (!siteMenuIconsEnabled()) {
+      return "";
+    }
+    return '<span class="site-menu-icon site-menu-icon--text" aria-hidden="true">'
+      + escapeHtml(text || "?") + '</span>';
+  }
+
   function siteMenuGroupIcon(group) {
     var order = Number(group && group.order);
     if (order === 1) { return "grupo-personalizados"; }
@@ -141,6 +149,7 @@
       '</nav>',
       '<div class="site-menu-secondary">',
       '<a href="catalogo/index.html" data-site-menu-link>' + renderSiteMenuIcon('catalogo') + '<span>Catálogo</span></a>',
+      '<a href="perguntasfrequentes.html" data-site-menu-link>' + renderSiteMenuTextIcon('?') + '<span>Perguntas frequentes</span></a>',
       '<a href="contacto.html" data-site-menu-link>' + renderSiteMenuIcon('contacto') + '<span>Contacto</span></a>',
       '<a href="' + escapeHtml(instagramUrl || "https://www.instagram.com/miaandpaper/") + '" target="_blank" rel="noopener" data-site-menu-link>' + renderSiteMenuIcon('instagram') + '<span>Instagram</span></a>',
       '</div>',
@@ -435,6 +444,7 @@
     return [
       '<footer class="site-footer">',
       '<a class="catalog-footer-link" href="catalogo/index.html">Comprar por catálogo</a>',
+      '<a href="perguntasfrequentes.html">Perguntas frequentes</a>',
       '<a href="privacy.html">Política de Privacidade</a>',
       showAdminLogin === false ? "" : '<button type="button" data-admin-open>Login de Administrador</button>',
       '<span>© ' + escapeHtml(brand || "Mia & Paper") + ' 2026 Todos os Direitos Reservados</span>',

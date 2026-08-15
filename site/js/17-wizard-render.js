@@ -1,7 +1,7 @@
 // js/17-wizard-render.js — parte 17/23 do antigo app.js (codigo intacto, so dividido).
 // Os modulos js/*.js partilham TODOS o mesmo escopo global (scripts classicos,
 // sem IIFE por ficheiro) e carregam pela ordem dos <script> nos HTML: 01 → 23.
-// Conteudo: render dos passos do wizard: media composer dos detalhes, open order hint, aviso de pagamento, pedido de oferta, slideshow do interior, numeracao e labels dos passos, historico do browser (handleWizardPopState).
+// Conteudo: render dos passos do wizard: media composer dos detalhes, open order hint, aviso de pagamento e antecedencia, pedido de oferta, slideshow do interior, numeracao e labels dos passos, historico do browser (handleWizardPopState).
   function isDetailsMediaComposer(step) {
     var fields = step && Array.isArray(step.fields) ? step.fields : [];
     return !!(
@@ -1322,6 +1322,25 @@
     return activeIndex === 0 ? 5 : percent;
   }
 
+  function stepLeadTimeNotice(product, step) {
+    var defaultText = "Os pedidos devem ser feitos com, pelo menos, 7 dias de antecedência em relação à data em que pretendes que sejam enviados.";
+
+    if (state.currentStep !== 0 || !step) {
+      return "";
+    }
+    if (Object.prototype.hasOwnProperty.call(step, "leadTimeNotice")) {
+      return String(step.leadTimeNotice || "").trim();
+    }
+    return defaultText;
+  }
+
+  function renderStepLeadTimeNotice(product, step) {
+    var notice = stepLeadTimeNotice(product, step);
+    return notice
+      ? '<p class="order-lead-time-notice">' + escapeHtml(notice) + '</p>'
+      : "";
+  }
+
   function renderProgress(product) {
     var visible = visibleSteps(product);
     var steps = progressSteps(product);
@@ -1532,6 +1551,7 @@
       '<p class="eyebrow">Passo ' + stepNumber + (state.admin && step.hidden ? ' · oculto' : '') + '</p>',
       '<h2 id="step-title">' + escapeHtml(displayStepTitle(product, step)) + '</h2>',
       renderProgress(product),
+      renderStepLeadTimeNotice(product, step),
       displayStepText(product, step) ? '<p class="step-help">' + escapeHtml(displayStepText(product, step)) + '</p>' : '',
       state.currentStep === 0 ? renderProductPreview(product) + renderProductGallery(product) : "",
       stepBody(product, step),
@@ -1879,4 +1899,3 @@
       bindCheckoutPage(state.home);
     }
   }
-

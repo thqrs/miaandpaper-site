@@ -173,6 +173,7 @@ está em `tools/parametros.php`. Aqui fica só o índice — o que existe e onde
 | `admin-funnel.php` | página | admin | `period`, `enrich`, `snapshot` |
 | `admin-live-dashboard.php` | página | admin | `period`, `view`, `start`, `end`, `sid`, `snapshot` |
 | `admin-orders.php` | página | admin | `view`, `id`, `f`, `p`, `q`, `page`, `saved`, `paid`, `shipped`, `cancelled`, `created`, `email` |
+| `bot.php` | página | admin | `id`, `page`, `notice` |
 | `modulos.php` | página | público | `snapshot` |
 | `tools/parametros.php` | página | admin | `formato`, `tipo`, `recurso`, `vazios` |
 | `tools/gerador-cartoes.php` | ferramenta | admin | 24 parâmetros, lidos no browser — ver [`README-url-cartoes.md`](../site/tools/README-url-cartoes.md) |
@@ -188,13 +189,14 @@ está em `tools/parametros.php`. Aqui fica só o índice — o que existe e onde
 | `admin-assisted-file.php` | ficheiro | admin | `upload_id`, `file` |
 | `order-media-preview.php` | ficheiro | token no URL | `token` |
 | `list-carousel-images.php` | API | público | `set` |
+| `send-order.php` | API | público | `checkout_debug` |
 
 Registados sem parâmetro nenhum, para o inventário ficar completo e ninguém
 ficar sem saber se foram esquecidos: `precos.php`, `materiais.php`,
 `carrousel.php`, `homepage-menu-design.php`, `admin-uploads.php`,
-`admin-snapshots.php`, `tools/index.php`, `tools/nomes.php`, `send-order.php`,
+`admin-snapshots.php`, `tools/index.php`, `tools/nomes.php`,
 `send-message.php`, `upload-order-photo.php`, `track-order-event.php`,
-`check-open-orders.php`, `help-upload.php`.
+`check-open-orders.php`, `help-upload.php`, `bot-api.php`.
 
 Os endpoints que servem ficheiros validam o formato do parâmetro antes de ir ao
 disco e nenhum aceita caminhos: `admin-order-file.php` exige que o anexo conste

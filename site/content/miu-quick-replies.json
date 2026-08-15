@@ -1,0 +1,2873 @@
+{
+  "schemaVersion": 2,
+  "global": {
+    "label": "Perguntas gerais",
+    "description": "Mostradas fora de um passo de produto.",
+    "items": [
+      {
+        "id": "global-encomenda",
+        "question": "Como faço uma encomenda?",
+        "answer": "Escolhe um produto, completa os passos e confirma o resumo. O envio regista o pedido para a Mia rever os detalhes, o pagamento e a data."
+      },
+      {
+        "id": "global-personalizar",
+        "question": "Onde posso usar uma imagem minha?",
+        "answer": "Abre [Personalização](personalizacao.html), envia a imagem e escolhe os produtos que queres criar com ela."
+      },
+      {
+        "id": "global-entrega",
+        "question": "Que formas de entrega existem?",
+        "answer": "Podes recolher na casa da Mia, receber por CTT ou juntar o pedido a outra encomenda que ainda não foi enviada."
+      },
+      {
+        "id": "global-precos",
+        "question": "Onde vejo o preço?",
+        "answer": "O preço é calculado na página do produto com a quantidade, o tamanho, os acabamentos e a entrega que escolheste. O total aparece no resumo."
+      },
+      {
+        "id": "global-contacto",
+        "question": "Como falo com a Mia?",
+        "answer": "Usa o [formulário de contacto](contacto.html) para falares directamente com a Mia."
+      }
+    ]
+  },
+  "contexts": {
+    "main:agendas:designs": {
+      "scope": "main",
+      "productSlug": "agendas",
+      "productName": "Agendas",
+      "stepId": "designs",
+      "stepName": "Escolhe a tua capa favorita",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-agendas-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 16 opções visíveis neste passo."
+        },
+        {
+          "id": "main-agendas-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 16 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-agendas-designs-own-design",
+          "question": "Posso usar uma imagem minha?",
+          "answer": "Sim. Carrega em “Personalizar a minha capa” para abrires [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "main:agendas:cover_type": {
+      "scope": "main",
+      "productSlug": "agendas",
+      "productName": "Agendas",
+      "stepId": "cover_type",
+      "stepName": "Escolhe a capa",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-agendas-cover_type-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Capa: Capa mole e Capa dura."
+        },
+        {
+          "id": "main-agendas-cover_type-required",
+          "question": "É obrigatório escolher?",
+          "answer": "Sim. Tens de escolher uma opção em Capa."
+        },
+        {
+          "id": "main-agendas-cover_type-price",
+          "question": "Estas opções alteram o preço?",
+          "answer": "Sim. Capa dura acrescenta um valor por unidade; Capa mole não acrescenta valor."
+        }
+      ]
+    },
+    "main:agendas:lamination": {
+      "scope": "main",
+      "productSlug": "agendas",
+      "productName": "Agendas",
+      "stepId": "lamination",
+      "stepName": "Escolhe o acabamento",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-agendas-lamination-options",
+          "question": "Que acabamentos posso escolher?",
+          "answer": "Tens 4 acabamentos: Matte, Glossy, Holográfica e Glitter branco."
+        },
+        {
+          "id": "main-agendas-lamination-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 4 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-agendas-lamination-difference",
+          "question": "Qual é a diferença entre os acabamentos?",
+          "answer": "Matte — Acabamento suave, sem brilho, Glossy — Acabamento brilhante, Holográfica — Brilho com reflexos coloridos e Glitter branco — Brilho fino sobre a capa."
+        }
+      ]
+    },
+    "main:agendas:add_ons": {
+      "scope": "main",
+      "productSlug": "agendas",
+      "productName": "Agendas",
+      "stepId": "add_ons",
+      "stepName": "Queres acrescentar algum add-on?",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-agendas-add_ons-options",
+          "question": "Que add-ons posso acrescentar?",
+          "answer": "Tens 4 add-ons: Marcador, Fita para marcar, Caneta e porta-canetas e Outro add-on."
+        },
+        {
+          "id": "main-agendas-add_ons-multiple",
+          "question": "Posso escolher vários add-ons?",
+          "answer": "Sim. Podes escolher vários dos 4 add-ons e os valores acumulam-se."
+        },
+        {
+          "id": "main-agendas-add_ons-optional",
+          "question": "Tenho de escolher algum add-on?",
+          "answer": "Não. Os quatro add-ons são opcionais; podes avançar sem escolher nenhum."
+        }
+      ]
+    },
+    "main:agendas:pack": {
+      "scope": "main",
+      "productSlug": "agendas",
+      "productName": "Agendas",
+      "stepId": "pack",
+      "stepName": "Escolhe a opção de compra",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-agendas-pack-options",
+          "question": "Que opções de compra existem?",
+          "answer": "Agenda Normal, Agenda Pioneiro, Pack Normal e Pack Pioneiro."
+        },
+        {
+          "id": "main-agendas-pack-more-than-one",
+          "question": "Posso encomendar mais do que uma unidade?",
+          "answer": "Sim. Podes encomendar de 1 a 9999 unidades da opção escolhida, todas com a mesma configuração."
+        },
+        {
+          "id": "main-agendas-pack-minimum",
+          "question": "Qual é a quantidade mínima?",
+          "answer": "A quantidade mínima é 1 unidade da opção de compra escolhida."
+        }
+      ]
+    },
+    "main:agendas:cover_personalization": {
+      "scope": "main",
+      "productSlug": "agendas",
+      "productName": "Agendas",
+      "stepId": "cover_personalization",
+      "stepName": "Queres personalizar a capa com um nome?",
+      "stepOrder": 5,
+      "items": [
+        {
+          "id": "main-agendas-cover_personalization-optional",
+          "question": "A personalização da capa é obrigatória?",
+          "answer": "Não. Podes escolher “Não” e receber a capa sem nome."
+        },
+        {
+          "id": "main-agendas-cover_personalization-without-name",
+          "question": "Posso encomendar a capa sem nome?",
+          "answer": "Sim. Escolhe “Não”; a capa segue sem personalização."
+        },
+        {
+          "id": "main-agendas-cover_personalization-length",
+          "question": "Qual é o tamanho máximo do nome?",
+          "answer": "O nome pode ter até 25 caracteres, incluindo espaços."
+        }
+      ]
+    },
+    "main:agendas:delivery_contact": {
+      "scope": "main",
+      "productSlug": "agendas",
+      "productName": "Agendas",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 6,
+      "items": [
+        {
+          "id": "main-agendas-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "main-agendas-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "main-agendas-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "main:agendas:confirm": {
+      "scope": "main",
+      "productSlug": "agendas",
+      "productName": "Agendas",
+      "stepId": "confirm",
+      "stepName": "Confirma antes de enviar",
+      "stepOrder": 7,
+      "items": [
+        {
+          "id": "main-agendas-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "main-agendas-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "main-agendas-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "main:blocos-a6:designs": {
+      "scope": "main",
+      "productSlug": "blocos-a6",
+      "productName": "Bloco Argolas A6",
+      "stepId": "designs",
+      "stepName": "Escolhe os teus designs favoritos",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-blocos-a6-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 11 opções visíveis neste passo."
+        },
+        {
+          "id": "main-blocos-a6-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Sim. Neste passo podes escolher várias opções entre as 11 disponíveis."
+        },
+        {
+          "id": "main-blocos-a6-designs-own-design",
+          "question": "Posso usar uma imagem minha?",
+          "answer": "Sim. Carrega em “Personalizar o meu bloco” para abrires [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "main:blocos-a6:pack": {
+      "scope": "main",
+      "productSlug": "blocos-a6",
+      "productName": "Bloco Argolas A6",
+      "stepId": "pack",
+      "stepName": "Diz-me quantos blocos queres",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-blocos-a6-pack-quantity",
+          "question": "Que quantidade posso escolher?",
+          "answer": "Podes escrever qualquer quantidade a partir de 1. Os botões de atalho mostram 1, 3, 5, 10, 24, 48 e 96."
+        },
+        {
+          "id": "main-blocos-a6-pack-split",
+          "question": "Posso repartir a quantidade por vários designs?",
+          "answer": "Sim. Podes repartir a quantidade total entre os designs escolhidos e indicar quantidades diferentes para cada um."
+        },
+        {
+          "id": "main-blocos-a6-pack-unit-price",
+          "question": "O preço por unidade muda com a quantidade?",
+          "answer": "Sim. O preço por unidade desce nos escalões de quantidade mostrados na tabela deste passo."
+        }
+      ]
+    },
+    "main:blocos-a6:details": {
+      "scope": "main",
+      "productSlug": "blocos-a6",
+      "productName": "Bloco Argolas A6",
+      "stepId": "details",
+      "stepName": "Dados para o cartão de apresentação",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-blocos-a6-details-what-card",
+          "question": "O que é o cartão de apresentação?",
+          "answer": "É o cartão impresso que acompanha os artigos da encomenda. Neste produto pode levar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-blocos-a6-details-fields",
+          "question": "Que dados posso colocar no cartão?",
+          "answer": "Podes colocar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-blocos-a6-details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Nome, Telemóvel ou Email e Congregação são opcionais; podes deixar esses campos em branco."
+        }
+      ]
+    },
+    "main:blocos-a6:delivery_contact": {
+      "scope": "main",
+      "productSlug": "blocos-a6",
+      "productName": "Bloco Argolas A6",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-blocos-a6-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "main-blocos-a6-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "main-blocos-a6-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "main:blocos-a6:confirm": {
+      "scope": "main",
+      "productSlug": "blocos-a6",
+      "productName": "Bloco Argolas A6",
+      "stepId": "confirm",
+      "stepName": "Confirma antes de enviar",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-blocos-a6-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "main-blocos-a6-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "main-blocos-a6-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "main:bloquinhos:designs": {
+      "scope": "main",
+      "productSlug": "bloquinhos",
+      "productName": "Bloquinhos",
+      "stepId": "designs",
+      "stepName": "Escolhe os teus bloquinhos favoritos",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-bloquinhos-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 6 opções: Bloquinho 01, Bloquinho 02, Bloquinho 03, Bloquinho 04, Bloquinho 05 e Bloquinho 06."
+        },
+        {
+          "id": "main-bloquinhos-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Sim. Neste passo podes escolher várias opções entre as 6 disponíveis."
+        },
+        {
+          "id": "main-bloquinhos-designs-own-design",
+          "question": "Posso usar uma imagem minha?",
+          "answer": "Sim. Carrega em “Personalizar o meu bloquinho” para abrires [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "main:bloquinhos:pack": {
+      "scope": "main",
+      "productSlug": "bloquinhos",
+      "productName": "Bloquinhos",
+      "stepId": "pack",
+      "stepName": "Diz-me quantos bloquinhos queres",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-bloquinhos-pack-quantity",
+          "question": "Que quantidade posso escolher?",
+          "answer": "Podes escrever qualquer quantidade a partir de 1. Os botões de atalho mostram 1, 3, 5, 10, 24, 48 e 96."
+        },
+        {
+          "id": "main-bloquinhos-pack-split",
+          "question": "Posso repartir a quantidade por vários designs?",
+          "answer": "Sim. Podes repartir a quantidade total entre os designs escolhidos e indicar quantidades diferentes para cada um."
+        },
+        {
+          "id": "main-bloquinhos-pack-unit-price",
+          "question": "O preço por unidade muda com a quantidade?",
+          "answer": "Sim. O preço por unidade desce nos escalões de quantidade mostrados na tabela deste passo."
+        }
+      ]
+    },
+    "main:bloquinhos:details": {
+      "scope": "main",
+      "productSlug": "bloquinhos",
+      "productName": "Bloquinhos",
+      "stepId": "details",
+      "stepName": "Dados para o cartão de apresentação",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-bloquinhos-details-what-card",
+          "question": "O que é o cartão de apresentação?",
+          "answer": "É o cartão impresso que acompanha os artigos da encomenda. Neste produto pode levar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-bloquinhos-details-fields",
+          "question": "Que dados posso colocar no cartão?",
+          "answer": "Podes colocar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-bloquinhos-details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Nome, Telemóvel ou Email e Congregação são opcionais; podes deixar esses campos em branco."
+        }
+      ]
+    },
+    "main:bloquinhos:delivery_contact": {
+      "scope": "main",
+      "productSlug": "bloquinhos",
+      "productName": "Bloquinhos",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-bloquinhos-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "main-bloquinhos-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "main-bloquinhos-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "main:bloquinhos:confirm": {
+      "scope": "main",
+      "productSlug": "bloquinhos",
+      "productName": "Bloquinhos",
+      "stepId": "confirm",
+      "stepName": "Confirma antes de enviar",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-bloquinhos-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "main-bloquinhos-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "main-bloquinhos-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "main:cadernos-anuais:designs": {
+      "scope": "main",
+      "productSlug": "cadernos-anuais",
+      "productName": "Cadernos Anuais",
+      "stepId": "designs",
+      "stepName": "Escolhe a tua capa favorita",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-cadernos-anuais-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 16 opções visíveis neste passo."
+        },
+        {
+          "id": "main-cadernos-anuais-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 16 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-cadernos-anuais-designs-own-design",
+          "question": "Posso usar uma imagem minha?",
+          "answer": "Sim. Carrega em “Personalizar a minha capa” para abrires [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "main:cadernos-anuais:cover_type": {
+      "scope": "main",
+      "productSlug": "cadernos-anuais",
+      "productName": "Cadernos Anuais",
+      "stepId": "cover_type",
+      "stepName": "Escolhe a capa",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-cadernos-anuais-cover_type-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Capa: Capa mole e Capa dura."
+        },
+        {
+          "id": "main-cadernos-anuais-cover_type-required",
+          "question": "É obrigatório escolher?",
+          "answer": "Sim. Tens de escolher uma opção em Capa."
+        },
+        {
+          "id": "main-cadernos-anuais-cover_type-price",
+          "question": "Estas opções alteram o preço?",
+          "answer": "Sim. Capa dura acrescenta um valor por unidade; Capa mole não acrescenta valor."
+        }
+      ]
+    },
+    "main:cadernos-anuais:lamination": {
+      "scope": "main",
+      "productSlug": "cadernos-anuais",
+      "productName": "Cadernos Anuais",
+      "stepId": "lamination",
+      "stepName": "Escolhe o acabamento",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-cadernos-anuais-lamination-options",
+          "question": "Que acabamentos posso escolher?",
+          "answer": "Tens 4 acabamentos: Matte, Glossy, Holográfica e Glitter branco."
+        },
+        {
+          "id": "main-cadernos-anuais-lamination-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 4 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-cadernos-anuais-lamination-difference",
+          "question": "Qual é a diferença entre os acabamentos?",
+          "answer": "Matte — Acabamento suave, sem brilho, Glossy — Acabamento brilhante normal, Holográfica — Brilho com reflexos coloridos e Glitter branco — Brilho tipo glitter/purpurinas brancas."
+        }
+      ]
+    },
+    "main:cadernos-anuais:pack": {
+      "scope": "main",
+      "productSlug": "cadernos-anuais",
+      "productName": "Cadernos Anuais",
+      "stepId": "pack",
+      "stepName": "Escolhe a opção de compra",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-cadernos-anuais-pack-options",
+          "question": "Que opções de compra existem?",
+          "answer": "Caderno Normal, Caderno Pioneiro, Pack Normal e Pack Pioneiro."
+        },
+        {
+          "id": "main-cadernos-anuais-pack-more-than-one",
+          "question": "Posso encomendar mais do que uma unidade?",
+          "answer": "Sim. Podes encomendar de 1 a 9999 unidades da opção escolhida, todas com a mesma configuração."
+        },
+        {
+          "id": "main-cadernos-anuais-pack-minimum",
+          "question": "Qual é a quantidade mínima?",
+          "answer": "A quantidade mínima é 1 unidade da opção de compra escolhida."
+        }
+      ]
+    },
+    "main:cadernos-anuais:cover_personalization": {
+      "scope": "main",
+      "productSlug": "cadernos-anuais",
+      "productName": "Cadernos Anuais",
+      "stepId": "cover_personalization",
+      "stepName": "Queres personalizar a capa com um nome?",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-cadernos-anuais-cover_personalization-optional",
+          "question": "A personalização da capa é obrigatória?",
+          "answer": "Não. Podes escolher “Não” e receber a capa sem nome."
+        },
+        {
+          "id": "main-cadernos-anuais-cover_personalization-without-name",
+          "question": "Posso encomendar a capa sem nome?",
+          "answer": "Sim. Escolhe “Não”; a capa segue sem personalização."
+        },
+        {
+          "id": "main-cadernos-anuais-cover_personalization-length",
+          "question": "Qual é o tamanho máximo do nome?",
+          "answer": "O nome pode ter até 25 caracteres, incluindo espaços."
+        }
+      ]
+    },
+    "main:cadernos-anuais:delivery_contact": {
+      "scope": "main",
+      "productSlug": "cadernos-anuais",
+      "productName": "Cadernos Anuais",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 5,
+      "items": [
+        {
+          "id": "main-cadernos-anuais-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "main-cadernos-anuais-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "main-cadernos-anuais-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "main:cadernos-anuais:confirm": {
+      "scope": "main",
+      "productSlug": "cadernos-anuais",
+      "productName": "Cadernos Anuais",
+      "stepId": "confirm",
+      "stepName": "Confirma antes de enviar",
+      "stepOrder": 6,
+      "items": [
+        {
+          "id": "main-cadernos-anuais-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "main-cadernos-anuais-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "main-cadernos-anuais-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "main:crachas-loja:designs": {
+      "scope": "main",
+      "productSlug": "crachas-loja",
+      "productName": "Crachás",
+      "stepId": "designs",
+      "stepName": "Escolhe os teus designs favoritos",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-crachas-loja-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 32 opções visíveis neste passo."
+        },
+        {
+          "id": "main-crachas-loja-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Sim. Neste passo podes escolher várias opções entre as 32 disponíveis."
+        },
+        {
+          "id": "main-crachas-loja-designs-own-design",
+          "question": "Posso usar uma imagem minha?",
+          "answer": "Sim. Carrega em “Personalizar o meu crachá” para abrires [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "main:crachas-loja:size": {
+      "scope": "main",
+      "productSlug": "crachas-loja",
+      "productName": "Crachás",
+      "stepId": "size",
+      "stepName": "Escolhe o tamanho",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-crachas-loja-size-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 3 opções: Pequeno, Médio e Grandes."
+        },
+        {
+          "id": "main-crachas-loja-size-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 3 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-crachas-loja-size-difference",
+          "question": "Qual é a diferença entre as opções?",
+          "answer": "Pequeno — 2,5 cm x 2,5 cm (25 mm), Médio — 3,2 cm x 3,2 cm (32 mm) e Grandes — 5,8 cm x 5,8 cm (58 mm)."
+        }
+      ]
+    },
+    "main:crachas-loja:pack": {
+      "scope": "main",
+      "productSlug": "crachas-loja",
+      "productName": "Crachás",
+      "stepId": "pack",
+      "stepName": "Diz-me quantos crachás queres",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-crachas-loja-pack-quantity",
+          "question": "Que quantidade posso escolher?",
+          "answer": "Podes escrever qualquer quantidade a partir de 1. Os botões de atalho mostram 1, 3, 5, 10, 24, 48 e 96."
+        },
+        {
+          "id": "main-crachas-loja-pack-split",
+          "question": "Posso repartir a quantidade por vários designs?",
+          "answer": "Sim. Podes repartir a quantidade total entre os designs escolhidos e indicar quantidades diferentes para cada um."
+        },
+        {
+          "id": "main-crachas-loja-pack-unit-price",
+          "question": "O preço por unidade muda com a quantidade?",
+          "answer": "Sim. O preço por unidade desce nos escalões de quantidade mostrados na tabela deste passo."
+        }
+      ]
+    },
+    "main:crachas-loja:details": {
+      "scope": "main",
+      "productSlug": "crachas-loja",
+      "productName": "Crachás",
+      "stepId": "details",
+      "stepName": "Vamos personalizar o teu Cartão de Apresentação?",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-crachas-loja-details-what-card",
+          "question": "O que é o cartão de apresentação?",
+          "answer": "É o cartão impresso que acompanha os artigos da encomenda. Neste produto pode levar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-crachas-loja-details-fields",
+          "question": "Que dados posso colocar no cartão?",
+          "answer": "Podes colocar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-crachas-loja-details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Nome, Telemóvel ou Email e Congregação são opcionais; podes deixar esses campos em branco."
+        }
+      ]
+    },
+    "main:crachas-loja:delivery_contact": {
+      "scope": "main",
+      "productSlug": "crachas-loja",
+      "productName": "Crachás",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-crachas-loja-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "main-crachas-loja-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "main-crachas-loja-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "main:crachas-loja:confirm": {
+      "scope": "main",
+      "productSlug": "crachas-loja",
+      "productName": "Crachás",
+      "stepId": "confirm",
+      "stepName": "Confirma o teu pedido",
+      "stepOrder": 5,
+      "items": [
+        {
+          "id": "main-crachas-loja-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "main-crachas-loja-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "main-crachas-loja-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "main:imanes-loja:designs": {
+      "scope": "main",
+      "productSlug": "imanes-loja",
+      "productName": "Ímanes",
+      "stepId": "designs",
+      "stepName": "Escolhe os teus designs favoritos",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-imanes-loja-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 12 opções visíveis neste passo."
+        },
+        {
+          "id": "main-imanes-loja-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Sim. Neste passo podes escolher várias opções entre as 12 disponíveis."
+        },
+        {
+          "id": "main-imanes-loja-designs-own-design",
+          "question": "Posso usar uma imagem minha?",
+          "answer": "Sim. Carrega em “Personalizar o meu íman” para abrires [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "main:imanes-loja:size": {
+      "scope": "main",
+      "productSlug": "imanes-loja",
+      "productName": "Ímanes",
+      "stepId": "size",
+      "stepName": "Escolhe o tipo",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-imanes-loja-size-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 2 opções: Finos e flexíveis e 3 milímetros de espessura."
+        },
+        {
+          "id": "main-imanes-loja-size-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 2 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-imanes-loja-size-difference",
+          "question": "Qual é a diferença entre as opções?",
+          "answer": "Finos e flexíveis — Disponível a partir de 15 unidades e 3 milímetros de espessura — Podes encomendar uma, ou mais unidades."
+        }
+      ]
+    },
+    "main:imanes-loja:pack": {
+      "scope": "main",
+      "productSlug": "imanes-loja",
+      "productName": "Ímanes",
+      "stepId": "pack",
+      "stepName": "Diz-me quantos ímanes queres",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-imanes-loja-pack-quantity",
+          "question": "Que quantidade posso escolher?",
+          "answer": "Podes escrever qualquer quantidade a partir de 1. Os botões de atalho mostram 1, 3, 5, 10, 15, 24, 30, 48, 60 e 105."
+        },
+        {
+          "id": "main-imanes-loja-pack-split",
+          "question": "Posso repartir a quantidade por vários designs?",
+          "answer": "Sim. Podes repartir a quantidade total entre os designs escolhidos e indicar quantidades diferentes para cada um."
+        },
+        {
+          "id": "main-imanes-loja-pack-unit-price",
+          "question": "O preço por unidade muda com a quantidade?",
+          "answer": "Sim. O preço por unidade desce nos escalões de quantidade mostrados na tabela deste passo."
+        }
+      ]
+    },
+    "main:imanes-loja:details": {
+      "scope": "main",
+      "productSlug": "imanes-loja",
+      "productName": "Ímanes",
+      "stepId": "details",
+      "stepName": "Vamos personalizar o teu Cartão de Apresentação?",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-imanes-loja-details-what-card",
+          "question": "O que é o cartão de apresentação?",
+          "answer": "É o cartão impresso que acompanha os artigos da encomenda. Neste produto pode levar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-imanes-loja-details-fields",
+          "question": "Que dados posso colocar no cartão?",
+          "answer": "Podes colocar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-imanes-loja-details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Nome, Telemóvel ou Email e Congregação são opcionais; podes deixar esses campos em branco."
+        }
+      ]
+    },
+    "main:imanes-loja:delivery_contact": {
+      "scope": "main",
+      "productSlug": "imanes-loja",
+      "productName": "Ímanes",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-imanes-loja-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "main-imanes-loja-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "main-imanes-loja-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "main:imanes-loja:confirm": {
+      "scope": "main",
+      "productSlug": "imanes-loja",
+      "productName": "Ímanes",
+      "stepId": "confirm",
+      "stepName": "Confirma o teu pedido",
+      "stepOrder": 5,
+      "items": [
+        {
+          "id": "main-imanes-loja-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "main-imanes-loja-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "main-imanes-loja-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "main:imanes-recortados:designs": {
+      "scope": "main",
+      "productSlug": "imanes-recortados",
+      "productName": "Ímanes recortados",
+      "stepId": "designs",
+      "stepName": "Escolhe os teus ímanes favoritos",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-imanes-recortados-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 6 opções: Recortado 01, Recortado 02, Recortado 03, Recortado 04, Recortado 05 e Recortado 06."
+        },
+        {
+          "id": "main-imanes-recortados-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Sim. Neste passo podes escolher várias opções entre as 6 disponíveis."
+        },
+        {
+          "id": "main-imanes-recortados-designs-own-design",
+          "question": "Posso usar uma imagem minha?",
+          "answer": "Sim. Carrega em “Personalizar o meu íman” para abrires [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "main:imanes-recortados:pack": {
+      "scope": "main",
+      "productSlug": "imanes-recortados",
+      "productName": "Ímanes recortados",
+      "stepId": "pack",
+      "stepName": "Diz-me quantos ímanes queres",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-imanes-recortados-pack-quantity",
+          "question": "Que quantidade posso escolher?",
+          "answer": "Podes escrever qualquer quantidade a partir de 12. Os botões de atalho mostram 12, 24, 36, 48, 60 e 96."
+        },
+        {
+          "id": "main-imanes-recortados-pack-split",
+          "question": "Posso repartir a quantidade por vários designs?",
+          "answer": "Sim. Podes repartir a quantidade total entre os designs escolhidos e indicar quantidades diferentes para cada um."
+        },
+        {
+          "id": "main-imanes-recortados-pack-unit-price",
+          "question": "O preço por unidade muda com a quantidade?",
+          "answer": "Sim. O preço por unidade desce nos escalões de quantidade mostrados na tabela deste passo."
+        }
+      ]
+    },
+    "main:imanes-recortados:details": {
+      "scope": "main",
+      "productSlug": "imanes-recortados",
+      "productName": "Ímanes recortados",
+      "stepId": "details",
+      "stepName": "Vamos personalizar o teu Cartão de Apresentação?",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-imanes-recortados-details-what-card",
+          "question": "O que é o cartão de apresentação?",
+          "answer": "É o cartão impresso que acompanha os artigos da encomenda. Neste produto pode levar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-imanes-recortados-details-fields",
+          "question": "Que dados posso colocar no cartão?",
+          "answer": "Podes colocar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-imanes-recortados-details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Nome, Telemóvel ou Email e Congregação são opcionais; podes deixar esses campos em branco."
+        }
+      ]
+    },
+    "main:imanes-recortados:delivery_contact": {
+      "scope": "main",
+      "productSlug": "imanes-recortados",
+      "productName": "Ímanes recortados",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-imanes-recortados-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "main-imanes-recortados-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "main-imanes-recortados-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "main:imanes-recortados:confirm": {
+      "scope": "main",
+      "productSlug": "imanes-recortados",
+      "productName": "Ímanes recortados",
+      "stepId": "confirm",
+      "stepName": "Confirma o teu pedido",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-imanes-recortados-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "main-imanes-recortados-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "main-imanes-recortados-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "main:marcadores-magneticos:designs": {
+      "scope": "main",
+      "productSlug": "marcadores-magneticos",
+      "productName": "Marcadores magnéticos",
+      "stepId": "designs",
+      "stepName": "Escolhe os teus marcadores magnéticos favoritos",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-marcadores-magneticos-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 6 opções: Marcador magnético 01, Marcador magnético 02, Marcador magnético 03, Marcador magnético 04, Marcador magnético 05 e Marcador magnético 06."
+        },
+        {
+          "id": "main-marcadores-magneticos-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Sim. Neste passo podes escolher várias opções entre as 6 disponíveis."
+        },
+        {
+          "id": "main-marcadores-magneticos-designs-own-design",
+          "question": "Posso usar uma imagem minha?",
+          "answer": "Sim. Carrega em “Personalizar o meu marcador magnético” para abrires [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "main:marcadores-magneticos:extras": {
+      "scope": "main",
+      "productSlug": "marcadores-magneticos",
+      "productName": "Marcadores magnéticos",
+      "stepId": "extras",
+      "stepName": "Escolhe o acabamento",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-marcadores-magneticos-extras-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Acabamento: Glossy e Holográfico."
+        },
+        {
+          "id": "main-marcadores-magneticos-extras-required",
+          "question": "É obrigatório escolher?",
+          "answer": "Sim. Tens de escolher uma opção em Acabamento."
+        },
+        {
+          "id": "main-marcadores-magneticos-extras-price",
+          "question": "Estas opções alteram o preço?",
+          "answer": "Sim. Holográfico acrescenta um valor por unidade; Glossy não acrescenta valor."
+        }
+      ]
+    },
+    "main:marcadores-magneticos:pack": {
+      "scope": "main",
+      "productSlug": "marcadores-magneticos",
+      "productName": "Marcadores magnéticos",
+      "stepId": "pack",
+      "stepName": "Diz-me quantos marcadores magnéticos queres",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-marcadores-magneticos-pack-quantity",
+          "question": "Que quantidade posso escolher?",
+          "answer": "Podes escrever qualquer quantidade a partir de 1. Os botões de atalho mostram 1, 5, 10 e 20."
+        },
+        {
+          "id": "main-marcadores-magneticos-pack-split",
+          "question": "Posso repartir a quantidade por vários designs?",
+          "answer": "Sim. Podes repartir a quantidade total entre os designs escolhidos e indicar quantidades diferentes para cada um."
+        },
+        {
+          "id": "main-marcadores-magneticos-pack-unit-price",
+          "question": "O preço por unidade muda com a quantidade?",
+          "answer": "Não. O preço por unidade mantém-se igual em todas as quantidades deste passo."
+        }
+      ]
+    },
+    "main:marcadores-magneticos:details": {
+      "scope": "main",
+      "productSlug": "marcadores-magneticos",
+      "productName": "Marcadores magnéticos",
+      "stepId": "details",
+      "stepName": "Vamos personalizar o teu Cartão de Apresentação?",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-marcadores-magneticos-details-what-card",
+          "question": "O que é o cartão de apresentação?",
+          "answer": "É o cartão impresso que acompanha os artigos da encomenda. Neste produto pode levar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-marcadores-magneticos-details-fields",
+          "question": "Que dados posso colocar no cartão?",
+          "answer": "Podes colocar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-marcadores-magneticos-details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Nome, Telemóvel ou Email e Congregação são opcionais; podes deixar esses campos em branco."
+        }
+      ]
+    },
+    "main:marcadores-magneticos:delivery_contact": {
+      "scope": "main",
+      "productSlug": "marcadores-magneticos",
+      "productName": "Marcadores magnéticos",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-marcadores-magneticos-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "main-marcadores-magneticos-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "main-marcadores-magneticos-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "main:marcadores-magneticos:confirm": {
+      "scope": "main",
+      "productSlug": "marcadores-magneticos",
+      "productName": "Marcadores magnéticos",
+      "stepId": "confirm",
+      "stepName": "Confirma o teu pedido",
+      "stepOrder": 5,
+      "items": [
+        {
+          "id": "main-marcadores-magneticos-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "main-marcadores-magneticos-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "main-marcadores-magneticos-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "main:marcadores:designs": {
+      "scope": "main",
+      "productSlug": "marcadores",
+      "productName": "Marcadores",
+      "stepId": "designs",
+      "stepName": "Escolhe os teus marcadores favoritos",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-marcadores-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 6 opções: Marcador 01, Marcador 02, Marcador 03, Marcador 04, Marcador 05 e Marcador 06."
+        },
+        {
+          "id": "main-marcadores-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Sim. Neste passo podes escolher várias opções entre as 6 disponíveis."
+        },
+        {
+          "id": "main-marcadores-designs-own-design",
+          "question": "Posso usar uma imagem minha?",
+          "answer": "Sim. Carrega em “Personalizar o meu marcador” para abrires [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "main:marcadores:extras": {
+      "scope": "main",
+      "productSlug": "marcadores",
+      "productName": "Marcadores",
+      "stepId": "extras",
+      "stepName": "Queres acrescentar alguma opção?",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-marcadores-extras-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Impressão: Impressão de um lado e Impressão dos dois lados. Papel: Papel normal e Papel holográfico. Buraquinho para pendente: Sem buraquinho e Com buraquinho para pendente. Margem de plástico: Sem margem e Com margem de plástico."
+        },
+        {
+          "id": "main-marcadores-extras-required",
+          "question": "É obrigatório escolher?",
+          "answer": "Sim. Tens de escolher uma opção em Impressão, Papel, Buraquinho para pendente e Margem de plástico."
+        },
+        {
+          "id": "main-marcadores-extras-price",
+          "question": "Estas opções alteram o preço?",
+          "answer": "Sim. Impressão dos dois lados, Papel holográfico, Com buraquinho para pendente e Com margem de plástico acrescentam um valor por unidade; Impressão de um lado, Papel normal, Sem buraquinho e Sem margem não acrescentam valor."
+        }
+      ]
+    },
+    "main:marcadores:pack": {
+      "scope": "main",
+      "productSlug": "marcadores",
+      "productName": "Marcadores",
+      "stepId": "pack",
+      "stepName": "Diz-me quantos marcadores queres",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-marcadores-pack-quantity",
+          "question": "Que quantidade posso escolher?",
+          "answer": "Podes escrever qualquer quantidade a partir de 1. Os botões de atalho mostram 1, 5, 10, 20, 25, 40 e 75."
+        },
+        {
+          "id": "main-marcadores-pack-split",
+          "question": "Posso repartir a quantidade por vários designs?",
+          "answer": "Sim. Podes repartir a quantidade total entre os designs escolhidos e indicar quantidades diferentes para cada um."
+        },
+        {
+          "id": "main-marcadores-pack-unit-price",
+          "question": "O preço por unidade muda com a quantidade?",
+          "answer": "Sim. O preço por unidade desce nos escalões de quantidade mostrados na tabela deste passo."
+        }
+      ]
+    },
+    "main:marcadores:details": {
+      "scope": "main",
+      "productSlug": "marcadores",
+      "productName": "Marcadores",
+      "stepId": "details",
+      "stepName": "Vamos personalizar o teu Cartão de Apresentação?",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-marcadores-details-what-card",
+          "question": "O que é o cartão de apresentação?",
+          "answer": "É o cartão impresso que acompanha os artigos da encomenda. Neste produto pode levar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-marcadores-details-fields",
+          "question": "Que dados posso colocar no cartão?",
+          "answer": "Podes colocar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-marcadores-details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Nome, Telemóvel ou Email e Congregação são opcionais; podes deixar esses campos em branco."
+        }
+      ]
+    },
+    "main:marcadores:delivery_contact": {
+      "scope": "main",
+      "productSlug": "marcadores",
+      "productName": "Marcadores",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-marcadores-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "main-marcadores-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "main-marcadores-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "main:marcadores:confirm": {
+      "scope": "main",
+      "productSlug": "marcadores",
+      "productName": "Marcadores",
+      "stepId": "confirm",
+      "stepName": "Confirma o teu pedido",
+      "stepOrder": 5,
+      "items": [
+        {
+          "id": "main-marcadores-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "main-marcadores-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "main-marcadores-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "main:mini-cadernos:designs": {
+      "scope": "main",
+      "productSlug": "mini-cadernos",
+      "productName": "Mini-Cadernos",
+      "stepId": "designs",
+      "stepName": "Escolhe os teus designs favoritos",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-mini-cadernos-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 11 opções visíveis neste passo."
+        },
+        {
+          "id": "main-mini-cadernos-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Sim. Neste passo podes escolher várias opções entre as 11 disponíveis."
+        },
+        {
+          "id": "main-mini-cadernos-designs-own-design",
+          "question": "Posso usar uma imagem minha?",
+          "answer": "Sim. Carrega em “Personalizar o meu mini-caderno” para abrires [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "main:mini-cadernos:pack": {
+      "scope": "main",
+      "productSlug": "mini-cadernos",
+      "productName": "Mini-Cadernos",
+      "stepId": "pack",
+      "stepName": "Diz-me quantos mini-cadernos queres",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-mini-cadernos-pack-quantity",
+          "question": "Que quantidade posso escolher?",
+          "answer": "Podes escrever qualquer quantidade a partir de 1. Os botões de atalho mostram 1, 3, 5, 10, 24, 48 e 96."
+        },
+        {
+          "id": "main-mini-cadernos-pack-split",
+          "question": "Posso repartir a quantidade por vários designs?",
+          "answer": "Sim. Podes repartir a quantidade total entre os designs escolhidos e indicar quantidades diferentes para cada um."
+        },
+        {
+          "id": "main-mini-cadernos-pack-unit-price",
+          "question": "O preço por unidade muda com a quantidade?",
+          "answer": "Sim. O preço por unidade desce nos escalões de quantidade mostrados na tabela deste passo."
+        }
+      ]
+    },
+    "main:mini-cadernos:details": {
+      "scope": "main",
+      "productSlug": "mini-cadernos",
+      "productName": "Mini-Cadernos",
+      "stepId": "details",
+      "stepName": "Dados para o cartão de apresentação",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-mini-cadernos-details-what-card",
+          "question": "O que é o cartão de apresentação?",
+          "answer": "É o cartão impresso que acompanha os artigos da encomenda. Neste produto pode levar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-mini-cadernos-details-fields",
+          "question": "Que dados posso colocar no cartão?",
+          "answer": "Podes colocar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-mini-cadernos-details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Nome, Telemóvel ou Email e Congregação são opcionais; podes deixar esses campos em branco."
+        }
+      ]
+    },
+    "main:mini-cadernos:delivery_contact": {
+      "scope": "main",
+      "productSlug": "mini-cadernos",
+      "productName": "Mini-Cadernos",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-mini-cadernos-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "main-mini-cadernos-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "main-mini-cadernos-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "main:mini-cadernos:confirm": {
+      "scope": "main",
+      "productSlug": "mini-cadernos",
+      "productName": "Mini-Cadernos",
+      "stepId": "confirm",
+      "stepName": "Confirma antes de enviar",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-mini-cadernos-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "main-mini-cadernos-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "main-mini-cadernos-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "main:personalizacao:artwork_upload": {
+      "scope": "main",
+      "productSlug": "personalizacao",
+      "productName": "Personalização",
+      "stepId": "artwork_upload",
+      "stepName": "Envia as tuas imagens",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-personalizacao-artwork_upload-formats",
+          "question": "Que formatos posso enviar?",
+          "answer": "Podes enviar JPG, JPEG, PNG, WEBP, HEIC, HEIF e PDF."
+        },
+        {
+          "id": "main-personalizacao-artwork_upload-files",
+          "question": "Quantas imagens posso enviar?",
+          "answer": "Podes enviar entre 1 e 10 ficheiros."
+        },
+        {
+          "id": "main-personalizacao-artwork_upload-required",
+          "question": "Tenho de enviar pelo menos uma imagem?",
+          "answer": "Sim. Este passo exige pelo menos 1 imagem para continuar."
+        }
+      ]
+    },
+    "main:personalizacao:custom_products": {
+      "scope": "main",
+      "productSlug": "personalizacao",
+      "productName": "Personalização",
+      "stepId": "custom_products",
+      "stepName": "Seleciona todos os produtos que queres criar com esta imagem",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-personalizacao-custom_products-products",
+          "question": "Que produtos posso criar com a minha imagem?",
+          "answer": "Crachás: Crachás pequenos, Crachás médios e Crachás grandes. Ímanes: Ímanes finos, Ímanes grossos e Ímanes recortados. Apontamentos: Caderno Anual Argolas A5, Agenda Anual Argolas A5, Bloco Argolas A6, Bloquinho A7 e Mini-Caderno Argolas. Papel: Stickers, Marcadores e Marcadores magnéticos."
+        },
+        {
+          "id": "main-personalizacao-custom_products-multiple",
+          "question": "Posso escolher vários produtos para a mesma imagem?",
+          "answer": "Sim. Podes escolher vários dos 14 produtos e configurar cada um separadamente."
+        },
+        {
+          "id": "main-personalizacao-custom_products-finishes",
+          "question": "Que acabamentos e extras existem?",
+          "answer": "Podes escolher Acabamento holográfico, Papel ou acabamento holográfico, Impressão dos dois lados, Buraquinho para pendente, Margem de plástico, Capa mole e Capa dura."
+        }
+      ]
+    },
+    "main:personalizacao:custom_quantities": {
+      "scope": "main",
+      "productSlug": "personalizacao",
+      "productName": "Personalização",
+      "stepId": "custom_quantities",
+      "stepName": "Quantos queres de cada um?",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-personalizacao-custom_quantities-different",
+          "question": "Posso usar quantidades diferentes em cada produto?",
+          "answer": "Sim. Cada produto escolhido tem a sua própria quantidade."
+        },
+        {
+          "id": "main-personalizacao-custom_quantities-required",
+          "question": "Tenho de indicar uma quantidade para cada produto?",
+          "answer": "Sim. Todos os produtos seleccionados precisam de uma quantidade antes de continuares."
+        },
+        {
+          "id": "main-personalizacao-custom_quantities-calculation",
+          "question": "Como é calculado o preço neste passo?",
+          "answer": "O preço é calculado separadamente para cada produto, quantidade, tamanho e acabamento que escolheste."
+        }
+      ]
+    },
+    "main:personalizacao:delivery_contact": {
+      "scope": "main",
+      "productSlug": "personalizacao",
+      "productName": "Personalização",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-personalizacao-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "main-personalizacao-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher ."
+        },
+        {
+          "id": "main-personalizacao-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "main:personalizacao:confirm": {
+      "scope": "main",
+      "productSlug": "personalizacao",
+      "productName": "Personalização",
+      "stepId": "confirm",
+      "stepName": "Confirma o teu pedido",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-personalizacao-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "main-personalizacao-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "main-personalizacao-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "main:quadros:designs": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "designs",
+      "stepName": "Escolhe o tipo de moldura",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-quadros-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 7 opções: Foto e Flores 3D, Moldura para Bebé, Coração de Flores, O Amor Nunca Acaba, Jardim de Flores, Silhueta Personalizada em Vinil e Super Personalizado."
+        },
+        {
+          "id": "main-quadros-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 7 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-quadros-designs-own-photo",
+          "question": "Posso usar uma fotografia minha?",
+          "answer": "Sim. Escolhe “Foto e Frase”; o passo seguinte permite enviar uma fotografia."
+        }
+      ]
+    },
+    "main:quadros:photo_upload": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "photo_upload",
+      "stepName": "Enviar foto",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-quadros-photo_upload-files",
+          "question": "Posso enviar mais do que uma fotografia?",
+          "answer": "Não. Este passo aceita apenas 1 fotografia."
+        },
+        {
+          "id": "main-quadros-photo_upload-required",
+          "question": "É obrigatório enviar a fotografia?",
+          "answer": "Sim. Tens de enviar uma fotografia ou escolher “Preciso de ajuda para enviar a foto”."
+        },
+        {
+          "id": "main-quadros-photo_upload-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “Foto e Frase”."
+        }
+      ]
+    },
+    "main:quadros:baby_gender": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "baby_gender",
+      "stepName": "É para menino ou menina?",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-quadros-baby_gender-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 2 opções: Menino e Menina."
+        },
+        {
+          "id": "main-quadros-baby_gender-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 2 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-quadros-baby_gender-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “Quadro para bebé”."
+        }
+      ]
+    },
+    "main:quadros:baby_animal": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "baby_animal",
+      "stepName": "Escolhe a silhueta",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-quadros-baby_animal-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 2 opções: Elefante e Outro animal."
+        },
+        {
+          "id": "main-quadros-baby_animal-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 2 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-quadros-baby_animal-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “Quadro para bebé”."
+        }
+      ]
+    },
+    "main:quadros:baby_custom_animal": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "baby_custom_animal",
+      "stepName": "Que animal gostarias?",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-quadros-baby_custom_animal-fields",
+          "question": "O que devo escrever neste passo?",
+          "answer": "Este passo pede Ex.: girafa, leão ou ursinho."
+        },
+        {
+          "id": "main-quadros-baby_custom_animal-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “Outro animal”."
+        },
+        {
+          "id": "main-quadros-baby_custom_animal-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Sim. Ex.: girafa, leão ou ursinho é obrigatório."
+        }
+      ]
+    },
+    "main:quadros:baby_color": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "baby_color",
+      "stepName": "Escolhe a cor",
+      "stepOrder": 5,
+      "items": [
+        {
+          "id": "main-quadros-baby_color-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 2 cores: Rosa bebé e Azul bebé."
+        },
+        {
+          "id": "main-quadros-baby_color-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 2 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-quadros-baby_color-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “Quadro para bebé”."
+        }
+      ]
+    },
+    "main:quadros:baby_details": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "baby_details",
+      "stepName": "Quais os dados do bebé?",
+      "stepOrder": 6,
+      "items": [
+        {
+          "id": "main-quadros-baby_details-fields",
+          "question": "O que devo escrever neste passo?",
+          "answer": "Este passo pede Nome da criança, Data de nascimento, Hora de nascimento, Peso à nascença e Outros dados."
+        },
+        {
+          "id": "main-quadros-baby_details-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “Quadro para bebé”."
+        },
+        {
+          "id": "main-quadros-baby_details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Nome da criança, Data de nascimento, Hora de nascimento, Peso à nascença e Outros dados são opcionais; podes deixar esses campos em branco."
+        }
+      ]
+    },
+    "main:quadros:silhouette": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "silhouette",
+      "stepName": "Que silhueta queres?",
+      "stepOrder": 7,
+      "items": [
+        {
+          "id": "main-quadros-silhouette-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 4 opções: Casal, Família, Pessoa e Outra silhueta."
+        },
+        {
+          "id": "main-quadros-silhouette-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 4 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-quadros-silhouette-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “Silhueta e Frase”."
+        }
+      ]
+    },
+    "main:quadros:silhouette_details": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "silhouette_details",
+      "stepName": "Que silhueta imaginas?",
+      "stepOrder": 8,
+      "items": [
+        {
+          "id": "main-quadros-silhouette_details-fields",
+          "question": "O que devo escrever neste passo?",
+          "answer": "Este passo pede Descreve aqui o tipo de silhueta que pretendes, ou envia-nos uma foto."
+        },
+        {
+          "id": "main-quadros-silhouette_details-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “Outra silhueta”."
+        },
+        {
+          "id": "main-quadros-silhouette_details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Descreve aqui o tipo de silhueta que pretendes, ou envia-nos uma foto é opcional; podes deixar esse campo em branco."
+        }
+      ]
+    },
+    "main:quadros:heart_finish": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "heart_finish",
+      "stepName": "Queres o fundo em flores ou folha de glitter?",
+      "stepOrder": 9,
+      "items": [
+        {
+          "id": "main-quadros-heart_finish-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 2 opções: Fundo com flores 3D e Fundo com folha de glitter."
+        },
+        {
+          "id": "main-quadros-heart_finish-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 2 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-quadros-heart_finish-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “Coração e Frase”."
+        }
+      ]
+    },
+    "main:quadros:colors": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "colors",
+      "stepName": "Escolhe as cores das Flores 3D",
+      "stepOrder": 10,
+      "items": [
+        {
+          "id": "main-quadros-colors-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 8 cores: Azuis frescos, Rosa e bordeaux, Amarelo e azul, Vermelhos quentes, Dourados naturais, Rosa suave, Verdes naturais e Terra e creme."
+        },
+        {
+          "id": "main-quadros-colors-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 8 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-quadros-colors-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste uma destas opções: “Foto e Frase”, “Jardim de Flores e Frase”, “Coração e Frase”, “O Amor Nunca Acaba” e “Silhueta e Frase”."
+        }
+      ]
+    },
+    "main:quadros:heart_background_colors": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "heart_background_colors",
+      "stepName": "Escolhe a cor do fundo",
+      "stepOrder": 11,
+      "items": [
+        {
+          "id": "main-quadros-heart_background_colors-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 8 cores: Azuis frescos, Rosa e bordeaux, Amarelo e azul, Vermelhos quentes, Dourados naturais, Rosa suave, Verdes naturais e Terra e creme."
+        },
+        {
+          "id": "main-quadros-heart_background_colors-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 8 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-quadros-heart_background_colors-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “Coração e Frase”."
+        }
+      ]
+    },
+    "main:quadros:photo_orientation": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "photo_orientation",
+      "stepName": "Escolhe a orientação da moldura",
+      "stepOrder": 12,
+      "items": [
+        {
+          "id": "main-quadros-photo_orientation-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 2 opções: Horizontal e Vertical."
+        },
+        {
+          "id": "main-quadros-photo_orientation-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 2 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-quadros-photo_orientation-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “Foto e Frase”."
+        }
+      ]
+    },
+    "main:quadros:phrase_details": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "phrase_details",
+      "stepName": "Que frase queres colocar em vinil?",
+      "stepOrder": 13,
+      "items": [
+        {
+          "id": "main-quadros-phrase_details-fields",
+          "question": "O que devo escrever neste passo?",
+          "answer": "Este passo pede Escreve aqui a tua frase, ou envia-nos um áudio ou uma foto do texto que queres colocar na moldura."
+        },
+        {
+          "id": "main-quadros-phrase_details-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste uma destas opções: “Foto e Frase”, “Jardim de Flores e Frase” e “Coração e Frase”."
+        },
+        {
+          "id": "main-quadros-phrase_details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Escreve aqui a tua frase, ou envia-nos um áudio ou uma foto do texto que queres colocar na moldura é opcional; podes deixar esse campo em branco."
+        }
+      ]
+    },
+    "main:quadros:love_dedication": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "love_dedication",
+      "stepName": "Personaliza a dedicatória",
+      "stepOrder": 14,
+      "items": [
+        {
+          "id": "main-quadros-love_dedication-fields",
+          "question": "O que devo escrever neste passo?",
+          "answer": "Este passo pede Escreve aqui a tua dedicatória, ou envia-nos um áudio ou uma foto do texto que queres colocar na moldura."
+        },
+        {
+          "id": "main-quadros-love_dedication-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “O Amor Nunca Acaba”."
+        },
+        {
+          "id": "main-quadros-love_dedication-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Escreve aqui a tua dedicatória, ou envia-nos um áudio ou uma foto do texto que queres colocar na moldura é opcional; podes deixar esse campo em branco."
+        }
+      ]
+    },
+    "main:quadros:silhouette_text_details": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "silhouette_text_details",
+      "stepName": "Que texto queres colocar em vinil?",
+      "stepOrder": 15,
+      "items": [
+        {
+          "id": "main-quadros-silhouette_text_details-fields",
+          "question": "O que devo escrever neste passo?",
+          "answer": "Este passo pede Escreve aqui o teu texto, ou envia-nos um áudio ou uma foto do texto que queres colocar na moldura."
+        },
+        {
+          "id": "main-quadros-silhouette_text_details-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “Silhueta e Frase”."
+        },
+        {
+          "id": "main-quadros-silhouette_text_details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Escreve aqui o teu texto, ou envia-nos um áudio ou uma foto do texto que queres colocar na moldura é opcional; podes deixar esse campo em branco."
+        }
+      ]
+    },
+    "main:quadros:super_details": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "super_details",
+      "stepName": "Escolhe um destes estilos…",
+      "stepOrder": 16,
+      "items": [
+        {
+          "id": "main-quadros-super_details-fields",
+          "question": "O que devo escrever neste passo?",
+          "answer": "Este passo pede Descreve as cores, formas, pessoas, texto e outros detalhes importantes."
+        },
+        {
+          "id": "main-quadros-super_details-why-visible",
+          "question": "Porque apareceu este passo?",
+          "answer": "Este passo aparece porque escolheste “Super Personalizado”."
+        },
+        {
+          "id": "main-quadros-super_details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Descreve as cores, formas, pessoas, texto e outros detalhes importantes é opcional; podes deixar esse campo em branco."
+        }
+      ]
+    },
+    "main:quadros:packaging": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "packaging",
+      "stepName": "Como queres receber a moldura?",
+      "stepOrder": 17,
+      "items": [
+        {
+          "id": "main-quadros-packaging-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 2 opções: Proteção normal e Embrulho para oferecer."
+        },
+        {
+          "id": "main-quadros-packaging-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 2 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "main-quadros-packaging-difference",
+          "question": "Qual é a diferença entre as opções?",
+          "answer": "Proteção normal — A moldura é protegida com plástico-bolha, e colocada num saco de papel e Embrulho para oferecer — A moldura é envolvida em papel de embrulho lustroso, com fita, e depois protegida com plástico-bolha, e colocada num saco de papel com fita."
+        }
+      ]
+    },
+    "main:quadros:pack": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "pack",
+      "stepName": "Quantidade",
+      "stepOrder": 18,
+      "items": [
+        {
+          "id": "main-quadros-pack-fixed",
+          "question": "Quantas molduras inclui este pedido?",
+          "answer": "Este pedido inclui 1 moldura."
+        },
+        {
+          "id": "main-quadros-pack-change",
+          "question": "Posso alterar a quantidade aqui?",
+          "answer": "Não. A quantidade está fixa em 1 moldura neste passo."
+        },
+        {
+          "id": "main-quadros-pack-visible",
+          "question": "Tenho de preencher este passo?",
+          "answer": "Não. Este passo está oculto e a quantidade 1 é aplicada automaticamente."
+        }
+      ]
+    },
+    "main:quadros:delivery_contact": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 19,
+      "items": [
+        {
+          "id": "main-quadros-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "main-quadros-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "main-quadros-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "main:quadros:confirm": {
+      "scope": "main",
+      "productSlug": "quadros",
+      "productName": "Moldura personalizada",
+      "stepId": "confirm",
+      "stepName": "Confirma o teu pedido",
+      "stepOrder": 20,
+      "items": [
+        {
+          "id": "main-quadros-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "main-quadros-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "main-quadros-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "main:stickers:designs": {
+      "scope": "main",
+      "productSlug": "stickers",
+      "productName": "Stickers",
+      "stepId": "designs",
+      "stepName": "Escolhe os teus stickers favoritos",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-stickers-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 6 opções: Sticker 01, Sticker 02, Sticker 03, Sticker 04, Sticker 05 e Sticker 06."
+        },
+        {
+          "id": "main-stickers-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Sim. Neste passo podes escolher várias opções entre as 6 disponíveis."
+        },
+        {
+          "id": "main-stickers-designs-own-design",
+          "question": "Posso usar uma imagem minha?",
+          "answer": "Sim. Carrega em “Personalizar os meus stickers” para abrires [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "main:stickers:pack": {
+      "scope": "main",
+      "productSlug": "stickers",
+      "productName": "Stickers",
+      "stepId": "pack",
+      "stepName": "Diz-me quantos stickers queres",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-stickers-pack-quantity",
+          "question": "Que quantidade posso escolher?",
+          "answer": "Podes escrever qualquer quantidade a partir de 1. Os botões de atalho mostram 1, 5, 10, 25 e 50."
+        },
+        {
+          "id": "main-stickers-pack-split",
+          "question": "Posso repartir a quantidade por vários designs?",
+          "answer": "Sim. Podes repartir a quantidade total entre os designs escolhidos e indicar quantidades diferentes para cada um."
+        },
+        {
+          "id": "main-stickers-pack-unit-price",
+          "question": "O preço por unidade muda com a quantidade?",
+          "answer": "Não. O preço por unidade mantém-se igual em todas as quantidades deste passo."
+        }
+      ]
+    },
+    "main:stickers:details": {
+      "scope": "main",
+      "productSlug": "stickers",
+      "productName": "Stickers",
+      "stepId": "details",
+      "stepName": "Vamos personalizar o teu Cartão de Apresentação?",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-stickers-details-what-card",
+          "question": "O que é o cartão de apresentação?",
+          "answer": "É o cartão impresso que acompanha os artigos da encomenda. Neste produto pode levar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-stickers-details-fields",
+          "question": "Que dados posso colocar no cartão?",
+          "answer": "Podes colocar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-stickers-details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Nome, Telemóvel ou Email e Congregação são opcionais; podes deixar esses campos em branco."
+        }
+      ]
+    },
+    "main:stickers:delivery_contact": {
+      "scope": "main",
+      "productSlug": "stickers",
+      "productName": "Stickers",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-stickers-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "main-stickers-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "main-stickers-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "main:stickers:confirm": {
+      "scope": "main",
+      "productSlug": "stickers",
+      "productName": "Stickers",
+      "stepId": "confirm",
+      "stepName": "Confirma o teu pedido",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-stickers-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "main-stickers-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "main-stickers-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "congress-2026:caderninhos:designs": {
+      "scope": "congress-2026",
+      "productSlug": "caderninhos",
+      "productName": "Mini-Cadernos",
+      "stepId": "designs",
+      "stepName": "Escolhe os que mais gostas",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "c26-caderninhos-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 11 opções visíveis neste passo."
+        },
+        {
+          "id": "c26-caderninhos-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Sim. Neste passo podes escolher várias opções entre as 11 disponíveis."
+        },
+        {
+          "id": "c26-caderninhos-designs-own-design",
+          "question": "Posso usar um design meu neste passo?",
+          "answer": "Não. Aqui escolhes apenas designs do catálogo. Para criares o produto com uma imagem tua, abre [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "congress-2026:caderninhos:pack": {
+      "scope": "congress-2026",
+      "productSlug": "caderninhos",
+      "productName": "Mini-Cadernos",
+      "stepId": "pack",
+      "stepName": "Diz-me quantos mini-cadernos queres",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "c26-caderninhos-pack-quantity",
+          "question": "Que quantidade posso escolher?",
+          "answer": "Podes escrever qualquer quantidade a partir de 1. Os botões de atalho mostram 1, 3, 5, 10, 24, 48 e 96."
+        },
+        {
+          "id": "c26-caderninhos-pack-split",
+          "question": "Posso repartir a quantidade por vários designs?",
+          "answer": "Sim. Podes repartir a quantidade total entre os designs escolhidos e indicar quantidades diferentes para cada um."
+        },
+        {
+          "id": "c26-caderninhos-pack-unit-price",
+          "question": "O preço por unidade muda com a quantidade?",
+          "answer": "Sim. O preço por unidade desce nos escalões de quantidade mostrados na tabela deste passo."
+        }
+      ]
+    },
+    "congress-2026:caderninhos:details": {
+      "scope": "congress-2026",
+      "productSlug": "caderninhos",
+      "productName": "Mini-Cadernos",
+      "stepId": "details",
+      "stepName": "Dados para o cartão de apresentação",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "c26-caderninhos-details-what-card",
+          "question": "O que é o cartão de apresentação?",
+          "answer": "É o cartão impresso que acompanha os artigos da encomenda. Neste produto pode levar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "c26-caderninhos-details-fields",
+          "question": "Que dados posso colocar no cartão?",
+          "answer": "Podes colocar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "c26-caderninhos-details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Nome, Telemóvel ou Email e Congregação são opcionais; podes deixar esses campos em branco."
+        }
+      ]
+    },
+    "congress-2026:caderninhos:delivery_contact": {
+      "scope": "congress-2026",
+      "productSlug": "caderninhos",
+      "productName": "Mini-Cadernos",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "c26-caderninhos-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "c26-caderninhos-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "c26-caderninhos-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "congress-2026:caderninhos:confirm": {
+      "scope": "congress-2026",
+      "productSlug": "caderninhos",
+      "productName": "Mini-Cadernos",
+      "stepId": "confirm",
+      "stepName": "Confirma antes de enviar",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "c26-caderninhos-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "c26-caderninhos-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "c26-caderninhos-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "congress-2026:cadernos:designs": {
+      "scope": "congress-2026",
+      "productSlug": "cadernos",
+      "productName": "Cadernos de Apontamentos",
+      "stepId": "designs",
+      "stepName": "Escolhe a capa do caderno",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "c26-cadernos-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 16 opções visíveis neste passo."
+        },
+        {
+          "id": "c26-cadernos-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 16 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "c26-cadernos-designs-own-design",
+          "question": "Posso usar um design meu neste passo?",
+          "answer": "Não. Aqui escolhes apenas designs do catálogo. Para criares o produto com uma imagem tua, abre [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "congress-2026:cadernos:lamination": {
+      "scope": "congress-2026",
+      "productSlug": "cadernos",
+      "productName": "Cadernos de Apontamentos",
+      "stepId": "lamination",
+      "stepName": "Escolhe o tipo de laminação",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "c26-cadernos-lamination-options",
+          "question": "Que acabamentos posso escolher?",
+          "answer": "Tens 4 acabamentos: Matte, Glossy, Holográfica e Glitter branco."
+        },
+        {
+          "id": "c26-cadernos-lamination-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 4 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "c26-cadernos-lamination-difference",
+          "question": "Qual é a diferença entre os acabamentos?",
+          "answer": "Matte — Acabamento suave, sem brilho, Glossy — Acabamento brilhante normal, Holográfica — Brilho com reflexos coloridos e Glitter branco — Brilho tipo glitter/purpurinas brancas."
+        }
+      ]
+    },
+    "congress-2026:cadernos:pack": {
+      "scope": "congress-2026",
+      "productSlug": "cadernos",
+      "productName": "Cadernos de Apontamentos",
+      "stepId": "pack",
+      "stepName": "Escolhe a opção de compra",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "c26-cadernos-pack-options",
+          "question": "Que opções de compra existem?",
+          "answer": "Caderno Normal, Caderno Pioneiro, Pack Normal e Pack Pioneiro."
+        },
+        {
+          "id": "c26-cadernos-pack-more-than-one",
+          "question": "Posso encomendar mais do que uma unidade?",
+          "answer": "Sim. Podes encomendar de 1 a 9999 unidades da opção escolhida, todas com a mesma configuração."
+        },
+        {
+          "id": "c26-cadernos-pack-minimum",
+          "question": "Qual é a quantidade mínima?",
+          "answer": "A quantidade mínima é 1 unidade da opção de compra escolhida."
+        }
+      ]
+    },
+    "congress-2026:cadernos:cover_personalization": {
+      "scope": "congress-2026",
+      "productSlug": "cadernos",
+      "productName": "Cadernos de Apontamentos",
+      "stepId": "cover_personalization",
+      "stepName": "Queres personalizar a capa com um nome?",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "c26-cadernos-cover_personalization-optional",
+          "question": "A personalização da capa é obrigatória?",
+          "answer": "Não. Podes escolher “Não” e receber a capa sem nome."
+        },
+        {
+          "id": "c26-cadernos-cover_personalization-without-name",
+          "question": "Posso encomendar a capa sem nome?",
+          "answer": "Sim. Escolhe “Não”; a capa segue sem personalização."
+        },
+        {
+          "id": "c26-cadernos-cover_personalization-length",
+          "question": "Qual é o tamanho máximo do nome?",
+          "answer": "O nome pode ter até 25 caracteres, incluindo espaços."
+        }
+      ]
+    },
+    "congress-2026:cadernos:delivery_contact": {
+      "scope": "congress-2026",
+      "productSlug": "cadernos",
+      "productName": "Cadernos de Apontamentos",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "c26-cadernos-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "c26-cadernos-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "c26-cadernos-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "congress-2026:cadernos:confirm": {
+      "scope": "congress-2026",
+      "productSlug": "cadernos",
+      "productName": "Cadernos de Apontamentos",
+      "stepId": "confirm",
+      "stepName": "Confirma antes de enviar",
+      "stepOrder": 5,
+      "items": [
+        {
+          "id": "c26-cadernos-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "c26-cadernos-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "c26-cadernos-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "congress-2026:crachas:designs": {
+      "scope": "congress-2026",
+      "productSlug": "crachas",
+      "productName": "Crachás",
+      "stepId": "designs",
+      "stepName": "Escolhe os teus designs favoritos",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "c26-crachas-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 32 opções visíveis neste passo."
+        },
+        {
+          "id": "c26-crachas-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Sim. Neste passo podes escolher várias opções entre as 32 disponíveis."
+        },
+        {
+          "id": "c26-crachas-designs-own-design",
+          "question": "Posso usar um design meu neste passo?",
+          "answer": "Não. Aqui escolhes apenas designs do catálogo. Para criares o produto com uma imagem tua, abre [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "congress-2026:crachas:size": {
+      "scope": "congress-2026",
+      "productSlug": "crachas",
+      "productName": "Crachás",
+      "stepId": "size",
+      "stepName": "Escolhe o tamanho",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "c26-crachas-size-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 2 opções: Pequeno e Médio."
+        },
+        {
+          "id": "c26-crachas-size-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 2 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "c26-crachas-size-difference",
+          "question": "Qual é a diferença entre as opções?",
+          "answer": "Pequeno — 2,5 cm x 2,5 cm (25 mm) e Médio — 3,2 cm x 3,2 cm (32 mm)."
+        }
+      ]
+    },
+    "congress-2026:crachas:pack": {
+      "scope": "congress-2026",
+      "productSlug": "crachas",
+      "productName": "Crachás",
+      "stepId": "pack",
+      "stepName": "Diz-me quantos crachás queres",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "c26-crachas-pack-quantity",
+          "question": "Que quantidade posso escolher?",
+          "answer": "Podes escrever qualquer quantidade a partir de 1. Os botões de atalho mostram 1, 3, 5, 24, 48 e 96."
+        },
+        {
+          "id": "c26-crachas-pack-split",
+          "question": "Posso repartir a quantidade por vários designs?",
+          "answer": "Sim. Podes repartir a quantidade total entre os designs escolhidos e indicar quantidades diferentes para cada um."
+        },
+        {
+          "id": "c26-crachas-pack-unit-price",
+          "question": "O preço por unidade muda com a quantidade?",
+          "answer": "Sim. O preço por unidade desce nos escalões de quantidade mostrados na tabela deste passo."
+        }
+      ]
+    },
+    "congress-2026:crachas:details": {
+      "scope": "congress-2026",
+      "productSlug": "crachas",
+      "productName": "Crachás",
+      "stepId": "details",
+      "stepName": "Vamos personalizar o teu Cartão de Apresentação?",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "c26-crachas-details-what-card",
+          "question": "O que é o cartão de apresentação?",
+          "answer": "É o cartão impresso que acompanha os artigos da encomenda. Neste produto pode levar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "c26-crachas-details-fields",
+          "question": "Que dados posso colocar no cartão?",
+          "answer": "Podes colocar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "c26-crachas-details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Nome, Telemóvel ou Email e Congregação são opcionais; podes deixar esses campos em branco."
+        }
+      ]
+    },
+    "congress-2026:crachas:delivery_contact": {
+      "scope": "congress-2026",
+      "productSlug": "crachas",
+      "productName": "Crachás",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "c26-crachas-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "c26-crachas-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "c26-crachas-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "congress-2026:crachas:confirm": {
+      "scope": "congress-2026",
+      "productSlug": "crachas",
+      "productName": "Crachás",
+      "stepId": "confirm",
+      "stepName": "Confirma o teu pedido",
+      "stepOrder": 5,
+      "items": [
+        {
+          "id": "c26-crachas-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "c26-crachas-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "c26-crachas-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    },
+    "congress-2026:imanes:designs": {
+      "scope": "congress-2026",
+      "productSlug": "imanes",
+      "productName": "Ímanes",
+      "stepId": "designs",
+      "stepName": "Escolhe os teus designs favoritos",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "c26-imanes-designs-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 12 opções visíveis neste passo."
+        },
+        {
+          "id": "c26-imanes-designs-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Sim. Neste passo podes escolher várias opções entre as 12 disponíveis."
+        },
+        {
+          "id": "c26-imanes-designs-own-design",
+          "question": "Posso usar um design meu neste passo?",
+          "answer": "Não. Aqui escolhes apenas designs do catálogo. Para criares o produto com uma imagem tua, abre [Personalização](personalizacao.html)."
+        }
+      ]
+    },
+    "congress-2026:imanes:size": {
+      "scope": "congress-2026",
+      "productSlug": "imanes",
+      "productName": "Ímanes",
+      "stepId": "size",
+      "stepName": "Escolhe o tipo",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "c26-imanes-size-options",
+          "question": "Que opções tenho neste passo?",
+          "answer": "Tens 2 opções: Finos e flexíveis e 3 milímetros de espessura."
+        },
+        {
+          "id": "c26-imanes-size-multiple",
+          "question": "Posso escolher mais do que uma opção?",
+          "answer": "Não. Neste passo escolhes apenas uma das 2 opções; uma nova escolha substitui a anterior."
+        },
+        {
+          "id": "c26-imanes-size-difference",
+          "question": "Qual é a diferença entre as opções?",
+          "answer": "Finos e flexíveis — Tens de encomendar pelo menos 15 unidades e 3 milímetros de espessura — Podes encomendar uma, ou mais unidades."
+        }
+      ]
+    },
+    "congress-2026:imanes:pack": {
+      "scope": "congress-2026",
+      "productSlug": "imanes",
+      "productName": "Ímanes",
+      "stepId": "pack",
+      "stepName": "Diz-me quantos ímanes queres",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "c26-imanes-pack-quantity",
+          "question": "Que quantidade posso escolher?",
+          "answer": "Podes escrever qualquer quantidade a partir de 1. Os botões de atalho mostram 1, 3, 5, 10, 15, 30, 60 e 105."
+        },
+        {
+          "id": "c26-imanes-pack-split",
+          "question": "Posso repartir a quantidade por vários designs?",
+          "answer": "Sim. Podes repartir a quantidade total entre os designs escolhidos e indicar quantidades diferentes para cada um."
+        },
+        {
+          "id": "c26-imanes-pack-unit-price",
+          "question": "O preço por unidade muda com a quantidade?",
+          "answer": "Sim. O preço por unidade desce nos escalões de quantidade mostrados na tabela deste passo."
+        }
+      ]
+    },
+    "congress-2026:imanes:details": {
+      "scope": "congress-2026",
+      "productSlug": "imanes",
+      "productName": "Ímanes",
+      "stepId": "details",
+      "stepName": "Vamos personalizar o teu Cartão de Apresentação?",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "c26-imanes-details-what-card",
+          "question": "O que é o cartão de apresentação?",
+          "answer": "É o cartão impresso que acompanha os artigos da encomenda. Neste produto pode levar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "c26-imanes-details-fields",
+          "question": "Que dados posso colocar no cartão?",
+          "answer": "Podes colocar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "c26-imanes-details-required",
+          "question": "É obrigatório preencher estes dados?",
+          "answer": "Não. Nome, Telemóvel ou Email e Congregação são opcionais; podes deixar esses campos em branco."
+        }
+      ]
+    },
+    "congress-2026:imanes:delivery_contact": {
+      "scope": "congress-2026",
+      "productSlug": "imanes",
+      "productName": "Ímanes",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "c26-imanes-delivery_contact-delivery",
+          "question": "Que opções de entrega tenho?",
+          "answer": "Vou recolher na casa da Mia, Envio CTT - até 2 Kg e Junta as minhas encomendas."
+        },
+        {
+          "id": "c26-imanes-delivery_contact-contact",
+          "question": "Que dados de contacto são obrigatórios?",
+          "answer": "Tens de preencher Nome e Email ou Telemóvel."
+        },
+        {
+          "id": "c26-imanes-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento."
+        }
+      ]
+    },
+    "congress-2026:imanes:confirm": {
+      "scope": "congress-2026",
+      "productSlug": "imanes",
+      "productName": "Ímanes",
+      "stepId": "confirm",
+      "stepName": "Confirma o teu pedido",
+      "stepOrder": 5,
+      "items": [
+        {
+          "id": "c26-imanes-confirm-confirmed",
+          "question": "O pedido fica logo confirmado?",
+          "answer": "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."
+        },
+        {
+          "id": "c26-imanes-confirm-change",
+          "question": "Posso corrigir alguma coisa antes de enviar?",
+          "answer": "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."
+        },
+        {
+          "id": "c26-imanes-confirm-after",
+          "question": "O que acontece depois de enviar?",
+          "answer": "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data."
+        }
+      ]
+    }
+  },
+  "intents": {
+    "prompt_probe": {
+      "id": "intent-prompt-probe",
+      "label": "Tentativas de obter instruções internas",
+      "answer": "Não percebi bem essa pergunta. Posso ajudar-te a escolher um produto, esclarecer este passo ou acompanhar uma encomenda."
+    },
+    "human_contact": {
+      "id": "intent-human-contact",
+      "label": "Pedido para falar com uma pessoa",
+      "answer": "Claro. Podes falar directamente com a Mia através do [formulário de contacto](contacto.html)."
+    }
+  }
+}

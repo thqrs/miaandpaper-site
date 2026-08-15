@@ -28,6 +28,7 @@
   --hero-button-ink: #3b2d18;
   --hero-overlay: rgba(31, 25, 15, 0.52);
   --accent-hover: var(--rose);
+  --admin-edit-accent: #c74438;
   --shadow-header: 0 8px 28px rgba(46, 36, 19, 0.07);
   --shadow-editorial: 0 12px 30px rgba(46, 36, 19, 0.08);
   --shadow-menu: -20px 0 50px rgba(37, 28, 14, 0.2);

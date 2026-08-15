@@ -13,16 +13,17 @@ DirectoryIndex index.html
     Require all denied
 </FilesMatch>
 
-# As copias de seguranca da galeria e do editor de precos chamam-se
-# "<produto>.json.galeria-bak" e "<ficheiro>.json.precos-bak". O sufixo tem um
-# hifen antes de "bak", por isso a regra acima nao as apanha.
+# As copias de seguranca dos editores chamam-se, por exemplo,
+# "<produto>.json.galeria-bak", "<ficheiro>.json.precos-bak" e
+# "faqs.json.faqs-bak". O sufixo tem um hifen antes de "bak", por isso a regra
+# acima nao as apanha.
 <FilesMatch "-(bak|backup)$">
     Require all denied
 </FilesMatch>
 
 # Bloqueia ficheiros dot e tudo o que vem da pasta privada irmã caso seja
 # alguma vez exposta por engano (defence-in-depth).
-<FilesMatch "^(\.|miaandpaper-mail-config|admin-login-attempts|seo-state\.json).*$">
+<FilesMatch "^(\.|miaandpaper-mail-config|miu-config|admin-login-attempts|seo-state\.json).*$">
     Require all denied
 </FilesMatch>
 

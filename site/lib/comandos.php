@@ -411,8 +411,8 @@ function cmd_ordem_tabs(array $args)
 {
     $ordem = cmd_csv($args, 'ordem');
     foreach ($ordem as $slug) {
-        if ($slug !== '__capsula__' && !preg_match('/^[a-z0-9-]+$/', $slug)) {
-            cmd_erro('`ordem` só pode conter slugs de produto ou `__capsula__`.');
+        if (!preg_match('/^[a-z0-9-]+$/', $slug)) {
+            cmd_erro('`ordem` só pode conter slugs de produto.');
         }
     }
     return $ordem;
@@ -525,11 +525,9 @@ function cmd_estado($dominio)
 
     if ($dominio === 'precos') {
         cmd_api('precos');
-        list($pricing, , $erro) = precos_ler_json(PRECOS_PRICING_FILE);
-        if ($erro !== '') {
-            cmd_erro($erro);
-        }
-        $cache[$dominio] = $pricing;
+        $dados = precos_recolher();
+        $cache[$dominio] = isset($dados['pricing']) && is_array($dados['pricing'])
+            ? $dados['pricing'] : array('products' => array());
     } elseif ($dominio === 'precos-tabs') {
         cmd_api('precos');
         $prefs = precos_ler_prefs();
@@ -665,11 +663,11 @@ function cmd_registo()
         'ordem-tabs' => array(
             'dominio' => 'precos',
             'titulo' => 'Ordem das tabs de preços',
-            'descricao' => 'Define a ordem das tabs guardada nas preferências privadas do editor de preços. Aceita slugs de produto e o marcador `__capsula__`, separados por vírgulas.',
+            'descricao' => 'Define a ordem das tabs guardada nas preferências privadas do editor de preços. Aceita slugs de produto, incluindo os produtos independentes `congresso-2026-*`, separados por vírgulas.',
             'parametros' => array(
-                'ordem' => 'slugs por ordem, separados por vírgulas; `__capsula__` representa a cápsula Congresso',
+                'ordem' => 'slugs de produto por ordem, separados por vírgulas',
             ),
-            'exemplo' => 'op=ordem-tabs&ordem=imanes-loja,agendas,__capsula__',
+            'exemplo' => 'op=ordem-tabs&ordem=imanes-loja,agendas,congresso-2026-imanes',
             'prever' => function (array $a) {
                 $depois = cmd_ordem_tabs($a);
                 $antes = cmd_estado('precos-tabs');
@@ -1861,7 +1859,7 @@ function cmd_desconto_alvo(array $a)
     return array($produto, $chave, $qtd, $escada, $percent, $antes);
 }
 
-/** Carrega uma entrada da galeria, uma vez por batch, sem tocar na cápsula. */
+/** Carrega uma entrada da galeria uma vez por batch. */
 function cmd_galeria_entrada($entradaId)
 {
     $entradaId = trim((string)$entradaId);
@@ -1876,16 +1874,6 @@ function cmd_galeria_entrada($entradaId)
     $path = galeria_entry_path($chave, $entradaId);
     if (!$path || !is_file($path)) {
         cmd_erro('Não encontrei a entrada "' . $entradaId . '". Usa o slug do produto ou "home".');
-    }
-
-    // A cápsula de 2026 é uma fotografia histórica. Nem esta ferramenta de
-    // administração a pode alterar por acidente.
-    $capsula = realpath(__DIR__ . '/../congressos/2026');
-    $real = realpath($path);
-    if ($capsula !== false && $real !== false
-        && strncmp($real, $capsula . DIRECTORY_SEPARATOR, strlen($capsula) + 1) === 0
-    ) {
-        cmd_erro('A cápsula Congresso 2026 é imutável e não aceita comandos.');
     }
 
     $bruto = (string)@file_get_contents($path);

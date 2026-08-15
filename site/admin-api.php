@@ -854,10 +854,16 @@ function admin_process_home_images(&$home)
     }
 }
 
-function admin_write_product($product, $force = false)
+function admin_write_product($product, $force = false, $context = '')
 {
     unset($product['_backup_created']);
     $slug = isset($product['slug']) ? admin_safe_slug($product['slug']) : '';
+    $context = trim((string)$context);
+    $isCongress = $context === 'congress-2026';
+    $productDir = $isCongress
+        ? __DIR__ . '/congressos/2026/content/products'
+        : MIAANDPAPER_PRODUCT_DIR;
+    $storageSlug = $isCongress ? 'congresso-2026-' . $slug : $slug;
     $path = '';
     $tmp = '';
     $json = '';
@@ -870,7 +876,20 @@ function admin_write_product($product, $force = false)
         ));
     }
 
-    $path = MIAANDPAPER_PRODUCT_DIR . '/' . $slug . '.json';
+    if ($context !== '' && !$isCongress) {
+        admin_respond(400, array(
+            'ok' => false,
+            'message' => 'Contexto de produto inválido.',
+        ));
+    }
+    if ($isCongress && !in_array($slug, array('crachas', 'imanes', 'caderninhos', 'cadernos'), true)) {
+        admin_respond(400, array(
+            'ok' => false,
+            'message' => 'Produto do Congresso inválido.',
+        ));
+    }
+
+    $path = $productDir . '/' . $slug . '.json';
     if (!is_file($path)) {
         admin_respond(404, array(
             'ok' => false,
@@ -898,7 +917,7 @@ function admin_write_product($product, $force = false)
         ));
     }
 
-    $backupPath = admin_backup_product_file($slug, $path);
+    $backupPath = admin_backup_product_file($storageSlug, $path);
     if (!is_string($backupPath)) {
         admin_respond(500, array(
             'ok' => false,
@@ -906,7 +925,7 @@ function admin_write_product($product, $force = false)
         ));
     }
 
-    admin_process_product_images($product, $slug);
+    admin_process_product_images($product, $storageSlug);
 
     if (defined('JSON_PRETTY_PRINT')) {
         $options |= JSON_PRETTY_PRINT;
@@ -1418,8 +1437,13 @@ if ($action === 'save-product') {
     }
 
     $force = isset($payload['force']) && $payload['force'] === true;
-    $product = admin_write_product($payload['product'], $force);
-    $syncFlagCreated = admin_mark_sync_needed(isset($product['slug']) ? $product['slug'] : 'unknown');
+    $context = isset($payload['context']) ? (string)$payload['context'] : '';
+    $product = admin_write_product($payload['product'], $force, $context);
+    $syncSlug = isset($product['slug']) ? $product['slug'] : 'unknown';
+    if ($context === 'congress-2026') {
+        $syncSlug = 'congresso-2026-' . $syncSlug;
+    }
+    $syncFlagCreated = admin_mark_sync_needed($syncSlug);
 
     admin_respond(200, array(
         'ok' => true,

@@ -25,6 +25,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Preços · Mia &amp; Paper</title>
+<link rel="stylesheet" href="admin-nav.css?v=2026081001">
+<script src="admin-nav.js?v=2026081001" defer></script>
 <style>
   /* Painel escuro azul-marinho, ao estilo dos dashboards de parede: fundo
      profundo, cartoes com um pouco mais de luz, numeros grandes e um acento
@@ -92,24 +94,6 @@
   }
 
   .principal { min-width: 0; }
-
-  /* Barra de administração, no topo e igual em todas as páginas de admin. */
-  .barra-admin {
-    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
-    padding: 8px 24px; background: var(--fundo-2);
-    border-bottom: 1px solid var(--linha);
-  }
-  .barra-admin strong {
-    font-size: .74rem; color: var(--texto-3); margin-right: 10px;
-    text-transform: uppercase; letter-spacing: .09em;
-  }
-  .barra-admin a {
-    font-size: .8rem; color: var(--texto-2); text-decoration: none;
-    padding: 4px 10px; border-radius: 7px; white-space: nowrap;
-    transition: background .12s, color .12s;
-  }
-  .barra-admin a:hover { background: var(--cartao); color: var(--texto); }
-  .barra-admin a.activo { background: var(--azul); color: #fff; font-weight: 600; }
 
   .barra {
     position: sticky; top: 0; z-index: 40;
@@ -426,23 +410,7 @@
   </aside>
 
   <div class="principal">
-    <nav class="barra-admin" aria-label="Administração">
-      <strong>Mia &amp; Paper Admin</strong>
-      <a href="produtos.html">Produtos</a>
-      <a href="galeria.html">Galeria</a>
-      <a href="multimedia.html">Multimédia</a>
-      <a href="reviews.html">Reviews</a>
-      <a href="precos.php" class="activo">Preços</a>
-  <a href="materiais.php">Materiais</a>
-      <a href="homepage-menu-design.php">Homepage &amp; Menu</a>
-  <a href="carrousel.php">Carrosséis</a>
-      <a href="admin-funnel.php">Funil</a>
-      <a href="admin-orders.php">Encomendas</a>
-      <a href="admin-colors.html">Cores</a>
-      <a href="admin-uploads.php">Uploads</a>
-      <a href="tools/index.php">Ferramentas</a>
-    </nav>
-    <header class="barra">
+    <header class="barra admin-secondary-bar">
       <h1>Todos os preços do site</h1>
       <span id="alerta"></span>
       <button id="desfazer" disabled title="Desfaz a última alteração ainda por gravar">Undo</button>
@@ -533,7 +501,7 @@
 
   // ── Fila de alterações e Undo ────────────────────────────────────────────
   // NADA escreve em ficheiro antes do Save. As alterações de valor ficam na
-  // fila; as estruturais (packs, extras, modo, cápsula) são aplicadas a uma
+  // fila; as estruturais (packs, extras e modo) são aplicadas a uma
   // cópia LOCAL dos dados, para a página mostrar o resultado, e só seguem para
   // o servidor quando se carrega em Save.
   //
@@ -840,7 +808,8 @@
       + "<span>" + esc(euros(unit)) + " € cada · " + esc(euros(cents)) + " € total</span>"
       + "<span>" + desconto.toFixed(0) + "% desconto</span>"
       + (custo
-          ? "<span" + (unit - custo < 0 ? ' class="negativo"' : "") + ">lucro "
+          ? "<span" + (unit - custo < 0 ? ' class="negativo"' : "") + ">"
+            + esc(rotuloResultado().toLowerCase()) + " "
             + esc(euros(Math.abs(unit - custo))) + " €/un · " + esc(euros(Math.abs(cents - custo * q))) + " € total</span>"
           : "");
     dica.hidden = false;
@@ -903,10 +872,28 @@
     return porProduto && porProduto[priceKey] ? parseInt(porProduto[priceKey], 10) || 0 : 0;
   }
 
+  function resultadoEhSoMateriais() {
+    return Number(dados.custoHoraCents) === 0;
+  }
+
+  function rotuloResultado() {
+    return resultadoEhSoMateriais() ? "Margem após materiais" : "Lucro";
+  }
+
+  function notaResultado(custo) {
+    if (resultadoEhSoMateriais()) {
+      return custo
+        ? "margem após materiais; mão de obra não contabilizada (custo/hora = 0 €)"
+        : "põe o custo para veres a margem após materiais";
+    }
+    return custo ? "lucro calculado por linha" : "põe o custo para veres o lucro";
+  }
+
   // Tabela de VARIANTES (purchase-option): as linhas são produtos diferentes,
   // não quantidades. O `quantity` de cada item é só um índice para alinhar com
   // a tabela do pricing.json, por isso não faz sentido mostrar preço unitário
-  // nem desconto — e o número que cobra é o priceCents do item, não a tabela.
+  // nem desconto. O servidor cobra flatUnitPricesCents; o item e a tabela por
+  // índice ficam como espelhos para a interface.
   function tabelaVariantes(produto, variantes) {
     var priceKey = variantes[0].priceKey || "";
     var custo = custoDe(produto.slug, priceKey);
@@ -915,7 +902,7 @@
       + ' <span class="selo mono">purchase-option</span></div>';
 
     html += '<p class="nota">Estas linhas são <strong>variantes</strong>, não quantidades — o cliente escolhe uma. '
-      + "O preço que cobra é o do item; o editor escreve também os espelhos no <code>pricing.json</code>, "
+      + "O preço cobrado vem do <code>pricing.json</code>; o editor escreve também os espelhos no item, "
       + "para os três ficarem sempre iguais.</p>";
 
     html += '<div class="custo-linha">'
@@ -923,10 +910,11 @@
       + '<input type="text" inputmode="decimal" class="dinheiro" value="' + esc(euros(custo)) + '"'
       + ' data-op="custo" data-contexto="' + attr({ slug: produto.slug, priceKey: priceKey }) + '"'
       + ' data-original="' + custo + '">'
-      + '<span class="custo-nota">' + (custo ? "lucro calculado por linha" : "põe o custo para veres o lucro") + "</span>"
+      + '<span class="custo-nota">' + esc(notaResultado(custo)) + "</span>"
       + "</div>";
 
-    html += "<table><thead><tr><th>Variante</th><th>Preço</th><th>Lucro</th><th>Margem</th></tr></thead><tbody>";
+    html += "<table><thead><tr><th>Variante</th><th>Preço</th><th>" + esc(rotuloResultado())
+      + "</th><th>Margem</th></tr></thead><tbody>";
     variantes.forEach(function (v) {
       html += '<tr data-linha="1">'
         + "<td>" + esc(v.titulo)
@@ -959,7 +947,7 @@
       + "<label>Custo do material por unidade</label>"
       + '<input type="text" inputmode="decimal" class="dinheiro" value="' + esc(euros(custo)) + '"'
       + ' data-op="custo" data-contexto="' + attr(ctxTabela) + '" data-original="' + custo + '">'
-      + '<span class="custo-nota">' + (custo ? "lucro calculado por linha" : "põe o custo para veres o lucro") + "</span>"
+      + '<span class="custo-nota">' + esc(notaResultado(custo)) + "</span>"
       + "</div>";
 
     var blocoD = mostraDesconto ? descontosDe(produto.slug, priceKey, tabela) : null;
@@ -975,8 +963,8 @@
                 + coluna + "</label></th>";
             }).join("")
           : "")
-      + '<th title="Quanto ganhas em cada unidade que fazes, já com o desconto deste pack">Lucro/un</th>'
-      + "<th>Lucro</th><th>Margem</th>"
+      + '<th title="Resultado por unidade depois dos custos contabilizados">' + esc(rotuloResultado()) + '/un</th>'
+      + "<th>" + esc(rotuloResultado()) + "</th><th>Margem</th>"
       + '<th class="col-accao"></th></tr></thead><tbody>';
 
     qs.forEach(function (q) {
@@ -1140,7 +1128,6 @@
   // escolhida e acrescenta ao fim o que for novo.
   function reconciliarOrdem() {
     var existentes = dados.produtos.map(function (p) { return p.slug; });
-    if (dados.capsula && dados.capsula.length) { existentes.push("__capsula__"); }
 
     var gravada = lerOrdemGravada().filter(function (s) { return existentes.indexOf(s) !== -1; });
     existentes.forEach(function (s) { if (gravada.indexOf(s) === -1) { gravada.push(s); } });
@@ -1152,7 +1139,6 @@
   }
 
   function rotuloTab(slug) {
-    if (slug === "__capsula__") { return "Congresso 2026"; }
     var p = dados.produtos.filter(function (x) { return x.slug === slug; })[0];
     return p ? p.titulo : slug;
   }
@@ -1163,9 +1149,7 @@
 
     html += ordemTabs.map(function (slug) {
       var p = dados.produtos.filter(function (x) { return x.slug === slug; })[0];
-      var mau = slug === "__capsula__"
-        ? (dados.capsula || []).some(function (c) { return c.espelho && !c.sincronizado; })
-        : (p && !p.valido);
+      var mau = p && !p.valido;
       return '<button class="tab' + (tabActiva === slug ? " activa" : "") + (mau ? " mau" : "") + '"'
         + ' data-tab="' + esc(slug) + '" draggable="true">'
         + (p && p.miniatura ? '<img class="tab-thumb" src="' + esc(p.miniatura) + '" alt="">' : "")
@@ -1228,6 +1212,7 @@
   function contagemColunas() {
     var contas = { D1: 0, D2: 0, D3: 0, D4: 0 };
     dados.produtos.forEach(function (produto) {
+      if (produto.congresso2026) { return; }
       var registo = dados.pricing.products ? dados.pricing.products[produto.slug] : null;
       if (!registo || !registo.prices) { return; }
       Object.keys(registo.prices).forEach(function (priceKey) {
@@ -1243,7 +1228,7 @@
     var contas = contagemColunas();
 
     return '<section class="cartao"><header><h2>Escada de descontos</h2>'
-      + '<span class="selo">todas as tabelas de uma vez</span></header><div class="corpo">'
+      + '<span class="selo">catálogo principal</span></header><div class="corpo">'
       + '<p class="nota-corpo">Cada tabela guarda quatro escadas de desconto — D1 a D4 — e usa uma. '
       + 'Isto põe todas as tabelas do catálogo na mesma, para uma campanha começar e acabar num clique.</p>'
       + '<div class="coluna-global">'
@@ -1273,8 +1258,8 @@
     });
 
     el("kpis").innerHTML =
-      kpi("Produtos", dados.produtos.length, "no catálogo")
-      + kpi("Tabelas de preço", nTabelas, "em pricing.json")
+      kpi("Produtos", dados.produtos.length, "no editor")
+      + kpi("Tabelas de preço", nTabelas, "nos ficheiros pricing.json")
       + kpi("Valores editáveis", nValores, "em todo o site")
       + kpi("Coerência", maus === 0 ? "OK" : maus, maus === 0 ? "produto ↔ pricing.json" : "produto(s) inválido(s)", maus === 0 ? "ok" : "mau");
 
@@ -1285,10 +1270,10 @@
       var p = dados.produtos.filter(function (x) { return x.slug === slug; })[0];
       var r = p && dados.pricing.products ? dados.pricing.products[p.slug] : null;
       var n = r && r.prices ? Object.keys(r.prices).length : 0;
-      var mau = slug === "__capsula__" ? false : (p && !p.valido);
+      var mau = p && !p.valido;
       return '<button class="nav-item" data-ir="' + esc(slug) + '">'
         + '<span class="ponto' + (mau ? " mau" : "") + '"></span>'
-        + esc(slug === "__capsula__" ? "congresso 2026" : slug)
+        + esc(slug)
         + '<span class="conta">' + (n || "") + "</span></button>";
     }).join("");
 
@@ -1306,7 +1291,7 @@
         + '<section class="cartao"><header><h2>Produtos</h2>'
         + '<span class="selo">clica para abrir</span></header>'
         + '<div class="corpo"><div class="grelha-produtos">'
-        + ordemTabs.filter(function (s) { return s !== "__capsula__"; }).map(function (slug) {
+        + ordemTabs.map(function (slug) {
             var p = dados.produtos.filter(function (x) { return x.slug === slug; })[0];
             if (!p) { return ""; }
             return '<button class="cartao-produto' + (p.valido ? "" : " mau") + '" data-ir="' + esc(p.slug) + '">'
@@ -1315,13 +1300,6 @@
               + '<span class="cartao-produto-slug">' + esc(p.slug) + "</span></button>";
           }).join("")
         + "</div></div></section>";
-      actualizarRodape();
-      alerta(maus ? maus + " produto(s) com configuração inválida" : "Tudo coerente.", maus ? "erro" : "ok");
-      return;
-    }
-
-    if (tabActiva === "__capsula__") {
-      el("conteudo").innerHTML = seccaoCapsula();
       actualizarRodape();
       alerta(maus ? maus + " produto(s) com configuração inválida" : "Tudo coerente.", maus ? "erro" : "ok");
       return;
@@ -1340,8 +1318,8 @@
         corpo += '<p class="nota">Sem entrada em <code>pricing.json</code> — o checkout recusa as encomendas deste produto.</p>';
       }
 
-      // Um produto de variantes não tem escada de quantidades: a tabela do
-      // pricing.json é só o espelho, por isso mostra-se a lista de variantes.
+      // Um produto de variantes não tem escada de quantidades: os índices da
+      // tabela alinham com opções diferentes, por isso mostra-se a lista delas.
       if (produto.variantes && produto.variantes.length) {
         corpo += tabelaVariantes(produto, produto.variantes);
       } else if (registo && registo.prices) {
@@ -1368,7 +1346,7 @@
       return '<section class="cartao" id="p-' + esc(produto.slug) + '">'
         + "<header>" + miniatura(produto) + "<h2>" + esc(produto.titulo) + "</h2>"
         + '<span class="selo mono">' + esc(produto.slug) + "</span>"
-        + (produto.mainV2 ? '<span class="selo">main-v2</span>' : "")
+        + (produto.congresso2026 ? '<span class="selo">Congresso 2026</span>' : (produto.mainV2 ? '<span class="selo">main-v2</span>' : ""))
         + selectorModo(produto)
         + (produto.valido ? "" : '<span class="selo mau">configuração inválida</span>')
         + "</header>"
@@ -1378,50 +1356,6 @@
 
     actualizarRodape();
     alerta(maus ? maus + " produto(s) com configuração inválida" : "Tudo coerente.", maus ? "erro" : "ok");
-  }
-
-  // Cápsula do Congresso 2026: só preços. A regra de não lhe mexer é sobre as
-  // imagens e o design; os preços têm de acompanhar o catálogo, senão divergem
-  // sozinhos — já aconteceu com os portes.
-  function seccaoCapsula() {
-    if (!dados.capsula || !dados.capsula.length) { return ""; }
-
-    var porSincronizar = dados.capsula.filter(function (c) {
-      return c.espelho && !c.sincronizado;
-    }).length;
-
-    var linhas = dados.capsula.map(function (c) {
-      var estado = !c.espelho
-        ? '<span class="selo">sem espelho</span>'
-        : (c.sincronizado
-            ? '<span class="selo ok">igual ao catálogo</span>'
-            : '<span class="selo mau">difere: ' + esc(c.diferencas.join(", ")) + "</span>");
-
-      return "<tr><td>" + esc(c.slug)
-        + '<div class="caminho">' + Object.keys(c.prices || {}).join(" · ") + "</div></td>"
-        + "<td>" + (c.espelho ? '<code>' + esc(c.espelho) + "</code>" : '<span class="vazio">—</span>') + "</td>"
-        + "<td>" + estado + "</td>"
-        + '<td class="col-accao">'
-        + (c.espelho && !c.sincronizado
-            ? '<button class="leve" data-op="capsula-sincronizar" data-slug="' + esc(c.slug) + '">Sincronizar</button>'
-            : "")
-        + "</td></tr>";
-    }).join("");
-
-    return '<section class="cartao" id="p-congresso-2026">'
-      + "<header><h2>Congresso 2026</h2>"
-      + '<span class="selo mono">congressos/2026</span>'
-      + (porSincronizar
-          ? '<span class="selo mau">' + porSincronizar + " por sincronizar</span>"
-          : '<span class="selo ok">tudo igual ao catálogo</span>')
-      + "</header>"
-      + '<div class="corpo">'
-      + '<p class="nota">A cápsula tem a sua própria tabela de preços, que o <code>send-order.php</code> lê '
-      + "quando o pedido vem de lá. Sincronizar copia as tabelas do produto do catálogo que a espelha — "
-      + "<strong>só preços</strong>, nunca imagens nem estrutura, e nunca acrescenta nem remove tabelas.</p>"
-      + "<table><thead><tr><th>Produto da cápsula</th><th>Espelha</th><th>Estado</th>"
-      + '<th class="col-accao"></th></tr></thead><tbody>' + linhas + "</tbody></table>"
-      + "</div></section>";
   }
 
   // Miniatura do produto. Sem imagem, mostra as iniciais do slug — continua a
@@ -1713,8 +1647,9 @@
     if (op === "desconto-coluna-global") {
       var colunaG = alvo.dataset.coluna;
       var tabelas = 0;
-      if (!window.confirm("Pôr TODAS as tabelas do catálogo na escada " + colunaG + "?")) { return; }
+      if (!window.confirm("Pôr TODAS as tabelas do catálogo principal na escada " + colunaG + "?")) { return; }
       dados.produtos.forEach(function (produto) {
+        if (produto.congresso2026) { return; }
         var registo = dados.pricing.products ? dados.pricing.products[produto.slug] : null;
         if (!registo || !registo.prices) { return; }
         Object.keys(registo.prices).forEach(function (priceKey) {
@@ -1794,21 +1729,6 @@
       return;
     }
 
-    if (op === "capsula-sincronizar") {
-      var slug = alvo.dataset.slug;
-      if (!window.confirm("Copiar os preços do catálogo para " + slug + " na cápsula do Congresso 2026?\n\n"
-          + "Só as tabelas de preço. Imagens, designs e estrutura não são tocados.")) { return; }
-      estrutural({ op: "capsula-sincronizar", slug: slug }, function () {
-        var c = dados.capsula.filter(function (x) { return x.slug === slug; })[0];
-        if (!c || !c.espelho) { throw new Error("sem espelho"); }
-        var origem = dados.pricing.products[c.espelho].prices;
-        Object.keys(c.prices).forEach(function (pk) {
-          if (origem[pk]) { c.prices[pk] = clonar(origem[pk]); }
-        });
-        c.sincronizado = true;
-        c.diferencas = [];
-      });
-    }
   });
 
   function ordenarTabela(t) {
@@ -1935,6 +1855,9 @@
     L.push("Convenções: preços em euros; o **total** é o que fica gravado, o unitário e o "
       + "desconto são derivados. O desconto conta-se sobre o unitário da quantidade mais baixa "
       + "da tabela. O custo é o do material, por unidade, e não é público.");
+    if (resultadoEhSoMateriais()) {
+      L.push("O custo/hora está a 0 €: a mão de obra não está contabilizada e os resultados são margem após materiais, não lucro líquido.");
+    }
     L.push("");
 
     dados.produtos.forEach(function (produto) {
@@ -1952,7 +1875,7 @@
         var custoV = custoDe(produto.slug, produto.variantes[0].priceKey || "");
         L.push("Variantes (o cliente escolhe uma; não são quantidades):");
         L.push("");
-        L.push("| Variante | Preço | Lucro | Margem |");
+        L.push("| Variante | Preço | " + rotuloResultado() + " | Margem |");
         L.push("|---|---:|---:|---:|");
         produto.variantes.forEach(function (v) {
           var t = textoLucro(v.cents, 1, custoV);
@@ -1968,7 +1891,8 @@
           L.push("### " + pk + " — " + modo);
           L.push("");
           if (custo) { L.push("Custo do material: **" + euros(custo) + " €/un**."); L.push(""); }
-          L.push("| Qtd | Total | Por unidade | Desconto | Lucro/un | Lucro | Margem |");
+          L.push("| Qtd | Total | Por unidade | Desconto | " + rotuloResultado()
+            + "/un | " + rotuloResultado() + " | Margem |");
           L.push("|---:|---:|---:|---:|---:|---:|---:|");
           Object.keys(tabela).map(Number).sort(function (a, b) { return a - b; }).forEach(function (q) {
             var cents = tabela[String(q)];
@@ -1996,18 +1920,6 @@
         L.push("");
       });
     });
-
-    if (dados.capsula && dados.capsula.length) {
-      L.push("## Cápsula do Congresso 2026");
-      L.push("");
-      L.push("| Produto | Espelha | Estado |");
-      L.push("|---|---|---|");
-      dados.capsula.forEach(function (c) {
-        L.push("| " + c.slug + " | " + (c.espelho || "—") + " | "
-          + (!c.espelho ? "sem espelho" : (c.sincronizado ? "igual ao catálogo" : "difere: " + c.diferencas.join(", "))) + " |");
-      });
-      L.push("");
-    }
 
     return L.join("\n");
   }

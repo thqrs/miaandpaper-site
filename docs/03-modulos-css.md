@@ -1,7 +1,7 @@
 # 03 · Módulos CSS — `site/css/`
 
-O antigo `styles.css` está dividido em 12 ficheiros. **A cascata depende da
-ordem dos `<link>` nas cascas: 01 → 12.** Uma regra do 10 ganha a uma regra
+O antigo `styles.css` está dividido nos módulos 01→12; o módulo 13 acrescenta
+o Míu. **A cascata depende da ordem dos `<link>` nas cascas: 01 → 13.** Uma regra do 10 ganha a uma regra
 igualmente específica do 03 só por vir depois — **não reordenar os `<link>`**.
 
 Uma folha nova tem de ser declarada nas **27** cascas que carregam o CSS: as
@@ -20,13 +20,17 @@ ao mover regras.**
 | 03 | `03-grelha-designs-tons.css` | 1321 | grelha de cards de designs, tons dos quadros |
 | 04 | `04-reviews-passos-acoes.css` | 1119 | acções rápidas do passo de designs, balões de reviews, barra sticky mobile |
 | 05 | `05-cookies-packs-entrega.css` | 1379 | banner de cookies, selecção de packs, resumo de preços, opções de entrega |
-| 06 | `06-admin.css` | 1677 | **tudo o que é admin embutido no site** |
+| 06 | `06-admin.css` | 1909 | **tudo o que é admin embutido no site**, incluindo contornos e popups sem impacto no layout |
 | 07 | `07-cards-crachas-molduras.css` | 244 | pilha de crachás, molduras dos cards em mobile |
 | 08 | `08-dark-mode.css` | 429 | **modo escuro, todo ele** |
 | 09 | `09-seccoes-produtos.css` | 1246 | secções dos passos de designs, passo 2 de crachás, resumo de molduras |
-| 10 | `10-entrega-uniformizacao.css` | 823 | passo de entrega/contacto e a camada `CSS_UNIFORMITY_LAYER_V1` |
+| 10 | `10-entrega-uniformizacao.css` | 949 | passo de entrega/contacto, ecrã final de pagamento, aviso de antecedência e a camada `CSS_UNIFORMITY_LAYER_V1` |
 | 11 | `11-home-marca.css` | 1906 | `BRAND_HOME_V1` e o resto da homepage, shell editorial |
 | 12 | `12-composer-glitter-chart.css` | 2281 | compositor de media, color flow, glitter, gráfico de preço |
+| 13 | `13-miu.css` | — | lançador-gato, painel, mensagens, sugestões e estados móveis do Míu |
+
+O módulo 13 usa apenas tokens da marca e é também carregado nas cascas públicas
+do catálogo, ofertas e Congresso. Ver [12 · Míu](12-miu.md).
 
 ## As duas camadas de tokens — a armadilha principal
 

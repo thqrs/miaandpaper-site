@@ -482,8 +482,42 @@
     });
 
     document.querySelectorAll("[data-admin-edit]").forEach(function (input) {
+      var liveImageKeys = ["frameScale", "frameWidth", "frameHeight", "frameMarginX", "frameMarginY", "imageZoom", "imagePositionX", "imagePositionY", "imageRotation"];
+
       input.addEventListener("click", function (event) {
         event.stopPropagation();
+      });
+
+      input.addEventListener("input", function () {
+        var step;
+        var item;
+        var imageStoreItem;
+        var editKey;
+
+        if (liveImageKeys.indexOf(input.dataset.adminEdit) === -1 || String(input.value).trim() === "") {
+          return;
+        }
+
+        step = product.steps.filter(function (candidate) {
+          return candidate.id === input.dataset.stepId;
+        })[0];
+        item = stepItemById(step, input.dataset.itemId);
+        imageStoreItem = stepItemById(step, input.dataset.adminImageStoreItemId || input.dataset.itemId);
+        editKey = input.dataset.miaEditKey || "";
+
+        if (!item) {
+          return;
+        }
+        if (input.dataset.adminLiveUndo !== "1") {
+          pushUndo(product);
+          input.dataset.adminLiveUndo = "1";
+        }
+        if (miaSlotDebugFlatKeys.indexOf(input.dataset.adminEdit) !== -1 || miaSlotDebugFrameKeys.indexOf(input.dataset.adminEdit) !== -1) {
+          writeImageEditSlot(imageStoreItem || item, editKey || miaSlotDebugEditKey(item, step, false), input.dataset.adminEdit, Number(input.value) || 0);
+        } else {
+          item[input.dataset.adminEdit] = Number(input.value) || 0;
+        }
+        refreshAdminImageAdjustment(step.id, item.id, item, false);
       });
 
       input.addEventListener("change", function () {
@@ -495,15 +529,23 @@
         var editKey = input.dataset.miaEditKey || "";
 
         if (item) {
-          pushUndo(product);
-          if (input.dataset.adminEdit === "quantity") {
-            item[input.dataset.adminEdit] = Math.max(1, parseInt(input.value, 10) || 1);
-          } else if (["frameScale", "frameWidth", "frameHeight", "frameMarginX", "frameMarginY", "imageZoom", "imagePositionX", "imagePositionY", "imageRotation"].indexOf(input.dataset.adminEdit) !== -1) {
+          if (liveImageKeys.indexOf(input.dataset.adminEdit) !== -1) {
+            if (input.dataset.adminLiveUndo !== "1") {
+              pushUndo(product);
+            }
             if (miaSlotDebugFlatKeys.indexOf(input.dataset.adminEdit) !== -1 || miaSlotDebugFrameKeys.indexOf(input.dataset.adminEdit) !== -1) {
               writeImageEditSlot(imageStoreItem || item, editKey || miaSlotDebugEditKey(item, step, false), input.dataset.adminEdit, Number(input.value) || 0);
             } else {
               item[input.dataset.adminEdit] = Number(input.value) || 0;
             }
+            delete input.dataset.adminLiveUndo;
+            refreshAdminImageAdjustment(step.id, item.id, item, false);
+            return;
+          }
+
+          pushUndo(product);
+          if (input.dataset.adminEdit === "quantity") {
+            item[input.dataset.adminEdit] = Math.max(1, parseInt(input.value, 10) || 1);
           } else if (input.dataset.adminEdit === "rectOrientation") {
             item.rectOrientation = input.value === "landscape" ? "landscape" : "portrait";
           } else if (input.dataset.adminEdit === "sectionOrder") {
@@ -674,6 +716,28 @@
         event.stopPropagation();
       });
 
+      input.addEventListener("input", function () {
+        var step = product.steps.filter(function (candidate) {
+          return candidate.id === input.dataset.stepId;
+        })[0];
+        var item = stepItemById(step, input.dataset.itemId);
+        var key = input.dataset.adminSideEdit;
+
+        if (!item || String(input.value).trim() === "") {
+          return;
+        }
+        if (input.dataset.adminLiveUndo !== "1") {
+          pushUndo(product);
+          input.dataset.adminLiveUndo = "1";
+        }
+        if (miaSlotDebugSideFlatKeys.indexOf(key) !== -1 || miaSlotDebugSideFrameKeys.indexOf(key) !== -1) {
+          writeImageEditSlot(item, miaSlotDebugEditKey(item, step, true), key, Number(input.value) || 0);
+        } else {
+          item[key] = Number(input.value) || 0;
+        }
+        refreshAdminImageAdjustment(step.id, item.id, item, true);
+      });
+
       input.addEventListener("change", function () {
         var step = product.steps.filter(function (candidate) {
           return candidate.id === input.dataset.stepId;
@@ -688,7 +752,9 @@
         }
 
         key = input.dataset.adminSideEdit;
-        pushUndo(product);
+        if (input.dataset.adminLiveUndo !== "1") {
+          pushUndo(product);
+        }
         if (["sideFrameScale", "sideFrameWidth", "sideFrameHeight", "sideFrameMarginX", "sideFrameMarginY", "sideImageZoom", "sideImagePositionX", "sideImagePositionY", "sideImageRotation"].indexOf(key) !== -1) {
           if (miaSlotDebugSideFlatKeys.indexOf(key) !== -1 || miaSlotDebugSideFrameKeys.indexOf(key) !== -1) {
             writeImageEditSlot(item, miaSlotDebugEditKey(item, step, true), key, Number(input.value) || 0);
@@ -698,7 +764,8 @@
         } else {
           item[key] = input.value;
         }
-        rerenderProduct(product);
+        delete input.dataset.adminLiveUndo;
+        refreshAdminImageAdjustment(step.id, item.id, item, true);
       });
     });
 
@@ -832,4 +899,3 @@
       message.value = "Quero pedir " + productName + ".";
     }
   }
-

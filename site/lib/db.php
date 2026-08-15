@@ -562,6 +562,40 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
     }
 
     /**
+     * Procura uma encomenda ainda aberta cujo envio por CTT já esteja pago ou
+     * por confirmar. É usada quando a pessoa escolhe juntar uma nova
+     * encomenda: só podemos mostrar pagamento imediato se já existir uma
+     * embalagem CTT para o mesmo nome, contacto e IP.
+     */
+    function mp_db_find_open_shipping_order($customerName, $customerContact, $ipNumber)
+    {
+        $normalizedName = mp_db_normalize($customerName);
+        $normalizedContact = mp_db_normalize($customerContact);
+        if ($normalizedName === '' || $normalizedContact === '') {
+            return null;
+        }
+        try {
+            $pdo = mp_db();
+            $stmt = $pdo->prepare(
+                "SELECT * FROM orders
+                 WHERE LOWER(TRIM(customer_name)) = ?
+                   AND LOWER(TRIM(customer_contact)) = ?
+                   AND (ip_number = ? OR ip_number IS NULL OR ? = '')
+                   AND delivery_option = 'shipping'
+                   AND fulfillment_status IN ('new', 'preparing')
+                 ORDER BY created_at DESC
+                 LIMIT 1"
+            );
+            $stmt->execute(array($normalizedName, $normalizedContact, (string)$ipNumber, (string)$ipNumber));
+            $row = $stmt->fetch();
+            return $row ?: null;
+        } catch (Exception $e) {
+            @error_log('[miaandpaper] mp_db_find_open_shipping_order falhou: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
      * SHORT_ORDER_CODE_V1
      * Gera order_code no formato MP-YYYYMM<seq>, em que <seq> é a próxima
      * sequência inteira do mês corrente (UTC). Exemplos:

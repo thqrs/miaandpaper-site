@@ -15,6 +15,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Carrosséis · Mia &amp; Paper</title>
+<link rel="stylesheet" href="admin-nav.css?v=2026081001">
+<script src="admin-nav.js?v=2026081001" defer></script>
 <style>
   :root {
     --fundo: #14153a;        --fundo-2: #101132;
@@ -37,21 +39,6 @@
   h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -.015em; }
   code { font-family: var(--mono); font-size: .85em; color: var(--ciano); }
   a { color: var(--azul); }
-
-  .barra-admin {
-    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
-    padding: 8px 24px; background: var(--fundo-2); border-bottom: 1px solid var(--linha);
-  }
-  .barra-admin strong {
-    font-size: .74rem; color: var(--texto-3); margin-right: 10px;
-    text-transform: uppercase; letter-spacing: .09em;
-  }
-  .barra-admin a {
-    font-size: .8rem; color: var(--texto-2); text-decoration: none;
-    padding: 4px 10px; border-radius: 7px; white-space: nowrap;
-  }
-  .barra-admin a:hover { background: var(--cartao); color: var(--texto); }
-  .barra-admin a.activo { background: var(--azul); color: #fff; font-weight: 600; }
 
   .barra {
     position: sticky; top: 0; z-index: 40;
@@ -224,24 +211,7 @@
 </head>
 <body>
 
-<nav class="barra-admin" aria-label="Administração">
-  <strong>Mia &amp; Paper Admin</strong>
-  <a href="produtos.html">Produtos</a>
-  <a href="galeria.html">Galeria</a>
-  <a href="multimedia.html">Multimédia</a>
-  <a href="reviews.html">Reviews</a>
-  <a href="precos.php">Preços</a>
-  <a href="materiais.php">Materiais</a>
-  <a href="homepage-menu-design.php">Homepage &amp; Menu</a>
-  <a href="carrousel.php" class="activo">Carrosséis</a>
-  <a href="admin-funnel.php">Funil</a>
-  <a href="admin-orders.php">Encomendas</a>
-  <a href="admin-colors.html">Cores</a>
-  <a href="admin-uploads.php">Uploads</a>
-  <a href="tools/index.php">Ferramentas</a>
-</nav>
-
-<header class="barra">
+<header class="barra admin-secondary-bar">
   <h1>Carrosséis</h1>
   <span id="alerta"></span>
   <button id="desfazer" disabled>Undo</button>

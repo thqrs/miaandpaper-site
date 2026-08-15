@@ -8,14 +8,22 @@
   var file = path.slice(path.lastIndexOf("/") + 1) || "index.html";
   var links = [
     { id: "products", label: "Produtos", href: "produtos.html", files: ["produtos.html"] },
+    { id: "step-one-designs", label: "Designs Passo 1", href: "produtos.php", files: ["produtos.php"] },
     { id: "gallery", label: "Galeria", href: "galeria.html", files: ["galeria.html"] },
     { id: "media", label: "Multimédia", href: "multimedia.html", files: ["multimedia.html"] },
+    { id: "photo-wizard", label: "Photo Wizard", href: "photo-wizard.php", files: ["photo-wizard.php"] },
     { id: "reviews", label: "Reviews", href: "reviews.html", files: ["reviews.html"] },
+    { id: "faqs", label: "FAQs", href: "faqs.php", files: ["faqs.php"] },
+    { id: "miu", label: "Míu", href: "bot.php", files: ["bot.php"] },
+    { id: "prices", label: "Preços", href: "precos.php", files: ["precos.php"] },
+    { id: "materials", label: "Materiais", href: "materiais.php", files: ["materiais.php"] },
+    { id: "home", label: "Homepage & Menu", href: "homepage-menu-design.php", files: ["homepage-menu-design.php"] },
+    { id: "carousels", label: "Carrosséis", href: "carrousel.php", files: ["carrousel.php"] },
     { id: "funnel", label: "Funil", href: "admin-funnel.php", files: ["admin-funnel.php", "admin-live-dashboard.php"] },
     { id: "orders", label: "Encomendas", href: "admin-orders.php", files: ["admin-orders.php"] },
     { id: "colors", label: "Cores", href: "admin-colors.html", files: ["admin-colors.html"] },
     { id: "uploads", label: "Uploads", href: "admin-uploads.php", files: ["admin-uploads.php"] },
-    { id: "tools", label: "Ferramentas", href: "tools/index.php", files: [] }
+    { id: "tools", label: "Ferramentas", href: "tools/index.php", files: ["comando.php"] }
   ];
   var nav;
   var list;

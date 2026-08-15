@@ -27,22 +27,9 @@ require_once __DIR__ . '/lib/private-paths.php';
 
 const PRECOS_PRODUCTS_DIR = __DIR__ . '/content/products';
 const PRECOS_PRICING_FILE = __DIR__ . '/content/pricing.json';
-
-// A capsula do Congresso 2026 tem a sua propria tabela de precos, que o
-// send-order.php le quando o pedido vem de la. A regra de "nao mexer na
-// capsula" e sobre as IMAGENS e o DESIGN — os precos podem e devem acompanhar
-// o catalogo, senao divergem sozinhos (ja aconteceu com os portes).
+const PRECOS_CAPSULA_PREFIX = 'congresso-2026-';
+const PRECOS_CAPSULA_PRODUCTS_DIR = __DIR__ . '/congressos/2026/content/products';
 const PRECOS_CAPSULA_FILE = __DIR__ . '/congressos/2026/content/pricing.json';
-
-// Que produto do catalogo manda em cada produto da capsula, para o botao de
-// sincronizar. `lembrancas` fica de fora: e uma oferta, esta tudo a zero.
-const PRECOS_CAPSULA_ESPELHO = array(
-    'crachas' => 'crachas-loja',
-    'pins' => 'crachas-loja',
-    'imanes' => 'imanes-loja',
-    'caderninhos' => 'mini-cadernos',
-    'cadernos' => 'cadernos-anuais',
-);
 
 // Campos monetarios reconhecidos dentro do JSON de um produto. A varredura e
 // generica, como a da galeria: um campo novo com um destes nomes aparece
@@ -118,8 +105,26 @@ function precos_caminho_produto($slug)
     if ($slug === '' || !preg_match('/^[a-z0-9-]+$/', $slug)) {
         return '';
     }
-    $path = PRECOS_PRODUCTS_DIR . '/' . $slug . '.json';
+    $capsulaSlug = precos_slug_capsula($slug);
+    $path = $capsulaSlug !== ''
+        ? PRECOS_CAPSULA_PRODUCTS_DIR . '/' . $capsulaSlug . '.json'
+        : PRECOS_PRODUCTS_DIR . '/' . $slug . '.json';
     return is_file($path) ? $path : '';
+}
+
+function precos_slug_capsula($slug)
+{
+    $slug = (string)$slug;
+    if (strpos($slug, PRECOS_CAPSULA_PREFIX) !== 0) {
+        return '';
+    }
+    $real = substr($slug, strlen(PRECOS_CAPSULA_PREFIX));
+    return $real !== '' && preg_match('/^[a-z0-9-]+$/', $real) ? $real : '';
+}
+
+function precos_slug_editor_capsula($slug)
+{
+    return PRECOS_CAPSULA_PREFIX . (string)$slug;
 }
 
 function precos_ler_json($path)
@@ -820,6 +825,20 @@ function precos_gravar_prefs($prefs)
     return '';
 }
 
+// O relatório distingue lucro de margem após materiais. O custo/hora vive no
+// ficheiro privado dos materiais; nunca é exposto no pricing.json público.
+function precos_ler_custo_hora()
+{
+    $path = mp_private_path('materiais.json');
+    if ($path === null || $path === '' || !is_file($path)) {
+        return 0;
+    }
+    $data = json_decode((string)@file_get_contents($path), true);
+    return is_array($data) && isset($data['custoHoraCents'])
+        ? max(0, (int)$data['custoHoraCents'])
+        : 0;
+}
+
 // Prepara todos os JSON antes de substituir o primeiro. Se qualquer rename ou
 // verificacao falhar, todos os caminhos voltam exactamente aos bytes iniciais.
 function precos_gravar_transacao($entradas)
@@ -928,7 +947,7 @@ function precos_limpar_ordem_tabs($ordem)
     $limpa = array();
     foreach ((array)$ordem as $slug) {
         $slug = (string)$slug;
-        if ($slug === '__capsula__' || preg_match('/^[a-z0-9-]+$/', $slug)) {
+        if (preg_match('/^[a-z0-9-]+$/', $slug)) {
             $limpa[] = $slug;
         }
     }
@@ -942,6 +961,10 @@ function precos_recolher()
     list($pricing, $pricingRaw, $erro) = precos_ler_json(PRECOS_PRICING_FILE);
     if ($erro !== '') {
         precos_erro($erro, 500);
+    }
+    list($capsulaPricing, $capsulaRaw, $erroCapsula) = precos_ler_json(PRECOS_CAPSULA_FILE);
+    if ($erroCapsula !== '') {
+        precos_erro($erroCapsula, 500);
     }
 
     $produtos = array();
@@ -989,41 +1012,54 @@ function precos_recolher()
         );
     }
 
-    // Cápsula do Congresso 2026: só a tabela de preços, e só para comparar e
-    // sincronizar. Nada de imagens nem de estrutura — é isso que a regra da
-    // cápsula protege.
-    $capsula = array();
-    $capsulaRevisao = '';
-    if (is_file(PRECOS_CAPSULA_FILE)) {
-        list($capsulaData, $capsulaRaw, $erroCapsula) = precos_ler_json(PRECOS_CAPSULA_FILE);
-        if ($erroCapsula === '') {
-            $capsulaRevisao = precos_revisao($capsulaRaw);
-            foreach ((array)(isset($capsulaData['products']) ? $capsulaData['products'] : array()) as $slug => $registo) {
-                $espelho = isset(PRECOS_CAPSULA_ESPELHO[$slug]) ? PRECOS_CAPSULA_ESPELHO[$slug] : '';
-                $catalogo = $espelho !== '' && isset($pricing['products'][$espelho])
-                    ? $pricing['products'][$espelho]
-                    : null;
+    // Os produtos do Congresso entram no mesmo editor, mas com slugs virtuais
+    // próprios. Os ficheiros e o pricing continuam dentro de congressos/2026:
+    // não há qualquer fusão com os produtos homónimos do catálogo principal.
+    foreach (glob(PRECOS_CAPSULA_PRODUCTS_DIR . '/*.json') as $path) {
+        $slugReal = basename($path, '.json');
+        if (!preg_match('/^[a-z0-9-]+$/', $slugReal)) {
+            continue;
+        }
 
-                $diferencas = array();
-                if ($catalogo !== null) {
-                    foreach ((array)(isset($registo['prices']) ? $registo['prices'] : array()) as $pk => $tab) {
-                        $doCatalogo = isset($catalogo['prices'][$pk]) ? $catalogo['prices'][$pk] : null;
-                        if ($doCatalogo === null) {
-                            $diferencas[] = $pk . ': o catálogo não tem esta tabela';
-                        } elseif (array_map('intval', (array)$tab) !== array_map('intval', (array)$doCatalogo)) {
-                            $diferencas[] = $pk;
-                        }
-                    }
-                }
+        list($data, $raw, $erroProduto) = precos_ler_json($path);
+        if ($erroProduto !== '') {
+            precos_erro($erroProduto, 500);
+        }
 
-                $capsula[] = array(
-                    'slug' => $slug,
-                    'espelho' => $espelho,
-                    'prices' => isset($registo['prices']) ? $registo['prices'] : array(),
-                    'sincronizado' => $espelho !== '' && $catalogo !== null && empty($diferencas),
-                    'diferencas' => $diferencas,
-                );
-            }
+        $slug = precos_slug_editor_capsula($slugReal);
+        $registoCentral = isset($capsulaPricing['products'][$slugReal])
+            ? $capsulaPricing['products'][$slugReal]
+            : null;
+        $coleccoes = array();
+        $soltos = array();
+        precos_varrer($data, array(), $coleccoes, $soltos, '');
+        $miniatura = precos_miniatura($data);
+        if ($miniatura !== '' && !preg_match('#^(?:https?:)?//#', $miniatura)) {
+            $miniatura = 'congressos/2026/' . ltrim($miniatura, '/');
+        }
+
+        $produtos[] = array(
+            'slug' => $slug,
+            'titulo' => 'Congresso 2026 · ' . (isset($data['hero']['title']) ? $data['hero']['title'] : (isset($data['title']) ? $data['title'] : (isset($data['name']) ? $data['name'] : $slugReal))),
+            'mainV2' => true,
+            'congresso2026' => true,
+            'construtor' => false,
+            'revisao' => precos_revisao($raw),
+            'coleccoes' => $coleccoes,
+            'soltos' => $soltos,
+            'variantes' => precos_variantes($data, $registoCentral === null ? array() : $registoCentral),
+            'miniatura' => $miniatura,
+            'pricingMode' => isset($data['pricingMode']) ? $data['pricingMode'] : null,
+            'allowUnitDiscounts' => isset($data['allowUnitDiscounts']) ? $data['allowUnitDiscounts'] : null,
+            'temPassoPack' => precos_passo_pack($data) !== null,
+            'temRegistoCentral' => $registoCentral !== null,
+            'valido' => $registoCentral !== null
+                && main_v2_pricing_is_valid($registoCentral)
+                && main_v2_pricing_modes_agree($data, $registoCentral),
+        );
+
+        if ($registoCentral !== null) {
+            $pricing['products'][$slug] = $registoCentral;
         }
     }
 
@@ -1049,7 +1085,7 @@ function precos_recolher()
                 }
             }
             foreach ($produtos as $p) {
-                if ($p['mainV2'] && !$p['construtor'] && !isset($noBuilder[$p['slug']])) {
+                if ($p['mainV2'] && empty($p['congresso2026']) && !$p['construtor'] && !isset($noBuilder[$p['slug']])) {
                     $foraDaPersonalizacao[] = $p['slug'];
                 }
             }
@@ -1064,14 +1100,15 @@ function precos_recolher()
         'pricing' => $pricing,
         'pricingRevisao' => precos_revisao($pricingRaw),
         'produtos' => $produtos,
-        'capsula' => $capsula,
-        'capsulaRevisao' => $capsulaRevisao,
+        'capsula' => array(),
+        'capsulaRevisao' => precos_revisao($capsulaRaw),
         'delivery' => isset($pricing['delivery']) ? $pricing['delivery'] : array(),
         'ordemTabs' => (function () {
             $prefs = precos_ler_prefs();
             return isset($prefs['ordemTabs']) && is_array($prefs['ordemTabs']) ? $prefs['ordemTabs'] : array();
         })(),
         'custos' => isset($custos['produtos']) ? $custos['produtos'] : array(),
+        'custoHoraCents' => precos_ler_custo_hora(),
         'custosPrivados' => precos_custos_path() !== '',
         'aberto' => !PRECOS_REQUIRE_ADMIN,
         'csrf' => PRECOS_REQUIRE_ADMIN && !empty($_SESSION['mp_precos_csrf']) ? $_SESSION['mp_precos_csrf'] : '',
@@ -1155,10 +1192,15 @@ function precos_gravar()
     }
     $pricingRevisao = precos_revisao($pricingRaw);
     $pricingMudou = false;
+    list($capsulaPricing, $capsulaRaw, $erroCapsula) = precos_ler_json(PRECOS_CAPSULA_FILE);
+    if ($erroCapsula !== '') {
+        precos_erro($erroCapsula, 500);
+    }
+    $capsulaRevisao = precos_revisao($capsulaRaw);
+    $capsulaMudou = false;
 
     $produtos = array();       // slug => array('path','data','revisao')
     $custosPendentes = array();   // slug => priceKey => cents
-    $capsulaPendente = array();   // slug da capsula => slug do catalogo a copiar
     $ordemTabsPendente = null;
 
     // Carrega um produto uma vez só e devolve-o por referência.
@@ -1202,7 +1244,19 @@ function precos_gravar()
             }
 
             if ($ficheiro === 'pricing') {
-                if (!precos_definir_por_trail($pricing, $trail, $cents)) {
+                $trailPricing = $trail;
+                $slugCapsula = isset($trailPricing[0], $trailPricing[1]) && $trailPricing[0] === 'products'
+                    ? precos_slug_capsula((string)$trailPricing[1])
+                    : '';
+                if ($slugCapsula !== '') {
+                    $trailPricing[1] = $slugCapsula;
+                    if (!precos_definir_por_trail($capsulaPricing, $trailPricing, $cents)) {
+                        precos_erro('Não encontrei ' . implode(' → ', $trail) . ' no pricing do Congresso 2026.');
+                    }
+                    $capsulaMudou = true;
+                    continue;
+                }
+                if (!precos_definir_por_trail($pricing, $trailPricing, $cents)) {
                     precos_erro('Não encontrei ' . implode(' → ', $trail) . ' no pricing.json.');
                 }
                 $pricingMudou = true;
@@ -1224,7 +1278,7 @@ function precos_gravar()
             $noEditado = precos_no_por_trail($produtos[$ficheiro]['data'], $trailNo, $okNo);
             $chaveCentral = $okNo ? precos_chave_central($noEditado) : '';
 
-            if ($chaveCentral !== '' && isset($pricing['optionExtras'][$chaveCentral])) {
+            if (precos_slug_capsula($ficheiro) === '' && $chaveCentral !== '' && isset($pricing['optionExtras'][$chaveCentral])) {
                 if ((int)$pricing['optionExtras'][$chaveCentral] !== $cents) {
                     $pricing['optionExtras'][$chaveCentral] = $cents;
                     $pricingMudou = true;
@@ -1288,8 +1342,15 @@ function precos_gravar()
                 precos_erro('Falta o produto ou a tabela de preços.');
             }
 
+            $slugPricing = precos_slug_capsula($slug);
+            if ($slugPricing !== '') {
+                $pricingAlvo =& $capsulaPricing;
+            } else {
+                $slugPricing = $slug;
+                $pricingAlvo =& $pricing;
+            }
             $ok = false;
-            $tabela = &precos_tabela($pricing, $slug, $priceKey, $ok);
+            $tabela = &precos_tabela($pricingAlvo, $slugPricing, $priceKey, $ok);
             if (!$ok || !is_array($tabela)) {
                 precos_erro('Não encontrei a tabela ' . $priceKey . ' de ' . $slug . '.');
             }
@@ -1339,10 +1400,14 @@ function precos_gravar()
             uksort($ordenada, function ($a, $b) { return (int)$a - (int)$b; });
             $tabela = $ordenada;
             unset($tabela);
-            $pricingMudou = true;
+            if (precos_slug_capsula($slug) !== '') {
+                $capsulaMudou = true;
+            } else {
+                $pricingMudou = true;
+            }
 
             // Espelha os botões de pack no JSON do produto.
-            $registo = isset($pricing['products'][$slug]) ? $pricing['products'][$slug] : array();
+            $registo = isset($pricingAlvo['products'][$slugPricing]) ? $pricingAlvo['products'][$slugPricing] : array();
             $quantidades = array();
             foreach ((array)(isset($registo['prices']) ? $registo['prices'] : array()) as $tab) {
                 foreach ((array)$tab as $q => $_) {
@@ -1372,24 +1437,31 @@ function precos_gravar()
             }
             $descontos = $modo !== 'flat-unit';
 
-            if (!isset($pricing['products'][$slug])) {
+            $slugPricing = precos_slug_capsula($slug);
+            if ($slugPricing !== '') {
+                $pricingAlvo =& $capsulaPricing;
+            } else {
+                $slugPricing = $slug;
+                $pricingAlvo =& $pricing;
+            }
+            if (!isset($pricingAlvo['products'][$slugPricing])) {
                 precos_erro('O produto ' . $slug . ' não tem entrada no pricing.json.');
             }
-            $pricing['products'][$slug]['pricingMode'] = $modo;
-            $pricing['products'][$slug]['allowUnitDiscounts'] = $descontos;
-            $pricingMudou = true;
+            $pricingAlvo['products'][$slugPricing]['pricingMode'] = $modo;
+            $pricingAlvo['products'][$slugPricing]['allowUnitDiscounts'] = $descontos;
+            if (precos_slug_capsula($slug) !== '') {
+                $capsulaMudou = true;
+            } else {
+                $pricingMudou = true;
+            }
 
             $abrir($slug);
             $produtos[$slug]['data']['pricingMode'] = $modo;
             $produtos[$slug]['data']['allowUnitDiscounts'] = $descontos;
             $indicePack = precos_passo_pack($produtos[$slug]['data']);
             if ($indicePack !== null) {
-                if (array_key_exists('pricingMode', $produtos[$slug]['data']['steps'][$indicePack])) {
-                    $produtos[$slug]['data']['steps'][$indicePack]['pricingMode'] = $modo;
-                }
-                if (array_key_exists('allowUnitDiscounts', $produtos[$slug]['data']['steps'][$indicePack])) {
-                    $produtos[$slug]['data']['steps'][$indicePack]['allowUnitDiscounts'] = $descontos;
-                }
+                $produtos[$slug]['data']['steps'][$indicePack]['pricingMode'] = $modo;
+                $produtos[$slug]['data']['steps'][$indicePack]['allowUnitDiscounts'] = $descontos;
             }
             continue;
         }
@@ -1407,7 +1479,14 @@ function precos_gravar()
             $priceKey = isset($alteracao['priceKey']) ? (string)$alteracao['priceKey'] : '';
             $bloco = isset($alteracao['bloco']) && is_array($alteracao['bloco']) ? $alteracao['bloco'] : array();
 
-            if (!isset($pricing['products'][$slug]['prices'][$priceKey])) {
+            $slugPricing = precos_slug_capsula($slug);
+            if ($slugPricing !== '') {
+                $pricingAlvo =& $capsulaPricing;
+            } else {
+                $slugPricing = $slug;
+                $pricingAlvo =& $pricing;
+            }
+            if (!isset($pricingAlvo['products'][$slugPricing]['prices'][$priceKey])) {
                 precos_erro('Não encontrei a tabela ' . $priceKey . ' de ' . $slug . '.');
             }
             $activo = isset($bloco['activo']) ? (string)$bloco['activo'] : 'D1';
@@ -1419,7 +1498,7 @@ function precos_gravar()
             foreach (PRECOS_COLUNAS_DESCONTO as $coluna) {
                 $valores = isset($bloco[$coluna]) && is_array($bloco[$coluna]) ? $bloco[$coluna] : array();
                 $limpo[$coluna] = array();
-                foreach ($pricing['products'][$slug]['prices'][$priceKey] as $q => $_) {
+                foreach ($pricingAlvo['products'][$slugPricing]['prices'][$priceKey] as $q => $_) {
                     $pct = isset($valores[(string)$q]) && is_numeric($valores[(string)$q])
                         ? (float)$valores[(string)$q]
                         : 0.0;
@@ -1427,20 +1506,24 @@ function precos_gravar()
                 }
             }
 
-            if (!isset($pricing['products'][$slug]['discountsByPriceKey'])
-                || !is_array($pricing['products'][$slug]['discountsByPriceKey'])
+            if (!isset($pricingAlvo['products'][$slugPricing]['discountsByPriceKey'])
+                || !is_array($pricingAlvo['products'][$slugPricing]['discountsByPriceKey'])
             ) {
-                $pricing['products'][$slug]['discountsByPriceKey'] = array();
+                $pricingAlvo['products'][$slugPricing]['discountsByPriceKey'] = array();
             }
-            $pricing['products'][$slug]['discountsByPriceKey'][$priceKey] = $limpo;
-            $pricingMudou = true;
+            $pricingAlvo['products'][$slugPricing]['discountsByPriceKey'][$priceKey] = $limpo;
+            if (precos_slug_capsula($slug) !== '') {
+                $capsulaMudou = true;
+            } else {
+                $pricingMudou = true;
+            }
             continue;
         }
 
         // ── Preço de uma variante (purchase-option) ──────────────────────────
-        // O mesmo número vive em três sítios e só um deles cobra. Escrevemos
-        // nos três de uma vez, senão o editor deixaria mudar um valor que não
-        // tem efeito nenhum no que o cliente paga.
+        // O mesmo número vive em três sítios. O servidor cobra o mapa
+        // flatUnitPricesCents; o item e a tabela indexada alimentam a interface.
+        // Escrevemos nos três de uma vez para nunca divergirem.
         if ($op === 'variante') {
             $slug = isset($alteracao['slug']) ? (string)$alteracao['slug'] : '';
             $valor = isset($alteracao['valor']) ? (string)$alteracao['valor'] : '';
@@ -1463,7 +1546,7 @@ function precos_gravar()
             $indiceQuantidade = 0;
             foreach ($produtos[$slug]['data']['steps'][$indicePack]['items'] as $i => $item) {
                 if (isset($item['value']) && (string)$item['value'] === $valor) {
-                    // 1. O que cobra.
+                    // 1. Espelho no item que a interface apresenta.
                     $produtos[$slug]['data']['steps'][$indicePack]['items'][$i]['priceCents'] = $cents;
                     $indiceQuantidade = isset($item['quantity']) ? (int)$item['quantity'] : 0;
                     $encontrado = true;
@@ -1474,18 +1557,27 @@ function precos_gravar()
                 precos_erro('Não encontrei a variante ' . $valor . ' em ' . $slug . '.');
             }
 
-            // 2. e 3. Os espelhos em pricing.json, se existirem.
-            $priceKey = isset($pricing['products'][$slug]['defaultPriceKey'])
-                ? (string)$pricing['products'][$slug]['defaultPriceKey'] : '';
-            if ($priceKey !== '' && $indiceQuantidade > 0
-                && isset($pricing['products'][$slug]['prices'][$priceKey][(string)$indiceQuantidade])
-            ) {
-                $pricing['products'][$slug]['prices'][$priceKey][(string)$indiceQuantidade] = $cents;
-                $pricingMudou = true;
+            // 2. Tabela por índice e 3. mapa autoritativo da variante.
+            $slugPricing = precos_slug_capsula($slug);
+            if ($slugPricing !== '') {
+                $pricingAlvo =& $capsulaPricing;
+            } else {
+                $slugPricing = $slug;
+                $pricingAlvo =& $pricing;
             }
-            if (isset($pricing['products'][$slug]['flatUnitPricesCents'][$valor])) {
-                $pricing['products'][$slug]['flatUnitPricesCents'][$valor] = $cents;
-                $pricingMudou = true;
+            $priceKey = isset($pricingAlvo['products'][$slugPricing]['defaultPriceKey'])
+                ? (string)$pricingAlvo['products'][$slugPricing]['defaultPriceKey'] : '';
+            if ($priceKey !== '' && $indiceQuantidade > 0
+                && isset($pricingAlvo['products'][$slugPricing]['prices'][$priceKey][(string)$indiceQuantidade])
+            ) {
+                $pricingAlvo['products'][$slugPricing]['prices'][$priceKey][(string)$indiceQuantidade] = $cents;
+                if (precos_slug_capsula($slug) !== '') $capsulaMudou = true;
+                else $pricingMudou = true;
+            }
+            if (isset($pricingAlvo['products'][$slugPricing]['flatUnitPricesCents'][$valor])) {
+                $pricingAlvo['products'][$slugPricing]['flatUnitPricesCents'][$valor] = $cents;
+                if (precos_slug_capsula($slug) !== '') $capsulaMudou = true;
+                else $pricingMudou = true;
             }
             continue;
         }
@@ -1506,27 +1598,13 @@ function precos_gravar()
             continue;
         }
 
-        // ── Sincronizar a cápsula com o catálogo ─────────────────────────────
-        if ($op === 'capsula-sincronizar') {
-            $slug = isset($alteracao['slug']) ? (string)$alteracao['slug'] : '';
-            if (!isset(PRECOS_CAPSULA_ESPELHO[$slug])) {
-                precos_erro('A cápsula não tem um espelho definido para ' . $slug . '.');
-            }
-            $espelho = PRECOS_CAPSULA_ESPELHO[$slug];
-            if (!isset($pricing['products'][$espelho]['prices'])) {
-                precos_erro('O catálogo não tem preços para ' . $espelho . '.');
-            }
-            $capsulaPendente[$slug] = $espelho;
-            continue;
-        }
-
         precos_erro('Operação desconhecida: ' . $op . '.');
     }
 
     // 2. Validar ANTES de escrever seja o que for. Esta e a razao de existir
     //    desta API: hoje uma incoerencia entre os dois ficheiros so aparece no
     //    checkout, em silencio para o cliente.
-    $problemas = precos_validar($pricing, $produtos);
+    $problemas = precos_validar($pricing, $capsulaPricing, $produtos);
     if (!empty($problemas)) {
         precos_responder(array(
             'ok' => false,
@@ -1543,36 +1621,14 @@ function precos_gravar()
         $entradas[] = array('path' => PRECOS_PRICING_FILE, 'data' => $pricing, 'revision' => $pricingRevisao);
         $gravados[] = 'pricing';
     }
+    if ($capsulaMudou) {
+        $entradas[] = array('path' => PRECOS_CAPSULA_FILE, 'data' => $capsulaPricing, 'revision' => $capsulaRevisao);
+        $gravados[] = 'congressos/2026/pricing';
+    }
 
     foreach ($produtos as $slug => $info) {
         $entradas[] = array('path' => $info['path'], 'data' => $info['data'], 'revision' => $info['revisao']);
         $gravados[] = $slug;
-    }
-
-    // Cápsula: copia as tabelas do produto do catálogo que a espelha. Só as
-    // tabelas que existem nos dois — nunca acrescenta nem remove tabelas, para
-    // não inventar um tamanho que a cápsula nunca vendeu.
-    if (!empty($capsulaPendente)) {
-        list($capsulaData, $capsulaRaw, $erroCapsula) = precos_ler_json(PRECOS_CAPSULA_FILE);
-        if ($erroCapsula !== '') {
-            precos_erro($erroCapsula, 500);
-        }
-        $copiadas = 0;
-        foreach ($capsulaPendente as $slug => $espelho) {
-            if (!isset($capsulaData['products'][$slug]['prices'])) {
-                continue;
-            }
-            foreach ($capsulaData['products'][$slug]['prices'] as $pk => $_) {
-                if (isset($pricing['products'][$espelho]['prices'][$pk])) {
-                    $capsulaData['products'][$slug]['prices'][$pk] = $pricing['products'][$espelho]['prices'][$pk];
-                    $copiadas++;
-                }
-            }
-        }
-        if ($copiadas > 0) {
-            $entradas[] = array('path' => PRECOS_CAPSULA_FILE, 'data' => $capsulaData, 'revision' => precos_revisao($capsulaRaw));
-            $gravados[] = 'congressos/2026';
-        }
     }
 
     // Custos por último: vivem fora da raiz web e não afectam o site.
@@ -1630,54 +1686,58 @@ function precos_gravar()
 // Corre a validacao real sobre o estado que FICARIA gravado. Os produtos que
 // nao foram tocados sao lidos do disco, para uma alteracao no pricing.json nao
 // poder partir um produto que nem foi aberto.
-function precos_validar($pricing, $produtosTocados)
+function precos_validar($pricing, $capsulaPricing, $produtosTocados)
 {
     $problemas = array();
 
-    foreach (glob(PRECOS_PRODUCTS_DIR . '/*.json') as $path) {
-        $slug = basename($path, '.json');
-        if (!preg_match('/^[a-z0-9-]+$/', $slug)) {
-            continue;
-        }
-
-        if (isset($produtosTocados[$slug])) {
-            $data = $produtosTocados[$slug]['data'];
-        } else {
-            list($data, , $erroProduto) = precos_ler_json($path);
-            if ($erroProduto !== '') {
-                $problemas[] = $erroProduto;
+    $validarPasta = function ($dir, $pricingContexto, $prefixo, $soMainV2) use (&$problemas, $produtosTocados) {
+        foreach (glob($dir . '/*.json') as $path) {
+            $slugReal = basename($path, '.json');
+            if (!preg_match('/^[a-z0-9-]+$/', $slugReal)) {
                 continue;
             }
-        }
+            $slugEditor = $prefixo . $slugReal;
 
-        if (!isset($data['catalogContext']) || $data['catalogContext'] !== 'main-v2') {
-            continue;
-        }
+            if (isset($produtosTocados[$slugEditor])) {
+                $data = $produtosTocados[$slugEditor]['data'];
+            } else {
+                list($data, , $erroProduto) = precos_ler_json($path);
+                if ($erroProduto !== '') {
+                    $problemas[] = $erroProduto;
+                    continue;
+                }
+            }
 
-        // O construtor da personalizacao nao tem tabela propria; nao e erro.
-        if ($slug === 'personalizacao') {
-            continue;
-        }
+            if ($soMainV2 && (!isset($data['catalogContext']) || $data['catalogContext'] !== 'main-v2')) {
+                continue;
+            }
+            if ($soMainV2 && $slugReal === 'personalizacao') {
+                continue;
+            }
 
-        $registo = isset($pricing['products'][$slug]) ? $pricing['products'][$slug] : null;
-        if ($registo === null) {
-            $problemas[] = $slug . ': não tem entrada no pricing.json.';
-            continue;
-        }
-        if (!main_v2_pricing_is_valid($registo)) {
-            $problemas[] = $slug . ': o modo de preço e o allowUnitDiscounts do pricing.json não são coerentes.';
-        }
-        if (!main_v2_pricing_modes_agree($data, $registo)) {
-            $problemas[] = $slug . ': o modo de preço do JSON do produto não coincide com o do pricing.json.';
-        }
-        foreach ((array)(isset($registo['prices']) ? $registo['prices'] : array()) as $priceKey => $tabela) {
-            foreach ((array)$tabela as $quantidade => $cents) {
-                if ((int)$cents < 0) {
-                    $problemas[] = $slug . ' / ' . $priceKey . ': o preço de ' . $quantidade . ' é negativo.';
+            $registo = isset($pricingContexto['products'][$slugReal]) ? $pricingContexto['products'][$slugReal] : null;
+            if ($registo === null) {
+                $problemas[] = $slugEditor . ': não tem entrada no pricing.json.';
+                continue;
+            }
+            if (!main_v2_pricing_is_valid($registo)) {
+                $problemas[] = $slugEditor . ': o modo de preço e o allowUnitDiscounts do pricing.json não são coerentes.';
+            }
+            if (!main_v2_pricing_modes_agree($data, $registo)) {
+                $problemas[] = $slugEditor . ': o modo de preço do JSON do produto não coincide com o do pricing.json.';
+            }
+            foreach ((array)(isset($registo['prices']) ? $registo['prices'] : array()) as $priceKey => $tabela) {
+                foreach ((array)$tabela as $quantidade => $cents) {
+                    if ((int)$cents < 0) {
+                        $problemas[] = $slugEditor . ' / ' . $priceKey . ': o preço de ' . $quantidade . ' é negativo.';
+                    }
                 }
             }
         }
-    }
+    };
+
+    $validarPasta(PRECOS_PRODUCTS_DIR, $pricing, '', true);
+    $validarPasta(PRECOS_CAPSULA_PRODUCTS_DIR, $capsulaPricing, PRECOS_CAPSULA_PREFIX, false);
 
     return $problemas;
 }
@@ -1707,6 +1767,13 @@ if ($action === 'calcular') {
     list($pricing, , $erro) = precos_ler_json(PRECOS_PRICING_FILE);
     if ($erro !== '') {
         precos_erro($erro, 500);
+    }
+    list($capsulaPricing, , $erroCapsula) = precos_ler_json(PRECOS_CAPSULA_FILE);
+    if ($erroCapsula !== '') {
+        precos_erro($erroCapsula, 500);
+    }
+    foreach ((array)(isset($capsulaPricing['products']) ? $capsulaPricing['products'] : array()) as $slug => $registo) {
+        $pricing['products'][precos_slug_editor_capsula($slug)] = $registo;
     }
     $ate = isset($_GET['ate']) ? (int)$_GET['ate'] : 500;
     precos_responder(array('ok' => true, 'tabelas' => precos_calcular($pricing, $ate), 'ate' => $ate));

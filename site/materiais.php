@@ -19,6 +19,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Materiais e custos · Mia &amp; Paper</title>
+<link rel="stylesheet" href="admin-nav.css?v=2026081001">
+<script src="admin-nav.js?v=2026081001" defer></script>
 <style>
   :root {
     --fundo: #14153a;        --fundo-2: #101132;
@@ -41,21 +43,6 @@
   h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -.015em; }
   code { font-family: var(--mono); font-size: .85em; color: var(--ciano); }
   a { color: var(--azul); }
-
-  .barra-admin {
-    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
-    padding: 8px 24px; background: var(--fundo-2); border-bottom: 1px solid var(--linha);
-  }
-  .barra-admin strong {
-    font-size: .74rem; color: var(--texto-3); margin-right: 10px;
-    text-transform: uppercase; letter-spacing: .09em;
-  }
-  .barra-admin a {
-    font-size: .8rem; color: var(--texto-2); text-decoration: none;
-    padding: 4px 10px; border-radius: 7px; white-space: nowrap;
-  }
-  .barra-admin a:hover { background: var(--cartao); color: var(--texto); }
-  .barra-admin a.activo { background: var(--azul); color: #fff; font-weight: 600; }
 
   .barra {
     position: sticky; top: 0; z-index: 40;
@@ -181,24 +168,7 @@
 </head>
 <body>
 
-<nav class="barra-admin" aria-label="Administração">
-  <strong>Mia &amp; Paper Admin</strong>
-  <a href="produtos.html">Produtos</a>
-  <a href="galeria.html">Galeria</a>
-  <a href="multimedia.html">Multimédia</a>
-  <a href="reviews.html">Reviews</a>
-  <a href="precos.php">Preços</a>
-  <a href="materiais.php" class="activo">Materiais</a>
-  <a href="homepage-menu-design.php">Homepage &amp; Menu</a>
-  <a href="carrousel.php">Carrosséis</a>
-  <a href="admin-funnel.php">Funil</a>
-  <a href="admin-orders.php">Encomendas</a>
-  <a href="admin-colors.html">Cores</a>
-  <a href="admin-uploads.php">Uploads</a>
-  <a href="tools/index.php">Ferramentas</a>
-</nav>
-
-<header class="barra">
+<header class="barra admin-secondary-bar">
   <h1>Materiais e custos</h1>
   <span id="alerta"></span>
   <button id="desfazer" disabled>Undo</button>
@@ -403,6 +373,10 @@
     var calculo = calculoDe(chave);
     var unidade = entrada ? entrada.unidade : "unidade";
     var preco = entrada ? entrada.precoUnidadeCents : 0;
+    var primeiroQ = entrada ? Number(entrada.primeiroEscalaoQuantidade) || 0 : 0;
+    var primeiroTotal = entrada ? Number(entrada.primeiroEscalaoTotalCents) || 0 : 0;
+    var semCustoHora = Number(dados.custoHoraCents) === 0;
+    var rotuloMargem = semCustoHora ? "Margem após materiais" : "Lucro";
     var lucro = preco - calculo.totalCents;
     var margem = preco > 0 ? Math.round(lucro / preco * 100) : null;
     var html = "";
@@ -415,9 +389,14 @@
     html += '<div class="resultado">'
       + '<div class="destaque"><span>Custo de 1 ' + esc(unidade) + '</span><strong>' + esc(eurosFinos(calculo.totalCents)) + '</strong></div>'
       + '<div><span>Materiais</span><strong>' + esc(eurosFinos(calculo.materiaisCents)) + '</strong></div>'
-      + '<div><span>Tempo</span><strong>' + esc(eurosFinos(calculo.maoDeObraCents)) + '</strong></div>'
-      + '<div><span>Preço de 1 à unidade</span><strong>' + esc(euros(preco)) + '</strong></div>'
-      + '<div class="' + (lucro >= 0 ? "bom" : "mau") + '"><span>Lucro</span><strong>' + esc(eurosFinos(lucro))
+      + '<div><span>Tempo</span><strong>' + (semCustoHora
+          ? esc(numero(calculo.minutosPorUnidade) + " min — não contabilizado")
+          : esc(eurosFinos(calculo.maoDeObraCents))) + '</strong></div>'
+      + '<div><span>' + (primeiroQ > 1 ? 'Preço/un. no primeiro escalão' : 'Preço de 1 à unidade') + '</span><strong>'
+      + esc(euros(preco)) + (primeiroQ > 1
+          ? ' <small style="font-size:.7rem">(' + esc(primeiroQ) + ' un. por ' + esc(euros(primeiroTotal)) + ')</small>'
+          : '') + '</strong></div>'
+      + '<div class="' + (lucro >= 0 ? "bom" : "mau") + '"><span>' + esc(rotuloMargem) + '</span><strong>' + esc(eurosFinos(lucro))
       + (margem === null ? "" : ' <small style="font-size:.7rem">' + margem + '%</small>') + '</strong></div>'
       + '</div>';
 
@@ -428,7 +407,8 @@
       + '<span class="dica">'
       + (dados.custoHoraCents > 0
           ? 'a ' + esc(euros(dados.custoHoraCents)) + '/hora, dá ' + esc(eurosFinos(calculo.maoDeObraCents)) + ' por ' + esc(unidade)
-          : 'põe o valor da hora no separador <strong>Materiais</strong> para isto contar')
+          : 'Tempo: ' + esc(numero(calculo.minutosPorUnidade))
+            + ' min — custo de mão de obra não contabilizado (custo/hora = 0 €).')
       + '</span></div></div></section>';
 
     html += '<section class="cartao"><header><h2>Materiais deste produto</h2>'
@@ -494,7 +474,8 @@
     var linhas = [];
     linhas.push("# Materiais e custos — Mia & Paper");
     linhas.push("");
-    linhas.push("Custo da hora de trabalho: " + euros(dados.custoHoraCents));
+    linhas.push("Custo da hora de trabalho: " + euros(dados.custoHoraCents)
+      + (Number(dados.custoHoraCents) === 0 ? " — mão de obra não contabilizada" : ""));
     linhas.push("");
     linhas.push("## Materiais");
     linhas.push("");
@@ -513,17 +494,27 @@
     (dados.catalogo || []).forEach(function (entrada) {
       var calculo = calculoDe(entrada.chave);
       if (!calculo.linhas.length && !calculo.minutosPorUnidade) { return; }
+      var semCustoHora = Number(dados.custoHoraCents) === 0;
+      var primeiroQ = Number(entrada.primeiroEscalaoQuantidade) || 0;
+      var primeiroTotal = Number(entrada.primeiroEscalaoTotalCents) || 0;
       var lucro = entrada.precoUnidadeCents - calculo.totalCents;
 
       linhas.push("");
       linhas.push("### " + entrada.etiqueta);
       linhas.push("");
       linhas.push("- Unidade: " + entrada.unidade);
-      linhas.push("- Preço de 1 à unidade: " + euros(entrada.precoUnidadeCents));
+      linhas.push(primeiroQ > 1
+        ? "- Primeiro escalão: " + primeiroQ + " un. por " + euros(primeiroTotal)
+          + " = " + euros(entrada.precoUnidadeCents) + "/un."
+        : "- Preço de 1 à unidade: " + euros(entrada.precoUnidadeCents));
       linhas.push("- Custo de materiais: " + eurosFinos(calculo.materiaisCents));
-      linhas.push("- Tempo: " + numero(calculo.minutosPorUnidade) + " min → " + eurosFinos(calculo.maoDeObraCents));
-      linhas.push("- **Custo total por unidade: " + eurosFinos(calculo.totalCents) + "**");
-      linhas.push("- Lucro: " + eurosFinos(lucro)
+      linhas.push(semCustoHora
+        ? "- Tempo: " + numero(calculo.minutosPorUnidade)
+          + " min — custo de mão de obra não contabilizado (custo/hora = 0 €)"
+        : "- Tempo: " + numero(calculo.minutosPorUnidade) + " min → " + eurosFinos(calculo.maoDeObraCents));
+      linhas.push("- **" + (semCustoHora ? "Custo de materiais" : "Custo total")
+        + " por unidade: " + eurosFinos(calculo.totalCents) + "**");
+      linhas.push("- " + (semCustoHora ? "Margem após materiais" : "Lucro") + ": " + eurosFinos(lucro)
         + (entrada.precoUnidadeCents > 0 ? " (" + Math.round(lucro / entrada.precoUnidadeCents * 100) + "%)" : ""));
       linhas.push("- Custo gravado nos preços: "
         + (entrada.custoNosPrecosCents === null ? "—" : euros(entrada.custoNosPrecosCents)));
@@ -546,6 +537,9 @@
     linhas.push("- Custo por unidade de produto = custo da unidade do material ÷ quantas unidades saem de 1.");
     linhas.push("- Tempo = minutos por unidade ÷ 60 × custo da hora.");
     linhas.push("- Custo total por unidade = soma dos materiais + tempo.");
+    if (Number(dados.custoHoraCents) === 0) {
+      linhas.push("- Com custo/hora = 0 €, as margens mostradas são após materiais, não lucro líquido.");
+    }
 
     var texto = linhas.join("\n");
     return '<section class="cartao"><header><h2>Tudo em Markdown</h2>'

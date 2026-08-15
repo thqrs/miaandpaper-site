@@ -62,6 +62,7 @@ novos_designs/
 # Cópias de segurança criadas pelo editor de preços (precos.php)
 *.precos-bak
 *.homepage-bak
+*.faqs-bak
 
 # Cache de dimensões das imagens (gerado pela galeria)
 site/content/.galeria-dimensoes.json

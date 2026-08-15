@@ -1,0 +1,79 @@
+{
+    "schemaVersion": 2,
+    "title": "Perguntas frequentes",
+    "intro": "Encontra aqui respostas sobre encomendas, personalização, pagamento e entrega. Se ficares com alguma dúvida, fala comigo.",
+    "items": [
+        {
+            "id": "como-faco-uma-encomenda",
+            "enabled": true,
+            "question": "Como faço uma encomenda?",
+            "answerHtml": "<p>Escolhe o produto e segue os passos de personalização:</p><ol><li>selecciona o design, as opções e a quantidade;</li><li>confirma os detalhes no resumo;</li><li>preenche o teu contacto e envia o pedido.</li></ol><p>Depois de receber o pedido, confirmo contigo o que for necessário. <strong>A encomenda só começa a ser preparada após confirmação do pagamento.</strong></p>"
+        },
+        {
+            "id": "antecedencia-da-encomenda",
+            "enabled": true,
+            "question": "Com quanta antecedência devo fazer a encomenda?",
+            "answerHtml": "<p>Faz o pedido com, pelo menos, <strong>7 dias de antecedência</strong> em relação à data em que pretendes que seja enviado.</p><p>Para quantidades maiores ou trabalhos com uma data fixa, é melhor encomendar mais cedo. Se o prazo for apertado, <a href=\"contacto.html\">contacta-me antes de encomendar</a> para confirmar se é possível.</p>"
+        },
+        {
+            "id": "o-que-posso-personalizar",
+            "enabled": true,
+            "question": "O que posso personalizar?",
+            "answerHtml": "<p>As opções dependem do produto. Quando estiverem disponíveis, podes escolher:</p><ul><li>nomes, frases ou outros textos;</li><li>design, tamanho, formato ou acabamento;</li><li>quantidade e distribuição por design;</li><li>fotografia, desenho ou ficheiro próprio.</li></ul><p>O formulário de cada produto mostra apenas as opções que se aplicam a esse artigo.</p>"
+        },
+        {
+            "id": "posso-enviar-design-fotografia-desenho",
+            "enabled": true,
+            "question": "Posso enviar o meu próprio design, fotografia ou desenho?",
+            "answerHtml": "<p>Sim, nos produtos que apresentam essa opção. Usa o campo de envio de ficheiros durante a personalização e escolhe uma imagem com a melhor qualidade possível.</p><p>Se não encontrares onde enviar o ficheiro, <a href=\"contacto.html\">fala comigo</a> e indica o produto que queres encomendar.</p>"
+        },
+        {
+            "id": "quantidades-minimas",
+            "enabled": true,
+            "question": "Há uma quantidade mínima?",
+            "answerHtml": "<p>Depende do produto. Alguns artigos são vendidos à unidade e outros em packs. As quantidades disponíveis aparecem no próprio formulário e o preço é actualizado à medida que escolhes.</p><p><em>Se precisares de uma quantidade que não aparece, pergunta antes de enviares o pedido.</em></p>"
+        },
+        {
+            "id": "como-e-calculado-o-preco",
+            "enabled": true,
+            "question": "Como é calculado o preço?",
+            "answerHtml": "<p>O valor depende da quantidade, das opções escolhidas, dos extras e da entrega. O resumo da encomenda mostra o cálculo antes de enviares o pedido.</p><p>Quando os portes ou algum detalhe ainda precisarem de confirmação, isso fica assinalado e confirmo o valor final contigo.</p>"
+        },
+        {
+            "id": "confirmacao-antes-da-producao",
+            "enabled": true,
+            "question": "Os detalhes são confirmados antes de começar a preparação?",
+            "answerHtml": "<p>Sim. Revejo os dados e os ficheiros enviados e entro em contacto se houver alguma dúvida ou se faltar informação.</p><p>Confirma sempre com atenção a ortografia dos nomes, datas e frases. A preparação começa depois de os detalhes necessários e o pagamento estarem confirmados.</p>"
+        },
+        {
+            "id": "como-funciona-o-pagamento",
+            "enabled": true,
+            "question": "Como funciona o pagamento?",
+            "answerHtml": "<p>Depois de enviares o pedido, o site pode mostrar logo os dados para pagamento por <strong>MB WAY</strong> quando o valor total e a entrega já estão definidos.</p><p>Nos restantes casos, entro em contacto contigo com o valor confirmado e os próximos passos. A encomenda só começa a ser preparada após confirmação do pagamento.</p>"
+        },
+        {
+            "id": "opcoes-de-entrega",
+            "enabled": true,
+            "question": "Que opções de entrega existem?",
+            "answerHtml": "<p>Consoante a encomenda, podes encontrar estas opções:</p><ul><li>recolha combinada;</li><li>envio por CTT;</li><li>juntar a outra encomenda ainda aberta.</li></ul><p>No envio por CTT, o valor apresentado pode ser uma estimativa mínima. A morada e o valor final são confirmados depois por contacto directo.</p>"
+        },
+        {
+            "id": "alterar-pedido-enviado",
+            "enabled": true,
+            "question": "Posso alterar ou cancelar um pedido depois de o enviar?",
+            "answerHtml": "<p><a href=\"contacto.html\"><strong>Contacta-me o mais depressa possível</strong></a> e indica o teu nome e o produto encomendado.</p><p>Enquanto a preparação não tiver começado, normalmente é mais simples corrigir os detalhes. Depois disso, a alteração pode já não ser possível ou pode mudar o preço e o prazo.</p>"
+        },
+        {
+            "id": "qualidade-dos-ficheiros",
+            "enabled": true,
+            "question": "Que cuidados devo ter com os ficheiros que envio?",
+            "answerHtml": "<ul><li>Envia a imagem original e com boa resolução.</li><li>Evita capturas de ecrã, imagens desfocadas ou ficheiros recebidos várias vezes por mensagem.</li><li>Confirma que tens autorização para usar as fotografias, ilustrações e logótipos enviados.</li></ul><p>Se a qualidade não for suficiente para o resultado pretendido, entro em contacto contigo.</p>"
+        },
+        {
+            "id": "diferencas-das-imagens",
+            "enabled": true,
+            "question": "O artigo final fica exactamente igual às imagens do site?",
+            "answerHtml": "<p>As fotografias mostram o aspecto e a escala aproximados. Pode haver pequenas diferenças de cor entre o ecrã e a impressão, e variações naturais do papel, do corte e do acabamento.</p><p>Estas pequenas diferenças fazem parte de uma produção em pequena escala. Se uma cor ou medida for essencial para o teu pedido, <a href=\"contacto.html\">confirma comigo antes de encomendar</a>.</p>"
+        }
+    ]
+}

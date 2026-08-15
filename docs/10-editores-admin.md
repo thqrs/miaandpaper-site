@@ -1,11 +1,46 @@
 # 10 · Editores de administração
 
-Duas páginas internas, ambas com o mesmo desenho: barra de admin no topo, tema
+As páginas internas seguem o mesmo desenho: barra de admin no topo, tema
 escuro próprio (não usam os tokens da marca, de propósito — são ferramentas),
 Save e Undo, e **nada toca no site antes do Save**.
 
-Ambas estão **abertas sem autenticação** até ao deploy, como a galeria. Fechar
+A lista da barra superior é definida uma única vez em `site/admin-nav.js`. As
+páginas de administração carregam esse ficheiro e `site/admin-nav.css`; não
+devem manter cópias próprias dos links.
+
+Estas páginas estão **abertas sem autenticação** até ao deploy, como a galeria. Fechar
 com `MIA_ADMIN_OPEN=false` em `site/admin-open.php`.
+
+## Modo admin dentro do site
+
+`ADMIN_OVERLAY_EDITOR_V1`. O modo admin usa a página pública como
+pré-visualização exacta: não coloca inputs dentro das grelhas nem muda a largura,
+altura ou posição dos cartões. Os elementos editáveis recebem apenas um contorno
+vermelho sobreposto. O contorno não recebe cliques: só o pequeno botão «Editar»
+abre os campos num popup fixo, fora do fluxo da página. Nas imagens, clicar na
+imagem selecciona-a para os atalhos de teclado; o popup só abre ao clicar
+literalmente no botão «Editar». A mesma camada de edição existe nas páginas do
+Congresso 2026.
+
+Os controlos continuam a ser os mesmos (`data-admin-*`) e a gravação continua a
+acontecer apenas no `SAVE`. Nos campos de enquadramento, zoom, posição, rotação e
+moldura, a alteração é aplicada logo à imagem da página; o popup não precisa de
+fechar nem de reconstruir o cartão. A tecla `Esc`, o fundo do popup e o botão
+`×` fecham o editor.
+
+No primeiro passo de cada produto, o mesmo popup inclui o aviso de antecedência
+da encomenda. Por omissão informa que o pedido deve ser feito com pelo menos
+sete dias de antecedência; o texto pode ser alterado por produto ou deixado
+vazio para não aparecer nesse produto.
+
+O painel geral abre recolhido por omissão, deixando apenas o pequeno comando
+`Admin · Mostrar painel`. Continua a dar acesso a `SAVE`, `UNDO` e às ferramentas
+internas quando for necessário.
+
+Na homepage, o modo admin mostra a mesma lista de cartões e as mesmas grelhas do
+site público. Cartões ocultos continuam fora da página e editam-se no
+`homepage-menu-design.php`; trazê-los para a grelha de edição mudaria as posições
+que se pretende verificar.
 
 | página | edita | ver |
 |---|---|---|
@@ -13,6 +48,47 @@ com `MIA_ADMIN_OPEN=false` em `site/admin-open.php`.
 | `homepage-menu-design.php` | o menu e a homepage | abaixo |
 | `carrousel.php` | os carrosséis dos cartões da homepage | abaixo |
 | `materiais.php` | quanto custa mesmo fazer uma unidade | abaixo |
+| `faqs.php` | as perguntas e respostas da página pública | abaixo |
+| `produtos.php` | os designs seleccionáveis no passo 1 de cada produto | abaixo |
+
+## `produtos.php`
+
+Lê directamente `content/products/*.json` e mostra os `items` do primeiro passo
+visível quando esse passo usa `design-grid`. O caminho apresentado por baixo de
+cada cartão é o valor exacto de `item.image`.
+
+Carrega a barra administrativa partilhada e o seu link é «Designs Passo 1».
+Inclui `admin-open.php`: continua aberta no desenvolvimento, mas passa a exigir
+uma sessão administrativa assim que `MIA_ADMIN_OPEN` for posto a `false` antes
+do deploy.
+
+Clicar directamente na imagem abre o selector de ficheiros; também se pode
+arrastar uma imagem, ou uma pasta que contenha uma única imagem, do computador
+para essa zona. O ficheiro é validado e convertido para WebP pela API da
+Galeria, e o caminho devolvido é gravado no JSON. Clicar no nome do design
+continua a abrir a Galeria para ajustar o enquadramento. Os campos alterados são
+explícitos em `directUploadTargets`: normalmente só `image`; em
+`cadernos-anuais`, também `laminationImages.matte` e `interiorImages[0]`.
+
+Permite acrescentar ou remover uma entrada segundo a receita explícita do slug
+em `lib/produtos-passo1.php`. Não existe fallback genérico: produto sem receita,
+ou cujo `stepId` já não corresponda ao contrato, fica bloqueado. A gravação
+passa pelo `save-product` do `admin-api.php`, portanto conserva as validações, a
+cópia de segurança, a preservação dos preços centralizados e a flag de
+sincronização do editor geral. Depois de uma alteração estrutural continuam a
+ser necessários novos snapshots.
+
+Nos produtos simples, `id`, `value`, `title` e `image`, mais os defaults próprios
+da receita, chegam ao selector, ao carrinho e à validação do servidor, porque
+todos lêem o mesmo `items`. `cadernos-anuais` exige no formulário todas as
+imagens de laminação e de compra e materializa `laminationImages`,
+`interiorImages` e `purchaseOptionImages`. `quadros` fica bloqueado: cada item é
+um percurso com preço, gavetas e passos condicionais ligados ao `value`, pelo
+que criar ou remover só o item seria incorrecto.
+
+Ao criar ou alterar um JSON de produto, actualizar `pd_passo1_receitas()` na
+mesma alteração. Esta obrigação também está no `AGENTS.md`, para um produto
+novo nunca herdar silenciosamente uma receita aproximada.
 
 ## `homepage-menu-design.php`
 
@@ -84,8 +160,8 @@ continua a valer e é o que o botão *herdar a ordem do menu* usa.
 Um `home.json` sem `homeSections` — ou com a lista vazia — dá as duas secções de
 sempre, montadas a partir do `news` e do `productsIntro`. `homeSectionList()` em
 `js/09-admin-paineis.js` e `hm_seccoes()` no `homepage-menu-api.php` têm de dar o
-mesmo. A cápsula do congresso **não** passa por aqui: tem o seu
-`app-congressos.js`, congelado e independente.
+mesmo. O contexto do Congresso **não** passa por aqui: tem o seu
+`app-congressos.js` independente.
 
 ### Campos novos no `home.json`
 
@@ -203,6 +279,21 @@ Guarda em `private/materiais.json`, **fora da raiz web**, pelo mesmo motivo que
 os custos: são as margens do negócio e o `content/` é servido publicamente. Não
 está no git; viaja por scp no `[2]upload-or-download.bat`, junto com o
 `custos.json`.
+
+---
+
+## `faqs.php`
+
+`FAQ_EDITOR_V2`. Edita `content/faqs.json`, que é lido por
+`perguntasfrequentes.html`. Permite acrescentar, remover e ordenar perguntas,
+alterar o título e a introdução da página e esconder uma entrada sem a apagar.
+
+A página pública só mostra entradas activas que tenham pergunta e resposta. As
+respostas têm um editor visual para negrito, itálico, listas numeradas ou com
+marcadores e links. O servidor limpa o HTML e só conserva `p`, `div`, `br`,
+`strong`, `b`, `em`, `i`, `ul`, `ol`, `li` e `a`; num link, só conserva um
+`href` HTTP(S), `mailto:`, `tel:` ou relativo. A gravação é atómica, tem cópia
+de segurança, CSRF e revisão SHA-256 contra alterações concorrentes.
 
 ---
 
