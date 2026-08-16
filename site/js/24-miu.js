@@ -23,10 +23,352 @@ var miuContextObserver = null;
 var miuContextInterval = 0;
 var miuSleepTimer = 0;
 var miuSleepDelayMs = 45000;
+var miuAnimationConfig = null;
+var miuInteractiveAnimationConfig = null; // biblioteca de Míu corpo inteiro; não é usada dentro do chat
+var miuAnimationById = {};
+var miuLauncherSprite = null;
+var miuAnimationTimer = 0;
+var miuIdleActionTimer = 0;
+var miuAnimationSerial = 0;
+var miuAnimationCooldowns = {};
+var miuRoamX = 0;
+var miuRootMotion = null;
+var miuReducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
-function miuSpriteMarkup(extraClass)
+function miuAnimationSetup(config)
 {
-  return '<span class="miu-sprite' + (extraClass ? " " + extraClass : "") + '" aria-hidden="true"></span>';
+  /*
+   * O chat usa SEMPRE a cara do Míu. As spritesheets de corpo inteiro
+   * (inspiradas na Lili) continuam a chegar do servidor e ficam guardadas
+   * separadamente para outros contextos interactivos do site.
+   */
+  miuInteractiveAnimationConfig = config && Array.isArray(config.animations) ? config : null;
+  var display = miuInteractiveAnimationConfig && miuInteractiveAnimationConfig.display
+    ? miuInteractiveAnimationConfig.display : {};
+
+  miuSleepDelayMs = Math.max(5000, Number(display.sleepAfterMs || 45000));
+  miuAnimationConfig = {
+    schemaVersion: 1,
+    baseAnimationId: "miu-cara-calma",
+    display: {
+      launcherPx: Math.max(32, Number(display.launcherPx || 46)),
+      smallPx: Math.max(18, Number(display.smallPx || 26)),
+      sleepAfterMs: miuSleepDelayMs,
+      idleRandomMinMs: Math.max(5000, Number(display.idleRandomMinMs || 14000)),
+      idleRandomMaxMs: Math.max(7000, Number(display.idleRandomMaxMs || 28000)),
+      maxRoamPx: 0
+    },
+    animations: [
+      {
+        id: "miu-cara-calma",
+        name: "Míu — cara calma",
+        sheetUrl: "content/brand/miu/miu-sprite.webp?v=chat-face-1",
+        columns: 4,
+        rows: 2,
+        sequence: [0, 0, 0, 1, 2, 3, 0, 0, 0, 7, 0, 0, 0],
+        frameDurationsMs: [1300, 1100, 900, 110, 100, 150, 1200, 950, 1200, 700, 1000, 900, 1200],
+        repeat: 0,
+        enabled: true,
+        triggers: [],
+        probability: 1,
+        weight: 1,
+        cooldownMs: 0,
+        flipX: false,
+        staticFrame: 0,
+        motion: { type: "none", distancePx: 0 }
+      },
+      {
+        id: "miu-cara-sorriso",
+        name: "Míu — cara sorriso",
+        sheetUrl: "content/brand/miu/miu-sprite.webp?v=chat-face-1",
+        columns: 4,
+        rows: 2,
+        sequence: [0, 6, 6, 0],
+        frameDurationsMs: [100, 320, 260, 180],
+        repeat: 1,
+        enabled: true,
+        triggers: ["launcher_hover", "launcher_open", "message_sent", "reply_end", "conversation_reset"],
+        probability: 1,
+        weight: 3,
+        cooldownMs: 650,
+        flipX: false,
+        staticFrame: 6,
+        motion: { type: "none", distancePx: 0 }
+      },
+      {
+        id: "miu-cara-inclina",
+        name: "Míu — cara inclina",
+        sheetUrl: "content/brand/miu/miu-sprite.webp?v=chat-face-1",
+        columns: 4,
+        rows: 2,
+        sequence: [0, 4, 4, 0, 5, 5, 0],
+        frameDurationsMs: [100, 420, 250, 160, 420, 250, 180],
+        repeat: 1,
+        enabled: true,
+        triggers: ["idle_random"],
+        probability: 0.58,
+        weight: 2,
+        cooldownMs: 7000,
+        flipX: false,
+        staticFrame: 4,
+        motion: { type: "none", distancePx: 0 }
+      },
+      {
+        id: "miu-cara-orelha",
+        name: "Míu — cara orelha",
+        sheetUrl: "content/brand/miu/miu-sprite.webp?v=chat-face-1",
+        columns: 4,
+        rows: 2,
+        sequence: [0, 7, 7, 0],
+        frameDurationsMs: [120, 380, 320, 180],
+        repeat: 1,
+        enabled: true,
+        triggers: ["idle_random", "launcher_close"],
+        probability: 0.5,
+        weight: 1,
+        cooldownMs: 9000,
+        flipX: false,
+        staticFrame: 7,
+        motion: { type: "none", distancePx: 0 }
+      },
+      {
+        id: "miu-cara-dormir",
+        name: "Míu — cara a dormir",
+        sheetUrl: "content/brand/miu/miu-sprite-sleep.webp?v=chat-face-1",
+        columns: 4,
+        rows: 1,
+        sequence: [0, 1, 2, 3, 2, 3],
+        frameDurationsMs: [650, 700, 650, 1100, 650, 1100],
+        repeat: 0,
+        enabled: true,
+        triggers: ["inactivity"],
+        probability: 1,
+        weight: 1,
+        cooldownMs: 0,
+        flipX: false,
+        staticFrame: 3,
+        motion: { type: "none", distancePx: 0 }
+      }
+    ]
+  };
+
+  miuAnimationById = {};
+  miuAnimationConfig.animations.forEach(function (animation) {
+    if (animation && animation.id) { miuAnimationById[String(animation.id)] = animation; }
+  });
+}
+function miuAnimationBase()
+{
+  if (!miuAnimationConfig) { return null; }
+  return miuAnimationById[String(miuAnimationConfig.baseAnimationId || "")] || miuAnimationConfig.animations[0] || null;
+}
+
+function miuAnimationSheetUrl(animation)
+{
+  if (!animation) { return ""; }
+  try { return new URL(String(animation.sheetUrl || ""), miuSiteRootUrl).href; }
+  catch (error) { return ""; }
+}
+
+function miuAnimationFramePosition(index, columns, rows)
+{
+  var column = index % columns;
+  var row = Math.floor(index / columns);
+  return {
+    x: columns <= 1 ? 0 : (column / (columns - 1)) * 100,
+    y: rows <= 1 ? 0 : (row / (rows - 1)) * 100
+  };
+}
+
+function miuAnimationApplyFrame(element, animation, frameIndex)
+{
+  if (!element || !animation) { return; }
+  var columns = Math.max(1, Number(animation.columns || 1));
+  var rows = Math.max(1, Number(animation.rows || 1));
+  var maxFrame = columns * rows - 1;
+  var index = Math.max(0, Math.min(maxFrame, Number(frameIndex || 0)));
+  var position = miuAnimationFramePosition(index, columns, rows);
+  element.style.backgroundImage = 'url("' + miuAnimationSheetUrl(animation).replace(/"/g, "%22") + '")';
+  element.style.backgroundSize = (columns * 100) + "% " + (rows * 100) + "%";
+  element.style.backgroundPosition = position.x + "% " + position.y + "%";
+  element.style.backgroundRepeat = "no-repeat";
+  element.style.transform = animation.flipX ? "scaleX(-1)" : "none";
+}
+
+function miuAnimationApplyStatic(element, variantIndex)
+{
+  if (!element) { return; }
+  var stableFrames = [0, 6, 0, 4, 0, 5, 0, 7];
+  var index = stableFrames[Math.abs(Number(variantIndex || 0)) % stableFrames.length];
+  var small = element.classList && element.classList.contains("miu-face--small");
+  miuAnimationApplyFrame(element, {
+    sheetUrl: small
+      ? "content/brand/miu/miu-sprite-small.webp?v=chat-face-1"
+      : "content/brand/miu/miu-sprite.webp?v=chat-face-1",
+    columns: 4,
+    rows: 2,
+    flipX: false
+  }, index);
+}
+function miuAnimationCycleMs(animation)
+{
+  var durations = animation && Array.isArray(animation.frameDurationsMs) ? animation.frameDurationsMs : [];
+  return Math.max(120, durations.reduce(function (sum, value) { return sum + Math.max(40, Number(value || 180)); }, 0));
+}
+
+function miuAnimationCancelTimer()
+{
+  window.clearTimeout(miuAnimationTimer);
+  miuAnimationTimer = 0;
+  miuAnimationSerial += 1;
+}
+
+function miuAnimationSetRootX(value)
+{
+  if (!miuRoot) { return; }
+  miuRoamX = Number(value || 0);
+  miuRoot.style.transform = "translate3d(" + miuRoamX + "px,0,0)";
+}
+
+function miuAnimationResetRoam()
+{
+  if (miuRootMotion && typeof miuRootMotion.cancel === "function") { miuRootMotion.cancel(); }
+  miuRootMotion = null;
+  miuAnimationSetRootX(0);
+}
+
+function miuAnimationMotion(animation)
+{
+  if (!miuRoot || !animation || !animation.motion || miuReducedMotion) { return; }
+  var type = String(animation.motion.type || "none");
+  var distance = Math.max(0, Number(animation.motion.distancePx || 0));
+  if (type === "none" || distance <= 0 || miuRoot.classList.contains("is-open")) { return; }
+  var maxRoam = miuAnimationConfig && miuAnimationConfig.display ? Math.max(0, Number(miuAnimationConfig.display.maxRoamPx || 0)) : 180;
+  var duration = Math.max(320, Math.min(5000, miuAnimationCycleMs(animation) * (Number(animation.repeat || 1) || 1)));
+  var startX = miuRoamX;
+  var targetX = startX;
+  if (type === "left") { targetX = Math.max(-maxRoam, startX - distance); }
+  if (type === "right") { targetX = Math.min(0, startX + distance); }
+  if (miuRootMotion && typeof miuRootMotion.cancel === "function") { miuRootMotion.cancel(); }
+  miuRootMotion = null;
+
+  if (type === "jump") {
+    if (typeof miuRoot.animate === "function") {
+      miuRootMotion = miuRoot.animate([
+        { transform: "translate3d(" + startX + "px,0,0)" },
+        { transform: "translate3d(" + startX + "px," + (-distance) + "px,0)", offset: 0.48 },
+        { transform: "translate3d(" + startX + "px,0,0)" }
+      ], { duration: Math.min(duration, 1200), easing: "ease-in-out" });
+      miuRootMotion.onfinish = function () { miuRootMotion = null; miuAnimationSetRootX(startX); };
+    }
+    return;
+  }
+
+  if (targetX === startX) { return; }
+  if (typeof miuRoot.animate === "function") {
+    miuRootMotion = miuRoot.animate([
+      { transform: "translate3d(" + startX + "px,0,0)" },
+      { transform: "translate3d(" + targetX + "px,0,0)" }
+    ], { duration: duration, easing: "linear" });
+    miuRootMotion.onfinish = function () { miuRootMotion = null; miuAnimationSetRootX(targetX); };
+  } else {
+    miuAnimationSetRootX(targetX);
+  }
+}
+
+function miuAnimationPlay(animation, restoreBase)
+{
+  if (!animation || !miuLauncherSprite) { return false; }
+  miuAnimationCancelTimer();
+  var serial = miuAnimationSerial;
+  var sequence = Array.isArray(animation.sequence) && animation.sequence.length ? animation.sequence.slice() : [0];
+  var durations = Array.isArray(animation.frameDurationsMs) && animation.frameDurationsMs.length === sequence.length
+    ? animation.frameDurationsMs.slice() : sequence.map(function () { return 180; });
+  var repeat = Math.max(0, Number(animation.repeat || 0));
+  var cursor = 0;
+  var cycles = 0;
+  miuAnimationMotion(animation);
+
+  function draw()
+  {
+    if (serial !== miuAnimationSerial || !miuLauncherSprite) { return; }
+    miuAnimationApplyFrame(miuLauncherSprite, animation, sequence[cursor]);
+    if (miuReducedMotion) {
+      if (restoreBase && animation.id !== (miuAnimationBase() || {}).id) {
+        miuAnimationTimer = window.setTimeout(function () { miuAnimationPlayBase(); }, 650);
+      }
+      return;
+    }
+    var delay = Math.max(40, Number(durations[cursor] || 180));
+    cursor += 1;
+    if (cursor >= sequence.length) {
+      cursor = 0;
+      cycles += 1;
+      if (repeat > 0 && cycles >= repeat) {
+        if (restoreBase) { miuAnimationTimer = window.setTimeout(miuAnimationPlayBase, delay); }
+        return;
+      }
+    }
+    miuAnimationTimer = window.setTimeout(draw, delay);
+  }
+  draw();
+  return true;
+}
+
+function miuAnimationPlayBase()
+{
+  var base = miuAnimationBase();
+  if (base) { miuAnimationPlay(base, false); }
+}
+
+function miuAnimationCandidates(trigger)
+{
+  if (!miuAnimationConfig) { return []; }
+  var now = Date.now();
+  return miuAnimationConfig.animations.filter(function (animation) {
+    if (!animation || !animation.enabled || !Array.isArray(animation.triggers) || animation.triggers.indexOf(trigger) === -1) { return false; }
+    if (Number(miuAnimationCooldowns[animation.id] || 0) > now) { return false; }
+    var probability = Math.max(0, Math.min(1, Number(animation.probability == null ? 1 : animation.probability)));
+    return Math.random() <= probability;
+  });
+}
+
+function miuAnimationTrigger(trigger)
+{
+  var candidates = miuAnimationCandidates(trigger);
+  if (!candidates.length) { return false; }
+  var totalWeight = candidates.reduce(function (sum, animation) { return sum + Math.max(1, Number(animation.weight || 1)); }, 0);
+  var pick = Math.random() * totalWeight;
+  var selected = candidates[candidates.length - 1];
+  candidates.some(function (animation) {
+    pick -= Math.max(1, Number(animation.weight || 1));
+    if (pick <= 0) { selected = animation; return true; }
+    return false;
+  });
+  miuAnimationCooldowns[selected.id] = Date.now() + Math.max(0, Number(selected.cooldownMs || 0));
+  return miuAnimationPlay(selected, Number(selected.repeat || 0) > 0);
+}
+
+function miuAnimationScheduleRandom()
+{
+  window.clearTimeout(miuIdleActionTimer);
+  miuIdleActionTimer = 0;
+  if (!miuRoot || miuBusy || miuRoot.classList.contains("is-open") || miuRoot.classList.contains("is-sleeping") || !miuAnimationConfig) { return; }
+  var display = miuAnimationConfig.display || {};
+  var minimum = Math.max(3000, Number(display.idleRandomMinMs || 14000));
+  var maximum = Math.max(minimum, Number(display.idleRandomMaxMs || 28000));
+  var delay = minimum + Math.random() * (maximum - minimum);
+  miuIdleActionTimer = window.setTimeout(function () {
+    if (miuRoot && !miuBusy && !miuRoot.classList.contains("is-open") && !miuRoot.classList.contains("is-sleeping")) {
+      miuAnimationTrigger("idle_random");
+    }
+    miuAnimationScheduleRandom();
+  }, delay);
+}
+
+function miuFaceMarkup(extraClass)
+{
+  return '<span class="miu-face' + (extraClass ? " " + extraClass : "") + '" aria-hidden="true"></span>';
 }
 
 function miuLoadLocalState()
@@ -106,12 +448,11 @@ function miuMessageNode(role, text, extraClass, avatarIndex)
   if (role === "assistant") {
     var row = document.createElement("div");
     var avatar = document.createElement("span");
-    var poses = [0, 4, 6, 5, 7, 1, 2, 3];
-    var pose = poses[Math.abs(Number(avatarIndex) || 0) % poses.length];
     row.className = "miu-message-row miu-message-row--assistant";
     miuRenderText(node, text);
-    avatar.className = "miu-message-avatar miu-sprite miu-sprite--pose-" + pose;
+    avatar.className = "miu-message-avatar miu-face miu-face--small";
     avatar.setAttribute("aria-hidden", "true");
+    miuAnimationApplyStatic(avatar, avatarIndex);
     row.appendChild(node);
     row.appendChild(avatar);
     return row;
@@ -209,16 +550,21 @@ function miuScheduleSleep()
   miuSleepTimer = window.setTimeout(function () {
     if (miuRoot && !miuBusy && !miuRoot.classList.contains("is-open")) {
       miuRoot.classList.add("is-sleeping");
+      if (!miuAnimationTrigger("inactivity")) { miuAnimationPlayBase(); }
+      window.clearTimeout(miuIdleActionTimer);
+      miuIdleActionTimer = 0;
     }
   }, miuSleepDelayMs);
 }
 
-function miuWakeLauncher()
+function miuWakeLauncher(keepAnimation)
 {
   window.clearTimeout(miuSleepTimer);
   miuSleepTimer = 0;
   if (miuRoot) { miuRoot.classList.remove("is-sleeping"); }
+  if (!keepAnimation) { miuAnimationPlayBase(); }
   miuScheduleSleep();
+  miuAnimationScheduleRandom();
 }
 
 function miuNormalizeForFilter(text)
@@ -329,6 +675,8 @@ function miuSendLocalReply(question, answer, replyId)
   miuMessagesHost.appendChild(pendingMessage);
   miuScrollToEnd();
   miuSetBusy(true);
+  miuAnimationTrigger("quick_reply");
+  window.setTimeout(function () { if (miuBusy) { miuAnimationTrigger("reply_start"); } }, 360);
   miuLogLocalReply(question, String(replyId || ""));
 
   window.setTimeout(function writeChunk() {
@@ -348,6 +696,7 @@ function miuSendLocalReply(question, answer, replyId)
     miuSaveLocalState();
     miuRenderMessages();
     miuSetBusy(false);
+    miuAnimationTrigger("reply_end");
     if (miuInput) { miuInput.focus(); }
   }, 180);
 }
@@ -489,8 +838,10 @@ function miuRefreshContext(force)
   if (!miuConfig || !miuRoot) { return; }
   var context = miuReadWizardContext();
   var signature = context ? [context.scope, context.product, context.step].join(":") : "none";
+  var previousSignature = miuContextSignature;
   if (!force && signature === miuContextSignature) { return; }
   miuContextSignature = signature;
+  if (previousSignature && previousSignature !== signature) { miuAnimationTrigger("step_change"); }
   if (!context) {
     miuPageContext = null;
     if (!miuMessages.length) { miuRenderMessages(); }
@@ -636,6 +987,7 @@ function miuHandleJsonResult(response)
 function miuSendMessage(forcedMessage)
 {
   var message = String(forcedMessage || (miuInput ? miuInput.value : "")).trim();
+  var replyCompleted = false;
   if (miuBusy) { return; }
   if (message.length > miuConfig.maxMessageChars) {
     miuSetStatus("A mensagem é demasiado longa. Resume-a a " + miuConfig.maxMessageChars + " caracteres.");
@@ -662,6 +1014,8 @@ function miuSendMessage(forcedMessage)
   miuMessagesHost.appendChild(pendingMessage);
   miuScrollToEnd();
   miuSetBusy(true);
+  miuAnimationTrigger("message_sent");
+  window.setTimeout(function () { if (miuBusy) { miuAnimationTrigger("reply_start"); } }, 360);
 
   window.fetch(miuApiUrl, {
     method: "POST",
@@ -688,12 +1042,14 @@ function miuSendMessage(forcedMessage)
         miuMessages.push({ role: "assistant", text: data.reply });
         miuSaveLocalState();
         miuRenderMessages();
+        replyCompleted = true;
       });
     }
     return miuConsumeStream(response, pendingMessage).then(function (result) {
       miuMessages.push({ role: "assistant", text: result.reply });
       miuSaveLocalState();
       miuRenderMessages();
+      replyCompleted = true;
       if (!result.ok && result.error) { miuSetStatus("A resposta foi interrompida."); }
     });
   }).catch(function () {
@@ -704,6 +1060,7 @@ function miuSendMessage(forcedMessage)
     miuSetStatus("Não foi possível ligar ao Míu. Confirma a ligação e tenta novamente.");
   }).then(function () {
     miuSetBusy(false);
+    if (replyCompleted) { miuAnimationTrigger("reply_end"); }
     if (miuInput) { miuInput.focus(); }
   });
 }
@@ -715,17 +1072,22 @@ function miuResetConversation()
   miuSaveLocalState();
   miuSetStatus("");
   miuRenderMessages();
+  miuAnimationTrigger("conversation_reset");
   if (miuInput) { miuInput.focus(); }
 }
 
 function miuSetOpen(open)
 {
   if (!miuRoot || !miuPanel) { return; }
+  var wasOpen = miuRoot.classList.contains("is-open");
+  if (!!open === wasOpen) { return; }
+  if (open) { miuAnimationResetRoam(); }
   miuRoot.classList.toggle("is-open", !!open);
   document.body.classList.toggle("is-miu-open", !!open);
   miuPanel.setAttribute("aria-hidden", open ? "false" : "true");
   miuRoot.querySelector(".miu-launcher").setAttribute("aria-expanded", open ? "true" : "false");
   miuWakeLauncher();
+  miuAnimationTrigger(open ? "launcher_open" : "launcher_close");
   if (open) {
     miuRefreshContext(false);
     if (miuInput) { window.setTimeout(function () { miuInput.focus(); }, 80); }
@@ -740,7 +1102,7 @@ function miuBuildInterface()
   miuRoot.innerHTML = [
     '<section class="miu-panel" role="dialog" aria-label="Conversa com o Míu" aria-hidden="true">',
       '<header class="miu-panel__head">',
-        '<span class="miu-panel__mini-cat">', miuSpriteMarkup("miu-sprite--mini"), '</span>',
+        '<span class="miu-panel__mini-cat">', miuFaceMarkup("miu-face--small miu-face--mini"), '</span>',
         '<span class="miu-panel__title"><strong>', String(miuConfig.name || "Míu").replace(/[<>&]/g, ""), '</strong></span>',
         '<button class="miu-panel__icon-button miu-panel__new" type="button" title="Nova conversa" aria-label="Começar nova conversa">↻</button>',
         '<button class="miu-panel__icon-button miu-panel__close" type="button" aria-label="Fechar conversa">×</button>',
@@ -755,7 +1117,7 @@ function miuBuildInterface()
       '</form>',
     '</section>',
     '<button class="miu-launcher" type="button" aria-label="Abrir o Míu, assistente virtual" aria-expanded="false">',
-      miuSpriteMarkup("miu-sprite--launcher"),
+      miuFaceMarkup("miu-face--launcher"),
       launcherPrompt ? '<span class="miu-launcher__callout" aria-hidden="true">' + launcherPrompt + '</span>' : '',
     '</button>'
   ].join("");
@@ -769,8 +1131,20 @@ function miuBuildInterface()
   var launcher = miuRoot.querySelector(".miu-launcher");
   var close = miuRoot.querySelector(".miu-panel__close");
   var reset = miuRoot.querySelector(".miu-panel__new");
+  var display = miuAnimationConfig && miuAnimationConfig.display ? miuAnimationConfig.display : {};
+  miuLauncherSprite = launcher.querySelector(".miu-face");
+  miuRoot.style.setProperty("--miu-launcher-sprite-size", Math.max(32, Number(display.launcherPx || 46)) + "px");
+  miuRoot.style.setProperty("--miu-small-sprite-size", Math.max(18, Number(display.smallPx || 26)) + "px");
+  miuAnimationPlayBase();
+  miuAnimationApplyStatic(miuRoot.querySelector(".miu-panel__mini-cat .miu-face"), 0);
 
   launcher.addEventListener("click", function () { miuSetOpen(!miuRoot.classList.contains("is-open")); });
+  launcher.addEventListener("mouseenter", function () {
+    if (!miuRoot.classList.contains("is-open")) {
+      miuWakeLauncher();
+      miuAnimationTrigger("launcher_hover");
+    }
+  });
   close.addEventListener("click", function () { miuSetOpen(false); launcher.focus(); });
   reset.addEventListener("click", function () {
     if (!miuMessages.length || window.confirm("Começar uma conversa nova?")) { miuResetConversation(); }
@@ -787,6 +1161,8 @@ function miuBuildInterface()
   miuUpdateCount();
   miuWatchContext();
   miuScheduleSleep();
+  miuAnimationScheduleRandom();
+  window.setTimeout(function () { miuAnimationTrigger("page_load"); }, 220);
 }
 
 function miuShouldStart()
@@ -806,6 +1182,7 @@ function miuInit()
     .then(function (config) {
       if (!config || !config.ok || !config.enabled || !config.csrf) { return; }
       miuConfig = config;
+      miuAnimationSetup(config.animations);
       miuBuildInterface();
     }).catch(function () {});
 }

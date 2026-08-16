@@ -3447,7 +3447,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   <link rel="stylesheet" href="css/10-entrega-uniformizacao.css?v=2026080501">
   <link rel="stylesheet" href="css/11-home-marca.css?v=2026080501">
   <link rel="stylesheet" href="css/12-composer-glitter-chart.css?v=2026080501">
-  <link rel="stylesheet" href="css/13-miu.css?v=2026081501">
+  <link rel="stylesheet" href="css/13-miu.css?v=2026081602">
 </head>
 <body class="result-body">
   <main class="result-card <?php echo h($kind); ?>">
@@ -3640,7 +3640,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
       } catch (error) {}
     </script>
   <?php endif; ?>
-  <script src="js/24-miu.js?v=2026081501"></script>
+  <script src="js/24-miu.js?v=2026081602"></script>
 </body>
 </html>
     <?php

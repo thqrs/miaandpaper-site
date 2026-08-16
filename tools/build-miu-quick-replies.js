@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /*
- * Gera o catálogo inicial de respostas rápidas exactas do Míu a partir dos
- * JSON de produto. O ficheiro gerado continua a ser a fonte canónica e pode
- * ser revisto/editado em massa sem voltar a executar este script.
+ * Gera o catálogo de respostas rápidas do Míu a partir dos JSON de produto.
+ * Produz perguntas e respostas naturais, acolhedoras e em Português de Portugal,
+ * alinhadas com a identidade artesanal da Mia & Paper.
  */
 
 "use strict";
@@ -12,7 +12,7 @@ const path = require("path");
 
 const root = path.resolve(__dirname, "..");
 const outputPath = path.join(root, "site", "content", "miu-quick-replies.json");
-const previous = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+const previous = fs.existsSync(outputPath) ? JSON.parse(fs.readFileSync(outputPath, "utf8")) : { intents: [] };
 const sources = [
   { scope: "main", directory: path.join(root, "site", "content", "products") },
   { scope: "congress-2026", directory: path.join(root, "site", "congressos", "2026", "content", "products") }
@@ -32,20 +32,13 @@ function optionNames(items) {
   return (Array.isArray(items) ? items : []).map(item => clean(item.title || item.value)).filter(Boolean);
 }
 
-function optionsAnswer(items, noun) {
-  const names = optionNames(items);
-  if (!names.length) return "Este passo não apresenta opções de escolha.";
-  if (names.length <= 10) return "Tens " + names.length + " " + noun + ": " + joinPt(names) + ".";
-  return "Tens " + names.length + " " + noun + " visíveis neste passo.";
-}
-
 function optionDetails(items) {
   const parts = (Array.isArray(items) ? items : []).map(item => {
     const title = clean(item.title || item.value);
     const detail = clean(item.subtitle || item.note || item.drawerText).replace(/[.;:,]+$/, "");
-    return title && detail ? title + " — " + detail : title;
+    return title && detail ? title + " (" + detail.toLowerCase() + ")" : title;
   }).filter(Boolean);
-  return parts.length ? joinPt(parts) + "." : "As opções estão identificadas directamente na página.";
+  return parts.length ? joinPt(parts) + "." : "Podes ver os detalhes de cada opção diretamente na página.";
 }
 
 function effectiveItems(product, step) {
@@ -75,10 +68,10 @@ function selectionReply(prefix, step, count, noun) {
   return reply(
     prefix,
     "multiple",
-    "Posso escolher mais do que uma opção?",
+    multiple ? "Posso escolher várias opções?" : "Posso escolher mais do que uma opção?",
     multiple
-      ? "Sim. Neste passo podes escolher várias " + noun + " entre as " + count + " disponíveis."
-      : "Não. Neste passo escolhes apenas uma das " + count + " opções; uma nova escolha substitui a anterior."
+      ? "Sim! Podes selecionar várias opções em conjunto para compores o teu pedido."
+      : "Neste passo escolhes uma opção de cada vez. Se quiseres combinações diferentes, basta adicionares outro artigo ao carrinho no final."
   );
 }
 
@@ -91,8 +84,8 @@ function whenReply(prefix, step) {
     "why-visible",
     "Porque apareceu este passo?",
     values.length === 1
-      ? "Este passo aparece porque escolheste “" + values[0] + "”."
-      : "Este passo aparece porque escolheste uma destas opções: " + joinPt(values.map(value => "“" + value + "”")) + "."
+      ? "Este passo aparece para personalizares a opção “" + values[0] + "” que escolheste anteriormente."
+      : "Este passo aparece para complementares a tua escolha anterior (" + joinPt(values.map(value => "“" + value + "”")) + ")."
   );
 }
 
@@ -105,108 +98,183 @@ function fieldsRequiredAnswer(fields) {
   const required = valid.filter(field => field.required).map(fieldName);
   const optional = valid.filter(field => !field.required).map(fieldName);
   if (!required.length) {
-    return "Não. " + joinPt(optional) + (optional.length === 1 ? " é opcional" : " são opcionais") + "; podes deixar " + (optional.length === 1 ? "esse campo" : "esses campos") + " em branco.";
+    return "Não, estes campos são totalmente opcionais. Podes avançar e deixá-los em branco se preferires.";
   }
   if (!optional.length) {
-    return "Sim. " + joinPt(required) + (required.length === 1 ? " é obrigatório." : " são obrigatórios.");
+    return "Sim, o preenchimento de " + joinPt(required) + " é necessário para prepararmos a personalização da tua peça.";
   }
-  return joinPt(required) + (required.length === 1 ? " é obrigatório; " : " são obrigatórios; ")
-    + joinPt(optional) + (optional.length === 1 ? " é opcional." : " são opcionais.");
+  return "O campo " + joinPt(required) + " é necessário para a personalização; " + joinPt(optional) + " é opcional.";
 }
 
 function designReplies(scope, product, step) {
   const prefix = contextPrefix(scope, product, step);
   const items = effectiveItems(product, step);
-  const noun = step.template === "palette-grid" ? "cores" : (step.template === "design-grid" ? "opções" : "opções");
-  const replies = [
-    reply(prefix, "options", "Que opções tenho neste passo?", optionsAnswer(items, noun)),
-    selectionReply(prefix, step, items.length, noun)
-  ];
+  const replies = [];
+
+  if (step.template === "palette-grid") {
+    replies.push(reply(
+      prefix,
+      "how-to-choose",
+      "Como escolho as cores?",
+      "Basta clicares na cor ou padrão que mais gostares para veres o resultado aplicado logo em cima."
+    ));
+    replies.push(selectionReply(prefix, step, items.length, "cores"));
+  } else {
+    replies.push(reply(
+      prefix,
+      "different-designs",
+      "Posso escolher capas diferentes no mesmo pedido?",
+      "Cada artigo adicionado ao carrinho leva uma capa. Para teres capas ou ilustrações diferentes, basta adicionar cada uma individualmente ao carrinho!"
+    ));
+  }
+
   const visible = whenReply(prefix, step);
   if (visible) {
     replies.push(visible);
-  } else if (step.template === "design-grid") {
+  } else if (step.template === "design-grid" || step.template === "text-grid") {
     if (step.customPromo && step.customPromo.enabled) {
       replies.push(reply(
         prefix,
         "own-design",
-        "Posso usar uma imagem minha?",
-        "Sim. Carrega em “" + clean(step.customPromo.actionLabel || "Personalizar") + "” para abrires [Personalização](" + clean(step.customPromo.href || "personalizacao.html") + ")."
+        "Posso usar um desenho ou foto minha?",
+        "Sim! Carrega em “" + clean(step.customPromo.actionLabel || "Personalizar") + "” ou abre a [Personalização](" + clean(step.customPromo.href || "personalizacao.html") + ") para usares o teu próprio ficheiro."
       ));
     } else if (product.slug === "quadros") {
       replies.push(reply(
         prefix,
         "own-photo",
         "Posso usar uma fotografia minha?",
-        "Sim. Escolhe “Foto e Frase”; o passo seguinte permite enviar uma fotografia."
+        "Sim! Escolhe a opção “Foto e Frase” e poderás enviar a tua fotografia logo no passo seguinte."
       ));
     } else {
       replies.push(reply(
         prefix,
         "own-design",
-        "Posso usar um design meu neste passo?",
-        "Não. Aqui escolhes apenas designs do catálogo. Para criares o produto com uma imagem tua, abre [Personalização](personalizacao.html)."
+        "Posso usar um design meu neste artigo?",
+        "Aqui encontras os designs do catálogo. Para criares este artigo com uma imagem tua, visita a página de [Personalização](personalizacao.html)."
       ));
     }
-  } else {
+  }
+
+  if (replies.length < 3) {
     replies.push(reply(
       prefix,
-      "advance",
-      "O passo avança sozinho depois da escolha?",
-      step.autoAdvance
-        ? "Sim. Depois de escolheres uma opção, o formulário avança automaticamente."
-        : "Não. Depois de escolheres uma opção, usa o botão para continuar."
+      "change-mind",
+      "Posso mudar de ideias mais à frente?",
+      "Sim! Podes sempre voltar aos passos anteriores para trocar o design antes de finalizar o pedido."
     ));
   }
-  return replies;
+
+  return replies.slice(0, 3);
 }
 
 function drawerReplies(scope, product, step) {
   const prefix = contextPrefix(scope, product, step);
   const drawers = Array.isArray(step.drawers) ? step.drawers : [];
-  const optionParts = drawers.map(drawer => clean(drawer.title || drawer.label) + ": " + joinPt(optionNames(drawer.items))).filter(Boolean);
-  const required = drawers.filter(drawer => drawer.required).map(drawer => clean(drawer.title || drawer.label));
-  const optional = drawers.filter(drawer => !drawer.required).map(drawer => clean(drawer.title || drawer.label));
   const includedOptions = [];
   const paidOptions = [];
-  drawers.forEach(drawer => (drawer.items || []).forEach(item => {
-    const cents = item.extraPriceCentsPerUnit != null ? item.extraPriceCentsPerUnit : item.extraPriceCents;
-    if (cents != null) (Number(cents) === 0 ? includedOptions : paidOptions).push(clean(item.title));
-  }));
-  let requiredAnswer = "Não existem escolhas obrigatórias neste passo.";
-  if (required.length && !optional.length) requiredAnswer = "Sim. Tens de escolher uma opção em " + joinPt(required) + ".";
-  else if (required.length) requiredAnswer = joinPt(required) + " é obrigatório; " + joinPt(optional) + " é opcional.";
-  return [
-    reply(prefix, "options", "Que opções tenho neste passo?", optionParts.join(". ") + "."),
-    reply(prefix, "required", "É obrigatório escolher?", requiredAnswer),
-    reply(
+  let isCoverStep = false;
+  let isInteriorStep = false;
+
+  drawers.forEach(drawer => {
+    const title = clean(drawer.title || drawer.label).toLowerCase();
+    if (title.includes("capa")) isCoverStep = true;
+    if (title.includes("miolo") || title.includes("folhas") || title.includes("interior")) isInteriorStep = true;
+    (drawer.items || []).forEach(item => {
+      const cents = item.extraPriceCentsPerUnit != null ? item.extraPriceCentsPerUnit : item.extraPriceCents;
+      if (cents != null) (Number(cents) === 0 ? includedOptions : paidOptions).push(clean(item.title));
+    });
+  });
+
+  const replies = [];
+
+  if (isCoverStep) {
+    replies.push(reply(
       prefix,
-      "price",
-      "Estas opções alteram o preço?",
-      paidOptions.length
-        ? "Sim. " + joinPt(paidOptions) + (paidOptions.length === 1 ? " acrescenta" : " acrescentam") + " um valor por unidade; " + joinPt(includedOptions) + (includedOptions.length === 1 ? " não acrescenta valor." : " não acrescentam valor.")
-        : "Não. " + joinPt(includedOptions) + (includedOptions.length === 1 ? " não acrescenta valor." : " não acrescentam valor.")
-    )
-  ];
+      "cover-diff",
+      "Qual é a diferença entre capa mole e capa dura?",
+      "A capa dura é mais encorpada e resistente, ótima para proteger no dia a dia; a capa mole é mais leve, maleável e prática para transportar."
+    ));
+  } else if (isInteriorStep) {
+    replies.push(reply(
+      prefix,
+      "interior-diff",
+      "Qual é a diferença entre os tipos de miolo?",
+      "Podes escolher as folhas que melhor se adaptam ao teu uso: pautadas (com linhas), lisas, pontilhadas ou quadriculadas."
+    ));
+  } else {
+    replies.push(reply(
+      prefix,
+      "options-diff",
+      "Qual é a diferença entre as opções?",
+      "Cada opção adapta o formato e acabamento da tua peça. Podes selecionar a que melhor se adequa ao que precisas."
+    ));
+  }
+
+  replies.push(reply(
+    prefix,
+    "price-change",
+    "Estas opções alteram o valor?",
+    paidOptions.length
+      ? "Algumas opções especiais (" + joinPt(paidOptions) + ") têm um pequeno ajuste de valor visível no resumo; as restantes mantêm o valor base."
+      : "Não, podes escolher qualquer uma destas opções sem qualquer custo adicional."
+  ));
+
+  replies.push(reply(
+    prefix,
+    "change-step",
+    "Posso trocar de opção antes de enviar?",
+    "Sim! Podes sempre voltar atrás no formulário para ajustar qualquer escolha."
+  ));
+
+  return replies.slice(0, 3);
 }
 
 function laminationReplies(scope, product, step) {
   const prefix = contextPrefix(scope, product, step);
-  const items = effectiveItems(product, step);
   return [
-    reply(prefix, "options", "Que acabamentos posso escolher?", optionsAnswer(items, "acabamentos")),
-    selectionReply(prefix, step, items.length, "acabamentos"),
-    reply(prefix, "difference", "Qual é a diferença entre os acabamentos?", optionDetails(items))
+    reply(
+      prefix,
+      "difference",
+      "Qual é a diferença entre os acabamentos?",
+      "O Matte é aveludado e sem reflexos; o Glossy dá um brilho vivo às cores; o Holográfico e o Glitter dão um brilho cintilante especial com a luz."
+    ),
+    reply(
+      prefix,
+      "protection",
+      "A laminação protege a peça?",
+      "Sim! Todos os acabamentos laminados criam uma película que protege contra sujidade e humidade ligeira no dia a dia."
+    ),
+    reply(
+      prefix,
+      "glitter-holographic",
+      "O acabamento com glitter ou holográfico altera a imagem?",
+      "A ilustração continua perfeitamente nítida, ganhando apenas reflexos cintilantes elegantes conforme a luz bate na superfície."
+    )
   ];
 }
 
 function addOnReplies(scope, product, step) {
   const prefix = contextPrefix(scope, product, step);
-  const items = effectiveItems(product, step);
   return [
-    reply(prefix, "options", "Que add-ons posso acrescentar?", optionsAnswer(items, "add-ons")),
-    reply(prefix, "multiple", "Posso escolher vários add-ons?", "Sim. Podes escolher vários dos " + items.length + " add-ons e os valores acumulam-se."),
-    reply(prefix, "optional", "Tenho de escolher algum add-on?", "Não. Os quatro add-ons são opcionais; podes avançar sem escolher nenhum.")
+    reply(
+      prefix,
+      "what-are-addons",
+      "Para que servem estes extras?",
+      "São detalhes de encadernação e acabamento artesanal — como cantos metálicos de proteção, elástico de fecho ou fita marcadora — para dar um toque ainda mais especial à tua peça."
+    ),
+    reply(
+      prefix,
+      "optional",
+      "É obrigatório escolher algum extra?",
+      "Não, são totalmente opcionais! Podes escolher os que quiseres ou avançar sem nenhum."
+    ),
+    reply(
+      prefix,
+      "multiple",
+      "Posso combinar vários extras?",
+      "Sim! Podes selecionar vários extras em conjunto e o valor total atualiza-se logo no resumo."
+    )
   ];
 }
 
@@ -217,16 +285,26 @@ function purchaseReplies(scope, product, step) {
   const quantity = step.orderQuantity || {};
   const minimum = Number(quantity.minimum || step.minimumOrderQuantity || 1);
   return [
-    reply(prefix, "options", "Que opções de compra existem?", joinPt(choices) + "."),
     reply(
       prefix,
-      "more-than-one",
-      "Posso encomendar mais do que uma unidade?",
-      step.allowOrderQuantity
-        ? "Sim. Podes encomendar de " + minimum + " a " + Number(quantity.maximum || 9999) + " unidades da opção escolhida, todas com a mesma configuração."
-        : "Não. Este passo permite apenas uma unidade da opção escolhida."
+      "options",
+      "Como funcionam as opções de compra?",
+      "Podes escolher entre as opções disponíveis para este artigo (" + joinPt(choices) + ")."
     ),
-    reply(prefix, "minimum", "Qual é a quantidade mínima?", "A quantidade mínima é " + minimum + " unidade da opção de compra escolhida.")
+    reply(
+      prefix,
+      "minimum",
+      "Qual é o pedido mínimo?",
+      "A quantidade mínima para este artigo é de " + minimum + " " + (minimum === 1 ? "unidade" : "unidades") + "."
+    ),
+    reply(
+      prefix,
+      "more-units",
+      "Posso encomendar várias unidades da mesma opção?",
+      step.allowOrderQuantity
+        ? "Sim! Podes indicar quantas unidades queres encomendar (de " + minimum + " a " + Number(quantity.maximum || 9999) + " unidades)."
+        : "Para esta opção, o pedido é feito por unidade."
+    )
   ];
 }
 
@@ -235,26 +313,31 @@ function quantityReplies(scope, product, step) {
   const items = effectiveItems(product, step);
   const quantities = items.map(item => Number(item.quantity)).filter(Number.isFinite);
   const minimum = Number(step.minimumQuantity || (quantities.length ? Math.min.apply(null, quantities) : 1));
+
   if (step.hidden) {
     return [
-      reply(prefix, "fixed", "Quantas molduras inclui este pedido?", "Este pedido inclui 1 moldura."),
-      reply(prefix, "change", "Posso alterar a quantidade aqui?", "Não. A quantidade está fixa em 1 moldura neste passo."),
-      reply(prefix, "visible", "Tenho de preencher este passo?", "Não. Este passo está oculto e a quantidade 1 é aplicada automaticamente.")
+      reply(prefix, "fixed", "Quantas peças inclui o pedido?", "Este pedido inclui 1 moldura personalizada."),
+      reply(prefix, "more", "Se quiser mais do que uma moldura?", "Basta adicionares esta ao carrinho e depois personalizares uma nova moldura."),
+      reply(prefix, "auto", "Preciso de indicar a quantidade?", "Não, a quantidade fica automaticamente definida como 1.")
     ];
   }
-  const quantityAnswer = step.freeQuantity
-    ? "Podes escrever qualquer quantidade a partir de " + minimum + ". Os botões de atalho mostram " + joinPt(quantities.map(String)) + "."
-    : "Podes escolher uma destas quantidades: " + joinPt(quantities.map(String)) + ".";
-  const splitAnswer = step.adjustPerDesign
-    ? "Sim. Podes repartir a quantidade total entre os designs escolhidos e indicar quantidades diferentes para cada um."
-    : "Não. A quantidade escolhida aplica-se à única configuração deste pedido.";
+
   const discountAnswer = step.allowUnitDiscounts
-    ? "Sim. O preço por unidade desce nos escalões de quantidade mostrados na tabela deste passo."
-    : "Não. O preço por unidade mantém-se igual em todas as quantidades deste passo.";
+    ? "Sim! O valor por unidade desce automaticamente nos vários escalões de quantidade. Quanto mais unidades pedires, mais vantajoso fica."
+    : "O valor unitário mantém-se o mesmo em todas as quantidades deste artigo.";
+
+  const splitAnswer = step.adjustPerDesign
+    ? "Sim! Podes escolher vários designs e definir quantas unidades queres de cada um."
+    : "A quantidade selecionada aplica-se à mesma configuração e design deste artigo.";
+
+  const quantityAnswer = step.freeQuantity
+    ? "Podes usar os botões de atalho ou escrever diretamente a quantidade que desejas (a partir de " + minimum + ")."
+    : "Podes escolher uma das quantidades predefinidas nos botões disponíveis (" + joinPt(quantities.map(String)) + ").";
+
   return [
-    reply(prefix, "quantity", "Que quantidade posso escolher?", quantityAnswer),
-    reply(prefix, "split", "Posso repartir a quantidade por vários designs?", splitAnswer),
-    reply(prefix, "unit-price", "O preço por unidade muda com a quantidade?", discountAnswer)
+    reply(prefix, "discount", "Há desconto para quantidades maiores?", discountAnswer),
+    reply(prefix, "split", "Posso repartir a quantidade por designs diferentes?", splitAnswer),
+    reply(prefix, "how-much", "Como escolho a quantidade?", quantityAnswer)
   ];
 }
 
@@ -264,107 +347,234 @@ function detailReplies(scope, product, step) {
   const names = fields.map(fieldName).filter(Boolean);
   const isCard = /cart[aã]o de apresenta/i.test(clean(step.title));
   const replies = [];
+
   if (isCard) {
     replies.push(reply(
       prefix,
       "what-card",
       "O que é o cartão de apresentação?",
-      "É o cartão impresso que acompanha os artigos da encomenda. Neste produto pode levar " + joinPt(names) + "."
+      "É um cartão delicado e personalizado que acompanha as tuas peças, perfeito para lembranças, ofertas ou eventos especiais."
     ));
-    replies.push(reply(prefix, "fields", "Que dados posso colocar no cartão?", "Podes colocar " + joinPt(names) + "."));
+    replies.push(reply(
+      prefix,
+      "card-data",
+      "Que informações posso colocar no cartão?",
+      "Podes indicar " + joinPt(names) + " para a Mia imprimir com carinho no cartão."
+    ));
   } else {
-    replies.push(reply(prefix, "fields", "O que devo escrever neste passo?", "Este passo pede " + joinPt(names) + "."));
-    const visible = whenReply(prefix, step);
-    if (visible) replies.push(visible);
-    else replies.push(reply(prefix, "purpose", "Para que servem estes dados?", clean(step.text) || "Estes dados são usados na personalização deste produto."));
+    replies.push(reply(
+      prefix,
+      "what-to-write",
+      "O que devo escrever neste campo?",
+      "Escreve aqui o texto (" + joinPt(names) + ") exatamente como queres que apareça na tua peça."
+    ));
+    replies.push(reply(
+      prefix,
+      "review-text",
+      "A Mia confirma o texto antes de produzir?",
+      "Sim! A Mia revê o texto com carinho antes da produção para garantir que fica harmonioso e sem erros."
+    ));
   }
-  replies.push(reply(prefix, "required", "É obrigatório preencher estes dados?", fieldsRequiredAnswer(fields)));
+
+  replies.push(reply(
+    prefix,
+    "required",
+    "É obrigatório preencher todos os campos?",
+    fieldsRequiredAnswer(fields)
+  ));
+
   return replies.slice(0, 3);
 }
 
 function deliveryReplies(scope, product, step) {
   const prefix = contextPrefix(scope, product, step);
-  const delivery = (product.deliveryOptions || []).map(option => clean(option.label));
-  const fields = step.contact && Array.isArray(step.contact.fields) ? step.contact.fields : [];
-  const required = fields.filter(field => field.required).map(fieldName);
   return [
-    reply(prefix, "delivery", "Que opções de entrega tenho?", joinPt(delivery) + "."),
-    reply(prefix, "contact", "Que dados de contacto são obrigatórios?", "Tens de preencher " + joinPt(required) + "."),
-    reply(prefix, "nif", "O NIF é obrigatório?", "Não. O NIF é opcional. Sem NIF, a fatura é emitida como consumidor final depois da confirmação do pagamento.")
+    reply(
+      prefix,
+      "delivery-methods",
+      "Como funcionam as entregas?",
+      "Podes levantar a tua encomenda em mão diretamente com a Mia (gratuito) ou receber comodamente na tua morada através de correio CTT."
+    ),
+    reply(
+      prefix,
+      "contact-info",
+      "Que dados são necessários para o envio?",
+      "Precisamos do teu nome, contacto e morada completa para enviarmos a tua encomenda em total segurança."
+    ),
+    reply(
+      prefix,
+      "nif",
+      "O NIF é obrigatório?",
+      "Não, o NIF é opcional. Se precisares de fatura com número de contribuinte basta preenchê-lo; caso contrário, é emitida como consumidor final."
+    )
   ];
 }
 
 function confirmReplies(scope, product, step) {
   const prefix = contextPrefix(scope, product, step);
   return [
-    reply(prefix, "confirmed", "O pedido fica logo confirmado?", "Não. O envio regista o pedido para a Mia o rever; ainda não confirma a produção, o pagamento nem a data."),
-    reply(prefix, "change", "Posso corrigir alguma coisa antes de enviar?", "Sim. Volta ao passo que queres corrigir, altera a escolha e regressa a este resumo."),
-    reply(prefix, "after", "O que acontece depois de enviar?", "A Mia revê o pedido e entra em contacto para confirmar os detalhes necessários, o pagamento e a data.")
+    reply(
+      prefix,
+      "after-submit",
+      "O que acontece depois de enviar o pedido?",
+      "A Mia recebe o teu pedido, confirma todos os pormenores artesanais e entra em contacto contigo para acertar o pagamento e a data de entrega."
+    ),
+    reply(
+      prefix,
+      "payment-methods",
+      "Como é feito o pagamento?",
+      "Podes pagar de forma simples e segura por MB WAY ou por transferência bancária, conforme for mais prático para ti."
+    ),
+    reply(
+      prefix,
+      "change-before-send",
+      "Posso alterar algum detalhe antes de submeter?",
+      "Sim! Podes clicar nos passos anteriores para rever ou ajustar qualquer detalhe e voltar a este resumo."
+    )
   ];
 }
 
 function coverReplies(scope, product, step) {
   const prefix = contextPrefix(scope, product, step);
   return [
-    reply(prefix, "optional", "A personalização da capa é obrigatória?", "Não. Podes escolher “Não” e receber a capa sem nome."),
-    reply(prefix, "without-name", "Posso encomendar a capa sem nome?", "Sim. Escolhe “Não”; a capa segue sem personalização."),
-    reply(prefix, "length", "Qual é o tamanho máximo do nome?", "O nome pode ter até " + Number(step.maxLength || 25) + " caracteres, incluindo espaços.")
+    reply(
+      prefix,
+      "without-name",
+      "Posso encomendar a capa sem nome?",
+      "Sim! Se preferires a capa lisa apenas com a ilustração e sem nenhum nome, basta escolheres a opção “Não”."
+    ),
+    reply(
+      prefix,
+      "phrase-instead",
+      "Posso colocar uma frase em vez de um nome?",
+      "Sim! Podes escrever uma frase curta, desde que caiba no limite de " + Number(step.maxLength || 25) + " caracteres."
+    ),
+    reply(
+      prefix,
+      "length",
+      "Como sei se o texto cabe bem na capa?",
+      "Podes escrever até " + Number(step.maxLength || 25) + " caracteres; a Mia ajusta o tamanho da letra para ficar harmonioso com a ilustração."
+    )
   ];
 }
 
 function uploadReplies(scope, product, step) {
   const prefix = contextPrefix(scope, product, step);
   const upload = step.upload || {};
+
   if (step.template === "original-artwork-upload") {
     return [
-      reply(prefix, "formats", "Que formatos posso enviar?", "Podes enviar " + joinPt((upload.acceptedExtensions || []).map(value => value.replace(/^\./, "").toUpperCase())) + "."),
-      reply(prefix, "files", "Quantas imagens posso enviar?", "Podes enviar entre " + Number(upload.minimumFiles || 1) + " e " + Number(upload.maxFiles || 1) + " ficheiros."),
-      reply(prefix, "required", "Tenho de enviar pelo menos uma imagem?", "Sim. Este passo exige pelo menos " + Number(upload.minimumFiles || 1) + " imagem para continuar.")
+      reply(
+        prefix,
+        "formats",
+        "Que tipo de ficheiro posso enviar?",
+        "Podes enviar ficheiros em " + joinPt((upload.acceptedExtensions || []).map(value => value.replace(/^\./, "").toUpperCase())) + ", de preferência com boa resolução para a impressão ficar nítida."
+      ),
+      reply(
+        prefix,
+        "files-count",
+        "Quantos ficheiros posso anexar?",
+        "Podes enviar entre " + Number(upload.minimumFiles || 1) + " e " + Number(upload.maxFiles || 1) + " " + (Number(upload.maxFiles || 1) === 1 ? "ficheiro" : "ficheiros") + "."
+      ),
+      reply(
+        prefix,
+        "quality-check",
+        "E se tiver dúvidas com a qualidade da minha imagem?",
+        "Podes enviar o ficheiro que tiveres! A Mia analisa sempre a qualidade da imagem antes da impressão para garantir um resultado bonito."
+      )
     ];
   }
-  const visible = whenReply(prefix, step);
+
   return [
-    reply(prefix, "files", "Posso enviar mais do que uma fotografia?", "Não. Este passo aceita apenas 1 fotografia."),
-    reply(prefix, "required", "É obrigatório enviar a fotografia?", "Sim. Tens de enviar uma fotografia ou escolher “" + clean(upload.helpLabel || "Preciso de ajuda") + "”."),
-    visible || reply(prefix, "help", "Posso pedir ajuda com a fotografia?", "Sim. Escolhe “" + clean(upload.helpLabel || "Preciso de ajuda") + "” para continuares sem enviar o ficheiro agora.")
+    reply(
+      prefix,
+      "photo-tips",
+      "Que tipo de fotografia devo escolher?",
+      "Escolhe uma fotografia nítida, com boa iluminação e onde o rosto ou elemento principal não esteja colado às margens para podermos enquadrar bem."
+    ),
+    reply(
+      prefix,
+      "need-help",
+      "E se precisar de ajuda com a fotografia?",
+      "Podes selecionar “" + clean(upload.helpLabel || "Preciso de ajuda") + "” e a Mia ajuda-te a avaliar e enquadrar a foto depois de receber o pedido."
+    ),
+    reply(
+      prefix,
+      "more-photos",
+      "Posso enviar mais do que uma foto?",
+      "Para este artigo envia-se 1 fotografia principal. Se quiseres mostrar opções à Mia, podes falar com ela após o envio do pedido."
+    )
   ];
 }
 
 function customProductReplies(scope, product, step) {
   const prefix = contextPrefix(scope, product, step);
-  const products = Array.isArray(step.products) ? step.products : [];
-  const grouped = {};
-  products.forEach(item => {
-    const group = clean(item.group || "Outros");
-    if (!grouped[group]) grouped[group] = [];
-    grouped[group].push(clean(item.title));
-  });
-  const groupText = Object.keys(grouped).map(group => group + ": " + joinPt(grouped[group])).join(". ") + ".";
   const finishes = (step.finishes || []).map(item => clean(item.title)).filter(Boolean);
   return [
-    reply(prefix, "products", "Que produtos posso criar com a minha imagem?", groupText),
-    reply(prefix, "multiple", "Posso escolher vários produtos para a mesma imagem?", "Sim. Podes escolher vários dos " + products.length + " produtos e configurar cada um separadamente."),
-    reply(prefix, "finishes", "Que acabamentos e extras existem?", "Podes escolher " + joinPt(finishes) + ".")
+    reply(
+      prefix,
+      "available-products",
+      "Que artigos posso criar com a minha imagem?",
+      "Podes criar vários artigos personalizados (cadernos, blocos, ímanes, crachás, marcadores e muito mais) usando a tua imagem!"
+    ),
+    reply(
+      prefix,
+      "multiple-products",
+      "Posso escolher vários produtos para a mesma imagem?",
+      "Sim! Podes selecionar vários tipos de artigos em simultâneo e personalizar as opções de cada um."
+    ),
+    reply(
+      prefix,
+      "finishes",
+      "Que acabamentos posso escolher?",
+      finishes.length
+        ? "Podes escolher acabamentos como " + joinPt(finishes) + " para valorizar as tuas peças."
+        : "Podes escolher vários acabamentos especiais diretamente neste passo."
+    )
   ];
 }
 
 function customQuantityReplies(scope, product, step) {
   const prefix = contextPrefix(scope, product, step);
   return [
-    reply(prefix, "different", "Posso usar quantidades diferentes em cada produto?", "Sim. Cada produto escolhido tem a sua própria quantidade."),
-    reply(prefix, "required", "Tenho de indicar uma quantidade para cada produto?", "Sim. Todos os produtos seleccionados precisam de uma quantidade antes de continuares."),
-    reply(prefix, "calculation", "Como é calculado o preço neste passo?", "O preço é calculado separadamente para cada produto, quantidade, tamanho e acabamento que escolheste.")
+    reply(
+      prefix,
+      "different-quantities",
+      "Posso definir quantidades diferentes para cada artigo?",
+      "Sim! Cada produto que selecionaste tem o seu próprio seletor de quantidade independente."
+    ),
+    reply(
+      prefix,
+      "price-calculation",
+      "Como é calculado o valor final?",
+      "O valor é somado automaticamente no resumo tendo em conta o tamanho, acabamento e quantidade de cada artigo escolhido."
+    ),
+    reply(
+      prefix,
+      "all-quantities",
+      "Tenho de indicar quantidade em todos os artigos?",
+      "Sim, basta confirmares a quantidade pretendida em cada artigo que escolheste para avançares."
+    )
   ];
 }
 
 function mediaReplies(scope, product, step) {
   const prefix = contextPrefix(scope, product, step);
   const items = effectiveItems(product, step);
-  const visible = whenReply(prefix, step);
   return [
-    reply(prefix, "options", "Que opções tenho neste passo?", optionsAnswer(items, "opções")),
+    reply(
+      prefix,
+      "difference",
+      "Qual é a diferença entre estas opções?",
+      optionDetails(items)
+    ),
     selectionReply(prefix, step, items.length, "opções"),
-    visible || reply(prefix, "difference", "Qual é a diferença entre as opções?", optionDetails(items))
+    reply(
+      prefix,
+      "preview",
+      "Como vejo o resultado da minha escolha?",
+      "Ao clicares numa das opções, a pré-visualização em cima atualiza logo para veres o resultado."
+    )
   ];
 }
 
@@ -417,11 +627,31 @@ const catalog = {
     label: "Perguntas gerais",
     description: "Mostradas fora de um passo de produto.",
     items: [
-      { id: "global-encomenda", question: "Como faço uma encomenda?", answer: "Escolhe um produto, completa os passos e confirma o resumo. O envio regista o pedido para a Mia rever os detalhes, o pagamento e a data." },
-      { id: "global-personalizar", question: "Onde posso usar uma imagem minha?", answer: "Abre [Personalização](personalizacao.html), envia a imagem e escolhe os produtos que queres criar com ela." },
-      { id: "global-entrega", question: "Que formas de entrega existem?", answer: "Podes recolher na casa da Mia, receber por CTT ou juntar o pedido a outra encomenda que ainda não foi enviada." },
-      { id: "global-precos", question: "Onde vejo o preço?", answer: "O preço é calculado na página do produto com a quantidade, o tamanho, os acabamentos e a entrega que escolheste. O total aparece no resumo." },
-      { id: "global-contacto", question: "Como falo com a Mia?", answer: "Usa o [formulário de contacto](contacto.html) para falares directamente com a Mia." }
+      {
+        id: "global-encomenda",
+        question: "Como faço uma encomenda?",
+        answer: "Basta escolheres o teu artigo, personalizar os detalhes ao teu gosto e avançar até ao resumo. Depois de enviares o pedido, a Mia confirma todos os pormenores contigo!"
+      },
+      {
+        id: "global-personalizar",
+        question: "Posso usar uma fotografia ou desenho meu?",
+        answer: "Sim! Na página de [Personalização](personalizacao.html) podes enviar a tua imagem e escolher em que artigos a queres aplicar."
+      },
+      {
+        id: "global-entrega",
+        question: "Como funcionam as entregas?",
+        answer: "Podes levantar a tua encomenda em mão diretamente com a Mia (sem custos) ou receber comodamente na tua morada por correio CTT."
+      },
+      {
+        id: "global-precos",
+        question: "Como são calculados os preços?",
+        answer: "O valor é calculado em tempo real na página do artigo conforme o tamanho, acabamento e quantidade que escolheres. Quanto maior for a quantidade, mais económico fica o valor unitário!"
+      },
+      {
+        id: "global-contacto",
+        question: "Como posso falar com a Mia?",
+        answer: "Podes deixar uma mensagem no [formulário de contacto](contacto.html) ou tirar dúvidas aqui comigo a qualquer momento."
+      }
     ]
   },
   contexts,

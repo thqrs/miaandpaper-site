@@ -124,6 +124,37 @@ body.miu-admin-body { min-width: 0; background: var(--surface-page); color: var(
 .miu-context-replies strong { color: var(--moss); font-size: .78rem; }
 .miu-context-replies p { margin: 4px 0 0; color: var(--muted); font-size: .75rem; line-height: 1.45; }
 
+
+.miu-admin-flash--error { border-color: var(--rose); color: var(--rose); }
+.miu-field input[type="file"] { width: 100%; min-width: 0; padding: 9px; border: 1px dashed var(--line); border-radius: var(--radius); background: var(--surface-raised); color: var(--ink); font: inherit; }
+.miu-toggle { display: flex; align-items: center; gap: 8px; min-height: 42px; padding: 9px 11px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-cream); color: var(--moss); font-size: .82rem; font-weight: 800; }
+.miu-toggle input { accent-color: var(--moss); }
+.miu-animation-global { display: grid; gap: 16px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+.miu-animation-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 22px 0 12px; }
+.miu-animation-heading h3 { margin: 0; color: var(--moss); font: 750 1.08rem/1.2 Georgia, "Times New Roman", serif; }
+.miu-animation-heading p { margin: 3px 0 0; color: var(--muted); font-size: .78rem; }
+.miu-animation-list { display: grid; gap: 14px; }
+.miu-animation-card { position: relative; display: grid; gap: 14px; padding: 15px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-cream); }
+.miu-animation-card__head { display: grid; grid-template-columns: 78px minmax(0, 1fr) auto; align-items: center; gap: 13px; }
+.miu-animation-preview-wrap { display: grid; width: 78px; height: 78px; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-panel); place-items: center; }
+.miu-animation-preview { display: block; width: 64px; height: 64px; background-repeat: no-repeat; image-rendering: auto; }
+.miu-animation-card__title { min-width: 0; }
+.miu-animation-card__title h3 { margin: 0; color: var(--moss); font: 750 1.04rem/1.2 Georgia, "Times New Roman", serif; }
+.miu-animation-card__title code { display: inline-block; margin-top: 3px; color: var(--muted); font-size: .68rem; overflow-wrap: anywhere; }
+.miu-animation-card__title p { margin: 4px 0 0; color: var(--muted); font-size: .72rem; overflow-wrap: anywhere; }
+.miu-animation-form { display: grid; gap: 14px; }
+.miu-animation-triggers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px 10px; margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-panel); }
+.miu-animation-triggers legend { padding: 0 5px; color: var(--moss); font-size: .78rem; font-weight: 850; }
+.miu-animation-triggers label { display: flex; align-items: flex-start; gap: 6px; min-width: 0; color: var(--ink); font-size: .76rem; line-height: 1.35; }
+.miu-animation-triggers input { flex: 0 0 auto; margin-top: 2px; accent-color: var(--moss); }
+.miu-animation-advanced { overflow: hidden; border: 1px dashed var(--line); border-radius: var(--radius); background: var(--surface-panel); }
+.miu-animation-advanced > summary { padding: 10px 12px; color: var(--moss); cursor: pointer; font-size: .8rem; font-weight: 850; }
+.miu-animation-advanced[open] > summary { border-bottom: 1px dashed var(--line); }
+.miu-animation-advanced > .miu-settings-grid { padding: 13px; }
+.miu-animation-actions { display: flex; justify-content: flex-end; }
+.miu-animation-delete { position: absolute; right: 15px; bottom: 15px; }
+.miu-animation-card .miu-animation-actions { padding-right: 88px; }
+
 @media (max-width: 800px) {
   .miu-admin-grid,
   .miu-conversation-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -131,6 +162,7 @@ body.miu-admin-body { min-width: 0; background: var(--surface-page); color: var(
   .miu-settings-span { grid-column: auto; }
   .miu-admin-header { align-items: start; flex-direction: column; }
   .miu-admin-tabs { border-radius: var(--radius); }
+  .miu-animation-triggers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 520px) {
@@ -141,4 +173,11 @@ body.miu-admin-body { min-width: 0; background: var(--surface-page); color: var(
   .miu-admin-message { max-width: 94%; }
   .miu-reply-item header { display: grid; }
   .miu-reply-item code { justify-self: start; }
+  .miu-animation-card__head { grid-template-columns: 66px minmax(0, 1fr); }
+  .miu-animation-card__head > .miu-badge { grid-column: 2; justify-self: start; }
+  .miu-animation-preview-wrap { width: 66px; height: 66px; }
+  .miu-animation-preview { width: 54px; height: 54px; }
+  .miu-animation-triggers { grid-template-columns: 1fr; }
+  .miu-animation-delete { position: static; }
+  .miu-animation-card .miu-animation-actions { padding-right: 0; }
 }

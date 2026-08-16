@@ -60,11 +60,11 @@
   transform: rotate(28deg) skew(8deg);
 }
 
-.miu-launcher .miu-sprite {
+.miu-launcher .miu-face {
   position: relative;
   z-index: 1;
-  width: 46px;
-  height: 46px;
+  width: var(--miu-launcher-sprite-size, 46px);
+  height: var(--miu-launcher-sprite-size, 46px);
 }
 
 .miu-launcher__callout {
@@ -113,47 +113,16 @@
   outline-offset: 3px;
 }
 
-.miu-sprite {
+.miu-face {
   display: block;
   width: 48px;
   height: 48px;
   background: url("../content/brand/miu/miu-sprite.webp") 0 0 / 400% 200% no-repeat;
-  animation: miu-cat-idle 7.2s steps(1, end) infinite;
+  transform-origin: center;
 }
 
-.miu-root.is-busy .miu-sprite { animation-duration: 2.4s; }
-
-.miu-sprite--pose-0 { background-position: 0 0; }
-.miu-sprite--pose-1 { background-position: 33.333% 0; }
-.miu-sprite--pose-2 { background-position: 66.667% 0; }
-.miu-sprite--pose-3 { background-position: 100% 0; }
-.miu-sprite--pose-4 { background-position: 0 100%; }
-.miu-sprite--pose-5 { background-position: 33.333% 100%; }
-.miu-sprite--pose-6 { background-position: 66.667% 100%; }
-.miu-sprite--pose-7 { background-position: 100% 100%; }
-
-@keyframes miu-cat-idle {
-  0%, 32% { background-position: 0 0; }
-  34% { background-position: 33.333% 0; }
-  36% { background-position: 66.667% 0; }
-  38%, 58% { background-position: 100% 0; }
-  61%, 70% { background-position: 0 100%; }
-  73%, 82% { background-position: 33.333% 100%; }
-  85%, 91% { background-position: 66.667% 100%; }
-  94%, 100% { background-position: 100% 100%; }
-}
-
-.miu-root.is-sleeping:not(.is-open) .miu-launcher .miu-sprite {
-  background-image: url("../content/brand/miu/miu-sprite-sleep.webp");
-  background-size: 400% 100%;
-  animation: miu-cat-sleep 4.1s steps(1, end) infinite;
-}
-
-@keyframes miu-cat-sleep {
-  0%, 17% { background-position: 0 0; }
-  18%, 42% { background-position: 33.333% 0; }
-  43%, 65% { background-position: 66.667% 0; }
-  66%, 100% { background-position: 100% 0; }
+.miu-face--small {
+  background-image: url("../content/brand/miu/miu-sprite-small.webp");
 }
 
 .miu-panel {
@@ -195,18 +164,17 @@
 .miu-panel__mini-cat {
   display: grid;
   flex: 0 0 auto;
-  width: 24px;
-  height: 24px;
+  width: calc(var(--miu-small-sprite-size, 26px) + 2px);
+  height: calc(var(--miu-small-sprite-size, 26px) + 2px);
   border: 1px solid var(--line);
   border-radius: 50%;
   background: var(--miu-panel);
   place-items: center;
 }
 
-.miu-panel__mini-cat .miu-sprite {
-  width: 22px;
-  height: 22px;
-  background-image: url("../content/brand/miu/miu-sprite-small.webp");
+.miu-panel__mini-cat .miu-face {
+  width: var(--miu-small-sprite-size, 26px);
+  height: var(--miu-small-sprite-size, 26px);
 }
 
 .miu-panel__title { min-width: 0; flex: 1 1 auto; }
@@ -262,20 +230,18 @@
 }
 
 .miu-message-row .miu-message {
-  max-width: calc(100% - 34px);
+  max-width: calc(100% - var(--miu-small-sprite-size, 26px) - 8px);
   margin: 0;
 }
 
 .miu-message-avatar {
   flex: 0 0 auto;
-  width: 29px;
-  height: 29px;
+  width: var(--miu-small-sprite-size, 26px);
+  height: var(--miu-small-sprite-size, 26px);
   border: 1px solid var(--miu-border-warm);
   border-radius: 50%;
-  background-image: url("../content/brand/miu/miu-sprite-small.webp");
   background-color: var(--miu-panel);
   box-shadow: var(--miu-shadow-small);
-  animation: none !important;
 }
 
 .miu-message--user {
@@ -410,10 +376,9 @@
     bottom: max(12px, env(safe-area-inset-bottom));
   }
   .miu-launcher { width: 50px; height: 50px; }
-  .miu-launcher .miu-sprite {
-    width: 46px;
-    height: 46px;
-    background-image: url("../content/brand/miu/miu-sprite-small.webp");
+  .miu-launcher .miu-face {
+    width: var(--miu-launcher-sprite-size, 46px);
+    height: var(--miu-launcher-sprite-size, 46px);
   }
   .miu-panel {
     right: 0;
@@ -427,8 +392,7 @@
   .miu-panel__icon-button { width: 23px; height: 23px; }
   .miu-messages { padding: 8px 7px 6px; }
   .miu-message { max-width: 91%; padding: 7px 9px; font-size: .76rem; }
-  .miu-message-row .miu-message { max-width: calc(100% - 31px); }
-  .miu-message-avatar { width: 26px; height: 26px; }
+  .miu-message-row .miu-message { max-width: calc(100% - var(--miu-small-sprite-size, 26px) - 6px); }
   .miu-composer { padding: 6px 7px calc(5px + env(safe-area-inset-bottom)); }
   .miu-composer textarea { min-height: 34px; padding: 7px 8px; }
   .miu-send { width: 34px; height: 34px; }
@@ -439,7 +403,7 @@
   .miu-panel,
   .miu-launcher__callout { transition: none; }
   .miu-thinking i,
-  .miu-sprite { animation: none; }
+  .miu-face { animation: none; }
   .miu-messages { scroll-behavior: auto; }
 }
 

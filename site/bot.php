@@ -18,6 +18,7 @@ if (empty($_SESSION['miaandpaper_admin'])) {
 }
 
 require_once __DIR__ . '/lib/miu-bot.php';
+require_once __DIR__ . '/lib/miu-animations.php';
 require_once __DIR__ . '/lib/parametros.php';
 
 function bot_h($value)
@@ -53,7 +54,9 @@ function bot_local_date($value)
 
 $csrf = mp_admin_csrf_token();
 $notice = isset($_GET['notice']) ? (string)$_GET['notice'] : '';
-$allowedTabs = array('conversations', 'settings', 'contexts', 'replies');
+$animationError = isset($_SESSION['miu_animation_error']) ? (string)$_SESSION['miu_animation_error'] : '';
+unset($_SESSION['miu_animation_error']);
+$allowedTabs = array('conversations', 'settings', 'contexts', 'replies', 'animations');
 $tab = isset($_GET['tab']) && in_array($_GET['tab'], $allowedTabs, true) ? (string)$_GET['tab'] : 'conversations';
 
 if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string)$_SERVER['REQUEST_METHOD']) === 'POST') {
@@ -104,6 +107,29 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string)$_SERVER['REQUEST_ME
         header('Location: bot.php?tab=conversations&notice=deleted');
         exit;
     }
+    if (in_array($action, array('save_animation_display', 'create_animation', 'update_animation', 'delete_animation'), true)) {
+        try {
+            if ($action === 'save_animation_display') {
+                miu_animation_save_display_from_request($_POST);
+                $animationNotice = 'animations-saved';
+            } elseif ($action === 'create_animation') {
+                miu_animation_create_from_request($_POST, $_FILES);
+                $animationNotice = 'animation-created';
+            } elseif ($action === 'update_animation') {
+                miu_animation_update_from_request($_POST, $_FILES);
+                $animationNotice = 'animation-saved';
+            } else {
+                miu_animation_delete_by_id(isset($_POST['animation_id']) ? $_POST['animation_id'] : '');
+                $animationNotice = 'animation-deleted';
+            }
+            header('Location: bot.php?tab=animations&notice=' . rawurlencode($animationNotice));
+            exit;
+        } catch (Exception $e) {
+            $_SESSION['miu_animation_error'] = $e->getMessage();
+            header('Location: bot.php?tab=animations&notice=animation-error');
+            exit;
+        }
+    }
     http_response_code(400);
     exit('Acção desconhecida.');
 }
@@ -120,6 +146,9 @@ $page = min($page, $pageCount);
 $conversations = miu_admin_conversations($page, $perPage);
 $detail = $detailId > 0 ? miu_admin_conversation($detailId) : null;
 $contextRows = $tab === 'contexts' ? miu_context_admin_rows() : array();
+$animationConfig = $tab === 'animations' ? miu_animation_config() : null;
+$animationTriggers = $tab === 'animations' ? miu_animation_trigger_options() : array();
+$animationMotions = $tab === 'animations' ? miu_animation_motion_options() : array();
 $quickReplyCatalog = miu_quick_reply_catalog();
 $quickReplyGlobal = isset($quickReplyCatalog['global']) && is_array($quickReplyCatalog['global']) ? $quickReplyCatalog['global'] : array();
 $quickReplyContexts = isset($quickReplyCatalog['contexts']) && is_array($quickReplyCatalog['contexts']) ? $quickReplyCatalog['contexts'] : array();
@@ -176,7 +205,7 @@ foreach ($contextRows as $contextRow) {
   <header class="miu-admin-header">
     <div>
       <h1>Míu</h1>
-      <p>Conversas, system prompt, informação enviada à IA e limites do chatbot.</p>
+      <p>Conversas, comportamento, imagem, animações e informação enviada à IA.</p>
     </div>
     <code class="miu-admin-path">private/miu.sqlite</code>
   </header>
@@ -186,11 +215,17 @@ foreach ($contextRows as $contextRow) {
     <a class="<?= $tab === 'settings' ? 'is-active' : '' ?>" href="bot.php?tab=settings">Configuração</a>
     <a class="<?= $tab === 'contexts' ? 'is-active' : '' ?>" href="bot.php?tab=contexts">Contexto por passo</a>
     <a class="<?= $tab === 'replies' ? 'is-active' : '' ?>" href="bot.php?tab=replies">Respostas rápidas</a>
+    <a class="<?= $tab === 'animations' ? 'is-active' : '' ?>" href="bot.php?tab=animations">Imagem e animações</a>
   </nav>
 
   <?php if ($notice === 'saved'): ?><p class="miu-admin-flash">Configuração guardada.</p><?php endif; ?>
   <?php if ($notice === 'context-saved'): ?><p class="miu-admin-flash">Contexto do passo guardado.</p><?php endif; ?>
   <?php if ($notice === 'deleted'): ?><p class="miu-admin-flash">Conversa apagada.</p><?php endif; ?>
+  <?php if ($notice === 'animations-saved'): ?><p class="miu-admin-flash">Comportamento visual do Míu guardado.</p><?php endif; ?>
+  <?php if ($notice === 'animation-created'): ?><p class="miu-admin-flash">Animação adicionada.</p><?php endif; ?>
+  <?php if ($notice === 'animation-saved'): ?><p class="miu-admin-flash">Animação actualizada.</p><?php endif; ?>
+  <?php if ($notice === 'animation-deleted'): ?><p class="miu-admin-flash">Animação apagada.</p><?php endif; ?>
+  <?php if ($animationError !== ''): ?><p class="miu-admin-flash miu-admin-flash--error"><?= bot_h($animationError) ?></p><?php endif; ?>
 
   <?php if ($tab === 'conversations'): ?>
   <section class="miu-admin-grid" aria-label="Resumo">
@@ -246,6 +281,136 @@ foreach ($contextRows as $contextRow) {
         <label class="miu-field miu-settings-span"><span>Base de informação enviada à API</span><textarea class="miu-field--knowledge" name="knowledge_base" maxlength="50000" data-max-count="50000"><?= bot_h($settings['knowledge_base']) ?></textarea><small>É anexada à system prompt em todas as respostas. Não incluir segredos nem dados de clientes.</small><span class="miu-char-count" data-char-count></span></label>
       </div>
       <div class="miu-admin-actions"><button class="miu-button" type="submit">Guardar configuração</button></div>
+    </form>
+  </section>
+  <?php endif; ?>
+
+  <?php if ($tab === 'animations' && $animationConfig): ?>
+  <section class="miu-admin-card" aria-labelledby="miu-animations-title">
+    <div class="miu-admin-card__head">
+      <div><h2 id="miu-animations-title">Imagem e animações</h2><p>As folhas abaixo são a biblioteca do Míu de corpo inteiro para contextos interactivos. O círculo e o chat usam sempre as folhas próprias da cara do Míu (<code>miu-sprite*.webp</code>).</p></div>
+      <span class="miu-badge is-ready"><?= count($animationConfig['animations']) ?> animações</span>
+    </div>
+    <div class="miu-admin-card__body">
+      <div class="miu-json-note">
+        <strong>Sprites mais leves</strong>
+        <p>O Míu aparece normalmente a <?= (int)$animationConfig['display']['launcherPx'] ?> px. Uma folha com frames de <strong>96–128 px</strong> já deixa margem para ecrãs Retina; não precisas dos actuais 192 px por frame. Mantém fundo transparente; WebP é preferível, mas PNG também funciona.</p>
+      </div>
+
+      <form class="miu-animation-global" method="post" action="bot.php?tab=animations">
+        <input type="hidden" name="csrf" value="<?= bot_h($csrf) ?>">
+        <input type="hidden" name="action" value="save_animation_display">
+        <div class="miu-settings-grid">
+          <label class="miu-field"><span>Animação base</span><select name="base_animation_id"><?php foreach ($animationConfig['animations'] as $animation): ?><option value="<?= bot_h($animation['id']) ?>" <?= $animationConfig['baseAnimationId'] === $animation['id'] ? 'selected' : '' ?>><?= bot_h($animation['name']) ?></option><?php endforeach; ?></select><small>Base guardada para os contextos interactivos de corpo inteiro; não substitui a cara do chat.</small></label>
+          <label class="miu-field"><span>Adormecer após</span><input type="number" name="sleep_after_seconds" min="5" max="600" value="<?= (int)round($animationConfig['display']['sleepAfterMs'] / 1000) ?>"><small>Segundos sem interacção. Usa as animações com gatilho “inactividade”.</small></label>
+          <label class="miu-field"><span>Acção aleatória: mínimo</span><input type="number" name="idle_random_min_seconds" min="3" max="300" value="<?= (int)round($animationConfig['display']['idleRandomMinMs'] / 1000) ?>"><small>Intervalo mínimo, em segundos, entre tentativas de acções espontâneas.</small></label>
+          <label class="miu-field"><span>Acção aleatória: máximo</span><input type="number" name="idle_random_max_seconds" min="3" max="600" value="<?= (int)round($animationConfig['display']['idleRandomMaxMs'] / 1000) ?>"></label>
+          <label class="miu-field"><span>Tamanho do Míu no botão</span><input type="number" name="launcher_px" min="32" max="64" value="<?= (int)$animationConfig['display']['launcherPx'] ?>"><small>É só o tamanho no ecrã, não redimensiona o ficheiro.</small></label>
+          <label class="miu-field"><span>Tamanho nos avatares</span><input type="number" name="small_px" min="18" max="36" value="<?= (int)$animationConfig['display']['smallPx'] ?>"></label>
+          <label class="miu-field"><span>Distância máxima que pode vaguear</span><input type="number" name="max_roam_px" min="0" max="800" value="<?= (int)$animationConfig['display']['maxRoamPx'] ?>"><small>Reservado para os contextos interactivos de corpo inteiro; a cara do chat não vagueia.</small></label>
+        </div>
+        <button class="miu-button" type="submit">Guardar comportamento visual</button>
+      </form>
+
+      <div class="miu-animation-heading">
+        <div><h3>Animações existentes</h3><p>Cada folha pode reagir a uma ou várias situações.</p></div>
+      </div>
+      <div class="miu-animation-list">
+      <?php foreach ($animationConfig['animations'] as $animation): ?>
+        <?php
+          $sheetPath = MIU_ANIMATIONS_DIR . '/' . $animation['file'];
+          $sheetInfo = @getimagesize($sheetPath);
+          $sheetWidth = $sheetInfo ? (int)$sheetInfo[0] : 0;
+          $sheetHeight = $sheetInfo ? (int)$sheetInfo[1] : 0;
+          $frameWidth = $sheetWidth && $animation['columns'] ? (int)($sheetWidth / $animation['columns']) : 0;
+          $frameHeight = $sheetHeight && $animation['rows'] ? (int)($sheetHeight / $animation['rows']) : 0;
+          $sheetVersion = is_file($sheetPath) ? (string)filemtime($sheetPath) : '1';
+          $sequenceText = implode(',', $animation['sequence']);
+          $durationText = implode(',', $animation['frameDurationsMs']);
+        ?>
+        <article class="miu-animation-card" data-animation-preview-card>
+          <header class="miu-animation-card__head">
+            <div class="miu-animation-preview-wrap">
+              <span class="miu-animation-preview" aria-hidden="true"
+                data-animation-preview
+                data-sheet="<?= bot_h('content/brand/miu/' . $animation['file'] . '?v=' . $sheetVersion) ?>"
+                data-columns="<?= (int)$animation['columns'] ?>"
+                data-rows="<?= (int)$animation['rows'] ?>"
+                data-sequence="<?= bot_h($sequenceText) ?>"
+                data-durations="<?= bot_h($durationText) ?>"
+                data-flip="<?= $animation['flipX'] ? '1' : '0' ?>"></span>
+            </div>
+            <div class="miu-animation-card__title"><h3><?= bot_h($animation['name']) ?></h3><code><?= bot_h($animation['id']) ?></code><p><?= bot_h($animation['file']) ?><?php if ($frameWidth && $frameHeight): ?> · <?= $frameWidth ?>×<?= $frameHeight ?> px/frame<?php endif; ?></p></div>
+            <span class="miu-badge <?= $animation['enabled'] ? 'is-ready' : 'is-blocked' ?>"><?= $animation['enabled'] ? 'Activa' : 'Desligada' ?></span>
+          </header>
+          <form class="miu-animation-form" method="post" enctype="multipart/form-data" action="bot.php?tab=animations">
+            <input type="hidden" name="csrf" value="<?= bot_h($csrf) ?>">
+            <input type="hidden" name="action" value="update_animation">
+            <input type="hidden" name="animation_id" value="<?= bot_h($animation['id']) ?>">
+            <div class="miu-settings-grid">
+              <label class="miu-field"><span>Nome</span><input type="text" name="animation_name" maxlength="80" value="<?= bot_h($animation['name']) ?>"></label>
+              <label class="miu-field"><span>Substituir spritesheet</span><input type="file" name="sheet" accept="image/webp,image/png,.webp,.png"><small>Opcional. Se não escolheres ficheiro, mantém o actual.</small></label>
+              <label class="miu-field"><span>Colunas</span><input type="number" name="columns" min="1" max="16" value="<?= (int)$animation['columns'] ?>"></label>
+              <label class="miu-field"><span>Linhas</span><input type="number" name="rows" min="1" max="16" value="<?= (int)$animation['rows'] ?>"></label>
+            </div>
+            <fieldset class="miu-animation-triggers"><legend>Quando pode acontecer</legend><?php foreach ($animationTriggers as $triggerId => $triggerLabel): ?><label><input type="checkbox" name="triggers[]" value="<?= bot_h($triggerId) ?>" <?= in_array($triggerId, $animation['triggers'], true) ? 'checked' : '' ?>> <span><?= bot_h($triggerLabel) ?></span></label><?php endforeach; ?></fieldset>
+            <details class="miu-animation-advanced">
+              <summary>Frames e comportamento avançado</summary>
+              <div class="miu-settings-grid">
+                <label class="miu-field miu-settings-span"><span>Ordem dos frames</span><input type="text" name="sequence" value="<?= bot_h($sequenceText) ?>"><small>Índices começam em 0, da esquerda para a direita e depois a linha seguinte. Ex.: 0,1,2,3,2,1.</small></label>
+                <label class="miu-field miu-settings-span"><span>Duração de cada frame (ms)</span><input type="text" name="durations" value="<?= bot_h($durationText) ?>"><small>Uma duração por posição da sequência. Se deixares inválido, usa o valor geral abaixo.</small></label>
+                <label class="miu-field"><span>Duração geral por frame</span><input type="number" name="frame_ms" min="40" max="10000" value="180"></label>
+                <label class="miu-field"><span>Repetições</span><input type="number" name="repeat" min="0" max="20" value="<?= (int)$animation['repeat'] ?>"><small>0 = continua até outra acção a substituir.</small></label>
+                <label class="miu-field"><span>Frame usado em avatar</span><input type="number" name="static_frame" min="0" max="<?= max(0, $animation['columns'] * $animation['rows'] - 1) ?>" value="<?= (int)$animation['staticFrame'] ?>"></label>
+                <label class="miu-field"><span>Probabilidade</span><input type="number" name="probability" min="0" max="100" value="<?= (int)round($animation['probability'] * 100) ?>"><small>100 = sempre elegível quando o gatilho acontece.</small></label>
+                <label class="miu-field"><span>Peso entre animações do mesmo gatilho</span><input type="number" name="weight" min="1" max="100" value="<?= (int)$animation['weight'] ?>"></label>
+                <label class="miu-field"><span>Cooldown</span><input type="number" name="cooldown_seconds" min="0" max="3600" value="<?= (int)round($animation['cooldownMs'] / 1000) ?>"><small>Segundos antes de poder voltar a acontecer.</small></label>
+                <label class="miu-field"><span>Movimento</span><select name="motion_type"><?php foreach ($animationMotions as $motionId => $motionLabel): ?><option value="<?= bot_h($motionId) ?>" <?= $animation['motion']['type'] === $motionId ? 'selected' : '' ?>><?= bot_h($motionLabel) ?></option><?php endforeach; ?></select></label>
+                <label class="miu-field"><span>Distância / altura do movimento</span><input type="number" name="motion_distance" min="0" max="600" value="<?= (int)$animation['motion']['distancePx'] ?>"><small>Pixels. Para um salto, é a altura; para andar, a distância.</small></label>
+                <label class="miu-toggle"><input type="checkbox" name="flip_x" value="1" <?= $animation['flipX'] ? 'checked' : '' ?>><span>Espelhar horizontalmente</span></label>
+                <label class="miu-toggle"><input type="checkbox" name="enabled" value="1" <?= $animation['enabled'] ? 'checked' : '' ?>><span>Animação activa</span></label>
+              </div>
+            </details>
+            <div class="miu-animation-actions"><button class="miu-button" type="submit">Guardar animação</button></div>
+          </form>
+          <form class="miu-animation-delete" method="post" action="bot.php?tab=animations" data-confirm="Apagar esta animação e a spritesheet carregada por este painel?"><input type="hidden" name="csrf" value="<?= bot_h($csrf) ?>"><input type="hidden" name="action" value="delete_animation"><input type="hidden" name="animation_id" value="<?= bot_h($animation['id']) ?>"><button class="miu-button miu-button--danger" type="submit">Apagar</button></form>
+        </article>
+      <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+
+  <section class="miu-admin-card" aria-labelledby="miu-animation-new-title">
+    <div class="miu-admin-card__head"><div><h2 id="miu-animation-new-title">Adicionar animação</h2><p>Uma spritesheet nova fica disponível no site assim que a guardares.</p></div></div>
+    <form class="miu-admin-card__body miu-animation-form" method="post" enctype="multipart/form-data" action="bot.php?tab=animations">
+      <input type="hidden" name="csrf" value="<?= bot_h($csrf) ?>">
+      <input type="hidden" name="action" value="create_animation">
+      <div class="miu-settings-grid">
+        <label class="miu-field"><span>Nome</span><input type="text" name="animation_name" maxlength="80" required placeholder="Ex.: Derrubar caneta"></label>
+        <label class="miu-field"><span>Identificador</span><input type="text" name="animation_id" maxlength="64" placeholder="Automático a partir do nome"><small>Depois de criada, fica estável.</small></label>
+        <label class="miu-field miu-settings-span"><span>Spritesheet WebP ou PNG</span><input type="file" name="sheet" accept="image/webp,image/png,.webp,.png" required><small>Fundo transparente. Recomendação: 96–128 px por frame. Máximo 8 MB.</small></label>
+        <label class="miu-field"><span>Colunas</span><input type="number" name="columns" min="1" max="16" value="4" required></label>
+        <label class="miu-field"><span>Linhas</span><input type="number" name="rows" min="1" max="16" value="1" required></label>
+      </div>
+      <fieldset class="miu-animation-triggers"><legend>Quando pode acontecer</legend><?php foreach ($animationTriggers as $triggerId => $triggerLabel): ?><label><input type="checkbox" name="triggers[]" value="<?= bot_h($triggerId) ?>"> <span><?= bot_h($triggerLabel) ?></span></label><?php endforeach; ?></fieldset>
+      <details class="miu-animation-advanced">
+        <summary>Frames e comportamento avançado</summary>
+        <div class="miu-settings-grid">
+          <label class="miu-field miu-settings-span"><span>Ordem dos frames</span><input type="text" name="sequence" placeholder="Vazio = 0,1,2,3…"><small>Podes repetir frames: 0,1,2,3,2,1,0.</small></label>
+          <label class="miu-field miu-settings-span"><span>Duração de cada frame (ms)</span><input type="text" name="durations" placeholder="Ex.: 250,120,120,400"><small>Opcional. Se vazio, usa a duração geral.</small></label>
+          <label class="miu-field"><span>Duração geral por frame</span><input type="number" name="frame_ms" min="40" max="10000" value="180"></label>
+          <label class="miu-field"><span>Repetições</span><input type="number" name="repeat" min="0" max="20" value="1"><small>0 = contínua.</small></label>
+          <label class="miu-field"><span>Frame usado em avatar</span><input type="number" name="static_frame" min="0" max="255" value="0"></label>
+          <label class="miu-field"><span>Probabilidade</span><input type="number" name="probability" min="0" max="100" value="100"></label>
+          <label class="miu-field"><span>Peso</span><input type="number" name="weight" min="1" max="100" value="1"></label>
+          <label class="miu-field"><span>Cooldown (segundos)</span><input type="number" name="cooldown_seconds" min="0" max="3600" value="0"></label>
+          <label class="miu-field"><span>Movimento</span><select name="motion_type"><?php foreach ($animationMotions as $motionId => $motionLabel): ?><option value="<?= bot_h($motionId) ?>"><?= bot_h($motionLabel) ?></option><?php endforeach; ?></select></label>
+          <label class="miu-field"><span>Distância / altura</span><input type="number" name="motion_distance" min="0" max="600" value="90"></label>
+          <label class="miu-toggle"><input type="checkbox" name="flip_x" value="1"><span>Espelhar horizontalmente</span></label>
+          <label class="miu-toggle"><input type="checkbox" name="enabled" value="1" checked><span>Animação activa</span></label>
+        </div>
+      </details>
+      <button class="miu-button" type="submit">Adicionar animação</button>
     </form>
   </section>
   <?php endif; ?>

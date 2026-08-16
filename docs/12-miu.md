@@ -27,11 +27,15 @@ O catálogo, as ofertas e `congressos/2026` carregam os mesmos módulos 13/24.
 Não existe uma segunda implementação do chatbot. Em previews e iframes o
 módulo detecta o contexto e não desenha nada.
 
-O sprite normal é usado a 48 px. A variante `miu-sprite-small.webp` tem
-contornos mais pesados e menos detalhe fino; é usada nos retratos de 22–29 px
-e no botão móvel. Após 45 segundos sem interacção com o chatbot, o lançador usa
-`miu-sprite-sleep.webp`: olhos, boca e “zzz” animam em quatro frames. Para
-voltar a gerar as três folhas sem alterar os nomes nem a ordem das poses:
+O círculo do lançador, a miniatura no cabeçalho e os retratos das mensagens usam
+exclusivamente a **cara do Míu**. `miu-sprite.webp` é a folha normal,
+`miu-sprite-small.webp` é a versão reforçada para retratos pequenos e
+`miu-sprite-sleep.webp` é usada após a inactividade. As spritesheets de corpo
+inteiro guardadas em `content/brand/miu/sprites/` formam uma biblioteca
+separada para outros contextos interactivos e nunca substituem a cara dentro
+do chat.
+
+Para voltar a gerar as três folhas da cara sem alterar os nomes nem a ordem das poses:
 
 ```bash
 python tools/process-miu-sprite.py tools/assets/miu-sprite-source.webp \

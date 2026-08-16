@@ -17,6 +17,41 @@
     });
   });
 
+  function miuAdminFramePosition(index, columns, rows)
+  {
+    var column = index % columns;
+    var row = Math.floor(index / columns);
+    return {
+      x: columns <= 1 ? 0 : (column / (columns - 1)) * 100,
+      y: rows <= 1 ? 0 : (row / (rows - 1)) * 100
+    };
+  }
+
+  document.querySelectorAll("[data-animation-preview]").forEach(function (preview) {
+    var columns = Math.max(1, Number(preview.dataset.columns || 1));
+    var rows = Math.max(1, Number(preview.dataset.rows || 1));
+    var sequence = String(preview.dataset.sequence || "0").split(",").map(Number).filter(function (value) {
+      return Number.isFinite(value) && value >= 0 && value < columns * rows;
+    });
+    var durations = String(preview.dataset.durations || "180").split(",").map(Number);
+    var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var cursor = 0;
+    if (!sequence.length) { sequence = [0]; }
+    preview.style.backgroundImage = 'url("' + String(preview.dataset.sheet || "").replace(/"/g, "%22") + '")';
+    preview.style.backgroundSize = (columns * 100) + "% " + (rows * 100) + "%";
+    preview.style.transform = preview.dataset.flip === "1" ? "scaleX(-1)" : "none";
+    var draw = function () {
+      var index = sequence[cursor % sequence.length];
+      var position = miuAdminFramePosition(index, columns, rows);
+      preview.style.backgroundPosition = position.x + "% " + position.y + "%";
+      if (reduceMotion) { return; }
+      var delay = Math.max(60, Number(durations[cursor % durations.length] || 180));
+      cursor = (cursor + 1) % sequence.length;
+      window.setTimeout(draw, delay);
+    };
+    draw();
+  });
+
   var contextFilter = document.querySelector("[data-context-filter]");
   if (contextFilter) {
     var normalize = function (value) {
