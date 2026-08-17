@@ -5752,6 +5752,16 @@
     return Math.max(minimumFreeQuantity(product), parseInt(step && step.maxQuantity, 10) || 9999);
   }
 
+  function effectiveMinimumFreeQuantity(product) {
+    var minimum = minimumFreeQuantity(product);
+
+    if (!isAssortedSelected(product)) {
+      minimum = Math.max(minimum, selectedDesignItems(product).length);
+    }
+
+    return minimum;
+  }
+
   function tierPriceCents(priceTable, quantity) {
     var count = Math.max(0, parseInt(quantity, 10) || 0);
     var tiers;
@@ -5970,11 +5980,17 @@
     }
 
     if (isAssortedSelected(product)) {
-      if (!current || allowedQuantities.indexOf(current) === -1) {
-        current = allowed[0] ? Number(allowed[0].quantity) : 0;
-        if (current) {
-          state.selections.pack_quantity = current;
+      if (freeQuantityStep(product)) {
+        if (!Number.isInteger(current)
+            || current < effectiveMinimumFreeQuantity(product)
+            || current > maximumFreeQuantity(product)) {
+          current = effectiveMinimumFreeQuantity(product);
         }
+      } else if (!current || allowedQuantities.indexOf(current) === -1) {
+        current = allowed[0] ? Number(allowed[0].quantity) : 0;
+      }
+      if (current) {
+        state.selections.pack_quantity = current;
       }
       state.selections.design_quantities = {};
       state.quantitySignature = "__assorted__";
@@ -5992,8 +6008,15 @@
       return;
     }
 
-    if (!current || allowedQuantities.indexOf(current) === -1) {
-      current = Number(allowed[0].quantity);
+    if (freeQuantityStep(product)) {
+      if (!Number.isInteger(current)
+          || current < effectiveMinimumFreeQuantity(product)
+          || current > maximumFreeQuantity(product)) {
+        current = effectiveMinimumFreeQuantity(product);
+        state.selections.pack_quantity = current;
+      }
+    } else if (!current || allowedQuantities.indexOf(current) === -1) {
+      current = allowed[0] ? Number(allowed[0].quantity) : 0;
       state.selections.pack_quantity = current;
     }
 
@@ -9626,7 +9649,7 @@
   }
 
   function renderFreeQuantityBuilder(product) {
-    var minimum = minimumFreeQuantity(product);
+    var minimum = effectiveMinimumFreeQuantity(product);
     var maximum = maximumFreeQuantity(product);
     var current = getPackQuantity(product) || minimum;
     var hint = freeQuantityStep(product) && freeQuantityStep(product).adjustHint
@@ -9647,7 +9670,7 @@
   }
 
   function setFreeQuantity(product, value) {
-    var minimum = minimumFreeQuantity(product);
+    var minimum = effectiveMinimumFreeQuantity(product);
     var maximum = maximumFreeQuantity(product);
     var quantity = Math.round(Number(value) || 0);
 
@@ -9669,7 +9692,7 @@
     var wrapper;
     var nextOverview;
     var quantity = getPackQuantity(product);
-    var minimum = minimumFreeQuantity(product);
+    var minimum = effectiveMinimumFreeQuantity(product);
     var maximum = maximumFreeQuantity(product);
     var minus = builder ? builder.querySelector('[data-free-quantity-change="-1"]') : null;
     var plus = builder ? builder.querySelector('[data-free-quantity-change="1"]') : null;
@@ -9703,17 +9726,14 @@
     var unassigned;
     var cards = "";
 
-    if (packStep && packStep.freeQuantity === true) {
-      return renderFreeQuantityBuilder(product);
-    }
+    var freeQuantityEnabled = !!(packStep && packStep.freeQuantity === true);
 
     ensurePackAndQuantities(product);
 
     if (isAssortedSelected(product)) {
-      return [
-        renderPackSelector(product),
-        renderPackPriceOverview(product)
-      ].join("");
+      return freeQuantityEnabled
+        ? [renderPackSelector(product), renderFreeQuantityBuilder(product)].join("")
+        : [renderPackSelector(product), renderPackPriceOverview(product)].join("");
     }
 
     if (!items.length) {
@@ -9760,7 +9780,7 @@
 
     return [
       renderPackSelector(product),
-      renderPackPriceOverview(product),
+      freeQuantityEnabled ? renderFreeQuantityBuilder(product) : renderPackPriceOverview(product),
       items.length > 1 && adjustHint ? '<p class="quantity-adjust-hint">' + escapeHtml(adjustHint) + '</p>' : "",
       '<div class="quantity-grid">',
       cards,
@@ -15238,7 +15258,7 @@
 
     document.querySelectorAll("[data-free-quantity-change]").forEach(function (button) {
       button.addEventListener("click", function () {
-        var current = getPackQuantity(product) || minimumFreeQuantity(product);
+        var current = getPackQuantity(product) || effectiveMinimumFreeQuantity(product);
         setFreeQuantity(product, current + Number(button.dataset.freeQuantityChange || 0));
         rerenderProduct(product);
       });
@@ -15247,7 +15267,7 @@
     document.querySelectorAll("[data-free-quantity-input]").forEach(function (input) {
       input.addEventListener("input", function () {
         var quantity = Number(input.value);
-        var minimum = minimumFreeQuantity(product);
+        var minimum = effectiveMinimumFreeQuantity(product);
         var maximum = maximumFreeQuantity(product);
 
         state.selections.pack_quantity = Number.isInteger(quantity) && quantity >= minimum && quantity <= maximum
@@ -15261,7 +15281,7 @@
       });
       input.addEventListener("change", function () {
         input.value = setFreeQuantity(product, input.value);
-        refreshFreeQuantityDraft(product, input);
+        rerenderProduct(product);
       });
     });
 

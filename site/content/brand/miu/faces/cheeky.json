@@ -1,0 +1,40 @@
+{
+  "id": "cheeky",
+  "name": "Maroto",
+  "file": "faces/cheeky.webp",
+  "columns": 4,
+  "rows": 1,
+  "frameWidth": 192,
+  "frameHeight": 192,
+  "totalFrames": 4,
+  "sequence": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "frameDurationsMs": [
+    120,
+    180,
+    420,
+    220
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "durationMs": 120
+    },
+    {
+      "index": 1,
+      "durationMs": 180
+    },
+    {
+      "index": 2,
+      "durationMs": 420
+    },
+    {
+      "index": 3,
+      "durationMs": 220
+    }
+  ]
+}

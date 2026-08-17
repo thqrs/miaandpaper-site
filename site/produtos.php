@@ -160,7 +160,7 @@ foreach (array_keys($receitasPasso1) as $slugReceita) {
   <link rel="icon" href="content/brand/logo.webp" type="image/webp">
   <link rel="stylesheet" href="css/01-tokens-agua.css?v=2026080501">
   <link rel="stylesheet" href="admin-nav.css?v=2026081001">
-  <script src="admin-nav.js?v=2026081701" defer></script>
+  <script src="admin-nav.js?v=2026081702" defer></script>
   <style>
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }

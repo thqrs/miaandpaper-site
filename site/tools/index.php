@@ -24,7 +24,7 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <link rel="stylesheet" href="../catalogo/catalogo.css?v=2026072601">
   <link rel="stylesheet" href="../ofertas/ofertas.css?v=2026062809">
   <link rel="stylesheet" href="../admin-nav.css?v=2026081001">
-  <script src="../admin-nav.js?v=2026081701" data-prefix="../" defer></script>
+  <script src="../admin-nav.js?v=2026081702" data-prefix="../" defer></script>
   <style>
     /* O card tem dois destinos, por isso deixa de ser um <a>: o título estica-se
        sobre o card inteiro e o segundo link fica por cima, na sua área. */
@@ -82,6 +82,10 @@ if (empty($_SESSION['miaandpaper_admin'])) {
         <a class="catalog-product-card" href="../bot.php">
           <span class="catalog-product-thumb" aria-hidden="true">M</span>
           <span class="catalog-product-copy"><strong>Míu</strong><span>Conversas, system prompt, base de informação, fornecedor e limites do chatbot.</span><span class="catalog-product-action">Abrir painel</span></span>
+        </a>
+        <a class="catalog-product-card" href="../sprites.php">
+          <span class="catalog-product-thumb" aria-hidden="true">▦</span>
+          <span class="catalog-product-copy"><strong>Sprites do Míu</strong><span>Pré-visualizar e editar frames, tempos, gatilhos, movimento e posição das animações.</span><span class="catalog-product-action">Abrir editor</span></span>
         </a>
         <a class="catalog-product-card" href="../materiais.php">
           <span class="catalog-product-thumb" aria-hidden="true">€/un</span>

@@ -185,6 +185,17 @@ function miuAnimationSetup(config)
     ]
   };
 
+  // Desde sprites.php, as expressões da cara deixam de estar presas a este
+  // fallback hardcoded. Se a API trouxer a biblioteca editável, ela é a fonte
+  // activa; o bloco acima fica apenas como compatibilidade para instalações
+  // que ainda não tenham face-animations.json.
+  var configuredFace = config && config.faceAnimations && Array.isArray(config.faceAnimations.animations)
+    ? config.faceAnimations : null;
+  if (configuredFace && configuredFace.animations.length) {
+    miuAnimationConfig.baseAnimationId = String(configuredFace.baseAnimationId || configuredFace.animations[0].id || "miu-cara-calma");
+    miuAnimationConfig.animations = configuredFace.animations;
+  }
+
   miuAnimationById = {};
   miuAnimationConfig.animations.forEach(function (animation) {
     if (animation && animation.id) { miuAnimationById[String(animation.id)] = animation; }
@@ -193,7 +204,10 @@ function miuAnimationSetup(config)
 function miuAnimationBase()
 {
   if (!miuAnimationConfig) { return null; }
-  return miuAnimationById[String(miuAnimationConfig.baseAnimationId || "")] || miuAnimationConfig.animations[0] || null;
+  var configured = miuAnimationById[String(miuAnimationConfig.baseAnimationId || "")] || null;
+  if (configured && configured.enabled !== false) { return configured; }
+  var enabled = miuAnimationConfig.animations.find(function (animation) { return animation && animation.enabled !== false; });
+  return enabled || configured || miuAnimationConfig.animations[0] || null;
 }
 
 function miuAnimationSheetUrl(animation)
@@ -219,7 +233,9 @@ function miuLauncherBodyAnimation()
     if (animation && String(animation.id || "") === baseId) { found = animation; return true; }
     return false;
   });
-  return found || config.animations[0] || null;
+  if (found && found.enabled !== false) { return found; }
+  var enabled = config.animations.find(function (animation) { return animation && animation.enabled !== false; });
+  return enabled || found || config.animations[0] || null;
 }
 
 function miuLauncherBodyStop()
@@ -296,7 +312,15 @@ function miuAnimationApplyFrame(element, animation, frameIndex)
   element.style.backgroundSize = (columns * 100) + "% " + (rows * 100) + "%";
   element.style.backgroundPosition = position.x + "% " + position.y + "%";
   element.style.backgroundRepeat = "no-repeat";
-  element.style.transform = animation.flipX ? "scaleX(-1)" : "none";
+  var transform = animation.transform && typeof animation.transform === "object" ? animation.transform : {};
+  var x = Math.max(-600, Math.min(600, Number(transform.xPx || 0)));
+  var y = Math.max(-600, Math.min(600, Number(transform.yPx || 0)));
+  var rotation = Math.max(-360, Math.min(360, Number(transform.rotationDeg || 0)));
+  var parts = [];
+  if (x || y) { parts.push("translate3d(" + x + "px," + y + "px,0)"); }
+  if (rotation) { parts.push("rotate(" + rotation + "deg)"); }
+  if (animation.flipX) { parts.push("scaleX(-1)"); }
+  element.style.transform = parts.length ? parts.join(" ") : "none";
 }
 
 function miuAnimationApplyStatic(element, variantIndex)
@@ -305,13 +329,15 @@ function miuAnimationApplyStatic(element, variantIndex)
   var stableFrames = [0, 6, 0, 4, 0, 5, 0, 7];
   var index = stableFrames[Math.abs(Number(variantIndex || 0)) % stableFrames.length];
   var small = element.classList && element.classList.contains("miu-face--small");
+  var base = miuAnimationBase() || {};
+  var normalSheet = String(base.sheetUrl || "content/brand/miu/miu-sprite.webp?v=chat-face-1");
+  var smallSheet = String(base.smallSheetUrl || "content/brand/miu/miu-sprite-small.webp?v=chat-face-1");
   miuAnimationApplyFrame(element, {
-    sheetUrl: small
-      ? "content/brand/miu/miu-sprite-small.webp?v=chat-face-1"
-      : "content/brand/miu/miu-sprite.webp?v=chat-face-1",
-    columns: 4,
-    rows: 2,
-    flipX: false
+    sheetUrl: small ? smallSheet : normalSheet,
+    columns: Math.max(1, Number(base.columns || 4)),
+    rows: Math.max(1, Number(base.rows || 2)),
+    flipX: false,
+    transform: { xPx: 0, yPx: 0, rotationDeg: 0 }
   }, index);
 }
 function miuAnimationCycleMs(animation)
@@ -1686,7 +1712,8 @@ function miuDebugPlayLooseSprite(row, button)
     cooldownMs: 0,
     flipX: false,
     staticFrame: 0,
-    motion: { type: "none", distancePx: 0 }
+    motion: { type: "none", distancePx: 0 },
+    transform: { xPx: 0, yPx: 0, rotationDeg: 0 }
   };
 
   miuAnimationCancelTimer();

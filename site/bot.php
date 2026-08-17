@@ -283,7 +283,7 @@ foreach ($contextRows as $contextRow) {
   <link rel="stylesheet" href="admin-nav.css?v=2026081001">
   <link rel="stylesheet" href="bot-admin.css?v=2026081501">
   <link rel="stylesheet" href="css/13-miu.css?v=2026081716">
-  <script src="admin-nav.js?v=2026081701" defer></script>
+  <script src="admin-nav.js?v=2026081702" defer></script>
   <script src="bot-admin.js?v=2026081501" defer></script>
   <script src="js/24-miu.js?v=2026081715" defer></script>
 </head>

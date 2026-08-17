@@ -1,0 +1,40 @@
+{
+  "id": "excited",
+  "name": "Entusiasmado",
+  "file": "faces/excited.webp",
+  "columns": 4,
+  "rows": 1,
+  "frameWidth": 192,
+  "frameHeight": 192,
+  "totalFrames": 4,
+  "sequence": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "frameDurationsMs": [
+    100,
+    150,
+    450,
+    220
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "durationMs": 100
+    },
+    {
+      "index": 1,
+      "durationMs": 150
+    },
+    {
+      "index": 2,
+      "durationMs": 450
+    },
+    {
+      "index": 3,
+      "durationMs": 220
+    }
+  ]
+}

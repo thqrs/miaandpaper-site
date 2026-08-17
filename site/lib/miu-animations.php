@@ -210,6 +210,7 @@ function miu_animation_default_config()
                 'flipX' => false,
                 'staticFrame' => 0,
                 'motion' => array('type' => 'none', 'distancePx' => 0),
+                'transform' => array('xPx' => 0, 'yPx' => 0, 'rotationDeg' => 0),
             ),
             array(
                 'id' => 'lili-dormir',
@@ -228,6 +229,7 @@ function miu_animation_default_config()
                 'flipX' => false,
                 'staticFrame' => 7,
                 'motion' => array('type' => 'none', 'distancePx' => 0),
+                'transform' => array('xPx' => 0, 'yPx' => 0, 'rotationDeg' => 0),
             ),
             array(
                 'id' => 'lili-andar-esquerda',
@@ -246,6 +248,7 @@ function miu_animation_default_config()
                 'flipX' => true,
                 'staticFrame' => 0,
                 'motion' => array('type' => 'left', 'distancePx' => 72),
+                'transform' => array('xPx' => 0, 'yPx' => 0, 'rotationDeg' => 0),
             ),
             array(
                 'id' => 'lili-andar-direita',
@@ -264,6 +267,7 @@ function miu_animation_default_config()
                 'flipX' => false,
                 'staticFrame' => 0,
                 'motion' => array('type' => 'right', 'distancePx' => 72),
+                'transform' => array('xPx' => 0, 'yPx' => 0, 'rotationDeg' => 0),
             ),
             array(
                 'id' => 'lili-saltar',
@@ -283,6 +287,7 @@ function miu_animation_default_config()
                 'flipX' => false,
                 'staticFrame' => 0,
                 'motion' => array('type' => 'jump', 'distancePx' => 34),
+                'transform' => array('xPx' => 0, 'yPx' => 0, 'rotationDeg' => 0),
             ),
             array(
                 'id' => 'lili-atirar',
@@ -301,6 +306,7 @@ function miu_animation_default_config()
                 'flipX' => false,
                 'staticFrame' => 7,
                 'motion' => array('type' => 'none', 'distancePx' => 0),
+                'transform' => array('xPx' => 0, 'yPx' => 0, 'rotationDeg' => 0),
             ),
         ),
     );
@@ -396,6 +402,7 @@ function miu_animation_sanitize_item($item)
     $motionOptions = miu_animation_motion_options();
     $motion = isset($item['motion']) && is_array($item['motion']) ? $item['motion'] : array();
     $motionType = isset($motion['type']) && isset($motionOptions[$motion['type']]) ? (string)$motion['type'] : 'none';
+    $transform = isset($item['transform']) && is_array($item['transform']) ? $item['transform'] : array();
 
     return array(
         'id' => $id,
@@ -417,6 +424,11 @@ function miu_animation_sanitize_item($item)
         'motion' => array(
             'type' => $motionType,
             'distancePx' => miu_animation_int(isset($motion['distancePx']) ? $motion['distancePx'] : 0, 0, 600, 0),
+        ),
+        'transform' => array(
+            'xPx' => miu_animation_int(isset($transform['xPx']) ? $transform['xPx'] : 0, -600, 600, 0),
+            'yPx' => miu_animation_int(isset($transform['yPx']) ? $transform['yPx'] : 0, -600, 600, 0),
+            'rotationDeg' => miu_animation_float(isset($transform['rotationDeg']) ? $transform['rotationDeg'] : 0, -360, 360, 0),
         ),
     );
 }
@@ -525,6 +537,12 @@ function miu_animation_public_config()
         $animation['sheetUrl'] = 'content/brand/miu/' . $animation['file'] . '?v=' . rawurlencode($version);
     }
     unset($animation);
+    // A configuração pública transporta também a biblioteca da cara. Mantemos
+    // as animações de corpo inteiro no campo histórico `animations` para não
+    // quebrar leitores antigos.
+    if (function_exists('miu_face_animation_public_config')) {
+        $config['faceAnimations'] = miu_face_animation_public_config();
+    }
     return $config;
 }
 
@@ -628,6 +646,7 @@ function miu_animation_item_from_post($post, $existing, $uploadedFile)
     }
     $motionOptions = miu_animation_motion_options();
     $motionType = isset($post['motion_type']) && isset($motionOptions[$post['motion_type']]) ? (string)$post['motion_type'] : 'none';
+    $existingTransform = isset($existing['transform']) && is_array($existing['transform']) ? $existing['transform'] : array();
     $probabilityPercent = miu_animation_float(isset($post['probability']) ? $post['probability'] : 100, 0, 100, 100);
 
     return array(
@@ -650,6 +669,11 @@ function miu_animation_item_from_post($post, $existing, $uploadedFile)
         'motion' => array(
             'type' => $motionType,
             'distancePx' => miu_animation_int(isset($post['motion_distance']) ? $post['motion_distance'] : 0, 0, 600, 0),
+        ),
+        'transform' => array(
+            'xPx' => miu_animation_int(isset($post['transform_x']) ? $post['transform_x'] : (isset($existingTransform['xPx']) ? $existingTransform['xPx'] : 0), -600, 600, 0),
+            'yPx' => miu_animation_int(isset($post['transform_y']) ? $post['transform_y'] : (isset($existingTransform['yPx']) ? $existingTransform['yPx'] : 0), -600, 600, 0),
+            'rotationDeg' => miu_animation_float(isset($post['transform_rotation']) ? $post['transform_rotation'] : (isset($existingTransform['rotationDeg']) ? $existingTransform['rotationDeg'] : 0), -360, 360, 0),
         ),
     );
 }
@@ -780,3 +804,7 @@ function miu_animation_save_appearance_from_request($post)
     $config['display'] = $display;
     return miu_animation_write_config($config);
 }
+
+// As animações da cara vivem num manifesto separado, mas usam os mesmos
+// sanitizadores de grelha, tempos e gatilhos definidos acima.
+require_once __DIR__ . '/miu-face-animations.php';

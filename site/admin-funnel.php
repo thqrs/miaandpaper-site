@@ -2289,7 +2289,7 @@ foreach ($ipLookupCache as $info) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Funil de encomendas · Mia &amp; Paper admin</title>
 <link rel="stylesheet" href="admin-nav.css?v=2026081001">
-<script src="admin-nav.js?v=2026081701" defer></script>
+<script src="admin-nav.js?v=2026081702" defer></script>
 <style>
 :root { --ink:#3b2f1f; --muted:#76551c; --line:rgba(118,85,28,0.22); --gold:#b88616; --moss:#4f7a3a; --bg:#fffbe9; --card:#fff8df; }
 * { box-sizing: border-box; }

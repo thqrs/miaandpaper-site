@@ -1,0 +1,255 @@
+{
+    "schemaVersion": 1,
+    "updatedAt": "2026-08-17T22:04:13+00:00",
+    "baseAnimationId": "miu-cara-calma",
+    "animations": [
+        {
+            "id": "miu-cara-calma",
+            "name": "Míu — cara calma",
+            "file": "miu-sprite.webp",
+            "smallFile": "miu-sprite-small.webp",
+            "columns": 4,
+            "rows": 2,
+            "sequence": [
+                0,
+                0,
+                0,
+                1,
+                2,
+                3,
+                0,
+                0,
+                0,
+                7,
+                0,
+                0,
+                0
+            ],
+            "frameDurationsMs": [
+                1300,
+                1100,
+                900,
+                110,
+                100,
+                150,
+                1200,
+                950,
+                1200,
+                700,
+                1000,
+                900,
+                1200
+            ],
+            "repeat": 0,
+            "enabled": true,
+            "triggers": [],
+            "products": [],
+            "probability": 1,
+            "weight": 1,
+            "cooldownMs": 0,
+            "flipX": false,
+            "staticFrame": 0,
+            "motion": {
+                "type": "none",
+                "distancePx": 0
+            },
+            "transform": {
+                "xPx": 0,
+                "yPx": 0,
+                "rotationDeg": 0
+            },
+            "contexts": [
+                "launcher",
+                "header",
+                "message"
+            ]
+        },
+        {
+            "id": "miu-cara-sorriso",
+            "name": "Míu — cara sorriso",
+            "file": "miu-sprite.webp",
+            "smallFile": "miu-sprite-small.webp",
+            "columns": 4,
+            "rows": 2,
+            "sequence": [
+                0,
+                6,
+                6,
+                0
+            ],
+            "frameDurationsMs": [
+                100,
+                320,
+                260,
+                180
+            ],
+            "repeat": 1,
+            "enabled": true,
+            "triggers": [
+                "launcher_hover",
+                "launcher_open",
+                "message_sent",
+                "reply_end",
+                "conversation_reset"
+            ],
+            "products": [],
+            "probability": 1,
+            "weight": 3,
+            "cooldownMs": 650,
+            "flipX": false,
+            "staticFrame": 6,
+            "motion": {
+                "type": "none",
+                "distancePx": 0
+            },
+            "transform": {
+                "xPx": 0,
+                "yPx": 0,
+                "rotationDeg": 0
+            },
+            "contexts": [
+                "launcher"
+            ]
+        },
+        {
+            "id": "miu-cara-inclina",
+            "name": "Míu — cara inclina",
+            "file": "miu-sprite.webp",
+            "smallFile": "miu-sprite-small.webp",
+            "columns": 4,
+            "rows": 2,
+            "sequence": [
+                0,
+                4,
+                4,
+                0,
+                5,
+                5,
+                0
+            ],
+            "frameDurationsMs": [
+                100,
+                420,
+                250,
+                160,
+                420,
+                250,
+                180
+            ],
+            "repeat": 1,
+            "enabled": true,
+            "triggers": [
+                "idle_random"
+            ],
+            "products": [],
+            "probability": 0.58,
+            "weight": 2,
+            "cooldownMs": 7000,
+            "flipX": false,
+            "staticFrame": 4,
+            "motion": {
+                "type": "none",
+                "distancePx": 0
+            },
+            "transform": {
+                "xPx": 0,
+                "yPx": 0,
+                "rotationDeg": 0
+            },
+            "contexts": [
+                "launcher"
+            ]
+        },
+        {
+            "id": "miu-cara-orelha",
+            "name": "Míu — cara orelha",
+            "file": "miu-sprite.webp",
+            "smallFile": "miu-sprite-small.webp",
+            "columns": 4,
+            "rows": 2,
+            "sequence": [
+                0,
+                7,
+                7,
+                0
+            ],
+            "frameDurationsMs": [
+                120,
+                380,
+                320,
+                180
+            ],
+            "repeat": 1,
+            "enabled": true,
+            "triggers": [
+                "idle_random",
+                "launcher_close"
+            ],
+            "products": [],
+            "probability": 0.5,
+            "weight": 1,
+            "cooldownMs": 9000,
+            "flipX": false,
+            "staticFrame": 7,
+            "motion": {
+                "type": "none",
+                "distancePx": 0
+            },
+            "transform": {
+                "xPx": 0,
+                "yPx": 0,
+                "rotationDeg": 0
+            },
+            "contexts": [
+                "launcher"
+            ]
+        },
+        {
+            "id": "miu-cara-dormir",
+            "name": "Míu — cara a dormir",
+            "file": "miu-sprite-sleep.webp",
+            "smallFile": "",
+            "columns": 4,
+            "rows": 1,
+            "sequence": [
+                0,
+                1,
+                2,
+                3,
+                2,
+                3
+            ],
+            "frameDurationsMs": [
+                650,
+                700,
+                650,
+                1100,
+                650,
+                1100
+            ],
+            "repeat": 0,
+            "enabled": true,
+            "triggers": [
+                "inactivity"
+            ],
+            "products": [],
+            "probability": 1,
+            "weight": 1,
+            "cooldownMs": 0,
+            "flipX": false,
+            "staticFrame": 3,
+            "motion": {
+                "type": "none",
+                "distancePx": 0
+            },
+            "transform": {
+                "xPx": 0,
+                "yPx": 0,
+                "rotationDeg": 0
+            },
+            "contexts": [
+                "launcher"
+            ]
+        }
+    ]
+}
