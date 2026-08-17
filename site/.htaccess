@@ -21,11 +21,14 @@ DirectoryIndex index.html
     Require all denied
 </FilesMatch>
 
-# Bloqueia ficheiros dot e tudo o que vem da pasta privada irmã caso seja
-# alguma vez exposta por engano (defence-in-depth).
-<FilesMatch "^(\.|miaandpaper-mail-config|miu-config|admin-login-attempts|seo-state\.json).*$">
+# Bloqueia ficheiros dot, configuracoes internas e miu-defaults.json (contém system prompt e knowledge base)
+<FilesMatch "^(\.|miaandpaper-mail-config|miu-config|admin-login-attempts|seo-state\.json|miu-defaults\.json).*$">
     Require all denied
 </FilesMatch>
+
+<Files "miu-defaults.json">
+    Require all denied
+</Files>
 
 # Caminhos de trabalho que chegaram a existir no live. O deploy e aditivo, por
 # isso estas respostas continuam a fechar copias antigas mesmo depois de os

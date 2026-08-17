@@ -54,6 +54,8 @@ function bot_local_date($value)
 
 $csrf = mp_admin_csrf_token();
 $notice = isset($_GET['notice']) ? (string)$_GET['notice'] : '';
+$settingsError = isset($_SESSION['miu_settings_error']) ? (string)$_SESSION['miu_settings_error'] : '';
+unset($_SESSION['miu_settings_error']);
 $animationError = isset($_SESSION['miu_animation_error']) ? (string)$_SESSION['miu_animation_error'] : '';
 unset($_SESSION['miu_animation_error']);
 $allowedTabs = array('conversations', 'settings', 'contexts', 'replies', 'animations');
@@ -67,27 +69,33 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string)$_SERVER['REQUEST_ME
     }
     $action = isset($_POST['action']) ? (string)$_POST['action'] : '';
     if ($action === 'save_settings') {
-        $current = miu_settings();
-        $provider = isset($_POST['provider']) && $_POST['provider'] === 'gemini' ? 'gemini' : 'openrouter';
-        miu_save_settings(array(
-            'enabled' => !empty($_POST['enabled']) ? '1' : '0',
-            'name' => trim(miu_text_slice(isset($_POST['name']) ? $_POST['name'] : 'Míu', 40)),
-            'greeting' => trim(miu_text_slice(isset($_POST['greeting']) ? $_POST['greeting'] : 'Em que posso ajudar?', 160)),
-            'launcher_prompt' => trim(miu_text_slice(isset($_POST['launcher_prompt']) ? $_POST['launcher_prompt'] : '', 60)),
-            'provider' => $provider,
-            'fallback_enabled' => !empty($_POST['fallback_enabled']) ? '1' : '0',
-            'openrouter_model' => bot_model(isset($_POST['openrouter_model']) ? $_POST['openrouter_model'] : '', $current['openrouter_model']),
-            'gemini_model' => bot_model(isset($_POST['gemini_model']) ? $_POST['gemini_model'] : '', $current['gemini_model']),
-            'max_message_chars' => (string)bot_int(isset($_POST['max_message_chars']) ? $_POST['max_message_chars'] : 800, 200, 2000, 800),
-            'max_conversation_turns' => (string)bot_int(isset($_POST['max_conversation_turns']) ? $_POST['max_conversation_turns'] : 20, 4, 30, 20),
-            'rate_per_minute' => (string)bot_int(isset($_POST['rate_per_minute']) ? $_POST['rate_per_minute'] : 6, 2, 30, 6),
-            'rate_per_hour' => (string)bot_int(isset($_POST['rate_per_hour']) ? $_POST['rate_per_hour'] : 40, 10, 300, 40),
-            'max_output_tokens' => (string)bot_int(isset($_POST['max_output_tokens']) ? $_POST['max_output_tokens'] : 450, 100, 1000, 450),
-            'system_prompt' => trim(miu_text_slice(isset($_POST['system_prompt']) ? $_POST['system_prompt'] : '', 20000)),
-            'knowledge_base' => trim(miu_text_slice(isset($_POST['knowledge_base']) ? $_POST['knowledge_base'] : '', 50000)),
-        ));
-        header('Location: bot.php?tab=settings&notice=saved');
-        exit;
+        try {
+            $current = miu_settings();
+            $provider = isset($_POST['provider']) && $_POST['provider'] === 'gemini' ? 'gemini' : 'openrouter';
+            miu_save_settings(array(
+                'enabled' => !empty($_POST['enabled']) ? '1' : '0',
+                'name' => trim(miu_text_slice(isset($_POST['name']) ? $_POST['name'] : 'Míu', 40)),
+                'greeting' => trim(miu_text_slice(isset($_POST['greeting']) ? $_POST['greeting'] : 'Em que posso ajudar?', 160)),
+                'launcher_prompt' => trim(miu_text_slice(isset($_POST['launcher_prompt']) ? $_POST['launcher_prompt'] : '', 60)),
+                'provider' => $provider,
+                'fallback_enabled' => !empty($_POST['fallback_enabled']) ? '1' : '0',
+                'openrouter_model' => bot_model(isset($_POST['openrouter_model']) ? $_POST['openrouter_model'] : '', $current['openrouter_model']),
+                'gemini_model' => bot_model(isset($_POST['gemini_model']) ? $_POST['gemini_model'] : '', $current['gemini_model']),
+                'max_message_chars' => (string)bot_int(isset($_POST['max_message_chars']) ? $_POST['max_message_chars'] : 800, 200, 2000, 800),
+                'max_conversation_turns' => (string)bot_int(isset($_POST['max_conversation_turns']) ? $_POST['max_conversation_turns'] : 20, 4, 30, 20),
+                'rate_per_minute' => (string)bot_int(isset($_POST['rate_per_minute']) ? $_POST['rate_per_minute'] : 6, 2, 30, 6),
+                'rate_per_hour' => (string)bot_int(isset($_POST['rate_per_hour']) ? $_POST['rate_per_hour'] : 40, 10, 300, 40),
+                'max_output_tokens' => (string)bot_int(isset($_POST['max_output_tokens']) ? $_POST['max_output_tokens'] : 220, 100, 1000, 220),
+                'system_prompt' => trim(miu_text_slice(isset($_POST['system_prompt']) ? $_POST['system_prompt'] : '', 20000)),
+                'knowledge_base' => trim(miu_text_slice(isset($_POST['knowledge_base']) ? $_POST['knowledge_base'] : '', 50000)),
+            ));
+            header('Location: bot.php?tab=settings&notice=saved');
+            exit;
+        } catch (Exception $e) {
+            $_SESSION['miu_settings_error'] = 'Não foi possível guardar as definições do Míu. O ficheiro anterior foi mantido. (' . $e->getMessage() . ')';
+            header('Location: bot.php?tab=settings&notice=save-failed');
+            exit;
+        }
     }
     if ($action === 'save_context') {
         $contextKey = isset($_POST['context_key']) ? trim((string)$_POST['context_key']) : '';
@@ -219,6 +227,7 @@ foreach ($contextRows as $contextRow) {
   </nav>
 
   <?php if ($notice === 'saved'): ?><p class="miu-admin-flash">Configuração guardada.</p><?php endif; ?>
+  <?php if ($notice === 'save-failed'): ?><p class="miu-admin-flash miu-admin-flash--error"><?= bot_h($settingsError !== '' ? $settingsError : 'Não foi possível guardar as definições do Míu. O ficheiro anterior foi mantido.') ?></p><?php endif; ?>
   <?php if ($notice === 'context-saved'): ?><p class="miu-admin-flash">Contexto do passo guardado.</p><?php endif; ?>
   <?php if ($notice === 'deleted'): ?><p class="miu-admin-flash">Conversa apagada.</p><?php endif; ?>
   <?php if ($notice === 'animations-saved'): ?><p class="miu-admin-flash">Comportamento visual do Míu guardado.</p><?php endif; ?>
@@ -246,6 +255,7 @@ foreach ($contextRows as $contextRow) {
       <input type="hidden" name="csrf" value="<?= bot_h($csrf) ?>">
       <input type="hidden" name="action" value="save_settings">
       <div class="miu-settings-grid">
+        <div class="miu-json-note miu-settings-span"><strong>Fonte única da configuração</strong><p>Estas definições são guardadas diretamente em <code>site/content/miu-defaults.json</code>, que é a fonte única da configuração global do Míu. O ficheiro faz parte do código do projeto e será incluído no futuro deploy.</p></div>
         <label class="miu-check">
           <input type="checkbox" name="enabled" value="1" <?= $settings['enabled'] === '1' ? 'checked' : '' ?>>
           <span><strong>Mostrar o Míu no site</strong><small>Quando está fechado, o botão não aparece e a API recusa mensagens.</small></span>

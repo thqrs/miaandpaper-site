@@ -13,14 +13,14 @@ O Míu é o assistente virtual no canto inferior direito das páginas públicas.
 | `tools/process-miu-sprite.py` | recorta e optimiza as duas folhas fonte 4×2 |
 | `tools/build-miu-quick-replies.js` | recria um catálogo inicial exacto a partir dos JSON de produto |
 | `site/bot-api.php` | endpoint público, CSRF, limites, contexto e resposta NDJSON |
-| `site/lib/miu-bot.php` | SQLite separado, filtros, prompt e chamadas aos fornecedores |
+| `site/lib/miu-bot.php` | filtros, prompt, chamadas aos fornecedores e SQLite para runtime |
 | `site/lib/miu-context.php` | valida produto/passo, objectivos, perguntas e preços actuais |
 | `site/lib/miu-stream.php` | liga ao streaming SSE dos fornecedores e recolhe o modelo usado |
-| `site/content/miu-defaults.json` | valores usados apenas na primeira criação da base |
+| `site/content/miu-defaults.json` | configuração global persistente e activa do Míu (fonte única) |
 | `site/content/miu-quick-replies.json` | perguntas e respostas locais por produto e passo, editáveis em massa |
 | `site/bot.php` | conversas e edição da configuração |
 | `site/bot-admin.css` / `.js` | interface própria do painel |
-| `private/miu.sqlite` | conversas, mensagens e configuração activa |
+| `private/miu.sqlite` | conversas, mensagens e contextos de passo (runtime) |
 | `private/miu-config.php` | chaves; nunca fica na raiz pública nem no Git |
 
 O catálogo, as ofertas e `congressos/2026` carregam os mesmos módulos 13/24.
@@ -82,9 +82,19 @@ e [generateContent do Gemini](https://ai.google.dev/gemini-api/docs/generate-con
 - passos em que a tabela de preços actual deve ser injectada;
 - tamanho de mensagem, turnos por conversa, rate limits e resposta máxima.
 
-`content/miu-defaults.json` é só a semente. Depois de `miu.sqlite` existir, a
-verdade é a tabela `bot_settings`. Para voltar aos defaults de um campo, copiar
-o valor pelo painel; não apagar a base, porque ela contém as conversas.
+`content/miu-defaults.json` é a **fonte única da verdade** para as definições
+globais do Míu. Guardar alterações no painel `bot.php` grava directamente
+neste ficheiro JSON versionado. O ficheiro faz parte do código do projecto e
+será incluído no futuro deploy, garantindo consistência total entre local e
+servidor sem dependência de tabelas de configuração em SQLite.
+
+O schema desse ficheiro é validado de forma estrita: as chaves globais são
+obrigatórias e booleanos, inteiros e texto têm de usar o tipo JSON correcto.
+Um ficheiro ausente, truncado ou estruturalmente inválido não é completado com
+valores silenciosos. Ao guardar, o painel escreve e valida primeiro um ficheiro
+temporário na mesma pasta, reserva a versão anterior e só depois instala a nova;
+se a substituição falhar, tenta repor a versão anterior sem escrever por cima
+dela parcialmente.
 
 O prompt instrui o Míu a responder em português de Portugal, a não inventar
 preços, prazos ou disponibilidade, a não pedir dados pessoais e a usar apenas
@@ -148,9 +158,8 @@ duros no servidor.
 
 ## SQLite e privacidade
 
-`private/miu.sqlite` tem quatro tabelas:
+`private/miu.sqlite` tem três tabelas activas:
 
-- `bot_settings` — configuração activa;
 - `bot_conversations` — token aleatório, IP, user-agent, página e datas;
 - `bot_messages` — papel, texto, estado, fornecedor/modelo e erro técnico.
 - `bot_step_contexts` — objectivos e opção de preços por passo; a coluna antiga de perguntas é apenas cache regenerada do JSON.

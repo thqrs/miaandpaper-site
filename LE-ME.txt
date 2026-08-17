@@ -1,0 +1,21 @@
+PATCH — correcções da persistência JSON do Míu
+
+Sobrepor estes ficheiros na raiz do projecto Mia & Paper:
+- site/lib/miu-bot.php
+- site/tools/test-miu-settings-json.php
+- docs/12-miu.md
+
+Este patch NÃO inclui nem altera site/content/miu-defaults.json.
+Assim, a prompt nova que já está no JSON actual fica exactamente como está e passa a ser a prompt activa, sem ser substituída pela prompt antiga que ainda possa existir em private/miu.sqlite.
+
+Correcções incluídas:
+1. validação estrita do schema e dos tipos de miu-defaults.json;
+2. ficheiro ausente/inválido já não é recriado silenciosamente por miu_save_settings();
+3. gravação segura: original -> backup, temporário -> original, rollback por rename;
+4. o backup nunca é apagado se uma restauração falhar;
+5. validação final do ficheiro já instalado antes de eliminar o backup;
+6. testes reforçados para JSON inválido, chaves em falta, tipos errados, ficheiro ausente e valores internos inválidos;
+7. teste SQLite passa a ser opcional quando o driver PDO SQLite não existe no ambiente.
+
+Teste principal:
+php site/tools/test-miu-settings-json.php
