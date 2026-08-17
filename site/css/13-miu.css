@@ -20,6 +20,19 @@
   justify-items: end;
   color: var(--ink);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Desktop é o valor base. O media query no fim troca apenas as variáveis
+     derivadas, permitindo tamanhos independentes em mobile. */
+  --miu-launcher-sprite-size: var(--miu-launcher-sprite-size-desktop, 46px);
+  --miu-header-sprite-size: var(--miu-header-sprite-size-desktop, 26px);
+  --miu-message-sprite-size: var(--miu-message-sprite-size-desktop, 26px);
+  --miu-interactive-sprite-size: var(--miu-interactive-sprite-size-desktop, 96px);
+  /* O launcher usa um ícone de balão circular em outline (estilo WhatsApp).
+     Reserva um pouco mais de folga à volta da cara para ela respirar dentro do contorno. */
+  --miu-launcher-box-size: max(56px, calc(var(--miu-launcher-sprite-size, 46px) + 14px));
+}
+
+.miu-root.miu-launcher-mode-basket {
+  --miu-launcher-box-size: max(50px, calc(var(--miu-launcher-sprite-size, 46px) * 1.22));
 }
 
 .miu-root *,
@@ -29,42 +42,73 @@
 .miu-launcher {
   position: relative;
   display: grid;
-  width: 50px;
-  height: 50px;
+  width: var(--miu-launcher-box-size);
+  height: var(--miu-launcher-box-size);
   padding: 0;
-  border: 1px solid var(--gold);
-  border-radius: 50%;
-  background: var(--miu-panel);
-  box-shadow: var(--miu-shadow-large);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   color: var(--moss);
   cursor: pointer;
   isolation: isolate;
   place-items: center;
+  overflow: visible;
   transition: transform .18s ease;
 }
 
 .miu-launcher:hover { transform: translateY(-3px) rotate(-2deg); }
 
-.miu-launcher::after {
+/* O launcher usa a silhueta exterior de um balão tipo WhatsApp.
+   O fundo mantém o mesmo var(--miu-panel) usado pelo launcher original;
+   apenas o CONTORNO é simples/sem gradiente. O SVG é espelhado para a ponta ficar à direita. */
+.miu-launcher::before,
+.miu-launcher::after { display: none; }
+
+.miu-launcher__bubble-outline {
   position: absolute;
-  right: -2px;
-  bottom: 3px;
-  z-index: -1;
-  width: 13px;
-  height: 13px;
-  border-right: 1px solid var(--gold);
-  border-bottom: 1px solid var(--gold);
-  border-radius: 0 0 3px 0;
-  background: var(--miu-panel);
-  content: "";
-  transform: rotate(28deg) skew(8deg);
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: var(--miu-panel);
+  stroke: var(--gold);
+  stroke-width: 1.55;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+  transform: scaleX(-1);
+  transform-origin: center;
+  filter: drop-shadow(0 4px 7px rgba(67,43,19,.12));
+}
+
+.miu-launcher__bubble-outline path {
+  vector-effect: non-scaling-stroke;
+}
+
+.miu-launcher__bubble-face {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  width: var(--miu-launcher-sprite-size, 46px);
+  height: var(--miu-launcher-sprite-size, 46px);
+  overflow: hidden;
+  border-radius: 50%;
+  background: transparent;
+  place-items: center;
+  transform: translate(-50%, -50%);
 }
 
 .miu-launcher .miu-face {
   position: relative;
   z-index: 1;
-  width: var(--miu-launcher-sprite-size, 46px);
-  height: var(--miu-launcher-sprite-size, 46px);
+  width: 100%;
+  height: 100%;
+  flex: 0 0 100%;
 }
 
 .miu-launcher__callout {
@@ -128,7 +172,7 @@
 .miu-panel {
   position: absolute;
   right: 0;
-  bottom: 68px;
+  bottom: calc(var(--miu-launcher-box-size) + 18px);
   display: grid;
   grid-template-rows: auto minmax(100px, 1fr) auto;
   width: min(310px, calc(100vw - 24px));
@@ -375,14 +419,13 @@
     right: max(12px, env(safe-area-inset-right));
     bottom: max(12px, env(safe-area-inset-bottom));
   }
-  .miu-launcher { width: 50px; height: 50px; }
   .miu-launcher .miu-face {
-    width: var(--miu-launcher-sprite-size, 46px);
-    height: var(--miu-launcher-sprite-size, 46px);
+    width: 100%;
+    height: 100%;
   }
   .miu-panel {
     right: 0;
-    bottom: 64px;
+    bottom: calc(var(--miu-launcher-box-size) + 14px);
     width: min(286px, calc(100vw - 56px));
     height: min(360px, 52dvh);
     min-height: 288px;
@@ -409,11 +452,7 @@
 
 @media print { .miu-root { display: none !important; } }
 
-/* MIU_APPEARANCE_V2 — tamanhos/círculos independentes e animação de corpo inteiro. */
-.miu-launcher {
-  width: max(50px, calc(var(--miu-launcher-sprite-size, 46px) + 4px));
-  height: max(50px, calc(var(--miu-launcher-sprite-size, 46px) + 4px));
-}
+/* MIU_APPEARANCE_V3 — tamanhos independentes e launcher balão/alcofinha. */
 
 /* O balão fica centrado verticalmente no círculo; a seta aponta para o centro
    do Míu em vez de ficar alguns pixels acima. */
@@ -460,17 +499,21 @@
 .miu-message-row .miu-message {
   max-width: calc(100% - var(--miu-message-sprite-size, 26px) - 8px);
 }
+/* Se o avatar do Míu for mais alto do que o balão, centra o balão na
+   altura do avatar. Se o texto for mais alto, a própria mensagem define a
+   altura da linha e o avatar mantém-se apoiado em baixo. */
+.miu-message-row--assistant .miu-message {
+  align-self: center;
+}
 .miu-message-avatar {
+  flex: 0 0 var(--miu-message-sprite-size, 26px);
   width: var(--miu-message-sprite-size, 26px);
   height: var(--miu-message-sprite-size, 26px);
 }
-
-.miu-root.miu-no-circle-launcher .miu-launcher {
-  border-color: transparent;
-  background: transparent;
-  box-shadow: none;
+.miu-message-row--assistant {
+  min-height: var(--miu-message-sprite-size, 26px);
 }
-.miu-root.miu-no-circle-launcher .miu-launcher::after { display: none; }
+
 .miu-root.miu-no-circle-header .miu-panel__mini-cat {
   border-color: transparent;
   background: transparent;
@@ -501,12 +544,475 @@
   background-repeat: no-repeat;
 }
 .miu-root.is-interactive:not(.is-open) .miu-interactive-wrap { opacity: 1; }
-.miu-root.is-interactive:not(.is-open) .miu-launcher .miu-face { opacity: 0; }
+.miu-root.is-interactive:not(.is-open) .miu-launcher__bubble-face,
+.miu-root.is-interactive:not(.is-open) .miu-launcher__basket { opacity: 0; }
+
+/* No laboratório, uma animação de corpo inteiro tem de ser visível mesmo se a
+   chatbox estiver aberta. Isto evita que o estado do chat esconda o teste. */
+body[data-miu-admin-chat="1"] .miu-root.is-debug-interactive-active .miu-interactive-wrap {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+body[data-miu-admin-chat="1"] .miu-root.is-debug-interactive-active .miu-interactive-sprite {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+body[data-miu-admin-chat="1"] .miu-root.is-debug-interactive-active .miu-launcher__bubble-face,
+body[data-miu-admin-chat="1"] .miu-root.is-debug-interactive-active .miu-launcher__basket { opacity: 0 !important; }
 
 @media (max-width: 520px) {
-  .miu-launcher {
-    width: max(50px, calc(var(--miu-launcher-sprite-size, 46px) + 4px));
-    height: max(50px, calc(var(--miu-launcher-sprite-size, 46px) + 4px));
+  .miu-root {
+    --miu-launcher-sprite-size: var(--miu-launcher-sprite-size-mobile, var(--miu-launcher-sprite-size-desktop, 46px));
+    --miu-header-sprite-size: var(--miu-header-sprite-size-mobile, var(--miu-header-sprite-size-desktop, 26px));
+    --miu-message-sprite-size: var(--miu-message-sprite-size-mobile, var(--miu-message-sprite-size-desktop, 26px));
+    --miu-interactive-sprite-size: var(--miu-interactive-sprite-size-mobile, var(--miu-interactive-sprite-size-desktop, 96px));
   }
   .miu-message-row .miu-message { max-width: calc(100% - var(--miu-message-sprite-size, 26px) - 6px); }
+}
+
+
+/* MIU_ADMIN_LAB_V1 — chat real + laboratório fixo de sprites no bot.php. */
+body[data-miu-admin-chat="1"] .miu-root {
+  z-index: 1300;
+}
+
+.miu-debug-dock {
+  position: fixed;
+  top: 50%;
+  left: max(8px, env(safe-area-inset-left));
+  z-index: 1400;
+  width: min(286px, calc(100vw - 24px));
+  max-height: calc(100dvh - 28px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--shadow-menu, var(--shadow));
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transform: translateY(-50%);
+  transition: width .16s ease, top .16s ease, bottom .16s ease, transform .16s ease;
+}
+
+.miu-debug-dock *,
+.miu-debug-dock *::before,
+.miu-debug-dock *::after {
+  box-sizing: border-box;
+}
+
+.miu-debug-dock__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.miu-debug-dock__head > div {
+  min-width: 0;
+}
+
+.miu-debug-dock__head strong {
+  display: block;
+  color: var(--moss);
+  font: 800 .86rem/1.15 Georgia, "Times New Roman", serif;
+}
+
+.miu-debug-dock__head small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: .64rem;
+}
+
+.miu-debug-dock__head button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--moss);
+  cursor: pointer;
+  place-items: center;
+}
+
+.miu-debug-dock__body {
+  max-height: calc(100dvh - 82px);
+  padding: 9px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.miu-debug-dock.is-collapsed {
+  top: auto;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: auto;
+  min-width: 148px;
+  transform: none;
+}
+
+.miu-debug-dock.is-collapsed .miu-debug-dock__head {
+  border-bottom: 0;
+}
+
+.miu-debug-dock.is-collapsed .miu-debug-dock__body {
+  display: none;
+}
+
+.miu-debug-dock section + section {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+
+.miu-debug-dock h2 {
+  margin: 0 0 6px;
+  color: var(--moss);
+  font-size: .7rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: .035em;
+}
+
+.miu-debug-buttons {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+}
+
+.miu-debug-animation-button,
+.miu-debug-play,
+.miu-debug-dock__actions button {
+  width: 100%;
+  padding: 6px 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: .68rem;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+}
+
+.miu-debug-animation-button:hover,
+.miu-debug-play:hover,
+.miu-debug-dock__actions button:hover {
+  border-color: var(--gold);
+  background: var(--linen);
+}
+
+.miu-debug-animation-button.is-disabled-config {
+  border-style: dashed;
+  opacity: .72;
+}
+
+.miu-debug-loading,
+.miu-debug-empty {
+  display: block;
+  padding: 6px 7px;
+  border-radius: 8px;
+  background: var(--linen);
+  color: var(--muted);
+  font-size: .66rem;
+}
+
+.miu-debug-sprite-lab > p {
+  margin: 0 0 7px;
+  color: var(--muted);
+  font-size: .62rem;
+  line-height: 1.35;
+}
+
+.miu-debug-sprite-lab code {
+  font-size: .6rem;
+  overflow-wrap: anywhere;
+}
+
+.miu-debug-lab-list {
+  display: grid;
+  gap: 7px;
+}
+
+.miu-debug-lab-row {
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--paper);
+}
+
+.miu-debug-lab-name {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  margin-bottom: 5px;
+}
+
+.miu-debug-lab-name strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: .66rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.miu-debug-lab-name small {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: .55rem;
+}
+
+.miu-debug-lab-fields {
+  display: grid;
+  grid-template-columns: .8fr .8fr 1.35fr;
+  gap: 4px;
+  margin-bottom: 5px;
+}
+
+.miu-debug-lab-fields label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: .58rem;
+}
+
+.miu-debug-lab-fields input {
+  width: 100%;
+  min-width: 0;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: .62rem;
+}
+
+.miu-debug-play {
+  text-align: center;
+}
+
+.miu-debug-dock__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+
+.miu-debug-dock__actions button {
+  text-align: center;
+}
+
+.miu-debug-status {
+  min-height: 1.1em;
+  margin: 6px 1px 0;
+  color: var(--muted);
+  font-size: .6rem;
+  line-height: 1.3;
+}
+
+@media (max-width: 760px) {
+  .miu-debug-dock {
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    max-height: min(62dvh, 520px);
+    transform: none;
+  }
+  .miu-debug-dock__body {
+    max-height: min(calc(62dvh - 48px), 472px);
+  }
+}
+
+/* MIU_LAUNCHER_MASCOT_V3 — a alcofinha pertence ao Míu principal no canto.
+   A barra do chat volta a usar apenas a cara, que pode ser mostrada/ocultada
+   e ter ou não círculo. */
+.miu-panel__mascot {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  align-self: center;
+  place-items: center;
+}
+.miu-root.miu-header-hidden .miu-panel__mascot { display: none; }
+
+.miu-launcher__basket {
+  position: relative;
+  z-index: 1;
+  display: none;
+  width: calc(var(--miu-launcher-sprite-size, 46px) * 1.36);
+  height: calc(var(--miu-launcher-sprite-size, 46px) * 1.22);
+  min-width: 34px;
+  min-height: 30px;
+  overflow: visible;
+}
+
+.miu-launcher__basket-body {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 1;
+  display: block;
+  width: var(--miu-launcher-sprite-size, 46px);
+  height: var(--miu-launcher-sprite-size, 46px);
+  margin-left: calc(var(--miu-launcher-sprite-size, 46px) / -2);
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  transform-origin: center bottom;
+}
+
+.miu-launcher__basket-front {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  height: 43%;
+  border: 1px solid color-mix(in srgb, var(--gold) 72%, #6f4a22 28%);
+  border-radius: 38% 38% 46% 46% / 24% 24% 54% 54%;
+  background:
+    repeating-linear-gradient(25deg, rgba(111,74,34,.16) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(-25deg, rgba(255,255,255,.24) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #dfbd75 0%, #c99b51 100%);
+  box-shadow: 0 2px 5px rgba(67,43,19,.18);
+}
+
+.miu-launcher__basket-front::before {
+  position: absolute;
+  right: -2px;
+  top: -4px;
+  left: -2px;
+  height: 6px;
+  content: "";
+  border: 1px solid color-mix(in srgb, var(--gold) 74%, #68441f 26%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #efd08c 0%, #c99649 100%);
+}
+
+.miu-root.miu-launcher-mode-circle.miu-launcher__bubble-face { display: grid; }
+.miu-root.miu-launcher-mode-circle .miu-launcher__bubble-outline { display: block; }
+.miu-root.miu-launcher-mode-circle .miu-launcher__basket { display: none; }
+.miu-root.miu-launcher-mode-basket.miu-launcher__bubble-face { display: none; }
+.miu-root.miu-launcher-mode-basket .miu-launcher__bubble-outline { display: none; }
+.miu-root.miu-launcher-mode-basket .miu-launcher__basket { display: block; }
+.miu-root.miu-launcher-mode-basket .miu-launcher {
+  width: max(50px, calc(var(--miu-launcher-sprite-size, 46px) * 1.36));
+  height: var(--miu-launcher-box-size);
+}
+.miu-root.miu-launcher-mode-basket .miu-launcher::before,
+.miu-root.miu-launcher-mode-basket .miu-launcher::after { display: none; }
+
+/* Opções da tab Aparência. São checkboxes a pedido, mas o JS mantém as duas
+   escolhas do Míu principal mutuamente exclusivas em tempo real. */
+.miu-launcher-mode-settings {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card, #fff);
+}
+.miu-launcher-mode-settings__title {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+.miu-launcher-mode-settings__choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.miu-launcher-mode-settings__choices .miu-toggle {
+  min-width: 0;
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .miu-launcher-mode-settings__choices { grid-template-columns: 1fr; }
+}
+
+
+/* MIU_CHAT_MORPH_V10 — mais respiro nos avatares e launcher <-> janela. */
+.miu-root {
+  --miu-header-avatar-padding: 4px;
+  --miu-message-avatar-padding: 4px;
+  --miu-header-avatar-box-size: calc(var(--miu-header-sprite-size, 26px) + (var(--miu-header-avatar-padding) * 2));
+  --miu-message-avatar-box-size: calc(var(--miu-message-sprite-size, 26px) + (var(--miu-message-avatar-padding) * 2));
+}
+
+/* O tamanho configurado continua a ser o tamanho da cara. O círculo ganha
+   padding próprio, para o Míu não ficar colado à borda. */
+.miu-panel__mini-cat {
+  width: var(--miu-header-avatar-box-size);
+  height: var(--miu-header-avatar-box-size);
+  padding: var(--miu-header-avatar-padding);
+}
+.miu-panel__mini-cat .miu-face {
+  width: var(--miu-header-sprite-size, 26px);
+  height: var(--miu-header-sprite-size, 26px);
+}
+
+.miu-message-avatar {
+  display: grid;
+  flex: 0 0 var(--miu-message-avatar-box-size);
+  width: var(--miu-message-avatar-box-size);
+  height: var(--miu-message-avatar-box-size);
+  padding: var(--miu-message-avatar-padding);
+  place-items: center;
+  overflow: hidden;
+}
+.miu-message-avatar .miu-face {
+  width: var(--miu-message-sprite-size, 26px);
+  height: var(--miu-message-sprite-size, 26px);
+  flex: 0 0 var(--miu-message-sprite-size, 26px);
+}
+.miu-message-row .miu-message {
+  max-width: calc(100% - var(--miu-message-avatar-box-size) - 8px);
+}
+.miu-message-row--assistant {
+  min-height: var(--miu-message-avatar-box-size);
+}
+
+/* Ao abrir, a janela ocupa o lugar visual do launcher; não ficam os dois
+   objetos visíveis ao mesmo tempo. Minimizar faz o inverso. */
+.miu-panel {
+  bottom: 0;
+}
+.miu-launcher {
+  transition: opacity .16s ease, visibility .16s ease, transform .18s ease;
+}
+.miu-root.is-open .miu-launcher {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(8px) scale(.92);
+}
+.miu-root.is-open .miu-interactive-wrap {
+  opacity: 0 !important;
+  visibility: hidden;
+}
+.miu-panel__minimize span {
+  display: block;
+  margin-top: -5px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+@media (max-width: 520px) {
+  .miu-panel { bottom: 0; }
+  .miu-message-row .miu-message {
+    max-width: calc(100% - var(--miu-message-avatar-box-size) - 6px);
+  }
 }

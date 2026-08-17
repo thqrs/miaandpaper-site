@@ -1,22 +1,28 @@
 {
     "schemaVersion": 2,
-    "updatedAt": "2026-08-16T00:35:13+00:00",
+    "updatedAt": "2026-08-17T18:51:15+00:00",
     "baseAnimationId": "lili-calma",
     "display": {
         "launcherPx": 46,
-        "smallPx": 26,
+        "launcherPxMobile": 46,
+        "headerPx": 45,
+        "headerPxMobile": 30,
+        "headerVisible": true,
+        "launcherMode": "circle",
+        "messagePx": 43,
+        "messagePxMobile": 26,
+        "interactivePx": 96,
+        "interactivePxMobile": 96,
+        "launcherCircle": true,
+        "headerCircle": false,
+        "messageCircle": false,
+        "promptSeconds": 3,
+        "errorsViaMiu": true,
+        "smallPx": 43,
         "sleepAfterMs": 45000,
         "idleRandomMinMs": 14000,
         "idleRandomMaxMs": 28000,
-        "maxRoamPx": 180,
-        "headerPx": 26,
-        "messagePx": 26,
-        "interactivePx": 96,
-        "launcherCircle": true,
-        "headerCircle": true,
-        "messageCircle": true,
-        "promptSeconds": 5,
-        "errorsViaMiu": true
+        "maxRoamPx": 180
     },
     "animations": [
         {
@@ -56,6 +62,7 @@
             "repeat": 0,
             "enabled": true,
             "triggers": [],
+            "products": [],
             "probability": 1,
             "weight": 1,
             "cooldownMs": 0,
@@ -64,8 +71,7 @@
             "motion": {
                 "type": "none",
                 "distancePx": 0
-            },
-            "products": []
+            }
         },
         {
             "id": "lili-dormir",
@@ -102,6 +108,7 @@
             "triggers": [
                 "inactivity"
             ],
+            "products": [],
             "probability": 1,
             "weight": 1,
             "cooldownMs": 0,
@@ -110,8 +117,7 @@
             "motion": {
                 "type": "none",
                 "distancePx": 0
-            },
-            "products": []
+            }
         },
         {
             "id": "lili-andar-esquerda",
@@ -144,6 +150,7 @@
             "triggers": [
                 "idle_random"
             ],
+            "products": [],
             "probability": 0.72,
             "weight": 3,
             "cooldownMs": 7000,
@@ -152,8 +159,7 @@
             "motion": {
                 "type": "left",
                 "distancePx": 72
-            },
-            "products": []
+            }
         },
         {
             "id": "lili-andar-direita",
@@ -186,6 +192,7 @@
             "triggers": [
                 "idle_random"
             ],
+            "products": [],
             "probability": 0.72,
             "weight": 3,
             "cooldownMs": 7000,
@@ -194,8 +201,7 @@
             "motion": {
                 "type": "right",
                 "distancePx": 72
-            },
-            "products": []
+            }
         },
         {
             "id": "lili-saltar",
@@ -231,6 +237,9 @@
                 "idle_random",
                 "product_enter"
             ],
+            "products": [
+                "*"
+            ],
             "probability": 0.38,
             "weight": 2,
             "cooldownMs": 9000,
@@ -239,10 +248,7 @@
             "motion": {
                 "type": "jump",
                 "distancePx": 34
-            },
-            "products": [
-                "*"
-            ]
+            }
         },
         {
             "id": "lili-atirar",
@@ -276,6 +282,7 @@
                 "idle_random",
                 "reply_end"
             ],
+            "products": [],
             "probability": 0.28,
             "weight": 1,
             "cooldownMs": 18000,
@@ -284,8 +291,7 @@
             "motion": {
                 "type": "none",
                 "distancePx": 0
-            },
-            "products": []
+            }
         }
     ]
 }

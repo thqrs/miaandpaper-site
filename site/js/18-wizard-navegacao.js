@@ -5,7 +5,6 @@
   function currentStep(product) {
     return visibleSteps(product)[state.currentStep];
   }
-
   function setSelection(step, input) {
     var values;
 
@@ -289,7 +288,7 @@
       }
     }
 
-    if (step.selection === "single" && step.field && step.id !== "designs" && !state.selections[step.field]) {
+    if (step.selection === "single" && step.field && step.id !== "designs" && step.template !== "palette-grid" && !state.selections[step.field]) {
       return step.selectionError ? String(step.selectionError) : "Escolhe uma opção para continuar.";
     }
 
@@ -600,4 +599,3 @@
       }, "image/webp", quality);
     });
   }
-

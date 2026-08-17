@@ -125,12 +125,32 @@ function miu_animation_normalize_display($display)
     if ($maxRandom < $minRandom) {
         $maxRandom = $minRandom;
     }
+    $launcherPx = miu_animation_int(isset($display['launcherPx']) ? $display['launcherPx'] : 46, 24, 120, 46);
+    $headerPx = miu_animation_int(isset($display['headerPx']) ? $display['headerPx'] : $legacySmall, 16, 120, $legacySmall);
+    // V6 guardava por engano o modo circle/basket na barra do chat.
+    // Se launcherMode ainda não existir, aproveitamos headerMode=basket como migração
+    // suave para o Míu principal, que era o destino pretendido dessa opção.
+    $legacyHeaderModeRaw = strtolower(trim((string)(isset($display['headerMode']) ? $display['headerMode'] : 'circle')));
+    $launcherModeRaw = strtolower(trim((string)(isset($display['launcherMode']) ? $display['launcherMode'] : ($legacyHeaderModeRaw === 'basket' ? 'basket' : 'circle'))));
+    $launcherMode = $launcherModeRaw === 'basket' ? 'basket' : 'circle';
+    $messagePx = miu_animation_int(isset($display['messagePx']) ? $display['messagePx'] : $legacySmall, 16, 80, $legacySmall);
+    $interactivePx = miu_animation_int(isset($display['interactivePx']) ? $display['interactivePx'] : 96, 48, 240, 96);
     return array(
-        'launcherPx' => miu_animation_int(isset($display['launcherPx']) ? $display['launcherPx'] : 46, 24, 120, 46),
-        'headerPx' => miu_animation_int(isset($display['headerPx']) ? $display['headerPx'] : $legacySmall, 16, 80, $legacySmall),
-        'messagePx' => miu_animation_int(isset($display['messagePx']) ? $display['messagePx'] : $legacySmall, 16, 80, $legacySmall),
-        'interactivePx' => miu_animation_int(isset($display['interactivePx']) ? $display['interactivePx'] : 96, 48, 240, 96),
-        'launcherCircle' => miu_animation_bool(isset($display['launcherCircle']) ? $display['launcherCircle'] : true, true),
+        // Os nomes sem sufixo continuam a representar desktop para manter
+        // compatibilidade com configurações já guardadas.
+        'launcherPx' => $launcherPx,
+        'launcherPxMobile' => miu_animation_int(isset($display['launcherPxMobile']) ? $display['launcherPxMobile'] : $launcherPx, 24, 120, $launcherPx),
+        'headerPx' => $headerPx,
+        'headerPxMobile' => miu_animation_int(isset($display['headerPxMobile']) ? $display['headerPxMobile'] : $headerPx, 16, 120, $headerPx),
+        'headerVisible' => miu_animation_bool(isset($display['headerVisible']) ? $display['headerVisible'] : true, true),
+        'launcherMode' => $launcherMode,
+        'messagePx' => $messagePx,
+        'messagePxMobile' => miu_animation_int(isset($display['messagePxMobile']) ? $display['messagePxMobile'] : $messagePx, 16, 80, $messagePx),
+        'interactivePx' => $interactivePx,
+        'interactivePxMobile' => miu_animation_int(isset($display['interactivePxMobile']) ? $display['interactivePxMobile'] : $interactivePx, 48, 240, $interactivePx),
+        // Campo legado: continua coerente para leitores antigos. No modo alcofinha
+        // o launcher não usa o balão/círculo da cara.
+        'launcherCircle' => $launcherMode === 'circle',
         'headerCircle' => miu_animation_bool(isset($display['headerCircle']) ? $display['headerCircle'] : true, true),
         'messageCircle' => miu_animation_bool(isset($display['messageCircle']) ? $display['messageCircle'] : true, true),
         'promptSeconds' => miu_animation_int(isset($display['promptSeconds']) ? $display['promptSeconds'] : 5, 0, 60, 5),
@@ -152,9 +172,15 @@ function miu_animation_default_config()
         'baseAnimationId' => 'lili-calma',
         'display' => array(
             'launcherPx' => 46,
+            'launcherPxMobile' => 46,
             'headerPx' => 26,
+            'headerPxMobile' => 26,
+            'headerVisible' => true,
+            'launcherMode' => 'circle',
             'messagePx' => 26,
+            'messagePxMobile' => 26,
             'interactivePx' => 96,
+            'interactivePxMobile' => 96,
             'launcherCircle' => true,
             'headerCircle' => true,
             'messageCircle' => true,
@@ -733,10 +759,18 @@ function miu_animation_save_appearance_from_request($post)
     $config = miu_animation_config();
     $display = $config['display'];
     $display['launcherPx'] = miu_animation_int(isset($post['launcher_px']) ? $post['launcher_px'] : $display['launcherPx'], 24, 120, 46);
-    $display['headerPx'] = miu_animation_int(isset($post['header_px']) ? $post['header_px'] : $display['headerPx'], 16, 80, 26);
+    $display['launcherPxMobile'] = miu_animation_int(isset($post['launcher_px_mobile']) ? $post['launcher_px_mobile'] : $display['launcherPxMobile'], 24, 120, $display['launcherPx']);
+    $display['headerPx'] = miu_animation_int(isset($post['header_px']) ? $post['header_px'] : $display['headerPx'], 16, 120, 26);
+    $display['headerPxMobile'] = miu_animation_int(isset($post['header_px_mobile']) ? $post['header_px_mobile'] : $display['headerPxMobile'], 16, 120, $display['headerPx']);
     $display['messagePx'] = miu_animation_int(isset($post['message_px']) ? $post['message_px'] : $display['messagePx'], 16, 80, 26);
+    $display['messagePxMobile'] = miu_animation_int(isset($post['message_px_mobile']) ? $post['message_px_mobile'] : $display['messagePxMobile'], 16, 80, $display['messagePx']);
     $display['interactivePx'] = miu_animation_int(isset($post['interactive_px']) ? $post['interactive_px'] : $display['interactivePx'], 48, 240, 96);
-    $display['launcherCircle'] = !empty($post['launcher_circle']);
+    $display['interactivePxMobile'] = miu_animation_int(isset($post['interactive_px_mobile']) ? $post['interactive_px_mobile'] : $display['interactivePxMobile'], 48, 240, $display['interactivePx']);
+    // São checkboxes no painel, mas representam opções mutuamente exclusivas
+    // para o Míu PRINCIPAL no canto inferior direito.
+    $display['launcherMode'] = !empty($post['launcher_mode_basket']) ? 'basket' : 'circle';
+    $display['launcherCircle'] = $display['launcherMode'] === 'circle';
+    $display['headerVisible'] = !empty($post['header_visible']);
     $display['headerCircle'] = !empty($post['header_circle']);
     $display['messageCircle'] = !empty($post['message_circle']);
     $display['promptSeconds'] = miu_animation_int(isset($post['prompt_seconds']) ? $post['prompt_seconds'] : $display['promptSeconds'], 0, 60, 5);

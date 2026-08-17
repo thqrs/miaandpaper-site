@@ -27,6 +27,9 @@ var miuAnimationConfig = null;
 var miuInteractiveAnimationConfig = null; // biblioteca do Míu de corpo inteiro, usada nos contextos interactivos
 var miuInteractiveSprite = null;
 var miuInteractiveWrap = null;
+var miuLauncherBodySprite = null;
+var miuLauncherBodyTimer = 0;
+var miuLauncherBodySerial = 0;
 var miuInteractiveTimer = 0;
 var miuInteractiveSerial = 0;
 var miuLauncherCallout = null;
@@ -40,13 +43,23 @@ var miuAnimationCooldowns = {};
 var miuRoamX = 0;
 var miuRootMotion = null;
 var miuReducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+var miuDebugForceMotion = false;
+var miuDebugPanelStorageKey = "miaandpaper_miu_debug_lab_v2";
+var miuDebugObjectUrls = {};
+var miuDebugActiveTest = null;
+
+function miuIsAdminChatPage()
+{
+  return !!(document.body && document.body.getAttribute("data-miu-admin-chat") === "1");
+}
 
 function miuAnimationSetup(config)
 {
   /*
-   * O chat usa SEMPRE a cara do Míu. As spritesheets de corpo inteiro
-   * (inspiradas na Lili) continuam a chegar do servidor e ficam guardadas
-   * separadamente para outros contextos interactivos do site.
+   * A barra do chat e os avatares das respostas usam a cara do Míu. O Míu
+   * principal no canto pode alternar entre a cara dentro do balão e a
+   * animação de corpo inteiro na alcofinha. As restantes sprites continuam
+   * disponíveis para contextos interactivos e para o laboratório.
    */
   miuInteractiveAnimationConfig = config && Array.isArray(config.animations) ? config : null;
   var display = miuInteractiveAnimationConfig && miuInteractiveAnimationConfig.display
@@ -58,9 +71,15 @@ function miuAnimationSetup(config)
     baseAnimationId: "miu-cara-calma",
     display: {
       launcherPx: Math.max(24, Number(display.launcherPx || 46)),
+      launcherPxMobile: Math.max(24, Number(display.launcherPxMobile || display.launcherPx || 46)),
       headerPx: Math.max(16, Number(display.headerPx || display.smallPx || 26)),
+      headerPxMobile: Math.max(16, Number(display.headerPxMobile || display.headerPx || display.smallPx || 26)),
+      headerVisible: display.headerVisible !== false,
+      launcherMode: String(display.launcherMode || display.headerMode || "circle").toLowerCase() === "basket" ? "basket" : "circle",
       messagePx: Math.max(16, Number(display.messagePx || display.smallPx || 26)),
+      messagePxMobile: Math.max(16, Number(display.messagePxMobile || display.messagePx || display.smallPx || 26)),
       interactivePx: Math.max(48, Number(display.interactivePx || 96)),
+      interactivePxMobile: Math.max(48, Number(display.interactivePxMobile || display.interactivePx || 96)),
       launcherCircle: display.launcherCircle !== false,
       headerCircle: display.headerCircle !== false,
       messageCircle: display.messageCircle !== false,
@@ -180,8 +199,79 @@ function miuAnimationBase()
 function miuAnimationSheetUrl(animation)
 {
   if (!animation) { return ""; }
-  try { return new URL(String(animation.sheetUrl || ""), miuSiteRootUrl).href; }
+  var source = String(animation.sheetUrl || "").trim();
+  // As animações vindas da API trazem sheetUrl. O fallback por `file` torna
+  // o laboratório robusto também quando trabalha com uma configuração local
+  // ou um objecto ainda não enriquecido por miu_animation_public_config().
+  if (!source && animation.file) { source = "content/brand/miu/" + String(animation.file).replace(/^\/+/, ""); }
+  if (!source) { return ""; }
+  try { return new URL(source, miuSiteRootUrl).href; }
   catch (error) { return ""; }
+}
+
+function miuLauncherBodyAnimation()
+{
+  var config = miuInteractiveAnimationConfig;
+  if (!config || !Array.isArray(config.animations) || !config.animations.length) { return null; }
+  var baseId = String(config.baseAnimationId || "");
+  var found = null;
+  config.animations.some(function (animation) {
+    if (animation && String(animation.id || "") === baseId) { found = animation; return true; }
+    return false;
+  });
+  return found || config.animations[0] || null;
+}
+
+function miuLauncherBodyStop()
+{
+  miuLauncherBodySerial += 1;
+  window.clearTimeout(miuLauncherBodyTimer);
+  miuLauncherBodyTimer = 0;
+}
+
+function miuLauncherBodyPlayBase()
+{
+  miuLauncherBodyStop();
+  if (!miuLauncherBodySprite || !miuRoot || !miuRoot.classList.contains("miu-launcher-mode-basket")) { return false; }
+  var animation = miuLauncherBodyAnimation();
+  if (!animation || !miuAnimationSheetUrl(animation)) { return false; }
+  var serial = miuLauncherBodySerial;
+  var sequence = Array.isArray(animation.sequence) && animation.sequence.length ? animation.sequence.slice() : [Number(animation.staticFrame || 0)];
+  var durations = Array.isArray(animation.frameDurationsMs) && animation.frameDurationsMs.length === sequence.length
+    ? animation.frameDurationsMs.slice() : sequence.map(function () { return 180; });
+  var cursor = 0;
+
+  function draw() {
+    if (serial !== miuLauncherBodySerial || !miuLauncherBodySprite) { return; }
+    miuAnimationApplyFrame(miuLauncherBodySprite, animation, sequence[cursor]);
+    if (miuReducedMotion && !miuDebugForceMotion) { return; }
+    var delay = Math.max(40, Number(durations[cursor] || 180));
+    cursor = (cursor + 1) % sequence.length;
+    miuLauncherBodyTimer = window.setTimeout(draw, delay);
+  }
+  draw();
+  return true;
+}
+
+function miuApplyHeaderAppearance(display)
+{
+  if (!miuRoot) { return; }
+  display = display || {};
+  miuRoot.classList.toggle("miu-header-hidden", display.headerVisible === false);
+  miuRoot.classList.toggle("miu-no-circle-header", display.headerCircle === false);
+}
+
+function miuApplyLauncherAppearance(display)
+{
+  if (!miuRoot) { return; }
+  display = display || {};
+  var mode = String(display.launcherMode || display.headerMode || "circle").toLowerCase() === "basket" ? "basket" : "circle";
+  display.launcherMode = mode;
+  display.launcherCircle = mode === "circle"; // compatibilidade com leitores antigos
+  miuRoot.classList.toggle("miu-launcher-mode-circle", mode === "circle");
+  miuRoot.classList.toggle("miu-launcher-mode-basket", mode === "basket");
+  if (mode === "basket") { miuLauncherBodyPlayBase(); }
+  else { miuLauncherBodyStop(); }
 }
 
 function miuAnimationFramePosition(index, columns, rows)
@@ -253,7 +343,7 @@ function miuAnimationResetRoam()
 
 function miuAnimationMotion(animation)
 {
-  if (!miuRoot || !animation || !animation.motion || miuReducedMotion) { return; }
+  if (!miuRoot || !animation || !animation.motion || (miuReducedMotion && !miuDebugForceMotion)) { return; }
   var type = String(animation.motion.type || "none");
   var distance = Math.max(0, Number(animation.motion.distancePx || 0));
   if (type === "none" || distance <= 0 || miuRoot.classList.contains("is-open")) { return; }
@@ -307,7 +397,7 @@ function miuAnimationPlay(animation, restoreBase)
   {
     if (serial !== miuAnimationSerial || !miuLauncherSprite) { return; }
     miuAnimationApplyFrame(miuLauncherSprite, animation, sequence[cursor]);
-    if (miuReducedMotion) {
+    if (miuReducedMotion && !miuDebugForceMotion) {
       if (restoreBase && animation.id !== (miuAnimationBase() || {}).id) {
         miuAnimationTimer = window.setTimeout(function () { miuAnimationPlayBase(); }, 650);
       }
@@ -466,11 +556,14 @@ function miuMessageNode(role, text, extraClass, avatarIndex)
   if (role === "assistant") {
     var row = document.createElement("div");
     var avatar = document.createElement("span");
+    var avatarFace = document.createElement("span");
     row.className = "miu-message-row miu-message-row--assistant";
     miuRenderText(node, text);
-    avatar.className = "miu-message-avatar miu-face miu-face--small miu-face--message";
+    avatar.className = "miu-message-avatar";
     avatar.setAttribute("aria-hidden", "true");
-    miuAnimationApplyStatic(avatar, avatarIndex);
+    avatarFace.className = "miu-face miu-face--small miu-face--message";
+    avatar.appendChild(avatarFace);
+    miuAnimationApplyStatic(avatarFace, avatarIndex);
     row.appendChild(node);
     row.appendChild(avatar);
     return row;
@@ -741,6 +834,7 @@ function miuContextScope()
 
 function miuReadWizardContext()
 {
+  if (miuIsAdminChatPage()) { return null; }
   var product = null;
   var step = null;
   var productSlug = "";
@@ -806,6 +900,7 @@ function miuUiControlLabel(element)
 
 function miuReadVisibleUiState()
 {
+  if (miuIsAdminChatPage()) { return { selected: [], errors: [] }; }
   var scope = document.querySelector(".wizard-shell .step-card")
     || document.querySelector(".wizard-shell")
     || document.querySelector("#order-form")
@@ -887,6 +982,11 @@ function miuScheduleContextRefresh()
 
 function miuWatchContext()
 {
+  if (miuIsAdminChatPage()) {
+    miuPageContext = null;
+    miuContextSignature = "none";
+    return;
+  }
   if (window.MutationObserver && document.body) {
     miuContextObserver = new MutationObserver(miuScheduleContextRefresh);
     miuContextObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
@@ -1143,13 +1243,16 @@ function miuInteractiveStop()
   if (miuInteractiveWrap && typeof miuInteractiveWrap.getAnimations === "function") {
     miuInteractiveWrap.getAnimations().forEach(function (animation) { try { animation.cancel(); } catch (error) {} });
   }
-  if (miuRoot) { miuRoot.classList.remove("is-interactive"); }
+  if (miuRoot) {
+    miuRoot.classList.remove("is-interactive");
+    miuRoot.classList.remove("is-debug-interactive-active");
+  }
   if (miuInteractiveWrap) { miuInteractiveWrap.style.transform = ""; }
 }
 
 function miuInteractiveMotion(animation, duration)
 {
-  if (!miuInteractiveWrap || !animation || !animation.motion || miuReducedMotion || typeof miuInteractiveWrap.animate !== "function") { return; }
+  if (!miuInteractiveWrap || !animation || !animation.motion || (miuReducedMotion && !miuDebugForceMotion) || typeof miuInteractiveWrap.animate !== "function") { return; }
   var type = String(animation.motion.type || "none");
   var distance = Math.max(0, Number(animation.motion.distancePx || 0));
   var maxRoam = miuInteractiveAnimationConfig && miuInteractiveAnimationConfig.display
@@ -1180,17 +1283,25 @@ function miuInteractivePlay(animation)
   var sequence = Array.isArray(animation.sequence) && animation.sequence.length ? animation.sequence.slice() : [0];
   var durations = Array.isArray(animation.frameDurationsMs) && animation.frameDurationsMs.length === sequence.length
     ? animation.frameDurationsMs.slice() : sequence.map(function () { return 180; });
-  var repeat = Math.max(1, Number(animation.repeat || 1));
+  var configuredRepeat = Math.max(0, Number(animation.repeat == null ? 1 : animation.repeat));
+  var loopUntilStopped = configuredRepeat === 0;
+  var repeat = loopUntilStopped ? 1 : Math.max(1, configuredRepeat);
   var cycleMs = durations.reduce(function (total, ms) { return total + Math.max(40, Number(ms || 180)); }, 0);
   var cursor = 0;
   var cycles = 0;
+  var sheetUrl = miuAnimationSheetUrl(animation);
+  if (!sheetUrl) { return false; }
+  // Guardamos a URL resolvida no objecto para que o primeiro frame possa ser
+  // desenhado mesmo em configurações de laboratório que só tenham `file`.
+  animation.sheetUrl = sheetUrl;
   miuRoot.classList.add("is-interactive");
+  if (miuDebugForceMotion && miuIsAdminChatPage()) { miuRoot.classList.add("is-debug-interactive-active"); }
   miuInteractiveMotion(animation, cycleMs * repeat);
 
   function draw() {
     if (serial !== miuInteractiveSerial || !miuInteractiveSprite) { return; }
     miuAnimationApplyFrame(miuInteractiveSprite, animation, sequence[cursor]);
-    if (miuReducedMotion) {
+    if (miuReducedMotion && !miuDebugForceMotion) {
       miuInteractiveTimer = window.setTimeout(miuInteractiveStop, 900);
       return;
     }
@@ -1199,7 +1310,7 @@ function miuInteractivePlay(animation)
     if (cursor >= sequence.length) {
       cursor = 0;
       cycles += 1;
-      if (cycles >= repeat) {
+      if (!loopUntilStopped && cycles >= repeat) {
         miuInteractiveTimer = window.setTimeout(miuInteractiveStop, Math.min(500, delay));
         return;
       }
@@ -1223,6 +1334,458 @@ function miuInteractiveTrigger(trigger)
     return false;
   });
   return miuInteractivePlay(selected);
+}
+
+function miuDebugReadPanelState()
+{
+  try {
+    var raw = window.localStorage.getItem(miuDebugPanelStorageKey);
+    var parsed = raw ? JSON.parse(raw) : null;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) { return {}; }
+}
+
+function miuDebugWritePanelState(patch)
+{
+  var state = miuDebugReadPanelState();
+  Object.keys(patch || {}).forEach(function (key) { state[key] = patch[key]; });
+  try { window.localStorage.setItem(miuDebugPanelStorageKey, JSON.stringify(state)); }
+  catch (error) {}
+}
+
+function miuDebugSetCollapsed(panel, collapsed)
+{
+  if (!panel) { return; }
+  var toggle = panel.querySelector("[data-miu-debug-toggle]");
+  panel.classList.toggle("is-collapsed", !!collapsed);
+  if (toggle) {
+    toggle.textContent = collapsed ? "+" : "−";
+    toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    toggle.title = collapsed ? "Abrir painel" : "Recolher painel";
+  }
+}
+
+function miuDebugParseIntegerList(value)
+{
+  return String(value || "").split(",").map(function (part) {
+    return Number(String(part).trim());
+  }).filter(function (value) {
+    return Number.isFinite(value) && value >= 0 && Math.floor(value) === value;
+  });
+}
+
+function miuDebugFormValue(form, name)
+{
+  var field = form ? form.elements.namedItem(name) : null;
+  return field ? field.value : "";
+}
+
+function miuDebugFormChecked(form, name)
+{
+  var field = form ? form.elements.namedItem(name) : null;
+  return !!(field && field.checked);
+}
+
+function miuDebugFindInteractiveAnimation(id)
+{
+  var animations = miuInteractiveAnimationConfig && Array.isArray(miuInteractiveAnimationConfig.animations)
+    ? miuInteractiveAnimationConfig.animations : [];
+  var selected = null;
+  animations.some(function (animation) {
+    if (String(animation.id || "") === String(id || "")) { selected = animation; return true; }
+    return false;
+  });
+  return selected;
+}
+
+function miuDebugAnimationDraftFromForm(form, animation)
+{
+  if (!form || !animation) { return animation; }
+  var columns = Math.max(1, Math.min(16, Number(miuDebugFormValue(form, "columns")) || Number(animation.columns || 1)));
+  var rows = Math.max(1, Math.min(16, Number(miuDebugFormValue(form, "rows")) || Number(animation.rows || 1)));
+  var frameCount = columns * rows;
+  var sequence = miuDebugParseIntegerList(miuDebugFormValue(form, "sequence"));
+  if (!sequence.length) {
+    sequence = [];
+    for (var i = 0; i < frameCount; i += 1) { sequence.push(i); }
+  }
+  sequence = sequence.map(function (frame) { return Math.max(0, Math.min(frameCount - 1, frame)); });
+  var frameMs = Math.max(40, Math.min(10000, Number(miuDebugFormValue(form, "frame_ms")) || 180));
+  var durations = miuDebugParseIntegerList(miuDebugFormValue(form, "durations"));
+  if (durations.length !== sequence.length) {
+    durations = sequence.map(function () { return frameMs; });
+  } else {
+    durations = durations.map(function (ms) { return Math.max(40, Math.min(10000, Number(ms) || frameMs)); });
+  }
+
+  animation.name = String(miuDebugFormValue(form, "animation_name") || animation.name || animation.id || "Animação");
+  animation.columns = columns;
+  animation.rows = rows;
+  animation.sequence = sequence;
+  animation.frameDurationsMs = durations;
+  animation.repeat = Math.max(0, Math.min(20, Number(miuDebugFormValue(form, "repeat")) || 0));
+  animation.staticFrame = Math.max(0, Math.min(frameCount - 1, Number(miuDebugFormValue(form, "static_frame")) || 0));
+  animation.probability = Math.max(0, Math.min(1, (Number(miuDebugFormValue(form, "probability")) || 0) / 100));
+  animation.weight = Math.max(1, Math.min(100, Number(miuDebugFormValue(form, "weight")) || 1));
+  animation.cooldownMs = Math.max(0, Math.min(3600000, (Number(miuDebugFormValue(form, "cooldown_seconds")) || 0) * 1000));
+  animation.flipX = miuDebugFormChecked(form, "flip_x");
+  animation.enabled = miuDebugFormChecked(form, "enabled");
+  animation.motion = animation.motion || {};
+  animation.motion.type = String(miuDebugFormValue(form, "motion_type") || "none");
+  animation.motion.distancePx = Math.max(0, Math.min(600, Number(miuDebugFormValue(form, "motion_distance")) || 0));
+
+  var triggerFields = form.querySelectorAll('input[name="triggers[]"]:checked');
+  animation.triggers = Array.prototype.map.call(triggerFields, function (field) { return String(field.value || ""); });
+  animation.products = String(miuDebugFormValue(form, "product_scopes") || "").split(",").map(function (item) {
+    return item.trim();
+  }).filter(Boolean);
+
+  var fileField = form.elements.namedItem("sheet");
+  if (fileField && fileField.files && fileField.files[0]) {
+    var animationId = String(animation.id || "draft");
+    if (miuDebugObjectUrls[animationId]) {
+      try { window.URL.revokeObjectURL(miuDebugObjectUrls[animationId]); } catch (error) {}
+    }
+    miuDebugObjectUrls[animationId] = window.URL.createObjectURL(fileField.files[0]);
+    animation.sheetUrl = miuDebugObjectUrls[animationId];
+  }
+  return animation;
+}
+
+function miuDebugSyncAnimationForm(form)
+{
+  if (!form) { return; }
+  var action = String(miuDebugFormValue(form, "action") || "");
+  if (action !== "update_animation") { return; }
+  var id = String(miuDebugFormValue(form, "animation_id") || "");
+  var animation = miuDebugFindInteractiveAnimation(id);
+  if (!animation) { return; }
+  miuDebugAnimationDraftFromForm(form, animation);
+
+  var button = document.querySelector('[data-miu-debug-kind="interactive"][data-miu-debug-animation-id="' + id.replace(/"/g, '\\"') + '"]');
+  if (button) {
+    button.textContent = String(animation.name || animation.id || "Animação") + (animation.enabled === false ? " · off" : "");
+    button.classList.toggle("is-disabled-config", animation.enabled === false);
+  }
+
+  var card = form.closest("[data-animation-preview-card]");
+  var preview = card ? card.querySelector("[data-animation-preview]") : null;
+  if (preview) {
+    preview.setAttribute("data-columns", String(animation.columns));
+    preview.setAttribute("data-rows", String(animation.rows));
+    preview.setAttribute("data-sequence", animation.sequence.join(","));
+    preview.setAttribute("data-durations", animation.frameDurationsMs.join(","));
+    preview.setAttribute("data-flip", animation.flipX ? "1" : "0");
+    if (animation.sheetUrl) { preview.setAttribute("data-sheet", animation.sheetUrl); }
+  }
+
+  if (miuDebugActiveTest && miuDebugActiveTest.kind === "interactive" && String(miuDebugActiveTest.id || "") === id) {
+    miuDebugForceMotion = true;
+    miuInteractivePlay(animation);
+    miuDebugSetStatus("Pré-visualização em tempo real: " + String(animation.name || animation.id));
+  }
+}
+
+function miuDebugApplyAppearanceDraft(form, previewPrompt, changedTarget)
+{
+  if (!form || !miuAnimationConfig || !miuAnimationConfig.display) { return; }
+  var display = miuAnimationConfig.display;
+  display.launcherPx = Math.max(24, Math.min(120, Number(miuDebugFormValue(form, "launcher_px")) || display.launcherPx || 46));
+  display.launcherPxMobile = Math.max(24, Math.min(120, Number(miuDebugFormValue(form, "launcher_px_mobile")) || display.launcherPxMobile || display.launcherPx));
+  display.headerPx = Math.max(16, Math.min(120, Number(miuDebugFormValue(form, "header_px")) || display.headerPx || 26));
+  display.headerPxMobile = Math.max(16, Math.min(120, Number(miuDebugFormValue(form, "header_px_mobile")) || display.headerPxMobile || display.headerPx));
+  var circleMode = form.querySelector('[name="launcher_mode_circle"]');
+  var basketMode = form.querySelector('[name="launcher_mode_basket"]');
+  if (changedTarget && changedTarget.getAttribute && changedTarget.getAttribute("data-miu-launcher-mode")) {
+    var changedMode = changedTarget.getAttribute("data-miu-launcher-mode");
+    if (changedTarget.checked) {
+      if (changedMode === "circle" && basketMode) { basketMode.checked = false; }
+      if (changedMode === "basket" && circleMode) { circleMode.checked = false; }
+    } else if (circleMode && basketMode && !circleMode.checked && !basketMode.checked) {
+      changedTarget.checked = true;
+    }
+  }
+  display.launcherMode = basketMode && basketMode.checked ? "basket" : "circle";
+  display.headerVisible = miuDebugFormChecked(form, "header_visible");
+  display.headerCircle = miuDebugFormChecked(form, "header_circle");
+  display.messagePx = Math.max(16, Math.min(80, Number(miuDebugFormValue(form, "message_px")) || display.messagePx || 26));
+  display.messagePxMobile = Math.max(16, Math.min(80, Number(miuDebugFormValue(form, "message_px_mobile")) || display.messagePxMobile || display.messagePx));
+  display.interactivePx = Math.max(48, Math.min(240, Number(miuDebugFormValue(form, "interactive_px")) || display.interactivePx || 96));
+  display.interactivePxMobile = Math.max(48, Math.min(240, Number(miuDebugFormValue(form, "interactive_px_mobile")) || display.interactivePxMobile || display.interactivePx));
+  display.promptSeconds = Math.max(0, Math.min(60, Number(miuDebugFormValue(form, "prompt_seconds")) || 0));
+  display.launcherCircle = display.launcherMode === "circle";
+  display.messageCircle = miuDebugFormChecked(form, "message_circle");
+  display.errorsViaMiu = miuDebugFormChecked(form, "errors_via_miu");
+
+  if (miuInteractiveAnimationConfig) {
+    miuInteractiveAnimationConfig.display = miuInteractiveAnimationConfig.display || {};
+    Object.keys(display).forEach(function (key) { miuInteractiveAnimationConfig.display[key] = display[key]; });
+  }
+
+  if (miuRoot) {
+    miuRoot.style.setProperty("--miu-launcher-sprite-size-desktop", display.launcherPx + "px");
+    miuRoot.style.setProperty("--miu-launcher-sprite-size-mobile", display.launcherPxMobile + "px");
+    miuRoot.style.setProperty("--miu-header-sprite-size-desktop", display.headerPx + "px");
+    miuRoot.style.setProperty("--miu-header-sprite-size-mobile", display.headerPxMobile + "px");
+    miuRoot.style.setProperty("--miu-message-sprite-size-desktop", display.messagePx + "px");
+    miuRoot.style.setProperty("--miu-message-sprite-size-mobile", display.messagePxMobile + "px");
+    miuRoot.style.setProperty("--miu-interactive-sprite-size-desktop", display.interactivePx + "px");
+    miuRoot.style.setProperty("--miu-interactive-sprite-size-mobile", display.interactivePxMobile + "px");
+    miuApplyLauncherAppearance(display);
+    miuApplyHeaderAppearance(display);
+    miuRoot.classList.toggle("miu-no-circle-message", display.messageCircle === false);
+  }
+
+  if (previewPrompt === true) {
+    if (display.promptSeconds > 0 && miuConfig && miuConfig.launcherPrompt) {
+      miuShowLauncherMessage(miuConfig.launcherPrompt, display.promptSeconds * 1000, false);
+    } else {
+      miuHideLauncherMessage();
+    }
+  }
+}
+
+function miuDebugApplyGlobalAnimationDraft(form)
+{
+  if (!form || !miuInteractiveAnimationConfig) { return; }
+  var display = miuInteractiveAnimationConfig.display = miuInteractiveAnimationConfig.display || {};
+  miuInteractiveAnimationConfig.baseAnimationId = String(miuDebugFormValue(form, "base_animation_id") || miuInteractiveAnimationConfig.baseAnimationId || "");
+  if (miuRoot && miuRoot.classList.contains("miu-launcher-mode-basket")) { miuLauncherBodyPlayBase(); }
+  display.sleepAfterMs = Math.max(5000, (Number(miuDebugFormValue(form, "sleep_after_seconds")) || 45) * 1000);
+  display.idleRandomMinMs = Math.max(3000, (Number(miuDebugFormValue(form, "idle_random_min_seconds")) || 14) * 1000);
+  display.idleRandomMaxMs = Math.max(display.idleRandomMinMs, (Number(miuDebugFormValue(form, "idle_random_max_seconds")) || 28) * 1000);
+  display.maxRoamPx = Math.max(0, Math.min(800, Number(miuDebugFormValue(form, "max_roam_px")) || 0));
+  miuSleepDelayMs = display.sleepAfterMs;
+  if (miuAnimationConfig && miuAnimationConfig.display) {
+    miuAnimationConfig.display.sleepAfterMs = display.sleepAfterMs;
+    miuAnimationConfig.display.idleRandomMinMs = display.idleRandomMinMs;
+    miuAnimationConfig.display.idleRandomMaxMs = display.idleRandomMaxMs;
+    miuAnimationConfig.display.maxRoamPx = display.maxRoamPx;
+  }
+  miuScheduleSleep();
+  miuAnimationScheduleRandom();
+}
+
+function miuDebugSetStatus(text)
+{
+  var node = document.querySelector("[data-miu-debug-status]");
+  if (node) { node.textContent = String(text || ""); }
+}
+
+function miuDebugButton(label, kind, id, disabled)
+{
+  var button = document.createElement("button");
+  button.type = "button";
+  button.className = "miu-debug-animation-button";
+  button.textContent = label;
+  button.setAttribute("data-miu-debug-kind", kind);
+  button.setAttribute("data-miu-debug-animation-id", id);
+  if (disabled) {
+    button.classList.add("is-disabled-config");
+    button.title = "Esta animação está desactivada na configuração, mas podes testá-la aqui.";
+  }
+  return button;
+}
+
+function miuDebugPopulateAnimationButtons()
+{
+  if (!miuIsAdminChatPage()) { return; }
+
+  var faceHost = document.querySelector("[data-miu-debug-face-buttons]");
+  if (faceHost) {
+    faceHost.innerHTML = "";
+    var faceAnimations = miuAnimationConfig && Array.isArray(miuAnimationConfig.animations)
+      ? miuAnimationConfig.animations : [];
+    faceAnimations.forEach(function (animation) {
+      faceHost.appendChild(miuDebugButton(String(animation.name || animation.id), "face", String(animation.id || ""), false));
+    });
+    if (!faceAnimations.length) {
+      faceHost.innerHTML = '<span class="miu-debug-loading">Sem animações.</span>';
+    }
+  }
+
+  var interactiveHost = document.querySelector("[data-miu-debug-interactive-buttons]");
+  if (interactiveHost) {
+    interactiveHost.innerHTML = "";
+    var interactiveAnimations = miuInteractiveAnimationConfig && Array.isArray(miuInteractiveAnimationConfig.animations)
+      ? miuInteractiveAnimationConfig.animations : [];
+    interactiveAnimations.forEach(function (animation) {
+      var label = String(animation.name || animation.id || "Animação");
+      if (animation.enabled === false) { label += " · off"; }
+      interactiveHost.appendChild(miuDebugButton(label, "interactive", String(animation.id || ""), animation.enabled === false));
+    });
+    if (!interactiveAnimations.length) {
+      interactiveHost.innerHTML = '<span class="miu-debug-loading">Sem animações configuradas.</span>';
+    }
+  }
+}
+
+function miuDebugPlayConfigured(kind, id)
+{
+  miuDebugForceMotion = true;
+  miuDebugActiveTest = { kind: kind, id: String(id || "") };
+  if (kind === "face") {
+    var face = miuAnimationById[String(id || "")];
+    if (!face) { miuDebugSetStatus("Não encontrei essa animação da cara."); return false; }
+    miuInteractiveStop();
+    miuAnimationPlay(face, face.id !== (miuAnimationBase() || {}).id);
+    miuDebugSetStatus("A testar: " + String(face.name || face.id));
+    return true;
+  }
+
+  if (kind === "interactive") {
+    var animations = miuInteractiveAnimationConfig && Array.isArray(miuInteractiveAnimationConfig.animations)
+      ? miuInteractiveAnimationConfig.animations : [];
+    var selected = null;
+    animations.some(function (animation) {
+      if (String(animation.id || "") === String(id || "")) { selected = animation; return true; }
+      return false;
+    });
+    if (!selected) { miuDebugSetStatus("Não encontrei essa animação de corpo inteiro."); return false; }
+    miuAnimationCancelTimer();
+    var played = miuInteractivePlay(selected);
+    miuDebugSetStatus(played ? "A testar: " + String(selected.name || selected.id) : "Não foi possível iniciar a animação.");
+    return played;
+  }
+  return false;
+}
+
+function miuDebugPlayLooseSprite(row, button)
+{
+  miuDebugForceMotion = true;
+  if (!row || !button) { return false; }
+  var sheetUrl = String(button.getAttribute("data-sheet-url") || "");
+  miuDebugActiveTest = { kind: "loose", sheetUrl: sheetUrl };
+  var colsInput = row.querySelector("[data-miu-debug-cols]");
+  var rowsInput = row.querySelector("[data-miu-debug-rows]");
+  var msInput = row.querySelector("[data-miu-debug-ms]");
+  var columns = Math.max(1, Math.min(16, Number(colsInput ? colsInput.value : 4) || 4));
+  var rows = Math.max(1, Math.min(16, Number(rowsInput ? rowsInput.value : 2) || 2));
+  var frameMs = Math.max(40, Math.min(5000, Number(msInput ? msInput.value : 180) || 180));
+  var frameCount = columns * rows;
+  var sequence = [];
+  var durations = [];
+  var index;
+  for (index = 0; index < frameCount; index += 1) {
+    sequence.push(index);
+    durations.push(frameMs);
+  }
+
+  var animation = {
+    id: "miu-debug-loose-sprite",
+    name: "Sprite de teste",
+    sheetUrl: sheetUrl,
+    columns: columns,
+    rows: rows,
+    sequence: sequence,
+    frameDurationsMs: durations,
+    repeat: 1,
+    enabled: true,
+    probability: 1,
+    weight: 1,
+    cooldownMs: 0,
+    flipX: false,
+    staticFrame: 0,
+    motion: { type: "none", distancePx: 0 }
+  };
+
+  miuAnimationCancelTimer();
+  var played = miuInteractivePlay(animation);
+  miuDebugSetStatus(played
+    ? "Sprite de teste: " + sheetUrl.split("/").pop() + " · " + columns + "×" + rows + " · " + frameMs + " ms"
+    : "Não foi possível testar a spritesheet.");
+  return played;
+}
+
+function miuDebugStopAll()
+{
+  miuDebugForceMotion = false;
+  miuDebugActiveTest = null;
+  miuInteractiveStop();
+  miuAnimationPlayBase();
+  miuDebugSetStatus("Parado. A cara voltou à animação base.");
+}
+
+function miuDebugPanelSetup()
+{
+  if (!miuIsAdminChatPage()) { return; }
+  var panel = document.querySelector("[data-miu-debug-panel]");
+  if (!panel || panel.getAttribute("data-miu-debug-ready") === "1") { return; }
+  panel.setAttribute("data-miu-debug-ready", "1");
+
+  var savedPanelState = miuDebugReadPanelState();
+  miuDebugSetCollapsed(panel, savedPanelState.collapsed === true);
+  miuDebugPopulateAnimationButtons();
+
+  var appearanceForm = document.querySelector('form input[name="action"][value="save_appearance"]');
+  appearanceForm = appearanceForm ? appearanceForm.closest("form") : null;
+  if (appearanceForm) {
+    appearanceForm.addEventListener("input", function (event) {
+      miuDebugApplyAppearanceDraft(appearanceForm, event.target && event.target.name === "prompt_seconds", event.target || null);
+    });
+    appearanceForm.addEventListener("change", function (event) {
+      miuDebugApplyAppearanceDraft(appearanceForm, event.target && event.target.name === "prompt_seconds", event.target || null);
+    });
+  }
+
+  var globalAnimationForm = document.querySelector('form input[name="action"][value="save_animation_display"]');
+  globalAnimationForm = globalAnimationForm ? globalAnimationForm.closest("form") : null;
+  if (globalAnimationForm) {
+    globalAnimationForm.addEventListener("input", function () { miuDebugApplyGlobalAnimationDraft(globalAnimationForm); });
+    globalAnimationForm.addEventListener("change", function () { miuDebugApplyGlobalAnimationDraft(globalAnimationForm); });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll("form.miu-animation-form"), function (form) {
+    var action = String(miuDebugFormValue(form, "action") || "");
+    if (action !== "update_animation") { return; }
+    form.addEventListener("input", function () { miuDebugSyncAnimationForm(form); });
+    form.addEventListener("change", function () { miuDebugSyncAnimationForm(form); });
+  });
+
+  panel.addEventListener("input", function (event) {
+    var row = event.target && event.target.closest ? event.target.closest("[data-miu-debug-lab-row]") : null;
+    if (!row || !miuDebugActiveTest || miuDebugActiveTest.kind !== "loose") { return; }
+    var button = row.querySelector("[data-miu-debug-lab-play]");
+    if (!button || String(button.getAttribute("data-sheet-url") || "") !== String(miuDebugActiveTest.sheetUrl || "")) { return; }
+    miuDebugPlayLooseSprite(row, button);
+  });
+
+  panel.addEventListener("click", function (event) {
+    var animationButton = event.target.closest("[data-miu-debug-animation-id]");
+    if (animationButton && panel.contains(animationButton)) {
+      var id = String(animationButton.getAttribute("data-miu-debug-animation-id") || "");
+      var kind = String(animationButton.getAttribute("data-miu-debug-kind") || "");
+      if (kind === "interactive") {
+        var form = document.querySelector('form.miu-animation-form input[name="animation_id"][value="' + id.replace(/"/g, '\\"') + '"]');
+        if (form) { miuDebugSyncAnimationForm(form.closest("form")); }
+      }
+      miuDebugPlayConfigured(kind, id);
+      return;
+    }
+
+    var labButton = event.target.closest("[data-miu-debug-lab-play]");
+    if (labButton && panel.contains(labButton)) {
+      miuDebugPlayLooseSprite(labButton.closest("[data-miu-debug-lab-row]"), labButton);
+      return;
+    }
+
+    if (event.target.closest("[data-miu-debug-stop]")) {
+      miuDebugStopAll();
+      return;
+    }
+
+    if (event.target.closest("[data-miu-debug-reload]")) {
+      window.location.reload();
+      return;
+    }
+
+    var toggle = event.target.closest("[data-miu-debug-toggle]");
+    if (toggle) {
+      var collapsed = !panel.classList.contains("is-collapsed");
+      miuDebugSetCollapsed(panel, collapsed);
+      miuDebugWritePanelState({ collapsed: collapsed });
+    }
+  });
 }
 
 function miuHideLauncherMessage()
@@ -1263,10 +1826,12 @@ function miuBuildInterface()
   miuRoot.innerHTML = [
     '<section class="miu-panel" role="dialog" aria-label="Conversa com o Míu" aria-hidden="true">',
       '<header class="miu-panel__head">',
-        '<span class="miu-panel__mini-cat">', miuFaceMarkup("miu-face--small miu-face--mini miu-face--header"), '</span>',
+        '<span class="miu-panel__mascot" aria-hidden="true">',
+          '<span class="miu-panel__mini-cat">', miuFaceMarkup("miu-face--small miu-face--mini miu-face--header"), '</span>',
+        '</span>',
         '<span class="miu-panel__title"><strong>', String(miuConfig.name || "Míu").replace(/[<>&]/g, ""), '</strong></span>',
         '<button class="miu-panel__icon-button miu-panel__new" type="button" title="Nova conversa" aria-label="Começar nova conversa">↻</button>',
-        '<button class="miu-panel__icon-button miu-panel__close" type="button" aria-label="Fechar conversa">×</button>',
+        '<button class="miu-panel__icon-button miu-panel__minimize" type="button" title="Minimizar" aria-label="Minimizar conversa"><span aria-hidden="true">−</span></button>',
       '</header>',
       '<div class="miu-messages" role="log" aria-live="polite" aria-relevant="additions text"></div>',
       '<form class="miu-composer">',
@@ -1279,7 +1844,9 @@ function miuBuildInterface()
     '</section>',
     '<span class="miu-interactive-wrap" aria-hidden="true"><span class="miu-interactive-sprite"></span></span>',
     '<button class="miu-launcher" type="button" aria-label="Abrir o Míu, assistente virtual" aria-expanded="false">',
-      miuFaceMarkup("miu-face--launcher"),
+      '<svg class="miu-launcher__bubble-outline" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326z"/></svg>',
+      '<span class="miu-launcher__bubble-face">', miuFaceMarkup("miu-face--launcher"), '</span>',
+      '<span class="miu-launcher__basket" aria-hidden="true"><span class="miu-launcher__basket-body"></span><span class="miu-launcher__basket-front"></span></span>',
       '<span class="miu-launcher__callout" aria-live="polite"></span>',
     '</button>'
   ].join("");
@@ -1291,19 +1858,24 @@ function miuBuildInterface()
   miuStatus = miuRoot.querySelector(".miu-status");
   miuCount = miuRoot.querySelector(".miu-count");
   var launcher = miuRoot.querySelector(".miu-launcher");
-  var close = miuRoot.querySelector(".miu-panel__close");
+  var minimize = miuRoot.querySelector(".miu-panel__minimize");
   var reset = miuRoot.querySelector(".miu-panel__new");
   var display = miuAnimationConfig && miuAnimationConfig.display ? miuAnimationConfig.display : {};
-  miuLauncherSprite = launcher.querySelector(".miu-face");
+  miuLauncherSprite = launcher.querySelector(".miu-launcher__bubble-face .miu-face");
   miuInteractiveWrap = miuRoot.querySelector(".miu-interactive-wrap");
   miuInteractiveSprite = miuRoot.querySelector(".miu-interactive-sprite");
+  miuLauncherBodySprite = miuRoot.querySelector(".miu-launcher__basket-body");
   miuLauncherCallout = miuRoot.querySelector(".miu-launcher__callout");
-  miuRoot.style.setProperty("--miu-launcher-sprite-size", Math.max(24, Number(display.launcherPx || 46)) + "px");
-  miuRoot.style.setProperty("--miu-header-sprite-size", Math.max(16, Number(display.headerPx || 26)) + "px");
-  miuRoot.style.setProperty("--miu-message-sprite-size", Math.max(16, Number(display.messagePx || 26)) + "px");
-  miuRoot.style.setProperty("--miu-interactive-sprite-size", Math.max(48, Number(display.interactivePx || 96)) + "px");
-  miuRoot.classList.toggle("miu-no-circle-launcher", display.launcherCircle === false);
-  miuRoot.classList.toggle("miu-no-circle-header", display.headerCircle === false);
+  miuRoot.style.setProperty("--miu-launcher-sprite-size-desktop", Math.max(24, Number(display.launcherPx || 46)) + "px");
+  miuRoot.style.setProperty("--miu-launcher-sprite-size-mobile", Math.max(24, Number(display.launcherPxMobile || display.launcherPx || 46)) + "px");
+  miuRoot.style.setProperty("--miu-header-sprite-size-desktop", Math.max(16, Number(display.headerPx || 26)) + "px");
+  miuRoot.style.setProperty("--miu-header-sprite-size-mobile", Math.max(16, Number(display.headerPxMobile || display.headerPx || 26)) + "px");
+  miuRoot.style.setProperty("--miu-message-sprite-size-desktop", Math.max(16, Number(display.messagePx || 26)) + "px");
+  miuRoot.style.setProperty("--miu-message-sprite-size-mobile", Math.max(16, Number(display.messagePxMobile || display.messagePx || 26)) + "px");
+  miuRoot.style.setProperty("--miu-interactive-sprite-size-desktop", Math.max(48, Number(display.interactivePx || 96)) + "px");
+  miuRoot.style.setProperty("--miu-interactive-sprite-size-mobile", Math.max(48, Number(display.interactivePxMobile || display.interactivePx || 96)) + "px");
+  miuApplyLauncherAppearance(display);
+  miuApplyHeaderAppearance(display);
   miuRoot.classList.toggle("miu-no-circle-message", display.messageCircle === false);
   miuAnimationPlayBase();
   miuAnimationApplyStatic(miuRoot.querySelector(".miu-panel__mini-cat .miu-face"), 0);
@@ -1315,7 +1887,7 @@ function miuBuildInterface()
       miuAnimationTrigger("launcher_hover");
     }
   });
-  close.addEventListener("click", function () { miuSetOpen(false); launcher.focus(); });
+  minimize.addEventListener("click", function () { miuSetOpen(false); launcher.focus(); });
   reset.addEventListener("click", function () {
     if (!miuMessages.length || window.confirm("Começar uma conversa nova?")) { miuResetConversation(); }
   });
@@ -1344,22 +1916,25 @@ function miuBuildInterface()
 function miuShouldStart()
 {
   var page = document.body ? document.body.getAttribute("data-page") : "";
+  var allowAdmin = miuIsAdminChatPage();
   if (page === "preview" || window.self !== window.top) { return false; }
-  if (document.querySelector(".admin-global-nav")) { return false; }
+  if (!allowAdmin && document.querySelector(".admin-global-nav")) { return false; }
   return true;
 }
 
 function miuInit()
 {
   if (!document.body || !window.fetch || !window.URL || !miuShouldStart() || miuRoot) { return; }
+  if (miuIsAdminChatPage()) { miuStorageKey = "miaandpaper_miu_admin_v1"; }
   miuLoadLocalState();
   window.fetch(miuApiUrl, { credentials: "same-origin", headers: { "Accept": "application/json" } })
     .then(function (response) { return response.ok ? response.json() : null; })
     .then(function (config) {
-      if (!config || !config.ok || !config.enabled || !config.csrf) { return; }
+      if (!config || !config.ok || !config.csrf || (!config.enabled && !miuIsAdminChatPage())) { return; }
       miuConfig = config;
       miuAnimationSetup(config.animations);
       miuBuildInterface();
+      miuDebugPanelSetup();
     }).catch(function () {});
 }
 

@@ -1,0 +1,16 @@
+LABORATÓRIO LOCAL DE SPRITES DO MÍU
+
+Coloca aqui spritesheets .webp ou .png que queiras testar rapidamente no bot.php.
+Depois recarrega bot.php. O painel fixo "Laboratório Míu" mostra cada ficheiro.
+
+Podes ajustar no próprio painel:
+- C = colunas
+- L = linhas
+- ms = duração de cada frame
+
+Dica: se o nome incluir a grelha, ela fica pré-preenchida automaticamente:
+  andar-4x2.webp
+  salto-8x1.webp
+  teste-3x3.png
+
+Estes ficheiros são apenas de teste e não alteram animations.json.

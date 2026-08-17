@@ -394,7 +394,7 @@ foreach (array_keys($receitasPasso1) as $slugReceita) {
                     aria-label="Carregar directamente uma imagem para <?= pd_h($design['titulo']) ?>">
                 <span class="pd-imagem">
                   <?php if ($design['imagem'] !== ''): ?>
-                    <img src="<?= pd_h($design['imagem']) ?>" alt="" loading="lazy" decoding="async">
+                    <img src="<?= pd_h($design['imagem']) ?>" alt="" loading="eager" decoding="async">
                   <?php else: ?>
                     <span class="pd-sem-imagem">Imagem ainda não definida</span>
                   <?php endif; ?>

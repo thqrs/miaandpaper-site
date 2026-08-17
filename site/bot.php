@@ -52,6 +52,72 @@ function bot_local_date($value)
     }
 }
 
+
+/**
+ * Spritesheets soltas para testes rápidos no painel do Míu.
+ *
+ * A pasta é deliberadamente separada da biblioteca activa de animações:
+ * colocar aqui um WebP/PNG nunca altera animations.json nem o site público.
+ * O nome pode incluir "4x2", "8x1", etc. para pré-preencher a grelha.
+ */
+function bot_miu_test_sprites()
+{
+    $directory = __DIR__ . '/content/brand/miu/test-sprites';
+    if (!is_dir($directory)) {
+        return array();
+    }
+
+    $entries = scandir($directory);
+    if (!is_array($entries)) {
+        return array();
+    }
+
+    $sprites = array();
+    foreach ($entries as $entry) {
+        if ($entry === '.' || $entry === '..' || $entry === '' || $entry[0] === '.') {
+            continue;
+        }
+        $extension = strtolower((string)pathinfo($entry, PATHINFO_EXTENSION));
+        if (!in_array($extension, array('webp', 'png'), true)) {
+            continue;
+        }
+
+        $path = $directory . DIRECTORY_SEPARATOR . $entry;
+        if (!is_file($path)) {
+            continue;
+        }
+
+        $columns = 4;
+        $rows = 2;
+        if (preg_match('/(?:^|[-_])([1-9][0-9]?)x([1-9][0-9]?)(?:[-_.]|$)/i', $entry, $matches)) {
+            $columns = min(16, max(1, (int)$matches[1]));
+            $rows = min(16, max(1, (int)$matches[2]));
+        }
+
+        $width = 0;
+        $height = 0;
+        $size = @getimagesize($path);
+        if (is_array($size)) {
+            $width = isset($size[0]) ? (int)$size[0] : 0;
+            $height = isset($size[1]) ? (int)$size[1] : 0;
+        }
+
+        $sprites[] = array(
+            'name' => $entry,
+            'url' => 'content/brand/miu/test-sprites/' . rawurlencode($entry),
+            'columns' => $columns,
+            'rows' => $rows,
+            'width' => $width,
+            'height' => $height,
+        );
+    }
+
+    usort($sprites, function ($a, $b) {
+        return strnatcasecmp($a['name'], $b['name']);
+    });
+    return $sprites;
+}
+
 $csrf = mp_admin_csrf_token();
 $notice = isset($_GET['notice']) ? (string)$_GET['notice'] : '';
 $settingsError = isset($_SESSION['miu_settings_error']) ? (string)$_SESSION['miu_settings_error'] : '';
@@ -168,6 +234,7 @@ $contextRows = $tab === 'contexts' ? miu_context_admin_rows() : array();
 $animationConfig = in_array($tab, array('animations', 'appearance'), true) ? miu_animation_config() : null;
 $animationTriggers = $tab === 'animations' ? miu_animation_trigger_options() : array();
 $animationMotions = $tab === 'animations' ? miu_animation_motion_options() : array();
+$miuTestSprites = bot_miu_test_sprites();
 $quickReplyCatalog = miu_quick_reply_catalog();
 $quickReplyGlobal = isset($quickReplyCatalog['global']) && is_array($quickReplyCatalog['global']) ? $quickReplyCatalog['global'] : array();
 $quickReplyContexts = isset($quickReplyCatalog['contexts']) && is_array($quickReplyCatalog['contexts']) ? $quickReplyCatalog['contexts'] : array();
@@ -215,11 +282,66 @@ foreach ($contextRows as $contextRow) {
   <link rel="stylesheet" href="css/01-tokens-agua.css?v=2026080501">
   <link rel="stylesheet" href="admin-nav.css?v=2026081001">
   <link rel="stylesheet" href="bot-admin.css?v=2026081501">
+  <link rel="stylesheet" href="css/13-miu.css?v=2026081716">
   <script src="admin-nav.js?v=2026081701" defer></script>
   <script src="bot-admin.js?v=2026081501" defer></script>
+  <script src="js/24-miu.js?v=2026081715" defer></script>
 </head>
-<body class="miu-admin-body">
+<body class="miu-admin-body" data-miu-admin-chat="1">
 <?= mp_parametros_barra('bot.php') ?>
+
+<aside class="miu-debug-dock" data-miu-debug-panel aria-label="Laboratório rápido de animações do Míu">
+  <header class="miu-debug-dock__head">
+    <div><strong>Laboratório Míu</strong><small>Testes locais</small></div>
+    <button type="button" data-miu-debug-toggle aria-expanded="true" title="Recolher painel">−</button>
+  </header>
+  <div class="miu-debug-dock__body" data-miu-debug-body>
+    <section>
+      <h2>Cara do chat</h2>
+      <div class="miu-debug-buttons" data-miu-debug-face-buttons>
+        <span class="miu-debug-loading">A carregar…</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Animações de corpo inteiro</h2>
+      <div class="miu-debug-buttons" data-miu-debug-interactive-buttons>
+        <span class="miu-debug-loading">A carregar…</span>
+      </div>
+    </section>
+
+    <section class="miu-debug-sprite-lab">
+      <h2>Sprites à toa</h2>
+      <p>Coloca <code>.webp</code> ou <code>.png</code> em <code>content/brand/miu/test-sprites/</code> e recarrega esta página. Se o nome tiver <code>4x2</code>, <code>8x1</code>, etc., a grelha é detectada automaticamente.</p>
+      <?php if (!$miuTestSprites): ?>
+        <div class="miu-debug-empty">A pasta está vazia.</div>
+      <?php else: ?>
+        <div class="miu-debug-lab-list">
+          <?php foreach ($miuTestSprites as $sprite): ?>
+          <div class="miu-debug-lab-row" data-miu-debug-lab-row>
+            <div class="miu-debug-lab-name">
+              <strong title="<?= bot_h($sprite['name']) ?>"><?= bot_h($sprite['name']) ?></strong>
+              <?php if ($sprite['width'] > 0 && $sprite['height'] > 0): ?><small><?= (int)$sprite['width'] ?>×<?= (int)$sprite['height'] ?> px</small><?php endif; ?>
+            </div>
+            <div class="miu-debug-lab-fields">
+              <label title="Colunas"><span>C</span><input type="number" min="1" max="16" value="<?= (int)$sprite['columns'] ?>" data-miu-debug-cols></label>
+              <label title="Linhas"><span>L</span><input type="number" min="1" max="16" value="<?= (int)$sprite['rows'] ?>" data-miu-debug-rows></label>
+              <label title="Milissegundos por frame"><span>ms</span><input type="number" min="40" max="5000" step="10" value="180" data-miu-debug-ms></label>
+            </div>
+            <button class="miu-debug-play" type="button" data-miu-debug-lab-play data-sheet-url="<?= bot_h($sprite['url']) ?>">▶ Testar</button>
+          </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </section>
+
+    <div class="miu-debug-dock__actions">
+      <button type="button" data-miu-debug-stop>■ Parar / base</button>
+      <button type="button" data-miu-debug-reload>↻ Recarregar ficheiros</button>
+    </div>
+    <p class="miu-debug-status" data-miu-debug-status aria-live="polite"></p>
+  </div>
+</aside>
 <main class="miu-admin-shell">
   <header class="miu-admin-header">
     <div>
@@ -315,13 +437,24 @@ foreach ($contextRows as $contextRow) {
       <input type="hidden" name="csrf" value="<?= bot_h($csrf) ?>">
       <input type="hidden" name="action" value="save_appearance">
       <div class="miu-settings-grid">
-        <label class="miu-field"><span>Míu do canto — tamanho</span><input type="number" name="launcher_px" min="24" max="120" value="<?= (int)$animationConfig['display']['launcherPx'] ?>"><small>Pixels da cara dentro do lançador.</small></label>
-        <label class="miu-toggle"><input type="checkbox" name="launcher_circle" value="1" <?= $animationConfig['display']['launcherCircle'] ? 'checked' : '' ?>><span>Mostrar círculo no Míu do canto</span></label>
-        <label class="miu-field"><span>Míu na barra do chat — tamanho</span><input type="number" name="header_px" min="16" max="80" value="<?= (int)$animationConfig['display']['headerPx'] ?>"></label>
-        <label class="miu-toggle"><input type="checkbox" name="header_circle" value="1" <?= $animationConfig['display']['headerCircle'] ? 'checked' : '' ?>><span>Mostrar círculo na barra do chat</span></label>
-        <label class="miu-field"><span>Míu após as respostas — tamanho</span><input type="number" name="message_px" min="16" max="80" value="<?= (int)$animationConfig['display']['messagePx'] ?>"></label>
-        <label class="miu-toggle"><input type="checkbox" name="message_circle" value="1" <?= $animationConfig['display']['messageCircle'] ? 'checked' : '' ?>><span>Mostrar círculo nos avatares das respostas</span></label>
-        <label class="miu-field"><span>Míu interactivo de corpo inteiro — tamanho</span><input type="number" name="interactive_px" min="48" max="240" value="<?= (int)$animationConfig['display']['interactivePx'] ?>"><small>Usado nas animações que podem sair do círculo ao entrar nos produtos.</small></label>
+        <label class="miu-field"><span>Míu principal no canto — Desktop</span><input type="number" name="launcher_px" min="24" max="120" value="<?= (int)$animationConfig['display']['launcherPx'] ?>"><small>Escala a cara no balão ou o corpo inteiro na alcofinha, conforme o tipo escolhido.</small></label>
+        <label class="miu-field"><span>Míu principal no canto — Mobile</span><input type="number" name="launcher_px_mobile" min="24" max="120" value="<?= (int)$animationConfig['display']['launcherPxMobile'] ?>"><small>Aplicado até 520 px de largura.</small></label>
+        <div class="miu-settings-span miu-launcher-mode-settings" role="group" aria-label="Tipo do Míu principal no canto inferior direito">
+          <span class="miu-launcher-mode-settings__title">Tipo do Míu principal</span>
+          <div class="miu-launcher-mode-settings__choices">
+            <label class="miu-toggle"><input type="checkbox" name="launcher_mode_circle" value="1" data-miu-launcher-mode="circle" <?= $animationConfig['display']['launcherMode'] === 'circle' ? 'checked' : '' ?>><span><strong>Cara no balão</strong><small>Usa a cara animada recortada dentro de um balão circular em outline, com a ponta virada para a direita.</small></span></label>
+            <label class="miu-toggle"><input type="checkbox" name="launcher_mode_basket" value="1" data-miu-launcher-mode="basket" <?= $animationConfig['display']['launcherMode'] === 'basket' ? 'checked' : '' ?>><span><strong>Corpo inteiro na alcofinha</strong><small>Troca o balão pela animação de corpo inteiro pousada dentro da alcofinha.</small></span></label>
+          </div>
+        </div>
+        <label class="miu-field"><span>Míu na barra do chat — Desktop</span><input type="number" name="header_px" min="16" max="120" value="<?= (int)$animationConfig['display']['headerPx'] ?>"></label>
+        <label class="miu-field"><span>Míu na barra do chat — Mobile</span><input type="number" name="header_px_mobile" min="16" max="120" value="<?= (int)$animationConfig['display']['headerPxMobile'] ?>"><small>Aplicado até 520 px de largura.</small></label>
+        <label class="miu-toggle miu-settings-span"><input type="checkbox" name="header_visible" value="1" <?= $animationConfig['display']['headerVisible'] ? 'checked' : '' ?>><span><strong>Mostrar Míu na barra do chat</strong><small>Desmarca para esconder completamente a mascote da barra de cima.</small></span></label>
+        <label class="miu-toggle miu-settings-span"><input type="checkbox" name="header_circle" value="1" <?= $animationConfig['display']['headerCircle'] ? 'checked' : '' ?>><span>Mostrar círculo no Míu da barra do chat</span></label>
+        <label class="miu-field"><span>Míu após as respostas — Desktop</span><input type="number" name="message_px" min="16" max="80" value="<?= (int)$animationConfig['display']['messagePx'] ?>"></label>
+        <label class="miu-field"><span>Míu após as respostas — Mobile</span><input type="number" name="message_px_mobile" min="16" max="80" value="<?= (int)$animationConfig['display']['messagePxMobile'] ?>"></label>
+        <label class="miu-toggle miu-settings-span"><input type="checkbox" name="message_circle" value="1" <?= $animationConfig['display']['messageCircle'] ? 'checked' : '' ?>><span>Mostrar círculo nos avatares das respostas</span></label>
+        <label class="miu-field"><span>Míu interactivo de corpo inteiro — Desktop</span><input type="number" name="interactive_px" min="48" max="240" value="<?= (int)$animationConfig['display']['interactivePx'] ?>"><small>Usado nas animações que podem sair do círculo ao entrar nos produtos.</small></label>
+        <label class="miu-field"><span>Míu interactivo de corpo inteiro — Mobile</span><input type="number" name="interactive_px_mobile" min="48" max="240" value="<?= (int)$animationConfig['display']['interactivePxMobile'] ?>"></label>
         <label class="miu-field"><span>Mostrar “<?= bot_h($settings['launcher_prompt']) ?>” durante</span><input type="number" name="prompt_seconds" min="0" max="60" value="<?= (int)$animationConfig['display']['promptSeconds'] ?>"><small>Segundos. 0 mantém escondido o balão inicial.</small></label>
         <label class="miu-toggle miu-settings-span"><input type="checkbox" name="errors_via_miu" value="1" <?= $animationConfig['display']['errorsViaMiu'] ? 'checked' : '' ?>><span><strong>O Míu diz os erros e avisos do site</strong><small>Ligado por omissão. Quando está desligado, as mensagens aparecem nos locais normais dos formulários.</small></span></label>
       </div>
