@@ -516,7 +516,7 @@ if (!$editorItems) {
     </article>
   </template>
 
-  <script src="admin-nav.js?v=2026081001"></script>
+  <script src="admin-nav.js?v=2026081701"></script>
   <script>
   (function () {
     "use strict";

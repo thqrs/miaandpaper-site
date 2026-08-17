@@ -15,6 +15,7 @@
     { id: "reviews", label: "Reviews", href: "reviews.html", files: ["reviews.html"] },
     { id: "faqs", label: "FAQs", href: "faqs.php", files: ["faqs.php"] },
     { id: "miu", label: "Míu", href: "bot.php", files: ["bot.php"] },
+    { id: "errors", label: "Erros", href: "erros.php", files: ["erros.php"] },
     { id: "prices", label: "Preços", href: "precos.php", files: ["precos.php"] },
     { id: "materials", label: "Materiais", href: "materiais.php", files: ["materiais.php"] },
     { id: "home", label: "Homepage & Menu", href: "homepage-menu-design.php", files: ["homepage-menu-design.php"] },

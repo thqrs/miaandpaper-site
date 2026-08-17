@@ -206,6 +206,8 @@
       return "molduras.html";
     }
     if (slug === "crachas-loja") return "crachas.html";
+    if (slug === "porta-chaves") return "porta-chaves.html";
+    if (slug === "porta-folhetos") return "porta-folhetos.html";
     if (slug === "imanes-loja") return "imanes.html";
     if (slug === "mini-cadernos") return "mini-cadernos.html";
     if (slug === "cadernos-anuais") return "cadernos-anuais.html";
@@ -738,8 +740,13 @@
       return quantities;
     }
 
-    selectedDesignItems(product).forEach(function (item) {
-      quantities[item.value] = isCadernosProduct(product) ? 1 : quantityFor(item.value);
+    var selectedItems = selectedDesignItems(product);
+    var fixedQuantity = !findStep(product, "pack") ? getPackQuantity(product) : 0;
+
+    selectedItems.forEach(function (item) {
+      quantities[item.value] = isCadernosProduct(product)
+        ? 1
+        : (fixedQuantity > 0 && selectedItems.length === 1 ? fixedQuantity : quantityFor(item.value));
     });
 
     return quantities;
@@ -1082,7 +1089,7 @@
         totals,
         '<button class="button secondary" type="button" data-back data-track="true" data-track-action="back" data-track-id="back">Voltar</button>',
         '<div class="next-action-wrap">',
-        state.errors ? '<p class="form-error action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
+        state.errors ? siteErrorMarkup(state.errors, "form-error action-error") : "",
         '</div>',
         '</div>'
       ].join("");
@@ -1093,7 +1100,7 @@
       totals,
       '<button class="button secondary" type="button" data-back aria-label="Voltar" data-track="true" data-track-action="back" data-track-id="back">' + backLabel + '</button>',
       '<div class="cart-entry-buttons">',
-      state.errors ? '<p class="form-error action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
+      state.errors ? siteErrorMarkup(state.errors, "form-error action-error") : "",
       '<button class="button secondary" type="button" data-cart-add-another aria-label="Adicionar ao cesto e escolher outro produto">' + addAnotherLabel + '</button>',
       '<button class="button primary" type="button" data-cart-finalize-current aria-label="Finalizar pedido">' + finalizeLabel + '</button>',
       '</div>',

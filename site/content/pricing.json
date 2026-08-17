@@ -1,931 +1,1127 @@
 {
-    "currency": "EUR",
-    "note": "Preços em cêntimos. Este ficheiro é a fonte central de preços do site; o modo admin mostra/edita em euros.",
-    "settings": {
-        "smartQuantities": true,
-        "quantityPricingSwitchVisible": false
-    },
-    "delivery": {
-        "pickup": 0,
-        "shipping": 540,
-        "join_orders": 0
-    },
-    "optionExtras": {
-        "holografica": 25,
-        "holografica-marcador": 15,
-        "holographic": 15,
-        "dois-lados-marcador": 15,
-        "buraquinho-marcador": 25,
-        "margem-plastico-marcador": 20,
-        "capa-mole": 0,
-        "capa-dura": 400,
-        "cover_personalization": 200
-    },
-    "products": {
-        "crachas-loja": {
-            "id": "crachas-loja",
-            "family": "crachas",
-            "catalogContext": "main-v2",
-            "label": "Crachás",
-            "unitLabel": "crachás",
-            "unitSingular": "crachá",
-            "unitShort": "crachá",
-            "defaultPriceKey": "25 mm",
-            "minimumQuantity": 1,
-            "pricingMode": "tier-unit",
-            "allowUnitDiscounts": true,
-            "quantityPricingSwitchByPriceKey": {
-                "25 mm": {
-                    "quantityTiers": true,
-                    "sliderMaximum": 150
-                },
-                "32 mm": {
-                    "quantityTiers": true,
-                    "sliderMaximum": 150
-                },
-                "58 mm": {
-                    "quantityTiers": true,
-                    "sliderMaximum": 150
-                }
-            },
-            "customArtworkFeePerFileCents": 300,
-            "prices": {
-                "25 mm": {
-                    "1": 150,
-                    "3": 436,
-                    "5": 712,
-                    "10": 1350,
-                    "24": 3060,
-                    "48": 5760,
-                    "96": 11520
-                },
-                "32 mm": {
-                    "1": 175,
-                    "3": 509,
-                    "5": 831,
-                    "10": 1575,
-                    "24": 3570,
-                    "48": 6720,
-                    "96": 13440
-                },
-                "58 mm": {
-                    "1": 200,
-                    "3": 582,
-                    "5": 950,
-                    "10": 1800,
-                    "24": 4080,
-                    "48": 7680,
-                    "96": 15360
-                }
-            },
-            "discountsByPriceKey": {
-                "25 mm": {
-                    "activo": "D1",
-                    "D1": {
-                        "1": 0,
-                        "3": 3,
-                        "5": 5,
-                        "10": 10,
-                        "24": 15,
-                        "48": 20,
-                        "96": 20
-                    },
-                    "D2": {
-                        "1": 0,
-                        "3": 6.7,
-                        "5": 13.3,
-                        "10": 13.3,
-                        "24": 25,
-                        "48": 30.6,
-                        "96": 37.5
-                    },
-                    "D3": {
-                        "1": 0,
-                        "3": 6.7,
-                        "5": 13.3,
-                        "10": 13.3,
-                        "24": 25,
-                        "48": 30.6,
-                        "96": 37.5
-                    },
-                    "D4": {
-                        "1": 0,
-                        "3": 6.7,
-                        "5": 13.3,
-                        "10": 13.3,
-                        "24": 25,
-                        "48": 30.6,
-                        "96": 37.5
-                    }
-                },
-                "32 mm": {
-                    "activo": "D1",
-                    "D1": {
-                        "1": 0,
-                        "3": 3,
-                        "5": 5,
-                        "10": 10,
-                        "24": 15,
-                        "48": 20,
-                        "96": 20
-                    },
-                    "D2": {
-                        "1": 0,
-                        "3": 4.8,
-                        "5": 14.3,
-                        "10": 14.3,
-                        "24": 23.8,
-                        "48": 31,
-                        "96": 37.5
-                    },
-                    "D3": {
-                        "1": 0,
-                        "3": 4.8,
-                        "5": 14.3,
-                        "10": 14.3,
-                        "24": 23.8,
-                        "48": 31,
-                        "96": 37.5
-                    },
-                    "D4": {
-                        "1": 0,
-                        "3": 4.8,
-                        "5": 14.3,
-                        "10": 14.3,
-                        "24": 23.8,
-                        "48": 31,
-                        "96": 37.5
-                    }
-                },
-                "58 mm": {
-                    "activo": "D1",
-                    "D1": {
-                        "1": 0,
-                        "3": 3,
-                        "5": 5,
-                        "10": 10,
-                        "24": 15,
-                        "48": 20,
-                        "96": 20
-                    },
-                    "D2": {
-                        "1": 0,
-                        "3": 5,
-                        "5": 14,
-                        "10": 14,
-                        "24": 23.8,
-                        "48": 30.9,
-                        "96": 37.5
-                    },
-                    "D3": {
-                        "1": 0,
-                        "3": 5,
-                        "5": 14,
-                        "10": 14,
-                        "24": 23.8,
-                        "48": 30.9,
-                        "96": 37.5
-                    },
-                    "D4": {
-                        "1": 0,
-                        "3": 5,
-                        "5": 14,
-                        "10": 14,
-                        "24": 23.8,
-                        "48": 30.9,
-                        "96": 37.5
-                    }
-                }
-            }
+  "currency": "EUR",
+  "note": "Preços em cêntimos. Este ficheiro é a fonte central de preços do site; o modo admin mostra/edita em euros.",
+  "settings": {
+    "smartQuantities": true,
+    "quantityPricingSwitchVisible": false
+  },
+  "delivery": {
+    "pickup": 0,
+    "shipping": 540,
+    "join_orders": 0
+  },
+  "optionExtras": {
+    "holografica": 25,
+    "holografica-marcador": 15,
+    "holographic": 15,
+    "dois-lados-marcador": 15,
+    "buraquinho-marcador": 25,
+    "margem-plastico-marcador": 20,
+    "capa-mole": 0,
+    "capa-dura": 400,
+    "cover_personalization": 200
+  },
+  "products": {
+    "crachas-loja": {
+      "id": "crachas-loja",
+      "family": "crachas",
+      "catalogContext": "main-v2",
+      "label": "Crachás",
+      "unitLabel": "crachás",
+      "unitSingular": "crachá",
+      "unitShort": "crachá",
+      "defaultPriceKey": "25 mm",
+      "minimumQuantity": 1,
+      "pricingMode": "tier-unit",
+      "allowUnitDiscounts": true,
+      "quantityPricingSwitchByPriceKey": {
+        "25 mm": {
+          "quantityTiers": true,
+          "sliderMaximum": 150
         },
-        "imanes-loja": {
-            "id": "imanes-loja",
-            "family": "imanes",
-            "catalogContext": "main-v2",
-            "label": "Ímanes",
-            "unitLabel": "ímanes",
-            "unitSingular": "íman",
-            "unitShort": "íman",
-            "defaultPriceKey": "Achatados",
-            "minimumQuantity": 1,
-            "pricingMode": "tier-unit",
-            "allowUnitDiscounts": true,
-            "quantityPricingSwitchByPriceKey": {
-                "Achatados": {
-                    "quantityTiers": true,
-                    "sliderMaximum": 150
-                },
-                "3 mm": {
-                    "quantityTiers": true,
-                    "sliderMaximum": 150
-                }
-            },
-            "customArtworkFeePerFileCents": 300,
-            "prices": {
-                "Achatados": {
-                    "15": 1000,
-                    "30": 1900,
-                    "60": 3600,
-                    "105": 5950
-                },
-                "3 mm": {
-                    "1": 250,
-                    "3": 728,
-                    "5": 1188,
-                    "10": 2300,
-                    "24": 5400,
-                    "30": 6750,
-                    "48": 10200,
-                    "60": 12750
-                }
-            },
-            "discountsByPriceKey": {
-                "Achatados": {
-                    "activo": "D1",
-                    "D1": {
-                        "15": 0,
-                        "30": 5,
-                        "60": 10,
-                        "105": 15
-                    },
-                    "D2": {
-                        "15": 0,
-                        "30": 10,
-                        "60": 20,
-                        "105": 24.3
-                    },
-                    "D3": {
-                        "15": 0,
-                        "30": 10,
-                        "60": 20,
-                        "105": 24.3
-                    },
-                    "D4": {
-                        "15": 0,
-                        "30": 10,
-                        "60": 20,
-                        "105": 24.3
-                    }
-                },
-                "3 mm": {
-                    "activo": "D1",
-                    "D1": {
-                        "1": 0,
-                        "3": 3,
-                        "5": 5,
-                        "10": 8,
-                        "24": 10,
-                        "30": 10,
-                        "48": 15,
-                        "60": 15
-                    },
-                    "D2": {
-                        "1": 0,
-                        "3": 4.7,
-                        "5": 6.8,
-                        "10": 10,
-                        "24": 10,
-                        "30": 20,
-                        "48": 20,
-                        "60": 25
-                    },
-                    "D3": {
-                        "1": 0,
-                        "3": 4.7,
-                        "5": 6.8,
-                        "10": 10,
-                        "24": 10,
-                        "30": 20,
-                        "48": 20,
-                        "60": 25
-                    },
-                    "D4": {
-                        "1": 0,
-                        "3": 4.7,
-                        "5": 6.8,
-                        "10": 10,
-                        "24": 10,
-                        "30": 20,
-                        "48": 20,
-                        "60": 25
-                    }
-                }
-            }
+        "32 mm": {
+          "quantityTiers": true,
+          "sliderMaximum": 150
         },
-        "imanes-recortados": {
-            "id": "imanes-recortados",
-            "family": "imanes-recortados",
-            "catalogContext": "main-v2",
-            "label": "Ímanes recortados",
-            "unitLabel": "ímanes",
-            "unitSingular": "íman",
-            "unitShort": "íman",
-            "defaultPriceKey": "Recortados",
-            "minimumQuantity": 12,
-            "pricingMode": "tier-unit",
-            "allowUnitDiscounts": true,
-            "quantityPricingSwitchByPriceKey": {
-                "Recortados": {
-                    "quantityTiers": true,
-                    "sliderMaximum": 150
-                }
-            },
-            "customArtworkFeePerFileCents": 300,
-            "prices": {
-                "Recortados": {
-                    "12": 1300,
-                    "24": 2470,
-                    "36": 3510,
-                    "48": 4680,
-                    "60": 5525,
-                    "96": 8320
-                }
-            },
-            "discountsByPriceKey": {
-                "Recortados": {
-                    "activo": "D1",
-                    "D1": {
-                        "12": 0,
-                        "24": 5,
-                        "36": 10,
-                        "48": 10,
-                        "60": 15,
-                        "96": 20
-                    },
-                    "D2": {
-                        "12": 0,
-                        "24": 7.7,
-                        "36": 12.8,
-                        "48": 15.4,
-                        "60": 16.9,
-                        "96": 16.9
-                    },
-                    "D3": {
-                        "12": 0,
-                        "24": 7.7,
-                        "36": 12.8,
-                        "48": 15.4,
-                        "60": 16.9,
-                        "96": 16.9
-                    },
-                    "D4": {
-                        "12": 0,
-                        "24": 7.7,
-                        "36": 12.8,
-                        "48": 15.4,
-                        "60": 16.9,
-                        "96": 16.9
-                    }
-                }
-            }
-        },
-        "mini-cadernos": {
-            "id": "mini-cadernos",
-            "family": "caderninhos",
-            "catalogContext": "main-v2",
-            "label": "Mini-cadernos",
-            "unitLabel": "mini-cadernos",
-            "unitSingular": "mini-caderno",
-            "unitShort": "mini-caderno",
-            "defaultPriceKey": "Mini-Cadernos",
-            "minimumQuantity": 1,
-            "pricingMode": "tier-unit",
-            "allowUnitDiscounts": true,
-            "quantityPricingSwitchByPriceKey": {
-                "Mini-Cadernos": {
-                    "quantityTiers": true,
-                    "sliderMaximum": 150
-                }
-            },
-            "customArtworkFeePerFileCents": 300,
-            "prices": {
-                "Mini-Cadernos": {
-                    "1": 450,
-                    "3": 1310,
-                    "5": 2138,
-                    "10": 4140,
-                    "24": 9504,
-                    "48": 18360,
-                    "96": 36720
-                }
-            },
-            "discountsByPriceKey": {
-                "Mini-Cadernos": {
-                    "activo": "D1",
-                    "D1": {
-                        "1": 0,
-                        "3": 3,
-                        "5": 5,
-                        "10": 8,
-                        "24": 12,
-                        "48": 15,
-                        "96": 15
-                    },
-                    "D2": {
-                        "1": 0,
-                        "3": 7.4,
-                        "5": 13.3,
-                        "10": 20,
-                        "24": 27.8,
-                        "48": 32.9,
-                        "96": 35.2
-                    },
-                    "D3": {
-                        "1": 0,
-                        "3": 7.4,
-                        "5": 13.3,
-                        "10": 20,
-                        "24": 27.8,
-                        "48": 32.9,
-                        "96": 35.2
-                    },
-                    "D4": {
-                        "1": 0,
-                        "3": 7.4,
-                        "5": 13.3,
-                        "10": 20,
-                        "24": 27.8,
-                        "48": 32.9,
-                        "96": 35.2
-                    }
-                }
-            }
-        },
-        "blocos-a6": {
-            "id": "blocos-a6",
-            "family": "caderninhos",
-            "catalogContext": "main-v2",
-            "label": "Bloco Argolas A6",
-            "unitLabel": "blocos",
-            "unitSingular": "bloco",
-            "unitShort": "bloco",
-            "defaultPriceKey": "Blocos A6",
-            "minimumQuantity": 1,
-            "pricingMode": "tier-unit",
-            "allowUnitDiscounts": true,
-            "quantityPricingSwitchByPriceKey": {
-                "Blocos A6": {
-                    "quantityTiers": true,
-                    "sliderMaximum": 150
-                }
-            },
-            "customArtworkFeePerFileCents": 300,
-            "prices": {
-                "Blocos A6": {
-                    "1": 900,
-                    "3": 2619,
-                    "5": 4275,
-                    "10": 8280,
-                    "24": 19008,
-                    "48": 36720,
-                    "96": 73440
-                }
-            },
-            "discountsByPriceKey": {
-                "Blocos A6": {
-                    "activo": "D1",
-                    "D1": {
-                        "1": 0,
-                        "3": 3,
-                        "5": 5,
-                        "10": 8,
-                        "24": 12,
-                        "48": 15,
-                        "96": 15
-                    },
-                    "D2": {
-                        "1": 0,
-                        "3": 7.4,
-                        "5": 13.3,
-                        "10": 20,
-                        "24": 27.8,
-                        "48": 32.9,
-                        "96": 35.2
-                    },
-                    "D3": {
-                        "1": 0,
-                        "3": 7.4,
-                        "5": 13.3,
-                        "10": 20,
-                        "24": 27.8,
-                        "48": 32.9,
-                        "96": 35.2
-                    },
-                    "D4": {
-                        "1": 0,
-                        "3": 7.4,
-                        "5": 13.3,
-                        "10": 20,
-                        "24": 27.8,
-                        "48": 32.9,
-                        "96": 35.2
-                    }
-                }
-            }
-        },
-        "bloquinhos": {
-            "id": "bloquinhos",
-            "family": "bloquinhos",
-            "catalogContext": "main-v2",
-            "label": "Bloquinhos",
-            "unitLabel": "bloquinhos",
-            "unitSingular": "bloquinho",
-            "unitShort": "bloquinho",
-            "defaultPriceKey": "Bloquinhos",
-            "minimumQuantity": 1,
-            "pricingMode": "tier-unit",
-            "allowUnitDiscounts": true,
-            "quantityPricingSwitchByPriceKey": {
-                "Bloquinhos": {
-                    "quantityTiers": true,
-                    "sliderMaximum": 150
-                }
-            },
-            "customArtworkFeePerFileCents": 300,
-            "prices": {
-                "Bloquinhos": {
-                    "1": 450,
-                    "3": 1310,
-                    "5": 2138,
-                    "10": 4050,
-                    "24": 9180,
-                    "48": 17280,
-                    "96": 34560
-                }
-            },
-            "discountsByPriceKey": {
-                "Bloquinhos": {
-                    "activo": "D1",
-                    "D1": {
-                        "1": 0,
-                        "3": 3,
-                        "5": 5,
-                        "10": 10,
-                        "24": 15,
-                        "48": 20,
-                        "96": 20
-                    },
-                    "D2": {
-                        "1": 0,
-                        "3": 7.4,
-                        "5": 13.3,
-                        "10": 20,
-                        "24": 27.8,
-                        "48": 32.9,
-                        "96": 35.2
-                    },
-                    "D3": {
-                        "1": 0,
-                        "3": 7.4,
-                        "5": 13.3,
-                        "10": 20,
-                        "24": 27.8,
-                        "48": 32.9,
-                        "96": 35.2
-                    },
-                    "D4": {
-                        "1": 0,
-                        "3": 7.4,
-                        "5": 13.3,
-                        "10": 20,
-                        "24": 27.8,
-                        "48": 32.9,
-                        "96": 35.2
-                    }
-                }
-            }
-        },
-        "cadernos-anuais": {
-            "id": "cadernos-anuais",
-            "family": "cadernos",
-            "catalogContext": "main-v2",
-            "label": "Cadernos anuais",
-            "unitLabel": "cadernos",
-            "unitSingular": "caderno",
-            "unitShort": "caderno",
-            "defaultPriceKey": "Cadernos",
-            "minimumQuantity": 1,
-            "pricingMode": "flat-unit",
-            "allowUnitDiscounts": false,
-            "customArtworkFeePerFileCents": 300,
-            "flatUnitPricesCents": {
-                "caderno_normal": 2990,
-                "caderno_pioneiro": 3490,
-                "pack_normal": 3790,
-                "pack_pioneiro": 4290
-            },
-            "prices": {
-                "Cadernos": {
-                    "1": 2990,
-                    "2": 3490,
-                    "3": 3790,
-                    "4": 4290
-                }
-            },
-            "discountsByPriceKey": {
-                "Cadernos": {
-                    "activo": "D1",
-                    "D1": {
-                        "1": 0,
-                        "2": 41.6,
-                        "3": 57.7,
-                        "4": 64.1
-                    },
-                    "D2": {
-                        "1": 0,
-                        "2": 41.6,
-                        "3": 57.7,
-                        "4": 64.1
-                    },
-                    "D3": {
-                        "1": 0,
-                        "2": 41.6,
-                        "3": 57.7,
-                        "4": 64.1
-                    },
-                    "D4": {
-                        "1": 0,
-                        "2": 41.6,
-                        "3": 57.7,
-                        "4": 64.1
-                    }
-                }
-            }
-        },
-        "agendas": {
-            "id": "agendas",
-            "family": "cadernos",
-            "catalogContext": "main-v2",
-            "label": "Agendas",
-            "unitLabel": "agendas",
-            "unitSingular": "agenda",
-            "unitShort": "agenda",
-            "defaultPriceKey": "Agendas",
-            "minimumQuantity": 1,
-            "pricingMode": "flat-unit",
-            "allowUnitDiscounts": false,
-            "customArtworkFeePerFileCents": 300,
-            "flatUnitPricesCents": {
-                "agenda_normal": 2990,
-                "agenda_pioneiro": 3490,
-                "pack_normal": 3790,
-                "pack_pioneiro": 4290
-            },
-            "prices": {
-                "Agendas": {
-                    "1": 2990,
-                    "2": 3490,
-                    "3": 3790,
-                    "4": 4290
-                }
-            },
-            "discountsByPriceKey": {
-                "Agendas": {
-                    "activo": "D1",
-                    "D1": {
-                        "1": 0,
-                        "2": 41.6,
-                        "3": 57.7,
-                        "4": 64.1
-                    },
-                    "D2": {
-                        "1": 0,
-                        "2": 41.6,
-                        "3": 57.7,
-                        "4": 64.1
-                    },
-                    "D3": {
-                        "1": 0,
-                        "2": 41.6,
-                        "3": 57.7,
-                        "4": 64.1
-                    },
-                    "D4": {
-                        "1": 0,
-                        "2": 41.6,
-                        "3": 57.7,
-                        "4": 64.1
-                    }
-                }
-            }
-        },
-        "quadros": {
-            "id": "quadros",
-            "label": "Molduras personalizadas",
-            "unitLabel": "molduras",
-            "unitSingular": "moldura",
-            "unitShort": "moldura",
-            "defaultPriceKey": "Moldura personalizada",
-            "prices": {
-                "Moldura personalizada": {
-                    "1": 4500
-                }
-            },
-            "discountsByPriceKey": {
-                "Moldura personalizada": {
-                    "activo": "D1",
-                    "D1": {
-                        "1": 0
-                    },
-                    "D2": {
-                        "1": 0
-                    },
-                    "D3": {
-                        "1": 0
-                    },
-                    "D4": {
-                        "1": 0
-                    }
-                }
-            }
-        },
-        "stickers": {
-            "id": "stickers",
-            "family": "stickers",
-            "catalogContext": "main-v2",
-            "label": "Stickers",
-            "unitLabel": "stickers",
-            "unitSingular": "sticker",
-            "unitShort": "sticker",
-            "defaultPriceKey": "Stickers",
-            "minimumQuantity": 1,
-            "pricingMode": "flat-unit",
-            "allowUnitDiscounts": false,
-            "customArtworkFeePerFileCents": 300,
-            "flatUnitPricesCents": {
-                "Stickers": 50
-            },
-            "prices": {
-                "Stickers": {
-                    "1": 50,
-                    "5": 250,
-                    "10": 500,
-                    "25": 1250,
-                    "50": 2500
-                }
-            },
-            "discountsByPriceKey": {
-                "Stickers": {
-                    "activo": "D1",
-                    "D1": {
-                        "1": 0,
-                        "5": 0,
-                        "10": 0,
-                        "25": 0,
-                        "50": 0
-                    },
-                    "D2": {
-                        "1": 0,
-                        "5": 0,
-                        "10": 0,
-                        "25": 0,
-                        "50": 0
-                    },
-                    "D3": {
-                        "1": 0,
-                        "5": 0,
-                        "10": 0,
-                        "25": 0,
-                        "50": 0
-                    },
-                    "D4": {
-                        "1": 0,
-                        "5": 0,
-                        "10": 0,
-                        "25": 0,
-                        "50": 0
-                    }
-                }
-            }
-        },
-        "marcadores": {
-            "id": "marcadores",
-            "family": "marcadores",
-            "catalogContext": "main-v2",
-            "label": "Marcadores",
-            "unitLabel": "marcadores",
-            "unitSingular": "marcador",
-            "unitShort": "marcador",
-            "defaultPriceKey": "Marcadores",
-            "minimumQuantity": 1,
-            "pricingMode": "tier-unit",
-            "allowUnitDiscounts": true,
-            "quantityPricingSwitchByPriceKey": {
-                "Marcadores": {
-                    "quantityTiers": true,
-                    "sliderMaximum": 150
-                }
-            },
-            "customArtworkFeePerFileCents": 300,
-            "flatUnitPricesCents": {
-                "Marcadores": 150
-            },
-            "prices": {
-                "Marcadores": {
-                    "1": 150,
-                    "5": 728,
-                    "10": 1425,
-                    "20": 2850,
-                    "25": 3375,
-                    "40": 5100,
-                    "75": 9000
-                }
-            },
-            "discountsByPriceKey": {
-                "Marcadores": {
-                    "activo": "D1",
-                    "D1": {
-                        "1": 0,
-                        "5": 3,
-                        "10": 5,
-                        "20": 5,
-                        "25": 10,
-                        "40": 15,
-                        "75": 20
-                    },
-                    "D2": {
-                        "1": 0,
-                        "5": 0,
-                        "10": 0,
-                        "20": 0,
-                        "25": 0,
-                        "40": 0,
-                        "75": 0
-                    },
-                    "D3": {
-                        "1": 0,
-                        "5": 0,
-                        "10": 0,
-                        "20": 0,
-                        "25": 0,
-                        "40": 0,
-                        "75": 0
-                    },
-                    "D4": {
-                        "1": 0,
-                        "5": 0,
-                        "10": 0,
-                        "20": 0,
-                        "25": 0,
-                        "40": 0,
-                        "75": 0
-                    }
-                }
-            }
-        },
-        "marcadores-magneticos": {
-            "id": "marcadores-magneticos",
-            "family": "marcadores-magneticos",
-            "catalogContext": "main-v2",
-            "label": "Marcadores magnéticos",
-            "unitLabel": "marcadores magnéticos",
-            "unitSingular": "marcador magnético",
-            "unitShort": "marcador",
-            "defaultPriceKey": "Marcadores magnéticos",
-            "minimumQuantity": 1,
-            "pricingMode": "flat-unit",
-            "allowUnitDiscounts": false,
-            "customArtworkFeePerFileCents": 300,
-            "flatUnitPricesCents": {
-                "Marcadores magnéticos": 150
-            },
-            "prices": {
-                "Marcadores magnéticos": {
-                    "1": 150,
-                    "5": 750,
-                    "10": 1500,
-                    "20": 3000
-                }
-            },
-            "discountsByPriceKey": {
-                "Marcadores magnéticos": {
-                    "activo": "D1",
-                    "D1": {
-                        "1": 0,
-                        "5": 0,
-                        "10": 0,
-                        "20": 0
-                    },
-                    "D2": {
-                        "1": 0,
-                        "5": 0,
-                        "10": 0,
-                        "20": 0
-                    },
-                    "D3": {
-                        "1": 0,
-                        "5": 0,
-                        "10": 0,
-                        "20": 0
-                    },
-                    "D4": {
-                        "1": 0,
-                        "5": 0,
-                        "10": 0,
-                        "20": 0
-                    }
-                }
-            }
+        "58 mm": {
+          "quantityTiers": true,
+          "sliderMaximum": 150
         }
+      },
+      "customArtworkFeePerFileCents": 300,
+      "prices": {
+        "25 mm": {
+          "1": 150,
+          "3": 436,
+          "5": 712,
+          "10": 1350,
+          "24": 3060,
+          "48": 5760,
+          "96": 11520
+        },
+        "32 mm": {
+          "1": 175,
+          "3": 509,
+          "5": 831,
+          "10": 1575,
+          "24": 3570,
+          "48": 6720,
+          "96": 13440
+        },
+        "58 mm": {
+          "1": 200,
+          "3": 582,
+          "5": 950,
+          "10": 1800,
+          "24": 4080,
+          "48": 7680,
+          "96": 15360
+        }
+      },
+      "discountsByPriceKey": {
+        "25 mm": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "3": 3,
+            "5": 5,
+            "10": 10,
+            "24": 15,
+            "48": 20,
+            "96": 20
+          },
+          "D2": {
+            "1": 0,
+            "3": 6.7,
+            "5": 13.3,
+            "10": 13.3,
+            "24": 25,
+            "48": 30.6,
+            "96": 37.5
+          },
+          "D3": {
+            "1": 0,
+            "3": 6.7,
+            "5": 13.3,
+            "10": 13.3,
+            "24": 25,
+            "48": 30.6,
+            "96": 37.5
+          },
+          "D4": {
+            "1": 0,
+            "3": 6.7,
+            "5": 13.3,
+            "10": 13.3,
+            "24": 25,
+            "48": 30.6,
+            "96": 37.5
+          }
+        },
+        "32 mm": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "3": 3,
+            "5": 5,
+            "10": 10,
+            "24": 15,
+            "48": 20,
+            "96": 20
+          },
+          "D2": {
+            "1": 0,
+            "3": 4.8,
+            "5": 14.3,
+            "10": 14.3,
+            "24": 23.8,
+            "48": 31,
+            "96": 37.5
+          },
+          "D3": {
+            "1": 0,
+            "3": 4.8,
+            "5": 14.3,
+            "10": 14.3,
+            "24": 23.8,
+            "48": 31,
+            "96": 37.5
+          },
+          "D4": {
+            "1": 0,
+            "3": 4.8,
+            "5": 14.3,
+            "10": 14.3,
+            "24": 23.8,
+            "48": 31,
+            "96": 37.5
+          }
+        },
+        "58 mm": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "3": 3,
+            "5": 5,
+            "10": 10,
+            "24": 15,
+            "48": 20,
+            "96": 20
+          },
+          "D2": {
+            "1": 0,
+            "3": 5,
+            "5": 14,
+            "10": 14,
+            "24": 23.8,
+            "48": 30.9,
+            "96": 37.5
+          },
+          "D3": {
+            "1": 0,
+            "3": 5,
+            "5": 14,
+            "10": 14,
+            "24": 23.8,
+            "48": 30.9,
+            "96": 37.5
+          },
+          "D4": {
+            "1": 0,
+            "3": 5,
+            "5": 14,
+            "10": 14,
+            "24": 23.8,
+            "48": 30.9,
+            "96": 37.5
+          }
+        }
+      }
+    },
+    "imanes-loja": {
+      "id": "imanes-loja",
+      "family": "imanes",
+      "catalogContext": "main-v2",
+      "label": "Ímanes",
+      "unitLabel": "ímanes",
+      "unitSingular": "íman",
+      "unitShort": "íman",
+      "defaultPriceKey": "Achatados",
+      "minimumQuantity": 1,
+      "pricingMode": "tier-unit",
+      "allowUnitDiscounts": true,
+      "quantityPricingSwitchByPriceKey": {
+        "Achatados": {
+          "quantityTiers": true,
+          "sliderMaximum": 150
+        },
+        "3 mm": {
+          "quantityTiers": true,
+          "sliderMaximum": 150
+        }
+      },
+      "customArtworkFeePerFileCents": 300,
+      "prices": {
+        "Achatados": {
+          "15": 1000,
+          "30": 1900,
+          "60": 3600,
+          "105": 5950
+        },
+        "3 mm": {
+          "1": 250,
+          "3": 728,
+          "5": 1188,
+          "10": 2300,
+          "24": 5400,
+          "30": 6750,
+          "48": 10200,
+          "60": 12750
+        }
+      },
+      "discountsByPriceKey": {
+        "Achatados": {
+          "activo": "D1",
+          "D1": {
+            "15": 0,
+            "30": 5,
+            "60": 10,
+            "105": 15
+          },
+          "D2": {
+            "15": 0,
+            "30": 10,
+            "60": 20,
+            "105": 24.3
+          },
+          "D3": {
+            "15": 0,
+            "30": 10,
+            "60": 20,
+            "105": 24.3
+          },
+          "D4": {
+            "15": 0,
+            "30": 10,
+            "60": 20,
+            "105": 24.3
+          }
+        },
+        "3 mm": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "3": 3,
+            "5": 5,
+            "10": 8,
+            "24": 10,
+            "30": 10,
+            "48": 15,
+            "60": 15
+          },
+          "D2": {
+            "1": 0,
+            "3": 4.7,
+            "5": 6.8,
+            "10": 10,
+            "24": 10,
+            "30": 20,
+            "48": 20,
+            "60": 25
+          },
+          "D3": {
+            "1": 0,
+            "3": 4.7,
+            "5": 6.8,
+            "10": 10,
+            "24": 10,
+            "30": 20,
+            "48": 20,
+            "60": 25
+          },
+          "D4": {
+            "1": 0,
+            "3": 4.7,
+            "5": 6.8,
+            "10": 10,
+            "24": 10,
+            "30": 20,
+            "48": 20,
+            "60": 25
+          }
+        }
+      }
+    },
+    "imanes-recortados": {
+      "id": "imanes-recortados",
+      "family": "imanes-recortados",
+      "catalogContext": "main-v2",
+      "label": "Ímanes recortados",
+      "unitLabel": "ímanes",
+      "unitSingular": "íman",
+      "unitShort": "íman",
+      "defaultPriceKey": "Recortados",
+      "minimumQuantity": 12,
+      "pricingMode": "tier-unit",
+      "allowUnitDiscounts": true,
+      "quantityPricingSwitchByPriceKey": {
+        "Recortados": {
+          "quantityTiers": true,
+          "sliderMaximum": 150
+        }
+      },
+      "customArtworkFeePerFileCents": 300,
+      "prices": {
+        "Recortados": {
+          "12": 1300,
+          "24": 2470,
+          "36": 3510,
+          "48": 4680,
+          "60": 5525,
+          "96": 8320
+        }
+      },
+      "discountsByPriceKey": {
+        "Recortados": {
+          "activo": "D1",
+          "D1": {
+            "12": 0,
+            "24": 5,
+            "36": 10,
+            "48": 10,
+            "60": 15,
+            "96": 20
+          },
+          "D2": {
+            "12": 0,
+            "24": 7.7,
+            "36": 12.8,
+            "48": 15.4,
+            "60": 16.9,
+            "96": 16.9
+          },
+          "D3": {
+            "12": 0,
+            "24": 7.7,
+            "36": 12.8,
+            "48": 15.4,
+            "60": 16.9,
+            "96": 16.9
+          },
+          "D4": {
+            "12": 0,
+            "24": 7.7,
+            "36": 12.8,
+            "48": 15.4,
+            "60": 16.9,
+            "96": 16.9
+          }
+        }
+      }
+    },
+    "mini-cadernos": {
+      "id": "mini-cadernos",
+      "family": "caderninhos",
+      "catalogContext": "main-v2",
+      "label": "Mini-cadernos",
+      "unitLabel": "mini-cadernos",
+      "unitSingular": "mini-caderno",
+      "unitShort": "mini-caderno",
+      "defaultPriceKey": "Mini-Cadernos",
+      "minimumQuantity": 1,
+      "pricingMode": "tier-unit",
+      "allowUnitDiscounts": true,
+      "quantityPricingSwitchByPriceKey": {
+        "Mini-Cadernos": {
+          "quantityTiers": true,
+          "sliderMaximum": 150
+        }
+      },
+      "customArtworkFeePerFileCents": 300,
+      "prices": {
+        "Mini-Cadernos": {
+          "1": 450,
+          "3": 1310,
+          "5": 2138,
+          "10": 4140,
+          "24": 9504,
+          "48": 18360,
+          "96": 36720
+        }
+      },
+      "discountsByPriceKey": {
+        "Mini-Cadernos": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "3": 3,
+            "5": 5,
+            "10": 8,
+            "24": 12,
+            "48": 15,
+            "96": 15
+          },
+          "D2": {
+            "1": 0,
+            "3": 7.4,
+            "5": 13.3,
+            "10": 20,
+            "24": 27.8,
+            "48": 32.9,
+            "96": 35.2
+          },
+          "D3": {
+            "1": 0,
+            "3": 7.4,
+            "5": 13.3,
+            "10": 20,
+            "24": 27.8,
+            "48": 32.9,
+            "96": 35.2
+          },
+          "D4": {
+            "1": 0,
+            "3": 7.4,
+            "5": 13.3,
+            "10": 20,
+            "24": 27.8,
+            "48": 32.9,
+            "96": 35.2
+          }
+        }
+      }
+    },
+    "blocos-a6": {
+      "id": "blocos-a6",
+      "family": "caderninhos",
+      "catalogContext": "main-v2",
+      "label": "Bloco Argolas A6",
+      "unitLabel": "blocos",
+      "unitSingular": "bloco",
+      "unitShort": "bloco",
+      "defaultPriceKey": "Blocos A6",
+      "minimumQuantity": 1,
+      "pricingMode": "tier-unit",
+      "allowUnitDiscounts": true,
+      "quantityPricingSwitchByPriceKey": {
+        "Blocos A6": {
+          "quantityTiers": true,
+          "sliderMaximum": 150
+        }
+      },
+      "customArtworkFeePerFileCents": 300,
+      "prices": {
+        "Blocos A6": {
+          "1": 900,
+          "3": 2619,
+          "5": 4275,
+          "10": 8280,
+          "24": 19008,
+          "48": 36720,
+          "96": 73440
+        }
+      },
+      "discountsByPriceKey": {
+        "Blocos A6": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "3": 3,
+            "5": 5,
+            "10": 8,
+            "24": 12,
+            "48": 15,
+            "96": 15
+          },
+          "D2": {
+            "1": 0,
+            "3": 7.4,
+            "5": 13.3,
+            "10": 20,
+            "24": 27.8,
+            "48": 32.9,
+            "96": 35.2
+          },
+          "D3": {
+            "1": 0,
+            "3": 7.4,
+            "5": 13.3,
+            "10": 20,
+            "24": 27.8,
+            "48": 32.9,
+            "96": 35.2
+          },
+          "D4": {
+            "1": 0,
+            "3": 7.4,
+            "5": 13.3,
+            "10": 20,
+            "24": 27.8,
+            "48": 32.9,
+            "96": 35.2
+          }
+        }
+      }
+    },
+    "bloquinhos": {
+      "id": "bloquinhos",
+      "family": "bloquinhos",
+      "catalogContext": "main-v2",
+      "label": "Bloquinhos",
+      "unitLabel": "bloquinhos",
+      "unitSingular": "bloquinho",
+      "unitShort": "bloquinho",
+      "defaultPriceKey": "Bloquinhos",
+      "minimumQuantity": 1,
+      "pricingMode": "tier-unit",
+      "allowUnitDiscounts": true,
+      "quantityPricingSwitchByPriceKey": {
+        "Bloquinhos": {
+          "quantityTiers": true,
+          "sliderMaximum": 150
+        }
+      },
+      "customArtworkFeePerFileCents": 300,
+      "prices": {
+        "Bloquinhos": {
+          "1": 450,
+          "3": 1310,
+          "5": 2138,
+          "10": 4050,
+          "24": 9180,
+          "48": 17280,
+          "96": 34560
+        }
+      },
+      "discountsByPriceKey": {
+        "Bloquinhos": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "3": 3,
+            "5": 5,
+            "10": 10,
+            "24": 15,
+            "48": 20,
+            "96": 20
+          },
+          "D2": {
+            "1": 0,
+            "3": 7.4,
+            "5": 13.3,
+            "10": 20,
+            "24": 27.8,
+            "48": 32.9,
+            "96": 35.2
+          },
+          "D3": {
+            "1": 0,
+            "3": 7.4,
+            "5": 13.3,
+            "10": 20,
+            "24": 27.8,
+            "48": 32.9,
+            "96": 35.2
+          },
+          "D4": {
+            "1": 0,
+            "3": 7.4,
+            "5": 13.3,
+            "10": 20,
+            "24": 27.8,
+            "48": 32.9,
+            "96": 35.2
+          }
+        }
+      }
+    },
+    "cadernos-anuais": {
+      "id": "cadernos-anuais",
+      "family": "cadernos",
+      "catalogContext": "main-v2",
+      "label": "Cadernos anuais",
+      "unitLabel": "cadernos",
+      "unitSingular": "caderno",
+      "unitShort": "caderno",
+      "defaultPriceKey": "Cadernos",
+      "minimumQuantity": 1,
+      "pricingMode": "flat-unit",
+      "allowUnitDiscounts": false,
+      "customArtworkFeePerFileCents": 300,
+      "flatUnitPricesCents": {
+        "caderno_normal": 2990,
+        "caderno_pioneiro": 3490,
+        "pack_normal": 3790,
+        "pack_pioneiro": 4290
+      },
+      "prices": {
+        "Cadernos": {
+          "1": 2990,
+          "2": 3490,
+          "3": 3790,
+          "4": 4290
+        }
+      },
+      "discountsByPriceKey": {
+        "Cadernos": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "2": 41.6,
+            "3": 57.7,
+            "4": 64.1
+          },
+          "D2": {
+            "1": 0,
+            "2": 41.6,
+            "3": 57.7,
+            "4": 64.1
+          },
+          "D3": {
+            "1": 0,
+            "2": 41.6,
+            "3": 57.7,
+            "4": 64.1
+          },
+          "D4": {
+            "1": 0,
+            "2": 41.6,
+            "3": 57.7,
+            "4": 64.1
+          }
+        }
+      }
+    },
+    "agendas": {
+      "id": "agendas",
+      "family": "cadernos",
+      "catalogContext": "main-v2",
+      "label": "Agendas",
+      "unitLabel": "agendas",
+      "unitSingular": "agenda",
+      "unitShort": "agenda",
+      "defaultPriceKey": "Agendas",
+      "minimumQuantity": 1,
+      "pricingMode": "flat-unit",
+      "allowUnitDiscounts": false,
+      "customArtworkFeePerFileCents": 300,
+      "flatUnitPricesCents": {
+        "agenda_normal": 2990,
+        "agenda_pioneiro": 3490,
+        "pack_normal": 3790,
+        "pack_pioneiro": 4290
+      },
+      "prices": {
+        "Agendas": {
+          "1": 2990,
+          "2": 3490,
+          "3": 3790,
+          "4": 4290
+        }
+      },
+      "discountsByPriceKey": {
+        "Agendas": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "2": 41.6,
+            "3": 57.7,
+            "4": 64.1
+          },
+          "D2": {
+            "1": 0,
+            "2": 41.6,
+            "3": 57.7,
+            "4": 64.1
+          },
+          "D3": {
+            "1": 0,
+            "2": 41.6,
+            "3": 57.7,
+            "4": 64.1
+          },
+          "D4": {
+            "1": 0,
+            "2": 41.6,
+            "3": 57.7,
+            "4": 64.1
+          }
+        }
+      }
+    },
+    "quadros": {
+      "id": "quadros",
+      "label": "Molduras personalizadas",
+      "unitLabel": "molduras",
+      "unitSingular": "moldura",
+      "unitShort": "moldura",
+      "defaultPriceKey": "Moldura personalizada",
+      "prices": {
+        "Moldura personalizada": {
+          "1": 4500
+        }
+      },
+      "discountsByPriceKey": {
+        "Moldura personalizada": {
+          "activo": "D1",
+          "D1": {
+            "1": 0
+          },
+          "D2": {
+            "1": 0
+          },
+          "D3": {
+            "1": 0
+          },
+          "D4": {
+            "1": 0
+          }
+        }
+      }
+    },
+    "stickers": {
+      "id": "stickers",
+      "family": "stickers",
+      "catalogContext": "main-v2",
+      "label": "Stickers",
+      "unitLabel": "stickers",
+      "unitSingular": "sticker",
+      "unitShort": "sticker",
+      "defaultPriceKey": "Stickers",
+      "minimumQuantity": 1,
+      "pricingMode": "flat-unit",
+      "allowUnitDiscounts": false,
+      "customArtworkFeePerFileCents": 300,
+      "flatUnitPricesCents": {
+        "Stickers": 50
+      },
+      "prices": {
+        "Stickers": {
+          "1": 50,
+          "5": 250,
+          "10": 500,
+          "25": 1250,
+          "50": 2500
+        }
+      },
+      "discountsByPriceKey": {
+        "Stickers": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "5": 0,
+            "10": 0,
+            "25": 0,
+            "50": 0
+          },
+          "D2": {
+            "1": 0,
+            "5": 0,
+            "10": 0,
+            "25": 0,
+            "50": 0
+          },
+          "D3": {
+            "1": 0,
+            "5": 0,
+            "10": 0,
+            "25": 0,
+            "50": 0
+          },
+          "D4": {
+            "1": 0,
+            "5": 0,
+            "10": 0,
+            "25": 0,
+            "50": 0
+          }
+        }
+      }
+    },
+    "marcadores": {
+      "id": "marcadores",
+      "family": "marcadores",
+      "catalogContext": "main-v2",
+      "label": "Marcadores",
+      "unitLabel": "marcadores",
+      "unitSingular": "marcador",
+      "unitShort": "marcador",
+      "defaultPriceKey": "Marcadores",
+      "minimumQuantity": 1,
+      "pricingMode": "tier-unit",
+      "allowUnitDiscounts": true,
+      "quantityPricingSwitchByPriceKey": {
+        "Marcadores": {
+          "quantityTiers": true,
+          "sliderMaximum": 150
+        }
+      },
+      "customArtworkFeePerFileCents": 300,
+      "flatUnitPricesCents": {
+        "Marcadores": 150
+      },
+      "prices": {
+        "Marcadores": {
+          "1": 150,
+          "5": 728,
+          "10": 1425,
+          "20": 2850,
+          "25": 3375,
+          "40": 5100,
+          "75": 9000
+        }
+      },
+      "discountsByPriceKey": {
+        "Marcadores": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "5": 3,
+            "10": 5,
+            "20": 5,
+            "25": 10,
+            "40": 15,
+            "75": 20
+          },
+          "D2": {
+            "1": 0,
+            "5": 0,
+            "10": 0,
+            "20": 0,
+            "25": 0,
+            "40": 0,
+            "75": 0
+          },
+          "D3": {
+            "1": 0,
+            "5": 0,
+            "10": 0,
+            "20": 0,
+            "25": 0,
+            "40": 0,
+            "75": 0
+          },
+          "D4": {
+            "1": 0,
+            "5": 0,
+            "10": 0,
+            "20": 0,
+            "25": 0,
+            "40": 0,
+            "75": 0
+          }
+        }
+      }
+    },
+    "marcadores-magneticos": {
+      "id": "marcadores-magneticos",
+      "family": "marcadores-magneticos",
+      "catalogContext": "main-v2",
+      "label": "Marcadores magnéticos",
+      "unitLabel": "marcadores magnéticos",
+      "unitSingular": "marcador magnético",
+      "unitShort": "marcador",
+      "defaultPriceKey": "Marcadores magnéticos",
+      "minimumQuantity": 1,
+      "pricingMode": "flat-unit",
+      "allowUnitDiscounts": false,
+      "customArtworkFeePerFileCents": 300,
+      "flatUnitPricesCents": {
+        "Marcadores magnéticos": 150
+      },
+      "prices": {
+        "Marcadores magnéticos": {
+          "1": 150,
+          "5": 750,
+          "10": 1500,
+          "20": 3000
+        }
+      },
+      "discountsByPriceKey": {
+        "Marcadores magnéticos": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "5": 0,
+            "10": 0,
+            "20": 0
+          },
+          "D2": {
+            "1": 0,
+            "5": 0,
+            "10": 0,
+            "20": 0
+          },
+          "D3": {
+            "1": 0,
+            "5": 0,
+            "10": 0,
+            "20": 0
+          },
+          "D4": {
+            "1": 0,
+            "5": 0,
+            "10": 0,
+            "20": 0
+          }
+        }
+      }
+    },
+    "porta-chaves": {
+      "id": "porta-chaves",
+      "family": "porta-chaves",
+      "catalogContext": "main-v2",
+      "label": "Porta-chaves",
+      "unitLabel": "porta-chaves",
+      "unitSingular": "porta-chaves",
+      "unitShort": "porta-chaves",
+      "defaultPriceKey": "32 mm",
+      "minimumQuantity": 1,
+      "pricingMode": "tier-unit",
+      "allowUnitDiscounts": true,
+      "quantityPricingSwitchByPriceKey": {
+        "32 mm": {
+          "quantityTiers": true,
+          "sliderMaximum": 150
+        },
+        "58 mm": {
+          "quantityTiers": true,
+          "sliderMaximum": 150
+        }
+      },
+      "customArtworkFeePerFileCents": 300,
+      "prices": {
+        "32 mm": {
+          "1": 225,
+          "3": 659,
+          "5": 1081,
+          "10": 2075,
+          "24": 4770,
+          "48": 9120,
+          "96": 18240
+        },
+        "58 mm": {
+          "1": 250,
+          "3": 732,
+          "5": 1200,
+          "10": 2300,
+          "24": 5280,
+          "48": 10080,
+          "96": 20160
+        }
+      },
+      "discountsByPriceKey": {
+        "32 mm": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "3": 2.4,
+            "5": 3.9,
+            "10": 7.8,
+            "24": 11.7,
+            "48": 15.6,
+            "96": 15.6
+          },
+          "D2": {
+            "1": 0,
+            "3": 2.4,
+            "5": 3.9,
+            "10": 7.8,
+            "24": 11.7,
+            "48": 15.6,
+            "96": 15.6
+          },
+          "D3": {
+            "1": 0,
+            "3": 2.4,
+            "5": 3.9,
+            "10": 7.8,
+            "24": 11.7,
+            "48": 15.6,
+            "96": 15.6
+          },
+          "D4": {
+            "1": 0,
+            "3": 2.4,
+            "5": 3.9,
+            "10": 7.8,
+            "24": 11.7,
+            "48": 15.6,
+            "96": 15.6
+          }
+        },
+        "58 mm": {
+          "activo": "D1",
+          "D1": {
+            "1": 0,
+            "3": 2.4,
+            "5": 4.0,
+            "10": 8.0,
+            "24": 12.0,
+            "48": 16.0,
+            "96": 16.0
+          },
+          "D2": {
+            "1": 0,
+            "3": 2.4,
+            "5": 4.0,
+            "10": 8.0,
+            "24": 12.0,
+            "48": 16.0,
+            "96": 16.0
+          },
+          "D3": {
+            "1": 0,
+            "3": 2.4,
+            "5": 4.0,
+            "10": 8.0,
+            "24": 12.0,
+            "48": 16.0,
+            "96": 16.0
+          },
+          "D4": {
+            "1": 0,
+            "3": 2.4,
+            "5": 4.0,
+            "10": 8.0,
+            "24": 12.0,
+            "48": 16.0,
+            "96": 16.0
+          }
+        }
+      }
+    },
+    "porta-folhetos": {
+      "id": "porta-folhetos",
+      "family": "porta-folhetos",
+      "catalogContext": "main-v2",
+      "label": "Porta-folhetos",
+      "unitLabel": "porta-folhetos",
+      "unitSingular": "porta-folhetos",
+      "unitShort": "porta-folhetos",
+      "defaultPriceKey": "A4",
+      "minimumQuantity": 1,
+      "pricingMode": "flat-unit",
+      "allowUnitDiscounts": false,
+      "customArtworkFeePerFileCents": 300,
+      "prices": {
+        "A4": {
+          "1": 1500
+        },
+        "A6": {
+          "1": 1000
+        },
+        "A4 + A6": {
+          "1": 2200
+        }
+      },
+      "discountsByPriceKey": {
+        "A4": {
+          "activo": "D1",
+          "D1": {
+            "1": 0
+          },
+          "D2": {
+            "1": 0
+          },
+          "D3": {
+            "1": 0
+          },
+          "D4": {
+            "1": 0
+          }
+        },
+        "A6": {
+          "activo": "D1",
+          "D1": {
+            "1": 0
+          },
+          "D2": {
+            "1": 0
+          },
+          "D3": {
+            "1": 0
+          },
+          "D4": {
+            "1": 0
+          }
+        },
+        "A4 + A6": {
+          "activo": "D1",
+          "D1": {
+            "1": 0
+          },
+          "D2": {
+            "1": 0
+          },
+          "D3": {
+            "1": 0
+          },
+          "D4": {
+            "1": 0
+          }
+        }
+      }
     }
+  }
 }

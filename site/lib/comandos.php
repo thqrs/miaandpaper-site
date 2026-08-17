@@ -1482,7 +1482,7 @@ function cmd_registo()
             'titulo' => 'Ordem dos cartões na homepage',
             'descricao' => 'Define a ordem completa dos ids de cartão, separados por vírgulas. A lista tem de conter cada cartão exactamente uma vez.',
             'parametros' => array('ids' => 'ids completos, por ordem, separados por vírgulas'),
-            'exemplo' => 'op=ordem-homepage&ids=personalizacao,cadernos-geral,mini-cadernos-geral,blocos-a6,bloquinhos,quadros,crachas-geral,postais,agendas,imanes-geral,imanes-recortados,stickers,marcadores,marcadores-magneticos,congressos,ofertas',
+            'exemplo' => 'op=ordem-homepage&ids=personalizacao,quadros,agendas,cadernos-geral,mini-cadernos-geral,blocos-a6,bloquinhos,porta-folhetos,crachas-geral,porta-chaves,imanes-geral,imanes-recortados,stickers,marcadores,marcadores-magneticos,postais,congressos,ofertas',
             'prever' => function (array $a) {
                 $ids = cmd_csv($a, 'ids');
                 $estado = cmd_estado('home');

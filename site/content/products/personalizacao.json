@@ -153,14 +153,32 @@
           "title": "Crachás grandes",
           "subtitle": "5,8 cm x 5,8 cm (58 mm)",
           "slug": "crachas-loja",
-          "size": "Grandes",
+          "size": "58 mm",
           "image": "content/designs/loja/crachas-loja/uploads/crachas-32-accc814bd59f.webp",
           "imageShape": "round",
-          "quoteOnly": true,
-          "quoteNote": "Preço a confirmar",
           "finishes": [
             "holografica"
           ]
+        },
+        {
+          "id": "porta-chaves-32",
+          "group": "Porta-chaves",
+          "title": "Porta-chaves 32 mm",
+          "subtitle": "3,2 cm",
+          "slug": "porta-chaves",
+          "size": "32 mm",
+          "image": "content/designs/loja/crachas-loja/uploads/crachas-32-accc814bd59f.webp",
+          "imageShape": "round"
+        },
+        {
+          "id": "porta-chaves-58",
+          "group": "Porta-chaves",
+          "title": "Porta-chaves 58 mm",
+          "subtitle": "5,8 cm",
+          "slug": "porta-chaves",
+          "size": "58 mm",
+          "image": "content/designs/loja/crachas-loja/uploads/crachas-32-accc814bd59f.webp",
+          "imageShape": "round"
         },
         {
           "id": "imanes-finos",
@@ -278,6 +296,100 @@
           "finishes": [
             "capa-mole",
             "capa-dura"
+          ]
+        },
+        {
+          "id": "porta-folhetos",
+          "group": "Apontamentos",
+          "title": "Porta-folhetos",
+          "subtitle": "A4, A6 ou conjunto",
+          "slug": "porta-folhetos",
+          "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.webp",
+          "imageShape": "rect",
+          "choices": [
+            {
+              "field": "size",
+              "label": "Formato",
+              "required": true,
+              "isPriceKey": true,
+              "items": [
+                {
+                  "value": "A4",
+                  "title": "A4",
+                  "subtitle": "15 €",
+                  "quantity": 1
+                },
+                {
+                  "value": "A6",
+                  "title": "A6",
+                  "subtitle": "10 €",
+                  "quantity": 1
+                },
+                {
+                  "value": "A4 + A6",
+                  "title": "A4 + A6",
+                  "subtitle": "22 €",
+                  "quantity": 1
+                }
+              ]
+            },
+            {
+              "field": "ring_color",
+              "label": "Argolas",
+              "required": true,
+              "items": [
+                {
+                  "value": "dourado",
+                  "title": "Douradas"
+                },
+                {
+                  "value": "rosa-metalico",
+                  "title": "Rosa metálico"
+                }
+              ]
+            },
+            {
+              "field": "ribbon_color",
+              "label": "Fita",
+              "required": true,
+              "items": [
+                {
+                  "value": "dourado",
+                  "title": "Dourada"
+                },
+                {
+                  "value": "rosa-metalico",
+                  "title": "Rosa"
+                }
+              ]
+            },
+            {
+              "field": "finish",
+              "label": "Acabamento",
+              "required": true,
+              "items": [
+                {
+                  "value": "matte",
+                  "title": "Matte"
+                },
+                {
+                  "value": "glossy",
+                  "title": "Glossy"
+                },
+                {
+                  "value": "holografico-1",
+                  "title": "Holográfico 1"
+                },
+                {
+                  "value": "holografico-2",
+                  "title": "Holográfico 2"
+                },
+                {
+                  "value": "holografico-3",
+                  "title": "Holográfico 3"
+                }
+              ]
+            }
           ]
         },
         {

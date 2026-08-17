@@ -24,7 +24,7 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <link rel="stylesheet" href="../catalogo/catalogo.css?v=2026072601">
   <link rel="stylesheet" href="../ofertas/ofertas.css?v=2026062809">
   <link rel="stylesheet" href="../admin-nav.css?v=2026081001">
-  <script src="../admin-nav.js?v=2026081001" data-prefix="../" defer></script>
+  <script src="../admin-nav.js?v=2026081701" data-prefix="../" defer></script>
   <style>
     /* O card tem dois destinos, por isso deixa de ser um <a>: o título estica-se
        sobre o card inteiro e o segundo link fica por cima, na sua área. */

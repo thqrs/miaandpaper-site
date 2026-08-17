@@ -160,7 +160,7 @@ foreach (array_keys($receitasPasso1) as $slugReceita) {
   <link rel="icon" href="content/brand/logo.webp" type="image/webp">
   <link rel="stylesheet" href="css/01-tokens-agua.css?v=2026080501">
   <link rel="stylesheet" href="admin-nav.css?v=2026081001">
-  <script src="admin-nav.js?v=2026081001" defer></script>
+  <script src="admin-nav.js?v=2026081701" defer></script>
   <style>
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -474,7 +474,7 @@ foreach (array_keys($receitasPasso1) as $slugReceita) {
     </form>
   </dialog>
 
-  <script src="galeria-slots.js?v=2026080410"></script>
+  <script src="galeria-slots.js?v=2026081701"></script>
   <script>
   (function () {
     "use strict";
@@ -978,6 +978,8 @@ foreach (array_keys($receitasPasso1) as $slugReceita) {
             pack_normal: extras.pack_normal,
             pack_pioneiro: extras.pack_pioneiro
           };
+        } else if (receitaAtual.strategy === "cover-drawer") {
+          item.interiorImages = [extras.interior];
         } else if (receitaAtual.strategy !== "standard") {
           throw new Error("Estratégia de criação não suportada: " + receitaAtual.strategy + ".");
         }

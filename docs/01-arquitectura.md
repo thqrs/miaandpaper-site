@@ -49,7 +49,8 @@ sempre coincide com o nome do HTML:
 
 Os restantes (`agendas`, `blocos-a6`, `bloquinhos`, `cadernos-anuais`,
 `imanes-recortados`, `marcadores`, `marcadores-magneticos`, `mini-cadernos`,
-`personalizacao`, `stickers`) usam o mesmo nome no HTML e no JSON.
+`personalizacao`, `porta-chaves`, `porta-folhetos`, `stickers`) usam o mesmo nome
+no HTML e no JSON.
 
 ### Redirects
 

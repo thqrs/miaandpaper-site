@@ -1,0 +1,78 @@
+MIA & PAPER — Porta-folhetos + Porta-chaves + Míu
+Patch para sobrepor no projeto local
+Data: 17-08-2026
+
+COMO APLICAR
+1. Fecha temporariamente o Codex/editor e, se estiver a correr, o servidor PHP local.
+2. Extrai TODO este ZIP por cima de F:\Projects\miaandpaper-site\
+3. Aceita substituir os ficheiros existentes.
+4. Se o 7-Zip disser “Acesso negado”, não continues com uma extração parcial: fecha o processo que estiver a usar o ficheiro ou remove o atributo Só de leitura e volta a extrair o ZIP inteiro.
+5. Não há deploy incluído nem executado.
+
+NOVOS PRODUTOS
+
+Porta-folhetos
+- Página: site/porta-folhetos.html
+- Produto: site/content/products/porta-folhetos.json
+- Construção descrita no conteúdo/Míu: capa e contracapa em cartão de 2 mm, argolas e bolsas interiores de plástico soldadas, para os folhetos da pregação.
+- Passos: capa/design -> argolas + fita -> acabamento -> formato -> entrega/confirmação.
+- Formatos/preços temporários: A4 15,00 €; A6 10,00 €; A4 + A6 22,00 €.
+- Acabamentos: Matte, Glossy, Holográfico 1, 2 e 3.
+- Argolas e fita: dourado ou rosa metálico.
+- O JSON suporta restrições por design através de optionAvailability. Os designs iniciais estão configurados com ambas as cores disponíveis porque não foi fornecida uma tabela de restrições por capa.
+
+Porta-chaves
+- Página: site/porta-chaves.html
+- Produto: site/content/products/porta-chaves.json
+- Passos: design -> tamanho 32/58 mm -> quantidade/packs -> dados do Cartão de Apresentação -> entrega/confirmação.
+- Usa os mesmos escalões/packs dos crachás.
+- Regra de preço: preço atual do crachá + 0,50 € por unidade.
+- 58 mm parte de 2,00 € no crachá e 2,50 € num porta-chaves.
+- A tabela central existente de descontos dos crachás é respeitada; o porta-chaves soma sempre 0,50 € por unidade ao total correspondente do crachá.
+
+INTEGRAÇÃO
+Os dois produtos foram registados/confirmados em homepage/menu, Personalização, carrinho/encomenda, galeria, Produtos/teia, funil, visualização Metro, dashboard, SEO/sitemap, catálogo, PASSO1/admin, preços e contexto/respostas rápidas do Míu.
+
+MÍU
+- Corrigida a seta do balão no canto para apontar ao centro do Míu.
+- A frase inicial (ex. “Dúvidas?”) desaparece após N segundos; N é configurável em bot.php -> Aparência. 0 esconde-a.
+- Nova tab Aparência no bot.php com tamanho e círculo independentes para: Míu do canto, Míu na barra do chat e Míu junto às respostas.
+- O tamanho das animações interativas de corpo inteiro também é configurável.
+- As animações podem ter âmbito por produto e gatilho product_enter. O lili-saltar fica como fallback genérico para todos os produtos até serem carregadas/anotadas animações específicas.
+- As sprites de corpo inteiro podem sair do círculo através do sistema de motion.
+
+ERROS E AVISOS
+- Novo site/content/erros.json com mensagens públicas inventariadas e versões Default/Míu.
+- Novo site/erros.php com tabs Default e Míu.
+- bot.php -> Aparência tem “O Míu diz os erros e avisos do site”, ligado por omissão.
+- Ligado: validações/avisos públicos integrados aparecem no mesmo balão do Míu.
+- Desligado: usam a mensagem Default no local normal do formulário.
+- Erros técnicos/admin não foram convertidos em fala do Míu.
+
+IMAGENS — IMPORTANTE
+O ZIP de código enviado para esta tarefa não continha a biblioteca completa de imagens de content/designs. Por isso não foram inventadas fotografias novas:
+- Porta-chaves usa temporariamente referências visuais existentes dos crachás.
+- Porta-folhetos usa temporariamente referências de capas/opções dos cadernos.
+- Holográfico 2 e 3 usam a imagem de referência do Holográfico 1 até existirem fotografias próprias.
+No PC, troca estas imagens pela Galeria/Produtos quando tiveres as fotografias finais.
+
+MATERIAIS / TEIA DE CUSTOS
+Os novos produtos aparecem no catálogo de Materiais/teia através de pricing.json. Não foram inventadas receitas de custo em private/materiais.json porque faltam dados exatos sobre os componentes/rendimentos (bolsas interiores, argolas, ferragens de porta-chaves, etc.). Acrescenta-os no editor de Materiais quando souberes qual stock usar.
+
+SNAPSHOTS
+Como são dados locais/runtime, não foram fabricados dentro deste patch. Depois de extrair, abre admin-snapshots.php no teu ambiente local e usa “Criar todos os snapshots” para atualizar as vistas rápidas do backend.
+
+VERIFICAÇÕES FEITAS
+- PHP lint: OK.
+- JavaScript node --check: OK.
+- JSON: OK.
+- Preços JS vs PHP, 1..500, 9.500 valores: zero divergências.
+- Regra porta-chaves = crachá + 0,50 €/unidade: OK.
+- Quantidade fixa do porta-folhetos normalizada no browser e no servidor: OK.
+- Dependência de opções por design: suporte no cliente e validação equivalente no servidor.
+- Páginas estáticas principais: HTTP 200 no servidor PHP local.
+- SEO build: 0 páginas pendentes; sitemap gerado com os dois produtos.
+- A systemPrompt nova do JSON não foi substituída; só a knowledgeBase/lista de páginas do Míu recebeu os novos produtos.
+
+NOTA SOBRE O SITE ONLINE
+Nada neste trabalho foi enviado para o site online. Esta versão continua apenas no projeto local, conforme pedido.

@@ -615,8 +615,8 @@ $csrf = htmlspecialchars(mp_admin_csrf_token(), ENT_QUOTES, 'UTF-8');
   <link rel="stylesheet" href="css/01-tokens-agua.css?v=2026081002">
   <link rel="stylesheet" href="admin-nav.css?v=2026081001">
   <link rel="stylesheet" href="photo-wizard.css?v=2026081502">
-  <script src="admin-nav.js?v=2026081001" defer></script>
-  <script src="galeria-slots.js?v=2026081501" defer></script>
+  <script src="admin-nav.js?v=2026081701" defer></script>
+  <script src="galeria-slots.js?v=2026081701" defer></script>
   <script src="photo-wizard.js?v=2026081502" defer></script>
 </head>
 <body>

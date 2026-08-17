@@ -189,6 +189,9 @@
     product: null,
     selections: {},
     errors: "",
+    errorCatalog: null,
+    lastMiuSiteMessage: "",
+    lastMiuSiteMessageAt: 0,
     invalidFields: [],
     // Gavetas abertas no passo dos produtos da personalizacao: chave
     // designToken::grupo. E estado de interface, por isso vive fora das
@@ -303,6 +306,66 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  function siteErrorCatalogMessages() {
+    return state.errorCatalog && Array.isArray(state.errorCatalog.messages) ? state.errorCatalog.messages : [];
+  }
+
+  function siteErrorRecord(raw) {
+    var text = String(raw || "").trim();
+    var messages = siteErrorCatalogMessages();
+    var matched = null;
+    messages.some(function (record) {
+      if (!record || typeof record !== "object") { return false; }
+      if (record.source && String(record.source) === text) {
+        matched = { record: record, rest: "" };
+        return true;
+      }
+      if (record.matchPrefix && text.indexOf(String(record.matchPrefix)) === 0) {
+        matched = { record: record, rest: text.slice(String(record.matchPrefix).length) };
+        return true;
+      }
+      if (record.matchContains && text.indexOf(String(record.matchContains)) !== -1) {
+        matched = { record: record, rest: "" };
+        return true;
+      }
+      return false;
+    });
+    return matched;
+  }
+
+  function siteErrorText(raw, variant) {
+    var text = String(raw || "").trim();
+    var found = siteErrorRecord(text);
+    if (!found) { return text; }
+    var record = found.record;
+    var chosen = String(record[variant === "miu" ? "miu" : "default"] || record.default || record.source || text);
+    return chosen.replace(/\{rest\}/g, found.rest);
+  }
+
+  function siteErrorsUseMiu() {
+    return typeof window.miuUsesSiteErrorPopups === "function" && window.miuUsesSiteErrorPopups();
+  }
+
+  function siteSpeakError(raw) {
+    var text = siteErrorText(raw, "miu");
+    var now = Date.now();
+    if (!text || typeof window.miuShowSiteMessage !== "function") { return false; }
+    if (state.lastMiuSiteMessage === text && now - Number(state.lastMiuSiteMessageAt || 0) < 1200) { return true; }
+    state.lastMiuSiteMessage = text;
+    state.lastMiuSiteMessageAt = now;
+    window.setTimeout(function () { window.miuShowSiteMessage(text); }, 0);
+    return true;
+  }
+
+  function siteErrorMarkup(raw, className, id) {
+    var text = String(raw || "").trim();
+    if (!text) { return ""; }
+    if (siteErrorsUseMiu() && siteSpeakError(text)) { return ""; }
+    return '<p class="' + escapeHtml(className || "form-error action-error") + '"'
+      + (id ? ' id="' + escapeHtml(id) + '"' : '')
+      + ' role="alert">' + escapeHtml(siteErrorText(text, "default")) + '</p>';
   }
 
   function renderInlineText(value) {

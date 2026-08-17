@@ -334,7 +334,7 @@ foreach ($classes as $classe => $n) {
 <title>Módulos · Mia &amp; Paper admin</title>
 <link rel="icon" href="content/brand/logo.webp" type="image/webp">
 <link rel="stylesheet" href="admin-nav.css?v=2026081001">
-<script src="admin-nav.js?v=2026081001" defer></script>
+<script src="admin-nav.js?v=2026081701" defer></script>
 <style>
 /* Prefixo md- — esta página não carrega o styles.css do site, de propósito.
    O CSS do site vive dentro dos iframes, onde não pode contaminar nada

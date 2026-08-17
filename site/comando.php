@@ -180,7 +180,7 @@ foreach ($analise['comandos'] as $c) {
   <title>Comando | Mia &amp; Paper</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="admin-nav.css?v=2026081001">
-  <script src="admin-nav.js?v=2026081001" defer></script>
+  <script src="admin-nav.js?v=2026081701" defer></script>
   <style>
     :root {
       --ink: #3b2f1f; --muted: #7a6a52; --line: rgba(0,0,0,0.14);

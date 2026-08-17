@@ -962,7 +962,7 @@
         '<span>Nome/frase <small data-cover-personalization-count>(' + text.length + ' / ' + limit + ')</small></span>',
         '<input class="' + (textError ? "is-missing" : "") + '" type="text" value="' + escapeHtml(state.selections.cover_personalization_text || "") + '" data-cover-personalization-text data-cover-personalization-limit="' + limit + '" aria-describedby="cover-personalization-help"' + (textError ? ' aria-invalid="true"' : '') + '>',
         '</label>',
-        textError ? '<p class="form-error" id="cover-personalization-help" role="alert">' + escapeHtml(textError) + '</p>' : '<p class="details-section-note" id="cover-personalization-help">Máximo de ' + limit + ' caracteres.</p>',
+        textError ? siteErrorMarkup(textError, "form-error", "cover-personalization-help") : '<p class="details-section-note" id="cover-personalization-help">Máximo de ' + limit + ' caracteres.</p>',
         '</div>'
       ].join("") : "";
 

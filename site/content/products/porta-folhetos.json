@@ -1,0 +1,990 @@
+{
+    "slug": "porta-folhetos",
+    "name": "Porta-folhetos",
+    "brand": "Mia & Paper",
+    "family": "porta-folhetos",
+    "homeUrl": "index.html",
+    "instagramUrl": "https://www.instagram.com/miaandpaper/",
+    "catalogContext": "main-v2",
+    "orderFlow": "catalog-or-custom",
+    "fixedQuantity": 1,
+    "unitLabel": "porta-folhetos",
+    "unitSingular": "porta-folhetos",
+    "unitShort": "porta-folhetos",
+    "form": {
+        "action": "send-order.php",
+        "returnTo": "porta-folhetos.html"
+    },
+    "intro": {
+        "eyebrow": "Porta-folhetos",
+        "title": "Escolhe o design da capa",
+        "text": "Porta-folhetos com capa e contracapa em cartão de 2 mm, argolas e bolsas interiores de plástico para guardares os folhetos usados na pregação."
+    },
+    "deliveryOptions": [
+        {
+            "id": "pickup",
+            "label": "Vou recolher na casa da Mia",
+            "text": "",
+            "feeCents": 0
+        },
+        {
+            "id": "shipping",
+            "label": "Envio CTT - até 2 Kg",
+            "text": "",
+            "feeCents": 540,
+            "priceText": "Valor mínimo:\n5,40 €"
+        },
+        {
+            "id": "join_orders",
+            "label": "Junta as minhas encomendas",
+            "text": "",
+            "feeCents": 0
+        }
+    ],
+    "templates": [
+        {
+            "id": "media-list",
+            "label": "Imagem + 2 linhas"
+        },
+        {
+            "id": "text-grid",
+            "label": "Texto em grelha"
+        },
+        {
+            "id": "price-pack-grid",
+            "label": "Packs/preços"
+        },
+        {
+            "id": "quantity-builder",
+            "label": "Pack + quantidades"
+        },
+        {
+            "id": "design-grid",
+            "label": "Grelha de designs"
+        },
+        {
+            "id": "lamination-choice",
+            "label": "Acabamento"
+        },
+        {
+            "id": "purchase-option",
+            "label": "Opções de compra"
+        },
+        {
+            "id": "details-form",
+            "label": "Formulário"
+        },
+        {
+            "id": "confirm",
+            "label": "Confirmação"
+        }
+    ],
+    "steps": [
+        {
+            "id": "designs",
+            "label": "Design",
+            "title": "Escolhe o design da capa",
+            "text": "Clica numa capa para veres mais imagens.",
+            "template": "design-grid",
+            "field": "design",
+            "selection": "single",
+            "items": [
+                {
+                    "id": "porta-folhetos-01",
+                    "value": "Design 01",
+                    "title": "Design 01",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.webp",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 147,
+                    "visual": "neutral",
+                    "badge": "",
+                    "sectionId": "novidades",
+                    "sectionOrder": 1,
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.webp"
+                    ],
+                    "imageZoom": 99,
+                    "imageRotation": 2,
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-01:main": {
+                            "zoom": 132,
+                            "frameWidth": 120,
+                            "frameScale": 120,
+                            "positionY": -1,
+                            "rotation": 1,
+                            "positionX": 1,
+                            "frameHeight": 147
+                        }
+                    },
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-02",
+                    "value": "Design 02",
+                    "title": "Design 02",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/o_jovem_cadeira/o_jovem_cadeira_matte.webp",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 147,
+                    "visual": "neutral",
+                    "badge": "",
+                    "sectionId": "novidades",
+                    "sectionOrder": 2,
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/o_jovem_cadeira/o_jovem_cadeira_matte.webp"
+                    ],
+                    "imageZoom": 99,
+                    "imageRotation": 2,
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-02:main": {
+                            "zoom": 129,
+                            "frameWidth": 120,
+                            "frameScale": 120,
+                            "positionY": 2,
+                            "rotation": 1,
+                            "positionX": 1,
+                            "frameHeight": 147
+                        }
+                    },
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-03",
+                    "value": "Design 03",
+                    "title": "Design 03",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/idosa_jovem/idosa_jovem_matte.webp",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 147,
+                    "visual": "neutral",
+                    "badge": "",
+                    "sectionId": "novidades",
+                    "sectionOrder": 3,
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/idosa_jovem/idosa_jovem_matte.webp"
+                    ],
+                    "imageZoom": 99,
+                    "imageRotation": 2,
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-03:main": {
+                            "zoom": 129,
+                            "frameWidth": 120,
+                            "frameScale": 120,
+                            "positionY": 1,
+                            "rotation": 1,
+                            "positionX": -1,
+                            "frameHeight": 147
+                        }
+                    },
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-04",
+                    "value": "Design 04",
+                    "title": "Design 04",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/idoso_jovem/idoso_jovem_matte.webp",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 147,
+                    "visual": "neutral",
+                    "badge": "",
+                    "sectionId": "novidades",
+                    "sectionOrder": 4,
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/idoso_jovem/idoso_jovem_matte.webp"
+                    ],
+                    "imageZoom": 99,
+                    "imageRotation": 2,
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-04:main": {
+                            "zoom": 128,
+                            "frameWidth": 120,
+                            "frameScale": 120,
+                            "positionY": 0,
+                            "rotation": 1,
+                            "positionX": -1,
+                            "frameHeight": 147
+                        }
+                    },
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-05",
+                    "value": "Design 05",
+                    "title": "Design 05",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/reencontro/reencontro_matte.webp",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 147,
+                    "visual": "neutral",
+                    "badge": "",
+                    "sectionId": "novidades",
+                    "sectionOrder": 5,
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/reencontro/reencontro_matte.webp"
+                    ],
+                    "imageZoom": 99,
+                    "imageRotation": 2,
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-05:main": {
+                            "zoom": 121,
+                            "frameWidth": 120,
+                            "frameScale": 120,
+                            "positionY": 2,
+                            "rotation": 1,
+                            "positionX": 0,
+                            "frameHeight": 147
+                        }
+                    },
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-06",
+                    "value": "Design 06",
+                    "title": "Design 06",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/vestido_verde/vestido_verde_matte.webp",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 147,
+                    "visual": "neutral",
+                    "badge": "",
+                    "sectionId": "novidades",
+                    "sectionOrder": 6,
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/vestido_verde/vestido_verde_matte.webp"
+                    ],
+                    "imageZoom": 99,
+                    "imageRotation": 2,
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-06:main": {
+                            "zoom": 124,
+                            "frameWidth": 120,
+                            "frameScale": 120,
+                            "positionY": 4,
+                            "rotation": 1,
+                            "positionX": -1,
+                            "frameHeight": 147
+                        }
+                    },
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-07",
+                    "value": "Design 07",
+                    "title": "Design 07",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/cornfield/cornfield_matte.webp",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 147,
+                    "visual": "neutral",
+                    "badge": "",
+                    "sectionId": "novidades",
+                    "sectionOrder": 7,
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/cornfield/cornfield_matte.webp"
+                    ],
+                    "imageZoom": 99,
+                    "imageRotation": 2,
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-07:main": {
+                            "zoom": 126,
+                            "frameWidth": 120,
+                            "frameScale": 120,
+                            "positionY": 6,
+                            "rotation": 1,
+                            "positionX": -4,
+                            "frameHeight": 147
+                        }
+                    },
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-08",
+                    "value": "Design 08",
+                    "title": "Design 08",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (1)/img (27).webp",
+                    "imageFit": "cover",
+                    "frameWidth": 200,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (1)/img (27).webp"
+                    ],
+                    "imageZoom": 99,
+                    "imageRotation": 2,
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-08:main": {
+                            "zoom": 166,
+                            "frameWidth": 120,
+                            "frameScale": 120,
+                            "positionY": 6,
+                            "rotation": 1,
+                            "positionX": -1,
+                            "frameHeight": 147
+                        }
+                    },
+                    "sectionId": "felicidade-eterna",
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-09",
+                    "value": "Design 09",
+                    "title": "Design 09",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (2)/img (21).webp",
+                    "imageFit": "cover",
+                    "frameWidth": 70,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (2)/img (21).webp"
+                    ],
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-09:main": {
+                            "frameWidth": 120,
+                            "zoom": 163,
+                            "rotation": 2,
+                            "frameHeight": 147,
+                            "positionY": 1,
+                            "positionX": -2
+                        }
+                    },
+                    "sectionId": "felicidade-eterna",
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-10",
+                    "value": "Design 10",
+                    "title": "Design 10",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (3)/img (22).webp",
+                    "imageFit": "cover",
+                    "frameWidth": 70,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (3)/img (22).webp"
+                    ],
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-10:main": {
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "zoom": 168,
+                            "positionY": 6,
+                            "positionX": -2,
+                            "rotation": 2
+                        }
+                    },
+                    "sectionId": "felicidade-eterna",
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-11",
+                    "value": "Design 11",
+                    "title": "Design 11",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (4)/img (28).webp",
+                    "imageFit": "cover",
+                    "frameWidth": 70,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (4)/img (28).webp"
+                    ],
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-11:main": {
+                            "frameWidth": 120,
+                            "frameHeight": 147,
+                            "zoom": 168,
+                            "positionX": -3,
+                            "rotation": 2,
+                            "positionY": 5
+                        }
+                    },
+                    "sectionId": "felicidade-eterna",
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-12",
+                    "value": "Design 12",
+                    "title": "Design 12",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (5)/img (26).webp",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (5)/img (26).webp"
+                    ],
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-12:main": {
+                            "frameHeight": 147,
+                            "zoom": 163,
+                            "rotation": 1,
+                            "positionY": 7,
+                            "positionX": -1
+                        }
+                    },
+                    "sectionId": "felicidade-eterna",
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-13",
+                    "value": "Design 13",
+                    "title": "Design 13",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (6)/1778703273549_reduced_q95.webp",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (6)/1778703273549_reduced_q95.webp"
+                    ],
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-13:main": {
+                            "frameHeight": 147,
+                            "zoom": 164,
+                            "rotation": 1,
+                            "positionY": 7,
+                            "positionX": -2
+                        }
+                    },
+                    "sectionId": "felicidade-eterna",
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-14",
+                    "value": "Design 14",
+                    "title": "Design 14",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (7)/img (12).webp",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (7)/img (12).webp"
+                    ],
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-14:main": {
+                            "frameHeight": 146,
+                            "zoom": 161,
+                            "rotation": 1,
+                            "positionY": 2
+                        }
+                    },
+                    "sectionId": "felicidade-eterna",
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-15",
+                    "value": "Design 15",
+                    "title": "Design 15",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (8)/img (19).webp",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (8)/img (19).webp"
+                    ],
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-15:main": {
+                            "frameHeight": 147,
+                            "zoom": 164,
+                            "rotation": 2,
+                            "positionY": 3
+                        }
+                    },
+                    "sectionId": "felicidade-eterna",
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                },
+                {
+                    "id": "porta-folhetos-16",
+                    "value": "Design 16",
+                    "title": "Design 16",
+                    "subtitle": "",
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (9)/img (16).webp",
+                    "imageFit": "cover",
+                    "frameWidth": 120,
+                    "frameHeight": 124,
+                    "visual": "neutral",
+                    "badge": "",
+                    "interiorImages": [
+                        "content/designs/loja/cadernos-anuais/catalog/cadernos/process/cadernos (9)/img (16).webp"
+                    ],
+                    "imageEdits": {
+                        "porta-folhetos:designs:porta-folhetos-16:main": {
+                            "frameHeight": 147,
+                            "zoom": 155,
+                            "rotation": 2,
+                            "positionY": 1
+                        }
+                    },
+                    "sectionId": "felicidade-eterna",
+                    "optionAvailability": {
+                        "ring_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ],
+                        "ribbon_color": [
+                            "dourado",
+                            "rosa-metalico"
+                        ]
+                    }
+                }
+            ],
+            "sections": [
+                {
+                    "id": "novidades",
+                    "title": "Novidades",
+                    "labelPrefix": ""
+                },
+                {
+                    "id": "felicidade-eterna",
+                    "title": "Felicidade Eterna",
+                    "labelPrefix": ""
+                }
+            ],
+            "orderFlowField": "order_flow",
+            "catalogFlowValue": "catalog",
+            "customPromo": {
+                "enabled": true,
+                "title": "Queres a capa com uma foto tua?",
+                "text": "",
+                "actionLabel": "Personalizar a minha capa",
+                "href": "personalizacao.html",
+                "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp"
+            },
+            "display": "cover-drawer",
+            "selectionError": "Escolhe uma capa."
+        },
+        {
+            "id": "hardware",
+            "label": "Argolas e fita",
+            "title": "Escolhe a cor das argolas e da fita",
+            "text": "As opções disponíveis podem variar com a capa escolhida. As capas atuais aceitam as duas cores.",
+            "template": "option-drawers",
+            "display": "cards",
+            "drawers": [
+                {
+                    "id": "ring-color",
+                    "field": "ring_color",
+                    "label": "cor das argolas",
+                    "title": "Cor das argolas",
+                    "required": true,
+                    "selectionError": "Escolhe a cor das argolas.",
+                    "items": [
+                        {
+                            "value": "dourado",
+                            "title": "Douradas",
+                            "subtitle": "Metal dourado",
+                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp",
+                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp",
+                            "drawerText": "Imagem de referência das argolas douradas.",
+                            "extraPriceCentsPerUnit": 0
+                        },
+                        {
+                            "value": "rosa-metalico",
+                            "title": "Rosa metálico",
+                            "subtitle": "Bronze rosado / rosa metálico",
+                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-pioneiro.webp",
+                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-pioneiro.webp",
+                            "drawerText": "Imagem de referência das argolas rosa metálico.",
+                            "extraPriceCentsPerUnit": 0
+                        }
+                    ],
+                    "customArtworkEnabled": true
+                },
+                {
+                    "id": "ribbon-color",
+                    "field": "ribbon_color",
+                    "label": "cor da fita",
+                    "title": "Cor da fita",
+                    "required": true,
+                    "selectionError": "Escolhe a cor da fita.",
+                    "items": [
+                        {
+                            "value": "dourado",
+                            "title": "Dourada",
+                            "subtitle": "Fita em tom dourado",
+                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp",
+                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp",
+                            "drawerText": "Imagem de referência da fita dourada.",
+                            "extraPriceCentsPerUnit": 0
+                        },
+                        {
+                            "value": "rosa-metalico",
+                            "title": "Rosa",
+                            "subtitle": "Fita em tom rosa",
+                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-pioneiro.webp",
+                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-pioneiro.webp",
+                            "drawerText": "Imagem de referência da fita rosa.",
+                            "extraPriceCentsPerUnit": 0
+                        }
+                    ],
+                    "customArtworkEnabled": true
+                }
+            ]
+        },
+        {
+            "id": "finish",
+            "label": "Acabamento",
+            "title": "Escolhe o acabamento",
+            "text": "Clica numa opção para veres a imagem de referência.",
+            "template": "option-drawers",
+            "display": "cards",
+            "drawers": [
+                {
+                    "id": "finish-choice",
+                    "field": "finish",
+                    "label": "acabamento",
+                    "title": "Acabamento",
+                    "required": true,
+                    "selectionError": "Escolhe o acabamento.",
+                    "items": [
+                        {
+                            "value": "matte",
+                            "title": "Matte",
+                            "subtitle": "Suave, sem brilho",
+                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-matte.webp",
+                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-matte.webp",
+                            "drawerText": "Exemplo visual de acabamento matte.",
+                            "extraPriceCentsPerUnit": 0
+                        },
+                        {
+                            "value": "glossy",
+                            "title": "Glossy",
+                            "subtitle": "Brilhante",
+                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-glossy-normal.webp",
+                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-glossy-normal.webp",
+                            "drawerText": "Exemplo visual de acabamento glossy.",
+                            "extraPriceCentsPerUnit": 0
+                        },
+                        {
+                            "value": "holografico-1",
+                            "title": "Holográfico 1",
+                            "subtitle": "Efeito holográfico",
+                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
+                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
+                            "drawerText": "Exemplo visual do Holográfico 1.",
+                            "extraPriceCentsPerUnit": 0
+                        },
+                        {
+                            "value": "holografico-2",
+                            "title": "Holográfico 2",
+                            "subtitle": "Efeito holográfico",
+                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
+                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
+                            "drawerText": "Imagem provisória até ser carregada a fotografia específica do Holográfico 2.",
+                            "extraPriceCentsPerUnit": 0
+                        },
+                        {
+                            "value": "holografico-3",
+                            "title": "Holográfico 3",
+                            "subtitle": "Efeito holográfico",
+                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
+                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
+                            "drawerText": "Imagem provisória até ser carregada a fotografia específica do Holográfico 3.",
+                            "extraPriceCentsPerUnit": 0
+                        }
+                    ],
+                    "customArtworkEnabled": true
+                }
+            ]
+        },
+        {
+            "id": "size",
+            "label": "Formato",
+            "title": "Escolhe o formato",
+            "text": "Podes encomendar o A4, o A6 ou o conjunto com os dois.",
+            "template": "media-list",
+            "display": "purchase-cards",
+            "field": "size",
+            "selection": "single",
+            "selectionError": "Escolhe o formato que queres.",
+            "items": [
+                {
+                    "id": "a4",
+                    "value": "A4",
+                    "priceKey": "A4",
+                    "title": "Apenas A4",
+                    "subtitle": "Porta-folhetos A4",
+                    "priceCents": 1500,
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp",
+                    "visual": "neutral"
+                },
+                {
+                    "id": "a6",
+                    "value": "A6",
+                    "priceKey": "A6",
+                    "title": "Apenas A6",
+                    "subtitle": "Porta-folhetos A6",
+                    "priceCents": 1000,
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp",
+                    "visual": "neutral"
+                },
+                {
+                    "id": "a4-a6",
+                    "value": "A4 + A6",
+                    "priceKey": "A4 + A6",
+                    "title": "A4 + A6",
+                    "subtitle": "Os dois tamanhos",
+                    "priceCents": 2200,
+                    "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp",
+                    "visual": "neutral"
+                }
+            ]
+        },
+        {
+            "id": "delivery_contact",
+            "label": "Entrega e contacto",
+            "title": "Entrega e contacto",
+            "text": "",
+            "template": "delivery-contact",
+            "delivery": {
+                "title": "Como queres receber a tua encomenda?",
+                "subtitle": "Caso já tenhas feito uma encomenda que ainda não foi enviada, escolhe \"Junta as minhas encomendas\" para receberes todas as tuas encomendas na mesma embalagem."
+            },
+            "contact": {
+                "title": "Dados de Contacto",
+                "notesAfter": [
+                    "Se quiseres fatura com número de contribuinte, preenche este campo. Se deixares em branco, a fatura será emitida como consumidor final.",
+                    "A fatura será emitida após confirmação do pagamento. Se indicares email, enviamos por email. Se indicares telemóvel, podemos enviar por WhatsApp."
+                ],
+                "fields": [
+                    {
+                        "name": "customer_name",
+                        "label": "Nome",
+                        "placeholder": "O teu nome",
+                        "required": true,
+                        "autocomplete": "name"
+                    },
+                    {
+                        "name": "customer_contact",
+                        "label": "Email ou Telemóvel",
+                        "placeholder": "Email ou telemóvel",
+                        "required": true,
+                        "autocomplete": "email"
+                    },
+                    {
+                        "name": "customer_nif",
+                        "label": "Número de Contribuinte (NIF)",
+                        "placeholder": "Se quiseres receber fatura com NIF",
+                        "required": false,
+                        "autocomplete": "off",
+                        "inputmode": "numeric"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "confirm",
+            "label": "Confirmar",
+            "title": "Confirma antes de enviar",
+            "text": "Se estiver tudo certo, envia o pedido",
+            "template": "confirm"
+        }
+    ],
+    "prices": {
+        "A4": {
+            "1": 1500
+        },
+        "A6": {
+            "1": 1000
+        },
+        "A4 + A6": {
+            "1": 2200
+        }
+    },
+    "minimumQuantity": 1,
+    "pricingMode": "flat-unit",
+    "allowUnitDiscounts": false,
+    "defaultPriceKey": "A4",
+    "customArtwork": {
+        "selectionField": "order_flow",
+        "catalogValue": "catalog",
+        "customValue": "custom",
+        "feePerFileCents": 300,
+        "feeLabel": "Preparação da imagem e testes",
+        "feeDescription": "Inclui a preparação do ficheiro e os testes necessários antes da produção.",
+        "quantityPerFile": true,
+        "minimumQuantityPerFile": 1,
+        "acceptedMimeTypes": [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/heic",
+            "image/heif",
+            "application/pdf"
+        ],
+        "acceptedExtensions": [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp",
+            ".heic",
+            ".heif",
+            ".pdf"
+        ],
+        "preserveOriginal": true,
+        "preserveOriginalFileName": true,
+        "compress": false,
+        "convert": false
+    }
+}

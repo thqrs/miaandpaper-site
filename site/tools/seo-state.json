@@ -2,80 +2,88 @@
   "version": 1,
   "pages": {
     "/": {
-      "fingerprint": "07fa790ab7abd2a126211822717c0ecaf787b051665fe99a0e74a3896e44c118",
-      "lastmod": "2026-08-15"
+      "fingerprint": "8afd544f6294f6e438a807dde2afd9acce5a6da6b00a63220b758e69e7a2b08a",
+      "lastmod": "2026-08-17"
     },
     "/congressos.html": {
-      "fingerprint": "a55a01d88bea773fdaa7360974d210d98b14399b02ab3d2045f0c53255db6a9e",
-      "lastmod": "2026-08-15"
+      "fingerprint": "f2dc18385bed048882ceb905cfed807c48ae0fa283c595243f6ac921ed71b177",
+      "lastmod": "2026-08-17"
     },
     "/imanes.html": {
-      "fingerprint": "1c3d1f9f0cd4e025958aa659964e5181d97c90a124049c11a91ff8c301a1bf4d",
-      "lastmod": "2026-08-15"
+      "fingerprint": "2cf461c188f37b56a12f2b7b2c93e70e4ff05c2cccc1ab715b7dab5214f52162",
+      "lastmod": "2026-08-17"
     },
     "/imanes-recortados.html": {
-      "fingerprint": "633fb10a167c77bf633b55e88cc62761d3ba26663c74e87946edc5d5df851966",
-      "lastmod": "2026-08-15"
+      "fingerprint": "12af07f902bc2e719ac5fb17b26c0fd052c2994940bb80fef1b38790b1853d75",
+      "lastmod": "2026-08-17"
     },
     "/crachas.html": {
-      "fingerprint": "bbd25875539649fefdd73a1ea262fb4c72bca2b660a2448e486c53fcb9a8175e",
-      "lastmod": "2026-08-15"
+      "fingerprint": "d5fe2f36b2b0dfc5707f7884064bb4305607c5348adc77865c92e797fc3508d9",
+      "lastmod": "2026-08-17"
     },
     "/molduras.html": {
-      "fingerprint": "69ab0b6432df4c47e4feeba678f4b79bd00d60e2ad38a74382ce9a4348af566f",
-      "lastmod": "2026-08-15"
+      "fingerprint": "36ecdd5129333afe37cd78b9dcf398a3b94181c21bfcc00182b29c113b117489",
+      "lastmod": "2026-08-17"
     },
     "/mini-cadernos.html": {
-      "fingerprint": "7216bf6f560c8a0c6942b1c1fc09fd945d0405986825172023a126647ed2567e",
-      "lastmod": "2026-08-15"
+      "fingerprint": "d42004e385513bad3d463b5bb6fc406d42229feaf79430b00d8358b509983940",
+      "lastmod": "2026-08-17"
     },
     "/cadernos-anuais.html": {
-      "fingerprint": "a73de2ed24e9d6111f3ba021397489625ff303cecca2ea5e9458bc30d9c81140",
-      "lastmod": "2026-08-15"
+      "fingerprint": "46fcee251e7fb53f462c01ed352e5feb1b3a8b337fc880ff9727120245ff8c7d",
+      "lastmod": "2026-08-17"
     },
     "/blocos-a6.html": {
-      "fingerprint": "6d9d55668aa92fc2dcec6ae00045331499bbb930ec76ef26877a1a8fe17c46ce",
-      "lastmod": "2026-08-15"
+      "fingerprint": "ea12e777c28a688776b9ea88dcc6357fb20037208dfd05e0b5755fef89c04c5c",
+      "lastmod": "2026-08-17"
     },
     "/bloquinhos.html": {
-      "fingerprint": "e9b2840d8eff595bd2116db33d95f016223d57170a56665d29194726bc87c4e0",
-      "lastmod": "2026-08-15"
+      "fingerprint": "c7fd0bd3006bd08b0a04b5ea08090fb47702d56a90f9395bde11fa73305f67aa",
+      "lastmod": "2026-08-17"
     },
     "/marcadores.html": {
-      "fingerprint": "1fe166c3699d34ae213eb2ef917967f084971a41185a3c1e3a62f7754cc93733",
-      "lastmod": "2026-08-15"
+      "fingerprint": "e175d929825f42a093bc176e78645b530e4d4510fe306c16fa0e3bece0c7a503",
+      "lastmod": "2026-08-17"
     },
     "/marcadores-magneticos.html": {
-      "fingerprint": "859a96b4bfccaf3cc43d94937926f2c26fd3f2dbb0a344e27a9d4256eb8ec1e0",
-      "lastmod": "2026-08-15"
+      "fingerprint": "47e1459f36e5484f39ed1695f19f2f0e7cef4c8ecd730b3858317667ec6bb7a5",
+      "lastmod": "2026-08-17"
     },
     "/stickers.html": {
-      "fingerprint": "e3dd289d1577fdfa3ab659302818707f07eb1b8384716f87064692d806909002",
-      "lastmod": "2026-08-15"
+      "fingerprint": "b12e1379fffebd32388abab1af530c0bea01cf3b0a693f6f4c5102224bacd64f",
+      "lastmod": "2026-08-17"
     },
     "/personalizacao.html": {
-      "fingerprint": "08858ddbc91f227e9dc9c379aeed80f24356cedcfe183e50e7f793a8e71a1370",
-      "lastmod": "2026-08-15"
+      "fingerprint": "64e9ff9bdfd72202731f9fa489f1adc93858d4751d9ee496b64de01ec61ccdbc",
+      "lastmod": "2026-08-17"
     },
     "/agendas.html": {
-      "fingerprint": "8d878ca8eda534c720403c4a69fad9ff9e7f0cc2af2a3bddef5b1cc336c214cb",
-      "lastmod": "2026-08-15"
+      "fingerprint": "0cca0c65c7a7e39396e4715c49109eb3c0f3de71880de6e46e41b60359f8a879",
+      "lastmod": "2026-08-17"
     },
     "/postais.html": {
-      "fingerprint": "031b9e83cbc02bc7e021fb922672b9ea83329150ae1fa868d44c41fce2c24373",
-      "lastmod": "2026-08-15"
+      "fingerprint": "26b41938de41b8de5654b22c161e53265b906296764c6d947ec80772d5c35f67",
+      "lastmod": "2026-08-17"
     },
     "/contacto.html": {
-      "fingerprint": "779ac3eb9d7d716fb55947c60eb490a5f50dd60cf3a7d354147b940b717cf1d9",
-      "lastmod": "2026-08-15"
+      "fingerprint": "71e8cea6477569afc891d088a34b432b1e710542d8c4c8825d7ce5c9bd394fd4",
+      "lastmod": "2026-08-17"
     },
     "/perguntasfrequentes.html": {
-      "fingerprint": "ee542cedd4181192e8caf1c7d6252c955e15b23c3fbe0925c024a6b65fa984ab",
-      "lastmod": "2026-08-15"
+      "fingerprint": "a17828cdb862e402b8169c974b1b22f1632c0867d60bfc39471d967cdcdd03e7",
+      "lastmod": "2026-08-17"
     },
     "/privacy.html": {
-      "fingerprint": "2ea24e2a726c713bfc866bae079bfa54d5c2f4b46d128fe660959293bda3142b",
-      "lastmod": "2026-08-15"
+      "fingerprint": "ab055422f84653435677b70f49a43c6da701b0885b2336b200fd4b49d5e6d242",
+      "lastmod": "2026-08-17"
+    },
+    "/porta-chaves.html": {
+      "fingerprint": "151c0a7207b64733dca2f69b765c6fdf7a2bcf1b54df4abb12702c3eaf81cd02",
+      "lastmod": "2026-08-17"
+    },
+    "/porta-folhetos.html": {
+      "fingerprint": "692de09e01620a88ed2c61093298ddcb99109695391518d83dc9e3369c013e09",
+      "lastmod": "2026-08-17"
     },
     "/ofertas/index.html": {
       "fingerprint": "631f140b65a2fda53c5ab6b00aeb6a3992c881164746a96165fa82ada24b69bd",

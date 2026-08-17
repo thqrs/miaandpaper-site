@@ -62,6 +62,25 @@ function pd_passo1_receitas()
             'note' => 'Crachá com moldura ampliada; a secção controla o agrupamento e o nome apresentado.',
             'defaults' => array('visual' => 'neutral', 'imageZoom' => 100, 'imagePositionX' => 0, 'imagePositionY' => 0, 'imageRotation' => 0, 'frameScale' => 130, 'frameMarginX' => 0, 'frameMarginY' => 10),
         ),
+        'porta-chaves' => array(
+            'stepId' => 'designs', 'strategy' => 'standard', 'allowCreate' => true, 'allowRemove' => true, 'allowDirectUpload' => true,
+            'directUploadTargets' => array('image'),
+            'expectedSections' => array('novidades', 'porto-2026', 'restelo', 'criancas', 'felicidade-eterna'),
+            'imageRequired' => true,
+            'note' => 'Porta-chaves redondo: catálogo e enquadramento seguem a família dos crachás.',
+            'defaults' => array('visual' => 'neutral', 'imageZoom' => 100, 'imagePositionX' => 0, 'imagePositionY' => 0, 'imageRotation' => 0, 'frameScale' => 130, 'frameMarginX' => 0, 'frameMarginY' => 10),
+        ),
+        'porta-folhetos' => array(
+            'stepId' => 'designs', 'strategy' => 'cover-drawer', 'allowCreate' => true, 'allowRemove' => true, 'allowDirectUpload' => true,
+            'directUploadTargets' => array('image', 'interiorImages.0'),
+            'expectedSections' => array('novidades', 'felicidade-eterna'),
+            'imageRequired' => true,
+            'note' => 'Capa do porta-folhetos com gaveta de imagens. Ao criar um design, indica a capa e uma segunda fotografia/exemplo para a gaveta.',
+            'defaults' => array('badge' => '', 'visual' => 'neutral', 'imageFit' => 'cover', 'frameWidth' => 120, 'frameHeight' => 147, 'imageEdits' => array()),
+            'extraImages' => array(
+                array('name' => 'interior', 'label' => 'Imagem da gaveta / exemplo adicional', 'group' => 'interiorImages', 'key' => '0'),
+            ),
+        ),
         'imanes-loja' => array(
             'stepId' => 'designs', 'strategy' => 'standard', 'allowCreate' => true, 'allowRemove' => true, 'allowDirectUpload' => true,
             'directUploadTargets' => array('image'),

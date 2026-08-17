@@ -37,6 +37,20 @@
       "carouselPanPercent": 0
     },
     {
+      "id": "porta-chaves",
+      "title": "Porta-chaves",
+      "subtitle": "32 mm ou 58 mm",
+      "href": "porta-chaves.html",
+      "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
+      "accent": "rose",
+      "available": true,
+      "carouselEnabled": true,
+      "carouselIntervalMs": 5000,
+      "carouselRandomizeOnLoad": true,
+      "clickable": true,
+      "carouselPanPercent": 0
+    },
+    {
       "id": "imanes-loja",
       "title": "Ímanes",
       "subtitle": "Para o teu frigorífico",
@@ -94,6 +108,20 @@
       "title": "Cadernos Anuais",
       "subtitle": "Para te acompanharem durante todo o ano",
       "href": "cadernos-anuais.html",
+      "accent": "gold",
+      "available": true,
+      "carouselEnabled": true,
+      "carouselIntervalMs": 5000,
+      "carouselRandomizeOnLoad": true,
+      "clickable": true,
+      "carouselPanPercent": 0
+    },
+    {
+      "id": "porta-folhetos",
+      "title": "Porta-folhetos",
+      "subtitle": "A4 e A6 para os folhetos da pregação",
+      "href": "porta-folhetos.html",
+      "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.webp",
       "accent": "gold",
       "available": true,
       "carouselEnabled": true,

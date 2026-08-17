@@ -23,6 +23,7 @@ function miu_animation_trigger_options()
 {
     return array(
         'page_load' => 'Ao carregar a página',
+        'product_enter' => 'Ao entrar num produto',
         'launcher_hover' => 'Ao passar o rato pelo Míu',
         'launcher_open' => 'Ao abrir a conversa',
         'launcher_close' => 'Ao fechar a conversa',
@@ -79,6 +80,70 @@ function miu_animation_float($value, $min, $max, $fallback)
     return max((float)$min, min((float)$max, (float)$value));
 }
 
+function miu_animation_bool($value, $fallback)
+{
+    if (is_bool($value)) {
+        return $value;
+    }
+    if (is_int($value) || is_float($value)) {
+        return (bool)$value;
+    }
+    $text = strtolower(trim((string)$value));
+    if (in_array($text, array('1', 'true', 'yes', 'sim', 'on'), true)) {
+        return true;
+    }
+    if (in_array($text, array('0', 'false', 'no', 'nao', 'não', 'off', ''), true)) {
+        return false;
+    }
+    return (bool)$fallback;
+}
+
+function miu_animation_clean_products($value)
+{
+    $parts = is_array($value) ? $value : preg_split('/[\s,;]+/', trim((string)$value));
+    $clean = array();
+    foreach ((array)$parts as $part) {
+        $part = strtolower(trim((string)$part));
+        if ($part === '*') {
+            $clean['*'] = '*';
+            continue;
+        }
+        $slug = preg_replace('/[^a-z0-9_-]+/', '', $part);
+        if ($slug !== '') {
+            $clean[$slug] = $slug;
+        }
+    }
+    return array_values($clean);
+}
+
+function miu_animation_normalize_display($display)
+{
+    $display = is_array($display) ? $display : array();
+    $legacySmall = miu_animation_int(isset($display['smallPx']) ? $display['smallPx'] : 26, 18, 64, 26);
+    $minRandom = miu_animation_int(isset($display['idleRandomMinMs']) ? $display['idleRandomMinMs'] : 14000, 3000, 300000, 14000);
+    $maxRandom = miu_animation_int(isset($display['idleRandomMaxMs']) ? $display['idleRandomMaxMs'] : 28000, 3000, 600000, 28000);
+    if ($maxRandom < $minRandom) {
+        $maxRandom = $minRandom;
+    }
+    return array(
+        'launcherPx' => miu_animation_int(isset($display['launcherPx']) ? $display['launcherPx'] : 46, 24, 120, 46),
+        'headerPx' => miu_animation_int(isset($display['headerPx']) ? $display['headerPx'] : $legacySmall, 16, 80, $legacySmall),
+        'messagePx' => miu_animation_int(isset($display['messagePx']) ? $display['messagePx'] : $legacySmall, 16, 80, $legacySmall),
+        'interactivePx' => miu_animation_int(isset($display['interactivePx']) ? $display['interactivePx'] : 96, 48, 240, 96),
+        'launcherCircle' => miu_animation_bool(isset($display['launcherCircle']) ? $display['launcherCircle'] : true, true),
+        'headerCircle' => miu_animation_bool(isset($display['headerCircle']) ? $display['headerCircle'] : true, true),
+        'messageCircle' => miu_animation_bool(isset($display['messageCircle']) ? $display['messageCircle'] : true, true),
+        'promptSeconds' => miu_animation_int(isset($display['promptSeconds']) ? $display['promptSeconds'] : 5, 0, 60, 5),
+        'errorsViaMiu' => miu_animation_bool(isset($display['errorsViaMiu']) ? $display['errorsViaMiu'] : true, true),
+        // Compatibilidade temporária com código/configuração antigos.
+        'smallPx' => $legacySmall,
+        'sleepAfterMs' => miu_animation_int(isset($display['sleepAfterMs']) ? $display['sleepAfterMs'] : 45000, 5000, 600000, 45000),
+        'idleRandomMinMs' => $minRandom,
+        'idleRandomMaxMs' => $maxRandom,
+        'maxRoamPx' => miu_animation_int(isset($display['maxRoamPx']) ? $display['maxRoamPx'] : 180, 0, 800, 180),
+    );
+}
+
 function miu_animation_default_config()
 {
     return array(
@@ -87,6 +152,14 @@ function miu_animation_default_config()
         'baseAnimationId' => 'lili-calma',
         'display' => array(
             'launcherPx' => 46,
+            'headerPx' => 26,
+            'messagePx' => 26,
+            'interactivePx' => 96,
+            'launcherCircle' => true,
+            'headerCircle' => true,
+            'messageCircle' => true,
+            'promptSeconds' => 5,
+            'errorsViaMiu' => true,
             'smallPx' => 26,
             'sleepAfterMs' => 45000,
             'idleRandomMinMs' => 14000,
@@ -176,7 +249,8 @@ function miu_animation_default_config()
                 'frameDurationsMs' => array(180, 150, 120, 120, 130, 150, 180, 300),
                 'repeat' => 1,
                 'enabled' => true,
-                'triggers' => array('launcher_hover', 'message_sent', 'idle_random'),
+                'triggers' => array('launcher_hover', 'message_sent', 'idle_random', 'product_enter'),
+                'products' => array('*'),
                 'probability' => 0.38,
                 'weight' => 2,
                 'cooldownMs' => 9000,
@@ -292,6 +366,7 @@ function miu_animation_sanitize_item($item)
             $triggers[] = $trigger;
         }
     }
+    $products = miu_animation_clean_products(isset($item['products']) ? $item['products'] : array());
     $motionOptions = miu_animation_motion_options();
     $motion = isset($item['motion']) && is_array($item['motion']) ? $item['motion'] : array();
     $motionType = isset($motion['type']) && isset($motionOptions[$motion['type']]) ? (string)$motion['type'] : 'none';
@@ -307,6 +382,7 @@ function miu_animation_sanitize_item($item)
         'repeat' => miu_animation_int(isset($item['repeat']) ? $item['repeat'] : 1, 0, 20, 1),
         'enabled' => !isset($item['enabled']) || (bool)$item['enabled'],
         'triggers' => $triggers,
+        'products' => $products,
         'probability' => miu_animation_float(isset($item['probability']) ? $item['probability'] : 1, 0, 1, 1),
         'weight' => miu_animation_int(isset($item['weight']) ? $item['weight'] : 1, 1, 100, 1),
         'cooldownMs' => miu_animation_int(isset($item['cooldownMs']) ? $item['cooldownMs'] : 0, 0, 3600000, 0),
@@ -352,14 +428,7 @@ function miu_animation_config()
         'schemaVersion' => 2,
         'updatedAt' => isset($raw['updatedAt']) ? (string)$raw['updatedAt'] : '',
         'baseAnimationId' => $baseId,
-        'display' => array(
-            'launcherPx' => miu_animation_int(isset($display['launcherPx']) ? $display['launcherPx'] : 46, 32, 64, 46),
-            'smallPx' => miu_animation_int(isset($display['smallPx']) ? $display['smallPx'] : 26, 18, 36, 26),
-            'sleepAfterMs' => miu_animation_int(isset($display['sleepAfterMs']) ? $display['sleepAfterMs'] : 45000, 5000, 600000, 45000),
-            'idleRandomMinMs' => $minRandom,
-            'idleRandomMaxMs' => $maxRandom,
-            'maxRoamPx' => miu_animation_int(isset($display['maxRoamPx']) ? $display['maxRoamPx'] : 180, 0, 800, 180),
-        ),
+        'display' => miu_animation_normalize_display($display),
         'animations' => $animations,
     );
 }
@@ -417,14 +486,7 @@ function miu_animation_config_from_array($raw)
         'schemaVersion' => 2,
         'updatedAt' => isset($raw['updatedAt']) ? (string)$raw['updatedAt'] : '',
         'baseAnimationId' => $baseId,
-        'display' => array(
-            'launcherPx' => miu_animation_int(isset($display['launcherPx']) ? $display['launcherPx'] : 46, 32, 64, 46),
-            'smallPx' => miu_animation_int(isset($display['smallPx']) ? $display['smallPx'] : 26, 18, 36, 26),
-            'sleepAfterMs' => miu_animation_int(isset($display['sleepAfterMs']) ? $display['sleepAfterMs'] : 45000, 5000, 600000, 45000),
-            'idleRandomMinMs' => $minRandom,
-            'idleRandomMaxMs' => $maxRandom,
-            'maxRoamPx' => miu_animation_int(isset($display['maxRoamPx']) ? $display['maxRoamPx'] : 180, 0, 800, 180),
-        ),
+        'display' => miu_animation_normalize_display($display),
         'animations' => $animations,
     );
 }
@@ -553,6 +615,7 @@ function miu_animation_item_from_post($post, $existing, $uploadedFile)
         'repeat' => miu_animation_int(isset($post['repeat']) ? $post['repeat'] : 1, 0, 20, 1),
         'enabled' => !empty($post['enabled']),
         'triggers' => array_values(array_unique($triggers)),
+        'products' => miu_animation_clean_products(isset($post['product_scopes']) ? $post['product_scopes'] : (isset($existing['products']) ? $existing['products'] : array())),
         'probability' => $probabilityPercent / 100,
         'weight' => miu_animation_int(isset($post['weight']) ? $post['weight'] : 1, 1, 100, 1),
         'cooldownMs' => miu_animation_int(isset($post['cooldown_seconds']) ? ((int)$post['cooldown_seconds']) * 1000 : 0, 0, 3600000, 0),
@@ -651,20 +714,35 @@ function miu_animation_save_display_from_request($post)
     if (miu_animation_find_index($config, $baseId) < 0) {
         $baseId = $config['baseAnimationId'];
     }
-    $sleepSeconds = miu_animation_int(isset($post['sleep_after_seconds']) ? $post['sleep_after_seconds'] : 45, 5, 600, 45);
-    $randomMinSeconds = miu_animation_int(isset($post['idle_random_min_seconds']) ? $post['idle_random_min_seconds'] : 14, 3, 300, 14);
-    $randomMaxSeconds = miu_animation_int(isset($post['idle_random_max_seconds']) ? $post['idle_random_max_seconds'] : 28, 3, 600, 28);
+    $sleepSeconds = miu_animation_int(isset($post['sleep_after_seconds']) ? $post['sleep_after_seconds'] : round($config['display']['sleepAfterMs'] / 1000), 5, 600, 45);
+    $randomMinSeconds = miu_animation_int(isset($post['idle_random_min_seconds']) ? $post['idle_random_min_seconds'] : round($config['display']['idleRandomMinMs'] / 1000), 3, 300, 14);
+    $randomMaxSeconds = miu_animation_int(isset($post['idle_random_max_seconds']) ? $post['idle_random_max_seconds'] : round($config['display']['idleRandomMaxMs'] / 1000), 3, 600, 28);
     if ($randomMaxSeconds < $randomMinSeconds) {
         $randomMaxSeconds = $randomMinSeconds;
     }
     $config['baseAnimationId'] = $baseId;
-    $config['display'] = array(
-        'launcherPx' => miu_animation_int(isset($post['launcher_px']) ? $post['launcher_px'] : 46, 32, 64, 46),
-        'smallPx' => miu_animation_int(isset($post['small_px']) ? $post['small_px'] : 26, 18, 36, 26),
-        'sleepAfterMs' => $sleepSeconds * 1000,
-        'idleRandomMinMs' => $randomMinSeconds * 1000,
-        'idleRandomMaxMs' => $randomMaxSeconds * 1000,
-        'maxRoamPx' => miu_animation_int(isset($post['max_roam_px']) ? $post['max_roam_px'] : 180, 0, 800, 180),
-    );
+    $config['display']['sleepAfterMs'] = $sleepSeconds * 1000;
+    $config['display']['idleRandomMinMs'] = $randomMinSeconds * 1000;
+    $config['display']['idleRandomMaxMs'] = $randomMaxSeconds * 1000;
+    $config['display']['maxRoamPx'] = miu_animation_int(isset($post['max_roam_px']) ? $post['max_roam_px'] : $config['display']['maxRoamPx'], 0, 800, 180);
+    return miu_animation_write_config($config);
+}
+
+function miu_animation_save_appearance_from_request($post)
+{
+    $config = miu_animation_config();
+    $display = $config['display'];
+    $display['launcherPx'] = miu_animation_int(isset($post['launcher_px']) ? $post['launcher_px'] : $display['launcherPx'], 24, 120, 46);
+    $display['headerPx'] = miu_animation_int(isset($post['header_px']) ? $post['header_px'] : $display['headerPx'], 16, 80, 26);
+    $display['messagePx'] = miu_animation_int(isset($post['message_px']) ? $post['message_px'] : $display['messagePx'], 16, 80, 26);
+    $display['interactivePx'] = miu_animation_int(isset($post['interactive_px']) ? $post['interactive_px'] : $display['interactivePx'], 48, 240, 96);
+    $display['launcherCircle'] = !empty($post['launcher_circle']);
+    $display['headerCircle'] = !empty($post['header_circle']);
+    $display['messageCircle'] = !empty($post['message_circle']);
+    $display['promptSeconds'] = miu_animation_int(isset($post['prompt_seconds']) ? $post['prompt_seconds'] : $display['promptSeconds'], 0, 60, 5);
+    $display['errorsViaMiu'] = !empty($post['errors_via_miu']);
+    // smallPx continua apenas como compatibilidade para leitores antigos.
+    $display['smallPx'] = $display['messagePx'];
+    $config['display'] = $display;
     return miu_animation_write_config($config);
 }

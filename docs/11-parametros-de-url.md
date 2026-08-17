@@ -173,7 +173,8 @@ está em `tools/parametros.php`. Aqui fica só o índice — o que existe e onde
 | `admin-funnel.php` | página | admin | `period`, `enrich`, `snapshot` |
 | `admin-live-dashboard.php` | página | admin | `period`, `view`, `start`, `end`, `sid`, `snapshot` |
 | `admin-orders.php` | página | admin | `view`, `id`, `f`, `p`, `q`, `page`, `saved`, `paid`, `shipped`, `cancelled`, `created`, `email` |
-| `bot.php` | página | admin | `id`, `page`, `notice` |
+| `bot.php` | página | admin | `tab`, `id`, `page`, `notice` |
+| `erros.php` | página | admin | `tab`, `saved` |
 | `modulos.php` | página | público | `snapshot` |
 | `tools/parametros.php` | página | admin | `formato`, `tipo`, `recurso`, `vazios` |
 | `tools/gerador-cartoes.php` | ferramenta | admin | 24 parâmetros, lidos no browser — ver [`README-url-cartoes.md`](../site/tools/README-url-cartoes.md) |

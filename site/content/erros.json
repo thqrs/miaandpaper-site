@@ -1,0 +1,498 @@
+{
+  "schemaVersion": 1,
+  "messages": [
+    {
+      "id": "design.frame",
+      "label": "Escolha da moldura",
+      "source": "Escolhe o tipo de moldura que queres criar.",
+      "default": "Escolhe o tipo de moldura que queres criar.",
+      "miu": "Primeiro escolhe o tipo de moldura que queres criar."
+    },
+    {
+      "id": "design.cover",
+      "label": "Escolha da capa",
+      "source": "Escolhe uma capa.",
+      "default": "Escolhe uma capa.",
+      "miu": "Escolhe uma capa para continuares."
+    },
+    {
+      "id": "design.general",
+      "label": "Escolha de design",
+      "source": "Escolhe pelo menos um design ou a opção Sortido",
+      "default": "Escolhe pelo menos um design ou a opção Sortido",
+      "miu": "Escolhe pelo menos um design ou a opção Sortido para continuares."
+    },
+    {
+      "id": "upload.wait",
+      "label": "Upload em curso",
+      "source": "Espera até todos os ficheiros terminarem de enviar.",
+      "default": "Espera até todos os ficheiros terminarem de enviar.",
+      "miu": "Ainda estou a receber os ficheiros. Espera só até todos terminarem de enviar."
+    },
+    {
+      "id": "upload.required",
+      "label": "Ficheiro obrigatório",
+      "source": "Carrega pelo menos uma imagem ou um PDF para continuar.",
+      "default": "Carrega pelo menos uma imagem ou um PDF para continuar.",
+      "miu": "Carrega pelo menos uma imagem ou um PDF para continuares."
+    },
+    {
+      "id": "upload.required.previous",
+      "label": "Ficheiro no passo anterior",
+      "source": "Carrega pelo menos uma imagem ou um PDF no passo anterior.",
+      "default": "Carrega pelo menos uma imagem ou um PDF no passo anterior.",
+      "miu": "Volta ao passo anterior e carrega pelo menos uma imagem ou um PDF."
+    },
+    {
+      "id": "quantity.design",
+      "label": "Quantidade por design",
+      "source": "Indica uma quantidade válida para cada design.",
+      "default": "Indica uma quantidade válida para cada design.",
+      "miu": "Indica quantas unidades queres de cada design."
+    },
+    {
+      "id": "minimum.order",
+      "label": "Encomenda mínima",
+      "matchPrefix": "A encomenda mínima é de ",
+      "default": "A encomenda mínima é de {rest}",
+      "miu": "Para este produto, a encomenda mínima é de {rest}"
+    },
+    {
+      "id": "purchase.option",
+      "label": "Opção de compra",
+      "source": "Escolhe uma opção de compra.",
+      "default": "Escolhe uma opção de compra.",
+      "miu": "Escolhe uma das opções de compra para continuares."
+    },
+    {
+      "id": "quantity.valid",
+      "label": "Quantidade válida",
+      "source": "Escolhe uma quantidade válida.",
+      "default": "Escolhe uma quantidade válida.",
+      "miu": "Escolhe uma quantidade válida para continuares."
+    },
+    {
+      "id": "cover.personalize",
+      "label": "Personalização da capa",
+      "source": "Escolhe se queres personalizar a capa.",
+      "default": "Escolhe se queres personalizar a capa.",
+      "miu": "Diz-me se queres personalizar a capa ou deixá-la como está."
+    },
+    {
+      "id": "cover.text",
+      "label": "Texto da capa",
+      "source": "Escreve o nome ou frase para personalizar a capa.",
+      "default": "Escreve o nome ou frase para personalizar a capa.",
+      "miu": "Escreve o nome ou a frase que queres colocar na capa."
+    },
+    {
+      "id": "cover.text.limit",
+      "label": "Limite de caracteres",
+      "matchPrefix": "O nome/frase tem de ter no máximo ",
+      "default": "O nome/frase tem de ter no máximo {rest}",
+      "miu": "O nome ou frase pode ter no máximo {rest}"
+    },
+    {
+      "id": "quantity.minimum",
+      "label": "Quantidade mínima",
+      "matchPrefix": "Indica uma quantidade válida (mínimo ",
+      "default": "Indica uma quantidade válida (mínimo {rest}",
+      "miu": "Indica uma quantidade válida. O mínimo é {rest}"
+    },
+    {
+      "id": "quantity.distribution",
+      "label": "Distribuição por designs",
+      "source": "Confirma a quantidade atribuída a cada design.",
+      "default": "Confirma a quantidade atribuída a cada design.",
+      "miu": "Confirma quantas unidades queres de cada design."
+    },
+    {
+      "id": "pack.required",
+      "label": "Pack obrigatório",
+      "source": "Escolhe um pack.",
+      "default": "Escolhe um pack.",
+      "miu": "Escolhe um dos packs para continuares."
+    },
+    {
+      "id": "pack.unassigned",
+      "label": "Unidades sem design",
+      "source": "Ainda há unidades sem design.",
+      "default": "Ainda há unidades sem design.",
+      "miu": "Ainda tens unidades deste pack sem design escolhido."
+    },
+    {
+      "id": "pack.missing",
+      "label": "Unidades por distribuir",
+      "source": "Ainda faltam unidades por distribuir.",
+      "default": "Ainda faltam unidades por distribuir.",
+      "miu": "Ainda faltam unidades por distribuir pelos designs."
+    },
+    {
+      "id": "pack.extra",
+      "label": "Unidades a mais",
+      "source": "Tens unidades a mais neste pack.",
+      "default": "Tens unidades a mais neste pack.",
+      "miu": "Tens mais unidades distribuídas do que este pack permite."
+    },
+    {
+      "id": "option.unavailable",
+      "label": "Opção deixou de estar disponível",
+      "source": "Uma das opções escolhidas deixou de estar disponível.",
+      "default": "Uma das opções escolhidas deixou de estar disponível.",
+      "miu": "Uma das opções que escolheste já não está disponível. Volta a escolhê-la para continuares."
+    },
+    {
+      "id": "option.required",
+      "label": "Opção obrigatória",
+      "source": "Escolhe uma opção.",
+      "default": "Escolhe uma opção.",
+      "miu": "Escolhe uma opção para continuares."
+    },
+    {
+      "id": "option.continue",
+      "label": "Escolha para continuar",
+      "source": "Escolhe uma opção para continuar.",
+      "default": "Escolhe uma opção para continuar.",
+      "miu": "Escolhe uma opção para continuares."
+    },
+    {
+      "id": "fields.required",
+      "label": "Campos obrigatórios",
+      "source": "Preenche os campos obrigatórios.",
+      "default": "Preenche os campos obrigatórios.",
+      "miu": "Ainda falta preencher um ou mais campos obrigatórios."
+    },
+    {
+      "id": "photo.wait",
+      "label": "Foto em envio",
+      "source": "Espera até a foto terminar de enviar.",
+      "default": "Espera até a foto terminar de enviar.",
+      "miu": "A foto ainda está a ser enviada. Espera só um instante."
+    },
+    {
+      "id": "photo.required",
+      "label": "Foto obrigatória",
+      "source": "Escolhe uma foto ou assinala que precisas de ajuda para a enviar.",
+      "default": "Escolhe uma foto ou assinala que precisas de ajuda para a enviar.",
+      "miu": "Escolhe uma foto ou assinala que precisas de ajuda para a enviar."
+    },
+    {
+      "id": "delivery.required",
+      "label": "Entrega obrigatória",
+      "source": "Escolhe como queres receber a tua encomenda.",
+      "default": "Escolhe como queres receber a tua encomenda.",
+      "miu": "Escolhe como queres receber a encomenda."
+    },
+    {
+      "id": "contact.required",
+      "label": "Contacto obrigatório",
+      "source": "Preenche os dados de contacto.",
+      "default": "Preenche os dados de contacto.",
+      "miu": "Ainda falta preencher os dados de contacto."
+    },
+    {
+      "id": "nif.invalid",
+      "label": "NIF inválido",
+      "source": "O NIF deve ter 9 dígitos.",
+      "default": "O NIF deve ter 9 dígitos.",
+      "miu": "O NIF deve ter exatamente 9 dígitos."
+    },
+    {
+      "id": "builder.product",
+      "label": "Produto na personalização",
+      "source": "Escolhe pelo menos um produto.",
+      "default": "Escolhe pelo menos um produto.",
+      "miu": "Escolhe pelo menos um produto para este design."
+    },
+    {
+      "id": "builder.product.add",
+      "label": "Adicionar produto",
+      "source": "Adiciona pelo menos um produto.",
+      "default": "Adiciona pelo menos um produto.",
+      "miu": "Adiciona pelo menos um produto antes de continuares."
+    },
+    {
+      "id": "cart.edit",
+      "label": "Edição do carrinho",
+      "source": "Não foi possível carregar este item do carrinho para edição.",
+      "default": "Não foi possível carregar este item do carrinho para edição.",
+      "miu": "Não consegui abrir este item para edição. Tenta voltar ao carrinho e abri-lo de novo."
+    },
+    {
+      "id": "cart.empty",
+      "label": "Carrinho vazio",
+      "source": "O carrinho está vazio.",
+      "default": "O carrinho está vazio.",
+      "miu": "O carrinho ainda está vazio. Adiciona primeiro um produto."
+    },
+    {
+      "id": "checkout.name",
+      "label": "Nome no checkout",
+      "source": "Indica o teu nome.",
+      "default": "Indica o teu nome.",
+      "miu": "Ainda falta indicares o teu nome."
+    },
+    {
+      "id": "checkout.contact",
+      "label": "Contacto no checkout",
+      "source": "Indica um email ou telemóvel válido para podermos confirmar a encomenda.",
+      "default": "Indica um email ou telemóvel válido para podermos confirmar a encomenda.",
+      "miu": "Indica um email ou telemóvel válido para a Mia poder confirmar a encomenda."
+    },
+    {
+      "id": "checkout.delivery",
+      "label": "Entrega no checkout",
+      "source": "Escolhe uma forma de entrega.",
+      "default": "Escolhe uma forma de entrega.",
+      "miu": "Escolhe uma forma de entrega para continuares."
+    },
+    {
+      "id": "checkout.copy.email",
+      "label": "Email da cópia",
+      "source": "Indica um email válido para receber a cópia.",
+      "default": "Indica um email válido para receber a cópia.",
+      "miu": "Indica um email válido para receberes a cópia da encomenda."
+    },
+    {
+      "id": "audio.finish",
+      "label": "Áudio em gravação",
+      "source": "Solta o botão do áudio para terminar a gravação.",
+      "default": "Solta o botão do áudio para terminar a gravação.",
+      "miu": "Solta o botão do áudio para terminares a gravação."
+    },
+    {
+      "id": "pack.too-small",
+      "label": "Pack demasiado pequeno",
+      "matchContains": "para todos os designs que escolheste.",
+      "default": "Este pack não chega para todos os designs que escolheste. Escolhe um número maior.",
+      "miu": "Esse pack não chega para todos os designs que escolheste. Escolhe um número maior."
+    },
+    {
+      "id": "pack.save-more",
+      "label": "Sugestão de poupança",
+      "source": "Escolhe um pack maior para começares a poupar.",
+      "default": "Escolhe um pack maior para começares a poupar.",
+      "miu": "Se escolheres um pack maior, começas a poupar no preço por unidade."
+    },
+    {
+      "id": "upload.wait.single",
+      "label": "Anexo em envio",
+      "source": "Espera até o anexo terminar de enviar.",
+      "default": "Espera até o anexo terminar de enviar.",
+      "miu": "O anexo ainda está a ser enviado. Espera só um instante."
+    },
+    {
+      "id": "palette.exact",
+      "label": "Combinação de cores",
+      "matchPrefix": "Escolhe uma combinação ou exatamente ",
+      "default": "Escolhe uma combinação ou exatamente {rest}",
+      "miu": "Escolhe uma combinação ou exatamente {rest}"
+    },
+    {
+      "id": "selection.more",
+      "label": "Faltam opções",
+      "source": "Escolhe mais opções para continuar.",
+      "default": "Escolhe mais opções para continuar.",
+      "miu": "Ainda faltam opções por escolher antes de continuares."
+    },
+    {
+      "id": "selection.too-many",
+      "label": "Opções a mais",
+      "source": "Escolheste opções a mais.",
+      "default": "Escolheste opções a mais.",
+      "miu": "Escolheste opções a mais. Retira uma para continuares."
+    },
+    {
+      "id": "text.too-long",
+      "label": "Texto demasiado longo",
+      "source": "O texto é demasiado longo.",
+      "default": "O texto é demasiado longo.",
+      "miu": "Esse texto ficou demasiado longo para esta opção."
+    },
+    {
+      "id": "builder.previous",
+      "label": "Produtos no passo anterior",
+      "source": "Escolhe pelo menos um produto no passo anterior.",
+      "default": "Escolhe pelo menos um produto no passo anterior.",
+      "miu": "Volta ao passo anterior e escolhe pelo menos um produto."
+    },
+    {
+      "id": "builder.image-product",
+      "label": "Produto para cada imagem",
+      "matchPrefix": "Escolhe pelo menos um produto para a tua ",
+      "default": "Escolhe pelo menos um produto para a tua {rest}",
+      "miu": "Ainda falta escolher pelo menos um produto para a tua {rest}"
+    },
+    {
+      "id": "builder.options",
+      "label": "Opções da personalização",
+      "matchPrefix": "Preenche as opções ",
+      "default": "Preenche as opções {rest}",
+      "miu": "Ainda falta preencher as opções {rest}"
+    },
+    {
+      "id": "builder.quantity",
+      "label": "Quantidade na personalização",
+      "matchPrefix": "Escolhe uma quantidade válida em ",
+      "default": "Escolhe uma quantidade válida em {rest}",
+      "miu": "Escolhe uma quantidade válida em {rest}"
+    },
+    {
+      "id": "upload.types",
+      "label": "Tipo de ficheiro",
+      "source": "Escolhe imagens JPG, PNG, WebP ou HEIC, ou ficheiros PDF.",
+      "default": "Escolhe imagens JPG, PNG, WebP ou HEIC, ou ficheiros PDF.",
+      "miu": "Esse tipo de ficheiro não dá aqui. Usa JPG, PNG, WebP, HEIC ou PDF."
+    },
+    {
+      "id": "upload.image-types",
+      "label": "Tipo de imagem",
+      "source": "Escolhe imagens JPG, PNG, WebP ou HEIC.",
+      "default": "Escolhe imagens JPG, PNG, WebP ou HEIC.",
+      "miu": "Esse tipo de ficheiro não dá aqui. Usa JPG, PNG, WebP ou HEIC."
+    },
+    {
+      "id": "upload.too-heavy",
+      "label": "Ficheiro demasiado pesado",
+      "matchPrefix": "Este ficheiro é demasiado pesado (máximo ",
+      "default": "Este ficheiro é demasiado pesado (máximo {rest}",
+      "miu": "Esse ficheiro é demasiado pesado. O máximo é {rest}"
+    },
+    {
+      "id": "upload.send-failed",
+      "label": "Falha ao enviar ficheiro",
+      "source": "Não foi possível enviar o ficheiro.",
+      "default": "Não foi possível enviar o ficheiro.",
+      "miu": "Não consegui enviar esse ficheiro. Tenta novamente."
+    },
+    {
+      "id": "upload.remove-failed",
+      "label": "Falha ao remover ficheiro",
+      "source": "Não foi possível remover o ficheiro.",
+      "default": "Não foi possível remover o ficheiro.",
+      "miu": "Não consegui remover esse ficheiro. Tenta novamente."
+    },
+    {
+      "id": "audio.permission",
+      "label": "Permissão do microfone",
+      "source": "Não foi possível usar o microfone. Confirma a permissão e tenta novamente.",
+      "default": "Não foi possível usar o microfone. Confirma a permissão e tenta novamente.",
+      "miu": "Não consegui usar o microfone. Confirma a permissão e tenta novamente."
+    },
+    {
+      "id": "orders.suspended",
+      "label": "Encomendas encerradas",
+      "source": "Lamento, mas já não é possível fazer encomendas para o Congresso de 2026.",
+      "default": "Lamento, mas já não é possível fazer encomendas para o Congresso de 2026.",
+      "miu": "Já não é possível fazer encomendas para o Congresso de 2026."
+    },
+    {
+      "id": "pack.savings",
+      "label": "Poupança deste pack",
+      "matchPrefix": "Com este pack poupas ",
+      "default": "Com este pack poupas {rest}",
+      "miu": "Com este pack poupas {rest}"
+    },
+    {
+      "id": "porta-folhetos.rings",
+      "source": "Escolhe a cor das argolas.",
+      "default": "Escolhe a cor das argolas.",
+      "miu": "Escolhe a cor das argolas para continuares."
+    },
+    {
+      "id": "porta-folhetos.ribbon",
+      "source": "Escolhe a cor da fita.",
+      "default": "Escolhe a cor da fita.",
+      "miu": "Escolhe a cor da fita para continuares."
+    },
+    {
+      "id": "porta-folhetos.finish",
+      "source": "Escolhe o acabamento.",
+      "default": "Escolhe o acabamento.",
+      "miu": "Escolhe o acabamento que queres para o porta-folhetos."
+    },
+    {
+      "id": "porta-folhetos.size",
+      "source": "Escolhe o formato que queres.",
+      "default": "Escolhe o formato que queres.",
+      "miu": "Escolhe A4, A6 ou o conjunto A4 + A6."
+    },
+    {
+      "id": "help.image.max",
+      "label": "Imagem demasiado pesada no envio rápido",
+      "source": "Cada imagem pode ter no máximo 15 MB.",
+      "default": "Cada imagem pode ter no máximo 15 MB.",
+      "miu": "Essa imagem é demasiado pesada. Aqui o máximo é 15 MB por imagem."
+    },
+    {
+      "id": "help.photo.required",
+      "label": "Foto obrigatória no envio rápido",
+      "source": "Escolhe pelo menos uma foto.",
+      "default": "Escolhe pelo menos uma foto.",
+      "miu": "Escolhe pelo menos uma foto para continuares."
+    },
+    {
+      "id": "help.photos.send",
+      "label": "Falha a enviar fotos",
+      "source": "Não foi possível enviar as fotos.",
+      "default": "Não foi possível enviar as fotos.",
+      "miu": "Não consegui enviar as fotos. Tenta novamente."
+    },
+    {
+      "id": "help.finish",
+      "label": "Falha a concluir envio rápido",
+      "source": "Não foi possível concluir o envio.",
+      "default": "Não foi possível concluir o envio.",
+      "miu": "Não consegui concluir o envio. Tenta novamente."
+    },
+    {
+      "id": "help.name-photo",
+      "label": "Nome e foto obrigatórios",
+      "source": "Indica o teu nome e escolhe pelo menos uma foto.",
+      "default": "Indica o teu nome e escolhe pelo menos uma foto.",
+      "miu": "Ainda falta o teu nome ou pelo menos uma foto."
+    },
+    {
+      "id": "help.photo.invalid",
+      "label": "Foto deixou de ser válida",
+      "source": "Uma das fotos já não é válida. Escolhe-a novamente.",
+      "default": "Uma das fotos já não é válida. Escolhe-a novamente.",
+      "miu": "Uma das fotos já não é válida. Escolhe-a outra vez."
+    },
+    {
+      "id": "help.photo.expired",
+      "label": "Foto expirada",
+      "source": "Uma das fotos expirou. Escolhe-a novamente.",
+      "default": "Uma das fotos expirou. Escolhe-a novamente.",
+      "miu": "Uma das fotos expirou. Escolhe-a outra vez."
+    },
+    {
+      "id": "help.reference",
+      "label": "Falha ao reservar referência",
+      "source": "Não foi possível reservar uma referência. Tenta novamente.",
+      "default": "Não foi possível reservar uma referência. Tenta novamente.",
+      "miu": "Não consegui criar a referência agora. Tenta novamente."
+    },
+    {
+      "id": "help.finish.retry",
+      "label": "Envio incompleto com fotos preservadas",
+      "source": "Não foi possível concluir o envio. As fotos ficaram disponíveis para tentares novamente.",
+      "default": "Não foi possível concluir o envio. As fotos ficaram disponíveis para tentares novamente.",
+      "miu": "Não consegui concluir o envio, mas as fotos ficaram guardadas para tentares novamente."
+    },
+    {
+      "id": "faq.load",
+      "label": "Falha a carregar perguntas frequentes",
+      "source": "Não foi possível carregar as perguntas. Podes falar com a Mia.",
+      "default": "Não foi possível carregar as perguntas. Podes falar com a Mia.",
+      "miu": "Não consegui carregar as perguntas frequentes. Podes falar com a Mia pelo contacto."
+    },
+    {
+      "id": "option.generated",
+      "label": "Escolha gerada pelo passo",
+      "matchPrefix": "Escolhe ",
+      "default": "Escolhe {rest}",
+      "miu": "Escolhe {rest}"
+    }
+  ]
+}

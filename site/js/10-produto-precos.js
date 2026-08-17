@@ -45,7 +45,16 @@
   }
 
   function supportsAssortedDesigns(product) {
-    return !!(product && ["crachas", "imanes", "imanes-recortados", "caderninhos", "bloquinhos", "stickers", "marcadores", "marcadores-magneticos"].indexOf(productFamily(product)) !== -1);
+    if (!product) {
+      return false;
+    }
+    if (product.supportsAssortedDesigns === true) {
+      return true;
+    }
+    if (product.supportsAssortedDesigns === false) {
+      return false;
+    }
+    return ["crachas", "imanes", "imanes-recortados", "caderninhos", "bloquinhos", "stickers", "marcadores", "marcadores-magneticos"].indexOf(productFamily(product)) !== -1;
   }
 
   function isAssortedSelected(product) {
@@ -124,10 +133,31 @@
     return records;
   }
 
-  function optionDrawerItem(drawer, value) {
-    return drawer && Array.isArray(drawer.items) ? drawer.items.filter(function (item) {
+  function optionDrawerAvailableItems(product, drawer) {
+    var items = drawer && Array.isArray(drawer.items) ? drawer.items : [];
+    var selectedDesigns = product ? selectedDesignItems(product) : [];
+    var availability;
+    var allowed;
+
+    if (selectedDesigns.length !== 1 || !drawer || !drawer.field) {
+      return items;
+    }
+    availability = selectedDesigns[0].optionAvailability;
+    allowed = availability && Array.isArray(availability[drawer.field])
+      ? availability[drawer.field].map(String)
+      : null;
+    if (!allowed) {
+      return items;
+    }
+    return items.filter(function (item) {
+      return item && allowed.indexOf(String(item.value)) !== -1;
+    });
+  }
+
+  function optionDrawerItem(drawer, value, product) {
+    return optionDrawerAvailableItems(product, drawer).filter(function (item) {
       return item && String(item.value) === String(value == null ? "" : value);
-    })[0] || null : null;
+    })[0] || null;
   }
 
   function ensureOptionDrawerSelections(product) {
@@ -137,7 +167,7 @@
       var current = state.selections[field];
       var fallback = drawer.defaultValue != null ? String(drawer.defaultValue) : "";
 
-      if ((current == null || current === "") && fallback && optionDrawerItem(drawer, fallback)) {
+      if ((current == null || current === "") && fallback && optionDrawerItem(drawer, fallback, product)) {
         state.selections[field] = fallback;
       }
     });
@@ -147,7 +177,7 @@
     ensureOptionDrawerSelections(product);
     return optionDrawerRecords(product).map(function (record) {
       var field = String(record.drawer.field);
-      var item = optionDrawerItem(record.drawer, state.selections[field]);
+      var item = optionDrawerItem(record.drawer, state.selections[field], product);
       return item ? { step: record.step, drawer: record.drawer, item: item } : null;
     }).filter(Boolean);
   }
@@ -936,7 +966,11 @@
   }
 
   function getPackQuantity(product) {
+    var fixedQuantity = Math.max(0, parseInt(product && product.fixedQuantity, 10) || 0);
     var pack = Number(state.selections.pack_quantity || 0);
+    if (fixedQuantity > 0) {
+      return fixedQuantity;
+    }
     if (isCustomArtworkSelected(product) && !isCadernosProduct(product)) {
       return customArtworkTotalQuantity(product);
     }
@@ -1088,10 +1122,16 @@
     }
 
     if (!findStep(product, "pack")) {
+      var fixedQuantity = getPackQuantity(product);
+
       state.selections.design_quantities = {};
+      if (fixedQuantity > 0 && items.length === 1) {
+        state.selections.design_quantities[items[0].value] = fixedQuantity;
+        state.selections.pack_quantity = fixedQuantity;
+      }
       state.quantitySignature = selectedItemsSignature(items);
       state.quantitiesTouched = false;
-      state.quantityPackBaseline = 0;
+      state.quantityPackBaseline = fixedQuantity;
       return;
     }
 

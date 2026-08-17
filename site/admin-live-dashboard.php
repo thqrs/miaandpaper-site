@@ -41,7 +41,7 @@ function lr_json_array($raw) {
     return is_array($decoded) ? $decoded : array();
 }
 function lr_main_v2_slugs() {
-    return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'personalizacao');
+    return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'porta-chaves', 'porta-folhetos', 'stickers', 'marcadores', 'marcadores-magneticos', 'personalizacao');
 }
 function lr_congress_slugs() {
     return array('crachas', 'imanes', 'caderninhos', 'cadernos');
@@ -413,7 +413,7 @@ function lr_product_friendly_name($slug) {
     $base = lr_product_base_slug($slug);
     $context = lr_product_context($slug);
     static $m = array(
-        'crachas'=>'Crachás','crachas-loja'=>'Crachás',
+        'crachas'=>'Crachás','crachas-loja'=>'Crachás','porta-chaves'=>'Porta-chaves','porta-folhetos'=>'Porta-folhetos',
         'imanes'=>'Ímanes','imanes-loja'=>'Ímanes',
         'caderninhos'=>'Mini-Cadernos','mini-cadernos'=>'Mini-Cadernos','blocos-a6'=>'Bloco Argolas A6',
         'cadernos'=>'Cadernos','cadernos-anuais'=>'Cadernos anuais','agendas'=>'Agendas',
@@ -1060,6 +1060,19 @@ function lr_funnel_lines() {
             array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
             array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
         )),
+        'porta-chaves' => array('label' => 'Porta-chaves · site', 'color' => '#d88ca5', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
+            array('id' => 'origem', 'label' => 'Catálogo / teu design', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
+            array('id' => 'tamanho', 'label' => 'Tamanho', 'steps' => array('size')),
+            array('id' => 'quantidade', 'label' => 'Quantidade', 'steps' => array('pack')),
+            array('id' => 'cartao', 'label' => 'Cartão', 'steps' => array('details')),
+        )),
+        'porta-folhetos' => array('label' => 'Porta-folhetos · site', 'color' => '#b18a5d', 'stations' => array(
+            array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
+            array('id' => 'argolas-fita', 'label' => 'Argolas e fita', 'steps' => array('hardware')),
+            array('id' => 'acabamento', 'label' => 'Acabamento', 'steps' => array('finish')),
+            array('id' => 'tamanho', 'label' => 'Formato', 'steps' => array('size')),
+        )),
         'imanes-loja' => array('label' => 'Ímanes · site', 'color' => '#6cb4a8', 'stations' => array(
             array('id' => 'designs', 'label' => 'Passo 1', 'steps' => array('designs')),
             array('id' => 'origem', 'label' => 'Catálogo / teu design', 'steps' => array('design_source_catalog', 'design_source_custom', 'artwork_upload')),
@@ -1273,7 +1286,7 @@ function lr_event_to_station($name, $stepId, $slug, $landing = '', $submitted = 
     if ($name === 'wizard_started' || $name === 'product_view') return 'split';
     if ($name === 'site_landed') {
         $lc = strtolower((string)$landing);
-        $pages = array('crachas-loja', 'imanes-loja', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'crachas', 'imanes', 'caderninhos', 'cadernos', 'molduras', 'congressos/2026');
+        $pages = array('crachas-loja', 'imanes-loja', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'porta-chaves', 'porta-folhetos', 'stickers', 'marcadores', 'marcadores-magneticos', 'crachas', 'imanes', 'caderninhos', 'cadernos', 'molduras', 'congressos/2026');
         foreach ($pages as $page) {
             if (strpos($lc, $page) !== false) return 'split';
         }
@@ -1528,7 +1541,7 @@ $teiaPayload = array(
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Live Dashboard · Mia &amp; Paper admin</title>
 <link rel="stylesheet" href="admin-nav.css?v=2026081001">
-<script src="admin-nav.js?v=2026081001" defer></script>
+<script src="admin-nav.js?v=2026081701" defer></script>
 <style>
 :root {
   --ink: #30251f;
@@ -2303,7 +2316,7 @@ $lrPayloadActivo = $dashboardView === 'teia' ? $teiaPayload : $replayPayload;
 
   var lineLabel = {
     home: 'Página inicial',
-    'crachas-loja': 'Crachás · site', 'imanes-loja': 'Ímanes · site',
+    'crachas-loja': 'Crachás · site', 'porta-chaves': 'Porta-chaves · site', 'porta-folhetos': 'Porta-folhetos · site', 'imanes-loja': 'Ímanes · site',
     'mini-cadernos': 'Mini-Cadernos · site', 'blocos-a6': 'Bloco Argolas A6 · site', 'cadernos-anuais': 'Cadernos anuais · site', agendas: 'Agendas · site',
     bloquinhos: 'Bloquinhos · site', 'imanes-recortados': 'Ímanes recortados · site',
     personalizacao: 'Personalização · site',

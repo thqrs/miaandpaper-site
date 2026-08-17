@@ -1,45 +1,36 @@
 {
-  "slug": "crachas-loja",
-  "name": "Crachás",
+  "slug": "porta-chaves",
+  "name": "Porta-chaves",
   "brand": "Mia & Paper",
   "homeUrl": "index.html",
   "instagramUrl": "https://www.instagram.com/miaandpaper/",
   "form": {
     "action": "send-order.php",
-    "returnTo": "crachas.html"
+    "returnTo": "porta-chaves.html"
   },
   "intro": {
-    "eyebrow": "Crachás",
+    "eyebrow": "Porta-chaves",
     "title": "Escolhe um design",
-    "text": "Podes escolher um dos nossos designs."
+    "text": "Escolhe o design que queres levar contigo."
   },
   "prices": {
-    "25 mm": {
-      "1": 150,
-      "3": 436,
-      "5": 712,
-      "10": 1350,
-      "24": 3060,
-      "48": 5760,
-      "96": 11520
-    },
     "32 mm": {
-      "1": 175,
-      "3": 509,
-      "5": 831,
-      "10": 1575,
-      "24": 3570,
-      "48": 6720,
-      "96": 13440
+      "1": 225,
+      "3": 659,
+      "5": 1081,
+      "10": 2075,
+      "24": 4770,
+      "48": 9120,
+      "96": 18240
     },
     "58 mm": {
-      "1": 200,
-      "3": 582,
-      "5": 950,
-      "10": 1800,
-      "24": 4080,
-      "48": 7680,
-      "96": 15360
+      "1": 250,
+      "3": 732,
+      "5": 1200,
+      "10": 2300,
+      "24": 5280,
+      "48": 10080,
+      "96": 20160
     }
   },
   "deliveryOptions": [
@@ -121,7 +112,7 @@
           "sectionId": "novidades",
           "sectionOrder": 1,
           "imageEdits": {
-            "crachas-loja:designs:cracha-braille-01:main": {
+            "porta-chaves:designs:cracha-braille-01:main": {
               "zoom": 66,
               "positionY": 1
             }
@@ -144,7 +135,7 @@
           "sectionId": "novidades",
           "sectionOrder": 2,
           "imageEdits": {
-            "crachas-loja:designs:cracha-esperanca-01:main": {
+            "porta-chaves:designs:cracha-esperanca-01:main": {
               "zoom": 67,
               "positionX": 1
             }
@@ -167,7 +158,7 @@
           "sectionId": "novidades",
           "sectionOrder": 3,
           "imageEdits": {
-            "crachas-loja:designs:cracha-esperanca-02:main": {
+            "porta-chaves:designs:cracha-esperanca-02:main": {
               "zoom": 71,
               "positionX": 3,
               "positionY": 0
@@ -191,7 +182,7 @@
           "sectionId": "novidades",
           "sectionOrder": 4,
           "imageEdits": {
-            "crachas-loja:designs:cracha-esperanca-03:main": {
+            "porta-chaves:designs:cracha-esperanca-03:main": {
               "zoom": 67,
               "rotation": 0,
               "positionX": -2
@@ -215,7 +206,7 @@
           "sectionId": "novidades",
           "sectionOrder": 5,
           "imageEdits": {
-            "crachas-loja:designs:cracha-esperanca-04:main": {
+            "porta-chaves:designs:cracha-esperanca-04:main": {
               "zoom": 70,
               "positionY": 2,
               "positionX": 1
@@ -239,7 +230,7 @@
           "sectionId": "novidades",
           "sectionOrder": 6,
           "imageEdits": {
-            "crachas-loja:designs:cracha-lingua-gestual-01:main": {
+            "porta-chaves:designs:cracha-lingua-gestual-01:main": {
               "zoom": 70,
               "positionX": 1
             }
@@ -262,7 +253,7 @@
           "sectionId": "novidades",
           "sectionOrder": 7,
           "imageEdits": {
-            "crachas-loja:designs:cracha-lingua-gestual-02:main": {
+            "porta-chaves:designs:cracha-lingua-gestual-02:main": {
               "zoom": 67,
               "positionY": 2,
               "positionX": 0
@@ -718,31 +709,12 @@
       "selection": "single",
       "items": [
         {
-          "id": "25",
-          "value": "25 mm",
-          "priceKey": "25 mm",
-          "title": "Pequeno",
-          "subtitle": "2,5 cm x 2,5 cm (25 mm)",
-          "note": "Mais discreto",
-          "visual": "pin-small",
-          "image": "content/designs/loja/crachas-loja/uploads/crachas-25-3d7d4ac2504c.webp",
-          "frameScale": 149,
-          "imageZoom": 60,
-          "frameWidth": 90,
-          "frameHeight": 90,
-          "sideImage": "content/designs/loja/crachas-loja/uploads/crachas-25-side-example.webp",
-          "sideImagePositionY": -17,
-          "sideImageZoom": 99,
-          "sideImageRotation": 0,
-          "sideImagePositionX": 2
-        },
-        {
           "id": "32",
           "value": "32 mm",
           "priceKey": "32 mm",
-          "title": "Médio",
+          "title": "32 mm",
           "subtitle": "3,2 cm x 3,2 cm (32 mm)",
-          "note": "Maior visibilidade",
+          "note": "Formato de porta-chaves",
           "visual": "pin-large",
           "image": "content/designs/loja/crachas-loja/uploads/crachas-32-accc814bd59f.webp",
           "imageZoom": 64,
@@ -758,9 +730,9 @@
           "id": "58",
           "value": "58 mm",
           "priceKey": "58 mm",
-          "title": "Grande",
+          "title": "58 mm",
           "subtitle": "5,8 cm x 5,8 cm (58 mm)",
-          "note": "Maior impacto",
+          "note": "Formato de porta-chaves",
           "visual": "pin-large",
           "image": "content/designs/loja/crachas-loja/uploads/crachas-32-accc814bd59f.webp",
           "frameWidth": 104,
@@ -768,13 +740,14 @@
           "imageZoom": 64
         }
       ],
-      "sideImageWraps": true
+      "sideImageWraps": true,
+      "display": "crachas-cards"
     },
     {
       "id": "pack",
       "label": "Pack",
-      "title": "Diz-me quantos crachás queres",
-      "text": "Quanto maior o pack, melhor o preço por unidade",
+      "title": "Diz-me quantos porta-chaves queres",
+      "text": "Os packs seguem os crachás, com mais 0,50 € por unidade.",
       "template": "quantity-builder",
       "field": "pack_quantity",
       "selection": "pack",
@@ -783,43 +756,43 @@
           "id": "pack-1",
           "quantity": 1,
           "title": "1",
-          "subtitle": "crachá"
+          "subtitle": "porta-chaves"
         },
         {
           "id": "pack-3",
           "quantity": 3,
           "title": "3",
-          "subtitle": "crachás"
+          "subtitle": "porta-chaves"
         },
         {
           "id": "pack-5",
           "quantity": 5,
           "title": "5",
-          "subtitle": "crachás"
+          "subtitle": "porta-chaves"
         },
         {
           "id": "pack-10",
           "quantity": 10,
           "title": "10",
-          "subtitle": "crachás"
+          "subtitle": "porta-chaves"
         },
         {
           "id": "pack-24",
           "quantity": 24,
           "title": "24",
-          "subtitle": "crachás"
+          "subtitle": "porta-chaves"
         },
         {
           "id": "pack-48",
           "quantity": 48,
           "title": "48",
-          "subtitle": "crachás"
+          "subtitle": "porta-chaves"
         },
         {
           "id": "pack-96",
           "quantity": 96,
           "title": "96",
-          "subtitle": "crachás"
+          "subtitle": "porta-chaves"
         }
       ],
       "minimumQuantity": 1,
@@ -832,7 +805,7 @@
       "id": "details",
       "label": "Dados",
       "title": "Vamos personalizar o teu Cartão de Apresentação?",
-      "text": "Estes dados ajudam-nos a tornar a tua encomenda única",
+      "text": "Se quiseres, indica os dados que devem acompanhar os porta-chaves.",
       "template": "details-form",
       "fields": [
         {
@@ -858,7 +831,7 @@
           "required": false,
           "autocomplete": "organization",
           "section": "Dados para o Cartão de Apresentação",
-          "sectionText": "Atenção: Estes dados pessoais serão imprimidos e colocados no Cartão de Apresentação que acompanha cada um dos Crachás"
+          "sectionText": "Estes dados pessoais serão impressos no Cartão de Apresentação que acompanha os porta-chaves."
         }
       ]
     },
@@ -912,26 +885,22 @@
       "template": "confirm"
     }
   ],
-  "unitLabel": "crachás",
-  "unitSingular": "crachá",
-  "unitShort": "crachá",
+  "unitLabel": "porta-chaves",
+  "unitSingular": "porta-chaves",
+  "unitShort": "porta-chaves",
   "imageShape": "round",
   "giftRequest": {
     "label": "Penso oferecer estes artigos a pessoas da minha congregação.",
     "text": "Escolhe esta opção se quiseres que a Mia te ajude a escolher designs únicos para a tua congregação."
   },
-  "defaultPriceKey": "25 mm",
-  "family": "crachas",
+  "defaultPriceKey": "32 mm",
+  "family": "porta-chaves",
   "catalogContext": "main-v2",
   "orderFlow": "catalog-or-custom",
   "minimumQuantity": 1,
   "pricingMode": "tier-unit",
   "allowUnitDiscounts": true,
   "quantityPricingSwitchByPriceKey": {
-    "25 mm": {
-      "quantityTiers": true,
-      "sliderMaximum": 150
-    },
     "32 mm": {
       "quantityTiers": true,
       "sliderMaximum": 150
@@ -979,5 +948,6 @@
       "subtitle": "Brilho com reflexos coloridos",
       "extraPriceCentsPerUnit": 25
     }
-  ]
+  ],
+  "supportsAssortedDesigns": true
 }

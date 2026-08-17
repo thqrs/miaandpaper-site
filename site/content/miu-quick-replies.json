@@ -2856,6 +2856,276 @@
           "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
         }
       ]
+    },
+    "main:porta-chaves:designs": {
+      "scope": "main",
+      "productSlug": "porta-chaves",
+      "productName": "Porta-chaves",
+      "stepId": "designs",
+      "stepName": "Escolhe os teus designs favoritos",
+      "stepOrder": 0,
+      "items": [
+        {
+          "id": "main-porta-chaves-designs-different-designs",
+          "question": "Posso escolher vários designs neste passo?",
+          "answer": "Sim. Podes selecionar vários designs no mesmo pedido e, no passo da quantidade, indicar quantas unidades queres de cada design."
+        },
+        {
+          "id": "main-porta-chaves-designs-own-design",
+          "question": "Posso usar um desenho, fotografia ou ficheiro meu?",
+          "answer": "Sim. Usa “Personalizar o meu porta-chaves” neste passo ou abre a [Personalização](personalizacao.html) para enviares o teu próprio ficheiro."
+        },
+        {
+          "id": "main-porta-chaves-designs-change-mind",
+          "question": "Posso mudar o design antes de enviar o pedido?",
+          "answer": "Sim. Enquanto ainda estás a preencher o pedido, podes voltar aos passos anteriores e alterar a escolha antes de o enviares."
+        }
+      ]
+    },
+    "main:porta-chaves:size": {
+      "scope": "main",
+      "productSlug": "porta-chaves",
+      "productName": "Porta-chaves",
+      "stepId": "size",
+      "stepName": "Escolhe o tamanho",
+      "stepOrder": 1,
+      "items": [
+        {
+          "id": "main-porta-chaves-size-difference",
+          "question": "Que tamanhos de porta-chaves existem?",
+          "answer": "Neste passo podes escolher 32 mm (3,2 cm) ou 58 mm (5,8 cm)."
+        },
+        {
+          "id": "main-porta-chaves-size-multiple",
+          "question": "Qual é a diferença entre 32 mm e 58 mm?",
+          "answer": "O de 32 mm é mais pequeno e discreto; o de 58 mm dá bastante mais espaço e destaque ao design."
+        },
+        {
+          "id": "main-porta-chaves-size-preview",
+          "question": "Quanto custa um porta-chaves?",
+          "answer": "Uma unidade de 32 mm custa 2,25 € e uma de 58 mm custa 2,50 €. Para quantidades maiores, o preço depende do pack escolhido e é mostrado no passo seguinte."
+        }
+      ]
+    },
+    "main:porta-chaves:pack": {
+      "scope": "main",
+      "productSlug": "porta-chaves",
+      "productName": "Porta-chaves",
+      "stepId": "pack",
+      "stepName": "Diz-me quantos porta-chaves queres",
+      "stepOrder": 2,
+      "items": [
+        {
+          "id": "main-porta-chaves-pack-discount",
+          "question": "Há desconto para quantidades maiores?",
+          "answer": "Sim. Este artigo usa escalões de quantidade, por isso o valor unitário pode baixar quando passas para um escalão maior."
+        },
+        {
+          "id": "main-porta-chaves-pack-split",
+          "question": "Posso repartir a quantidade por designs diferentes?",
+          "answer": "Sim. Se escolheste vários designs, podes definir quantas unidades queres de cada um."
+        },
+        {
+          "id": "main-porta-chaves-pack-how-much",
+          "question": "Como escolho a quantidade?",
+          "answer": "Podes usar os botões de atalho ou escrever diretamente a quantidade que queres, a partir de 1 unidade."
+        }
+      ]
+    },
+    "main:porta-chaves:details": {
+      "scope": "main",
+      "productSlug": "porta-chaves",
+      "productName": "Porta-chaves",
+      "stepId": "details",
+      "stepName": "Vamos personalizar o teu Cartão de Apresentação?",
+      "stepOrder": 3,
+      "items": [
+        {
+          "id": "main-porta-chaves-details-what-card",
+          "question": "Para que servem estes dados?",
+          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+        },
+        {
+          "id": "main-porta-chaves-details-card-data",
+          "question": "Que dados posso colocar no Cartão de Apresentação?",
+          "answer": "Podes indicar Nome, Telemóvel ou Email e Congregação."
+        },
+        {
+          "id": "main-porta-chaves-details-required",
+          "question": "É obrigatório preencher estes campos?",
+          "answer": "Não. Os três campos deste passo são opcionais e podes avançar sem os preencher."
+        }
+      ]
+    },
+    "main:porta-chaves:delivery_contact": {
+      "scope": "main",
+      "productSlug": "porta-chaves",
+      "productName": "Porta-chaves",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-porta-chaves-delivery_contact-delivery-methods",
+          "question": "Que opções de entrega existem?",
+          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+        },
+        {
+          "id": "main-porta-chaves-delivery_contact-contact-info",
+          "question": "Que dados tenho de preencher aqui?",
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+        },
+        {
+          "id": "main-porta-chaves-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+        }
+      ]
+    },
+    "main:porta-chaves:confirm": {
+      "scope": "main",
+      "productSlug": "porta-chaves",
+      "productName": "Porta-chaves",
+      "stepId": "confirm",
+      "stepName": "Confirma o teu pedido",
+      "stepOrder": 5,
+      "items": [
+        {
+          "id": "main-porta-chaves-confirm-after-submit",
+          "question": "O que acontece depois de enviar o pedido?",
+          "answer": "O pedido é enviado para a Mia. Quando o total e a entrega já estão definidos, o site pode mostrar logo os dados para pagamento por MB WAY; nos restantes casos, a Mia entra em contacto para confirmar o que faltar. A preparação só começa após confirmação do pagamento."
+        },
+        {
+          "id": "main-porta-chaves-confirm-payment-methods",
+          "question": "Como funciona o pagamento?",
+          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+        },
+        {
+          "id": "main-porta-chaves-confirm-change-before-send",
+          "question": "Posso alterar alguma coisa antes de enviar?",
+          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+        }
+      ]
+    },
+    "main:porta-folhetos:designs": {
+      "scope": "main",
+      "productSlug": "porta-folhetos",
+      "productName": "Porta-folhetos",
+      "stepId": "designs",
+      "stepName": "Design",
+      "items": [
+        {
+          "id": "main-porta-folhetos-designs-drawer",
+          "question": "Posso ver mais imagens?",
+          "answer": "Sim. Clica numa capa e abre uma gaveta com mais imagens desse design."
+        },
+        {
+          "id": "main-porta-folhetos-designs-own",
+          "question": "Posso usar o meu design?",
+          "answer": "Sim. Para usares um ficheiro teu, entra em [Personalização](personalizacao.html) e escolhe Porta-folhetos."
+        }
+      ],
+      "stepOrder": 0
+    },
+    "main:porta-folhetos:hardware": {
+      "scope": "main",
+      "productSlug": "porta-folhetos",
+      "productName": "Porta-folhetos",
+      "stepId": "hardware",
+      "stepName": "Argolas e fita",
+      "items": [
+        {
+          "id": "main-porta-folhetos-hardware-colors",
+          "question": "Que cores existem?",
+          "answer": "Em geral tens dourado e rosa metálico. As opções mostradas neste passo são as que estão disponíveis para a capa escolhida."
+        }
+      ],
+      "stepOrder": 1
+    },
+    "main:porta-folhetos:finish": {
+      "scope": "main",
+      "productSlug": "porta-folhetos",
+      "productName": "Porta-folhetos",
+      "stepId": "finish",
+      "stepName": "Acabamento",
+      "items": [
+        {
+          "id": "main-porta-folhetos-finish-options",
+          "question": "Que acabamentos existem?",
+          "answer": "Podes escolher Matte, Glossy ou um dos três acabamentos holográficos. Clica numa opção para veres a imagem de referência."
+        }
+      ],
+      "stepOrder": 2
+    },
+    "main:porta-folhetos:size": {
+      "scope": "main",
+      "productSlug": "porta-folhetos",
+      "productName": "Porta-folhetos",
+      "stepId": "size",
+      "stepName": "Formato",
+      "items": [
+        {
+          "id": "main-porta-folhetos-size-prices",
+          "question": "Quanto custa?",
+          "answer": "O A4 custa 15 €, o A6 custa 10 € e o conjunto A4 + A6 custa 22 €."
+        },
+        {
+          "id": "main-porta-folhetos-size-both",
+          "question": "Posso encomendar os dois?",
+          "answer": "Sim. Escolhe “A4 + A6”; o conjunto fica a 22 €."
+        }
+      ],
+      "stepOrder": 3
+    },
+    "main:porta-folhetos:delivery_contact": {
+      "scope": "main",
+      "productSlug": "porta-folhetos",
+      "productName": "Porta-folhetos",
+      "stepId": "delivery_contact",
+      "stepName": "Entrega e contacto",
+      "stepOrder": 4,
+      "items": [
+        {
+          "id": "main-porta-folhetos-delivery_contact-delivery-methods",
+          "question": "Que opções de entrega existem?",
+          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+        },
+        {
+          "id": "main-porta-folhetos-delivery_contact-contact-info",
+          "question": "Que dados tenho de preencher aqui?",
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+        },
+        {
+          "id": "main-porta-folhetos-delivery_contact-nif",
+          "question": "O NIF é obrigatório?",
+          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+        }
+      ]
+    },
+    "main:porta-folhetos:confirm": {
+      "scope": "main",
+      "productSlug": "porta-folhetos",
+      "productName": "Porta-folhetos",
+      "stepId": "confirm",
+      "stepName": "Confirma o teu pedido",
+      "stepOrder": 5,
+      "items": [
+        {
+          "id": "main-porta-folhetos-confirm-after-submit",
+          "question": "O que acontece depois de enviar o pedido?",
+          "answer": "O pedido é enviado para a Mia. Quando o total e a entrega já estão definidos, o site pode mostrar logo os dados para pagamento por MB WAY; nos restantes casos, a Mia entra em contacto para confirmar o que faltar. A preparação só começa após confirmação do pagamento."
+        },
+        {
+          "id": "main-porta-folhetos-confirm-payment-methods",
+          "question": "Como funciona o pagamento?",
+          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+        },
+        {
+          "id": "main-porta-folhetos-confirm-change-before-send",
+          "question": "Posso alterar alguma coisa antes de enviar?",
+          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+        }
+      ]
     }
   },
   "intents": {

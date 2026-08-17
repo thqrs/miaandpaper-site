@@ -8,7 +8,15 @@
         "sleepAfterMs": 45000,
         "idleRandomMinMs": 14000,
         "idleRandomMaxMs": 28000,
-        "maxRoamPx": 180
+        "maxRoamPx": 180,
+        "headerPx": 26,
+        "messagePx": 26,
+        "interactivePx": 96,
+        "launcherCircle": true,
+        "headerCircle": true,
+        "messageCircle": true,
+        "promptSeconds": 5,
+        "errorsViaMiu": true
     },
     "animations": [
         {
@@ -56,7 +64,8 @@
             "motion": {
                 "type": "none",
                 "distancePx": 0
-            }
+            },
+            "products": []
         },
         {
             "id": "lili-dormir",
@@ -101,7 +110,8 @@
             "motion": {
                 "type": "none",
                 "distancePx": 0
-            }
+            },
+            "products": []
         },
         {
             "id": "lili-andar-esquerda",
@@ -142,7 +152,8 @@
             "motion": {
                 "type": "left",
                 "distancePx": 72
-            }
+            },
+            "products": []
         },
         {
             "id": "lili-andar-direita",
@@ -183,7 +194,8 @@
             "motion": {
                 "type": "right",
                 "distancePx": 72
-            }
+            },
+            "products": []
         },
         {
             "id": "lili-saltar",
@@ -216,7 +228,8 @@
             "triggers": [
                 "launcher_hover",
                 "message_sent",
-                "idle_random"
+                "idle_random",
+                "product_enter"
             ],
             "probability": 0.38,
             "weight": 2,
@@ -226,7 +239,10 @@
             "motion": {
                 "type": "jump",
                 "distancePx": 34
-            }
+            },
+            "products": [
+                "*"
+            ]
         },
         {
             "id": "lili-atirar",
@@ -268,7 +284,8 @@
             "motion": {
                 "type": "none",
                 "distancePx": 0
-            }
+            },
+            "products": []
         }
     ]
 }

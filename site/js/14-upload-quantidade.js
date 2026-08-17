@@ -1990,17 +1990,21 @@
 
     if (savedCents <= 0 || discount <= 0) {
       if (hasBetterPack) {
-        return '<p class="pack-savings-info pack-savings-info--nudge">Escolhe um pack maior para começares a poupar.</p>';
+        var nudge = "Escolhe um pack maior para começares a poupar.";
+        if (siteErrorsUseMiu() && siteSpeakError(nudge)) { return ""; }
+        return '<p class="pack-savings-info pack-savings-info--nudge">' + escapeHtml(siteErrorText(nudge, "default")) + '</p>';
       }
       return "";
     }
 
-    lines.push('Com este pack <strong>poupas ' + escapeHtml(formatCents(savedCents)) + '</strong>, ou seja <strong>' + discount + '%</strong> em relação ao preço de um ' + escapeHtml(unitSingular) + ' individual.');
+    lines.push('Com este pack poupas ' + formatCents(savedCents) + ', ou seja ' + discount + '% em relação ao preço de um ' + unitSingular + ' individual.');
     if (hasBetterPack) {
       lines.push(' Escolhe um pack maior para poupares mais.');
     }
 
-    return '<p class="pack-savings-info">' + lines.join("") + '</p>';
+    var savingsMessage = lines.join("");
+    if (siteErrorsUseMiu() && siteSpeakError(savingsMessage)) { return ""; }
+    return '<p class="pack-savings-info">' + escapeHtml(siteErrorText(savingsMessage, "default")) + '</p>';
   }
 
   function packDisabledMessageFor(product, quantity) {
@@ -2125,7 +2129,7 @@
       '<div class="pack-options">',
       cards,
       '</div>',
-      message ? '<p class="pack-disabled-message" role="status" aria-live="polite">' + escapeHtml(message) + '</p>' : "",
+      message ? (siteErrorsUseMiu() && siteSpeakError(message) ? "" : '<p class="pack-disabled-message" role="status" aria-live="polite">' + escapeHtml(siteErrorText(message, "default")) + '</p>') : "",
       adminEditor,
       '</div>'
     ].join("");

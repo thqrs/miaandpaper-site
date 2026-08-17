@@ -23,10 +23,12 @@
       loadJson("content/pricing.json").catch(function () { return null; }),
       loadJson(ORDER_HOME_CONTENT).catch(function () { return null; }),
       loadJson("content/home.json").catch(function () { return null; }),
-      loadJson(COLORS_API).catch(function () { return null; })
+      loadJson(COLORS_API).catch(function () { return null; }),
+      loadJson("content/erros.json").catch(function () { return null; })
     ]).then(function (results) {
       var product;
       var productSiteSettings = Object.assign({}, results[2] || {});
+      state.errorCatalog = results[5] || state.errorCatalog;
       var menuHome = results[3] || results[2] || {};
       if (results[0] && results[0].ordersSuspended === true) {
         productSiteSettings.ordersSuspended = true;
@@ -1051,6 +1053,7 @@
 
   applyTheme(currentTheme());
   bindThemeToggle();
+  loadJson("content/erros.json").then(function (catalog) { state.errorCatalog = catalog; }).catch(function () {});
   if (page !== "preview") {
     initPaletteLiquidEffects();
   }

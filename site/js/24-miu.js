@@ -24,7 +24,13 @@ var miuContextInterval = 0;
 var miuSleepTimer = 0;
 var miuSleepDelayMs = 45000;
 var miuAnimationConfig = null;
-var miuInteractiveAnimationConfig = null; // biblioteca de Míu corpo inteiro; não é usada dentro do chat
+var miuInteractiveAnimationConfig = null; // biblioteca do Míu de corpo inteiro, usada nos contextos interactivos
+var miuInteractiveSprite = null;
+var miuInteractiveWrap = null;
+var miuInteractiveTimer = 0;
+var miuInteractiveSerial = 0;
+var miuLauncherCallout = null;
+var miuLauncherCalloutTimer = 0;
 var miuAnimationById = {};
 var miuLauncherSprite = null;
 var miuAnimationTimer = 0;
@@ -51,12 +57,20 @@ function miuAnimationSetup(config)
     schemaVersion: 1,
     baseAnimationId: "miu-cara-calma",
     display: {
-      launcherPx: Math.max(32, Number(display.launcherPx || 46)),
+      launcherPx: Math.max(24, Number(display.launcherPx || 46)),
+      headerPx: Math.max(16, Number(display.headerPx || display.smallPx || 26)),
+      messagePx: Math.max(16, Number(display.messagePx || display.smallPx || 26)),
+      interactivePx: Math.max(48, Number(display.interactivePx || 96)),
+      launcherCircle: display.launcherCircle !== false,
+      headerCircle: display.headerCircle !== false,
+      messageCircle: display.messageCircle !== false,
+      promptSeconds: Math.max(0, Number(display.promptSeconds == null ? 5 : display.promptSeconds)),
+      errorsViaMiu: display.errorsViaMiu !== false,
       smallPx: Math.max(18, Number(display.smallPx || 26)),
       sleepAfterMs: miuSleepDelayMs,
       idleRandomMinMs: Math.max(5000, Number(display.idleRandomMinMs || 14000)),
       idleRandomMaxMs: Math.max(7000, Number(display.idleRandomMaxMs || 28000)),
-      maxRoamPx: 0
+      maxRoamPx: Math.max(0, Number(display.maxRoamPx || 180))
     },
     animations: [
       {
@@ -328,6 +342,10 @@ function miuAnimationCandidates(trigger)
   return miuAnimationConfig.animations.filter(function (animation) {
     if (!animation || !animation.enabled || !Array.isArray(animation.triggers) || animation.triggers.indexOf(trigger) === -1) { return false; }
     if (Number(miuAnimationCooldowns[animation.id] || 0) > now) { return false; }
+    // Ao entrar num produto tem de existir sempre uma animação elegível. A
+    // probabilidade continua a controlar os gatilhos aleatórios/ambientais,
+    // mas não pode fazer o product_enter desaparecer em 62% das visitas.
+    if (trigger === "product_enter") { return true; }
     var probability = Math.max(0, Math.min(1, Number(animation.probability == null ? 1 : animation.probability)));
     return Math.random() <= probability;
   });
@@ -450,7 +468,7 @@ function miuMessageNode(role, text, extraClass, avatarIndex)
     var avatar = document.createElement("span");
     row.className = "miu-message-row miu-message-row--assistant";
     miuRenderText(node, text);
-    avatar.className = "miu-message-avatar miu-face miu-face--small";
+    avatar.className = "miu-message-avatar miu-face miu-face--small miu-face--message";
     avatar.setAttribute("aria-hidden", "true");
     miuAnimationApplyStatic(avatar, avatarIndex);
     row.appendChild(node);
@@ -1094,6 +1112,149 @@ function miuSetOpen(open)
   }
 }
 
+function miuInteractiveProductSlug()
+{
+  return document.body ? String(document.body.getAttribute("data-product") || "").trim().toLowerCase() : "";
+}
+
+function miuInteractiveCandidates(trigger)
+{
+  var config = miuInteractiveAnimationConfig;
+  var slug = miuInteractiveProductSlug();
+  if (!config || !slug || !Array.isArray(config.animations)) { return []; }
+  return config.animations.filter(function (animation) {
+    if (!animation || !animation.enabled || !Array.isArray(animation.triggers) || animation.triggers.indexOf(trigger) === -1) { return false; }
+    var products = Array.isArray(animation.products) ? animation.products : [];
+    if (products.length && products.indexOf("*") === -1 && products.indexOf(slug) === -1) { return false; }
+    // Ao entrar num produto tem de existir sempre uma animação elegível. A
+    // probabilidade continua a controlar os gatilhos aleatórios/ambientais,
+    // mas não pode fazer o product_enter desaparecer em 62% das visitas.
+    if (trigger === "product_enter") { return true; }
+    var probability = Math.max(0, Math.min(1, Number(animation.probability == null ? 1 : animation.probability)));
+    return Math.random() <= probability;
+  });
+}
+
+function miuInteractiveStop()
+{
+  window.clearTimeout(miuInteractiveTimer);
+  miuInteractiveTimer = 0;
+  miuInteractiveSerial += 1;
+  if (miuInteractiveWrap && typeof miuInteractiveWrap.getAnimations === "function") {
+    miuInteractiveWrap.getAnimations().forEach(function (animation) { try { animation.cancel(); } catch (error) {} });
+  }
+  if (miuRoot) { miuRoot.classList.remove("is-interactive"); }
+  if (miuInteractiveWrap) { miuInteractiveWrap.style.transform = ""; }
+}
+
+function miuInteractiveMotion(animation, duration)
+{
+  if (!miuInteractiveWrap || !animation || !animation.motion || miuReducedMotion || typeof miuInteractiveWrap.animate !== "function") { return; }
+  var type = String(animation.motion.type || "none");
+  var distance = Math.max(0, Number(animation.motion.distancePx || 0));
+  var maxRoam = miuInteractiveAnimationConfig && miuInteractiveAnimationConfig.display
+    ? Math.max(0, Number(miuInteractiveAnimationConfig.display.maxRoamPx || 180)) : 180;
+  if (!distance || type === "none") { return; }
+  distance = Math.min(distance, maxRoam || distance);
+  if (type === "jump") {
+    miuInteractiveWrap.animate([
+      { transform: "translate3d(0,0,0)" },
+      { transform: "translate3d(0," + (-distance) + "px,0)", offset: .48 },
+      { transform: "translate3d(0,0,0)" }
+    ], { duration: Math.min(1600, Math.max(360, duration)), easing: "ease-in-out" });
+  } else {
+    var x = type === "left" ? -distance : distance;
+    miuInteractiveWrap.animate([
+      { transform: "translate3d(0,0,0)" },
+      { transform: "translate3d(" + x + "px,0,0)" },
+      { transform: "translate3d(0,0,0)" }
+    ], { duration: Math.min(5000, Math.max(500, duration)), easing: "ease-in-out" });
+  }
+}
+
+function miuInteractivePlay(animation)
+{
+  if (!animation || !miuInteractiveSprite || !miuRoot) { return false; }
+  miuInteractiveStop();
+  var serial = miuInteractiveSerial;
+  var sequence = Array.isArray(animation.sequence) && animation.sequence.length ? animation.sequence.slice() : [0];
+  var durations = Array.isArray(animation.frameDurationsMs) && animation.frameDurationsMs.length === sequence.length
+    ? animation.frameDurationsMs.slice() : sequence.map(function () { return 180; });
+  var repeat = Math.max(1, Number(animation.repeat || 1));
+  var cycleMs = durations.reduce(function (total, ms) { return total + Math.max(40, Number(ms || 180)); }, 0);
+  var cursor = 0;
+  var cycles = 0;
+  miuRoot.classList.add("is-interactive");
+  miuInteractiveMotion(animation, cycleMs * repeat);
+
+  function draw() {
+    if (serial !== miuInteractiveSerial || !miuInteractiveSprite) { return; }
+    miuAnimationApplyFrame(miuInteractiveSprite, animation, sequence[cursor]);
+    if (miuReducedMotion) {
+      miuInteractiveTimer = window.setTimeout(miuInteractiveStop, 900);
+      return;
+    }
+    var delay = Math.max(40, Number(durations[cursor] || 180));
+    cursor += 1;
+    if (cursor >= sequence.length) {
+      cursor = 0;
+      cycles += 1;
+      if (cycles >= repeat) {
+        miuInteractiveTimer = window.setTimeout(miuInteractiveStop, Math.min(500, delay));
+        return;
+      }
+    }
+    miuInteractiveTimer = window.setTimeout(draw, delay);
+  }
+  draw();
+  return true;
+}
+
+function miuInteractiveTrigger(trigger)
+{
+  var candidates = miuInteractiveCandidates(trigger);
+  if (!candidates.length) { return false; }
+  var totalWeight = candidates.reduce(function (sum, animation) { return sum + Math.max(1, Number(animation.weight || 1)); }, 0);
+  var pick = Math.random() * totalWeight;
+  var selected = candidates[candidates.length - 1];
+  candidates.some(function (animation) {
+    pick -= Math.max(1, Number(animation.weight || 1));
+    if (pick <= 0) { selected = animation; return true; }
+    return false;
+  });
+  return miuInteractivePlay(selected);
+}
+
+function miuHideLauncherMessage()
+{
+  window.clearTimeout(miuLauncherCalloutTimer);
+  miuLauncherCalloutTimer = 0;
+  if (miuLauncherCallout) {
+    miuLauncherCallout.classList.remove("is-callout-visible");
+    miuLauncherCallout.classList.remove("is-site-message");
+  }
+}
+
+function miuShowLauncherMessage(text, durationMs, siteMessage)
+{
+  var clean = String(text || "").replace(/[<>]/g, "").trim();
+  if (!miuLauncherCallout || !clean) { return false; }
+  window.clearTimeout(miuLauncherCalloutTimer);
+  miuLauncherCallout.textContent = clean;
+  miuLauncherCallout.classList.toggle("is-site-message", siteMessage === true);
+  miuLauncherCallout.classList.add("is-callout-visible");
+  var duration = durationMs == null || durationMs === "" ? 5200 : Math.max(250, Number(durationMs));
+  miuLauncherCalloutTimer = window.setTimeout(miuHideLauncherMessage, duration);
+  return true;
+}
+
+window.miuUsesSiteErrorPopups = function () {
+  return !!(miuAnimationConfig && miuAnimationConfig.display && miuAnimationConfig.display.errorsViaMiu);
+};
+window.miuShowSiteMessage = function (text, durationMs) {
+  return miuShowLauncherMessage(text, durationMs || 5600, true);
+};
+
 function miuBuildInterface()
 {
   var launcherPrompt = String(miuConfig.launcherPrompt || "").replace(/[<>&]/g, "").trim();
@@ -1102,7 +1263,7 @@ function miuBuildInterface()
   miuRoot.innerHTML = [
     '<section class="miu-panel" role="dialog" aria-label="Conversa com o Míu" aria-hidden="true">',
       '<header class="miu-panel__head">',
-        '<span class="miu-panel__mini-cat">', miuFaceMarkup("miu-face--small miu-face--mini"), '</span>',
+        '<span class="miu-panel__mini-cat">', miuFaceMarkup("miu-face--small miu-face--mini miu-face--header"), '</span>',
         '<span class="miu-panel__title"><strong>', String(miuConfig.name || "Míu").replace(/[<>&]/g, ""), '</strong></span>',
         '<button class="miu-panel__icon-button miu-panel__new" type="button" title="Nova conversa" aria-label="Começar nova conversa">↻</button>',
         '<button class="miu-panel__icon-button miu-panel__close" type="button" aria-label="Fechar conversa">×</button>',
@@ -1116,9 +1277,10 @@ function miuBuildInterface()
         '<div class="miu-composer__meta"><span class="miu-status" role="status"></span><span class="miu-count"></span></div>',
       '</form>',
     '</section>',
+    '<span class="miu-interactive-wrap" aria-hidden="true"><span class="miu-interactive-sprite"></span></span>',
     '<button class="miu-launcher" type="button" aria-label="Abrir o Míu, assistente virtual" aria-expanded="false">',
       miuFaceMarkup("miu-face--launcher"),
-      launcherPrompt ? '<span class="miu-launcher__callout" aria-hidden="true">' + launcherPrompt + '</span>' : '',
+      '<span class="miu-launcher__callout" aria-live="polite"></span>',
     '</button>'
   ].join("");
   document.body.appendChild(miuRoot);
@@ -1133,8 +1295,16 @@ function miuBuildInterface()
   var reset = miuRoot.querySelector(".miu-panel__new");
   var display = miuAnimationConfig && miuAnimationConfig.display ? miuAnimationConfig.display : {};
   miuLauncherSprite = launcher.querySelector(".miu-face");
-  miuRoot.style.setProperty("--miu-launcher-sprite-size", Math.max(32, Number(display.launcherPx || 46)) + "px");
-  miuRoot.style.setProperty("--miu-small-sprite-size", Math.max(18, Number(display.smallPx || 26)) + "px");
+  miuInteractiveWrap = miuRoot.querySelector(".miu-interactive-wrap");
+  miuInteractiveSprite = miuRoot.querySelector(".miu-interactive-sprite");
+  miuLauncherCallout = miuRoot.querySelector(".miu-launcher__callout");
+  miuRoot.style.setProperty("--miu-launcher-sprite-size", Math.max(24, Number(display.launcherPx || 46)) + "px");
+  miuRoot.style.setProperty("--miu-header-sprite-size", Math.max(16, Number(display.headerPx || 26)) + "px");
+  miuRoot.style.setProperty("--miu-message-sprite-size", Math.max(16, Number(display.messagePx || 26)) + "px");
+  miuRoot.style.setProperty("--miu-interactive-sprite-size", Math.max(48, Number(display.interactivePx || 96)) + "px");
+  miuRoot.classList.toggle("miu-no-circle-launcher", display.launcherCircle === false);
+  miuRoot.classList.toggle("miu-no-circle-header", display.headerCircle === false);
+  miuRoot.classList.toggle("miu-no-circle-message", display.messageCircle === false);
   miuAnimationPlayBase();
   miuAnimationApplyStatic(miuRoot.querySelector(".miu-panel__mini-cat .miu-face"), 0);
 
@@ -1162,7 +1332,13 @@ function miuBuildInterface()
   miuWatchContext();
   miuScheduleSleep();
   miuAnimationScheduleRandom();
+  if (launcherPrompt && Number(display.promptSeconds || 0) > 0) {
+    window.setTimeout(function () { miuShowLauncherMessage(launcherPrompt, Number(display.promptSeconds) * 1000); }, 280);
+  }
   window.setTimeout(function () { miuAnimationTrigger("page_load"); }, 220);
+  if (miuInteractiveProductSlug()) {
+    window.setTimeout(function () { miuInteractiveTrigger("product_enter"); }, 650);
+  }
 }
 
 function miuShouldStart()

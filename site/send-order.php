@@ -76,7 +76,7 @@ function parse_email_recipients($value)
 function safe_return_to()
 {
     $returnTo = field('return_to');
-    $allowed = array('index.html', 'molduras.html', 'quadros.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'mini-cadernos.html', 'blocos-a6.html', 'bloquinhos.html', 'cadernos-anuais.html', 'agendas.html', 'imanes.html', 'imanes-recortados.html', 'stickers.html', 'marcadores.html', 'marcadores-magneticos.html', 'lembrancas.html', 'personalizacao.html', 'adicionar-produto.html', 'checkout.html');
+    $allowed = array('index.html', 'molduras.html', 'quadros.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'mini-cadernos.html', 'blocos-a6.html', 'bloquinhos.html', 'cadernos-anuais.html', 'agendas.html', 'imanes.html', 'imanes-recortados.html', 'stickers.html', 'marcadores.html', 'marcadores-magneticos.html', 'porta-chaves.html', 'porta-folhetos.html', 'lembrancas.html', 'personalizacao.html', 'adicionar-produto.html', 'checkout.html');
 
     if (in_array($returnTo, $allowed, true)) {
         return $returnTo;
@@ -88,7 +88,7 @@ function safe_return_to()
 function safe_product_slug()
 {
     $slug = strtolower(field('product_slug'));
-    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'personalizacao');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'porta-chaves', 'porta-folhetos', 'personalizacao');
 
     if (in_array($slug, $allowed, true)) {
         return $slug;
@@ -629,7 +629,7 @@ function cart_allowed_product_slug($slug)
     // aqui de proposito: e a pagina de origem, nao um produto — cada linha
     // que sai de la traz o slug do produto real (crachas-loja, marcadores...).
     $slug = strtolower(trim((string)$slug));
-    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'porta-chaves', 'porta-folhetos');
 
     return in_array($slug, $allowed, true) ? $slug : '';
 }
@@ -922,12 +922,31 @@ function product_option_drawers($product)
     return $drawers;
 }
 
-function product_option_drawer_item($drawer, $value)
+function product_option_drawer_item($drawer, $value, $product = array(), $designs = array())
 {
     $items = isset($drawer['items']) && is_array($drawer['items']) ? $drawer['items'] : array();
+    $allowed = null;
+
+    // Uma capa pode limitar as opções das gavetas seguintes (por exemplo,
+    // as cores de argola/fita disponíveis para esse design). Se o JSON não
+    // declarar uma restrição, mantêm-se todas as opções da gaveta.
+    if (is_array($product) && count($designs) === 1 && !empty($drawer['field'])) {
+        $designStep = product_step($product, 'designs');
+        $designItem = product_step_item_by_value($designStep, (string)$designs[0]);
+        $availability = isset($designItem['optionAvailability']) && is_array($designItem['optionAvailability'])
+            ? $designItem['optionAvailability']
+            : array();
+        if (isset($availability[$drawer['field']]) && is_array($availability[$drawer['field']])) {
+            $allowed = array_map('strval', $availability[$drawer['field']]);
+        }
+    }
+
     foreach ($items as $item) {
         $itemValue = is_array($item) && isset($item['value']) ? (string)$item['value'] : '';
-        if ($itemValue !== '' && $itemValue === (string)$value) {
+        if ($itemValue !== ''
+            && $itemValue === (string)$value
+            && ($allowed === null || in_array($itemValue, $allowed, true))
+        ) {
             return $item;
         }
     }
@@ -1043,7 +1062,7 @@ function cart_assoc_text_selection($selections, $name)
 
 function cart_is_main_v2_slug($slug)
 {
-    return in_array((string)$slug, array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos'), true);
+    return in_array((string)$slug, array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'porta-chaves', 'porta-folhetos'), true);
 }
 
 function cart_is_congress_slug($slug)
@@ -1564,6 +1583,9 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $allowedDesigns = product_design_values($productConfig, $defaultAllowedDesigns);
     $packStep = product_step($productConfig, 'pack');
     $hasPackStep = !empty($packStep);
+    $fixedProductQuantity = !$hasPackStep && isset($productConfig['fixedQuantity'])
+        ? max(0, (int)$productConfig['fixedQuantity'])
+        : 0;
     $hasPrices = !empty($packPrices);
     $orderFlow = cart_string_selection($selections, 'order_flow');
     $designSource = cart_string_selection($selections, 'design_source');
@@ -1661,14 +1683,19 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
 
     $optionDrawerLabels = array();
     $optionDrawerExtraPerUnitCents = 0;
-    if (!$isMainCustomArtwork) {
-        foreach (product_option_drawers($productConfig) as $drawer) {
+    foreach (product_option_drawers($productConfig) as $drawer) {
+            // Por omissão, as gavetas pertencem apenas ao fluxo do catálogo.
+            // Produtos que precisem das mesmas escolhas em Personalização
+            // declaram explicitamente customArtworkEnabled no próprio JSON.
+            if ($isMainCustomArtwork && empty($drawer['customArtworkEnabled'])) {
+                continue;
+            }
             $drawerField = isset($drawer['field']) ? cart_text($drawer['field']) : '';
             $drawerValue = $drawerField !== '' ? cart_string_selection($selections, $drawerField) : '';
             if ($drawerValue === '' && isset($drawer['defaultValue'])) {
                 $drawerValue = cart_text($drawer['defaultValue']);
             }
-            $drawerItem = $drawerField !== '' ? product_option_drawer_item($drawer, $drawerValue) : array();
+            $drawerItem = $drawerField !== '' ? product_option_drawer_item($drawer, $drawerValue, $productConfig, $designs) : array();
 
             if ($drawerField === '') {
                 continue;
@@ -1688,7 +1715,6 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
             $optionDrawerLabels[] = (isset($drawer['label']) ? cart_text($drawer['label']) . ': ' : '')
                 . (isset($drawerItem['title']) ? cart_text($drawerItem['title']) : $drawerValue);
             $optionDrawerExtraPerUnitCents += max(0, (int)(isset($drawerItem['extraPriceCentsPerUnit']) ? $drawerItem['extraPriceCentsPerUnit'] : 0));
-        }
     }
 
     $cardDescriptionKey = $slug === 'crachas' ? 'cracha_card_description' : 'iman_card_description';
@@ -1735,6 +1761,18 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         $selections['artwork_total_quantity'] = $artworkTotalQuantity;
     } elseif ($isMainV2) {
         unset($selections['custom_artwork_uploads'], $selections['customization_file_count'], $selections['customization_fee_cents'], $selections['artwork_total_quantity']);
+    }
+
+    // Produtos sem passo de pack podem declarar uma quantidade fixa no JSON.
+    // O servidor volta a impô-la para que o browser não consiga alterar a
+    // quantidade e para que o resumo/email mostre, por exemplo, a capa x1.
+    if ($fixedProductQuantity > 0) {
+        $packQuantity = $fixedProductQuantity;
+        $selections['pack_quantity'] = $packQuantity;
+        if (!$isCustomArtwork && !$assortedDesigns && count($designs) === 1) {
+            $designQuantities = array($designs[0] => $packQuantity);
+            $selections['design_quantities'] = $designQuantities;
+        }
     }
 
     $quadroType = $isQuadros && !empty($designs) ? (string)$designs[0] : '';
@@ -3435,19 +3473,19 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=2026080501">
-  <link rel="stylesheet" href="css/02-base-chrome.css?v=2026080501">
-  <link rel="stylesheet" href="css/03-grelha-designs-tons.css?v=2026080501">
-  <link rel="stylesheet" href="css/04-reviews-passos-acoes.css?v=2026080501">
-  <link rel="stylesheet" href="css/05-cookies-packs-entrega.css?v=2026080501">
-  <link rel="stylesheet" href="css/06-admin.css?v=2026080501">
-  <link rel="stylesheet" href="css/07-cards-crachas-molduras.css?v=2026080501">
-  <link rel="stylesheet" href="css/08-dark-mode.css?v=2026080501">
-  <link rel="stylesheet" href="css/09-seccoes-produtos.css?v=2026080501">
-  <link rel="stylesheet" href="css/10-entrega-uniformizacao.css?v=2026080501">
-  <link rel="stylesheet" href="css/11-home-marca.css?v=2026080501">
-  <link rel="stylesheet" href="css/12-composer-glitter-chart.css?v=2026080501">
-  <link rel="stylesheet" href="css/13-miu.css?v=2026081602">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=2026081701">
+  <link rel="stylesheet" href="css/02-base-chrome.css?v=2026081701">
+  <link rel="stylesheet" href="css/03-grelha-designs-tons.css?v=2026081701">
+  <link rel="stylesheet" href="css/04-reviews-passos-acoes.css?v=2026081701">
+  <link rel="stylesheet" href="css/05-cookies-packs-entrega.css?v=2026081701">
+  <link rel="stylesheet" href="css/06-admin.css?v=2026081701">
+  <link rel="stylesheet" href="css/07-cards-crachas-molduras.css?v=2026081701">
+  <link rel="stylesheet" href="css/08-dark-mode.css?v=2026081701">
+  <link rel="stylesheet" href="css/09-seccoes-produtos.css?v=2026081701">
+  <link rel="stylesheet" href="css/10-entrega-uniformizacao.css?v=2026081701">
+  <link rel="stylesheet" href="css/11-home-marca.css?v=2026081701">
+  <link rel="stylesheet" href="css/12-composer-glitter-chart.css?v=2026081701">
+  <link rel="stylesheet" href="css/13-miu.css?v=2026081701">
 </head>
 <body class="result-body">
   <main class="result-card <?php echo h($kind); ?>">
@@ -3640,7 +3678,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
       } catch (error) {}
     </script>
   <?php endif; ?>
-  <script src="js/24-miu.js?v=2026081602"></script>
+  <script src="js/24-miu.js?v=2026081701"></script>
 </body>
 </html>
     <?php

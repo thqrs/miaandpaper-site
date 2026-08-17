@@ -227,13 +227,43 @@
       "description": "Política de privacidade do site Mia & Paper.",
       "ogDescription": "Política de privacidade do site Mia & Paper.",
       "h1": "Política de Privacidade"
+    },
+    {
+      "file": "porta-chaves.html",
+      "url": "/porta-chaves.html",
+      "priority": "0.8",
+      "changefreq": "monthly",
+      "product": "porta-chaves",
+      "title": "Porta-chaves personalizados 32 mm e 58 mm | Mia & Paper",
+      "description": "Porta-chaves personalizados em 32 mm ou 58 mm, com designs Mia & Paper ou com o teu próprio ficheiro. Escolhe o design, tamanho, quantidade e cartão de apresentação.",
+      "ogDescription": "Porta-chaves personalizados em 32 mm e 58 mm.",
+      "h1": "Porta-chaves personalizados",
+      "lead": "Porta-chaves personalizados em 32 mm ou 58 mm. Escolhe um design Mia & Paper ou envia o teu próprio desenho."
+    },
+    {
+      "file": "porta-folhetos.html",
+      "url": "/porta-folhetos.html",
+      "priority": "0.8",
+      "changefreq": "monthly",
+      "product": "porta-folhetos",
+      "title": "Porta-folhetos A4 e A6 personalizados | Mia & Paper",
+      "description": "Porta-folhetos A4 e A6 com capa personalizada, argolas, fita e bolsas interiores de plástico para organizar os folhetos usados na pregação.",
+      "ogDescription": "Porta-folhetos personalizados A4 e A6 para organizar os folhetos da pregação.",
+      "h1": "Porta-folhetos personalizados",
+      "lead": "Porta-folhetos com capa e contracapa em cartão de 2 mm, argolas e bolsas interiores de plástico. Escolhe a capa, as cores, o acabamento e o tamanho A4, A6 ou ambos."
     }
   ],
   "extraSitemapUrls": [
-    { "url": "/ofertas/index.html", "priority": "0.6", "changefreq": "monthly" }
+    {
+      "url": "/ofertas/index.html",
+      "priority": "0.6",
+      "changefreq": "monthly"
+    }
   ],
   "organization": {
     "description": "Lembranças personalizadas para congressos e assembleias, papelaria e peças feitas à mão por encomenda.",
-    "sameAs": ["https://www.instagram.com/miaandpaper/"]
+    "sameAs": [
+      "https://www.instagram.com/miaandpaper/"
+    ]
   }
 }

@@ -15,7 +15,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Homepage &amp; Menu · Mia &amp; Paper</title>
 <link rel="stylesheet" href="admin-nav.css?v=2026081001">
-<script src="admin-nav.js?v=2026081001" defer></script>
+<script src="admin-nav.js?v=2026081701" defer></script>
 <style>
   :root {
     --fundo: #14153a;        --fundo-2: #101132;

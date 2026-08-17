@@ -72,7 +72,7 @@
     crachas: "CRACHA", imanes: "IMAN", lembrancas: "LEMBRANCA", pins: "PINS",
     "cadernos-anuais": "CADERNO-ANUAL", "mini-cadernos": "MINICADERNO-LOJA",
     agendas: "AGENDA",
-    "crachas-loja": "CRACHA-LOJA", "imanes-loja": "IMAN-LOJA",
+    "crachas-loja": "CRACHA-LOJA", "porta-chaves": "PORTA-CHAVES", "porta-folhetos": "PORTA-FOLHETOS", "imanes-loja": "IMAN-LOJA",
     stickers: "STICKER", marcadores: "MARCADOR", "marcadores-magneticos": "MARCADOR-MAGNETICO", bloquinhos: "BLOQUINHO",
     postais: "POSTAL", home: "HOMEPAGE"
   };
@@ -90,6 +90,8 @@
     "cadernos-anuais": "AL",
     agendas: "AG",
     "crachas-loja": "RL",
+    "porta-chaves": "PK",
+    "porta-folhetos": "PF",
     "imanes-loja": "IL",
     quadros: "MO",
     lembrancas: "LE",

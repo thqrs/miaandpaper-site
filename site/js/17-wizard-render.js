@@ -880,7 +880,7 @@
         : "";
 
       return heading + '<div class="option-list size-choice-list crachas-size-card-list cadernos-add-on-list">'
-        + (drawer.items || []).map(function (item) {
+        + optionDrawerAvailableItems(product, drawer).map(function (item) {
           return renderOptionDrawerCard(product, step, drawer, item);
         }).join("")
         + '</div>';
@@ -891,7 +891,7 @@
     ensureOptionDrawerSelections(product);
 
     return '<div class="option-drawer-list">' + (step.drawers || []).map(function (drawer) {
-      var selected = optionDrawerItem(drawer, state.selections[drawer.field]);
+      var selected = optionDrawerItem(drawer, state.selections[drawer.field], product);
       var selectedExtra = selected ? Math.max(0, parseInt(selected.extraPriceCentsPerUnit, 10) || 0) : 0;
       var key = optionDrawerUiKey(step, drawer);
       var open = state.optionDrawerOpen && state.optionDrawerOpen[key] === true;
@@ -905,7 +905,7 @@
         '<span class="option-drawer-chevron" aria-hidden="true"></span>',
         '</summary>',
         '<div class="option-drawer-body" role="radiogroup" aria-label="' + escapeHtml(drawer.label || drawer.title || "Opção") + '">',
-        (drawer.items || []).map(function (item) {
+        optionDrawerAvailableItems(product, drawer).map(function (item) {
           return renderOptionDrawerChoice(product, step, drawer, item);
         }).join(""),
         '</div>',
@@ -914,12 +914,39 @@
     }).join("") + '</div>';
   }
 
+  function renderFixedPurchaseSizeStep(product, step) {
+    var selected = selectedValues(step);
+    var html = "";
+
+    (step.items || []).forEach(function (item) {
+      var checked = selected.indexOf(item.value) !== -1;
+      var info = priceForSize(product, item.value);
+      var priceText = info && info.cents ? info.total : (item.priceCents != null ? formatCents(item.priceCents) : "");
+
+      html += [
+        '<label class="choice-card crachas-size-card cadernos-purchase-card' + (checked ? ' is-selected' : '') + '">',
+        '<input type="radio" name="' + escapeHtml(step.field) + '" value="' + escapeHtml(item.value) + '" data-choice-step="' + escapeHtml(step.id) + '"' + (checked ? ' checked' : '') + '>',
+        '<span class="crachas-size-card-visual">' + renderVisual(item, "media-list", step) + '</span>',
+        '<span class="choice-copy crachas-size-card-text">',
+        '<strong>' + escapeHtml(item.title || item.value || "") + '</strong>',
+        item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '',
+        '</span>',
+        priceText ? '<span class="cadernos-purchase-price">' + escapeHtml(priceText) + '</span>' : '',
+        '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+        adminItemControls(step, item),
+        '</label>'
+      ].join("");
+    });
+
+    return '<div class="option-list size-choice-list crachas-size-card-list cadernos-purchase-list">' + html + '</div>';
+  }
+
   function stepBody(product, step) {
     if (isQuadrosProduct(product) && step.id === "designs") {
       return renderQuadrosDesignStep(product, step);
     }
 
-    if (isCadernosProduct(product) && step.id === "designs") {
+    if ((isCadernosProduct(product) || step.display === "cover-drawer") && step.id === "designs") {
       return renderCadernosCoverStep(product, step);
     }
 
@@ -993,8 +1020,11 @@
       // mas reaproveita o sumario "Designs que vais encomendar" dos crachas
       // (tiles em grelha 1-5 colunas conforme largura). Outros produtos
       // mantem o sumario antigo de pilulas.
-      if (product && productFamily(product) === "crachas") {
+      if (step.display === "crachas-cards" || (product && productFamily(product) === "crachas")) {
         return renderCrachasSizeStep(product, step);
+      }
+      if (step.display === "purchase-cards") {
+        return renderFixedPurchaseSizeStep(product, step);
       }
       if (product && productFamily(product) === "imanes") {
         return renderSizeChoiceItems(product, step) + renderCrachasSelectedDesigns(product);
@@ -1562,8 +1592,8 @@
       builderActionTotals(product, step),
       '<button class="button secondary" type="button" data-back data-track="true" data-track-action="back" data-track-id="back">Voltar</button>',
       '<div class="next-action-wrap">',
-      state.errors ? '<p class="form-error action-error" id="step-action-error" role="alert">' + escapeHtml(state.errors) + '</p>' : "",
-      '<button class="button primary' + (suspended ? ' is-disabled' : '') + '" type="' + (isLast && !suspended ? "submit" : "button") + '" data-next' + (state.errors ? ' aria-describedby="step-action-error"' : '') + (suspended ? ' data-order-suspended-submit aria-disabled="true"' : '') + ' data-track="true" data-track-action="' + (isLast ? 'submit' : 'next') + '" data-track-id="' + (isLast ? 'submit' : 'next') + '">' + escapeHtml(nextLabel) + '</button>',
+      state.errors ? siteErrorMarkup(state.errors, "form-error action-error", "step-action-error") : "",
+      '<button class="button primary' + (suspended ? ' is-disabled' : '') + '" type="' + (isLast && !suspended ? "submit" : "button") + '" data-next' + (state.errors && !siteErrorsUseMiu() ? ' aria-describedby="step-action-error"' : '') + (suspended ? ' data-order-suspended-submit aria-disabled="true"' : '') + ' data-track="true" data-track-action="' + (isLast ? 'submit' : 'next') + '" data-track-id="' + (isLast ? 'submit' : 'next') + '">' + escapeHtml(nextLabel) + '</button>',
       '</div>',
       '</div>'
       ].join(""),

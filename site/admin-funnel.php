@@ -149,7 +149,7 @@ function af_json_array($raw) {
     $decoded = json_decode((string)$raw, true);
     return is_array($decoded) ? $decoded : array();
 }
-function af_main_v2_slugs() { return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'personalizacao'); }
+function af_main_v2_slugs() { return array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'porta-chaves', 'porta-folhetos', 'personalizacao'); }
 function af_congress_slugs() { return array('crachas', 'imanes', 'caderninhos', 'cadernos'); }
 function af_is_main_v2_slug($slug) { return in_array((string)$slug, af_main_v2_slugs(), true); }
 function af_is_congress_slug($slug) { return in_array((string)$slug, af_congress_slugs(), true); }
@@ -1196,6 +1196,8 @@ function product_friendly_name($slug, $fallbackFromJson = '')
     static $names = array(
         'crachas'     => 'Crachás',
         'crachas-loja'=> 'Crachás',
+        'porta-chaves' => 'Porta-chaves',
+        'porta-folhetos' => 'Porta-folhetos',
         'imanes'      => 'Ímanes',
         'imanes-loja' => 'Ímanes',
         'caderninhos' => 'Mini-Cadernos',
@@ -1427,7 +1429,7 @@ function render_selection_summary($selectionJson, $productSlug = '') {
     }
     if (!empty($selectionJson['selected_size'])) {
         if ($baseSlug === 'imanes' || $baseSlug === 'imanes-loja') $parts[] = 'tipo ' . $selectionJson['selected_size'];
-        elseif ($baseSlug === 'crachas' || $baseSlug === 'crachas-loja') $parts[] = 'tamanho ' . $selectionJson['selected_size'];
+        elseif ($baseSlug === 'crachas' || $baseSlug === 'crachas-loja' || $baseSlug === 'porta-chaves') $parts[] = 'tamanho ' . $selectionJson['selected_size'];
         else $parts[] = $selectionJson['selected_size'];
     }
 
@@ -2287,7 +2289,7 @@ foreach ($ipLookupCache as $info) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Funil de encomendas · Mia &amp; Paper admin</title>
 <link rel="stylesheet" href="admin-nav.css?v=2026081001">
-<script src="admin-nav.js?v=2026081001" defer></script>
+<script src="admin-nav.js?v=2026081701" defer></script>
 <style>
 :root { --ink:#3b2f1f; --muted:#76551c; --line:rgba(118,85,28,0.22); --gold:#b88616; --moss:#4f7a3a; --bg:#fffbe9; --card:#fff8df; }
 * { box-sizing: border-box; }

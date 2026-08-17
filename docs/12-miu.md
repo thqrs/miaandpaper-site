@@ -18,7 +18,10 @@ O Míu é o assistente virtual no canto inferior direito das páginas públicas.
 | `site/lib/miu-stream.php` | liga ao streaming SSE dos fornecedores e recolhe o modelo usado |
 | `site/content/miu-defaults.json` | configuração global persistente e activa do Míu (fonte única) |
 | `site/content/miu-quick-replies.json` | perguntas e respostas locais por produto e passo, editáveis em massa |
-| `site/bot.php` | conversas e edição da configuração |
+| `site/content/erros.json` | versões Default/Míu das mensagens públicas de validação e ajuda |
+| `site/lib/miu-animations.php` | biblioteca de spritesheets, gatilhos, âmbito por produto e aparência do Míu |
+| `site/bot.php` | conversas, configuração, aparência e animações |
+| `site/erros.php` | editor das mensagens públicas Default/Míu |
 | `site/bot-admin.css` / `.js` | interface própria do painel |
 | `private/miu.sqlite` | conversas, mensagens e contextos de passo (runtime) |
 | `private/miu-config.php` | chaves; nunca fica na raiz pública nem no Git |
@@ -74,6 +77,11 @@ e [generateContent do Gemini](https://ai.google.dev/gemini-api/docs/generate-con
 
 - ligar ou fechar o Míu;
 - alterar ou esconder o texto “Fala comigo!” junto ao botão;
+- na TAB **Aparência**, definir separadamente o tamanho da cara no canto, na barra do chat e após cada resposta;
+- mostrar ou esconder o círculo em cada um desses três locais;
+- definir durante quantos segundos aparece o balão inicial junto ao Míu;
+- escolher se os erros/avisos públicos aparecem no formulário ou são ditos pelo Míu no mesmo balão;
+- configurar o tamanho das animações interactivas de corpo inteiro;
 - fornecedor principal e fallback;
 - modelo de cada fornecedor;
 - system prompt e base de informação enviada em cada pedido;
@@ -119,6 +127,31 @@ limita e limpa estas listas, oculta emails/números que apareçam no texto e
 marca-as como estado não fiável da interface;
 nunca ganham prioridade sobre o produto, o passo ou a tabela de preços
 validados.
+
+
+## Aparência, animações por produto e mensagens do site
+
+A cara usada no chat e a biblioteca de corpo inteiro continuam separadas. Na
+TAB **Aparência** de `bot.php`, `animations.json.display` guarda os tamanhos e
+os círculos independentes para o lançador, o cabeçalho e o avatar das respostas,
+além do tamanho interactivo, duração do balão inicial e `errorsViaMiu`.
+
+As animações de corpo inteiro podem declarar o gatilho `product_enter` e uma
+lista `products`. `products: ["*"]` funciona como fallback para qualquer produto;
+uma lista de slugs restringe a animação a esses produtos. Ao entrar numa página
+com `data-product`, o browser escolhe sempre uma animação elegível para esse
+produto. Os gatilhos aleatórios continuam a respeitar a probabilidade configurada.
+A deslocação (`left`, `right`, `jump`) acontece fora da cara do círculo, por isso
+a personagem pode sair visualmente da sua posição normal sem substituir os
+avatares do chat.
+
+As mensagens públicas de validação e pequenas sugestões vivem em
+`content/erros.json`. Cada registo guarda uma versão `default` e uma versão
+`miu`; `erros.php` permite editar as duas em TABs separadas. Quando
+`errorsViaMiu` está ligado (por omissão), o texto `miu` é mostrado no balão junto
+ao lançador e a mensagem inline é suprimida. Quando está desligado, o formulário
+mostra a versão `default` no local normal. Erros técnicos, erros de administração,
+CSRF, configuração e falhas internas não pertencem a este catálogo.
 
 ## Fluxo e barreiras
 

@@ -169,6 +169,9 @@
       if (isQuadrosProduct(product)) {
         return "Escolhe o tipo de moldura que queres criar.";
       }
+      if (step.selectionError) {
+        return String(step.selectionError);
+      }
       if (isCadernosProduct(product)) {
         return "Escolhe uma capa.";
       }
@@ -286,6 +289,10 @@
       }
     }
 
+    if (step.selection === "single" && step.field && step.id !== "designs" && !state.selections[step.field]) {
+      return step.selectionError ? String(step.selectionError) : "Escolhe uma opção para continuar.";
+    }
+
     if (step.template === "palette-grid") {
       var colorKeys = quadrosColorSelectionKeys(step);
       if (state.selections[colorKeys.mia]) {
@@ -337,7 +344,7 @@
           return optionDrawer.selectionError
             || ("Escolhe " + String(optionDrawer.label || optionDrawer.title || "uma opção").toLowerCase() + ".");
         }
-        if (optionDrawerValue && !optionDrawerItem(optionDrawer, optionDrawerValue)) {
+        if (optionDrawerValue && !optionDrawerItem(optionDrawer, optionDrawerValue, product)) {
           state.invalidFields = [optionDrawer.field];
           return "Uma das opções escolhidas deixou de estar disponível.";
         }

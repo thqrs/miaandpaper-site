@@ -1550,7 +1550,7 @@
     return [
       state.orderUploadBusy && state.orderUploadProgress ? renderOrderUploadProgress() : '',
       state.orderUploadBusy && !state.orderUploadProgress ? '<p class="order-upload-status" role="status">A processar…</p>' : '',
-      state.orderUploadError ? '<p class="form-error order-upload-error order-upload-popup" role="alert">' + escapeHtml(state.orderUploadError) + '</p>' : '',
+      state.orderUploadError ? siteErrorMarkup(state.orderUploadError, "form-error order-upload-error order-upload-popup") : '',
       state.orderUploadMessage ? '<p class="order-upload-status" role="status">' + escapeHtml(state.orderUploadMessage) + '</p>' : ''
     ].join("");
   }
