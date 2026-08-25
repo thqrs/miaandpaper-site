@@ -1,0 +1,127 @@
+{
+  "id": "sneeze",
+  "name": "Míu — Espirro com Dente-de-Leão",
+  "file": "miu-banana/sneeze.webp",
+  "masterSource": "miu_sneeze_8x2_1787068347558.jpg",
+  "columns": 6,
+  "rows": 3,
+  "frameWidth": 229,
+  "frameHeight": 256,
+  "sheetWidth": 1376,
+  "sheetHeight": 768,
+  "totalFrames": 18,
+  "sequence": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "frameDurationsMs": [
+    180,
+    180,
+    180,
+    180,
+    180,
+    180,
+    180,
+    180,
+    180,
+    180,
+    180,
+    180,
+    180,
+    180,
+    180,
+    180,
+    180,
+    180
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "durationMs": 180
+    },
+    {
+      "index": 1,
+      "durationMs": 180
+    },
+    {
+      "index": 2,
+      "durationMs": 180
+    },
+    {
+      "index": 3,
+      "durationMs": 180
+    },
+    {
+      "index": 4,
+      "durationMs": 180
+    },
+    {
+      "index": 5,
+      "durationMs": 180
+    },
+    {
+      "index": 6,
+      "durationMs": 180
+    },
+    {
+      "index": 7,
+      "durationMs": 180
+    },
+    {
+      "index": 8,
+      "durationMs": 180
+    },
+    {
+      "index": 9,
+      "durationMs": 180
+    },
+    {
+      "index": 10,
+      "durationMs": 180
+    },
+    {
+      "index": 11,
+      "durationMs": 180
+    },
+    {
+      "index": 12,
+      "durationMs": 180
+    },
+    {
+      "index": 13,
+      "durationMs": 180
+    },
+    {
+      "index": 14,
+      "durationMs": 180
+    },
+    {
+      "index": 15,
+      "durationMs": 180
+    },
+    {
+      "index": 16,
+      "durationMs": 180
+    },
+    {
+      "index": 17,
+      "durationMs": 180
+    }
+  ]
+}

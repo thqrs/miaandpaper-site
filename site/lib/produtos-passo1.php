@@ -71,15 +71,12 @@ function pd_passo1_receitas()
             'defaults' => array('visual' => 'neutral', 'imageZoom' => 100, 'imagePositionX' => 0, 'imagePositionY' => 0, 'imageRotation' => 0, 'frameScale' => 130, 'frameMarginX' => 0, 'frameMarginY' => 10),
         ),
         'porta-folhetos' => array(
-            'stepId' => 'designs', 'strategy' => 'cover-drawer', 'allowCreate' => true, 'allowRemove' => true, 'allowDirectUpload' => true,
-            'directUploadTargets' => array('image', 'interiorImages.0'),
-            'expectedSections' => array('novidades', 'felicidade-eterna'),
+            'stepId' => 'designs', 'strategy' => 'standard', 'allowCreate' => false, 'allowRemove' => false, 'allowDirectUpload' => true,
+            'directUploadTargets' => array('image'),
+            'expectedSections' => array(),
             'imageRequired' => true,
-            'note' => 'Capa do porta-folhetos com gaveta de imagens. Ao criar um design, indica a capa e uma segunda fotografia/exemplo para a gaveta.',
-            'defaults' => array('badge' => '', 'visual' => 'neutral', 'imageFit' => 'cover', 'frameWidth' => 120, 'frameHeight' => 147, 'imageEdits' => array()),
-            'extraImages' => array(
-                array('name' => 'interior', 'label' => 'Imagem da gaveta / exemplo adicional', 'group' => 'interiorImages', 'key' => '0'),
-            ),
+            'note' => 'O passo público separa capa e variação. Este editor mantém as fotografias finais de fita/argolas no passo designs; criar ou remover exige também ligar a variação à capa e ao grupo A4/A6, por isso fica bloqueado. Uma fotografia existente pode ser substituída diretamente.',
+            'defaults' => array('visual' => 'neutral', 'imageFit' => 'contain', 'frameWidth' => 96, 'frameHeight' => 120),
         ),
         'imanes-loja' => array(
             'stepId' => 'designs', 'strategy' => 'standard', 'allowCreate' => true, 'allowRemove' => true, 'allowDirectUpload' => true,

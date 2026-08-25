@@ -161,6 +161,55 @@ $triggerOptions = miu_animation_trigger_options();
 $motionOptions = miu_animation_motion_options();
 $contextOptions = miu_face_animation_context_options();
 
+function sprites_enrich_animation($anim, $root)
+{
+    if (!is_array($anim) || empty($anim['file'])) {
+        return $anim;
+    }
+    if (!empty($anim['frameWidth']) && !empty($anim['frameHeight'])) {
+        if (empty($anim['aspectRatio'])) {
+            $anim['aspectRatio'] = round((float)$anim['frameWidth'] / (float)$anim['frameHeight'], 4);
+        }
+        return $anim;
+    }
+    $file = (string)$anim['file'];
+    $baseName = preg_replace('/\.(?:webp|png|jpg|jpeg)$/i', '', $file);
+    $companionJson = $root . $baseName . '.json';
+    if (is_file($companionJson)) {
+        $raw = @file_get_contents($companionJson);
+        $data = is_string($raw) ? json_decode($raw, true) : null;
+        if (is_array($data)) {
+            if (!empty($data['frameWidth']) && !empty($data['frameHeight'])) {
+                $anim['frameWidth'] = (int)$data['frameWidth'];
+                $anim['frameHeight'] = (int)$data['frameHeight'];
+                $anim['aspectRatio'] = round((float)$anim['frameWidth'] / (float)$anim['frameHeight'], 4);
+                return $anim;
+            }
+            if (!empty($data['sheetWidth']) && !empty($data['sheetHeight']) && !empty($anim['columns']) && !empty($anim['rows'])) {
+                $anim['sheetWidth'] = (int)$data['sheetWidth'];
+                $anim['sheetHeight'] = (int)$data['sheetHeight'];
+                $anim['frameWidth'] = round((int)$data['sheetWidth'] / (int)$anim['columns']);
+                $anim['frameHeight'] = round((int)$data['sheetHeight'] / (int)$anim['rows']);
+                $anim['aspectRatio'] = round((float)$anim['frameWidth'] / (float)$anim['frameHeight'], 4);
+                return $anim;
+            }
+        }
+    }
+    $imgPath = $root . $file;
+    if (is_file($imgPath)) {
+        $size = @getimagesize($imgPath);
+        if ($size && !empty($size[0]) && !empty($size[1]) && !empty($anim['columns']) && !empty($anim['rows'])) {
+            $anim['sheetWidth'] = (int)$size[0];
+            $anim['sheetHeight'] = (int)$size[1];
+            $anim['frameWidth'] = round((int)$size[0] / (int)$anim['columns']);
+            $anim['frameHeight'] = round((int)$size[1] / (int)$anim['rows']);
+            $anim['aspectRatio'] = round((float)$anim['frameWidth'] / (float)$anim['frameHeight'], 4);
+            return $anim;
+        }
+    }
+    return $anim;
+}
+
 $imageFiles = array();
 $root = __DIR__ . '/content/brand/miu/';
 foreach (array_merge($bodyConfig['animations'], $faceConfig['animations']) as $animation) {
@@ -172,14 +221,17 @@ foreach (array_merge($bodyConfig['animations'], $faceConfig['animations']) as $a
     }
 }
 
+$bodyAnimations = array_map(function($a) use ($root) { return sprites_enrich_animation($a, $root); }, $bodyConfig['animations']);
+$faceAnimations = array_map(function($a) use ($root) { return sprites_enrich_animation($a, $root); }, $faceConfig['animations']);
+
 $state = array(
     'body' => array(
         'baseAnimationId' => $bodyConfig['baseAnimationId'],
-        'animations' => $bodyConfig['animations'],
+        'animations' => $bodyAnimations,
     ),
     'face' => array(
         'baseAnimationId' => $faceConfig['baseAnimationId'],
-        'animations' => $faceConfig['animations'],
+        'animations' => $faceAnimations,
     ),
     'triggers' => $triggerOptions,
     'motionOptions' => $motionOptions,
@@ -210,8 +262,8 @@ button,input,select{font:inherit}.sprites-top{position:sticky;top:46px;z-index:4
 .flash{padding:10px 13px;border-radius:10px;margin-bottom:14px;border:1px solid rgba(67,211,158,.35);background:rgba(67,211,158,.1);color:#bff5df}.flash.error{border-color:rgba(255,107,131,.4);background:rgba(255,107,131,.1);color:#ffc4ce}
 .group{margin-top:26px}.group-head{display:flex;align-items:end;gap:10px;margin-bottom:10px}.group-head h2{margin:0;font-size:1.03rem}.group-head p{margin:0;color:var(--dim);font-size:.8rem}
 .sprite-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;box-shadow:0 10px 30px rgba(0,0,0,.18)}.sprite-card.is-off{opacity:.66}.sprite-card>header{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02)}.sprite-card>header strong{font-size:.96rem}.sprite-card>header code{font:12px var(--mono);color:var(--dim)}.enabled{margin-left:auto;display:flex;align-items:center;gap:7px;color:var(--muted)}.enabled input{accent-color:var(--green);width:17px;height:17px}
-.sprite-layout{display:grid;grid-template-columns:minmax(430px,1.25fr) minmax(390px,.95fr);min-height:300px}.visual{padding:18px;display:grid;grid-template-columns:190px minmax(0,1fr);gap:18px;align-items:start}.preview-box{width:190px;height:190px;border:1px solid #454b69;background:linear-gradient(45deg,#292d43 25%,transparent 25%),linear-gradient(-45deg,#292d43 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#292d43 75%),linear-gradient(-45deg,transparent 75%,#292d43 75%);background-size:18px 18px;background-position:0 0,0 9px,9px -9px,-9px 0;position:relative;overflow:hidden;border-radius:8px}.preview-stage{position:absolute;inset:10px;display:grid;place-items:center}.sprite-crop{width:100%;height:100%;background-repeat:no-repeat;will-change:background-position,transform}.missing{position:absolute;inset:0;display:none;place-items:center;padding:15px;text-align:center;background:rgba(8,9,15,.82);color:var(--muted);font-size:.78rem}.missing.show{display:grid}
-.timeline-column{min-width:0}.timeline-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.timeline-title span{color:var(--muted);font-size:.8rem}.timeline-wrap{display:grid;grid-template-columns:30px minmax(0,1fr) 30px;gap:7px;align-items:center}.arrow{height:92px;padding:0;border:0;background:transparent;color:var(--text);font-size:2rem;cursor:pointer}.frames{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:thin;scroll-snap-type:x proximity}.frame-step{flex:0 0 70px;scroll-snap-align:start}.frame-thumb{width:70px;height:70px;border:1px solid #4a506d;background:#0f1120;border-radius:5px;overflow:hidden;position:relative}.frame-thumb .sprite-crop{width:100%;height:100%}.frame-index{position:absolute;top:3px;left:3px;background:rgba(0,0,0,.65);border-radius:4px;padding:1px 4px;font:10px var(--mono);color:#fff}.frame-step input{width:100%;margin-top:4px;background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:5px;padding:3px 4px;text-align:center;font:11px var(--mono)}.frame-step small{display:block;text-align:center;color:var(--dim);font-size:9px;margin-top:1px}
+.sprite-layout{display:grid;grid-template-columns:minmax(430px,1.25fr) minmax(390px,.95fr);min-height:300px}.visual{padding:18px;display:grid;grid-template-columns:190px minmax(0,1fr);gap:18px;align-items:start}.preview-box{width:190px;height:190px;border:1px solid #454b69;background:linear-gradient(45deg,#292d43 25%,transparent 25%),linear-gradient(-45deg,#292d43 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#292d43 75%),linear-gradient(-45deg,transparent 75%,#292d43 75%);background-size:18px 18px;background-position:0 0,0 9px,9px -9px,-9px 0;position:relative;overflow:hidden;border-radius:8px}.preview-stage{position:absolute;inset:10px;display:flex;align-items:center;justify-content:center}.sprite-crop{width:100%;height:100%;background-repeat:no-repeat;will-change:background-position,transform}.missing{position:absolute;inset:0;display:none;place-items:center;padding:15px;text-align:center;background:rgba(8,9,15,.82);color:var(--muted);font-size:.78rem}.missing.show{display:grid}
+.timeline-column{min-width:0}.timeline-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.timeline-title span{color:var(--muted);font-size:.8rem}.timeline-wrap{display:grid;grid-template-columns:30px minmax(0,1fr) 30px;gap:7px;align-items:center}.arrow{height:92px;padding:0;border:0;background:transparent;color:var(--text);font-size:2rem;cursor:pointer}.frames{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:thin;scroll-snap-type:x proximity}.frame-step{flex:0 0 70px;scroll-snap-align:start}.frame-thumb{width:70px;height:70px;border:1px solid #4a506d;background:#0f1120;border-radius:5px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center}.frame-thumb .sprite-crop{width:100%;height:100%}.frame-index{position:absolute;top:3px;left:3px;background:rgba(0,0,0,.65);border-radius:4px;padding:1px 4px;font:10px var(--mono);color:#fff}.frame-step input{width:100%;margin-top:4px;background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:5px;padding:3px 4px;text-align:center;font:11px var(--mono)}.frame-step small{display:block;text-align:center;color:var(--dim);font-size:9px;margin-top:1px}
 .details{background:var(--black);padding:16px;border-left:1px solid var(--line)}.details-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.field{display:flex;flex-direction:column;gap:4px;min-width:0}.field.full{grid-column:1/-1}.field>span,.subhead{font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:#8d93aa}.field input,.field select{width:100%;min-width:0;border:1px solid #2e3348;background:#11131d;color:var(--text);border-radius:7px;padding:6px 7px}.field input:focus,.field select:focus{outline:none;border-color:var(--blue)}.field code{font:11px var(--mono);color:var(--cyan);word-break:break-all}.checkrow{display:flex;gap:10px;flex-wrap:wrap}.checkrow label{display:flex;gap:5px;align-items:center;color:var(--muted);font-size:.76rem}.checkrow input{accent-color:var(--blue)}.subhead{grid-column:1/-1;margin-top:7px;padding-top:9px;border-top:1px solid #252938}.circumstances{grid-column:1/-1;color:#c7cbda;font-size:.76rem;background:#10121b;border:1px solid #262a39;padding:8px;border-radius:7px}.base-label{display:flex;gap:7px;align-items:center;color:var(--amber);font-size:.76rem}.base-label input{accent-color:var(--amber)}
 .add-panel{display:none;margin-bottom:20px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}.add-panel.open{display:block}.add-panel h2{margin:0 0 12px;font-size:1rem}.add-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:10px}.add-grid .field input,.add-grid .field select{background:var(--bg2)}.add-actions{display:flex;gap:8px;align-items:center;margin-top:13px}.add-note{margin-left:auto;color:var(--dim);font-size:.75rem}
 .dirty-dot{display:none;color:var(--amber);font-weight:700}.dirty .dirty-dot{display:inline}
@@ -232,7 +284,7 @@ button,input,select{font:inherit}.sprites-top{position:sticky;top:46px;z-index:4
   <?php if ($error !== ''): ?><div class="flash error"><?= sprites_h($error) ?></div><?php endif; ?>
 
   <section class="intro">
-    <div><h2>Biblioteca visual</h2><p>Cada cartão mostra a animação em loop, todos os passos da sequência e o tempo de cada frame. À direita ficam localização, gatilhos, grelha, repetição, movimento e transformações X/Y/rotação.</p></div>
+    <div><h2>Biblioteca visual</h2><p>Cada cartão mostra a animação em loop, todos os passos da sequência e o tempo de cada frame. À direita ficam localização, gatilhos, grelha, proporção, repetição, movimento e transformações X/Y/rotação.</p></div>
     <div class="stats"><span class="pill"><strong><?= count($faceConfig['animations']) ?></strong> cara</span><span class="pill"><strong><?= count($bodyConfig['animations']) ?></strong> corpo inteiro</span><span class="pill"><strong><?= count(array_filter($imageFiles)) ?></strong> imagens encontradas neste ZIP/site</span></div>
   </section>
 
@@ -273,8 +325,47 @@ button,input,select{font:inherit}.sprites-top{position:sticky;top:46px;z-index:4
   function markDirty(){ dirty=true; document.body.classList.add("dirty"); }
   function imageUrl(file){ return file ? miuPrefix + String(file).replace(/^\/+/,"") : ""; }
   function framePos(index,cols,rows){ var c=index%cols,r=Math.floor(index/cols); return {x:cols<=1?0:(c/(cols-1))*100,y:rows<=1?0:(r/(rows-1))*100}; }
+  function getAspectRatio(a){
+    var fw = Number(a.frameWidth||0), fh = Number(a.frameHeight||0);
+    if (fw > 0 && fh > 0) return fw / fh;
+    var ar = Number(a.aspectRatio||0);
+    if (ar > 0) return ar;
+    var sw = Number(a.sheetWidth||0), sh = Number(a.sheetHeight||0), cols = Number(a.columns||1), rows = Number(a.rows||1);
+    if (sw > 0 && sh > 0 && cols > 0 && rows > 0) return (sw / cols) / (sh / rows);
+    return 1;
+  }
   function transformCss(a){ var t=a.transform||{}, parts=[]; var x=num(t.xPx,-600,600,0),y=num(t.yPx,-600,600,0),rot=num(t.rotationDeg,-360,360,0); if(x||y) parts.push("translate3d("+x+"px,"+y+"px,0)"); if(rot) parts.push("rotate("+rot+"deg)"); if(a.flipX) parts.push("scaleX(-1)"); return parts.length?parts.join(" "):"none"; }
-  function applyFrame(el,a,index,file){ if(!el)return; var cols=Math.max(1,Number(a.columns||1)),rows=Math.max(1,Number(a.rows||1)),max=cols*rows-1; index=Math.max(0,Math.min(max,Number(index||0))); var p=framePos(index,cols,rows); el.style.backgroundImage='url("'+imageUrl(file||a.file).replace(/"/g,"%22")+'")'; el.style.backgroundSize=(cols*100)+"% "+(rows*100)+"%"; el.style.backgroundPosition=p.x+"% "+p.y+"%"; el.style.transform=transformCss(a); }
+  function applyFrame(el,a,index,file){
+    if(!el)return;
+    var cols=Math.max(1,Number(a.columns||1)),rows=Math.max(1,Number(a.rows||1)),max=cols*rows-1;
+    index=Math.max(0,Math.min(max,Number(index||0)));
+    var p=framePos(index,cols,rows);
+    var ratio=getAspectRatio(a);
+    el.style.backgroundImage='url("'+imageUrl(file||a.file).replace(/"/g,"%22")+'")';
+    el.style.backgroundSize=(cols*100)+"% "+(rows*100)+"%";
+    el.style.backgroundPosition=p.x+"% "+p.y+"%";
+    el.style.transform=transformCss(a);
+    if(ratio!==1 && Number.isFinite(ratio) && ratio>0){
+      el.style.aspectRatio=String(ratio);
+      if(ratio<1){
+        el.style.height="100%";
+        el.style.width="auto";
+        el.style.maxWidth=(ratio*100)+"%";
+        el.style.maxHeight="100%";
+      }else{
+        el.style.width="100%";
+        el.style.height="auto";
+        el.style.maxWidth="100%";
+        el.style.maxHeight=((1/ratio)*100)+"%";
+      }
+    }else{
+      el.style.aspectRatio="1 / 1";
+      el.style.width="100%";
+      el.style.height="100%";
+      el.style.maxWidth="100%";
+      el.style.maxHeight="100%";
+    }
+  }
   function animationCycle(a){ return (a.frameDurationsMs||[]).reduce(function(sum,v){return sum+Math.max(40,Number(v||180));},0)||180; }
   function stopPreview(card){ var old=timers.get(card); if(old) window.clearTimeout(old); timers.delete(card); var stage=card.querySelector(".preview-stage"); if(stage&&stage.getAnimations) stage.getAnimations().forEach(function(x){try{x.cancel();}catch(e){}}); }
   function animateMotion(card,a){ var stage=card.querySelector(".preview-stage"); if(!stage||!stage.animate||!a.motion)return; var type=String(a.motion.type||"none"),d=Math.max(0,Number(a.motion.distancePx||0)); if(!d||type==="none")return; var duration=Math.max(450,animationCycle(a)); var frames=type==="jump"?[{transform:"translate3d(0,0,0)"},{transform:"translate3d(0,"+(-d)+"px,0)",offset:.5},{transform:"translate3d(0,0,0)"}]:[{transform:"translate3d(0,0,0)"},{transform:"translate3d("+(type==="left"?-d:d)+"px,0,0)"},{transform:"translate3d(0,0,0)"}]; stage.animate(frames,{duration:duration,iterations:Infinity,easing:"ease-in-out"}); }
@@ -284,17 +375,6 @@ button,input,select{font:inherit}.sprites-top{position:sticky;top:46px;z-index:4
   function triggersHtml(a){ return Object.keys(state.triggers||{}).map(function(key){return '<label><input type="checkbox" data-field="trigger" value="'+esc(key)+'" '+((a.triggers||[]).indexOf(key)!==-1?'checked':'')+'> '+esc(state.triggers[key])+'</label>';}).join(""); }
   function motionOptionsHtml(a){ return Object.keys(state.motionOptions||{}).map(function(key){return '<option value="'+esc(key)+'" '+(String((a.motion||{}).type||"none")===key?'selected':'')+'>'+esc(state.motionOptions[key])+'</option>';}).join(""); }
   function frameRail(card,a){ var host=card.querySelector(".frames"); host.innerHTML=""; (a.sequence||[]).forEach(function(frame,step){ var item=document.createElement("div"); item.className="frame-step"; item.innerHTML='<div class="frame-thumb"><div class="sprite-crop"></div><span class="frame-index">'+esc(frame)+'</span></div><input type="number" min="40" max="10000" value="'+esc((a.frameDurationsMs||[])[step]||180)+'" data-step="'+step+'"><small>ms</small>'; applyFrame(item.querySelector(".sprite-crop"),a,frame,a.file); host.appendChild(item); }); }
-  function readCard(card,a,kind){
-    function val(name){var el=card.querySelector('[data-field="'+name+'"]');return el?el.value:"";}
-    a.name=val("name").trim()||a.name; a.file=val("file").trim(); a.columns=num(val("columns"),1,16,a.columns||1); a.rows=num(val("rows"),1,16,a.rows||1); a.sequence=val("sequence").split(/[\s,;]+/).map(Number).filter(function(v){return Number.isInteger(v)&&v>=0&&v<a.columns*a.rows;}).slice(0,128); if(!a.sequence.length)a.sequence=[0];
-    var oldDur=Array.isArray(a.frameDurationsMs)?a.frameDurationsMs:[]; a.frameDurationsMs=a.sequence.map(function(_,i){var step=card.querySelector('[data-step="'+i+'"]');return num(step?step.value:oldDur[i],40,10000,180);});
-    a.repeat=num(val("repeat"),0,20,1); a.probability=num(val("probability"),0,100,100)/100; a.weight=num(val("weight"),1,100,1); a.cooldownMs=num(val("cooldown"),0,3600,0)*1000; a.staticFrame=num(val("staticFrame"),0,Math.max(0,a.columns*a.rows-1),0); a.flipX=!!card.querySelector('[data-field="flipX"]:checked'); a.enabled=!!card.querySelector('[data-field="enabled"]:checked');
-    a.products=val("products").split(/[\s,;]+/).map(function(x){return x.trim().toLowerCase();}).filter(Boolean); a.triggers=Array.prototype.map.call(card.querySelectorAll('[data-field="trigger"]:checked'),function(el){return el.value;});
-    a.transform={xPx:num(val("x"),-600,600,0),yPx:num(val("y"),-600,600,0),rotationDeg:num(val("rotation"),-360,360,0)};
-    if(kind==="face"){a.smallFile=val("smallFile").trim();a.contexts=Array.prototype.map.call(card.querySelectorAll('[data-field="context"]:checked'),function(el){return el.value;});a.motion={type:"none",distancePx:0};}
-    else{a.motion={type:val("motionType")||"none",distancePx:num(val("motionDistance"),0,600,0)};}
-    return a;
-  }
   function renderCard(a,kind,section){
     a.transform=a.transform||{xPx:0,yPx:0,rotationDeg:0}; a.motion=a.motion||{type:"none",distancePx:0}; a.products=a.products||[]; a.triggers=a.triggers||[];
     var card=document.createElement("article"); card.className="sprite-card"+(a.enabled===false?" is-off":""); card.dataset.id=a.id; card.dataset.kind=kind;
@@ -306,6 +386,7 @@ button,input,select{font:inherit}.sprites-top{position:sticky;top:46px;z-index:4
       '<label class="field full"><span>Localização da imagem</span><input data-field="file" value="'+esc(a.file)+'"><code>'+esc(miuPrefix+a.file)+'</code></label>'+
       (kind==="face"?'<label class="field full"><span>Variante pequena (barra / mensagens)</span><input data-field="smallFile" value="'+esc(a.smallFile||'')+'"></label>':'')+
       '<label class="field"><span>Colunas</span><input type="number" data-field="columns" min="1" max="16" value="'+esc(a.columns)+'"></label><label class="field"><span>Linhas</span><input type="number" data-field="rows" min="1" max="16" value="'+esc(a.rows)+'"></label>'+
+      '<label class="field"><span>Largura da frame (px)</span><input type="number" data-field="frameWidth" min="0" max="4000" placeholder="1:1 (padrão)" value="'+esc(a.frameWidth||'')+'"></label><label class="field"><span>Altura da frame (px)</span><input type="number" data-field="frameHeight" min="0" max="4000" placeholder="1:1 (padrão)" value="'+esc(a.frameHeight||'')+'"></label>'+
       '<label class="field full"><span>Sequência de frames</span><input data-field="sequence" value="'+esc((a.sequence||[]).join(', '))+'"></label>'+
       '<div class="subhead">Quando aparece</div><div class="field full"><div class="checkrow">'+triggersHtml(a)+'</div></div>'+
       (kind==="face"?'<div class="field full"><span>Contextos</span><div class="checkrow">'+contextsHtml(a)+'</div></div>':'')+
@@ -314,8 +395,6 @@ button,input,select{font:inherit}.sprites-top{position:sticky;top:46px;z-index:4
       (kind==="body"?'<label class="field"><span>Movimento</span><select data-field="motionType">'+motionOptionsHtml(a)+'</select></label><label class="field"><span>Distância (px)</span><input type="number" data-field="motionDistance" min="0" max="600" value="'+esc(a.motion.distancePx||0)+'"></label>':'')+
       '<div class="subhead">Transformação visual</div><label class="field"><span>X (px)</span><input type="number" data-field="x" min="-600" max="600" value="'+esc(a.transform.xPx||0)+'"></label><label class="field"><span>Y (px)</span><input type="number" data-field="y" min="-600" max="600" value="'+esc(a.transform.yPx||0)+'"></label><label class="field"><span>Rotação (°)</span><input type="number" data-field="rotation" min="-360" max="360" step="1" value="'+esc(a.transform.rotationDeg||0)+'"></label>'+
       '</div></aside></div>';
-    // O flip é um select visual, mas readCard espera a semântica de checkbox.
-    var flipSelect=card.querySelector('[data-field="flipX"]');
     function sync(){
       a=readCardSpecial(card,a,kind); card.classList.toggle("is-off",a.enabled===false); card.querySelector("header strong").textContent=a.name; card.querySelector(".circumstances").textContent=triggerText(a); frameRail(card,a); startPreview(card,a); var code=card.querySelector('.field.full code'); if(code)code.textContent=miuPrefix+a.file; markDirty();
     }
@@ -325,11 +404,20 @@ button,input,select{font:inherit}.sprites-top{position:sticky;top:46px;z-index:4
     frameRail(card,a); startPreview(card,a); return card;
   }
   function readCardSpecial(card,a,kind){
-    // O select de flip evita um checkbox minúsculo no painel escuro; converte-o
-    // temporariamente antes de usar a rotina comum.
     var flip=card.querySelector('[data-field="flipX"]'); var checked=flip&&flip.value==="1";
     function val(name){var el=card.querySelector('[data-field="'+name+'"]');return el?el.value:"";}
     a.name=val("name").trim()||a.name; a.file=val("file").trim(); a.columns=num(val("columns"),1,16,a.columns||1); a.rows=num(val("rows"),1,16,a.rows||1); a.sequence=val("sequence").split(/[\s,;]+/).map(Number).filter(function(v){return Number.isInteger(v)&&v>=0&&v<a.columns*a.rows;}).slice(0,128); if(!a.sequence.length)a.sequence=[0];
+    var fw=num(val("frameWidth"),0,4000,0);
+    var fh=num(val("frameHeight"),0,4000,0);
+    if(fw>0 && fh>0){
+      a.frameWidth=fw;
+      a.frameHeight=fh;
+      a.aspectRatio=Math.round((fw/fh)*10000)/10000;
+    }else{
+      delete a.frameWidth;
+      delete a.frameHeight;
+      delete a.aspectRatio;
+    }
     var oldDur=Array.isArray(a.frameDurationsMs)?a.frameDurationsMs:[]; a.frameDurationsMs=a.sequence.map(function(_,i){var step=card.querySelector('[data-step="'+i+'"]');return num(step?step.value:oldDur[i],40,10000,180);}); a.repeat=num(val("repeat"),0,20,1); a.probability=num(val("probability"),0,100,100)/100; a.weight=num(val("weight"),1,100,1); a.cooldownMs=num(val("cooldown"),0,3600,0)*1000; a.staticFrame=num(val("staticFrame"),0,Math.max(0,a.columns*a.rows-1),0); a.flipX=checked; a.enabled=!!card.querySelector('[data-field="enabled"]:checked'); a.products=val("products").split(/[\s,;]+/).map(function(x){return x.trim().toLowerCase();}).filter(Boolean); a.triggers=Array.prototype.map.call(card.querySelectorAll('[data-field="trigger"]:checked'),function(el){return el.value;}); a.transform={xPx:num(val("x"),-600,600,0),yPx:num(val("y"),-600,600,0),rotationDeg:num(val("rotation"),-360,360,0)}; if(kind==="face"){a.smallFile=val("smallFile").trim();a.contexts=Array.prototype.map.call(card.querySelectorAll('[data-field="context"]:checked'),function(el){return el.value;});a.motion={type:"none",distancePx:0};}else{a.motion={type:val("motionType")||"none",distancePx:num(val("motionDistance"),0,600,0)};} return a;
   }
   function renderSection(kind){ var section=state[kind],host=document.getElementById(kind+"-list"); host.innerHTML=""; section.animations.forEach(function(a){host.appendChild(renderCard(a,kind,section));}); }

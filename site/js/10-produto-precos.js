@@ -195,7 +195,9 @@
     return selectedOptionDrawerRecords(product).map(function (record) {
       var extra = Math.max(0, parseInt(record.item.extraPriceCentsPerUnit, 10) || 0);
       var value = String(record.item.title || record.item.value || "");
-      if (extra) {
+      if (record.item.priceLabel) {
+        value += " (" + String(record.item.priceLabel) + ")";
+      } else if (extra) {
         value += " (+" + formatCents(extra) + " por " + productUnitSingular(product) + ")";
       }
       return [String(record.drawer.label || record.drawer.title || "Opção") + ":", value];

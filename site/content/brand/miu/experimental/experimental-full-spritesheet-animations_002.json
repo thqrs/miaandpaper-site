@@ -1,0 +1,191 @@
+{
+  "version": 2,
+  "kind": "multi-sheet-grid",
+  "name": "Míu · Sistema Fluído Multi-Sheet (8×8)",
+  "defaultSheet": "1",
+  "sheets": {
+    "1": {
+      "file": "miu-fluid-animations-transparent.png",
+      "columns": 8,
+      "rows": 8,
+      "name": "Folha 1 · Animações Fluídas (In-betweens)"
+    },
+    "2": {
+      "file": "ChatGPT Image 19_08_2026, 22_36_20.png",
+      "columns": 8,
+      "rows": 8,
+      "name": "Folha 2 · Expressões e Emoções (64 Poses)"
+    }
+  },
+  "finalUseSizePx": 100,
+  "defaultAnimationId": "idle_blink",
+  "note": "Suporta combinação de frames das 2 folhas para máxima fluidez e expressividade.",
+  "animations": [
+    {
+      "id": "idle_blink",
+      "name": "01 · Respiração & Piscar Fluído",
+      "group": "Ciclos de Base",
+      "loop": true,
+      "frames": [
+        { "sheet": "1", "cell": [0, 0], "durationMs": 1400 },
+        { "sheet": "1", "cell": [1, 0], "durationMs": 70 },
+        { "sheet": "1", "cell": [2, 0], "durationMs": 70 },
+        { "sheet": "1", "cell": [3, 0], "durationMs": 90 },
+        { "sheet": "1", "cell": [4, 0], "durationMs": 110 },
+        { "sheet": "1", "cell": [5, 0], "durationMs": 70 },
+        { "sheet": "1", "cell": [6, 0], "durationMs": 70 },
+        { "sheet": "1", "cell": [7, 0], "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "happy_laugh",
+      "name": "02 · Sorriso Doce & Gargalhada",
+      "group": "Expressões Positivas",
+      "loop": true,
+      "frames": [
+        { "sheet": "1", "cell": [0, 1], "durationMs": 400 },
+        { "sheet": "1", "cell": [1, 1], "durationMs": 140 },
+        { "sheet": "1", "cell": [2, 1], "durationMs": 150 },
+        { "sheet": "1", "cell": [3, 1], "durationMs": 280 },
+        { "sheet": "1", "cell": [4, 1], "durationMs": 350 },
+        { "sheet": "1", "cell": [5, 1], "durationMs": 250 },
+        { "sheet": "2", "cell": [6, 1], "durationMs": 300 },
+        { "sheet": "1", "cell": [6, 1], "durationMs": 250 },
+        { "sheet": "1", "cell": [7, 1], "durationMs": 500 }
+      ]
+    },
+    {
+      "id": "curious_tilt",
+      "name": "03 · Inclinação de Cabeça Curiosa",
+      "group": "Curiosidade & Exploração",
+      "loop": true,
+      "frames": [
+        { "sheet": "1", "cell": [0, 2], "durationMs": 350 },
+        { "sheet": "1", "cell": [1, 2], "durationMs": 130 },
+        { "sheet": "1", "cell": [2, 2], "durationMs": 150 },
+        { "sheet": "1", "cell": [3, 2], "durationMs": 420 },
+        { "sheet": "1", "cell": [4, 2], "durationMs": 480 },
+        { "sheet": "1", "cell": [5, 2], "durationMs": 180 },
+        { "sheet": "1", "cell": [6, 2], "durationMs": 140 },
+        { "sheet": "1", "cell": [7, 2], "durationMs": 400 }
+      ]
+    },
+    {
+      "id": "yawn_to_sleep",
+      "name": "04 · Do Bocejo ao Sono Profundo",
+      "group": "Repouso & Sono",
+      "loop": true,
+      "frames": [
+        { "sheet": "1", "cell": [0, 3], "durationMs": 600 },
+        { "sheet": "1", "cell": [1, 3], "durationMs": 200 },
+        { "sheet": "1", "cell": [2, 3], "durationMs": 450 },
+        { "sheet": "1", "cell": [3, 3], "durationMs": 250 },
+        { "sheet": "1", "cell": [4, 3], "durationMs": 400 },
+        { "sheet": "1", "cell": [5, 3], "durationMs": 600 },
+        { "sheet": "2", "cell": [4, 3], "durationMs": 800 },
+        { "sheet": "1", "cell": [6, 3], "durationMs": 700 },
+        { "sheet": "1", "cell": [7, 3], "durationMs": 1300 }
+      ]
+    },
+    {
+      "id": "thinking_to_surprise",
+      "name": "05 · A Pensar até à Descoberta (Eureka!)",
+      "group": "Raciocínio & Ideias",
+      "loop": true,
+      "frames": [
+        { "sheet": "1", "cell": [0, 4], "durationMs": 350 },
+        { "sheet": "1", "cell": [1, 4], "durationMs": 200 },
+        { "sheet": "1", "cell": [2, 4], "durationMs": 600 },
+        { "sheet": "2", "cell": [4, 2], "durationMs": 500 },
+        { "sheet": "1", "cell": [3, 4], "durationMs": 250 },
+        { "sheet": "1", "cell": [4, 4], "durationMs": 450 },
+        { "sheet": "2", "cell": [6, 2], "durationMs": 400 },
+        { "sheet": "1", "cell": [5, 4], "durationMs": 350 },
+        { "sheet": "1", "cell": [6, 4], "durationMs": 400 }
+      ]
+    },
+    {
+      "id": "sneeze_flower",
+      "name": "06 · O Espirro com a Margarida",
+      "group": "Natureza & Emoções",
+      "loop": true,
+      "frames": [
+        { "sheet": "1", "cell": [0, 5], "durationMs": 600 },
+        { "sheet": "1", "cell": [1, 5], "durationMs": 250 },
+        { "sheet": "1", "cell": [2, 5], "durationMs": 250 },
+        { "sheet": "1", "cell": [3, 5], "durationMs": 250 },
+        { "sheet": "1", "cell": [4, 5], "durationMs": 380 },
+        { "sheet": "1", "cell": [5, 5], "durationMs": 450 },
+        { "sheet": "1", "cell": [6, 5], "durationMs": 250 },
+        { "sheet": "1", "cell": [7, 5], "durationMs": 500 }
+      ]
+    },
+    {
+      "id": "paw_washing",
+      "name": "07 · Patinha a Lavar o Rosto",
+      "group": "Grooming & Carinho",
+      "loop": true,
+      "frames": [
+        { "sheet": "1", "cell": [0, 6], "durationMs": 250 },
+        { "sheet": "1", "cell": [1, 6], "durationMs": 300 },
+        { "sheet": "1", "cell": [2, 6], "durationMs": 380 },
+        { "sheet": "1", "cell": [3, 6], "durationMs": 380 },
+        { "sheet": "1", "cell": [4, 6], "durationMs": 300 },
+        { "sheet": "1", "cell": [5, 6], "durationMs": 350 },
+        { "sheet": "1", "cell": [6, 6], "durationMs": 220 },
+        { "sheet": "1", "cell": [7, 6], "durationMs": 500 }
+      ]
+    },
+    {
+      "id": "origami_heart",
+      "name": "08 · Origami de Coração de Papel",
+      "group": "Papelaria & Artesanato",
+      "loop": true,
+      "frames": [
+        { "sheet": "1", "cell": [0, 7], "durationMs": 400 },
+        { "sheet": "1", "cell": [1, 7], "durationMs": 250 },
+        { "sheet": "1", "cell": [2, 7], "durationMs": 250 },
+        { "sheet": "1", "cell": [3, 7], "durationMs": 250 },
+        { "sheet": "1", "cell": [4, 7], "durationMs": 350 },
+        { "sheet": "1", "cell": [5, 7], "durationMs": 550 },
+        { "sheet": "1", "cell": [6, 7], "durationMs": 400 },
+        { "sheet": "2", "cell": [5, 7], "durationMs": 500 },
+        { "sheet": "1", "cell": [7, 7], "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "butterfly_story",
+      "name": "09 · História da Borboleta (Híbrida Folha 1+2)",
+      "group": "Histórias Híbridas",
+      "loop": true,
+      "frames": [
+        { "sheet": "1", "cell": [0, 0], "durationMs": 800 },
+        { "sheet": "1", "cell": [1, 2], "durationMs": 250 },
+        { "sheet": "1", "cell": [2, 2], "durationMs": 300 },
+        { "sheet": "2", "cell": [1, 7], "durationMs": 600 },
+        { "sheet": "2", "cell": [0, 7], "durationMs": 900 },
+        { "sheet": "1", "cell": [1, 5], "durationMs": 250 },
+        { "sheet": "1", "cell": [4, 5], "durationMs": 350 },
+        { "sheet": "2", "cell": [6, 0], "durationMs": 400 },
+        { "sheet": "1", "cell": [6, 1], "durationMs": 400 },
+        { "sheet": "1", "cell": [7, 1], "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "cozy_love",
+      "name": "10 · Momento Doce & Carinho (Híbrida Folha 1+2)",
+      "group": "Histórias Híbridas",
+      "loop": true,
+      "frames": [
+        { "sheet": "1", "cell": [0, 1], "durationMs": 400 },
+        { "sheet": "1", "cell": [1, 6], "durationMs": 300 },
+        { "sheet": "1", "cell": [2, 6], "durationMs": 350 },
+        { "sheet": "1", "cell": [5, 7], "durationMs": 400 },
+        { "sheet": "2", "cell": [3, 4], "durationMs": 550 },
+        { "sheet": "2", "cell": [4, 4], "durationMs": 500 },
+        { "sheet": "2", "cell": [5, 4], "durationMs": 450 },
+        { "sheet": "1", "cell": [7, 7], "durationMs": 800 }
+      ]
+    }
+  ]
+}

@@ -404,7 +404,7 @@ function miu_animation_sanitize_item($item)
     $motionType = isset($motion['type']) && isset($motionOptions[$motion['type']]) ? (string)$motion['type'] : 'none';
     $transform = isset($item['transform']) && is_array($item['transform']) ? $item['transform'] : array();
 
-    return array(
+    $res = array(
         'id' => $id,
         'name' => substr(trim((string)(isset($item['name']) ? $item['name'] : $id)), 0, 80),
         'file' => $file,
@@ -431,6 +431,26 @@ function miu_animation_sanitize_item($item)
             'rotationDeg' => miu_animation_float(isset($transform['rotationDeg']) ? $transform['rotationDeg'] : 0, -360, 360, 0),
         ),
     );
+
+    if (isset($item['frameWidth']) && is_numeric($item['frameWidth']) && (int)$item['frameWidth'] > 0) {
+        $res['frameWidth'] = (int)$item['frameWidth'];
+    }
+    if (isset($item['frameHeight']) && is_numeric($item['frameHeight']) && (int)$item['frameHeight'] > 0) {
+        $res['frameHeight'] = (int)$item['frameHeight'];
+    }
+    if (isset($item['sheetWidth']) && is_numeric($item['sheetWidth']) && (int)$item['sheetWidth'] > 0) {
+        $res['sheetWidth'] = (int)$item['sheetWidth'];
+    }
+    if (isset($item['sheetHeight']) && is_numeric($item['sheetHeight']) && (int)$item['sheetHeight'] > 0) {
+        $res['sheetHeight'] = (int)$item['sheetHeight'];
+    }
+    if (isset($item['aspectRatio']) && is_numeric($item['aspectRatio']) && (float)$item['aspectRatio'] > 0) {
+        $res['aspectRatio'] = round((float)$item['aspectRatio'], 4);
+    } elseif (!empty($res['frameWidth']) && !empty($res['frameHeight'])) {
+        $res['aspectRatio'] = round($res['frameWidth'] / $res['frameHeight'], 4);
+    }
+
+    return $res;
 }
 
 function miu_animation_config()

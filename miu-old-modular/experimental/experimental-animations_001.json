@@ -1,0 +1,388 @@
+{
+  "schemaVersion": 1,
+  "id": "miu-modular-animations-001",
+  "status": "experimental",
+  "scope": "Cara do Míu; sem corpo completo e sem alcofa.",
+  "atlases": [
+    "miu-modular-sheet_001.json",
+    "miu-modular-sheet_002.json"
+  ],
+  "defaultAnimationId": "face-calm",
+  "defaultStateId": "headNeutral",
+  "currentSources": {
+    "faceNeutral": {
+      "sheet": "../miu-sprite.webp",
+      "columns": 4,
+      "rows": 2,
+      "sequence": [0],
+      "frameDurationsMs": [1000]
+    },
+    "faceCalm": {
+      "sheet": "../miu-sprite.webp",
+      "columns": 4,
+      "rows": 2,
+      "sequence": [0, 0, 0, 1, 2, 3, 0, 0, 0, 7, 0, 0, 0],
+      "frameDurationsMs": [1300, 1100, 900, 110, 100, 150, 1200, 950, 1200, 700, 1000, 900, 1200]
+    },
+    "faceSmile": {
+      "sheet": "../miu-sprite.webp",
+      "columns": 4,
+      "rows": 2,
+      "sequence": [0, 6, 6, 0],
+      "frameDurationsMs": [100, 320, 260, 180]
+    },
+    "faceTilt": {
+      "sheet": "../miu-sprite.webp",
+      "columns": 4,
+      "rows": 2,
+      "sequence": [0, 4, 4, 0, 5, 5, 0],
+      "frameDurationsMs": [100, 420, 250, 160, 420, 250, 180]
+    },
+    "faceEar": {
+      "sheet": "../miu-sprite.webp",
+      "columns": 4,
+      "rows": 2,
+      "sequence": [0, 7, 7, 0],
+      "frameDurationsMs": [120, 380, 320, 180]
+    },
+    "faceSleep": {
+      "sheet": "../miu-sprite-sleep.webp",
+      "columns": 4,
+      "rows": 1,
+      "sequence": [0, 1, 2, 3, 2, 3],
+      "frameDurationsMs": [650, 700, 650, 1100, 650, 1100]
+    }
+  },
+  "states": {
+    "headNeutral": {
+      "name": "Cara neutra",
+      "group": "Míu actual recriado",
+      "layers": { "ears": "ears.neutral", "base": "base.headNeutral", "eyes": "eyes.open", "mouth": "mouth.neutral" }
+    },
+    "headHalfBlink": {
+      "name": "Meio piscar",
+      "group": "Míu actual recriado",
+      "layers": { "ears": "ears.neutral", "base": "base.headNeutral", "eyes": "eyes.half", "mouth": "mouth.neutral" }
+    },
+    "headClosed": {
+      "name": "Olhos fechados",
+      "group": "Míu actual recriado",
+      "layers": { "ears": "ears.neutral", "base": "base.headNeutral", "eyes": "eyes.closed", "mouth": "mouth.neutral" }
+    },
+    "headSmile": {
+      "name": "Sorriso",
+      "group": "Míu actual recriado",
+      "layers": { "ears": "ears.neutral", "base": "base.headNeutral", "eyes": "eyes.smiling", "mouth": "mouth.lightSmile", "effects": ["effects.blushLeft", "effects.blushRight"] }
+    },
+    "headOpenSmile": {
+      "name": "Sorriso aberto",
+      "group": "Míu actual recriado",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "eyes.smiling", "mouth": "mouth.openSmile", "effects": "effects.sparkles" }
+    },
+    "headTiltLeft": {
+      "name": "Inclinação esquerda",
+      "group": "Míu actual recriado",
+      "layers": { "ears": "ears.leftTilt", "base": "base.headTiltLeft", "eyes": "eyes.curious", "mouth": "mouth.lightSmile" }
+    },
+    "headTiltRight": {
+      "name": "Inclinação direita",
+      "group": "Míu actual recriado",
+      "layers": { "ears": "ears.rightTilt", "base": "base.headTiltRight", "eyes": "eyes.curious", "mouth": "mouth.lightSmile" }
+    },
+    "headEarLeft": {
+      "name": "Orelha esquerda",
+      "group": "Míu actual recriado",
+      "layers": { "ears": "ears.leftTwitch", "base": "base.headNeutral", "eyes": "eyes.open", "mouth": "mouth.neutral" }
+    },
+    "headEarRight": {
+      "name": "Orelha direita",
+      "group": "Míu actual recriado",
+      "layers": { "ears": "ears.rightTwitch", "base": "base.headNeutral", "eyes": "eyes.open", "mouth": "mouth.neutral" }
+    },
+    "headDrowsy": {
+      "name": "A ficar sonolento",
+      "group": "Míu actual recriado",
+      "layers": { "ears": "ears.sleepy", "base": "base.headSleepy", "eyes": "eyes.sleepy", "mouth": "mouth.sleepy" }
+    },
+    "headAsleep": {
+      "name": "A dormir",
+      "group": "Míu actual recriado",
+      "layers": { "ears": "ears.sleepy", "base": "base.headSleepy", "eyes": "eyes.closed", "mouth": "mouth.sleepy", "effects": "effects.sleepZ" }
+    },
+    "headDeepSleep": {
+      "name": "Sono profundo",
+      "group": "Míu actual recriado",
+      "layers": { "ears": "ears.lowered", "base": "base.headSleepy", "eyes": "eyes.closed", "mouth": "mouth.sleepy", "effects": "effects.sleepZAlt" },
+      "transform": { "y": 2, "scale": 0.98 }
+    },
+    "headCurious": {
+      "name": "Curioso",
+      "group": "Outras emoções",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "eyes.curious", "brows": "brows.leftRaised", "mouth": "mouth.lightSmile" }
+    },
+    "headConfused": {
+      "name": "Confuso",
+      "group": "Outras emoções",
+      "layers": { "ears": "ears.leftTilt", "base": "base.headNeutral", "eyes": "ekmanEyes.confused", "mouth": "ekmanMouth.confused", "effects": "emotionDetail.confusedQuestion" }
+    },
+    "headSurprised": {
+      "name": "Surpreendido",
+      "group": "Outras emoções",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "eyes.surprised", "mouth": "mouth.surpriseO", "effects": "effects.exclamation" }
+    },
+    "headThinking": {
+      "name": "Pensativo",
+      "group": "Outras emoções",
+      "layers": { "ears": "ears.rightTilt", "base": "base.headTiltRight", "eyes": "eyes.curious", "brows": "brows.rightRaised", "mouth": "mouth.uncertain", "effects": "emotionEffects.thought" }
+    },
+    "headWorried": {
+      "name": "Preocupado",
+      "group": "Outras emoções",
+      "layers": { "ears": "ears.lowered", "base": "base.headNeutral", "eyes": "ekmanEyes.sadness", "brows": "brows.worried", "mouth": "mouth.uncertain", "effects": "effects.sweat" }
+    },
+    "headEmbarrassed": {
+      "name": "Envergonhado",
+      "group": "Outras emoções",
+      "layers": { "ears": "ears.lowered", "base": "base.headNeutral", "eyes": "eyes.half", "mouth": "mouth.sorry", "effects": "emotionEffects.blush" }
+    },
+    "headSorry": {
+      "name": "Pedido de desculpa",
+      "group": "Outras emoções",
+      "layers": { "ears": "ears.lowered", "base": "base.headNeutral", "eyes": "ekmanEyes.sadness", "mouth": "mouth.sorry", "paws": "paws.leftUnderChin" }
+    },
+    "headCheeky": {
+      "name": "Maroto",
+      "group": "Outras emoções",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "eyes.half", "brows": "brows.leftRaised", "mouth": "mouth.cheeky", "effects": "effects.shine" }
+    },
+    "ekmanHappiness": {
+      "name": "Ekman · felicidade",
+      "group": "Emoções de Ekman",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "ekmanEyes.happiness", "mouth": "ekmanMouth.happiness", "effects": "emotionDetail.happyBlush" }
+    },
+    "ekmanSadness": {
+      "name": "Ekman · tristeza",
+      "group": "Emoções de Ekman",
+      "layers": { "ears": "ears.lowered", "base": "base.headNeutral", "eyes": "ekmanEyes.sadness", "mouth": "ekmanMouth.sadness", "effects": "emotionDetail.sadTear" }
+    },
+    "ekmanAnger": {
+      "name": "Ekman · raiva",
+      "group": "Emoções de Ekman",
+      "layers": { "ears": "ears.lowered", "base": "base.headNeutral", "eyes": "ekmanEyes.anger", "mouth": "ekmanMouth.anger", "effects": "emotionDetail.angerMark" }
+    },
+    "ekmanFear": {
+      "name": "Ekman · medo",
+      "group": "Emoções de Ekman",
+      "layers": { "ears": "ears.lowered", "base": "base.headNeutral", "eyes": "ekmanEyes.fear", "mouth": "ekmanMouth.fear", "effects": "emotionDetail.fearSweat" }
+    },
+    "ekmanDisgust": {
+      "name": "Ekman · nojo",
+      "group": "Emoções de Ekman",
+      "layers": { "ears": "ears.rightTilt", "base": "base.headNeutral", "eyes": "ekmanEyes.disgust", "mouth": "ekmanMouth.disgust", "effects": "emotionDetail.disgustSquiggle" }
+    },
+    "ekmanSurprise": {
+      "name": "Ekman · surpresa",
+      "group": "Emoções de Ekman",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "ekmanEyes.surprise", "mouth": "ekmanMouth.surprise", "effects": "emotionDetail.surpriseMotion" }
+    },
+    "ekmanContempt": {
+      "name": "Ekman · desprezo",
+      "group": "Emoções de Ekman",
+      "layers": { "ears": "ears.rightTilt", "base": "base.headNeutral", "eyes": "ekmanEyes.contempt", "mouth": "ekmanMouth.contempt", "effects": "emotionDetail.contemptBrow" }
+    },
+    "butterflyLeft": {
+      "name": "Borboleta aproxima-se pela esquerda",
+      "group": "Interacções cara-first",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "eyes.curious", "mouth": "mouth.neutral", "props": "props.butterflyLeft" }
+    },
+    "butterflyRight": {
+      "name": "Borboleta aproxima-se pela direita",
+      "group": "Interacções cara-first",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "eyes.curious", "mouth": "mouth.neutral", "props": "props.butterflyRight" }
+    },
+    "butterflyNose": {
+      "name": "Borboleta pousada no nariz",
+      "group": "Interacções cara-first",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "eyes.curious", "mouth": "mouth.lightSmile", "props": "props.butterflyNose" }
+    },
+    "yarnLeft": {
+      "name": "Novelo à esquerda",
+      "group": "Interacções cara-first",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "eyes.curious", "mouth": "mouth.lightSmile", "paws": "paws.reachLeft", "props": "props.yarnLeft" }
+    },
+    "yarnRight": {
+      "name": "Novelo à direita",
+      "group": "Interacções cara-first",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "eyes.curious", "mouth": "mouth.lightSmile", "paws": "paws.reachRight", "props": "props.yarnRight" }
+    },
+    "yarnHold": {
+      "name": "A segurar no fio de lã",
+      "group": "Interacções cara-first",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "eyes.smiling", "mouth": "mouth.openSmile", "paws": "paws.holdYarn", "props": "props.yarnStrand" }
+    },
+    "pawsUnderChin": {
+      "name": "Patinhas sob o queixo",
+      "group": "Interacções cara-first",
+      "layers": { "ears": "ears.neutral", "base": "base.headNeutral", "eyes": "eyes.smiling", "mouth": "mouth.lightSmile", "paws": "paws.bothUnderChin" }
+    },
+    "pawWave": {
+      "name": "Patinha a acenar",
+      "group": "Interacções cara-first",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "eyes.smiling", "mouth": "mouth.openSmile", "paws": "paws.wave" }
+    },
+    "coverMouth": {
+      "name": "Patinha a tapar a boca",
+      "group": "Interacções cara-first",
+      "layers": { "ears": "ears.neutral", "base": "base.headNeutral", "eyes": "eyes.smiling", "mouth": "mouth.openSmile", "paws": "paws.coverMouth", "effects": "effects.blushRight" }
+    },
+    "paperHeart": {
+      "name": "Coração de papel",
+      "group": "Interacções cara-first",
+      "layers": { "ears": "ears.alert", "base": "base.headNeutral", "eyes": "eyes.smiling", "mouth": "mouth.lightSmile", "paws": "paws.bothUnderChin", "props": "props.paperHeart" }
+    },
+    "flowerCurious": {
+      "name": "Flor curiosa",
+      "group": "Interacções cara-first",
+      "layers": { "ears": "ears.leftTilt", "base": "base.headTiltLeft", "eyes": "eyes.curious", "mouth": "mouth.lightSmile", "props": "props.flower" }
+    }
+  },
+  "animations": [
+    {
+      "id": "face-calm",
+      "name": "Actual · cara calma",
+      "group": "Animações actuais",
+      "current": "faceCalm",
+      "loop": true,
+      "frames": [
+        { "state": "headNeutral", "durationMs": 1300 }, { "state": "headNeutral", "durationMs": 1100 }, { "state": "headNeutral", "durationMs": 900 },
+        { "state": "headHalfBlink", "durationMs": 110 }, { "state": "headClosed", "durationMs": 100 }, { "state": "headHalfBlink", "durationMs": 150 },
+        { "state": "headNeutral", "durationMs": 1200 }, { "state": "headNeutral", "durationMs": 950 }, { "state": "headNeutral", "durationMs": 1200 },
+        { "state": "headEarLeft", "durationMs": 700 }, { "state": "headNeutral", "durationMs": 1000 }, { "state": "headNeutral", "durationMs": 900 },
+        { "state": "headNeutral", "durationMs": 1200 }
+      ]
+    },
+    {
+      "id": "face-smile",
+      "name": "Actual · sorriso",
+      "group": "Animações actuais",
+      "current": "faceSmile",
+      "loop": true,
+      "frames": [
+        { "state": "headNeutral", "durationMs": 100 }, { "state": "headSmile", "durationMs": 320 },
+        { "state": "headOpenSmile", "durationMs": 260 }, { "state": "headNeutral", "durationMs": 180 }
+      ]
+    },
+    {
+      "id": "face-tilt",
+      "name": "Actual · inclinar",
+      "group": "Animações actuais",
+      "current": "faceTilt",
+      "loop": true,
+      "frames": [
+        { "state": "headNeutral", "durationMs": 100 }, { "state": "headTiltLeft", "durationMs": 420 },
+        { "state": "headTiltLeft", "durationMs": 250 }, { "state": "headNeutral", "durationMs": 160 },
+        { "state": "headTiltRight", "durationMs": 420 }, { "state": "headTiltRight", "durationMs": 250 },
+        { "state": "headNeutral", "durationMs": 180 }
+      ]
+    },
+    {
+      "id": "face-ear-twitch",
+      "name": "Actual · mexer a orelha",
+      "group": "Animações actuais",
+      "current": "faceEar",
+      "loop": true,
+      "frames": [
+        { "state": "headNeutral", "durationMs": 120 }, { "state": "headEarLeft", "durationMs": 190 },
+        { "state": "headEarRight", "durationMs": 190 }, { "state": "headNeutral", "durationMs": 180 }
+      ]
+    },
+    {
+      "id": "face-sleep",
+      "name": "Actual · dormir",
+      "group": "Animações actuais",
+      "current": "faceSleep",
+      "loop": true,
+      "frames": [
+        { "state": "headDrowsy", "durationMs": 650 }, { "state": "headHalfBlink", "durationMs": 700 },
+        { "state": "headAsleep", "durationMs": 650 }, { "state": "headDeepSleep", "durationMs": 1100 },
+        { "state": "headAsleep", "durationMs": 650 }, { "state": "headDeepSleep", "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "ekman-happiness", "name": "Ekman · felicidade", "group": "Emoções de Ekman", "current": "faceSmile", "loop": true,
+      "frames": [{ "state": "headNeutral", "durationMs": 180 }, { "state": "ekmanHappiness", "durationMs": 760 }, { "state": "headSmile", "durationMs": 260 }, { "state": "ekmanHappiness", "durationMs": 620 }]
+    },
+    {
+      "id": "ekman-sadness", "name": "Ekman · tristeza", "group": "Emoções de Ekman", "current": "faceNeutral", "loop": true,
+      "frames": [{ "state": "headNeutral", "durationMs": 220 }, { "state": "headWorried", "durationMs": 340 }, { "state": "ekmanSadness", "durationMs": 1100 }, { "state": "ekmanSadness", "durationMs": 760, "layers": { "effects": "emotionEffects.tearLeft" } }]
+    },
+    {
+      "id": "ekman-anger", "name": "Ekman · raiva", "group": "Emoções de Ekman", "current": "faceNeutral", "loop": true,
+      "frames": [{ "state": "headNeutral", "durationMs": 180 }, { "state": "ekmanAnger", "durationMs": 620, "transform": { "x": -1 } }, { "state": "ekmanAnger", "durationMs": 180, "transform": { "x": 1 } }, { "state": "ekmanAnger", "durationMs": 700 }]
+    },
+    {
+      "id": "ekman-fear", "name": "Ekman · medo", "group": "Emoções de Ekman", "current": "faceNeutral", "loop": true,
+      "frames": [{ "state": "headNeutral", "durationMs": 180 }, { "state": "ekmanFear", "durationMs": 520, "transform": { "scale": 0.97 } }, { "state": "ekmanFear", "durationMs": 180, "transform": { "scale": 1.02 } }, { "state": "ekmanFear", "durationMs": 720 }]
+    },
+    {
+      "id": "ekman-disgust", "name": "Ekman · nojo", "group": "Emoções de Ekman", "current": "faceNeutral", "loop": true,
+      "frames": [{ "state": "headNeutral", "durationMs": 200 }, { "state": "ekmanDisgust", "durationMs": 860 }, { "state": "ekmanDisgust", "durationMs": 320, "transform": { "rotation": 2 } }, { "state": "headNeutral", "durationMs": 220 }]
+    },
+    {
+      "id": "ekman-surprise", "name": "Ekman · surpresa", "group": "Emoções de Ekman", "current": "faceNeutral", "loop": true,
+      "frames": [{ "state": "headNeutral", "durationMs": 260 }, { "state": "ekmanSurprise", "durationMs": 170, "transform": { "scale": 1.04 } }, { "state": "ekmanSurprise", "durationMs": 760 }, { "state": "headSurprised", "durationMs": 340 }]
+    },
+    {
+      "id": "ekman-contempt", "name": "Ekman · desprezo", "group": "Emoções de Ekman", "current": "faceNeutral", "loop": true,
+      "frames": [{ "state": "headNeutral", "durationMs": 240 }, { "state": "ekmanContempt", "durationMs": 980 }, { "state": "headCheeky", "durationMs": 300 }, { "state": "ekmanContempt", "durationMs": 620 }]
+    },
+    {
+      "id": "expression-curious", "name": "Curioso", "group": "Outras emoções", "current": "faceTilt", "loop": true,
+      "frames": [{ "state": "headNeutral", "durationMs": 180 }, { "state": "headTiltLeft", "durationMs": 380 }, { "state": "headCurious", "durationMs": 760 }, { "state": "headTiltRight", "durationMs": 420 }, { "state": "headCurious", "durationMs": 580 }]
+    },
+    {
+      "id": "expression-confused", "name": "Confuso", "group": "Outras emoções", "current": "faceTilt", "loop": true,
+      "frames": [{ "state": "headNeutral", "durationMs": 200 }, { "state": "headConfused", "durationMs": 780 }, { "state": "headTiltLeft", "durationMs": 360 }, { "state": "headConfused", "durationMs": 760, "transform": { "rotation": -2 } }]
+    },
+    {
+      "id": "expression-thinking", "name": "Pensativo", "group": "Outras emoções", "current": "faceTilt", "loop": true,
+      "frames": [{ "state": "headCurious", "durationMs": 320 }, { "state": "headThinking", "durationMs": 900 }, { "state": "headThinking", "durationMs": 520, "layers": { "effects": "effects.question" } }, { "state": "headCurious", "durationMs": 360 }]
+    },
+    {
+      "id": "expression-embarrassed", "name": "Envergonhado", "group": "Outras emoções", "current": "faceNeutral", "loop": true,
+      "frames": [{ "state": "headNeutral", "durationMs": 220 }, { "state": "headEmbarrassed", "durationMs": 760 }, { "state": "headClosed", "durationMs": 240, "layers": { "effects": "emotionEffects.blush" } }, { "state": "headEmbarrassed", "durationMs": 680 }]
+    },
+    {
+      "id": "expression-sorry", "name": "Pedido de desculpa", "group": "Outras emoções", "current": "faceNeutral", "loop": true,
+      "frames": [{ "state": "headWorried", "durationMs": 360 }, { "state": "headSorry", "durationMs": 920 }, { "state": "headClosed", "durationMs": 260, "layers": { "paws": "paws.leftUnderChin", "mouth": "mouth.sorry" } }, { "state": "headSorry", "durationMs": 720 }]
+    },
+    {
+      "id": "expression-cheeky", "name": "Maroto", "group": "Outras emoções", "current": "faceSmile", "loop": true,
+      "frames": [{ "state": "headNeutral", "durationMs": 220 }, { "state": "headCheeky", "durationMs": 620 }, { "state": "headSmile", "durationMs": 340 }, { "state": "headCheeky", "durationMs": 560 }]
+    },
+    {
+      "id": "interaction-butterfly-nose", "name": "Borboleta a pousar no nariz", "group": "Interacções cara-first", "current": "faceNeutral", "loop": true,
+      "frames": [{ "state": "butterflyRight", "durationMs": 520 }, { "state": "butterflyLeft", "durationMs": 480 }, { "state": "butterflyNose", "durationMs": 980 }, { "state": "butterflyNose", "durationMs": 220, "layers": { "eyes": "eyes.closed" } }, { "state": "butterflyNose", "durationMs": 760 }]
+    },
+    {
+      "id": "interaction-yarn", "name": "Brincar com o novelo", "group": "Interacções cara-first", "current": "faceTilt", "loop": true,
+      "frames": [{ "state": "yarnLeft", "durationMs": 620 }, { "state": "yarnHold", "durationMs": 520 }, { "state": "yarnRight", "durationMs": 620 }, { "state": "yarnHold", "durationMs": 560, "layers": { "effects": "effects.sparkles" } }]
+    },
+    {
+      "id": "interaction-paw-wave", "name": "Acenar com a patinha", "group": "Interacções cara-first", "current": "faceSmile", "loop": true,
+      "frames": [{ "state": "headSmile", "durationMs": 260 }, { "state": "pawWave", "durationMs": 360, "transform": { "rotation": -1 } }, { "state": "pawWave", "durationMs": 260, "transform": { "rotation": 1 } }, { "state": "pawWave", "durationMs": 360 }]
+    },
+    {
+      "id": "interaction-paws-under-chin", "name": "Patinhas sob o queixo", "group": "Interacções cara-first", "current": "faceSmile", "loop": true,
+      "frames": [{ "state": "headSmile", "durationMs": 260 }, { "state": "pawsUnderChin", "durationMs": 900 }, { "state": "pawsUnderChin", "durationMs": 220, "layers": { "eyes": "eyes.closed" } }, { "state": "pawsUnderChin", "durationMs": 720 }]
+    },
+    {
+      "id": "interaction-paper-heart", "name": "Coração de papel", "group": "Interacções cara-first", "current": "faceSmile", "loop": true,
+      "frames": [{ "state": "pawsUnderChin", "durationMs": 420 }, { "state": "paperHeart", "durationMs": 920 }, { "state": "paperHeart", "durationMs": 420, "layers": { "effects": "playful.hearts" } }, { "state": "headOpenSmile", "durationMs": 520 }]
+    },
+    {
+      "id": "interaction-flower", "name": "Flor curiosa", "group": "Interacções cara-first", "current": "faceTilt", "loop": true,
+      "frames": [{ "state": "headCurious", "durationMs": 380 }, { "state": "flowerCurious", "durationMs": 880 }, { "state": "flowerCurious", "durationMs": 260, "layers": { "eyes": "eyes.closed" } }, { "state": "headSmile", "durationMs": 520 }]
+    }
+  ]
+}

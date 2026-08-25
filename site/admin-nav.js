@@ -16,6 +16,7 @@
     { id: "faqs", label: "FAQs", href: "faqs.php", files: ["faqs.php"] },
     { id: "miu", label: "Míu", href: "bot.php", files: ["bot.php"] },
     { id: "sprites", label: "Sprites", href: "sprites.php", files: ["sprites.php"] },
+    { id: "miu-lab", label: "Míu Lab · Experimental", href: "miu-animation-lab.php", files: ["miu-animation-lab.php"] },
     { id: "errors", label: "Erros", href: "erros.php", files: ["erros.php"] },
     { id: "prices", label: "Preços", href: "precos.php", files: ["precos.php"] },
     { id: "materials", label: "Materiais", href: "materiais.php", files: ["materiais.php"] },

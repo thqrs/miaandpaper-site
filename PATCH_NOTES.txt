@@ -1,0 +1,21 @@
+MEUJW VOICE ASSISTANT PATCH — 2026-08-22
+
+Extrair o conteúdo deste ZIP por cima de F:\Projects\MeuJW, mantendo a estrutura de pastas.
+
+Não inclui nem altera .env, config.toml, a base SQLite ou outros dados de runtime.
+O .env atual é compatível: AssemblyAIAPI e OpenRouterFreeAPI são aceites diretamente.
+
+Implementado:
+- botão de voz físico -> remote_daemon -> Termux microphone -> ADB -> PC
+- M4A -> WAV mono 16 kHz via ffmpeg
+- AssemblyAI Sync
+- OpenRouter openrouter/free com tools semanticamente limitadas
+- comandos MeuJW/ExoPlayer por Android intents semânticos
+- TV/HDMI/YouTube por ADB sem expor shell ao LLM
+- endpoints localhost /api/assistant/status e /api/assistant/text
+- start_meujw.ps1 passa o ADB/serial já descobertos ao servidor
+
+Validação neste ambiente:
+- Python compileall: OK
+- pytest: 32 passed, 5 skipped (ripgrep ausente neste ambiente Linux)
+- Android Gradle build não foi executável aqui porque o bundle do agente não contém gradle-wrapper.jar nem o Android SDK/cache.

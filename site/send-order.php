@@ -1073,6 +1073,8 @@ function cart_is_congress_slug($slug)
 function product_authoritative_design_labels($product, $designs)
 {
     $step = product_step($product, 'designs');
+    $parentStep = !empty($step['parentStepId']) ? product_step($product, (string)$step['parentStepId']) : array();
+    $parentItemProperty = !empty($step['parentItemProperty']) ? (string)$step['parentItemProperty'] : 'parentValue';
     $labels = array();
     foreach ((array)$designs as $design) {
         if ($design === '__sortido__') {
@@ -1081,7 +1083,11 @@ function product_authoritative_design_labels($product, $designs)
         }
         $item = product_step_item_by_value($step, $design);
         if (!empty($item)) {
-            $labels[$design] = !empty($item['title']) ? cart_text($item['title']) : cart_text($design);
+            $variationLabel = !empty($item['title']) ? cart_text($item['title']) : cart_text($design);
+            $parentValue = isset($item[$parentItemProperty]) ? (string)$item[$parentItemProperty] : '';
+            $parentItem = $parentValue !== '' ? product_step_item_by_value($parentStep, $parentValue) : array();
+            $parentLabel = !empty($parentItem['title']) ? cart_text($parentItem['title']) : '';
+            $labels[$design] = $parentLabel !== '' ? $parentLabel . ' · ' . $variationLabel : $variationLabel;
         }
     }
     return $labels;
@@ -1712,8 +1718,12 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
             }
 
             $selections[$drawerField] = $drawerValue;
-            $optionDrawerLabels[] = (isset($drawer['label']) ? cart_text($drawer['label']) . ': ' : '')
+            $optionDrawerLabel = (isset($drawer['label']) ? cart_text($drawer['label']) . ': ' : '')
                 . (isset($drawerItem['title']) ? cart_text($drawerItem['title']) : $drawerValue);
+            if (!empty($drawerItem['priceLabel'])) {
+                $optionDrawerLabel .= ' (' . cart_text($drawerItem['priceLabel']) . ')';
+            }
+            $optionDrawerLabels[] = $optionDrawerLabel;
             $optionDrawerExtraPerUnitCents += max(0, (int)(isset($drawerItem['extraPriceCentsPerUnit']) ? $drawerItem['extraPriceCentsPerUnit'] : 0));
     }
 
@@ -1950,6 +1960,54 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
                 $errors[] = 'Um dos designs escolhidos em ' . $productName . ' não é válido.';
                 break;
             }
+        }
+    }
+
+    // DESIGNS_BY_SIZE_V1: alguns produtos pedem exactamente um design por
+    // grupo exigido pelo tamanho escolhido (por exemplo A4, A6 ou ambos).
+    // A regra vive no JSON do passo, não numa lista de slugs.
+    $designStepConfig = product_step($productConfig, 'designs');
+    if (!$isCustomArtwork && !$assortedDesigns
+        && !empty($designStepConfig['sizeGroups']) && is_array($designStepConfig['sizeGroups'])
+        && isset($designStepConfig['sizeGroups'][$size]) && is_array($designStepConfig['sizeGroups'][$size])
+    ) {
+        $requiredDesignGroups = array_values(array_map('strval', $designStepConfig['sizeGroups'][$size]));
+        $selectedDesignGroups = array();
+        $parentSelectionFields = !empty($designStepConfig['parentSelectionFields']) && is_array($designStepConfig['parentSelectionFields'])
+            ? $designStepConfig['parentSelectionFields']
+            : array();
+        $parentItemProperty = !empty($designStepConfig['parentItemProperty'])
+            ? (string)$designStepConfig['parentItemProperty']
+            : 'parentValue';
+        foreach ($designs as $designValue) {
+            $designItemForGroup = product_step_item_by_value($designStepConfig, $designValue);
+            $groupValue = !empty($designItemForGroup['sizeGroup']) ? (string)$designItemForGroup['sizeGroup'] : '';
+            if ($groupValue === '' || !in_array($groupValue, $requiredDesignGroups, true)) {
+                $errors[] = 'Um dos designs escolhidos não corresponde ao formato selecionado em ' . $productName . '.';
+                continue;
+            }
+            if (isset($selectedDesignGroups[$groupValue])) {
+                $errors[] = 'Escolhe apenas um design ' . $groupValue . ' em ' . $productName . '.';
+                continue;
+            }
+            $parentField = !empty($parentSelectionFields[$groupValue]) ? (string)$parentSelectionFields[$groupValue] : '';
+            if ($parentField !== '') {
+                $selectedParentValue = isset($selections[$parentField]) ? cart_text($selections[$parentField]) : '';
+                $itemParentValue = isset($designItemForGroup[$parentItemProperty]) ? cart_text($designItemForGroup[$parentItemProperty]) : '';
+                if ($selectedParentValue === '' || $itemParentValue === '' || $selectedParentValue !== $itemParentValue) {
+                    $errors[] = 'A combinação escolhida não pertence à capa ' . $groupValue . ' em ' . $productName . '.';
+                    continue;
+                }
+            }
+            $selectedDesignGroups[$groupValue] = $designValue;
+        }
+        foreach ($requiredDesignGroups as $requiredDesignGroup) {
+            if (empty($selectedDesignGroups[$requiredDesignGroup])) {
+                $errors[] = 'Escolhe o design ' . $requiredDesignGroup . ' em ' . $productName . '.';
+            }
+        }
+        if (count($designs) !== count($requiredDesignGroups)) {
+            $errors[] = 'A quantidade de designs escolhidos não corresponde ao formato selecionado em ' . $productName . '.';
         }
     }
     if ($isMainV2 && !$isCustomArtwork) {

@@ -1,7 +1,7 @@
 // js/17-wizard-render.js — parte 17/23 do antigo app.js (codigo intacto, so dividido).
 // Os modulos js/*.js partilham TODOS o mesmo escopo global (scripts classicos,
 // sem IIFE por ficheiro) e carregam pela ordem dos <script> nos HTML: 01 → 23.
-// Conteudo: render dos passos do wizard: media composer dos detalhes, open order hint, aviso de pagamento e antecedencia, pedido de oferta, slideshow do interior, numeracao e labels dos passos, historico do browser (handleWizardPopState).
+// Conteudo: render dos passos do wizard, incluindo escolhas agrupadas de capa/variação: media composer dos detalhes, open order hint, aviso de pagamento e antecedencia, pedido de oferta, slideshow do interior, numeracao e labels dos passos, historico do browser (handleWizardPopState).
   function isDetailsMediaComposer(step) {
     var fields = step && Array.isArray(step.fields) ? step.fields : [];
     return !!(
@@ -838,7 +838,7 @@
       '<input type="radio" name="' + escapeHtml(drawer.field) + '" value="' + escapeHtml(item.value || "") + '" data-option-drawer-choice data-option-drawer-field="' + escapeHtml(drawer.field) + '"' + (selected ? ' checked' : '') + '>',
       renderVisual(item, "media-list", step),
       '<span class="option-drawer-choice-copy"><strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>' + (item.subtitle ? '<small>' + escapeHtml(item.subtitle) + '</small>' : '') + '</span>',
-      '<span class="option-drawer-choice-price">' + (extra ? '+ ' + escapeHtml(formatCents(extra)) + '<small>por ' + escapeHtml(productUnitSingular(product)) + '</small>' : '<small>Sem acréscimo</small>') + '</span>',
+      '<span class="option-drawer-choice-price">' + (item.priceLabel ? '<small>' + escapeHtml(item.priceLabel) + '</small>' : (extra ? '+ ' + escapeHtml(formatCents(extra)) + '<small>por ' + escapeHtml(productUnitSingular(product)) + '</small>' : '<small>Sem acréscimo</small>')) + '</span>',
       '<span class="option-drawer-choice-check" aria-hidden="true">' + ICON_CHECK + '</span>',
       '</label>'
     ].join("");
@@ -861,7 +861,7 @@
       '<strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>',
       item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : "",
       '</span>',
-      '<span class="cadernos-purchase-price">' + (extra ? '+' + escapeHtml(formatCents(extra)) : 'Incluído') + '</span>',
+      '<span class="cadernos-purchase-price">' + (item.priceLabel ? escapeHtml(item.priceLabel) : (extra ? '+' + escapeHtml(formatCents(extra)) : 'Incluído')) + '</span>',
       '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
       '</label>',
       selected ? renderCadernoAddOnDrawer(item) : "",
@@ -901,7 +901,7 @@
         '<summary class="option-drawer-summary">',
         selected ? renderVisual(selected, "media-list", step) : '<span class="option-image neutral" aria-hidden="true"></span>',
         '<span class="option-drawer-summary-copy"><strong>' + escapeHtml(drawer.title || drawer.label || "Opção") + '</strong><small>' + escapeHtml(selected ? (selected.title || selected.value) : "Escolhe uma opção") + '</small></span>',
-        '<span class="option-drawer-summary-price">' + (selectedExtra ? '+ ' + escapeHtml(formatCents(selectedExtra)) + '<small>por ' + escapeHtml(productUnitSingular(product)) + '</small>' : '<small>Incluído</small>') + '</span>',
+        '<span class="option-drawer-summary-price">' + (selected && selected.priceLabel ? '<small>' + escapeHtml(selected.priceLabel) + '</small>' : (selectedExtra ? '+ ' + escapeHtml(formatCents(selectedExtra)) + '<small>por ' + escapeHtml(productUnitSingular(product)) + '</small>' : '<small>Incluído</small>')) + '</span>',
         '<span class="option-drawer-chevron" aria-hidden="true"></span>',
         '</summary>',
         '<div class="option-drawer-body" role="radiogroup" aria-label="' + escapeHtml(drawer.label || drawer.title || "Opção") + '">',
@@ -941,7 +941,156 @@
     return '<div class="option-list size-choice-list crachas-size-card-list cadernos-purchase-list">' + html + '</div>';
   }
 
+  // DESIGNS_BY_SIZE_V1: um único passo de design pode pedir uma escolha
+  // independente por grupo de tamanho. O JSON define tudo: campo do tamanho,
+  // grupos necessários por valor e campo de seleção de cada grupo.
+  function designGroupsForStep(step) {
+    var sizeField = String(step && step.sizeField || "size");
+    var selectedSize = String(state.selections[sizeField] || "");
+    var map = step && step.sizeGroups && typeof step.sizeGroups === "object" ? step.sizeGroups : {};
+    return Array.isArray(map[selectedSize]) ? map[selectedSize].map(String) : [];
+  }
+
+  function groupedDesignField(step, group) {
+    var fields = step && step.selectionFields && typeof step.selectionFields === "object" ? step.selectionFields : {};
+    return String(fields[group] || "");
+  }
+
+  function groupedDesignItems(step, group) {
+    var parentFields = step && step.parentSelectionFields && typeof step.parentSelectionFields === "object" ? step.parentSelectionFields : {};
+    var parentField = String(parentFields[group] || "");
+    var parentValue = parentField ? String(state.selections[parentField] || "") : "";
+    var parentProperty = String(step && step.parentItemProperty || "parentValue");
+
+    return (step && Array.isArray(step.items) ? step.items : []).filter(function (item) {
+      if (!item || String(item.sizeGroup || "") !== String(group || "")) {
+        return false;
+      }
+      if (step.hideVariationOnly && item.isVariationOnly) {
+        return false;
+      }
+      return !parentField || (!!parentValue && String(item[parentProperty] || "") === parentValue);
+    });
+  }
+
+  function syncGroupedDesignSelections(product, step) {
+    var expected = designGroupsForStep(step);
+    var values = [];
+
+    expected.forEach(function (group) {
+      var field = groupedDesignField(step, group);
+      var value = field ? String(state.selections[field] || "") : "";
+      var valid = value && groupedDesignItems(step, group).some(function (item) {
+        return String(item.value || "") === value;
+      });
+      if (valid) {
+        values.push(value);
+      }
+    });
+    var aggregateField = String(step && step.aggregateField || "");
+    if (aggregateField) {
+      state.selections[aggregateField] = values;
+    }
+    return values;
+  }
+
+  function groupedDesignOrderTitle(product, item) {
+    var step = product && findStep(product, "designs");
+    var parentStep = step && step.parentStepId ? findStep(product, String(step.parentStepId)) : null;
+    var parentProperty = String(step && step.parentItemProperty || "parentValue");
+    var parentValue = item ? String(item[parentProperty] || "") : "";
+    var parentItem = parentStep && Array.isArray(parentStep.items) ? parentStep.items.filter(function (candidate) {
+      return candidate && String(candidate.value || "") === parentValue;
+    })[0] || null : null;
+    var parentTitle = parentItem ? String(parentItem.title || parentItem.value || "") : "";
+    var variationTitle = item ? String(displayItemTitle(item) || item.title || item.value || "") : "";
+
+    return parentTitle && variationTitle ? parentTitle + " · " + variationTitle : (variationTitle || parentTitle);
+  }
+
+  function renderGroupedFormatChoices(product, step) {
+    var formatStepId = String(step && step.formatStepId || "");
+    var formatStep = formatStepId ? findStep(product, formatStepId) : null;
+    var selected = String(state.selections[formatStep && formatStep.field || "size"] || "");
+    var html = "";
+
+    if (!formatStep || !Array.isArray(formatStep.items)) {
+      return "";
+    }
+
+    formatStep.items.forEach(function (item) {
+      var checked = selected === String(item.value || "");
+      var info = priceForSize(product, item.value);
+      var priceText = info && info.cents ? info.total : (item.priceCents != null ? formatCents(item.priceCents) : "");
+      html += [
+        '<label class="choice-card crachas-size-card cadernos-purchase-card' + (checked ? ' is-selected' : '') + '">',
+        '<input type="radio" name="' + escapeHtml(formatStep.field || "size") + '" value="' + escapeHtml(item.value || "") + '" data-grouped-format-choice data-grouped-format-step="' + escapeHtml(formatStep.id || "size") + '"' + (checked ? ' checked' : '') + '>',
+        '<span class="crachas-size-card-visual">' + renderVisual(item, "media-list", formatStep) + '</span>',
+        '<span class="choice-copy crachas-size-card-text"><strong>' + escapeHtml(item.title || item.value || "") + '</strong>' + (item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '') + '</span>',
+        priceText ? '<span class="cadernos-purchase-price">' + escapeHtml(priceText) + '</span>' : '',
+        '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+        '</label>'
+      ].join("");
+    });
+
+    return [
+      '<section class="design-grid-section grouped-design-section grouped-format-section">',
+      '<h3 class="design-grid-section-title">' + escapeHtml(step.formatTitle || "Escolhe o formato") + '</h3>',
+      '<div class="option-list size-choice-list crachas-size-card-list cadernos-purchase-list">' + html + '</div>',
+      '</section>'
+    ].join("");
+  }
+
+  function renderDesignsBySizeStep(product, step) {
+    var groups = designGroupsForStep(step);
+    var titles = step && step.groupTitles && typeof step.groupTitles === "object" ? step.groupTitles : {};
+    var html = renderGroupedFormatChoices(product, step) + renderDesignActionControls(product, step);
+
+    syncGroupedDesignSelections(product, step);
+
+    if (!groups.length) {
+      return html + '<p class="open-order-hint" role="status">Escolhe primeiro A4, A6 ou PACK.</p>';
+    }
+
+    groups.forEach(function (group) {
+      var field = groupedDesignField(step, group);
+      var selected = field ? String(state.selections[field] || "") : "";
+      var items = groupedDesignItems(step, group);
+      var cards = items.map(function (item) {
+        var checked = selected === String(item.value || "");
+        var muted = selected && !checked ? " is-muted" : "";
+        return [
+          '<div class="cadernos-cover-choice grouped-design-choice">',
+          '<label class="choice-card crachas-size-card cadernos-cover-card' + (checked ? ' is-selected' : '') + muted + '">',
+          '<input type="radio" name="' + escapeHtml(field) + '" value="' + escapeHtml(item.value || "") + '" data-grouped-design-choice data-grouped-design-group="' + escapeHtml(group) + '" data-grouped-design-field="' + escapeHtml(field) + '"' + (checked ? ' checked' : '') + '>',
+          renderCadernoCoverCardMedia(product, step, item),
+          '<span class="choice-copy crachas-size-card-text">',
+          '<strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>',
+          item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '',
+          '</span>',
+          '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+          adminItemControls(step, item),
+          '</label>',
+          '</div>'
+        ].join("");
+      }).join("");
+
+      html += [
+        '<section class="design-grid-section grouped-design-section" data-design-size-group="' + escapeHtml(group) + '">',
+        '<h3 class="design-grid-section-title">' + escapeHtml(titles[group] || ("Escolhe o design " + group)) + '</h3>',
+        '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list">' + cards + '</div>',
+        '</section>'
+      ].join("");
+    });
+
+    return html;
+  }
+
   function stepBody(product, step) {
+    if (step.template === "designs-by-size") {
+      return renderDesignsBySizeStep(product, step);
+    }
+
     if (isQuadrosProduct(product) && step.id === "designs") {
       return renderQuadrosDesignStep(product, step);
     }

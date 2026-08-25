@@ -1,0 +1,78 @@
+[server]
+host = "0.0.0.0"
+port = 8765
+
+[library]
+root = "F:\\JWTPO"
+language = "pt-PT"
+
+[database]
+path = "F:\\Projects\\MeuJW\\server\\data\\meujw.sqlite3"
+
+[search]
+rg_path = "C:\\ProgramData\\chocolatey\\bin\\rg.exe"
+page_size = 10
+
+[playback]
+seek_tap_ms = 10000
+resume_rewind_ms = 3000
+preview_context_ms = 3000
+progress_checkpoint_ms = 15000
+
+[session]
+health_interval_ms = 5000
+health_failure_threshold = 3
+
+[[home.rows]]
+id = "continue"
+title = "Continuar a ouvir"
+kind = "continue"
+limit = 30
+
+[[home.rows]]
+id = "jw-broadcasting"
+title = "JW Broadcasting"
+kind = "category"
+categories = ["JW Broadcasting"]
+limit = 30
+
+[[home.rows]]
+id = "morning-worship"
+title = "Adoração Matinal"
+kind = "category"
+categories = ["Adoração Matinal"]
+limit = 30
+
+[[home.rows]]
+id = "books"
+title = "Livros e Brochuras"
+kind = "category"
+categories = ["Livros e Brochuras", "Livros e Brochura"]
+limit = 30
+
+[[home.rows]]
+id = "videos"
+title = "Vídeos / outras categorias relevantes"
+kind = "other"
+limit = 30
+
+[[home.rows]]
+id = "favorites"
+title = "Favoritos"
+kind = "favorites"
+limit = 30
+
+# Push-to-talk through the physical Xiaomi remote. API keys should normally
+# live in .env instead of this TOML file.
+[assistant]
+enabled = true
+remote_input_device = "/dev/input/event3"
+remote_daemon_path = "/data/local/tmp/meujw_remote_daemon"
+remote_recording_path = "/data/data/com.termux/files/home/meujw_voice.m4a"
+disable_native_assistant = true
+assemblyai_sync_url = "https://sync.assemblyai.com/transcribe"
+assemblyai_sync_model = "u3-sync-pro"
+assemblyai_timeout_seconds = 20
+openrouter_model = "openrouter/free"
+openrouter_timeout_seconds = 45
+hdmi_input_uri = "content://android.media.tv/passthrough/com.mediatek.tvinput%2F.hdmi.HDMIInputService%2FHW2"

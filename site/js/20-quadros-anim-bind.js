@@ -1,7 +1,7 @@
 // js/20-quadros-anim-bind.js — parte 20/23 do antigo app.js (codigo intacto, so dividido).
 // Os modulos js/*.js partilham TODOS o mesmo escopo global (scripts classicos,
 // sem IIFE por ficheiro) e carregam pela ordem dos <script> nos HTML: 01 → 23.
-// Conteudo: animacoes dos quadros (FLIP da grelha de cores, espiral dos tons, setinha do marcador, grid flip) e bindProduct (liga todos os handlers do wizard).
+// Conteudo: animacoes dos quadros (FLIP da grelha de cores, espiral dos tons, setinha do marcador, grid flip) e bindProduct (liga todos os handlers do wizard, incluindo formato/capa/variação agrupados).
   // ---- Fluído da grelha de cores (FLIP) ----------------------------------
   // Abrir/fechar os tons muda o número de quadrados, por isso a grelha reflui.
   // Guardamos as posições antes do render e animamos cada quadrado da posição
@@ -933,6 +933,46 @@
       });
     });
 
+    document.querySelectorAll("[data-grouped-design-choice]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        var active = currentStep(product);
+        var field = String(input.dataset.groupedDesignField || "");
+        if (!input.checked || !active || active.template !== "designs-by-size" || !field) {
+          return;
+        }
+        state.selections[field] = input.value;
+        var resetFields = active.resetFieldsByGroup && Array.isArray(active.resetFieldsByGroup[input.dataset.groupedDesignGroup])
+          ? active.resetFieldsByGroup[input.dataset.groupedDesignGroup]
+          : [];
+        resetFields.forEach(function (key) {
+          delete state.selections[key];
+        });
+        syncGroupedDesignSelections(product, active);
+        if (active.aggregateField === "designs") {
+          state.selections.order_flow = "catalog";
+          state.selections.design_source = "catalog";
+        }
+        resetQuantityState();
+        state.errors = "";
+        state.packDisabledMessage = "";
+        try { trackDesignToggle(product, input.value, true); } catch (e) {}
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-grouped-format-choice]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        var active = currentStep(product);
+        var formatStep = findStep(product, String(input.dataset.groupedFormatStep || "size"));
+        if (!input.checked || !active || !formatStep) {
+          return;
+        }
+        setSelection(formatStep, input);
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+
     document.querySelectorAll("[data-choice-step]").forEach(function (input) {
       input.addEventListener("change", function () {
         // SEMANTIC_EVENTS_V1 (Phase C): captura semantic ANTES de mutar state
@@ -1445,4 +1485,3 @@
     bindImageViewerTriggers();
     bindAdminItemEditing(product);
   }
-

@@ -12,6 +12,7 @@ O Míu é o assistente virtual no canto inferior direito das páginas públicas.
 | `site/content/brand/miu/` | folhas WebP normal/pequena, frames e manifestos do gato |
 | `tools/process-miu-sprite.py` | recorta e optimiza as duas folhas fonte 4×2 |
 | `tools/build-miu-quick-replies.js` | recria um catálogo inicial exacto a partir dos JSON de produto |
+| `tools/export-sprites-miu.ps1` | empacota todos os assets e código de sprites num ZIP completo |
 | `site/bot-api.php` | endpoint público, CSRF, limites, contexto e resposta NDJSON |
 | `site/lib/miu-bot.php` | filtros, prompt, chamadas aos fornecedores e SQLite para runtime |
 | `site/lib/miu-context.php` | valida produto/passo, objectivos, perguntas e preços actuais |
@@ -21,10 +22,15 @@ O Míu é o assistente virtual no canto inferior direito das páginas públicas.
 | `site/content/erros.json` | versões Default/Míu das mensagens públicas de validação e ajuda |
 | `site/lib/miu-animations.php` | biblioteca de spritesheets, gatilhos, âmbito por produto e aparência do Míu |
 | `site/bot.php` | conversas, configuração, aparência e animações |
+| `site/sprites.php` | editor visual frame a frame das expressões faciais |
 | `site/erros.php` | editor das mensagens públicas Default/Míu |
 | `site/bot-admin.css` / `.js` | interface própria do painel |
+| `site/miu-animation-lab.php` | laboratório experimental 8×8 multi-sheet e auto-centragem com in-betweens fluídos |
+| `site/miu-animation-lab.js` | motor de visão computacional (connected components) e leitor de sequências |
+| `site/miu-animation-lab.css` | estilos do laboratório experimental |
 | `private/miu.sqlite` | conversas, mensagens e contextos de passo (runtime) |
 | `private/miu-config.php` | chaves; nunca fica na raiz pública nem no Git |
+| `miu-old/` | arquivo externo com o protótipo do Míu modular descontinuado |
 
 O catálogo, as ofertas e `congressos/2026` carregam os mesmos módulos 13/24.
 Não existe uma segunda implementação do chatbot. Em previews e iframes o
@@ -153,6 +159,20 @@ ao lançador e a mensagem inline é suprimida. Quando está desligado, o formul�
 mostra a versão `default` no local normal. Erros técnicos, erros de administração,
 CSRF, configuração e falhas internas não pertencem a este catálogo.
 
+## Laboratório Experimental 8×8 e Sistema Multi-Sheet
+
+O projeto conta com um ambiente de testes avançado para afinação de expressões faciais em `site/miu-animation-lab.php`.
+
+### Características do Laboratório:
+1. **Algoritmo de Auto-Centragem e Isolamento (*Connected-Component Labelling*):**
+   Varre a imagem pixel a pixel com a "metáfora dos autocolantes", isolando a tinta de cada gato e eliminando *drift* vertical e desalinhamentos de folhas geradas por IA.
+2. **Arquitetura Multi-Sheet:**
+   Permite carregar múltiplas folhas em simultâneo (ex.: Folha 1 com tiras de *in-betweens* contínuos e Folha 2 com expressões de 64 poses), combinando frames de ambas na mesma sequência animada.
+3. **Ciclo Contínuo Automático (*Showcase Mode*):**
+   Por omissão, o leitor percorre todas as animações sequencialmente em loop, atualizando em tempo real o nome da animação, o seletor e a linha de timings no ecrã.
+4. **Ficheiro de Configuração Ativo:**
+   `site/content/brand/miu/experimental/experimental-full-spritesheet-animations_002.json` e `miu-fluid-animations-transparent.png`.
+
 ## Fluxo e barreiras
 
 ```text
@@ -222,6 +242,7 @@ conversa pode ser aberta e apagada, com CSRF e confirmação, em `bot.php`.
    “Contexto por passo”, confirmar a pré-visualização de um passo de preços e
    do passo “Cartão de Apresentação”.
 8. Confirmar em `bot.php` o IP, hora, contexto, modelo real e resposta guardados.
+9. Abrir `miu-animation-lab.php` para testar as animações fluídas 8×8 e o modo multi-sheet.
 
 `miu-config.php` nunca é um endereço público. O ficheiro fica em
 `private-local/miu-config.php`; a gestão faz-se em `/bot.php` e o teste público

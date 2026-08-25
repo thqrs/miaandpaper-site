@@ -1,0 +1,435 @@
+/* MIU_ANIMATION_LAB_EXPERIMENTAL_V2 — laboratório de sprites 8×8 e comparação com produção. */
+
+.miu-lab-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--gold-soft) 28%, transparent), transparent 38rem),
+    var(--surface-page);
+  color: var(--ink);
+}
+
+.miu-lab-shell {
+  width: min(100% - 28px, 1180px);
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 64px) 0 72px;
+}
+
+.miu-lab-hero {
+  display: grid;
+  gap: 14px;
+  max-width: 820px;
+  margin-bottom: 24px;
+}
+
+.miu-lab-eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--border-soft-gold);
+  border-radius: 999px;
+  background: var(--surface-gold-soft);
+  color: var(--moss);
+  font-size: .72rem;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.miu-lab-hero h1 {
+  margin: 0;
+  color: var(--moss);
+  font: 750 clamp(2rem, 6vw, 4.2rem)/.98 Georgia, "Times New Roman", serif;
+  letter-spacing: -.035em;
+}
+
+.miu-lab-hero > p:not(.miu-lab-eyebrow) {
+  max-width: 720px;
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(.98rem, 2vw, 1.12rem);
+  line-height: 1.65;
+}
+
+.miu-lab-isolation {
+  margin: 0 0 24px;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  border-radius: var(--radius);
+  background: var(--surface-panel);
+  color: var(--muted);
+  font-size: .88rem;
+  line-height: 1.55;
+}
+
+.miu-lab-isolation strong { color: var(--moss); }
+
+.miu-lab-card {
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) * 2);
+  background: color-mix(in srgb, var(--surface-panel) 96%, transparent);
+  box-shadow: var(--shadow-editorial);
+}
+
+.miu-lab-controls {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 24px;
+  padding: clamp(16px, 3vw, 24px);
+}
+
+.miu-lab-selectors,
+.miu-lab-buttons,
+.miu-lab-toggles,
+.miu-lab-speed {
+  display: grid;
+  gap: 10px;
+}
+
+.miu-lab-selectors label,
+.miu-lab-speed label {
+  display: grid;
+  gap: 6px;
+  color: var(--moss);
+  font-size: .78rem;
+  font-weight: 850;
+}
+
+.miu-lab-controls select {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 36px 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+
+.miu-lab-buttons {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.miu-lab-button {
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-cream);
+  color: var(--moss);
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.miu-lab-button:hover,
+.miu-lab-button:focus-visible {
+  border-color: var(--border-soft-gold);
+  background: var(--surface-gold-soft);
+  outline: none;
+}
+
+.miu-lab-button--primary {
+  border-color: var(--moss);
+  background: var(--moss);
+  color: var(--card);
+}
+
+.miu-lab-button--primary:hover,
+.miu-lab-button--primary:focus-visible {
+  background: color-mix(in srgb, var(--moss) 88%, var(--gold));
+  color: var(--card);
+}
+
+.miu-lab-toggles {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.miu-lab-check {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-cream);
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 750;
+}
+
+.miu-lab-check input { accent-color: var(--moss); }
+
+.miu-lab-speed {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.miu-lab-speed label { grid-column: 1 / -1; }
+.miu-lab-speed input { width: 100%; accent-color: var(--moss); }
+
+.miu-lab-speed output {
+  min-width: 48px;
+  color: var(--moss);
+  font-size: .86rem;
+  font-weight: 900;
+  text-align: right;
+}
+
+.miu-lab-comparison {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.miu-lab-stage-card {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+  padding: clamp(16px, 3vw, 24px);
+}
+
+.miu-lab-stage-card header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.miu-lab-stage-card h2,
+.miu-lab-section-title {
+  margin: 0;
+  color: var(--moss);
+  font: 750 1.22rem/1.2 Georgia, "Times New Roman", serif;
+}
+
+.miu-lab-stage-card header span {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: var(--surface-gold-soft);
+  color: var(--muted);
+  font-size: .66rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.miu-lab-stage,
+.miu-lab-atlas-wrap {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) * 1.5);
+  background-color: var(--surface-raised);
+  background-image:
+    linear-gradient(45deg, color-mix(in srgb, var(--linen) 56%, transparent) 25%, transparent 25%),
+    linear-gradient(-45deg, color-mix(in srgb, var(--linen) 56%, transparent) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, color-mix(in srgb, var(--linen) 56%, transparent) 75%),
+    linear-gradient(-45deg, transparent 75%, color-mix(in srgb, var(--linen) 56%, transparent) 75%);
+  background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+  background-size: 24px 24px;
+}
+
+.miu-lab-stage {
+  display: grid;
+  min-height: 220px;
+  place-items: center;
+}
+
+.miu-lab-stage canvas {
+  display: block;
+  width: min(70vw, 100px);
+  height: auto;
+}
+
+.miu-lab-stage-card footer {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+.miu-lab-stage-card footer p { margin: 0; }
+
+.miu-lab-progress {
+  width: 100%;
+  height: 6px;
+  border: 0;
+  accent-color: var(--gold);
+}
+
+.miu-lab-details {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 24px;
+  padding: clamp(16px, 3vw, 24px);
+}
+
+.miu-lab-state-line {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 12px;
+}
+
+.miu-lab-state-line strong {
+  color: var(--moss);
+  font-size: 1.02rem;
+}
+
+.miu-lab-state-line span {
+  color: var(--muted);
+  font-size: .8rem;
+}
+
+.miu-lab-sequence-wrap {
+  display: grid;
+  gap: 10px;
+}
+
+.miu-lab-sequence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.miu-lab-seq-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-cream);
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 750;
+  transition: all .14s ease;
+}
+
+.miu-lab-seq-item strong {
+  color: var(--moss);
+  font-weight: 850;
+}
+
+.miu-lab-seq-item.is-active {
+  border-color: var(--moss);
+  background: var(--surface-gold-soft);
+  color: var(--moss);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--moss) 20%, transparent);
+}
+
+.miu-lab-atlas {
+  display: grid;
+  gap: 14px;
+  padding: clamp(16px, 3vw, 24px);
+}
+
+.miu-lab-atlas-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.miu-lab-atlas-list {
+  display: grid;
+  gap: 22px;
+}
+
+.miu-lab-atlas-list--single {
+  justify-items: center;
+}
+
+.miu-lab-atlas-item {
+  display: grid;
+  gap: 10px;
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.miu-lab-atlas-item figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  color: var(--moss);
+  font-size: .82rem;
+}
+
+.miu-lab-atlas-item figcaption a { color: var(--moss); }
+
+.miu-lab-atlas-wrap {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.miu-lab-atlas-wrap img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.miu-lab-atlas-wrap::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(to right, transparent 0 calc(12.5% - 1px), var(--border-soft-gold) calc(12.5% - 1px) 12.5%),
+    repeating-linear-gradient(to bottom, transparent 0 calc(12.5% - 1px), var(--border-soft-gold) calc(12.5% - 1px) 12.5%);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+}
+
+.miu-lab-atlas-wrap.show-grid::after { opacity: 1; }
+
+.miu-lab-atlas-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.miu-lab-loading,
+.miu-lab-error {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface-gold-soft);
+  color: var(--moss);
+  font-weight: 750;
+}
+
+.miu-lab-error {
+  border: 1px solid color-mix(in srgb, var(--admin-edit-accent) 48%, var(--line));
+  background: color-mix(in srgb, var(--admin-edit-accent) 8%, var(--surface-panel));
+  color: var(--admin-edit-accent);
+}
+
+@media (min-width: 720px) {
+  .miu-lab-controls {
+    grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
+    align-items: end;
+  }
+
+  .miu-lab-buttons,
+  .miu-lab-toggles,
+  .miu-lab-speed { grid-column: 2; }
+
+  .miu-lab-selectors { grid-row: 1 / span 3; }
+  .miu-lab-comparison { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .miu-lab-atlas-wrap::after { transition: none; }
+}

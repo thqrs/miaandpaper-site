@@ -726,7 +726,9 @@
     }
 
     selectedDesignItems(product).forEach(function (item) {
-      labels[item.value] = displayItemTitle(item) || item.title || item.value;
+      labels[item.value] = typeof groupedDesignOrderTitle === "function"
+        ? groupedDesignOrderTitle(product, item)
+        : (displayItemTitle(item) || item.title || item.value);
     });
 
     return labels;
@@ -742,11 +744,15 @@
 
     var selectedItems = selectedDesignItems(product);
     var fixedQuantity = !findStep(product, "pack") ? getPackQuantity(product) : 0;
+    var designStep = findStep(product, "designs");
+    var perSelectedDesign = Math.max(0, parseInt(designStep && designStep.quantityPerSelectedDesign, 10) || 0);
 
     selectedItems.forEach(function (item) {
-      quantities[item.value] = isCadernosProduct(product)
-        ? 1
-        : (fixedQuantity > 0 && selectedItems.length === 1 ? fixedQuantity : quantityFor(item.value));
+      quantities[item.value] = perSelectedDesign > 0
+        ? perSelectedDesign
+        : (isCadernosProduct(product)
+          ? 1
+          : (fixedQuantity > 0 && selectedItems.length === 1 ? fixedQuantity : quantityFor(item.value)));
     });
 
     return quantities;
@@ -754,6 +760,10 @@
 
   function currentProductCartSelections(product) {
     ensureOptionDrawerSelections(product);
+    var groupedDesignStep = findStep(product, "designs");
+    if (groupedDesignStep && groupedDesignStep.template === "designs-by-size") {
+      syncGroupedDesignSelections(product, groupedDesignStep);
+    }
     var selections = cloneJson(state.selections);
     var cadernoLamination = isCadernosProduct(product) ? selectedCadernoLamination(product) : null;
     var cadernoOption = isCadernosProduct(product) ? selectedCadernoPurchaseOption(product) : null;
@@ -1231,4 +1241,3 @@
       .replace(/[^a-z0-9_-]/gi, "-");
     return "#produto-" + id;
   }
-

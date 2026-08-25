@@ -66,8 +66,16 @@ foreach (glob($pastaProdutos . '/*.json') as $ficheiro) {
     }
 
     $primeiroPasso = null;
+    $editorDesignStepId = isset($produto['editorDesignStepId']) ? trim((string)$produto['editorDesignStepId']) : '';
     foreach ($produto['steps'] as $indice => $passo) {
-        if (!is_array($passo) || !empty($passo['hidden'])) {
+        if (!is_array($passo)) {
+            continue;
+        }
+        if ($editorDesignStepId !== '') {
+            if (!isset($passo['id']) || (string)$passo['id'] !== $editorDesignStepId) {
+                continue;
+            }
+        } elseif (!empty($passo['hidden'])) {
             continue;
         }
         $primeiroPasso = $passo;
@@ -75,8 +83,9 @@ foreach (glob($pastaProdutos . '/*.json') as $ficheiro) {
         break;
     }
 
+    $editorTemplate = $primeiroPasso && isset($primeiroPasso['template']) ? (string)$primeiroPasso['template'] : '';
     if (!$primeiroPasso
-        || (isset($primeiroPasso['template']) ? $primeiroPasso['template'] : '') !== 'design-grid'
+        || !in_array($editorTemplate, array('design-grid', 'designs-by-size'), true)
         || empty($primeiroPasso['items'])
         || !is_array($primeiroPasso['items'])) {
         continue;

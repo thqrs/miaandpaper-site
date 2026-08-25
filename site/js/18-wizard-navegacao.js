@@ -164,6 +164,29 @@
       return state.orderAudioRecording ? "Solta o botão do áudio para terminar a gravação." : "Espera até o anexo terminar de enviar.";
     }
 
+    if (step.template === "designs-by-size") {
+      var requiredGroups = designGroupsForStep(step);
+      if (!requiredGroups.length) {
+        return "Escolhe primeiro A4, A6 ou PACK.";
+      }
+      for (i = 0; i < requiredGroups.length; i += 1) {
+        var requiredGroup = requiredGroups[i];
+        var groupedField = groupedDesignField(step, requiredGroup);
+        var groupedValue = groupedField ? String(state.selections[groupedField] || "") : "";
+        var groupedValid = groupedValue && groupedDesignItems(step, requiredGroup).some(function (item) {
+          return String(item.value || "") === groupedValue;
+        });
+        if (!groupedValid) {
+          state.invalidFields = groupedField ? [groupedField] : [];
+          return step.groupSelectionError
+            ? String(step.groupSelectionError).replace("{group}", requiredGroup)
+            : "Escolhe o design " + requiredGroup + " para continuar.";
+        }
+      }
+      syncGroupedDesignSelections(product, step);
+      return "";
+    }
+
     if (step.id === "designs" && selectedDesignItems(product).length === 0 && !isAssortedSelected(product) && !isCustomArtworkSelected(product)) {
       if (isQuadrosProduct(product)) {
         return "Escolhe o tipo de moldura que queres criar.";

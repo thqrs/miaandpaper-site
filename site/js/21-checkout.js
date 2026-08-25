@@ -56,7 +56,9 @@
     } else {
       appendHidden(form, "assorted_designs", "");
       selectedDesignItems(product).forEach(function (item) {
-        var label = displayItemTitle(item) || item.title || "";
+        var label = typeof groupedDesignOrderTitle === "function"
+          ? groupedDesignOrderTitle(product, item)
+          : (displayItemTitle(item) || item.title || "");
         appendHidden(form, "designs[]", item.value);
         appendHidden(form, "design_quantities[]", item.value + "||" + (isCadernosProduct(product) ? 1 : quantityFor(item.value)));
         // SECTION_DISPLAY_LABELS_V1: enviar tambem o nome publico (Porto 01)
@@ -868,4 +870,3 @@
 
     return Math.max(range[0], Math.min(range[1], Math.round(number * 100) / 100));
   }
-
