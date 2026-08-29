@@ -88,7 +88,7 @@ function miu_v2_default_config()
         'engine' => 'v2',
         'assets' => array(
             'runtime' => 'miu-v2-runtime.js',
-            'cacheVersion' => '2026082901',
+            'cacheVersion' => '2026082902',
             'coreManifest' => 'content/brand/miu/v2/core-manifest.json',
             'libraryManifest' => 'content/brand/miu/experimental/library-v1/library-manifest.json',
             'episodeManifest' => 'content/brand/miu/experimental/library-v1/episodes/episode-manifest.json',

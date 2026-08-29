@@ -64,6 +64,7 @@
 
   function Actor(reducedMotion) {
     this.reducedMotion = reducedMotion;
+    this.gridDetector = null;
     this.manifest = null;
     this.manifestUrl = '';
     this.animations = {};
@@ -80,10 +81,11 @@
     this.finished = false;
   }
 
-  Actor.prototype.configure = function (manifest, manifestUrl) {
+  Actor.prototype.configure = function (manifest, manifestUrl, gridDetector) {
     var actor = this;
     actor.manifest = manifest || {};
     actor.manifestUrl = manifestUrl;
+    actor.gridDetector = typeof gridDetector === 'function' ? gridDetector : null;
     (manifest.animations || []).forEach(function (animation) {
       if (animation && animation.id) actor.animations[String(animation.id)] = animation;
     });
@@ -101,6 +103,18 @@
     var imageUrl = new URL(declaration.file, actor.manifestUrl).href;
     actor.sheetPromises[key] = loadImage(imageUrl).then(function (image) {
       var grid = declaration.grid;
+      if (actor.gridDetector) {
+        var detected = actor.gridDetector(
+          image,
+          Math.max(1, Math.round(finite(grid.columns, 8))),
+          Math.max(1, Math.round(finite(grid.rows, 8)))
+        );
+        detected.image = image;
+        detected.kind = 'detected';
+        detected.anchorStrategy = 'connected-components-median-anatomical-centres';
+        actor.grids[key] = detected;
+        return detected;
+      }
       grid.image = image;
       grid.kind = 'precomputed';
       actor.grids[key] = grid;
@@ -954,6 +968,12 @@
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = 'high';
     context.save();
+    /* A personagem fica dentro da zona redonda do ícone. O recorte acontece
+       só durante o desenho do sprite: os FX anime são desenhados depois e
+       podem respirar à volta do balão sem fazer a cabeça flutuar na página. */
+    context.beginPath();
+    context.arc(canvas.width / 2, canvas.height * 0.47, canvas.width * 0.455, 0, Math.PI * 2);
+    context.clip();
     context.translate((canvas.width / 2) + offsetX + motion.x, (canvas.height / 2) + offsetY + motion.y);
     context.rotate(motion.rotate);
     context.scale(1 + motion.scaleX, 1 + motion.scaleY);
@@ -973,6 +993,7 @@
   };
 
   Controller.prototype.snapshot = function () {
+    var current = this.actor.current();
     return {
       engine: 'v2',
       phase: this.phase,
@@ -993,6 +1014,8 @@
       special: this.special || null,
       reducedMotion: this.reducedMotion,
       rigIntensity: finite(this.config.appearance.rigIntensity, 0.62),
+      spriteIsolation: current && current.grid ? current.grid.kind : null,
+      anchorStrategy: current && current.grid ? current.grid.anchorStrategy || null : null,
       meshEnabled: Boolean(this.config.mesh && this.config.mesh.enabled !== false && !this.reducedMotion),
       meshRows: finite(this.config.mesh && this.config.mesh.rows, 6)
     };
@@ -1060,8 +1083,12 @@
   Controller.prototype.mount = function () {
     var controller = this;
     var manifestUrl = new URL(controller.config.assets.coreManifest, controller.siteRoot).href;
-    return fetchJson(manifestUrl).then(function (manifest) {
-      controller.actor.configure(manifest, manifestUrl);
+    var detectorUrl = new URL(
+      'miu-sprite-grid.js?v=' + encodeURIComponent(controller.config.assets.cacheVersion || ''),
+      controller.siteRoot
+    ).href;
+    return Promise.all([fetchJson(manifestUrl), loadScriptOnce(detectorUrl)]).then(function (parts) {
+      controller.actor.configure(parts[0], manifestUrl, parts[1].detectConnectedGrid);
       return controller.actor.loadSheet('5');
     }).then(function () {
       var resolution = finite(controller.config.appearance.canvasResolution, 360);

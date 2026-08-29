@@ -108,8 +108,9 @@ As folhas são cópias PNG dos assets derivados do Míu canónico. A origem não
 alterada nem substituída. Continuam 8×8, RGBA e com 64 células. **Nunca são
 convertidas para WebP.**
 
-O script de promoção calcula uma vez as âncoras que o browser precisa. Para cada
-célula mede a caixa alpha, calcula os centros e usa a mediana por linha/coluna:
+O script de promoção calcula âncoras aproximadas para diagnóstico e fallback.
+Para cada célula mede a caixa alpha, calcula os centros e usa a mediana por
+linha/coluna:
 
 ```text
 anchorX = median(column body centres) - logicalCell.sourceX
@@ -117,14 +118,47 @@ anchorY = median(row body centres)    - logicalCell.sourceY
 ```
 
 O resultado fica em `core-manifest.json` com
-`anchorStrategy: precomputed-median-anatomical-centres`. Em produção, o canvas
-desenha directamente o recorte lógico com estas âncoras. Isto preserva o método
-de auto-centragem e evita fazer Connected-Component Labelling sobre milhões de
-píxeis em cada visita mobile.
+`anchorStrategy: precomputed-median-anatomical-centres`, mas não é a fonte final
+da centragem pública. Um recorte lógico 8×8 pode cortar uma orelha ou um lado do
+Míu quando o autocolante atravessa a fronteira matemática da célula. Foi este o
+defeito detectado nas colunas exteriores da primeira integração V2.
+
+Diagnóstico concreto na folha core 5: a célula lógica `[0,0]` terminava em
+`x=155`, mas o componente real continuava até `x=165`; na célula `[7,0]`, o
+componente começava em `x=1085`, doze píxeis antes do recorte lógico `x=1097`.
+As âncoras não conseguem recuperar píxeis que já foram cortados.
+
+Antes de mostrar o primeiro frame V2, o runtime público carrega
+`miu-sprite-grid.js` e executa o mesmo
+`MiuSpriteGrid.detectConnectedGrid` usado no laboratório. Cada pose core passa
+assim por Connected-Component Labelling, máscara de isolamento e âncoras de
+mediana reais. O V1 permanece visível durante esta preparação; se o detector ou
+a folha falhar, o V2 não recebe `is-miu-v2-ready` e o fallback não desaparece.
+Só a folha core 5 é processada no arranque. A folha 6 é preparada depois, em
+idle, e as folhas emocionais/histórias continuam a ser carregadas apenas a
+pedido.
 
 Para folhas emocionais ou histórias carregadas apenas a pedido, o runtime usa o
-detector exacto `MiuSpriteGrid.detectConnectedGrid`; esse custo só existe quando
-`setMood()` ou `playEpisode()` é chamado.
+mesmo detector exacto; esse custo só existe quando `setMood()` ou
+`playEpisode()` é chamado.
+
+### Composição do ícone
+
+O canvas V2 não substitui o ícone completo. Substitui apenas a arte facial:
+
+```text
+SVG histórico do balão (fundo + contorno + ponta)
+                           ↓
+canvas V2 recortado à área circular interior
+                           ↓
+callout / controlos do launcher
+```
+
+O renderer limita a personagem à zona circular interior através de um recorte
+2D do canvas. Esse recorte é restaurado antes dos FX anime, para que estrelas,
+gotas e linhas possam aparecer à volta do Míu sem libertar a cabeça para fora
+do ícone. O contorno SVG continua visível e a cara V1 fica escondida só depois
+de o primeiro frame V2 estar pronto.
 
 ## O modelo de actor
 
@@ -337,6 +371,7 @@ Com `prefers-reduced-motion: reduce`:
 | `site/miu-v2.php` | painel e interruptor | remover pelo revert; não é dependência do V1 |
 | `site/lib/miu-v2.php` | defaults, validação e persistência | retirar o require/GET do `bot-api.php` |
 | `site/miu-v2-runtime.js` | actor canvas, director e lazy library | fica sem ser carregado em `engine:v1` |
+| `site/miu-sprite-grid.js` | isolamento CCL e âncoras exactas do core e biblioteca | o V1 não o carrega; falha antes de ocultar o fallback |
 | `site/miu-v2-admin.css` | estilo exclusivo do painel | sem efeito fora do painel |
 | `site/content/brand/miu/miu-v2-config.json` | fonte única do switch/afinação | mudar `engine` para `v1` |
 | `site/content/brand/miu/v2/` | manifesto e dois PNG core | V1 não lhes toca |
