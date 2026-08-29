@@ -284,6 +284,13 @@
 
   Controller.prototype.updateNavigationClearance = function () {
     if (!this.root || !this.root.isConnected) return;
+    var viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    if (viewportWidth > 700) {
+      if (!this.navigationClearance) return;
+      this.navigationClearance = 0;
+      this.root.style.setProperty('--miu-navigation-clearance', '0px');
+      return;
+    }
     var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
     var rootRect = this.root.getBoundingClientRect();
     var computedBottom = parseFloat(window.getComputedStyle(this.root).bottom) || 0;

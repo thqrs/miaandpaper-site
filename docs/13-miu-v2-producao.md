@@ -166,12 +166,14 @@ O launcher V2 usa `60 × 60 px` em desktop e mobile, a mesma caixa visual do
 launcher histórico. A resolução interna do canvas continua em 360 px: reduzir
 o tamanho CSS não reduz a precisão do recorte, do rig ou da mesh.
 
-Quando uma `.step-actions` com **Voltar / Continuar** está sticky no fundo ou
-visível na metade inferior do ecrã, o runtime mede a sua posição e acrescenta
-apenas a folga necessária a `--miu-navigation-clearance`. O Míu termina 8 px
-acima da barra. Sem navegação visível, a folga volta a zero e o launcher mantém
-o `bottom` histórico de 16 px em desktop ou 12 px em mobile. A medição reage a
-resize, scroll e substituição do passo no DOM; não usa alturas fixas nem slugs.
+Só em mobile (`≤ 700 px`), quando uma `.step-actions` com
+**Voltar / Continuar** está sticky no fundo ou visível na metade inferior do
+ecrã, o runtime mede a sua posição e acrescenta apenas a folga necessária a
+`--miu-navigation-clearance`. O Míu termina 8 px acima da barra. Em ecrãs
+largos esta compensação fica sempre a zero: o launcher permanece no canto
+inferior direito histórico, mesmo quando os botões estão visíveis. A medição
+mobile reage a resize, scroll e substituição do passo no DOM; não usa alturas
+fixas nem slugs.
 
 O idle não deve competir com o produto. Depois de uma micro-animação, a pose
 final fica quieta durante um intervalo aleatório de 14–28 segundos. Só depois
