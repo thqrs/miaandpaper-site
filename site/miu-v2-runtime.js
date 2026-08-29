@@ -260,6 +260,10 @@
     this.boundQuantity = this.onQuantityEvent.bind(this);
     this.boundStep = this.onStepCompleted.bind(this);
     this.boundVisibility = this.onVisibility.bind(this);
+    this.boundLayout = this.scheduleNavigationClearance.bind(this);
+    this.navigationClearance = 0;
+    this.layoutFrame = 0;
+    this.layoutObserver = null;
   }
 
   Controller.prototype.log = function () {
@@ -267,6 +271,55 @@
     var args = Array.prototype.slice.call(arguments);
     args.unshift('[Míu V2]');
     window.console.log.apply(window.console, args);
+  };
+
+  Controller.prototype.scheduleNavigationClearance = function () {
+    var controller = this;
+    if (controller.layoutFrame) return;
+    controller.layoutFrame = window.requestAnimationFrame(function () {
+      controller.layoutFrame = 0;
+      controller.updateNavigationClearance();
+    });
+  };
+
+  Controller.prototype.updateNavigationClearance = function () {
+    if (!this.root || !this.root.isConnected) return;
+    var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    var rootRect = this.root.getBoundingClientRect();
+    var computedBottom = parseFloat(window.getComputedStyle(this.root).bottom) || 0;
+    var baseBottom = Math.max(0, computedBottom - this.navigationClearance);
+    var baselineTop = viewportHeight - baseBottom - rootRect.height;
+    var targetTop = Infinity;
+
+    Array.prototype.forEach.call(document.querySelectorAll('.step-actions'), function (actions) {
+      var style = window.getComputedStyle(actions);
+      if (style.display === 'none' || style.visibility === 'hidden') return;
+      var rect = actions.getBoundingClientRect();
+      if (rect.height <= 0 || rect.width <= 0 || rect.bottom <= 0 || rect.top >= viewportHeight) return;
+      var pinnedToBottom = (style.position === 'sticky' || style.position === 'fixed') && rect.bottom >= viewportHeight - 3;
+      var overlapsBaseline = rect.bottom > baselineTop && rect.top < viewportHeight - baseBottom;
+      var navigationIsLow = rect.top >= viewportHeight * 0.52;
+      if (pinnedToBottom || overlapsBaseline || navigationIsLow) targetTop = Math.min(targetTop, rect.top);
+    });
+
+    var clearance = targetTop < Infinity
+      ? Math.max(0, viewportHeight - targetTop + 8 - baseBottom)
+      : 0;
+    clearance = Math.min(clearance, Math.max(0, viewportHeight - rootRect.height - baseBottom - 8));
+    if (Math.abs(clearance - this.navigationClearance) < 0.5) return;
+    this.navigationClearance = clearance;
+    this.root.style.setProperty('--miu-navigation-clearance', clearance.toFixed(2) + 'px');
+  };
+
+  Controller.prototype.watchNavigationClearance = function () {
+    var controller = this;
+    window.addEventListener('resize', controller.boundLayout, { passive: true });
+    document.addEventListener('scroll', controller.boundLayout, { passive: true, capture: true });
+    if (window.MutationObserver && document.body) {
+      controller.layoutObserver = new MutationObserver(controller.boundLayout);
+      controller.layoutObserver.observe(document.body, { childList: true, subtree: true });
+    }
+    controller.scheduleNavigationClearance();
   };
 
   Controller.prototype.setPhase = function (phase) {
@@ -331,7 +384,7 @@
 
   Controller.prototype.scheduleIdle = function () {
     var timing = this.config.timing || {};
-    this.nextIdleAt = performance.now() + randomBetween(finite(timing.idleMinMs, 850), finite(timing.idleMaxMs, 2600));
+    this.nextIdleAt = performance.now() + randomBetween(finite(timing.idleMinMs, 14000), finite(timing.idleMaxMs, 28000));
   };
 
   Controller.prototype.scheduleAmbient = function () {
@@ -1014,6 +1067,7 @@
       special: this.special || null,
       reducedMotion: this.reducedMotion,
       rigIntensity: finite(this.config.appearance.rigIntensity, 0.62),
+      navigationClearancePx: this.navigationClearance,
       spriteIsolation: current && current.grid ? current.grid.kind : null,
       anchorStrategy: current && current.grid ? current.grid.anchorStrategy || null : null,
       meshEnabled: Boolean(this.config.mesh && this.config.mesh.enabled !== false && !this.reducedMotion),
@@ -1100,13 +1154,14 @@
         controller.canvas.setAttribute('aria-hidden', 'true');
         controller.context = controller.canvas.getContext('2d', { alpha: true });
         controller.launcher.appendChild(controller.canvas);
-        controller.root.style.setProperty('--miu-v2-size-desktop', finite(controller.config.appearance.sizeDesktopPx, 118) + 'px');
-        controller.root.style.setProperty('--miu-v2-size-mobile', finite(controller.config.appearance.sizeMobilePx, 98) + 'px');
+        controller.root.style.setProperty('--miu-v2-size-desktop', finite(controller.config.appearance.sizeDesktopPx, 60) + 'px');
+        controller.root.style.setProperty('--miu-v2-size-mobile', finite(controller.config.appearance.sizeMobilePx, 60) + 'px');
         controller.setPhase('idle');
         controller.root.classList.add('is-miu-v2-ready');
         document.addEventListener('mia:miu-quantity-change', controller.boundQuantity);
         document.addEventListener('mia:step-completed', controller.boundStep);
         document.addEventListener('visibilitychange', controller.boundVisibility);
+        controller.watchNavigationClearance();
         controller.onReady(controller);
         controller.raf = window.requestAnimationFrame(controller.loop.bind(controller));
         var preload = function () { controller.actor.loadSheet('6').catch(function (error) { controller.log(error.message); }); };
@@ -1122,6 +1177,11 @@
     document.removeEventListener('mia:miu-quantity-change', this.boundQuantity);
     document.removeEventListener('mia:step-completed', this.boundStep);
     document.removeEventListener('visibilitychange', this.boundVisibility);
+    window.removeEventListener('resize', this.boundLayout);
+    document.removeEventListener('scroll', this.boundLayout, true);
+    if (this.layoutObserver) this.layoutObserver.disconnect();
+    if (this.layoutFrame) window.cancelAnimationFrame(this.layoutFrame);
+    if (this.root) this.root.style.removeProperty('--miu-navigation-clearance');
     if (this.canvas && this.canvas.parentNode) this.canvas.parentNode.removeChild(this.canvas);
     if (this.root) this.root.classList.remove('is-miu-v2-ready');
     if (activeController === this) activeController = null;

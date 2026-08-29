@@ -88,14 +88,14 @@ function miu_v2_default_config()
         'engine' => 'v2',
         'assets' => array(
             'runtime' => 'miu-v2-runtime.js',
-            'cacheVersion' => '2026082902',
+            'cacheVersion' => '2026083001',
             'coreManifest' => 'content/brand/miu/v2/core-manifest.json',
             'libraryManifest' => 'content/brand/miu/experimental/library-v1/library-manifest.json',
             'episodeManifest' => 'content/brand/miu/experimental/library-v1/episodes/episode-manifest.json',
         ),
         'appearance' => array(
-            'sizeDesktopPx' => 118,
-            'sizeMobilePx' => 98,
+            'sizeDesktopPx' => 60,
+            'sizeMobilePx' => 60,
             'canvasResolution' => 360,
             'offsetXPx' => 0,
             'offsetYPx' => 5,
@@ -114,8 +114,8 @@ function miu_v2_default_config()
             'speed' => 1,
             'quietWindowMs' => 190,
             'minimumAttentionMs' => 150,
-            'idleMinMs' => 850,
-            'idleMaxMs' => 2600,
+            'idleMinMs' => 14000,
+            'idleMaxMs' => 28000,
             'reactionHoldMs' => 110,
             'recoveryDelayMs' => 90,
         ),
@@ -226,8 +226,8 @@ function miu_v2_sanitize_config($raw)
 
     $smallMax = miu_v2_float(isset($thresholds['smallMax']) ? $thresholds['smallMax'] : 0.28, 0.05, 0.7, 0.28);
     $mediumMax = miu_v2_float(isset($thresholds['mediumMax']) ? $thresholds['mediumMax'] : 0.62, $smallMax + 0.05, 0.95, 0.62);
-    $idleMin = miu_v2_int(isset($timing['idleMinMs']) ? $timing['idleMinMs'] : 850, 250, 60000, 850);
-    $idleMax = miu_v2_int(isset($timing['idleMaxMs']) ? $timing['idleMaxMs'] : 2600, $idleMin, 120000, 2600);
+    $idleMin = miu_v2_int(isset($timing['idleMinMs']) ? $timing['idleMinMs'] : 14000, 250, 60000, 14000);
+    $idleMax = miu_v2_int(isset($timing['idleMaxMs']) ? $timing['idleMaxMs'] : 28000, $idleMin, 120000, 28000);
     $ambientMin = miu_v2_int(isset($library['ambientMinMs']) ? $library['ambientMinMs'] : 60000, 15000, 1800000, 60000);
     $ambientMax = miu_v2_int(isset($library['ambientMaxMs']) ? $library['ambientMaxMs'] : 120000, $ambientMin, 3600000, 120000);
 
@@ -262,8 +262,8 @@ function miu_v2_sanitize_config($raw)
             'episodeManifest' => miu_v2_path(isset($assets['episodeManifest']) ? $assets['episodeManifest'] : '', $defaults['assets']['episodeManifest'], 'json'),
         ),
         'appearance' => array(
-            'sizeDesktopPx' => miu_v2_int(isset($appearance['sizeDesktopPx']) ? $appearance['sizeDesktopPx'] : 118, 64, 240, 118),
-            'sizeMobilePx' => miu_v2_int(isset($appearance['sizeMobilePx']) ? $appearance['sizeMobilePx'] : 98, 56, 200, 98),
+            'sizeDesktopPx' => miu_v2_int(isset($appearance['sizeDesktopPx']) ? $appearance['sizeDesktopPx'] : 60, 52, 240, 60),
+            'sizeMobilePx' => miu_v2_int(isset($appearance['sizeMobilePx']) ? $appearance['sizeMobilePx'] : 60, 52, 200, 60),
             'canvasResolution' => miu_v2_int(isset($appearance['canvasResolution']) ? $appearance['canvasResolution'] : 360, 192, 720, 360),
             'offsetXPx' => miu_v2_int(isset($appearance['offsetXPx']) ? $appearance['offsetXPx'] : 0, -120, 120, 0),
             'offsetYPx' => miu_v2_int(isset($appearance['offsetYPx']) ? $appearance['offsetYPx'] : 5, -120, 120, 5),

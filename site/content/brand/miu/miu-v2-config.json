@@ -4,14 +4,14 @@
     "engine": "v2",
     "assets": {
         "runtime": "miu-v2-runtime.js",
-        "cacheVersion": "2026082902",
+        "cacheVersion": "2026083001",
         "coreManifest": "content/brand/miu/v2/core-manifest.json",
         "libraryManifest": "content/brand/miu/experimental/library-v1/library-manifest.json",
         "episodeManifest": "content/brand/miu/experimental/library-v1/episodes/episode-manifest.json"
     },
     "appearance": {
-        "sizeDesktopPx": 118,
-        "sizeMobilePx": 98,
+        "sizeDesktopPx": 60,
+        "sizeMobilePx": 60,
         "canvasResolution": 360,
         "offsetXPx": 0,
         "offsetYPx": 5,
@@ -30,8 +30,8 @@
         "speed": 1,
         "quietWindowMs": 190,
         "minimumAttentionMs": 150,
-        "idleMinMs": 850,
-        "idleMaxMs": 2600,
+        "idleMinMs": 14000,
+        "idleMaxMs": 28000,
         "reactionHoldMs": 110,
         "recoveryDelayMs": 90
     },

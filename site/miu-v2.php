@@ -78,8 +78,8 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string)$_SERVER['REQUEST_ME
         if ($action === 'save_controls') {
             $config = miu_v2_config();
             $config['appearance'] = array(
-                'sizeDesktopPx' => miu_v2_admin_post('size_desktop_px', 118),
-                'sizeMobilePx' => miu_v2_admin_post('size_mobile_px', 98),
+                'sizeDesktopPx' => miu_v2_admin_post('size_desktop_px', 60),
+                'sizeMobilePx' => miu_v2_admin_post('size_mobile_px', 60),
                 'canvasResolution' => miu_v2_admin_post('canvas_resolution', 360),
                 'offsetXPx' => miu_v2_admin_post('offset_x_px', 0),
                 'offsetYPx' => miu_v2_admin_post('offset_y_px', 5),
@@ -98,8 +98,8 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string)$_SERVER['REQUEST_ME
                 'speed' => miu_v2_admin_post('speed', 1),
                 'quietWindowMs' => miu_v2_admin_post('quiet_window_ms', 190),
                 'minimumAttentionMs' => miu_v2_admin_post('minimum_attention_ms', 150),
-                'idleMinMs' => miu_v2_admin_post('idle_min_ms', 850),
-                'idleMaxMs' => miu_v2_admin_post('idle_max_ms', 2600),
+                'idleMinMs' => miu_v2_admin_post('idle_min_ms', 14000),
+                'idleMaxMs' => miu_v2_admin_post('idle_max_ms', 28000),
                 'reactionHoldMs' => miu_v2_admin_post('reaction_hold_ms', 110),
                 'recoveryDelayMs' => miu_v2_admin_post('recovery_delay_ms', 90),
             );
@@ -242,8 +242,8 @@ function miu_v2_admin_animation_select($name, $selected, $animationIds)
     <fieldset>
       <legend>Aparência</legend>
       <div class="miu-v2-admin__grid">
-        <label>Tamanho desktop (px)<input type="number" name="size_desktop_px" min="64" max="240" value="<?= (int)$config['appearance']['sizeDesktopPx'] ?>"></label>
-        <label>Tamanho mobile (px)<input type="number" name="size_mobile_px" min="56" max="200" value="<?= (int)$config['appearance']['sizeMobilePx'] ?>"></label>
+        <label>Tamanho desktop (px)<input type="number" name="size_desktop_px" min="52" max="240" value="<?= (int)$config['appearance']['sizeDesktopPx'] ?>"></label>
+        <label>Tamanho mobile (px)<input type="number" name="size_mobile_px" min="52" max="200" value="<?= (int)$config['appearance']['sizeMobilePx'] ?>"></label>
         <label>Resolução do canvas<input type="number" name="canvas_resolution" min="192" max="720" value="<?= (int)$config['appearance']['canvasResolution'] ?>"></label>
         <label>Offset X (px)<input type="number" name="offset_x_px" min="-120" max="120" value="<?= (int)$config['appearance']['offsetXPx'] ?>"></label>
         <label>Offset Y (px)<input type="number" name="offset_y_px" min="-120" max="120" value="<?= (int)$config['appearance']['offsetYPx'] ?>"></label>

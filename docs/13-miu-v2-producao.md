@@ -160,6 +160,25 @@ gotas e linhas possam aparecer à volta do Míu sem libertar a cabeça para fora
 do ícone. O contorno SVG continua visível e a cara V1 fica escondida só depois
 de o primeiro frame V2 estar pronto.
 
+### Escala, navegação e presença discreta
+
+O launcher V2 usa `60 × 60 px` em desktop e mobile, a mesma caixa visual do
+launcher histórico. A resolução interna do canvas continua em 360 px: reduzir
+o tamanho CSS não reduz a precisão do recorte, do rig ou da mesh.
+
+Quando uma `.step-actions` com **Voltar / Continuar** está sticky no fundo ou
+visível na metade inferior do ecrã, o runtime mede a sua posição e acrescenta
+apenas a folga necessária a `--miu-navigation-clearance`. O Míu termina 8 px
+acima da barra. Sem navegação visível, a folga volta a zero e o launcher mantém
+o `bottom` histórico de 16 px em desktop ou 12 px em mobile. A medição reage a
+resize, scroll e substituição do passo no DOM; não usa alturas fixas nem slugs.
+
+O idle não deve competir com o produto. Depois de uma micro-animação, a pose
+final fica quieta durante um intervalo aleatório de 14–28 segundos. Só depois
+pode ocorrer outro piscar, olhar ou movimento de orelha. Episódios ambientais
+continuam desligados por defeito; atenção e reacções imediatas ficam reservadas
+para interacções reais da pessoa.
+
 ## O modelo de actor
 
 A implementação segue a correcção conceptual do V5:
