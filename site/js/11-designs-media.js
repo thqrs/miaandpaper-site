@@ -362,14 +362,14 @@
     });
   }
 
-  // PRODUCT_IMAGE_ZOOM_V1: a lupa vive no passo da escolha do design — o passo 1
-  // de todos os produtos — e mais lado nenhum. Deixou de estar limitada a quatro
-  // familias: qualquer produto com fotografia real no passo 1 passa a te-la.
+  // PRODUCT_IMAGE_ZOOM_V1: a lupa vive no passo principal de escolha do design.
+  // Outros passos podem pedi-la explicitamente nos dados com showDesignZoom,
+  // para o comportamento acompanhar os seus when sem depender de slugs.
   function shouldShowDesignZoom(product, step, item) {
     return !state.admin
       && product
       && step
-      && step.id === "designs"
+      && (step.id === "designs" || step.showDesignZoom === true)
       && item
       && item.image;
   }
@@ -425,4 +425,3 @@
     }
     return value ? [value] : [];
   }
-

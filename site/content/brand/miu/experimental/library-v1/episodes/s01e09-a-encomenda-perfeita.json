@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "kind": "miu-mini-episode",
+  "id": "s01e09-a-encomenda-perfeita",
+  "season": 1,
+  "episode": 9,
+  "title": "A encomenda perfeita",
+  "logline": "Míu embrulha uma caixa, fica preso na fita e tenta manter a dignidade.",
+  "trigger": "checkout-soft-special",
+  "productionIntegrated": false,
+  "durationMs": 5060,
+  "director": {
+    "priority": "one-shot-story",
+    "interruptPolicy": "finish-current-beat-then-yield",
+    "suppressQuantityReactions": true,
+    "returnTo": "live-idle-for-current-context"
+  },
+  "sheets": [
+    "transition-idle-to-attention",
+    "gift-wrap",
+    "anime-sweat-drop-fx",
+    "anime-blush-fx",
+    "anime-sparkles-fx",
+    "transition-soft-recovery"
+  ],
+  "timeline": [
+    {
+      "order": 0,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-idle-to-attention",
+      "beat": "blink-interrupted",
+      "durationMs": 320,
+      "priority": "attention",
+      "interruptible": false
+    },
+    {
+      "order": 1,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "gift-wrap",
+      "beat": "discover-box",
+      "durationMs": 340,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 2,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "gift-wrap",
+      "beat": "pull-paper-corners",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 3,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "gift-wrap",
+      "beat": "fold-paper",
+      "durationMs": 460,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 4,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "gift-wrap",
+      "beat": "pin-and-smooth",
+      "durationMs": 440,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 5,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "gift-wrap",
+      "beat": "thread-ribbon",
+      "durationMs": 460,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 6,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "gift-wrap",
+      "beat": "brief-tangle",
+      "durationMs": 480,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 7,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-sweat-drop-fx",
+      "beat": "awkward-motion-ticks",
+      "durationMs": 300,
+      "blend": "source-over",
+      "anchor": "head"
+    },
+    {
+      "order": 8,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-blush-fx",
+      "beat": "shy-lines-blush",
+      "durationMs": 300,
+      "blend": "source-over",
+      "anchor": "cheeks"
+    },
+    {
+      "order": 9,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "gift-wrap",
+      "beat": "pat-finished-bow",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 10,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-sparkles-fx",
+      "beat": "single-glint",
+      "durationMs": 240,
+      "blend": "source-over",
+      "anchor": "bow"
+    },
+    {
+      "order": 11,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "gift-wrap",
+      "beat": "present-gift",
+      "durationMs": 500,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 12,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-soft-recovery",
+      "beat": "awkward-to-idle",
+      "durationMs": 380,
+      "priority": "recovery",
+      "interruptible": false
+    }
+  ],
+  "reducedMotion": {
+    "strategy": "key-pose-sequence",
+    "framePolicy": "first-middle-last-per-beat",
+    "keepEmotionAndProps": true,
+    "remove": [
+      "bounce",
+      "overshoot",
+      "rapid-looping-fx"
+    ]
+  },
+  "optionalEnhancements": [],
+  "missingSheets": [],
+  "status": "complete"
+}

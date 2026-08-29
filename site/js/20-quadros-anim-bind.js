@@ -1,7 +1,7 @@
 // js/20-quadros-anim-bind.js — parte 20/23 do antigo app.js (codigo intacto, so dividido).
 // Os modulos js/*.js partilham TODOS o mesmo escopo global (scripts classicos,
 // sem IIFE por ficheiro) e carregam pela ordem dos <script> nos HTML: 01 → 23.
-// Conteudo: animacoes dos quadros (FLIP da grelha de cores, espiral dos tons, setinha do marcador, grid flip) e bindProduct (liga todos os handlers do wizard, incluindo formato/capa/variação agrupados).
+// Conteudo: animacoes dos quadros (FLIP da grelha de cores, espiral dos tons, setinha do marcador, grid flip) e bindProduct (liga todos os handlers do wizard, incluindo formato/capa/variação agrupados, atribuição A4/A6 dentro da preview e o toggle dos cantos metálicos).
   // ---- Fluído da grelha de cores (FLIP) ----------------------------------
   // Abrir/fechar os tons muda o número de quadrados, por isso a grelha reflui.
   // Guardamos as posições antes do render e animamos cada quadrado da posição
@@ -929,6 +929,297 @@
         state.selections[field] = input.value;
         state.errors = "";
         try { trackOptionSelected(product, field, input.value, input.closest("label").textContent || ""); } catch (e) {}
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-copy-step-selection]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var step = findStep(product, String(button.dataset.copyStepSelection || ""));
+        var config = step && step.copySelection;
+        var sourceField = String(config && config.sourceField || "");
+        var targetField = String(config && config.targetField || "");
+        var sourceValue = sourceField ? String(state.selections[sourceField] || "") : "";
+        var valueMap = config && config.valueMap && typeof config.valueMap === "object" ? config.valueMap : {};
+        var targetValue = Object.prototype.hasOwnProperty.call(valueMap, sourceValue)
+          ? String(valueMap[sourceValue] || "")
+          : sourceValue;
+
+        if (!sourceValue || !targetField || !targetValue) {
+          return;
+        }
+        if (Array.isArray(config.resetSelectionKeys)) {
+          config.resetSelectionKeys.forEach(function (key) {
+            delete state.selections[String(key)];
+          });
+        }
+        state.selections[targetField] = targetValue;
+        if (step.template === "designs-by-size") {
+          syncGroupedDesignSelections(product, step);
+          resetQuantityState();
+        }
+        state.errors = "";
+        try { trackOptionSelected(product, targetField, targetValue, button.textContent || ""); } catch (e) {}
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-assignment-preview-open]").forEach(function (button) {
+      function openAssignmentPreview(event) {
+        var stepId = String(button.dataset.assignmentStep || "");
+        var value = String(button.dataset.assignmentValue || "");
+        var currentValue;
+        var previousCard;
+        var step;
+        var config;
+        var previousHasOnlyA6 = false;
+        var nextHasOnlyA6 = false;
+
+        function hasOnlySecondaryAssignment(card) {
+          var selected = card ? Array.prototype.filter.call(card.querySelectorAll("[data-assignment-toggle]"), function (candidate) {
+            return candidate.getAttribute("aria-pressed") === "true";
+          }) : [];
+          var secondary = config && config.groups[1];
+          return selected.length === 1 && secondary
+            && String(selected[0].dataset.assignmentGroup || "") === String(secondary.id || secondary.label || "");
+        }
+
+        if (event && event.type === "click" && event.target && event.target.closest("button")) {
+          return;
+        }
+        if (!stepId || !value) {
+          return;
+        }
+        step = findStep(product, stepId);
+        config = assignmentPickerConfig(step);
+        currentValue = state.assignmentPickerOpen && String(state.assignmentPickerOpen[stepId] || "");
+        if (currentValue === value
+          && state.assignmentPickerControlsExpanded
+          && String(state.assignmentPickerControlsExpanded[stepId] || "") === value) {
+          return;
+        }
+        previousCard = Array.prototype.filter.call(document.querySelectorAll("[data-assignment-preview-open]"), function (candidate) {
+          return String(candidate.dataset.assignmentStep || "") === stepId
+            && String(candidate.dataset.assignmentValue || "") === currentValue;
+        })[0] || null;
+        previousHasOnlyA6 = currentValue && hasOnlySecondaryAssignment(previousCard);
+        nextHasOnlyA6 = hasOnlySecondaryAssignment(button);
+
+        if (state.assignmentPickerMotionTimer) {
+          window.clearTimeout(state.assignmentPickerMotionTimer);
+        }
+        state.assignmentPickerMotion = previousHasOnlyA6 || nextHasOnlyA6 ? {
+          stepId: stepId,
+          leavingValue: previousHasOnlyA6 ? currentValue : "",
+          revealingValue: nextHasOnlyA6 ? value : ""
+        } : null;
+        if (!state.assignmentPickerOpen || typeof state.assignmentPickerOpen !== "object") {
+          state.assignmentPickerOpen = {};
+        }
+        if (!state.assignmentPickerControlsExpanded || typeof state.assignmentPickerControlsExpanded !== "object") {
+          state.assignmentPickerControlsExpanded = {};
+        }
+        state.assignmentPickerOpen[stepId] = value;
+        state.assignmentPickerControlsExpanded[stepId] = value;
+        state.errors = "";
+        rerenderProduct(product);
+
+        if (state.assignmentPickerMotion) {
+          state.assignmentPickerMotionTimer = window.setTimeout(function () {
+            state.assignmentPickerMotion = null;
+            state.assignmentPickerMotionTimer = null;
+            rerenderProduct(product);
+          }, 250);
+        }
+      }
+
+      button.addEventListener("click", openAssignmentPreview);
+      button.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openAssignmentPreview(event);
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-assignment-toggle]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var step = findStep(product, String(button.dataset.assignmentStep || ""));
+        var config = assignmentPickerConfig(step);
+        var groupId = String(button.dataset.assignmentGroup || "");
+        var field = String(button.dataset.assignmentField || "");
+        var value = String(button.dataset.assignmentValue || "");
+        var itemValue = String(button.dataset.assignmentItem || "");
+        var previousValue = String(state.selections[field] || "");
+        var resetKeys;
+        var resetValues = {};
+        var group = config ? config.groups.filter(function (candidate) {
+          return String(candidate && (candidate.id || candidate.label) || "") === groupId;
+        })[0] || null : null;
+
+        if (!step || !group || !field || !value) {
+          return;
+        }
+        if (state.assignmentPickerMotionTimer) {
+          window.clearTimeout(state.assignmentPickerMotionTimer);
+          state.assignmentPickerMotionTimer = null;
+        }
+        state.assignmentPickerMotion = null;
+        resetKeys = step.resetFieldsByGroup && Array.isArray(step.resetFieldsByGroup[groupId])
+          ? step.resetFieldsByGroup[groupId].map(String)
+          : [];
+        if (previousValue && previousValue !== value) {
+          resetKeys.forEach(function (key) {
+            if (Object.prototype.hasOwnProperty.call(state.selections, key)) {
+              resetValues[key] = Array.isArray(state.selections[key])
+                ? state.selections[key].slice()
+                : state.selections[key];
+            }
+          });
+        }
+
+        if (previousValue === value) {
+          delete state.selections[field];
+        } else {
+          state.selections[field] = value;
+          if (previousValue) {
+            if (!Array.isArray(state.assignmentPickerUndos)) {
+              state.assignmentPickerUndos = [];
+            }
+            state.assignmentPickerUndoSequence = Number(state.assignmentPickerUndoSequence || 0) + 1;
+            state.assignmentPickerUndos.push({
+              id: String(Date.now()) + "-" + String(state.assignmentPickerUndoSequence),
+              stepId: String(step.id || ""),
+              groupId: groupId,
+              field: field,
+              previousValue: previousValue,
+              newValue: value,
+              itemValue: itemValue,
+              resetKeys: resetKeys,
+              resetValues: resetValues,
+              expiresAt: Date.now() + 5000,
+              message: String(config.undoMessage || "Escolha {group} atualizada.").replace("{group}", group.label || group.id || "")
+            });
+          }
+        }
+        if (state.assignmentPickerControlsExpanded && step.id) {
+          state.assignmentPickerControlsExpanded[step.id] = itemValue;
+        }
+        resetKeys.forEach(function (key) { delete state.selections[key]; });
+        resetQuantityState();
+        state.errors = "";
+        state.packDisabledMessage = "";
+        try { trackOptionSelected(product, field, state.selections[field] || "off", button.textContent || ""); } catch (e) {}
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-assignment-undo]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var undoId = String(button.dataset.assignmentUndoId || "");
+        var undos = Array.isArray(state.assignmentPickerUndos) ? state.assignmentPickerUndos : [];
+        var undoIndex = undos.findIndex(function (candidate) {
+          return String(candidate && candidate.id || "") === undoId;
+        });
+        var undo = undoIndex >= 0 ? undos[undoIndex] : null;
+        if (!undo) {
+          return;
+        }
+        if (Date.now() > Number(undo.expiresAt || 0)) {
+          undos.splice(undoIndex, 1);
+          state.assignmentPickerUndos = undos;
+          rerenderProduct(product);
+          return;
+        }
+        state.selections[undo.field] = undo.previousValue;
+        (undo.resetKeys || []).forEach(function (key) {
+          delete state.selections[key];
+          if (Object.prototype.hasOwnProperty.call(undo.resetValues || {}, key)) {
+            state.selections[key] = Array.isArray(undo.resetValues[key])
+              ? undo.resetValues[key].slice()
+              : undo.resetValues[key];
+          }
+        });
+        if (state.assignmentPickerUndoInterval) {
+          window.clearInterval(state.assignmentPickerUndoInterval);
+        }
+        undos.splice(undoIndex, 1);
+        state.assignmentPickerUndos = undos;
+        state.assignmentPickerUndoInterval = null;
+        resetQuantityState();
+        state.errors = "";
+        state.packDisabledMessage = "";
+        try { trackOptionSelected(product, undo.field, undo.previousValue, "Reverter"); } catch (e) {}
+        rerenderProduct(product);
+      });
+    });
+
+    if (state.assignmentPickerUndoInterval) {
+      window.clearInterval(state.assignmentPickerUndoInterval);
+      state.assignmentPickerUndoInterval = null;
+    }
+    if (Array.isArray(state.assignmentPickerUndos) && state.assignmentPickerUndos.length) {
+      state.assignmentPickerUndoInterval = window.setInterval(function () {
+        var now = Date.now();
+        var undos = Array.isArray(state.assignmentPickerUndos) ? state.assignmentPickerUndos : [];
+        var activeUndos = undos.filter(function (undo) {
+          return undo && Number(undo.expiresAt || 0) > now;
+        });
+        var changed = activeUndos.length !== undos.length;
+        state.assignmentPickerUndos = activeUndos;
+        document.querySelectorAll("[data-assignment-undo-countdown]").forEach(function (countdown) {
+          var countdownId = String(countdown.dataset.assignmentUndoId || "");
+          var undo = activeUndos.filter(function (candidate) {
+            return String(candidate && candidate.id || "") === countdownId;
+          })[0] || null;
+          if (undo) {
+            countdown.textContent = String(Math.max(1, Math.ceil((Number(undo.expiresAt || 0) - now) / 1000)));
+          }
+        });
+        if (changed) {
+          window.clearInterval(state.assignmentPickerUndoInterval);
+          state.assignmentPickerUndoInterval = null;
+          rerenderProduct(product);
+        }
+      }, 200);
+    }
+
+    document.querySelectorAll("[data-pf-metal-corners-toggle]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var field = String(button.dataset.pfMetalCornersField || "");
+        var value = String(button.dataset.pfMetalCornersValue || "");
+        if (!field || !value) {
+          return;
+        }
+        if (String(state.selections[field] || "") === value) {
+          delete state.selections[field];
+        } else {
+          state.selections[field] = value;
+        }
+        state.errors = "";
+        try { trackOptionSelected(product, field, state.selections[field] || "off", button.textContent || ""); } catch (e) {}
+        rerenderProduct(product);
+      });
+    });
+
+    document.querySelectorAll("[data-continuous-variation-choice]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        var field = String(input.dataset.continuousVariationField || "");
+        var stepId = String(input.dataset.continuousVariationStep || "");
+        var variationStep = stepId ? findStep(product, stepId) : null;
+        if (!input.checked || !field || !variationStep) {
+          return;
+        }
+        state.selections[field] = input.value;
+        syncGroupedDesignSelections(product, variationStep);
+        if (variationStep.aggregateField === "designs") {
+          state.selections.order_flow = "catalog";
+          state.selections.design_source = "catalog";
+        }
+        resetQuantityState();
+        state.errors = "";
+        state.packDisabledMessage = "";
+        try { trackDesignToggle(product, input.value, true); } catch (e) {}
         rerenderProduct(product);
       });
     });

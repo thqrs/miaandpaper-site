@@ -29,7 +29,8 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <link rel="stylesheet" href="admin-nav.css?v=2026081001">
   <link rel="stylesheet" href="miu-animation-lab.css?v=2026082502">
   <script src="admin-nav.js?v=2026081901" defer></script>
-  <script src="miu-animation-lab.js?v=2026082502" defer></script>
+  <script src="miu-sprite-grid.js?v=2026082703" defer></script>
+  <script src="miu-animation-lab.js?v=2026082702" defer></script>
 </head>
 <body class="miu-lab-page">
   <main
@@ -137,14 +138,50 @@ if (empty($_SESSION['miaandpaper_admin'])) {
       <div class="miu-lab-atlas-head">
         <h2 class="miu-lab-section-title" id="miu-lab-atlas-title">Folhas de Sprites Ativas</h2>
       </div>
-      <div class="miu-lab-atlas-list miu-lab-atlas-list--single" id="miu-lab-atlas-container">
+      <div class="miu-lab-atlas-list" id="miu-lab-atlas-container">
         <figure class="miu-lab-atlas-item">
           <figcaption>
             <strong>Folha 1 · Animações Fluídas (In-betweens)</strong>
             <a href="content/brand/miu/experimental/experimental-full-spritesheet-animations_002.json">Manifesto JSON</a>
           </figcaption>
-          <div class="miu-lab-atlas-wrap" id="miu-lab-sheet-wrap">
+          <div class="miu-lab-atlas-wrap">
             <img id="miu-lab-sheet-img" src="content/brand/miu/experimental/miu-fluid-animations-transparent.png" alt="Spritesheet experimental de animações fluídas">
+          </div>
+        </figure>
+        <figure class="miu-lab-atlas-item">
+          <figcaption>
+            <strong>Folha 3 · V4 Estados e Micro-idles</strong>
+            <a href="content/brand/miu/experimental/quantity-rig-v4/miu-v4-states-idle-8x8.png">Abrir PNG</a>
+          </figcaption>
+          <div class="miu-lab-atlas-wrap">
+            <img src="content/brand/miu/experimental/quantity-rig-v4/miu-v4-states-idle-8x8.png" alt="Spritesheet PNG 8 por 8 dos estados emocionais do Quantity Rig V4">
+          </div>
+        </figure>
+        <figure class="miu-lab-atlas-item">
+          <figcaption>
+            <strong>Folha 4 · V4 Reacções e Rejoice</strong>
+            <a href="content/brand/miu/experimental/quantity-rig-v4/miu-v4-reactions-rejoice-8x8.png">Abrir PNG</a>
+          </figcaption>
+          <div class="miu-lab-atlas-wrap">
+            <img src="content/brand/miu/experimental/quantity-rig-v4/miu-v4-reactions-rejoice-8x8.png" alt="Spritesheet PNG 8 por 8 das reacções de quantidade e rejoice do V4">
+          </div>
+        </figure>
+        <figure class="miu-lab-atlas-item">
+          <figcaption>
+            <strong>Folha 5 · V5 Idle Vivo e Atenção</strong>
+            <a href="content/brand/miu/experimental/quantity-rig-v4/miu-v5-idle-attention-8x8.png">Abrir PNG</a>
+          </figcaption>
+          <div class="miu-lab-atlas-wrap">
+            <img src="content/brand/miu/experimental/quantity-rig-v4/miu-v5-idle-attention-8x8.png" alt="Spritesheet PNG 8 por 8 do idle vivo e atenção do Míu Animation Director V5">
+          </div>
+        </figure>
+        <figure class="miu-lab-atlas-item">
+          <figcaption>
+            <strong>Folha 6 · V5 Reacções por Gesto</strong>
+            <a href="content/brand/miu/experimental/quantity-rig-v4/miu-v5-gesture-reactions-8x8.png">Abrir PNG</a>
+          </figcaption>
+          <div class="miu-lab-atlas-wrap">
+            <img src="content/brand/miu/experimental/quantity-rig-v4/miu-v5-gesture-reactions-8x8.png" alt="Spritesheet PNG 8 por 8 das reacções por gesto do Míu Animation Director V5">
           </div>
         </figure>
       </div>

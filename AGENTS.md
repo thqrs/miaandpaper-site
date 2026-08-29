@@ -23,7 +23,10 @@ servidor. Usar HTML, CSS, JavaScript vanilla e PHP sem dependências.
 Next.js, npm ou qualquer framework. O deploy tem de continuar a ser copiar
 ficheiros.
 
-Manter o site leve e *mobile-first*, e as imagens optimizadas — **WebP, sempre**.
+Manter o site leve e *mobile-first*, e as imagens optimizadas — **WebP, sempre**,
+com uma única excepção: **sprites e spritesheets do Míu permanecem em PNG e
+nunca são convertidos para WebP**. A transparência e os componentes isolados
+são parte do contrato do motor de auto-centragem.
 
 Não pôr segredos, passwords, chaves de API ou dados de clientes no repositório.
 

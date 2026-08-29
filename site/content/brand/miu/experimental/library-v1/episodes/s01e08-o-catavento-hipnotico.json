@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "kind": "miu-mini-episode",
+  "id": "s01e08-o-catavento-hipnotico",
+  "season": 1,
+  "episode": 8,
+  "title": "O catavento hipnótico",
+  "logline": "Míu dobra um catavento, dá-lhe um toque e fica preso a seguir as voltas.",
+  "trigger": "craft-special",
+  "productionIntegrated": false,
+  "durationMs": 4560,
+  "director": {
+    "priority": "one-shot-story",
+    "interruptPolicy": "finish-current-beat-then-yield",
+    "suppressQuantityReactions": true,
+    "returnTo": "live-idle-for-current-context"
+  },
+  "sheets": [
+    "transition-idle-to-attention",
+    "paper-pinwheel",
+    "anime-sparkles-fx",
+    "transition-soft-recovery"
+  ],
+  "timeline": [
+    {
+      "order": 0,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-idle-to-attention",
+      "beat": "curious-head-tilt",
+      "durationMs": 320,
+      "priority": "attention",
+      "interruptible": false
+    },
+    {
+      "order": 1,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-pinwheel",
+      "beat": "discover-paper",
+      "durationMs": 360,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 2,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-pinwheel",
+      "beat": "hold-and-fold",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 3,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-pinwheel",
+      "beat": "press-centre",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 4,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-pinwheel",
+      "beat": "finish-pinwheel",
+      "durationMs": 460,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 5,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-pinwheel",
+      "beat": "lift-pinwheel",
+      "durationMs": 380,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 6,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-pinwheel",
+      "beat": "tentative-paw-tap",
+      "durationMs": 360,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 7,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-pinwheel",
+      "beat": "mesmerised-spin",
+      "durationMs": 620,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 8,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-sparkles-fx",
+      "beat": "orbiting-sparkles",
+      "durationMs": 360,
+      "blend": "source-over",
+      "anchor": "pinwheel"
+    },
+    {
+      "order": 9,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-pinwheel",
+      "beat": "delighted-settle",
+      "durationMs": 480,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 10,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-soft-recovery",
+      "beat": "delighted-to-idle",
+      "durationMs": 380,
+      "priority": "recovery",
+      "interruptible": false
+    }
+  ],
+  "reducedMotion": {
+    "strategy": "key-pose-sequence",
+    "framePolicy": "first-middle-last-per-beat",
+    "keepEmotionAndProps": true,
+    "remove": [
+      "bounce",
+      "overshoot",
+      "rapid-looping-fx"
+    ]
+  },
+  "optionalEnhancements": [],
+  "missingSheets": [],
+  "status": "complete"
+}

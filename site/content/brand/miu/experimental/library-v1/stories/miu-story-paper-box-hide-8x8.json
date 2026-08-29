@@ -1,0 +1,334 @@
+{
+  "version": 1,
+  "id": "paper-box-hide",
+  "name": "Míu · Esconder-se numa caixa",
+  "category": "story",
+  "file": "miu-story-paper-box-hide-8x8.png",
+  "canonicalReference": "../../../miu-sprite.webp",
+  "format": "png-rgba",
+  "background": "transparent-alpha",
+  "columns": 8,
+  "rows": 8,
+  "frameCount": 64,
+  "readingOrder": "row-major",
+  "detector": {
+    "id": "MiuSpriteGrid.detectConnectedGrid",
+    "anchorStrategy": "median-anatomical-centres",
+    "isolatedComponents": true,
+    "expectedCellOccupancy": "64-of-64"
+  },
+  "defaultFrameDurationMs": 95,
+  "beats": [
+    {
+      "row": 0,
+      "id": "inspect-box",
+      "frames": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          7,
+          0
+        ]
+      ]
+    },
+    {
+      "row": 1,
+      "id": "paw-inside",
+      "frames": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          7,
+          1
+        ]
+      ]
+    },
+    {
+      "row": 2,
+      "id": "squeeze-in",
+      "frames": [
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          2
+        ]
+      ]
+    },
+    {
+      "row": 3,
+      "id": "ears-disappear",
+      "frames": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          7,
+          3
+        ]
+      ]
+    },
+    {
+      "row": 4,
+      "id": "eyes-peek",
+      "frames": [
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          7,
+          4
+        ]
+      ]
+    },
+    {
+      "row": 5,
+      "id": "surprise-pop",
+      "frames": [
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          7,
+          5
+        ]
+      ]
+    },
+    {
+      "row": 6,
+      "id": "box-tips",
+      "frames": [
+        [
+          0,
+          6
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ]
+      ]
+    },
+    {
+      "row": 7,
+      "id": "flattened-box-settle",
+      "frames": [
+        [
+          0,
+          7
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          7,
+          7
+        ]
+      ]
+    }
+  ],
+  "generation": {
+    "mode": "built-in-imagegen-derived",
+    "date": "2026-08-27",
+    "canonicalIdentityLocked": true,
+    "promptProfile": "miu-story-8x8-v1",
+    "backgroundProcessing": "built-in-imagegen-alpha-extraction"
+  }
+}

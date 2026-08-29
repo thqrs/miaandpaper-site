@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "kind": "miu-mini-episode",
+  "id": "s01e02-o-novelo-rebelde",
+  "season": 1,
+  "episode": 2,
+  "title": "O novelo rebelde",
+  "logline": "Um toque de pata transforma um novelo quieto numa pequena confusão.",
+  "trigger": "ambient-special",
+  "productionIntegrated": false,
+  "durationMs": 4950,
+  "director": {
+    "priority": "one-shot-story",
+    "interruptPolicy": "finish-current-beat-then-yield",
+    "suppressQuantityReactions": true,
+    "returnTo": "live-idle-for-current-context"
+  },
+  "sheets": [
+    "transition-idle-to-attention",
+    "yarn-ball",
+    "anime-attention-fx",
+    "anime-sweat-drop-fx",
+    "anime-sparkles-fx",
+    "transition-soft-recovery"
+  ],
+  "timeline": [
+    {
+      "order": 0,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-idle-to-attention",
+      "beat": "paw-pause-and-focus",
+      "durationMs": 320,
+      "priority": "attention",
+      "interruptible": false
+    },
+    {
+      "order": 1,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "yarn-ball",
+      "beat": "notice-yarn",
+      "durationMs": 360,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 2,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-attention-fx",
+      "beat": "curiosity-dots",
+      "durationMs": 240,
+      "blend": "source-over",
+      "anchor": "head"
+    },
+    {
+      "order": 3,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "yarn-ball",
+      "beat": "paw-tap",
+      "durationMs": 380,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 4,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "yarn-ball",
+      "beat": "track-roll",
+      "durationMs": 430,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 5,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "yarn-ball",
+      "beat": "two-paw-pounce",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 6,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "yarn-ball",
+      "beat": "tug-thread",
+      "durationMs": 440,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 7,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "yarn-ball",
+      "beat": "light-tangle",
+      "durationMs": 480,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 8,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-sweat-drop-fx",
+      "beat": "classic-sweat-drop",
+      "durationMs": 300,
+      "blend": "source-over",
+      "anchor": "head-right"
+    },
+    {
+      "order": 9,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "yarn-ball",
+      "beat": "comic-tumble",
+      "durationMs": 520,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 10,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "yarn-ball",
+      "beat": "proud-settle",
+      "durationMs": 460,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 11,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-sparkles-fx",
+      "beat": "single-glint",
+      "durationMs": 220,
+      "blend": "source-over",
+      "anchor": "paw"
+    },
+    {
+      "order": 12,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-soft-recovery",
+      "beat": "awkward-to-idle",
+      "durationMs": 380,
+      "priority": "recovery",
+      "interruptible": false
+    }
+  ],
+  "reducedMotion": {
+    "strategy": "key-pose-sequence",
+    "framePolicy": "first-middle-last-per-beat",
+    "keepEmotionAndProps": true,
+    "remove": [
+      "bounce",
+      "overshoot",
+      "rapid-looping-fx"
+    ]
+  },
+  "optionalEnhancements": [],
+  "missingSheets": [],
+  "status": "complete"
+}

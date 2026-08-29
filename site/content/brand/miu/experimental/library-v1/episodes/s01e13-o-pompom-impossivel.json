@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "kind": "miu-mini-episode",
+  "id": "s01e13-o-pompom-impossivel",
+  "season": 1,
+  "episode": 13,
+  "title": "O pompom impossível",
+  "logline": "Míu enrola a lã com muita concentração, perde uma patinha no fio e encontra um pompom perfeito.",
+  "trigger": "craft-special",
+  "productionIntegrated": false,
+  "durationMs": 4700,
+  "director": {
+    "priority": "one-shot-story",
+    "interruptPolicy": "finish-current-beat-then-yield",
+    "suppressQuantityReactions": true,
+    "returnTo": "live-idle-for-current-context"
+  },
+  "sheets": [
+    "transition-idle-to-attention",
+    "wool-pompom",
+    "anime-sweat-drop-fx",
+    "anime-sparkles-fx",
+    "transition-soft-recovery"
+  ],
+  "timeline": [
+    {
+      "order": 0,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-idle-to-attention",
+      "beat": "gaze-left-to-attention",
+      "durationMs": 320,
+      "priority": "attention",
+      "interruptible": false
+    },
+    {
+      "order": 1,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "wool-pompom",
+      "beat": "notice-wool",
+      "durationMs": 340,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 2,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "wool-pompom",
+      "beat": "inspect-cardboard-rings",
+      "durationMs": 380,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 3,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "wool-pompom",
+      "beat": "begin-wrapping",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 4,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "wool-pompom",
+      "beat": "two-paw-wrapping",
+      "durationMs": 460,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 5,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "wool-pompom",
+      "beat": "paw-tangle",
+      "durationMs": 440,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 6,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-sweat-drop-fx",
+      "beat": "classic-sweat-drop",
+      "durationMs": 280,
+      "blend": "source-over",
+      "anchor": "head-right"
+    },
+    {
+      "order": 7,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "wool-pompom",
+      "beat": "pompom-appears",
+      "durationMs": 440,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 8,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "wool-pompom",
+      "beat": "bat-pompom",
+      "durationMs": 500,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 9,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "wool-pompom",
+      "beat": "proud-pompom",
+      "durationMs": 480,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 10,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-sparkles-fx",
+      "beat": "paired-glints",
+      "durationMs": 260,
+      "blend": "source-over",
+      "anchor": "paw"
+    },
+    {
+      "order": 11,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-soft-recovery",
+      "beat": "delighted-to-idle",
+      "durationMs": 380,
+      "priority": "recovery",
+      "interruptible": false
+    }
+  ],
+  "reducedMotion": {
+    "strategy": "key-pose-sequence",
+    "framePolicy": "first-middle-last-per-beat",
+    "keepEmotionAndProps": true,
+    "remove": [
+      "bounce",
+      "overshoot",
+      "rapid-looping-fx"
+    ]
+  },
+  "optionalEnhancements": [],
+  "missingSheets": [],
+  "status": "complete"
+}

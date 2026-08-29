@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "kind": "miu-mini-episode",
+  "id": "s01e01-borboleta-no-nariz",
+  "season": 1,
+  "episode": 1,
+  "title": "A borboleta no nariz",
+  "logline": "Míu segue uma borboleta, fica completamente hipnotizado e acaba por espirrar.",
+  "trigger": "ambient-special",
+  "productionIntegrated": false,
+  "durationMs": 5520,
+  "director": {
+    "priority": "one-shot-story",
+    "interruptPolicy": "finish-current-beat-then-yield",
+    "suppressQuantityReactions": true,
+    "returnTo": "live-idle-for-current-context"
+  },
+  "sheets": [
+    "transition-idle-to-attention",
+    "butterfly-and-miu",
+    "anime-attention-fx",
+    "butterfly-prop",
+    "anime-sparkles-fx",
+    "transition-soft-recovery"
+  ],
+  "timeline": [
+    {
+      "order": 0,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-idle-to-attention",
+      "beat": "gaze-left-to-attention",
+      "durationMs": 320,
+      "priority": "attention",
+      "interruptible": false
+    },
+    {
+      "order": 1,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "butterfly-and-miu",
+      "beat": "notice-butterfly",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 2,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-attention-fx",
+      "beat": "attention-tick",
+      "durationMs": 260,
+      "blend": "source-over",
+      "anchor": "logical-cell-centre",
+      "startOffsetMs": 80
+    },
+    {
+      "order": 3,
+      "type": "overlay",
+      "layer": "prop",
+      "sheet": "butterfly-prop",
+      "beat": "flight-arc",
+      "durationMs": 520,
+      "blend": "source-over"
+    },
+    {
+      "order": 4,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "butterfly-and-miu",
+      "beat": "track-flight",
+      "durationMs": 460,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 5,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "butterfly-and-miu",
+      "beat": "mesmerised-circle",
+      "durationMs": 520,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 6,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "butterfly-and-miu",
+      "beat": "nose-approach",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 7,
+      "type": "overlay",
+      "layer": "prop",
+      "sheet": "butterfly-prop",
+      "beat": "landing",
+      "durationMs": 340,
+      "blend": "source-over",
+      "anchor": "nose"
+    },
+    {
+      "order": 8,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "butterfly-and-miu",
+      "beat": "butterfly-on-nose",
+      "durationMs": 360,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 9,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "butterfly-and-miu",
+      "beat": "sneeze",
+      "durationMs": 420,
+      "priority": "reaction",
+      "interruptible": false
+    },
+    {
+      "order": 10,
+      "type": "overlay",
+      "layer": "prop",
+      "sheet": "butterfly-prop",
+      "beat": "sneeze-escape",
+      "durationMs": 380,
+      "blend": "source-over"
+    },
+    {
+      "order": 11,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "butterfly-and-miu",
+      "beat": "amused-recovery",
+      "durationMs": 440,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 12,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-sparkles-fx",
+      "beat": "paired-glints",
+      "durationMs": 280,
+      "blend": "source-over",
+      "anchor": "head"
+    },
+    {
+      "order": 13,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-soft-recovery",
+      "beat": "sneeze-to-idle",
+      "durationMs": 380,
+      "priority": "recovery",
+      "interruptible": false
+    }
+  ],
+  "reducedMotion": {
+    "strategy": "key-pose-sequence",
+    "framePolicy": "first-middle-last-per-beat",
+    "keepEmotionAndProps": true,
+    "remove": [
+      "bounce",
+      "overshoot",
+      "rapid-looping-fx"
+    ]
+  },
+  "optionalEnhancements": [],
+  "missingSheets": [],
+  "status": "complete"
+}

@@ -1,7 +1,7 @@
 // js/17-wizard-render.js — parte 17/23 do antigo app.js (codigo intacto, so dividido).
 // Os modulos js/*.js partilham TODOS o mesmo escopo global (scripts classicos,
 // sem IIFE por ficheiro) e carregam pela ordem dos <script> nos HTML: 01 → 23.
-// Conteudo: render dos passos do wizard, incluindo escolhas agrupadas de capa/variação: media composer dos detalhes, open order hint, aviso de pagamento e antecedencia, pedido de oferta, slideshow do interior, numeracao e labels dos passos, historico do browser (handleWizardPopState).
+// Conteudo: render dos passos do wizard, incluindo escolhas agrupadas de capa/variação e o fluxo dos porta-folhetos (atribuição A4/A6 dentro da preview): media composer dos detalhes, open order hint, aviso de pagamento e antecedencia, pedido de oferta, slideshow do interior, numeracao e labels dos passos, historico do browser (handleWizardPopState).
   function isDetailsMediaComposer(step) {
     var fields = step && Array.isArray(step.fields) ? step.fields : [];
     return !!(
@@ -829,6 +829,23 @@
     return String(step && step.id || "opcoes") + "::" + String(drawer && (drawer.id || drawer.field) || "gaveta");
   }
 
+  function renderCopySelectionButton(step) {
+    var config = step && step.copySelection;
+    var sourceField = String(config && config.sourceField || "");
+    var sourceValue = sourceField ? String(state.selections[sourceField] || "") : "";
+
+    if (!config || !sourceField || !config.targetField) {
+      return "";
+    }
+
+    return [
+      '<button type="button" class="pf-copy-selection" data-copy-step-selection="' + escapeHtml(step.id || "") + '"' + (sourceValue ? '' : ' disabled') + '>',
+      '<span class="pf-copy-selection-check" aria-hidden="true">✓</span>',
+      '<span>' + escapeHtml(config.title || "Usar a mesma escolha") + '</span>',
+      '</button>'
+    ].join("");
+  }
+
   function renderOptionDrawerChoice(product, step, drawer, item) {
     var selected = String(state.selections[drawer.field] || "") === String(item.value || "");
     var extra = Math.max(0, parseInt(item.extraPriceCentsPerUnit, 10) || 0);
@@ -851,6 +868,9 @@
   function renderOptionDrawerCard(product, step, drawer, item) {
     var selected = String(state.selections[drawer.field] || "") === String(item.value || "");
     var extra = Math.max(0, parseInt(item.extraPriceCentsPerUnit, 10) || 0);
+    var priceText = item.priceLabel
+      ? escapeHtml(item.priceLabel)
+      : (extra ? '+' + escapeHtml(formatCents(extra)) : (step.hideIncludedLabel ? '' : 'Incluído'));
 
     return [
       '<div class="cadernos-add-on-choice option-drawer-card-choice">',
@@ -861,7 +881,7 @@
       '<strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>',
       item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : "",
       '</span>',
-      '<span class="cadernos-purchase-price">' + (item.priceLabel ? escapeHtml(item.priceLabel) : (extra ? '+' + escapeHtml(formatCents(extra)) : 'Incluído')) + '</span>',
+      priceText ? '<span class="cadernos-purchase-price">' + priceText + '</span>' : '',
       '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
       '</label>',
       selected ? renderCadernoAddOnDrawer(item) : "",
@@ -871,15 +891,18 @@
 
   function renderOptionDrawerCards(product, step) {
     ensureOptionDrawerSelections(product);
+    var drawers = optionDrawersForStep(product, step);
 
-    return (step.drawers || []).map(function (drawer) {
+    return drawers.map(function (drawer) {
       // Com uma gaveta so, o titulo do passo ja diz o que se escolhe; com
       // varias, cada grupo precisa do seu cabecalho para nao se misturarem.
-      var heading = (step.drawers || []).length > 1
+      var heading = drawers.length > 1
         ? '<h3 class="option-drawer-cards-title">' + escapeHtml(drawer.title || drawer.label || "Opção") + '</h3>'
         : "";
 
-      return heading + '<div class="option-list size-choice-list crachas-size-card-list cadernos-add-on-list">'
+      var drawerClass = String(drawer.field || drawer.id || "option").toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+
+      return heading + '<div class="option-list size-choice-list crachas-size-card-list cadernos-add-on-list pf-fluid-drawer-list pf-fluid-drawer-list--' + escapeHtml(drawerClass) + '" data-pf-drawer-field="' + escapeHtml(drawer.field || "") + '">'
         + optionDrawerAvailableItems(product, drawer).map(function (item) {
           return renderOptionDrawerCard(product, step, drawer, item);
         }).join("")
@@ -890,7 +913,7 @@
   function renderOptionDrawers(product, step) {
     ensureOptionDrawerSelections(product);
 
-    return '<div class="option-drawer-list">' + (step.drawers || []).map(function (drawer) {
+    return '<div class="option-drawer-list">' + optionDrawersForStep(product, step).map(function (drawer) {
       var selected = optionDrawerItem(drawer, state.selections[drawer.field], product);
       var selectedExtra = selected ? Math.max(0, parseInt(selected.extraPriceCentsPerUnit, 10) || 0) : 0;
       var key = optionDrawerUiKey(step, drawer);
@@ -941,10 +964,167 @@
     return '<div class="option-list size-choice-list crachas-size-card-list cadernos-purchase-list">' + html + '</div>';
   }
 
+  function renderPortaFolhetosSizeStep(product, step) {
+    var selected = String(state.selections[step.field || "size"] || "");
+    var html = "";
+
+    (step.items || []).forEach(function (item) {
+      var checked = selected === String(item.value || "");
+      var info = priceForSize(product, item.value);
+      var priceText = info && info.cents ? info.total : (item.priceCents != null ? formatCents(item.priceCents) : "");
+
+      html += [
+        '<div class="pf-size-choice">',
+        '<label class="choice-card crachas-size-card cadernos-purchase-card pf-size-card' + (checked ? ' is-selected' : '') + '">',
+        '<input type="radio" name="' + escapeHtml(step.field || "size") + '" value="' + escapeHtml(item.value || "") + '" data-choice-step="' + escapeHtml(step.id || "size") + '"' + (checked ? ' checked' : '') + '>',
+        '<span class="crachas-size-card-visual">' + renderVisual(item, "media-list", step) + '</span>',
+        '<span class="choice-copy crachas-size-card-text"><strong>' + escapeHtml(item.title || item.value || "") + '</strong>' + (item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '') + '</span>',
+        priceText ? '<span class="cadernos-purchase-price">' + escapeHtml(priceText) + '</span>' : '',
+        '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+        adminItemControls(step, item),
+        '</label>',
+        checked ? renderCadernoCoverDrawer(product, item) : '',
+        '</div>'
+      ].join("");
+    });
+
+    return '<div class="pf-size-list">' + html + '</div>';
+  }
+
+  function portaFolhetosDetailsVariationStep(product, step) {
+    var config = step && step.portaFolhetosDetails;
+    var stepId = config ? String(config.variationStepId || "") : "";
+    return stepId ? findStep(product, stepId) : null;
+  }
+
+  function portaFolhetosDetailsGroups(step, variationStep) {
+    var config = step && step.portaFolhetosDetails;
+    return config && Array.isArray(config.fixedGroups)
+      ? config.fixedGroups.map(String)
+      : designGroupsForStep(variationStep);
+  }
+
+  function syncPortaFolhetosDetailSelections(product, step) {
+    var variationStep = portaFolhetosDetailsVariationStep(product, step);
+
+    if (!variationStep) {
+      return;
+    }
+
+    portaFolhetosDetailsGroups(step, variationStep).forEach(function (group) {
+      var field = groupedDesignField(variationStep, group);
+      var items = groupedDesignItems(variationStep, group);
+      var current = field ? String(state.selections[field] || "") : "";
+      var valid = current && items.some(function (item) {
+        return item && String(item.value || "") === current;
+      });
+
+      if (!field) {
+        return;
+      }
+      if (!valid && items.length === 1) {
+        state.selections[field] = items[0].value;
+      } else if (!valid) {
+        delete state.selections[field];
+      }
+    });
+
+    syncGroupedDesignSelections(product, variationStep);
+  }
+
+  function renderPortaFolhetosMetalCorners(product, step) {
+    var config = step && step.portaFolhetosDetails || {};
+    var sourceStepId = String(config.metalCornersSourceStepId || "");
+    var sourceStep = sourceStepId ? findStep(product, sourceStepId) : step;
+    var drawers = optionDrawersForStep(product, sourceStep);
+    var drawer = drawers.length ? drawers[0] : null;
+    var item = drawer && Array.isArray(drawer.items) ? drawer.items[0] : null;
+    var field = drawer ? String(drawer.field || "") : "";
+    var value = item ? String(item.value || "") : "";
+    var selected = field && value && String(state.selections[field] || "") === value;
+    var extra = Math.max(0, parseInt(item && item.extraPriceCentsPerUnit, 10) || 0);
+    var groups = Array.isArray(config.metalCornersGroups) ? config.metalCornersGroups : [];
+
+    if (!drawer || !item || !field || !value) {
+      return "";
+    }
+
+    if (groups.length) {
+      return '<div class="pf-metal-corners-groups">' + groups.map(function (group) {
+        var groupField = String(group && group.field || "");
+        var groupLabel = String(group && (group.label || group.id) || "");
+        var groupSelected = groupField && String(state.selections[groupField] || "") === value;
+
+        return [
+          '<button type="button" class="pf-metal-corners-toggle' + (groupSelected ? ' is-selected' : '') + '" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(groupField) + '" data-pf-metal-corners-value="' + escapeHtml(value) + '" aria-pressed="' + (groupSelected ? 'true' : 'false') + '">',
+          '<span class="pf-metal-corners-image">' + renderVisual(item, "media-list", sourceStep) + '</span>',
+          '<span class="pf-metal-corners-copy"><strong>' + escapeHtml((item.title || "Quero cantos metálicos!") + (groupLabel ? " · " + groupLabel : "")) + '</strong><small>' + escapeHtml(item.subtitle || "") + '</small></span>',
+          '<span class="pf-metal-corners-price">+' + escapeHtml(formatCents(extra)) + '</span>',
+          '<span class="pf-metal-corners-check" aria-hidden="true">✓</span>',
+          '</button>'
+        ].join("");
+      }).join("") + '</div>';
+    }
+
+    return [
+      '<button type="button" class="pf-metal-corners-toggle' + (selected ? ' is-selected' : '') + '" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(field) + '" data-pf-metal-corners-value="' + escapeHtml(value) + '" aria-pressed="' + (selected ? 'true' : 'false') + '">',
+      '<span class="pf-metal-corners-image">' + renderVisual(item, "media-list", step) + '</span>',
+      '<span class="pf-metal-corners-copy"><strong>' + escapeHtml(item.title || "Quero cantos metálicos!") + '</strong><small>' + escapeHtml(item.subtitle || "") + '</small></span>',
+      '<span class="pf-metal-corners-price">+' + escapeHtml(formatCents(extra)) + '</span>',
+      '<span class="pf-metal-corners-check" aria-hidden="true">✓</span>',
+      '</button>'
+    ].join("");
+  }
+
+  function renderPortaFolhetosDetails(product, step) {
+    var config = step && step.portaFolhetosDetails || {};
+    var variationStep = portaFolhetosDetailsVariationStep(product, step);
+    var html = '<div class="pf-details-step">' + renderPortaFolhetosMetalCorners(product, step);
+
+    if (!variationStep) {
+      return html + '</div>';
+    }
+
+    syncPortaFolhetosDetailSelections(product, step);
+    portaFolhetosDetailsGroups(step, variationStep).forEach(function (group) {
+      var field = groupedDesignField(variationStep, group);
+      var items = groupedDesignItems(variationStep, group);
+      var selected = field ? String(state.selections[field] || "") : "";
+
+      if (items.length < 2) {
+        return;
+      }
+
+      html += [
+        '<section class="pf-details-variation" data-design-size-group="' + escapeHtml(group) + '">',
+        '<h3>' + escapeHtml(config.variationTitle || "Escolhe as argolas e fita") + ' · ' + escapeHtml(group) + '</h3>',
+        '<div class="pf-details-variation-list" role="radiogroup">',
+        items.map(function (item) {
+          var checked = selected === String(item.value || "");
+          return [
+            '<label class="pf-details-variation-card' + (checked ? ' is-selected' : '') + '">',
+            '<input type="radio" name="' + escapeHtml(field) + '" value="' + escapeHtml(item.value || "") + '" data-continuous-variation-choice data-continuous-variation-step="' + escapeHtml(variationStep.id || "") + '" data-continuous-variation-field="' + escapeHtml(field) + '" data-continuous-variation-group="' + escapeHtml(group) + '"' + (checked ? ' checked' : '') + '>',
+            '<span class="pf-details-variation-image">' + renderVisual(item, "media-list", variationStep) + '</span>',
+            '<span class="pf-details-variation-copy"><strong>' + escapeHtml(item.title || item.value || "") + '</strong><small>' + escapeHtml(item.subtitle || "") + '</small></span>',
+            '<span class="pf-details-variation-check" aria-hidden="true">✓</span>',
+            '</label>'
+          ].join("");
+        }).join(""),
+        '</div>',
+        '</section>'
+      ].join("");
+    });
+
+    return html + '</div>';
+  }
+
   // DESIGNS_BY_SIZE_V1: um único passo de design pode pedir uma escolha
   // independente por grupo de tamanho. O JSON define tudo: campo do tamanho,
   // grupos necessários por valor e campo de seleção de cada grupo.
   function designGroupsForStep(step) {
+    if (step && Array.isArray(step.fixedGroups)) {
+      return step.fixedGroups.map(String);
+    }
     var sizeField = String(step && step.sizeField || "size");
     var selectedSize = String(state.selections[sizeField] || "");
     var map = step && step.sizeGroups && typeof step.sizeGroups === "object" ? step.sizeGroups : {};
@@ -957,12 +1137,14 @@
   }
 
   function groupedDesignItems(step, group) {
+    var sourceId = String(step && step.itemsSourceStepId || "");
+    var itemStep = sourceId ? findStep(state.product, sourceId) : step;
     var parentFields = step && step.parentSelectionFields && typeof step.parentSelectionFields === "object" ? step.parentSelectionFields : {};
     var parentField = String(parentFields[group] || "");
     var parentValue = parentField ? String(state.selections[parentField] || "") : "";
     var parentProperty = String(step && step.parentItemProperty || "parentValue");
 
-    return (step && Array.isArray(step.items) ? step.items : []).filter(function (item) {
+    return (itemStep && Array.isArray(itemStep.items) ? itemStep.items : []).filter(function (item) {
       if (!item || String(item.sizeGroup || "") !== String(group || "")) {
         return false;
       }
@@ -1041,21 +1223,417 @@
     ].join("");
   }
 
+  // ASSIGNMENT_PICKER_V1: um catálogo visual abre uma única preview por linha;
+  // os botões no próprio cartão atribuem ou retiram o item de cada grupo.
+  // A origem, os campos e qualquer mapa de valores vêm sempre do JSON.
+  function assignmentPickerConfig(step) {
+    var config = step && step.assignmentPicker;
+    return config && Array.isArray(config.groups) ? config : null;
+  }
+
+  function assignmentPickerSourceStep(product, step) {
+    var config = assignmentPickerConfig(step) || {};
+    var sourceId = String(config.sourceStepId || "");
+    return sourceId ? findStep(product, sourceId) : step;
+  }
+
+  function assignmentPickerItems(product, step) {
+    var config = assignmentPickerConfig(step) || {};
+    var sourceStep = assignmentPickerSourceStep(product, step);
+    var drawerId = String(config.sourceDrawerId || "");
+    var items = sourceStep && Array.isArray(sourceStep.items) ? sourceStep.items : [];
+
+    if (drawerId && sourceStep && Array.isArray(sourceStep.drawers)) {
+      var drawer = sourceStep.drawers.filter(function (candidate) {
+        return candidate && String(candidate.id || candidate.field || "") === drawerId;
+      })[0] || null;
+      items = drawer && Array.isArray(drawer.items) ? drawer.items : [];
+    }
+
+    if (config.sourceGroup != null) {
+      items = items.filter(function (item) {
+        return item && String(item.sizeGroup || "") === String(config.sourceGroup);
+      });
+    }
+
+    return items;
+  }
+
+  function assignmentPickerValue(group, item) {
+    var sourceValue = String(item && item.value || "");
+    var valueMap = group && group.valueMap && typeof group.valueMap === "object" ? group.valueMap : {};
+    return Object.prototype.hasOwnProperty.call(valueMap, sourceValue)
+      ? String(valueMap[sourceValue] || "")
+      : sourceValue;
+  }
+
+  function assignmentPickerAssignedItem(product, step, group) {
+    var field = String(group && group.field || "");
+    var selected = field ? String(state.selections[field] || "") : "";
+    return selected ? assignmentPickerItems(product, step).filter(function (item) {
+      return assignmentPickerValue(group, item) === selected;
+    })[0] || null : null;
+  }
+
+  function renderAssignmentPickerSlots(product, step) {
+    var config = assignmentPickerConfig(step) || {};
+    var sourceStep = assignmentPickerSourceStep(product, step);
+
+    return (config.slotsTitle ? '<h3 class="pf-assignment-slots-title">' + escapeHtml(config.slotsTitle) + '</h3>' : '')
+      + '<div class="pf-assignment-slots" aria-label="Escolhas atribuídas">' + config.groups.map(function (group) {
+      var item = assignmentPickerAssignedItem(product, step, group);
+      return [
+        '<div class="pf-assignment-slot' + (item ? ' has-selection' : '') + '" data-assignment-slot="' + escapeHtml(group.id || group.label || "") + '">',
+        '<span class="pf-assignment-slot-media">' + (item ? renderVisual(item, "media-list", sourceStep) : '<span class="pf-assignment-slot-empty" aria-hidden="true">?</span>') + '</span>',
+        '<strong>' + escapeHtml(group.label || group.id || "") + '</strong>',
+        '</div>'
+      ].join("");
+    }).join("") + '</div>';
+  }
+
+  function renderAssignmentPickerPreview(product, step, item) {
+    var config = assignmentPickerConfig(step) || {};
+
+    return [
+      '<div class="pf-assignment-preview" data-assignment-preview role="status" aria-live="polite">',
+      renderCadernosProofPhoto(item, config.previewLabel || "Imagem ilustrativa"),
+      '</div>'
+    ].join("");
+  }
+
+  function renderAssignmentPickerUndo(step) {
+    var now = Date.now();
+    var undos = Array.isArray(state.assignmentPickerUndos) ? state.assignmentPickerUndos.filter(function (undo) {
+      return undo && String(undo.stepId || "") === String(step.id || "") && Number(undo.expiresAt || 0) > now;
+    }) : [];
+
+    if (!undos.length) {
+      return "";
+    }
+    return '<div class="pf-assignment-undo-stack" role="status" aria-live="polite">' + undos.slice().reverse().map(function (undo) {
+      var remaining = Math.max(1, Math.ceil((Number(undo.expiresAt || 0) - now) / 1000));
+      return [
+        '<div class="pf-assignment-undo" data-assignment-undo-id="' + escapeHtml(undo.id || "") + '" style="--assignment-undo-duration:' + Math.max(0, Number(undo.expiresAt || 0) - now) + 'ms">',
+        '<span>' + escapeHtml(undo.message || "Escolha atualizada.") + '</span>',
+        '<button type="button" data-assignment-undo data-assignment-undo-id="' + escapeHtml(undo.id || "") + '">Reverter (<span data-assignment-undo-countdown data-assignment-undo-id="' + escapeHtml(undo.id || "") + '">' + remaining + '</span>s)</button>',
+        '<span class="pf-assignment-undo-progress" aria-hidden="true"></span>',
+        '</div>'
+      ].join("");
+    }).join("") + '</div>';
+  }
+
+  function renderAssignmentPicker(product, step) {
+    var config = assignmentPickerConfig(step) || {};
+    var sourceStep = assignmentPickerSourceStep(product, step);
+    var items = assignmentPickerItems(product, step);
+    var openValue = state.assignmentPickerOpen && String(state.assignmentPickerOpen[step.id] || "");
+    var openItem = openValue ? items.filter(function (item) {
+      return String(item.value || "") === openValue;
+    })[0] || null : null;
+    var openIndex = openItem ? items.indexOf(openItem) : -1;
+    var motion = state.assignmentPickerMotion && String(state.assignmentPickerMotion.stepId || "") === String(step.id || "")
+      ? state.assignmentPickerMotion
+      : null;
+    var cards = items.map(function (item) {
+      var itemGroups = config.groups.filter(function (group) {
+        var field = String(group && group.field || "");
+        return field && String(state.selections[field] || "") === assignmentPickerValue(group, item);
+      });
+      var open = openItem === item;
+      var leaving = motion && String(motion.leavingValue || "") === String(item.value || "");
+      var revealing = motion && String(motion.revealingValue || "") === String(item.value || "");
+      var expanded = open
+        && state.assignmentPickerControlsExpanded
+        && String(state.assignmentPickerControlsExpanded[step.id] || "") === String(item.value || "");
+      var visibleGroups = expanded || leaving ? config.groups : itemGroups;
+      var controls = (open || itemGroups.length || leaving) ? '<span class="pf-assignment-card-controls' + (expanded ? ' is-expanded' : ' is-collapsed') + (leaving ? ' is-leaving' : '') + (revealing ? ' is-revealing' : '') + '" role="group" aria-label="Atribuir esta escolha">' + visibleGroups.map(function (group) {
+        var field = String(group && group.field || "");
+        var value = assignmentPickerValue(group, item);
+        var selected = field && value && String(state.selections[field] || "") === value;
+        var groupIndex = config.groups.indexOf(group);
+        var fading = leaving && !selected && groupIndex === 0;
+        var promoted = leaving && selected && groupIndex > 0;
+        var restoring = revealing && selected && groupIndex > 0;
+        var revealed = revealing && !selected && groupIndex === 0;
+
+        return [
+          '<button type="button" class="pf-assignment-card-toggle' + (selected ? ' is-selected' : '') + (fading ? ' is-fading' : '') + (promoted ? ' is-promoted' : '') + (restoring ? ' is-restoring' : '') + (revealed ? ' is-revealed' : '') + '" data-assignment-toggle data-assignment-step="' + escapeHtml(step.id || "") + '" data-assignment-group="' + escapeHtml(group.id || group.label || "") + '" data-assignment-field="' + escapeHtml(field) + '" data-assignment-value="' + escapeHtml(value) + '" data-assignment-item="' + escapeHtml(item.value || "") + '" aria-pressed="' + (selected ? 'true' : 'false') + '">',
+          '<span>' + escapeHtml(group.label || group.id || "") + '</span>',
+          '<span class="pf-assignment-card-check" aria-hidden="true">' + ICON_CHECK + '</span>',
+          '</button>'
+        ].join("");
+      }).join("") + '</span>' : '';
+
+      return [
+        '<div class="cadernos-cover-choice pf-assignment-choice">',
+        '<div class="choice-card crachas-size-card cadernos-cover-card pf-assignment-card' + (itemGroups.length ? ' is-assigned' : '') + (open ? ' is-open' : '') + '" data-assignment-preview-open data-assignment-step="' + escapeHtml(step.id || "") + '" data-assignment-value="' + escapeHtml(item.value || "") + '" role="button" tabindex="0" aria-expanded="' + (open ? 'true' : 'false') + '">',
+        renderCadernoCoverCardMedia(product, Object.assign({}, sourceStep || step, { showDesignZoom: false }), item),
+        '<span class="choice-copy crachas-size-card-text"><strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>' + (item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '') + '</span>',
+        controls,
+        adminItemControls(sourceStep, item),
+        '</div>',
+        '</div>'
+      ].join("");
+    }).join("");
+    var preview = openItem
+      ? '<div class="pf-assignment-preview-row" style="--assignment-preview-row-three:' + (Math.floor(openIndex / 3) + 2) + ';--assignment-preview-row-two:' + (Math.floor(openIndex / 2) + 2) + '">' + renderAssignmentPickerPreview(product, step, openItem) + '</div>'
+      : "";
+
+    return [
+      '<div class="porta-folhetos-fluid pf-assignment-picker">',
+      renderAssignmentPickerSlots(product, step),
+      '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list pf-fluid-cover-list pf-assignment-list">',
+      cards,
+      preview,
+      '</div>',
+      renderAssignmentPickerUndo(step),
+      '</div>'
+    ].join("");
+  }
+
+  // CONTINUOUS_CONFIGURATOR_V1: alguns produtos têm várias decisões que
+  // pertencem visualmente à mesma personalização. O passo principal declara
+  // os passos de variação/extras no JSON; esses passos podem ficar escondidos
+  // no wizard público sem alterar os campos enviados ao checkout.
+  function continuousConfiguratorConfig(step) {
+    var config = step && step.continuousConfigurator;
+    return config && config.enabled === true ? config : null;
+  }
+
+  function continuousConfiguratorStep(product, step, key) {
+    var config = continuousConfiguratorConfig(step);
+    var id = config ? String(config[key] || "") : "";
+    return id ? findStep(product, id) : null;
+  }
+
+  function continuousConfiguratorSelectedItem(step, group) {
+    var field = groupedDesignField(step, group);
+    var value = field ? String(state.selections[field] || "") : "";
+    return groupedDesignItems(step, group).filter(function (item) {
+      return item && String(item.value || "") === value;
+    })[0] || null;
+  }
+
+  function syncContinuousConfigurator(product, step) {
+    var config = continuousConfiguratorConfig(step);
+    var variationStep = continuousConfiguratorStep(product, step, "variationStepId");
+    var groups;
+
+    if (!config || !variationStep) {
+      return;
+    }
+
+    groups = designGroupsForStep(step);
+    groups.forEach(function (group) {
+      var coverField = groupedDesignField(step, group);
+      var coverValue = coverField ? String(state.selections[coverField] || "") : "";
+      var variationField = groupedDesignField(variationStep, group);
+      var variations = coverValue ? groupedDesignItems(variationStep, group) : [];
+      var currentValue = variationField ? String(state.selections[variationField] || "") : "";
+      var currentValid = currentValue && variations.some(function (item) {
+        return item && String(item.value || "") === currentValue;
+      });
+
+      if (!variationField) {
+        return;
+      }
+      if (!coverValue) {
+        delete state.selections[variationField];
+        return;
+      }
+      if (!currentValid) {
+        if (variations.length === 1) {
+          state.selections[variationField] = variations[0].value;
+        } else {
+          delete state.selections[variationField];
+        }
+      }
+    });
+
+    syncGroupedDesignSelections(product, variationStep);
+    ensureOptionDrawerSelections(product);
+  }
+
+  function renderContinuousVariationPicker(product, step, group) {
+    var config = continuousConfiguratorConfig(step) || {};
+    var variationStep = continuousConfiguratorStep(product, step, "variationStepId");
+    var coverField = groupedDesignField(step, group);
+    var coverValue = coverField ? String(state.selections[coverField] || "") : "";
+    var variationField = variationStep ? groupedDesignField(variationStep, group) : "";
+    var variations = variationStep && coverValue ? groupedDesignItems(variationStep, group) : [];
+    var selectedValue = variationField ? String(state.selections[variationField] || "") : "";
+    var invalid = state.invalidFields && state.invalidFields.indexOf(variationField) !== -1;
+
+    if (!coverValue || !variationStep || !variationField || !variations.length) {
+      return "";
+    }
+
+    if (variations.length === 1) {
+      return [
+        '<div class="pf-fluid-variation is-auto">',
+        '<div class="pf-fluid-variation-heading"><strong>' + escapeHtml(config.variationTitle || "Argolas e fita") + '</strong></div>',
+        '<div class="pf-fluid-auto-note"><span class="pf-fluid-auto-check" aria-hidden="true">✓</span><span>Esta capa só existe com <b>' + escapeHtml(variations[0].title || variations[0].value || "esta combinação") + '</b> — já ficou escolhida automaticamente.</span></div>',
+        '</div>'
+      ].join("");
+    }
+
+    return [
+      '<div class="pf-fluid-variation' + (invalid ? ' is-missing' : '') + '">',
+      '<div class="pf-fluid-variation-heading"><strong>' + escapeHtml(config.variationTitle || "Argolas e fita") + '</strong><small>Escolhe a combinação para esta capa.</small></div>',
+      '<div class="pf-fluid-variation-list" role="radiogroup" aria-label="' + escapeHtml((config.variationTitle || "Argolas e fita") + " " + group) + '">',
+      variations.map(function (item) {
+        var checked = selectedValue === String(item.value || "");
+        return [
+          '<label class="pf-fluid-variation-choice' + (checked ? ' is-selected' : '') + '">',
+          '<input type="radio" name="' + escapeHtml(variationField) + '" value="' + escapeHtml(item.value || "") + '" data-continuous-variation-choice data-continuous-variation-step="' + escapeHtml(variationStep.id || "") + '" data-continuous-variation-field="' + escapeHtml(variationField) + '" data-continuous-variation-group="' + escapeHtml(group) + '"' + (checked ? ' checked' : '') + '>',
+          '<span class="pf-fluid-variation-media">' + renderVisual(item, "media-list", variationStep) + '</span>',
+          '<span class="pf-fluid-variation-copy"><strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>' + (item.subtitle ? '<small>' + escapeHtml(item.subtitle) + '</small>' : '') + '</span>',
+          '<span class="pf-fluid-variation-check" aria-hidden="true">✓</span>',
+          '</label>'
+        ].join("");
+      }).join(""),
+      '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function renderContinuousConfiguratorSummary(product, step) {
+    var config = continuousConfiguratorConfig(step) || {};
+    var variationStep = continuousConfiguratorStep(product, step, "variationStepId");
+    var extrasStep = continuousConfiguratorStep(product, step, "extrasStepId");
+    var groups = designGroupsForStep(step);
+    var size = String(state.selections[step.sizeField || "size"] || "");
+    var info = priceInfo(product);
+    var rows = [];
+
+    if (size) {
+      rows.push('<div class="pf-fluid-summary-row"><span>Formato</span><strong>' + escapeHtml(size) + '</strong></div>');
+    }
+
+    groups.forEach(function (group) {
+      var coverItem = continuousConfiguratorSelectedItem(step, group);
+      var variationItem = variationStep ? continuousConfiguratorSelectedItem(variationStep, group) : null;
+      if (coverItem) {
+        rows.push('<div class="pf-fluid-summary-row"><span>Capa ' + escapeHtml(group) + '</span><strong>' + escapeHtml(coverItem.title || coverItem.value || "") + '</strong></div>');
+      }
+      if (variationItem) {
+        rows.push('<div class="pf-fluid-summary-row"><span>Argolas + fita ' + escapeHtml(group) + '</span><strong>' + escapeHtml(variationItem.title || variationItem.value || "") + '</strong></div>');
+      }
+    });
+
+    if (extrasStep && Array.isArray(extrasStep.drawers)) {
+      extrasStep.drawers.forEach(function (drawer) {
+        var selected = drawer && drawer.field ? optionDrawerItem(drawer, state.selections[drawer.field], product) : null;
+        if (selected) {
+          rows.push('<div class="pf-fluid-summary-row"><span>' + escapeHtml(drawer.title || drawer.label || "Opção") + '</span><strong>' + escapeHtml(selected.title || selected.value || "") + '</strong></div>');
+        }
+      });
+    }
+
+    if (info && info.total) {
+      rows.push('<div class="pf-fluid-summary-row pf-fluid-summary-total"><span>Total</span><strong>' + escapeHtml(info.total) + '</strong></div>');
+    }
+
+    return [
+      '<aside class="pf-fluid-summary" aria-live="polite">',
+      '<h3>' + escapeHtml(config.summaryTitle || "O que vais encomendar") + '</h3>',
+      rows.length ? rows.join("") : '<p>Escolhe o formato para começar.</p>',
+      '</aside>'
+    ].join("");
+  }
+
+  function renderContinuousConfigurator(product, step) {
+    var config = continuousConfiguratorConfig(step) || {};
+    var groups;
+    var titles = step && step.groupTitles && typeof step.groupTitles === "object" ? step.groupTitles : {};
+    var extrasStep = continuousConfiguratorStep(product, step, "extrasStepId");
+    var html;
+
+    syncContinuousConfigurator(product, step);
+    groups = designGroupsForStep(step);
+    html = '<div class="porta-folhetos-fluid">' + renderGroupedFormatChoices(product, step) + renderDesignActionControls(product, step);
+
+    if (!groups.length) {
+      return html + '<p class="open-order-hint" role="status">Escolhe primeiro A4, A6 ou PACK.</p></div>';
+    }
+
+    groups.forEach(function (group) {
+      var field = groupedDesignField(step, group);
+      var selected = field ? String(state.selections[field] || "") : "";
+      var selectedVariation = continuousConfiguratorStep(product, step, "variationStepId");
+      var selectedVariationItem = selectedVariation ? continuousConfiguratorSelectedItem(selectedVariation, group) : null;
+      var items = groupedDesignItems(step, group);
+      var coverMissing = state.invalidFields && state.invalidFields.indexOf(field) !== -1;
+      var cards = items.map(function (item) {
+        var checked = selected === String(item.value || "");
+        var displayItem = checked && selectedVariationItem && selectedVariationItem.image
+          ? Object.assign({}, item, { image: selectedVariationItem.image })
+          : item;
+        return [
+          '<div class="cadernos-cover-choice grouped-design-choice">',
+          '<label class="choice-card crachas-size-card cadernos-cover-card' + (checked ? ' is-selected' : '') + '">',
+          '<input type="radio" name="' + escapeHtml(field) + '" value="' + escapeHtml(item.value || "") + '" data-grouped-design-choice data-grouped-design-group="' + escapeHtml(group) + '" data-grouped-design-field="' + escapeHtml(field) + '"' + (checked ? ' checked' : '') + '>',
+          renderCadernoCoverCardMedia(product, step, displayItem),
+          '<span class="choice-copy crachas-size-card-text"><strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>' + (item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '') + '</span>',
+          '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+          adminItemControls(step, item),
+          '</label>',
+          '</div>'
+        ].join("");
+      }).join("");
+
+      html += [
+        '<section class="pf-fluid-size-section' + (coverMissing ? ' is-missing' : '') + '" data-design-size-group="' + escapeHtml(group) + '">',
+        '<div class="pf-fluid-size-heading"><div><span class="pf-fluid-size-kicker">' + escapeHtml(group) + '</span><h3>' + escapeHtml(titles[group] || ("Personaliza o " + group)) + '</h3></div>' + (selected ? '<span class="pf-fluid-done">✓ Capa escolhida</span>' : '') + '</div>',
+        '<h4 class="pf-fluid-subtitle">' + escapeHtml(config.coverTitle || "Escolhe a capa") + '</h4>',
+        '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list pf-fluid-cover-list">' + cards + '</div>',
+        renderContinuousVariationPicker(product, step, group),
+        '</section>'
+      ].join("");
+    });
+
+    if (extrasStep) {
+      html += [
+        '<section class="pf-fluid-extras">',
+        '<div class="pf-fluid-size-heading"><div><span class="pf-fluid-size-kicker">Final</span><h3>' + escapeHtml(config.extrasTitle || extrasStep.title || "Acabamento e extras") + '</h3></div></div>',
+        extrasStep.text ? '<p class="pf-fluid-extras-copy">' + escapeHtml(extrasStep.text) + '</p>' : '',
+        renderOptionDrawerCards(product, extrasStep),
+        '</section>'
+      ].join("");
+    }
+
+    html += renderContinuousConfiguratorSummary(product, step) + '</div>';
+    return html;
+  }
+
   function renderDesignsBySizeStep(product, step) {
+    if (continuousConfiguratorConfig(step)) {
+      return renderContinuousConfigurator(product, step);
+    }
+
     var groups = designGroupsForStep(step);
     var titles = step && step.groupTitles && typeof step.groupTitles === "object" ? step.groupTitles : {};
-    var html = renderGroupedFormatChoices(product, step) + renderDesignActionControls(product, step);
+    var verticalColumns = step && step.display === "porta-folhetos-design-columns";
+    var html = (verticalColumns ? '<div class="porta-folhetos-fluid pf-design-step">' : '')
+      + renderCopySelectionButton(step)
+      + renderGroupedFormatChoices(product, step)
+      + renderDesignActionControls(product, step);
 
     syncGroupedDesignSelections(product, step);
 
     if (!groups.length) {
-      return html + '<p class="open-order-hint" role="status">Escolhe primeiro A4, A6 ou PACK.</p>';
+      return html + '<p class="open-order-hint" role="status">Escolhe primeiro A4, A6 ou PACK.</p>'
+        + (verticalColumns ? '</div>' : '');
     }
 
     groups.forEach(function (group) {
       var field = groupedDesignField(step, group);
       var selected = field ? String(state.selections[field] || "") : "";
       var items = groupedDesignItems(step, group);
+      var selectedItem = selected ? items.filter(function (item) {
+        return String(item.value || "") === selected;
+      })[0] || null : null;
+      var selectedIndex = selectedItem ? items.indexOf(selectedItem) : -1;
       var cards = items.map(function (item) {
         var checked = selected === String(item.value || "");
         var muted = selected && !checked ? " is-muted" : "";
@@ -1074,19 +1652,26 @@
           '</div>'
         ].join("");
       }).join("");
+      var selectedPreview = selectedItem && step.selectedImagePreview
+        ? '<div class="grouped-design-selected-preview" data-selected-image-preview role="status" aria-live="polite" style="--selected-preview-row-three:' + (Math.floor(selectedIndex / 3) + 2) + ';--selected-preview-row-two:' + (Math.floor(selectedIndex / 2) + 2) + '">' + renderCadernosProofPhoto(selectedItem, step.selectedImagePreview.label || "Imagem ilustrativa") + '</div>'
+        : '';
 
       html += [
         '<section class="design-grid-section grouped-design-section" data-design-size-group="' + escapeHtml(group) + '">',
         '<h3 class="design-grid-section-title">' + escapeHtml(titles[group] || ("Escolhe o design " + group)) + '</h3>',
-        '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list">' + cards + '</div>',
+        '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list' + (verticalColumns ? ' pf-fluid-cover-list' : '') + '">' + cards + selectedPreview + '</div>',
         '</section>'
       ].join("");
     });
 
-    return html;
+    return html + (verticalColumns ? '</div>' : '');
   }
 
   function stepBody(product, step) {
+    if (step.template === "assignment-picker" && assignmentPickerConfig(step)) {
+      return renderAssignmentPicker(product, step);
+    }
+
     if (step.template === "designs-by-size") {
       return renderDesignsBySizeStep(product, step);
     }
@@ -1131,8 +1716,19 @@
       return renderInteriorSlideshow(product) + renderQuantityBuilder(product);
     }
 
+    if (step.display === "porta-folhetos-size") {
+      return renderPortaFolhetosSizeStep(product, step);
+    }
+
+    if (step.portaFolhetosDetails) {
+      return renderPortaFolhetosDetails(product, step);
+    }
+
     if (step.template === "option-drawers" && step.display === "cards") {
-      return renderOptionDrawerCards(product, step)
+      return (productFamily(product) === "porta-folhetos" ? '<div class="pf-finish-step">' : '')
+        + renderCopySelectionButton(step)
+        + renderOptionDrawerCards(product, step)
+        + (productFamily(product) === "porta-folhetos" ? '</div>' : '')
         + (isCadernosProduct(product) ? renderCadernosBuildSummaryV2(product, step) : "");
     }
 
@@ -1217,11 +1813,17 @@
   function visibleSteps(product) {
     var steps = product && Array.isArray(product.steps) ? product.steps : [];
 
+    steps = steps.filter(function (step) {
+      return step && step.dataOnly !== true;
+    });
+
+    steps = steps.filter(stepConditionMatches);
+
     return state.admin ? steps : steps.filter(function (step) {
       if (isCustomArtworkSelected(product) && !isCadernosProduct(product) && step && step.id === "pack" && step.freeQuantity === true) {
         return false;
       }
-      return !step.hidden && stepConditionMatches(step);
+      return !step.hidden;
     });
   }
 

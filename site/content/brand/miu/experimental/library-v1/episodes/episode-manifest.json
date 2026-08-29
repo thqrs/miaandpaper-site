@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "kind": "miu-mini-series",
+  "name": "Míu · Pequenos episódios da oficina · Temporada 1",
+  "productionIntegrated": false,
+  "playbackModel": "idle -> attention -> episode beats + overlays -> organic recovery -> live idle",
+  "rules": {
+    "valueDefinesMood": true,
+    "changeDefinesReaction": true,
+    "episodesAreOneShots": true,
+    "quantityReactionPriorityDuringEpisode": "queued-or-suppressed",
+    "neverMorphFaces": true,
+    "canonicalIdentityRequired": true,
+    "neverConvertToWebp": true
+  },
+  "episodes": [
+    {
+      "id": "s01e01-borboleta-no-nariz",
+      "title": "A borboleta no nariz",
+      "file": "s01e01-borboleta-no-nariz.json",
+      "durationMs": 5520,
+      "status": "complete",
+      "missingSheets": []
+    },
+    {
+      "id": "s01e02-o-novelo-rebelde",
+      "title": "O novelo rebelde",
+      "file": "s01e02-o-novelo-rebelde.json",
+      "durationMs": 4950,
+      "status": "complete",
+      "missingSheets": []
+    },
+    {
+      "id": "s01e03-a-flor-teimosa",
+      "title": "A flor teimosa",
+      "file": "s01e03-a-flor-teimosa.json",
+      "durationMs": 4900,
+      "status": "complete",
+      "missingSheets": []
+    },
+    {
+      "id": "s01e04-o-cracha-careta",
+      "title": "O crachá da careta",
+      "file": "s01e04-o-cracha-careta.json",
+      "durationMs": 4860,
+      "status": "complete",
+      "missingSheets": []
+    },
+    {
+      "id": "s01e05-a-caixa-e-minha",
+      "title": "A caixa é minha",
+      "file": "s01e05-a-caixa-e-minha.json",
+      "durationMs": 4620,
+      "status": "complete",
+      "missingSheets": []
+    },
+    {
+      "id": "s01e06-a-grande-corrida",
+      "title": "A grande corrida",
+      "file": "s01e06-a-grande-corrida.json",
+      "durationMs": 6000,
+      "status": "complete",
+      "missingSheets": []
+    },
+    {
+      "id": "s01e07-chuva-de-confettis",
+      "title": "Chuva de confettis",
+      "file": "s01e07-chuva-de-confettis.json",
+      "durationMs": 4820,
+      "status": "complete",
+      "missingSheets": []
+    },
+    {
+      "id": "s01e08-o-catavento-hipnotico",
+      "title": "O catavento hipnótico",
+      "file": "s01e08-o-catavento-hipnotico.json",
+      "durationMs": 4560,
+      "status": "complete",
+      "missingSheets": []
+    },
+    {
+      "id": "s01e09-a-encomenda-perfeita",
+      "title": "A encomenda perfeita",
+      "file": "s01e09-a-encomenda-perfeita.json",
+      "durationMs": 5060,
+      "status": "complete",
+      "missingSheets": []
+    },
+    {
+      "id": "s01e10-um-dia-na-oficina",
+      "title": "Um dia na oficina",
+      "file": "s01e10-um-dia-na-oficina.json",
+      "durationMs": 5620,
+      "status": "complete",
+      "missingSheets": []
+    },
+    {
+      "id": "s01e11-a-coleccao-de-caretas",
+      "title": "A colecção de caretas",
+      "file": "s01e11-a-coleccao-de-caretas.json",
+      "durationMs": 4900,
+      "status": "complete",
+      "missingSheets": []
+    },
+    {
+      "id": "s01e12-a-coroa-da-oficina",
+      "title": "A coroa da oficina",
+      "file": "s01e12-a-coroa-da-oficina.json",
+      "durationMs": 3300,
+      "status": "complete",
+      "missingSheets": []
+    },
+    {
+      "id": "s01e13-o-pompom-impossivel",
+      "title": "O pompom impossível",
+      "file": "s01e13-o-pompom-impossivel.json",
+      "durationMs": 4700,
+      "status": "complete",
+      "missingSheets": []
+    },
+    {
+      "id": "s01e14-a-carta-sem-palavras",
+      "title": "A carta sem palavras",
+      "file": "s01e14-a-carta-sem-palavras.json",
+      "durationMs": 4540,
+      "status": "complete",
+      "missingSheets": []
+    }
+  ]
+}

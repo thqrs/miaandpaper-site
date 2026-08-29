@@ -1,0 +1,334 @@
+{
+  "version": 1,
+  "id": "paper-envelope",
+  "name": "Míu · Envelope de papel",
+  "category": "story",
+  "file": "miu-story-paper-envelope-8x8.png",
+  "canonicalReference": "../../../miu-sprite.webp",
+  "format": "png-rgba",
+  "background": "transparent-alpha",
+  "columns": 8,
+  "rows": 8,
+  "frameCount": 64,
+  "readingOrder": "row-major",
+  "detector": {
+    "id": "MiuSpriteGrid.detectConnectedGrid",
+    "anchorStrategy": "median-anatomical-centres",
+    "isolatedComponents": true,
+    "expectedCellOccupancy": "64-of-64"
+  },
+  "defaultFrameDurationMs": 95,
+  "beats": [
+    {
+      "row": 0,
+      "id": "inspect-square-paper",
+      "frames": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          7,
+          0
+        ]
+      ]
+    },
+    {
+      "row": 1,
+      "id": "align-corners",
+      "frames": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          7,
+          1
+        ]
+      ]
+    },
+    {
+      "row": 2,
+      "id": "first-fold",
+      "frames": [
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          2
+        ]
+      ]
+    },
+    {
+      "row": 3,
+      "id": "press-crease",
+      "frames": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          7,
+          3
+        ]
+      ]
+    },
+    {
+      "row": 4,
+      "id": "fold-side-flaps",
+      "frames": [
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          7,
+          4
+        ]
+      ]
+    },
+    {
+      "row": 5,
+      "id": "close-envelope",
+      "frames": [
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          7,
+          5
+        ]
+      ]
+    },
+    {
+      "row": 6,
+      "id": "blank-card-surprise",
+      "frames": [
+        [
+          0,
+          6
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ]
+      ]
+    },
+    {
+      "row": 7,
+      "id": "proud-envelope-reveal",
+      "frames": [
+        [
+          0,
+          7
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          7,
+          7
+        ]
+      ]
+    }
+  ],
+  "generation": {
+    "mode": "built-in-imagegen-derived",
+    "date": "2026-08-28",
+    "canonicalIdentityLocked": true,
+    "promptProfile": "miu-story-8x8-v1",
+    "backgroundProcessing": "imagegen semantic extraction separated black fur from black background; exterior checkerboard flood-fill completed alpha"
+  }
+}

@@ -1,0 +1,30 @@
+--- a/site/css/03-grelha-designs-tons.css
++++ b/site/css/03-grelha-designs-tons.css
+@@ -564,6 +564,8 @@
+      a setinha desloca-se em múltiplos do tamanho do quadrado. */
+   --palette-slot-size: clamp(68px, 20vw, 84px);
+   position: relative;
++  display: grid;
++  justify-items: center;
+   padding-bottom: 11px;
+ }
+ 
+--- a/site/css/09-seccoes-produtos.css
++++ b/site/css/09-seccoes-produtos.css
+@@ -1478,6 +1478,16 @@
+   border-radius: calc(var(--radius) + 1px) !important;
+ }
+ 
++/* iPad/WebKit: não depender de height: 100% quando a altura do card
++   é calculada por aspect-ratio. O frame ocupa o pai por inset. */
++.porta-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media > .uploaded-image {
++  position: absolute;
++  inset: 0;
++  width: auto !important;
++  height: auto !important;
++  aspect-ratio: auto !important;
++}
++
+ .porta-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media .uploaded-image-inner,
+ .porta-folhetos-fluid .pf-fluid-cover-list .crachas-size-card-visual .uploaded-image-inner {
+   inset: 0;

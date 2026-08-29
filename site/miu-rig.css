@@ -1,0 +1,364 @@
+.rig5-page {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--surface-page, Canvas);
+  color: var(--ink, CanvasText);
+  font-family: system-ui, sans-serif;
+}
+
+.rig5-shell {
+  width: min(100% - 28px, 1240px);
+  margin: auto;
+  padding: 32px 0 72px;
+}
+
+.rig5-hero {
+  display: grid;
+  gap: 10px;
+  max-width: 940px;
+  margin-bottom: 20px;
+}
+
+.rig5-kicker,
+.rig5-badge {
+  display: inline-flex;
+  width: max-content;
+  align-items: center;
+  padding: 6px 9px;
+  border: 1px solid var(--border-soft-gold, currentColor);
+  border-radius: 999px;
+  background: var(--surface-gold-soft, Canvas);
+  color: var(--moss, CanvasText);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.rig5-hero h1 {
+  margin: 0;
+  color: var(--moss, CanvasText);
+  font: 750 clamp(2rem, 6vw, 4rem)/1 Georgia, "Times New Roman", serif;
+  letter-spacing: -.035em;
+}
+
+.rig5-hero p,
+.rig5-note {
+  margin: 0;
+  color: var(--muted, CanvasText);
+  line-height: 1.6;
+}
+
+.rig5-rule {
+  margin-bottom: 18px;
+  padding: 13px 15px;
+  border: 1px solid var(--line, currentColor);
+  border-left: 4px solid var(--gold, currentColor);
+  border-radius: 14px;
+  background: var(--surface-panel, Canvas);
+  color: var(--muted, CanvasText);
+  line-height: 1.55;
+}
+
+.rig5-rule strong {
+  color: var(--moss, CanvasText);
+}
+
+.rig5-card {
+  min-width: 0;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 22px;
+  background: var(--surface-panel, Canvas);
+  box-shadow: var(--shadow-editorial, none);
+}
+
+.rig5-compare,
+.rig5-workbench {
+  display: grid;
+  gap: 16px;
+}
+
+.rig5-stage-card,
+.rig5-controls,
+.rig5-debug,
+.rig5-demos {
+  display: grid;
+  gap: 15px;
+  padding: 17px;
+}
+
+.rig5-stage-card header,
+.rig5-quantity-head,
+.rig5-setting {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rig5-stage-card h2,
+.rig5-controls h2,
+.rig5-debug h2,
+.rig5-demos h2 {
+  margin: 0;
+  color: var(--moss, CanvasText);
+  font: 750 1.12rem/1.2 Georgia, "Times New Roman", serif;
+}
+
+.rig5-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 310px;
+  overflow: hidden;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 16px;
+  background-color: var(--surface-raised, Canvas);
+  background-image:
+    linear-gradient(45deg, color-mix(in srgb, var(--linen, currentColor) 20%, transparent) 25%, transparent 25%),
+    linear-gradient(-45deg, color-mix(in srgb, var(--linen, currentColor) 20%, transparent) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, color-mix(in srgb, var(--linen, currentColor) 20%, transparent) 75%),
+    linear-gradient(-45deg, transparent 75%, color-mix(in srgb, var(--linen, currentColor) 20%, transparent) 75%);
+  background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+  background-size: 24px 24px;
+}
+
+.rig5-stage canvas {
+  display: block;
+  width: min(76vw, 320px);
+  height: auto;
+}
+
+.rig5-stage-card footer {
+  min-height: 44px;
+  color: var(--muted, CanvasText);
+  font-size: .8rem;
+  line-height: 1.45;
+}
+
+.rig5-stage-card footer p {
+  margin: 0;
+}
+
+.rig5-workbench {
+  margin-top: 16px;
+}
+
+.rig5-quantity-value {
+  color: var(--moss, CanvasText);
+  font: 750 clamp(1.5rem, 4vw, 2.4rem)/1 Georgia, "Times New Roman", serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.rig5-main-slider {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 11px;
+  align-items: center;
+}
+
+.rig5-main-slider span {
+  color: var(--muted, CanvasText);
+  font-size: .75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.rig5-main-slider input,
+.rig5-setting input {
+  width: 100%;
+  accent-color: var(--moss, CanvasText);
+}
+
+.rig5-summary,
+.rig5-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.rig5-summary div,
+.rig5-metrics div {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 12px;
+  background: var(--surface-raised, Canvas);
+}
+
+.rig5-summary dt,
+.rig5-metrics dt {
+  margin-bottom: 3px;
+  color: var(--muted, CanvasText);
+  font-size: .66rem;
+  font-weight: 800;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+
+.rig5-summary dd,
+.rig5-metrics dd {
+  overflow: hidden;
+  margin: 0;
+  color: var(--moss, CanvasText);
+  font-size: .82rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rig5-row,
+.rig5-toggles,
+.rig5-lanes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.rig5-row--packs {
+  padding-top: 12px;
+  border-top: 1px solid var(--line, currentColor);
+}
+
+.rig5-row-label {
+  color: var(--muted, CanvasText);
+  font-size: .76rem;
+  font-weight: 750;
+}
+
+.rig5-button {
+  min-height: 39px;
+  padding: 8px 12px;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 11px;
+  background: var(--surface-cream, Canvas);
+  color: var(--moss, CanvasText);
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.rig5-button:hover,
+.rig5-button:focus-visible,
+.rig5-button[aria-pressed="true"] {
+  border-color: var(--border-soft-gold, currentColor);
+  background: var(--surface-gold-soft, Canvas);
+  outline: none;
+}
+
+.rig5-button--primary {
+  background: var(--moss, CanvasText);
+  color: var(--card, Canvas);
+}
+
+.rig5-toggles label {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  color: var(--muted, CanvasText);
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.rig5-settings {
+  display: grid;
+  gap: 12px;
+}
+
+.rig5-setting label,
+.rig5-setting output {
+  color: var(--muted, CanvasText);
+  font-size: .76rem;
+  font-weight: 750;
+}
+
+.rig5-setting input {
+  flex: 1 1 220px;
+}
+
+.rig5-lanes {
+  padding: 10px;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 13px;
+  background: var(--surface-raised, Canvas);
+}
+
+.rig5-lane {
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: var(--muted, CanvasText);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+}
+
+.rig5-lane.is-active {
+  background: var(--surface-gold-soft, Canvas);
+  color: var(--moss, CanvasText);
+}
+
+.rig5-event-log {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted, CanvasText);
+  font: .73rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.rig5-event-log li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rig5-demo-status,
+.rig5-error {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-raised, Canvas);
+  color: var(--muted, CanvasText);
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.rig5-error {
+  border: 1px solid var(--danger, currentColor);
+  color: var(--danger, CanvasText);
+}
+
+@media (min-width: 760px) {
+  .rig5-compare {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rig5-workbench {
+    grid-template-columns: minmax(0, 1.45fr) minmax(300px, .8fr);
+  }
+
+  .rig5-demos {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1040px) {
+  .rig5-summary,
+  .rig5-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rig5-page *,
+  .rig5-page *::before,
+  .rig5-page *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

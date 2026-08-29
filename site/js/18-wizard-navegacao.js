@@ -164,6 +164,27 @@
       return state.orderAudioRecording ? "Solta o botão do áudio para terminar a gravação." : "Espera até o anexo terminar de enviar.";
     }
 
+    if (step.template === "assignment-picker" && assignmentPickerConfig(step)) {
+      var assignmentConfig = assignmentPickerConfig(step);
+      var assignmentItems = assignmentPickerItems(product, step);
+
+      for (i = 0; i < assignmentConfig.groups.length; i += 1) {
+        var assignmentGroup = assignmentConfig.groups[i];
+        var assignmentField = String(assignmentGroup && assignmentGroup.field || "");
+        var assignmentValue = assignmentField ? String(state.selections[assignmentField] || "") : "";
+        var assignmentValid = assignmentValue && assignmentItems.some(function (item) {
+          return assignmentPickerValue(assignmentGroup, item) === assignmentValue;
+        });
+
+        if (!assignmentValid) {
+          state.invalidFields = assignmentField ? [assignmentField] : [];
+          return String(step.groupSelectionError || "Atribui uma escolha ao {group} para continuar.")
+            .replace("{group}", assignmentGroup.label || assignmentGroup.id || "tamanho");
+        }
+      }
+      return "";
+    }
+
     if (step.template === "designs-by-size") {
       var requiredGroups = designGroupsForStep(step);
       if (!requiredGroups.length) {
@@ -184,6 +205,29 @@
         }
       }
       syncGroupedDesignSelections(product, step);
+
+      // CONTINUOUS_CONFIGURATOR_V1: o passo visível também valida os passos
+      // ligados que ficaram escondidos no wizard. O checkout continua a
+      // receber e validar exactamente os mesmos campos de antes.
+      if (continuousConfiguratorConfig(step)) {
+        var continuousVariationStep = continuousConfiguratorStep(product, step, "variationStepId");
+        var continuousExtrasStep = continuousConfiguratorStep(product, step, "extrasStepId");
+        var continuousError;
+
+        syncContinuousConfigurator(product, step);
+        if (continuousVariationStep) {
+          continuousError = validateStep(product, continuousVariationStep);
+          if (continuousError) {
+            return continuousError;
+          }
+        }
+        if (continuousExtrasStep) {
+          continuousError = validateStep(product, continuousExtrasStep);
+          if (continuousError) {
+            return continuousError;
+          }
+        }
+      }
       return "";
     }
 
@@ -352,9 +396,31 @@
     }
 
     if (step.template === "option-drawers") {
+      var stepDrawers = optionDrawersForStep(product, step);
+      if (step.portaFolhetosDetails) {
+        var detailsVariationStep = portaFolhetosDetailsVariationStep(product, step);
+        var detailsGroups;
+        syncPortaFolhetosDetailSelections(product, step);
+        if (detailsVariationStep) {
+          detailsGroups = portaFolhetosDetailsGroups(step, detailsVariationStep);
+          for (i = 0; i < detailsGroups.length; i += 1) {
+            var detailsGroup = detailsGroups[i];
+            var detailsField = groupedDesignField(detailsVariationStep, detailsGroup);
+            var detailsValue = detailsField ? String(state.selections[detailsField] || "") : "";
+            var detailsValid = detailsValue && groupedDesignItems(detailsVariationStep, detailsGroup).some(function (item) {
+              return String(item.value || "") === detailsValue;
+            });
+            if (!detailsValid) {
+              state.invalidFields = detailsField ? [detailsField] : [];
+              return String(detailsVariationStep.groupSelectionError || "Escolhe a variação {group} para continuar.")
+                .replace("{group}", detailsGroup);
+            }
+          }
+        }
+      }
       ensureOptionDrawerSelections(product);
-      for (i = 0; i < (step.drawers || []).length; i += 1) {
-        var optionDrawer = step.drawers[i];
+      for (i = 0; i < stepDrawers.length; i += 1) {
+        var optionDrawer = stepDrawers[i];
         var optionDrawerValue = optionDrawer && optionDrawer.field ? state.selections[optionDrawer.field] : "";
         if (!optionDrawer || !optionDrawer.field) {
           continue;
@@ -611,7 +677,26 @@
     });
   }
 
+  var orderCanvasWebpEncodingSupported = null;
+
+  function orderCanvasSupportsWebpEncoding() {
+    var probe;
+    if (orderCanvasWebpEncodingSupported !== null) {
+      return orderCanvasWebpEncodingSupported;
+    }
+    try {
+      probe = document.createElement("canvas");
+      probe.width = 1;
+      probe.height = 1;
+      orderCanvasWebpEncodingSupported = probe.toDataURL("image/webp", 0.5).indexOf("data:image/webp") === 0;
+    } catch (error) {
+      orderCanvasWebpEncodingSupported = false;
+    }
+    return orderCanvasWebpEncodingSupported;
+  }
+
   function orderCanvasBlob(canvas, quality) {
+    var requestedType = orderCanvasSupportsWebpEncoding() ? "image/webp" : "image/jpeg";
     return new Promise(function (resolve, reject) {
       canvas.toBlob(function (blob) {
         if (blob) {
@@ -619,6 +704,6 @@
         } else {
           reject(new Error("encode"));
         }
-      }, "image/webp", quality);
+      }, requestedType, quality);
     });
   }

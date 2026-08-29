@@ -1,0 +1,475 @@
+.episodes-page {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--surface-page, Canvas);
+  color: var(--ink, CanvasText);
+  font-family: system-ui, sans-serif;
+}
+
+.episodes-shell {
+  width: min(100% - 28px, 1320px);
+  margin: auto;
+  padding: 32px 0 72px;
+}
+
+.episodes-hero {
+  display: grid;
+  gap: 10px;
+  max-width: 980px;
+  margin-bottom: 22px;
+}
+
+.episodes-kicker,
+.episodes-status,
+.episodes-count {
+  display: inline-flex;
+  width: max-content;
+  align-items: center;
+  padding: 6px 9px;
+  border: 1px solid var(--border-soft-gold, currentColor);
+  border-radius: 999px;
+  background: var(--surface-gold-soft, Canvas);
+  color: var(--moss, CanvasText);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.episodes-hero h1 {
+  margin: 0;
+  color: var(--moss, CanvasText);
+  font: 750 clamp(2rem, 6vw, 4rem)/1 Georgia, "Times New Roman", serif;
+  letter-spacing: -.035em;
+}
+
+.episodes-hero p,
+.episodes-player-head p,
+.episodes-storyboard header p {
+  margin: 0;
+  color: var(--muted, CanvasText);
+  line-height: 1.6;
+}
+
+.episodes-layout {
+  display: grid;
+  gap: 16px;
+}
+
+.episodes-library,
+.episodes-player,
+.episodes-storyboard,
+.episodes-contract {
+  min-width: 0;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 22px;
+  background: var(--surface-panel, Canvas);
+  box-shadow: var(--shadow-editorial, none);
+}
+
+.episodes-library,
+.episodes-player,
+.episodes-storyboard,
+.episodes-contract {
+  padding: 17px;
+}
+
+.episodes-library-head,
+.episodes-player-head,
+.episodes-storyboard > header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.episodes-library h2,
+.episodes-player h2,
+.episodes-storyboard h2,
+.episodes-contract h2 {
+  margin: 3px 0 0;
+  color: var(--moss, CanvasText);
+  font: 750 clamp(1.15rem, 3vw, 1.55rem)/1.15 Georgia, "Times New Roman", serif;
+}
+
+.episodes-eyebrow {
+  color: var(--muted, CanvasText);
+  font-size: .66rem;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.episodes-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.episodes-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 14px;
+  background: var(--surface-raised, Canvas);
+  color: var(--moss, CanvasText);
+  text-align: left;
+  cursor: pointer;
+}
+
+.episodes-card:hover,
+.episodes-card:focus-visible,
+.episodes-card[aria-current="true"] {
+  border-color: var(--border-soft-gold, currentColor);
+  background: var(--surface-gold-soft, Canvas);
+  outline: none;
+}
+
+.episodes-card-number {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-cream, Canvas);
+  font-size: .72rem;
+  font-weight: 850;
+}
+
+.episodes-card-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.episodes-card-copy strong {
+  overflow: hidden;
+  font-size: .82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.episodes-card-copy small {
+  color: var(--muted, CanvasText);
+  font-size: .68rem;
+}
+
+.episodes-player {
+  display: grid;
+  gap: 15px;
+}
+
+.episodes-player-head > div {
+  display: grid;
+  gap: 6px;
+  max-width: 720px;
+}
+
+.episodes-stage-wrap {
+  position: relative;
+  display: grid;
+  min-height: 360px;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 18px;
+  background-color: var(--surface-raised, Canvas);
+  background-image:
+    linear-gradient(45deg, color-mix(in srgb, var(--linen, currentColor) 20%, transparent) 25%, transparent 25%),
+    linear-gradient(-45deg, color-mix(in srgb, var(--linen, currentColor) 20%, transparent) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, color-mix(in srgb, var(--linen, currentColor) 20%, transparent) 75%),
+    linear-gradient(-45deg, transparent 75%, color-mix(in srgb, var(--linen, currentColor) 20%, transparent) 75%);
+  background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+  background-size: 24px 24px;
+}
+
+.episodes-stage-wrap canvas {
+  display: block;
+  width: min(84vw, 570px);
+  height: auto;
+}
+
+.episodes-layer-chips {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.episodes-layer-chips span {
+  padding: 4px 7px;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 999px;
+  background: var(--surface-panel, Canvas);
+  color: var(--muted, CanvasText);
+  font-size: .62rem;
+  font-weight: 800;
+  opacity: .55;
+}
+
+.episodes-layer-chips span.is-active {
+  border-color: var(--border-soft-gold, currentColor);
+  color: var(--moss, CanvasText);
+  opacity: 1;
+}
+
+.episodes-handoff {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: grid;
+  gap: 2px;
+  max-width: min(75%, 300px);
+  padding: 9px 11px;
+  border: 1px solid var(--border-soft-gold, currentColor);
+  border-radius: 12px;
+  background: var(--surface-gold-soft, Canvas);
+  color: var(--moss, CanvasText);
+  font-size: .7rem;
+}
+
+.episodes-handoff strong {
+  font-size: .61rem;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.episodes-transport,
+.episodes-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.episodes-button {
+  min-height: 39px;
+  padding: 8px 12px;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 11px;
+  background: var(--surface-cream, Canvas);
+  color: var(--moss, CanvasText);
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.episodes-button:hover,
+.episodes-button:focus-visible {
+  border-color: var(--border-soft-gold, currentColor);
+  background: var(--surface-gold-soft, Canvas);
+  outline: none;
+}
+
+.episodes-button--primary {
+  min-width: 108px;
+  background: var(--moss, CanvasText);
+  color: var(--card, Canvas);
+}
+
+.episodes-progress-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  color: var(--muted, CanvasText);
+  font: .7rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.episodes-progress-row input {
+  width: 100%;
+  accent-color: var(--moss, CanvasText);
+}
+
+.episodes-options {
+  padding-top: 12px;
+  border-top: 1px solid var(--line, currentColor);
+}
+
+.episodes-options label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--muted, CanvasText);
+  font-size: .72rem;
+  font-weight: 750;
+}
+
+.episodes-speed {
+  margin-left: auto;
+}
+
+.episodes-speed select {
+  min-height: 34px;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 9px;
+  background: var(--surface-raised, Canvas);
+  color: var(--moss, CanvasText);
+}
+
+.episodes-debug {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.episodes-debug div {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 11px;
+  background: var(--surface-raised, Canvas);
+}
+
+.episodes-debug dt {
+  color: var(--muted, CanvasText);
+  font-size: .61rem;
+  font-weight: 850;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.episodes-debug dd {
+  overflow: hidden;
+  margin: 3px 0 0;
+  color: var(--moss, CanvasText);
+  font-size: .76rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.episodes-storyboard,
+.episodes-contract {
+  margin-top: 16px;
+}
+
+.episodes-storyboard > header p {
+  max-width: 620px;
+  font-size: .74rem;
+}
+
+.episodes-timeline {
+  display: grid;
+  gap: 7px;
+  margin: 15px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.episodes-timeline button {
+  display: grid;
+  grid-template-columns: 38px 74px minmax(0, 1fr) auto;
+  gap: 9px;
+  width: 100%;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 11px;
+  background: var(--surface-raised, Canvas);
+  color: var(--muted, CanvasText);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.episodes-timeline button:hover,
+.episodes-timeline button:focus-visible,
+.episodes-timeline button.is-active {
+  border-color: var(--border-soft-gold, currentColor);
+  background: var(--surface-gold-soft, Canvas);
+  color: var(--moss, CanvasText);
+  outline: none;
+}
+
+.episodes-timeline-index,
+.episodes-timeline-layer,
+.episodes-timeline-duration {
+  font-size: .65rem;
+  font-weight: 800;
+}
+
+.episodes-timeline-index,
+.episodes-timeline-duration {
+  font-variant-numeric: tabular-nums;
+}
+
+.episodes-timeline-layer {
+  text-transform: uppercase;
+}
+
+.episodes-timeline-beat {
+  overflow: hidden;
+  font-size: .76rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.episodes-contract div {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.episodes-contract p {
+  margin: 0;
+  color: var(--muted, CanvasText);
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.episodes-contract strong {
+  color: var(--moss, CanvasText);
+}
+
+.episodes-contract code {
+  font-size: .73rem;
+}
+
+.episodes-error {
+  padding: 11px 13px;
+  border: 1px solid var(--danger, currentColor);
+  border-radius: 12px;
+  background: var(--surface-panel, Canvas);
+  color: var(--danger, CanvasText);
+}
+
+@media (min-width: 720px) {
+  .episodes-debug {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .episodes-contract div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 980px) {
+  .episodes-layout {
+    grid-template-columns: 300px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .episodes-library {
+    position: sticky;
+    top: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .episodes-page *,
+  .episodes-page *::before,
+  .episodes-page *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

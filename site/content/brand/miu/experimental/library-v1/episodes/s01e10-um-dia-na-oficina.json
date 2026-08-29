@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "kind": "miu-mini-episode",
+  "id": "s01e10-um-dia-na-oficina",
+  "season": 1,
+  "episode": 10,
+  "title": "Um dia na oficina",
+  "logline": "Míu acompanha a máquina, carimba o papel e apresenta o pequeno resultado.",
+  "trigger": "long-form-demo-only",
+  "productionIntegrated": false,
+  "durationMs": 5620,
+  "director": {
+    "priority": "one-shot-story",
+    "interruptPolicy": "finish-current-beat-then-yield",
+    "suppressQuantityReactions": true,
+    "returnTo": "live-idle-for-current-context"
+  },
+  "sheets": [
+    "transition-idle-to-attention",
+    "cricut-helper",
+    "craft-stamp",
+    "anime-sparkles-fx",
+    "transition-soft-recovery"
+  ],
+  "timeline": [
+    {
+      "order": 0,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-idle-to-attention",
+      "beat": "ears-perk-forward",
+      "durationMs": 320,
+      "priority": "attention",
+      "interruptible": false
+    },
+    {
+      "order": 1,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "cricut-helper",
+      "beat": "approach-machine",
+      "durationMs": 360,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 2,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "cricut-helper",
+      "beat": "tap-safe-button",
+      "durationMs": 360,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 3,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "cricut-helper",
+      "beat": "machine-wakes",
+      "durationMs": 400,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 4,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "cricut-helper",
+      "beat": "track-feed-mat",
+      "durationMs": 520,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 5,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "cricut-helper",
+      "beat": "paper-emerges",
+      "durationMs": 460,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 6,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "cricut-helper",
+      "beat": "lift-paper-flower",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 7,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "craft-stamp",
+      "beat": "discover-stamp",
+      "durationMs": 340,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 8,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "craft-stamp",
+      "beat": "align-on-paper",
+      "durationMs": 380,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 9,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "craft-stamp",
+      "beat": "two-paw-press",
+      "durationMs": 460,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 10,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "craft-stamp",
+      "beat": "lift-and-reveal",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 11,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "craft-stamp",
+      "beat": "present-print",
+      "durationMs": 480,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 12,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-sparkles-fx",
+      "beat": "three-star-arc",
+      "durationMs": 320,
+      "blend": "source-over",
+      "anchor": "paper"
+    },
+    {
+      "order": 13,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-soft-recovery",
+      "beat": "generic-one-shot-to-idle",
+      "durationMs": 380,
+      "priority": "recovery",
+      "interruptible": false
+    }
+  ],
+  "reducedMotion": {
+    "strategy": "key-pose-sequence",
+    "framePolicy": "first-middle-last-per-beat",
+    "keepEmotionAndProps": true,
+    "remove": [
+      "bounce",
+      "overshoot",
+      "rapid-looping-fx"
+    ]
+  },
+  "optionalEnhancements": [],
+  "missingSheets": [],
+  "status": "complete"
+}

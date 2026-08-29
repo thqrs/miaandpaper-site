@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "kind": "miu-mini-episode",
+  "id": "s01e06-a-grande-corrida",
+  "season": 1,
+  "episode": 6,
+  "title": "A grande corrida",
+  "logline": "Um rolo de fita foge, Míu persegue-o e gasta toda a energia numa volta relâmpago.",
+  "trigger": "ambient-special",
+  "productionIntegrated": false,
+  "durationMs": 6000,
+  "director": {
+    "priority": "one-shot-story",
+    "interruptPolicy": "finish-current-beat-then-yield",
+    "suppressQuantityReactions": true,
+    "returnTo": "live-idle-for-current-context"
+  },
+  "sheets": [
+    "transition-idle-to-attention",
+    "tape-roll-chase",
+    "zoomies",
+    "anime-impact-lines-fx",
+    "anime-sweat-drop-fx",
+    "yawn",
+    "transition-soft-recovery"
+  ],
+  "timeline": [
+    {
+      "order": 0,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-idle-to-attention",
+      "beat": "quick-soft-surprise",
+      "durationMs": 320,
+      "priority": "attention",
+      "interruptible": false
+    },
+    {
+      "order": 1,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "tape-roll-chase",
+      "beat": "spot-roll",
+      "durationMs": 320,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 2,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "tape-roll-chase",
+      "beat": "paw-nudge",
+      "durationMs": 340,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 3,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "tape-roll-chase",
+      "beat": "track-and-trot",
+      "durationMs": 380,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 4,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "tape-roll-chase",
+      "beat": "two-paw-chase",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 5,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "zoomies",
+      "beat": "rear-wiggle",
+      "durationMs": 260,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 6,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "zoomies",
+      "beat": "launch-right",
+      "durationMs": 300,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 7,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "zoomies",
+      "beat": "fast-run",
+      "durationMs": 520,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 8,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-impact-lines-fx",
+      "beat": "zoomies-streaks",
+      "durationMs": 300,
+      "blend": "source-over",
+      "anchor": "body"
+    },
+    {
+      "order": 9,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "zoomies",
+      "beat": "skid-turn",
+      "durationMs": 340,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 10,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-impact-lines-fx",
+      "beat": "curved-chase-lines",
+      "durationMs": 260,
+      "blend": "source-over",
+      "anchor": "body"
+    },
+    {
+      "order": 11,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "zoomies",
+      "beat": "dash-left",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 12,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "zoomies",
+      "beat": "joyful-bound",
+      "durationMs": 360,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 13,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-sweat-drop-fx",
+      "beat": "relieved-shrink",
+      "durationMs": 260,
+      "blend": "source-over",
+      "anchor": "head"
+    },
+    {
+      "order": 14,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "yawn",
+      "beat": "mouth-opens",
+      "durationMs": 320,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 15,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "zoomies",
+      "beat": "happy-loaf",
+      "durationMs": 500,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 16,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-soft-recovery",
+      "beat": "tired-to-idle",
+      "durationMs": 380,
+      "priority": "recovery",
+      "interruptible": false
+    }
+  ],
+  "reducedMotion": {
+    "strategy": "key-pose-sequence",
+    "framePolicy": "first-middle-last-per-beat",
+    "keepEmotionAndProps": true,
+    "remove": [
+      "bounce",
+      "overshoot",
+      "rapid-looping-fx"
+    ]
+  },
+  "optionalEnhancements": [],
+  "missingSheets": [],
+  "status": "complete"
+}

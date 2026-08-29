@@ -64,7 +64,10 @@
       URL.revokeObjectURL(loaded.url);
 
       return compressOrderPhotoCanvas(canvas, targetBytes).then(function (result) {
-        var prepared = new File([result.blob], stem + "-web.webp", { type: "image/webp", lastModified: Date.now() });
+        var mime = String(result.blob && result.blob.type || "").toLowerCase();
+        var extension = mime === "image/webp" ? "webp" : (mime === "image/png" ? "png" : "jpg");
+        var preparedType = mime === "image/webp" || mime === "image/png" || mime === "image/jpeg" ? mime : "image/jpeg";
+        var prepared = new File([result.blob], stem + "-web." + extension, { type: preparedType, lastModified: Date.now() });
         return { file: prepared, width: result.width, height: result.height };
       });
     }).catch(function (cause) {

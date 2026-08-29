@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "kind": "miu-mini-episode",
+  "id": "s01e14-a-carta-sem-palavras",
+  "season": 1,
+  "episode": 14,
+  "title": "A carta sem palavras",
+  "logline": "Míu dobra um envelope com as patinhas e descobre que um cartão em branco também pode ser uma surpresa.",
+  "trigger": "craft-special",
+  "productionIntegrated": false,
+  "durationMs": 4540,
+  "director": {
+    "priority": "one-shot-story",
+    "interruptPolicy": "finish-current-beat-then-yield",
+    "suppressQuantityReactions": true,
+    "returnTo": "live-idle-for-current-context"
+  },
+  "sheets": [
+    "transition-idle-to-attention",
+    "paper-envelope",
+    "anime-attention-fx",
+    "anime-blush-fx",
+    "transition-soft-recovery"
+  ],
+  "timeline": [
+    {
+      "order": 0,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-idle-to-attention",
+      "beat": "paw-pause-and-focus",
+      "durationMs": 320,
+      "priority": "attention",
+      "interruptible": false
+    },
+    {
+      "order": 1,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-envelope",
+      "beat": "inspect-square-paper",
+      "durationMs": 340,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 2,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-envelope",
+      "beat": "align-corners",
+      "durationMs": 360,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 3,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-envelope",
+      "beat": "first-fold",
+      "durationMs": 400,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 4,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-envelope",
+      "beat": "press-crease",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 5,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-envelope",
+      "beat": "fold-side-flaps",
+      "durationMs": 440,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 6,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-envelope",
+      "beat": "close-envelope",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 7,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-envelope",
+      "beat": "blank-card-surprise",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 8,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-attention-fx",
+      "beat": "exclamation-pop",
+      "durationMs": 240,
+      "blend": "source-over",
+      "anchor": "head"
+    },
+    {
+      "order": 9,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-envelope",
+      "beat": "proud-envelope-reveal",
+      "durationMs": 500,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 10,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-blush-fx",
+      "beat": "warm-dots-blush",
+      "durationMs": 300,
+      "blend": "source-over",
+      "anchor": "cheeks"
+    },
+    {
+      "order": 11,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-soft-recovery",
+      "beat": "delighted-to-idle",
+      "durationMs": 380,
+      "priority": "recovery",
+      "interruptible": false
+    }
+  ],
+  "reducedMotion": {
+    "strategy": "key-pose-sequence",
+    "framePolicy": "first-middle-last-per-beat",
+    "keepEmotionAndProps": true,
+    "remove": [
+      "bounce",
+      "overshoot",
+      "rapid-looping-fx"
+    ]
+  },
+  "optionalEnhancements": [],
+  "missingSheets": [],
+  "status": "complete"
+}

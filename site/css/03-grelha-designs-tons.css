@@ -564,6 +564,8 @@
      a setinha desloca-se em múltiplos do tamanho do quadrado. */
   --palette-slot-size: clamp(68px, 20vw, 84px);
   position: relative;
+  display: grid;
+  justify-items: center;
   padding-bottom: 11px;
 }
 

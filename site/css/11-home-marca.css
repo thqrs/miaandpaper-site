@@ -445,9 +445,11 @@ html[data-theme="dark"] .image-viewer-controls button {
   }
 
   .choice-card.design-grid .design-card-media .design-image.uploaded-image {
-    width: 100% !important;
-    height: 100% !important;
-    aspect-ratio: var(--frame-aspect, 1) !important;
+    position: absolute;
+    inset: 0;
+    width: auto !important;
+    height: auto !important;
+    aspect-ratio: auto !important;
   }
 
   .design-zoom-button {
@@ -463,6 +465,7 @@ html[data-theme="dark"] .image-viewer-controls button {
 
   .image-viewer-stage {
     height: calc(100vh - 140px);
+    height: calc(100dvh - 140px);
   }
 
   .image-viewer-img {
@@ -869,6 +872,7 @@ body:has(.home-shell--brand) .cart-floating-button {
   padding: 7px 9px;
   border-radius: 999px;
   background: rgba(20, 17, 12, .3);
+  -webkit-backdrop-filter: blur(7px);
   backdrop-filter: blur(7px);
   pointer-events: auto;
   transform: translateX(-50%);

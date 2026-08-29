@@ -1,0 +1,140 @@
+PORTA-FOLHETOS — FOTOGRAFIAS E FICHEIROS A REVER
+
+Data da verificação: 28-08-2026
+Origem: drive-download-20260828T113203Z-1-001.zip
+Pasta no projecto: site/content/designs/loja/porta-folhetos/catalog/
+URL base público: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/
+
+DESIGNS QUE AINDA PRECISAM DE OUTRA COMBINAÇÃO
+
+Os três designs abaixo continuam disponíveis no site, mas só têm uma combinação
+real de argolas e fita: dourado. A outra fotografia encontrada mostra a mesma
+combinação noutro enquadramento, não uma segunda cor.
+
+1. Quão lindos são os pés · Passeio
+   Caminho: site/content/designs/loja/porta-folhetos/catalog/passeio-dourado.webp
+   URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/passeio-dourado.webp
+
+2. Declara as boas novas · Campo colorido
+   Caminho: site/content/designs/loja/porta-folhetos/catalog/declara-campo-colorido-dourado.webp
+   URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/declara-campo-colorido-dourado.webp
+
+3. Quão lindos são os pés · Campo colorido
+   Caminho: site/content/designs/loja/porta-folhetos/catalog/quao-campo-colorido-dourado.webp
+   URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/quao-campo-colorido-dourado.webp
+
+Para completar estas opções, falta fotografar cada design com pelo menos uma
+combinação de argolas e fita diferente da dourada. Quando essas fotografias
+existirem, devem ser acrescentadas ao passo final "Escolhe as argolas e fita".
+
+
+FICHEIROS WEBP USADOS COMO IMAGEM PRINCIPAL OU OPÇÃO
+
+- Bicicleta rosa · dourado
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/bicicleta-rosa-dourado.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/bicicleta-rosa-dourado.webp
+
+- Bicicleta rosa · rosa metálico
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/bicicleta-rosa-rosa-metalico.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/bicicleta-rosa-rosa-metalico.webp
+
+- Castanho · rosa metálico
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/castanho-rosa-metalico.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/castanho-rosa-metalico.webp
+
+- Declara as boas novas · Campo colorido · dourado
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/declara-campo-colorido-dourado.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/declara-campo-colorido-dourado.webp
+
+- Flores salmão · dourado
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/flores-salmao-dourado.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/flores-salmao-dourado.webp
+
+- Flores salmão · rosa · frente
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/flores-salmao-rosa-frente.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/flores-salmao-rosa-frente.webp
+
+- Flores vermelhas · dourado
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/flores-vermelhas-dourado.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/flores-vermelhas-dourado.webp
+
+- Flores vermelhas · rosa · frente
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/flores-vermelhas-rosa-frente.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/flores-vermelhas-rosa-frente.webp
+
+- Folhagem azul · dourado
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/folhagem-azul-dourado.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/folhagem-azul-dourado.webp
+
+- Folhagem azul · rosa · frente
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/folhagem-azul-rosa-frente.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/folhagem-azul-rosa-frente.webp
+
+- Lavanda · dourado
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/lavanda-dourado.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/lavanda-dourado.webp
+
+- Lavanda · rosa · frente
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/lavanda-rosa-frente.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/lavanda-rosa-frente.webp
+
+- Quão lindos são os pés · Passeio · dourado
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/passeio-dourado.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/passeio-dourado.webp
+
+- Quão lindos são os pés · Campo colorido · dourado
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/quao-campo-colorido-dourado.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/quao-campo-colorido-dourado.webp
+
+- Sapatos · dourado
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/sapatos-dourado.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/sapatos-dourado.webp
+
+- Sapatos · rosa metálico
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/sapatos-rosa-metalico.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/sapatos-rosa-metalico.webp
+
+
+FOTOGRAFIAS DUPLICADAS — ÂNGULOS ALTERNATIVOS
+
+Estes seis WebP permanecem dentro da pasta do site para consulta. Não são
+opções de compra separadas porque mostram a mesma combinação de argolas e fita
+que a fotografia principal indicada. A diferença é apenas o enquadramento.
+
+- Flores salmão · rosa · aberto
+  Duplica a combinação de: flores-salmao-rosa-frente.webp
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/flores-salmao-rosa-aberto.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/flores-salmao-rosa-aberto.webp
+
+- Flores vermelhas · rosa · ângulo
+  Duplica a combinação de: flores-vermelhas-rosa-frente.webp
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/flores-vermelhas-rosa-angulo.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/flores-vermelhas-rosa-angulo.webp
+
+- Folhagem azul · rosa · aberto
+  Duplica a combinação de: folhagem-azul-rosa-frente.webp
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/folhagem-azul-rosa-aberto.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/folhagem-azul-rosa-aberto.webp
+
+- Lavanda · rosa · aberto
+  Duplica a combinação de: lavanda-rosa-frente.webp
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/lavanda-rosa-aberto.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/lavanda-rosa-aberto.webp
+
+- Lavanda · rosa · ângulo
+  Duplica a combinação de: lavanda-rosa-frente.webp
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/lavanda-rosa-angulo.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/lavanda-rosa-angulo.webp
+
+- Sapatos · rosa · aberto
+  Duplica a combinação de: sapatos-rosa-metalico.webp
+  Caminho: site/content/designs/loja/porta-folhetos/catalog/sapatos-rosa-aberto.webp
+  URL: https://miaandpaper.pt/content/designs/loja/porta-folhetos/catalog/sapatos-rosa-aberto.webp
+
+
+RESUMO
+
+- 22 ficheiros WebP provenientes do ZIP estão na pasta catalog do site.
+- 16 são usados como imagens principais ou opções de argolas e fita.
+- 6 são ângulos alternativos mantidos apenas para consulta e revisão.
+- Os designs A4 e A6 usam o mesmo catálogo de designs, como pedido.

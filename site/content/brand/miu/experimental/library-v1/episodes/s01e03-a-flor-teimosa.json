@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "kind": "miu-mini-episode",
+  "id": "s01e03-a-flor-teimosa",
+  "season": 1,
+  "episode": 3,
+  "title": "A flor teimosa",
+  "logline": "Míu dobra uma flor de origami, engana-se, pensa e consegue abri-la.",
+  "trigger": "craft-special",
+  "productionIntegrated": false,
+  "durationMs": 4900,
+  "director": {
+    "priority": "one-shot-story",
+    "interruptPolicy": "finish-current-beat-then-yield",
+    "suppressQuantityReactions": true,
+    "returnTo": "live-idle-for-current-context"
+  },
+  "sheets": [
+    "transition-idle-to-attention",
+    "origami-flowers",
+    "anime-attention-fx",
+    "anime-sparkles-fx",
+    "transition-soft-recovery"
+  ],
+  "timeline": [
+    {
+      "order": 0,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-idle-to-attention",
+      "beat": "curious-head-tilt",
+      "durationMs": 320,
+      "priority": "attention",
+      "interruptible": false
+    },
+    {
+      "order": 1,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "origami-flowers",
+      "beat": "inspect-paper",
+      "durationMs": 380,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 2,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "origami-flowers",
+      "beat": "hold-corners",
+      "durationMs": 380,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 3,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "origami-flowers",
+      "beat": "first-fold",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 4,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "origami-flowers",
+      "beat": "press-crease",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 5,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "origami-flowers",
+      "beat": "petal-folds",
+      "durationMs": 480,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 6,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "origami-flowers",
+      "beat": "puzzled-mistake",
+      "durationMs": 440,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 7,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-attention-fx",
+      "beat": "question-pop",
+      "durationMs": 300,
+      "blend": "source-over",
+      "anchor": "head"
+    },
+    {
+      "order": 8,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "origami-flowers",
+      "beat": "flower-opens",
+      "durationMs": 480,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 9,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-sparkles-fx",
+      "beat": "three-star-arc",
+      "durationMs": 380,
+      "blend": "source-over",
+      "anchor": "paper"
+    },
+    {
+      "order": 10,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "origami-flowers",
+      "beat": "bouquet-reveal",
+      "durationMs": 520,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 11,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-soft-recovery",
+      "beat": "delighted-to-idle",
+      "durationMs": 380,
+      "priority": "recovery",
+      "interruptible": false
+    }
+  ],
+  "reducedMotion": {
+    "strategy": "key-pose-sequence",
+    "framePolicy": "first-middle-last-per-beat",
+    "keepEmotionAndProps": true,
+    "remove": [
+      "bounce",
+      "overshoot",
+      "rapid-looping-fx"
+    ]
+  },
+  "optionalEnhancements": [],
+  "missingSheets": [],
+  "status": "complete"
+}

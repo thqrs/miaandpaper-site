@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "kind": "miu-mini-episode",
+  "id": "s01e12-a-coroa-da-oficina",
+  "season": 1,
+  "episode": 12,
+  "title": "A coroa da oficina",
+  "logline": "Míu escolhe flores de papel, monta uma coroa com as patinhas e tenta fingir que não está muito orgulhoso.",
+  "trigger": "craft-special",
+  "productionIntegrated": false,
+  "durationMs": 3300,
+  "director": {
+    "priority": "one-shot-story",
+    "interruptPolicy": "finish-current-beat-then-yield",
+    "suppressQuantityReactions": true,
+    "returnTo": "live-idle-for-current-context"
+  },
+  "sheets": [
+    "transition-idle-to-attention",
+    "paper-flower-crown",
+    "anime-sparkles-fx",
+    "anime-blush-fx",
+    "transition-soft-recovery"
+  ],
+  "timeline": [
+    {
+      "order": 0,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-idle-to-attention",
+      "beat": "curious-head-tilt",
+      "durationMs": 320,
+      "priority": "attention",
+      "interruptible": false
+    },
+    {
+      "order": 1,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "paper-flower-crown",
+      "beat": "rainbow-crown-sequence",
+      "durationMs": 1880,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 2,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-sparkles-fx",
+      "beat": "orbiting-sparkles",
+      "durationMs": 360,
+      "blend": "source-over",
+      "anchor": "head"
+    },
+    {
+      "order": 3,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-blush-fx",
+      "beat": "heart-blush",
+      "durationMs": 360,
+      "blend": "source-over",
+      "anchor": "cheeks"
+    },
+    {
+      "order": 4,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-soft-recovery",
+      "beat": "delighted-to-idle",
+      "durationMs": 380,
+      "priority": "recovery",
+      "interruptible": false
+    }
+  ],
+  "reducedMotion": {
+    "strategy": "key-pose-sequence",
+    "framePolicy": "first-middle-last-per-beat",
+    "keepEmotionAndProps": true,
+    "remove": [
+      "bounce",
+      "overshoot",
+      "rapid-looping-fx"
+    ]
+  },
+  "optionalEnhancements": [],
+  "missingSheets": [],
+  "status": "complete"
+}

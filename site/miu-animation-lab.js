@@ -701,7 +701,9 @@
 
           return loadImage(sheetUrl).then(function (img) {
             player.images[key] = img;
-            player.detectedGrids[key] = detectConnectedGrid(img, cols, rows);
+            player.detectedGrids[key] = window.MiuSpriteGrid
+              ? window.MiuSpriteGrid.detectConnectedGrid(img, cols, rows)
+              : detectConnectedGrid(img, cols, rows);
           });
         });
 
@@ -966,7 +968,7 @@
     var animationName = document.getElementById("miu-lab-animation-name");
     var playState = document.getElementById("miu-lab-play-state");
     var sequenceList = document.getElementById("miu-lab-full-sequence");
-    var sheetWrap = document.getElementById("miu-lab-sheet-wrap");
+    var sheetWraps = document.querySelectorAll(".miu-lab-atlas-wrap");
     var errorBox = document.getElementById("miu-lab-error");
     var loading = document.getElementById("miu-lab-loading");
     var fullPlayer;
@@ -1099,9 +1101,9 @@
     });
 
     gridToggle.addEventListener("change", function () {
-      if (sheetWrap) {
+      sheetWraps.forEach(function (sheetWrap) {
         sheetWrap.classList.toggle("show-grid", gridToggle.checked);
-      }
+      });
     });
 
     speedControl.addEventListener("input", function () {

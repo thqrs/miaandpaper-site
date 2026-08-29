@@ -1,0 +1,785 @@
+{
+  "slug": "porta-folhetos",
+  "name": "Porta-folhetos",
+  "brand": "Mia & Paper",
+  "family": "porta-folhetos",
+  "homeUrl": "index.html",
+  "instagramUrl": "https://www.instagram.com/miaandpaper/",
+  "catalogContext": "main-v2",
+  "orderFlow": "catalog-or-custom",
+  "fixedQuantity": 1,
+  "unitLabel": "porta-folhetos",
+  "unitSingular": "porta-folhetos",
+  "unitShort": "porta-folhetos",
+  "form": {
+    "action": "send-order.php",
+    "returnTo": "porta-folhetos.html"
+  },
+  "intro": {
+    "eyebrow": "Porta-folhetos",
+    "title": "Escolhe a capa",
+    "text": "Escolhe o formato e a capa de cada porta-folhetos. No passo seguinte vês apenas as combinações de fita e argolas disponíveis para essa capa."
+  },
+  "deliveryOptions": [
+    {
+      "id": "pickup",
+      "label": "Vou recolher na casa da Mia",
+      "text": "",
+      "feeCents": 0
+    },
+    {
+      "id": "shipping",
+      "label": "Envio CTT - até 2 Kg",
+      "text": "",
+      "feeCents": 540,
+      "priceText": "Valor mínimo:\n5,40 €"
+    },
+    {
+      "id": "join_orders",
+      "label": "Junta as minhas encomendas",
+      "text": "",
+      "feeCents": 0
+    }
+  ],
+  "templates": [
+    {
+      "id": "designs-by-size",
+      "label": "Designs por tamanho"
+    },
+    {
+      "id": "media-list",
+      "label": "Imagem + 2 linhas"
+    },
+    {
+      "id": "text-grid",
+      "label": "Texto em grelha"
+    },
+    {
+      "id": "price-pack-grid",
+      "label": "Packs/preços"
+    },
+    {
+      "id": "quantity-builder",
+      "label": "Pack + quantidades"
+    },
+    {
+      "id": "design-grid",
+      "label": "Grelha de designs"
+    },
+    {
+      "id": "lamination-choice",
+      "label": "Acabamento"
+    },
+    {
+      "id": "purchase-option",
+      "label": "Opções de compra"
+    },
+    {
+      "id": "details-form",
+      "label": "Formulário"
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmação"
+    }
+  ],
+  "steps": [
+    {
+      "id": "size",
+      "hidden": true,
+      "label": "Formato",
+      "title": "O que queres encomendar?",
+      "text": "Escolhe A4, A6 ou o PACK com os dois tamanhos.",
+      "template": "media-list",
+      "display": "purchase-cards",
+      "field": "size",
+      "selection": "single",
+      "selectionError": "Escolhe A4, A6 ou PACK.",
+      "resetSelectionKeys": [
+        "covers",
+        "cover_a4",
+        "cover_a6",
+        "designs",
+        "design_a4",
+        "design_a6"
+      ],
+      "items": [
+        {
+          "id": "a4",
+          "value": "A4",
+          "priceKey": "A4",
+          "title": "A4",
+          "subtitle": "Porta-folhetos A4",
+          "priceCents": 3290,
+          "image": "content/designs/loja/porta-folhetos/a4/a4-01.webp",
+          "imageFit": "contain",
+          "frameWidth": 100,
+          "frameHeight": 120,
+          "visual": "neutral"
+        },
+        {
+          "id": "a6",
+          "value": "A6",
+          "priceKey": "A6",
+          "title": "A6",
+          "subtitle": "Porta-folhetos A6",
+          "priceCents": 1990,
+          "image": "content/designs/loja/porta-folhetos/a6/a6-01.webp",
+          "imageFit": "contain",
+          "frameWidth": 100,
+          "frameHeight": 120,
+          "visual": "neutral"
+        },
+        {
+          "id": "a4-a6",
+          "value": "A4 + A6",
+          "priceKey": "A4 + A6",
+          "title": "PACK",
+          "subtitle": "A4 + A6",
+          "priceCents": 4490,
+          "image": "content/designs/loja/porta-folhetos/pack-a4-a6.webp",
+          "imageFit": "contain",
+          "frameWidth": 120,
+          "frameHeight": 88,
+          "visual": "neutral"
+        }
+      ]
+    },
+    {
+      "id": "covers",
+      "label": "Capa",
+      "title": "Escolhe a capa",
+      "text": "Primeiro escolhe A4, A6 ou o PACK. Depois escolhe uma capa por tamanho; as cores da fita e das argolas ficam para o passo seguinte.",
+      "template": "designs-by-size",
+      "formatStepId": "size",
+      "formatTitle": "Escolhe o formato",
+      "field": "covers",
+      "selection": "multi",
+      "hideVariationOnly": true,
+      "groupSelectionError": "Escolhe a capa {group} para continuar.",
+      "items": [
+        {
+          "id": "porta-folhetos-a4-01",
+          "value": "A4 · Opção 01",
+          "title": "Quão lindos são os pés · Passeio",
+          "subtitle": "",
+          "sizeGroup": "A4",
+          "image": "content/designs/loja/porta-folhetos/a4/a4-01.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a4/a4-01.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a4-02",
+          "value": "A4 · Opção 02",
+          "title": "Prega a palavra · Agenda rosa",
+          "subtitle": "",
+          "sizeGroup": "A4",
+          "image": "content/designs/loja/porta-folhetos/a4/a4-02.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a4/a4-02.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a4-03",
+          "value": "A4 · Opção 03",
+          "title": "Declara as boas novas · Bicicleta rosa",
+          "subtitle": "",
+          "sizeGroup": "A4",
+          "image": "content/designs/loja/porta-folhetos/a4/a4-03.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a4/a4-03.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a4-04",
+          "value": "A4 · Opção 04",
+          "title": "Declara as boas novas · Campo colorido",
+          "subtitle": "",
+          "sizeGroup": "A4",
+          "image": "content/designs/loja/porta-folhetos/a4/a4-04.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a4/a4-04.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a4-05",
+          "value": "A4 · Opção 05",
+          "title": "Prega a palavra · Caminho de flores",
+          "subtitle": "",
+          "sizeGroup": "A4",
+          "image": "content/designs/loja/porta-folhetos/a4/a4-05.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a4/a4-05.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a4-06",
+          "value": "A4 · Opção 06",
+          "title": "Realiza plenamente o teu ministério · Castanho",
+          "subtitle": "",
+          "sizeGroup": "A4",
+          "image": "content/designs/loja/porta-folhetos/a4/a4-06.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a4/a4-06.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a4-07",
+          "isVariationOnly": true,
+          "value": "A4 · Opção 07",
+          "title": "A4 · Opção 07",
+          "subtitle": "",
+          "sizeGroup": "A4",
+          "image": "content/designs/loja/porta-folhetos/a4/a4-07.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a4/a4-07.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a4-08",
+          "value": "A4 · Opção 08",
+          "title": "Quão lindos são os pés · Campo colorido",
+          "subtitle": "",
+          "sizeGroup": "A4",
+          "image": "content/designs/loja/porta-folhetos/a4/a4-08.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a4/a4-08.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a4-09",
+          "value": "A4 · Opção 09",
+          "title": "Declara as boas novas · Bicicleta azul",
+          "subtitle": "",
+          "sizeGroup": "A4",
+          "image": "content/designs/loja/porta-folhetos/a4/a4-09.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a4/a4-09.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a4-10",
+          "isVariationOnly": true,
+          "value": "A4 · Opção 10",
+          "title": "A4 · Opção 10",
+          "subtitle": "",
+          "sizeGroup": "A4",
+          "image": "content/designs/loja/porta-folhetos/a4/a4-10.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a4/a4-10.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a4-11",
+          "isVariationOnly": true,
+          "value": "A4 · Opção 11",
+          "title": "A4 · Opção 11",
+          "subtitle": "",
+          "sizeGroup": "A4",
+          "image": "content/designs/loja/porta-folhetos/a4/a4-11.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a4/a4-11.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a6-01",
+          "value": "A6 · Opção 01",
+          "title": "Realiza plenamente o teu ministério · Flores vermelhas",
+          "subtitle": "",
+          "sizeGroup": "A6",
+          "image": "content/designs/loja/porta-folhetos/a6/a6-01.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a6/a6-01.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a6-02",
+          "value": "A6 · Opção 02",
+          "title": "Prega a palavra · Agenda rosa",
+          "subtitle": "",
+          "sizeGroup": "A6",
+          "image": "content/designs/loja/porta-folhetos/a6/a6-02.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a6/a6-02.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a6-03",
+          "value": "A6 · Opção 03",
+          "title": "Realiza plenamente o teu ministério · Flores salmão",
+          "subtitle": "",
+          "sizeGroup": "A6",
+          "image": "content/designs/loja/porta-folhetos/a6/a6-03.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a6/a6-03.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a6-04",
+          "value": "A6 · Opção 04",
+          "title": "Declara as boas novas · Bicicleta azul",
+          "subtitle": "",
+          "sizeGroup": "A6",
+          "image": "content/designs/loja/porta-folhetos/a6/a6-04.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a6/a6-04.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a6-05",
+          "value": "A6 · Opção 05",
+          "title": "Prega a palavra · Caminho de flores",
+          "subtitle": "",
+          "sizeGroup": "A6",
+          "image": "content/designs/loja/porta-folhetos/a6/a6-05.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a6/a6-05.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a6-06",
+          "isVariationOnly": true,
+          "value": "A6 · Opção 06",
+          "title": "A6 · Opção 06",
+          "subtitle": "",
+          "sizeGroup": "A6",
+          "image": "content/designs/loja/porta-folhetos/a6/a6-06.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a6/a6-06.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a6-07",
+          "value": "A6 · Opção 07",
+          "title": "Realiza plenamente o teu ministério · Lavanda",
+          "subtitle": "",
+          "sizeGroup": "A6",
+          "image": "content/designs/loja/porta-folhetos/a6/a6-07.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a6/a6-07.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a6-08",
+          "isVariationOnly": true,
+          "value": "A6 · Opção 08",
+          "title": "A6 · Opção 08",
+          "subtitle": "",
+          "sizeGroup": "A6",
+          "image": "content/designs/loja/porta-folhetos/a6/a6-08.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a6/a6-08.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a6-09",
+          "value": "A6 · Opção 09",
+          "title": "Realiza plenamente o teu ministério · Sapatos",
+          "subtitle": "",
+          "sizeGroup": "A6",
+          "image": "content/designs/loja/porta-folhetos/a6/a6-09.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a6/a6-09.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a6-10",
+          "value": "A6 · Opção 10",
+          "title": "Realiza plenamente o teu ministério · Folhagem azul",
+          "subtitle": "",
+          "sizeGroup": "A6",
+          "image": "content/designs/loja/porta-folhetos/a6/a6-10.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a6/a6-10.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a6-11",
+          "value": "A6 · Opção 11",
+          "title": "Declara as boas novas · Bicicleta rosa",
+          "subtitle": "",
+          "sizeGroup": "A6",
+          "image": "content/designs/loja/porta-folhetos/a6/a6-11.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a6/a6-11.webp"
+          ]
+        },
+        {
+          "id": "porta-folhetos-a6-12",
+          "isVariationOnly": true,
+          "value": "A6 · Opção 12",
+          "title": "A6 · Opção 12",
+          "subtitle": "",
+          "sizeGroup": "A6",
+          "image": "content/designs/loja/porta-folhetos/a6/a6-12.webp",
+          "imageFit": "contain",
+          "frameWidth": 96,
+          "frameHeight": 120,
+          "visual": "neutral",
+          "interiorImages": [
+            "content/designs/loja/porta-folhetos/a6/a6-12.webp"
+          ]
+        }
+      ],
+      "sizeField": "size",
+      "selectionFields": {
+        "A4": "cover_a4",
+        "A6": "cover_a6"
+      },
+      "sizeGroups": {
+        "A4": [
+          "A4"
+        ],
+        "A6": [
+          "A6"
+        ],
+        "A4 + A6": [
+          "A4",
+          "A6"
+        ]
+      },
+      "groupTitles": {
+        "A4": "Escolhe a capa do A4",
+        "A6": "Escolhe a capa do A6"
+      },
+      "resetFieldsByGroup": {
+        "A4": ["design_a4", "designs"],
+        "A6": ["design_a6", "designs"]
+      },
+      "selectionError": "Escolhe a capa correspondente ao formato escolhido.",
+      "customPromo": {
+        "enabled": true,
+        "title": "Queres a capa com uma foto tua?",
+        "text": "",
+        "actionLabel": "Personalizar a minha capa",
+        "href": "personalizacao.html",
+        "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp"
+      }
+    },
+    {
+      "id": "designs",
+      "label": "Fita e argolas",
+      "title": "Escolhe a fita e as argolas",
+      "text": "Mostramos apenas as combinações disponíveis para a capa que escolheste.",
+      "template": "designs-by-size",
+      "field": "designs",
+      "selection": "multi",
+      "aggregateField": "designs",
+      "groupSelectionError": "Escolhe a variação {group} para continuar.",
+      "sizeField": "size",
+      "selectionFields": { "A4": "design_a4", "A6": "design_a6" },
+      "parentSelectionFields": { "A4": "cover_a4", "A6": "cover_a6" },
+      "parentStepId": "covers",
+      "parentItemProperty": "coverValue",
+      "sizeGroups": { "A4": ["A4"], "A6": ["A6"], "A4 + A6": ["A4", "A6"] },
+      "groupTitles": { "A4": "Variação do A4", "A6": "Variação do A6" },
+      "quantityPerSelectedDesign": 1,
+      "selectionError": "Escolhe a combinação de fita e argolas.",
+      "items": [
+        { "id": "porta-folhetos-a4-01-final", "value": "A4 · Opção 01", "title": "Dourado", "subtitle": "Argolas e fita douradas", "sizeGroup": "A4", "coverValue": "A4 · Opção 01", "image": "content/designs/loja/porta-folhetos/a4/a4-01.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a4-02-final", "value": "A4 · Opção 02", "title": "Dourado", "subtitle": "Argolas e fita douradas", "sizeGroup": "A4", "coverValue": "A4 · Opção 02", "image": "content/designs/loja/porta-folhetos/a4/a4-02.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a4-07-final", "value": "A4 · Opção 07", "title": "Rosa metálico", "subtitle": "Argolas e fita rosa metálico", "sizeGroup": "A4", "coverValue": "A4 · Opção 02", "image": "content/designs/loja/porta-folhetos/a4/a4-07.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a4-03-final", "value": "A4 · Opção 03", "title": "Rosa metálico", "subtitle": "Argolas e fita rosa metálico", "sizeGroup": "A4", "coverValue": "A4 · Opção 03", "image": "content/designs/loja/porta-folhetos/a4/a4-03.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a4-10-final", "value": "A4 · Opção 10", "title": "Dourado", "subtitle": "Argolas e fita douradas", "sizeGroup": "A4", "coverValue": "A4 · Opção 03", "image": "content/designs/loja/porta-folhetos/a4/a4-10.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a4-04-final", "value": "A4 · Opção 04", "title": "Dourado", "subtitle": "Argolas e fita douradas", "sizeGroup": "A4", "coverValue": "A4 · Opção 04", "image": "content/designs/loja/porta-folhetos/a4/a4-04.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a4-05-final", "value": "A4 · Opção 05", "title": "Rosa metálico", "subtitle": "Argolas e fita rosa metálico", "sizeGroup": "A4", "coverValue": "A4 · Opção 05", "image": "content/designs/loja/porta-folhetos/a4/a4-05.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a4-06-final", "value": "A4 · Opção 06", "title": "Dourado", "subtitle": "Argolas e fita douradas", "sizeGroup": "A4", "coverValue": "A4 · Opção 06", "image": "content/designs/loja/porta-folhetos/a4/a4-06.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a4-08-final", "value": "A4 · Opção 08", "title": "Dourado", "subtitle": "Argolas e fita douradas", "sizeGroup": "A4", "coverValue": "A4 · Opção 08", "image": "content/designs/loja/porta-folhetos/a4/a4-08.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a4-09-final", "value": "A4 · Opção 09", "title": "Azul", "subtitle": "Argolas e fita azuis", "sizeGroup": "A4", "coverValue": "A4 · Opção 09", "image": "content/designs/loja/porta-folhetos/a4/a4-09.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a4-11-final", "value": "A4 · Opção 11", "title": "Verde", "subtitle": "Argolas e fita verdes", "sizeGroup": "A4", "coverValue": "A4 · Opção 09", "image": "content/designs/loja/porta-folhetos/a4/a4-11.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a6-01-final", "value": "A6 · Opção 01", "title": "Dourado", "subtitle": "Argolas e fita douradas", "sizeGroup": "A6", "coverValue": "A6 · Opção 01", "image": "content/designs/loja/porta-folhetos/a6/a6-01.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a6-02-final", "value": "A6 · Opção 02", "title": "Rosa metálico", "subtitle": "Argolas e fita rosa metálico", "sizeGroup": "A6", "coverValue": "A6 · Opção 02", "image": "content/designs/loja/porta-folhetos/a6/a6-02.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a6-06-final", "value": "A6 · Opção 06", "title": "Dourado", "subtitle": "Argolas e fita douradas", "sizeGroup": "A6", "coverValue": "A6 · Opção 02", "image": "content/designs/loja/porta-folhetos/a6/a6-06.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a6-03-final", "value": "A6 · Opção 03", "title": "Dourado", "subtitle": "Argolas e fita douradas", "sizeGroup": "A6", "coverValue": "A6 · Opção 03", "image": "content/designs/loja/porta-folhetos/a6/a6-03.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a6-04-final", "value": "A6 · Opção 04", "title": "Azul", "subtitle": "Argolas douradas e fita azul", "sizeGroup": "A6", "coverValue": "A6 · Opção 04", "image": "content/designs/loja/porta-folhetos/a6/a6-04.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a6-05-final", "value": "A6 · Opção 05", "title": "Rosa metálico", "subtitle": "Argolas e fita rosa metálico", "sizeGroup": "A6", "coverValue": "A6 · Opção 05", "image": "content/designs/loja/porta-folhetos/a6/a6-05.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a6-12-final", "value": "A6 · Opção 12", "title": "Dourado", "subtitle": "Argolas e fita douradas", "sizeGroup": "A6", "coverValue": "A6 · Opção 05", "image": "content/designs/loja/porta-folhetos/a6/a6-12.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a6-07-final", "value": "A6 · Opção 07", "title": "Rosa metálico", "subtitle": "Argolas e fita rosa metálico", "sizeGroup": "A6", "coverValue": "A6 · Opção 07", "image": "content/designs/loja/porta-folhetos/a6/a6-07.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a6-08-final", "value": "A6 · Opção 08", "title": "Dourado", "subtitle": "Argolas e fita douradas", "sizeGroup": "A6", "coverValue": "A6 · Opção 07", "image": "content/designs/loja/porta-folhetos/a6/a6-08.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a6-09-final", "value": "A6 · Opção 09", "title": "Dourado", "subtitle": "Argolas e fita douradas", "sizeGroup": "A6", "coverValue": "A6 · Opção 09", "image": "content/designs/loja/porta-folhetos/a6/a6-09.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a6-10-final", "value": "A6 · Opção 10", "title": "Verde", "subtitle": "Argolas douradas e fita verde", "sizeGroup": "A6", "coverValue": "A6 · Opção 10", "image": "content/designs/loja/porta-folhetos/a6/a6-10.webp", "imageFit": "contain", "visual": "neutral" },
+        { "id": "porta-folhetos-a6-11-final", "value": "A6 · Opção 11", "title": "Rosa metálico", "subtitle": "Argolas e fita rosa metálico", "sizeGroup": "A6", "coverValue": "A6 · Opção 11", "image": "content/designs/loja/porta-folhetos/a6/a6-11.webp", "imageFit": "contain", "visual": "neutral" }
+      ]
+    },
+    {
+      "id": "extras",
+      "label": "Extras",
+      "title": "Acabamento e extras",
+      "text": "A capa, a fita e as argolas já estão escolhidas. Agora escolhe o acabamento e, se quiseres, os cantos metálicos.",
+      "template": "option-drawers",
+      "display": "cards",
+      "drawers": [
+        {
+          "id": "finish-choice",
+          "field": "finish",
+          "label": "acabamento",
+          "title": "Acabamento",
+          "required": true,
+          "selectionError": "Escolhe o acabamento.",
+          "items": [
+            {
+              "value": "matte",
+              "title": "Matte",
+              "subtitle": "Suave, sem brilho",
+              "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-matte.webp",
+              "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-matte.webp",
+              "drawerText": "Exemplo visual de acabamento matte.",
+              "extraPriceCentsPerUnit": 0
+            },
+            {
+              "value": "glossy",
+              "title": "Glossy",
+              "subtitle": "Brilhante",
+              "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-glossy-normal.webp",
+              "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-glossy-normal.webp",
+              "drawerText": "Exemplo visual de acabamento glossy.",
+              "extraPriceCentsPerUnit": 0
+            },
+            {
+              "value": "holografico-1",
+              "title": "Holográfico 1",
+              "subtitle": "Efeito holográfico",
+              "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
+              "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
+              "drawerText": "Exemplo visual do Holográfico 1.",
+              "extraPriceCentsPerUnit": 0
+            },
+            {
+              "value": "holografico-2",
+              "title": "Holográfico 2",
+              "subtitle": "Efeito holográfico",
+              "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
+              "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
+              "drawerText": "Imagem provisória até ser carregada a fotografia específica do Holográfico 2.",
+              "extraPriceCentsPerUnit": 0
+            },
+            {
+              "value": "holografico-3",
+              "title": "Holográfico 3",
+              "subtitle": "Efeito holográfico",
+              "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
+              "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
+              "drawerText": "Imagem provisória até ser carregada a fotografia específica do Holográfico 3.",
+              "extraPriceCentsPerUnit": 0
+            }
+          ],
+          "customArtworkEnabled": true
+        },
+        {
+          "id": "metal-corners",
+          "field": "metal_corners",
+          "label": "cantos metálicos",
+          "title": "Cantos metálicos",
+          "required": true,
+          "defaultValue": "no",
+          "selectionError": "Escolhe se queres cantos metálicos.",
+          "items": [
+            {
+              "value": "no",
+              "title": "Sem cantos metálicos",
+              "subtitle": "Mantém os cantos normais.",
+              "visual": "neutral",
+              "extraPriceCentsPerUnit": 0
+            },
+            {
+              "value": "yes",
+              "title": "Com cantos metálicos",
+              "subtitle": "Acrescenta cantos metálicos decorativos e protetores.",
+              "visual": "neutral",
+              "extraPriceCentsPerUnit": 0,
+              "priceLabel": "A confirmar",
+              "drawerText": "O valor deste extra será confirmado pela Mia antes da preparação."
+            }
+          ],
+          "customArtworkEnabled": true
+        }
+      ]
+    },
+    {
+      "id": "delivery_contact",
+      "label": "Entrega e contacto",
+      "title": "Entrega e contacto",
+      "text": "",
+      "template": "delivery-contact",
+      "delivery": {
+        "title": "Como queres receber a tua encomenda?",
+        "subtitle": "Caso já tenhas feito uma encomenda que ainda não foi enviada, escolhe \"Junta as minhas encomendas\" para receberes todas as tuas encomendas na mesma embalagem."
+      },
+      "contact": {
+        "title": "Dados de Contacto",
+        "notesAfter": [
+          "Se quiseres fatura com número de contribuinte, preenche este campo. Se deixares em branco, a fatura será emitida como consumidor final.",
+          "A fatura será emitida após confirmação do pagamento. Se indicares email, enviamos por email. Se indicares telemóvel, podemos enviar por WhatsApp."
+        ],
+        "fields": [
+          {
+            "name": "customer_name",
+            "label": "Nome",
+            "placeholder": "O teu nome",
+            "required": true,
+            "autocomplete": "name"
+          },
+          {
+            "name": "customer_contact",
+            "label": "Email ou Telemóvel",
+            "placeholder": "Email ou telemóvel",
+            "required": true,
+            "autocomplete": "email"
+          },
+          {
+            "name": "customer_nif",
+            "label": "Número de Contribuinte (NIF)",
+            "placeholder": "Se quiseres receber fatura com NIF",
+            "required": false,
+            "autocomplete": "off",
+            "inputmode": "numeric"
+          }
+        ]
+      }
+    },
+    {
+      "id": "confirm",
+      "label": "Confirmar",
+      "title": "Confirma antes de enviar",
+      "text": "Se estiver tudo certo, envia o pedido",
+      "template": "confirm"
+    }
+  ],
+  "prices": {
+    "A4": {
+      "1": 3290
+    },
+    "A6": {
+      "1": 1990
+    },
+    "A4 + A6": {
+      "1": 4490
+    }
+  },
+  "minimumQuantity": 1,
+  "pricingMode": "flat-unit",
+  "allowUnitDiscounts": false,
+  "defaultPriceKey": "A4",
+  "customArtwork": {
+    "selectionField": "order_flow",
+    "catalogValue": "catalog",
+    "customValue": "custom",
+    "feePerFileCents": 300,
+    "feeLabel": "Preparação da imagem e testes",
+    "feeDescription": "Inclui a preparação do ficheiro e os testes necessários antes da produção.",
+    "quantityPerFile": true,
+    "minimumQuantityPerFile": 1,
+    "acceptedMimeTypes": [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+      "application/pdf"
+    ],
+    "acceptedExtensions": [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".webp",
+      ".heic",
+      ".heif",
+      ".pdf"
+    ],
+    "preserveOriginal": true,
+    "preserveOriginalFileName": true,
+    "compress": false,
+    "convert": false
+  },
+  "designQuantityPerSelection": 1,
+  "editorDesignStepId": "designs"
+}

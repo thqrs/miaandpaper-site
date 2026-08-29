@@ -900,20 +900,64 @@ function product_variant_item($variant, $value)
     return array();
 }
 
+// Condições declaradas nos passos do wizard. O servidor aplica as mesmas
+// regras do browser para não exigir nem cobrar opções de um percurso oculto.
+function product_step_condition_matches($step, $selections)
+{
+    $condition = isset($step['when']) && is_array($step['when']) ? $step['when'] : array();
+    $field = isset($condition['field']) ? (string)$condition['field'] : '';
+    if ($field === '') {
+        return true;
+    }
+    $value = array_key_exists($field, $selections) ? $selections[$field] : null;
+    if (array_key_exists('equals', $condition)) {
+        return is_array($value)
+            ? in_array($condition['equals'], $value, true)
+            : $value === $condition['equals'];
+    }
+    if (isset($condition['in']) && is_array($condition['in'])) {
+        if (is_array($value)) {
+            return count(array_intersect($value, $condition['in'])) > 0;
+        }
+        return in_array($value, $condition['in'], true);
+    }
+    if (array_key_exists('notEquals', $condition)) {
+        return is_array($value)
+            ? !in_array($condition['notEquals'], $value, true)
+            : $value !== $condition['notEquals'];
+    }
+    return true;
+}
+
 // Gavetas de opções do catálogo. Cada escolha pode acrescentar um valor por
 // unidade; o servidor volta a ler esse valor no JSON e nunca aceita o preço
-// enviado pelo browser.
-function product_option_drawers($product)
+// enviado pelo browser. Um passo pode reutilizar as gavetas de outro e mudar
+// apenas os campos/rótulos através de drawerOverrides.
+function product_option_drawers($product, $selections)
 {
     $drawers = array();
     $steps = isset($product['steps']) && is_array($product['steps']) ? $product['steps'] : array();
     foreach ($steps as $step) {
-        if (!is_array($step) || !isset($step['template']) || (string)$step['template'] !== 'option-drawers') {
+        if (!is_array($step)
+            || !isset($step['template'])
+            || (string)$step['template'] !== 'option-drawers'
+            || !product_step_condition_matches($step, $selections)
+        ) {
             continue;
         }
-        if (isset($step['drawers']) && is_array($step['drawers'])) {
-            foreach ($step['drawers'] as $drawer) {
+        $drawerStep = $step;
+        if (!empty($step['drawersSourceStepId'])) {
+            $drawerStep = product_step($product, (string)$step['drawersSourceStepId']);
+        }
+        $stepDrawers = isset($drawerStep['drawers']) && is_array($drawerStep['drawers']) ? $drawerStep['drawers'] : array();
+        $overrides = isset($step['drawerOverrides']) && is_array($step['drawerOverrides']) ? $step['drawerOverrides'] : array();
+        if (!empty($stepDrawers)) {
+            foreach ($stepDrawers as $drawer) {
                 if (is_array($drawer)) {
+                    $key = isset($drawer['field']) ? (string)$drawer['field'] : (isset($drawer['id']) ? (string)$drawer['id'] : '');
+                    if ($key !== '' && isset($overrides[$key]) && is_array($overrides[$key])) {
+                        $drawer = array_merge($drawer, $overrides[$key]);
+                    }
                     $drawers[] = $drawer;
                 }
             }
@@ -1689,7 +1733,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
 
     $optionDrawerLabels = array();
     $optionDrawerExtraPerUnitCents = 0;
-    foreach (product_option_drawers($productConfig) as $drawer) {
+    foreach (product_option_drawers($productConfig, $selections) as $drawer) {
             // Por omissão, as gavetas pertencem apenas ao fluxo do catálogo.
             // Produtos que precisem das mesmas escolhas em Personalização
             // declaram explicitamente customArtworkEnabled no próprio JSON.

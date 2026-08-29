@@ -1,0 +1,330 @@
+{
+  "version": 1,
+  "status": {
+    "state": "episodes-expansion-in-progress",
+    "updatedAt": "2026-08-28",
+    "generatedSheets": 41,
+    "generatedFrames": 2624
+  },
+  "references": {
+    "canonicalIdentity": "../../miu-sprite.webp",
+    "validatedGridLayout": "../quantity-rig-v4/miu-v5-idle-attention-8x8.png"
+  },
+  "commonPrompt": "Derive every image from the canonical Míu identity reference. Preserve markings, eyes, proportions, ears, whiskers, paws and handmade illustration. Create exactly 8 columns by 8 rows, 64 separate stickers with transparent gutters and genuine PNG alpha. Read left-to-right and top-to-bottom. No text, borders, backgrounds, face morphing or redesign.",
+  "pending": [
+    {
+      "id": "paper-lantern",
+      "category": "story",
+      "target": "stories/miu-story-paper-lantern-8x8.png",
+      "reason": "first generation returned seven columns; needs a new exact 8x8 composition"
+    },
+    {
+      "id": "rolling-pencil",
+      "category": "story",
+      "target": "stories/miu-story-rolling-pencil-8x8.png",
+      "reason": "first generation returned seven columns and six rows; needs a new exact 8x8 composition"
+    },
+    {
+      "id": "washi-tape",
+      "category": "story",
+      "target": "stories/miu-story-washi-tape-8x8.png",
+      "reason": "first generation returned six columns and seven rows; needs a new exact 8x8 composition"
+    },
+    {
+      "id": "paper-card-tower",
+      "category": "story",
+      "target": "stories/miu-story-paper-card-tower-8x8.png",
+      "reason": "first generation returned six columns and seven rows; needs a new exact 8x8 composition"
+    },
+    {
+      "id": "paper-scrap-nest",
+      "category": "story",
+      "target": "stories/miu-story-paper-scrap-nest-8x8.png",
+      "reason": "first generation returned seven columns; needs a new exact 8x8 composition"
+    },
+    {
+      "id": "ribbon-bow",
+      "category": "story",
+      "target": "stories/miu-story-ribbon-bow-8x8.png",
+      "reason": "first generation returned seven columns and seven rows; needs a new exact 8x8 composition"
+    },
+    {
+      "id": "paw-print-stamp",
+      "category": "story",
+      "target": "stories/miu-story-paw-print-stamp-8x8.png",
+      "reason": "first generation returned seven columns; needs a new exact 8x8 composition"
+    },
+    {
+      "id": "product-gift-tags-miu-faces",
+      "category": "product",
+      "target": "products/miu-product-gift-tags-faces-8x8.png",
+      "reason": "first generation returned eight columns but only seven rows; needs a new exact 8x8 composition"
+    }
+  ],
+  "completed": [
+    {
+      "id": "ekman-happiness",
+      "category": "emotion",
+      "target": "emotions/miu-ekman-happiness-8x8.png"
+    },
+    {
+      "id": "ekman-sadness",
+      "category": "emotion",
+      "target": "emotions/miu-ekman-sadness-8x8.png"
+    },
+    {
+      "id": "ekman-anger",
+      "category": "emotion",
+      "target": "emotions/miu-ekman-anger-8x8.png"
+    },
+    {
+      "id": "ekman-fear",
+      "category": "emotion",
+      "target": "emotions/miu-ekman-fear-8x8.png"
+    },
+    {
+      "id": "ekman-surprise",
+      "category": "emotion",
+      "target": "emotions/miu-ekman-surprise-8x8.png"
+    },
+    {
+      "id": "ekman-disgust",
+      "category": "emotion",
+      "target": "emotions/miu-ekman-disgust-8x8.png"
+    },
+    {
+      "id": "ekman-contempt",
+      "category": "emotion",
+      "target": "emotions/miu-ekman-contempt-8x8.png"
+    },
+    {
+      "id": "butterfly-and-miu",
+      "category": "story",
+      "target": "stories/miu-story-butterfly-sneeze-8x8.png"
+    },
+    {
+      "id": "yarn-ball",
+      "category": "story",
+      "target": "stories/miu-story-yarn-ball-8x8.png"
+    },
+    {
+      "id": "scratch-behind-ear",
+      "category": "story",
+      "target": "stories/miu-story-scratch-behind-ear-8x8.png"
+    },
+    {
+      "id": "paper-scissors",
+      "category": "story",
+      "target": "stories/miu-story-paper-scissors-8x8.png"
+    },
+    {
+      "id": "cricut-helper",
+      "category": "story",
+      "target": "stories/miu-story-cricut-helper-8x8.png"
+    },
+    {
+      "id": "origami-flowers",
+      "category": "story",
+      "target": "stories/miu-story-origami-flowers-8x8.png"
+    },
+    {
+      "id": "push-and-break",
+      "category": "story",
+      "target": "stories/miu-story-push-break-paper-build-8x8.png"
+    },
+    {
+      "id": "zoomies",
+      "category": "story",
+      "target": "stories/miu-story-zoomies-8x8.png"
+    },
+    {
+      "id": "yawn",
+      "category": "story",
+      "target": "stories/miu-story-yawn-8x8.png"
+    },
+    {
+      "id": "sneeze",
+      "category": "story",
+      "target": "stories/miu-story-sneeze-8x8.png"
+    },
+    {
+      "id": "ribbon-tangle",
+      "category": "story",
+      "target": "stories/miu-story-ribbon-tangle-8x8.png"
+    },
+    {
+      "id": "paper-box-hide",
+      "category": "story",
+      "target": "stories/miu-story-paper-box-hide-8x8.png"
+    },
+    {
+      "id": "tape-roll-chase",
+      "category": "story",
+      "target": "stories/miu-story-tape-roll-chase-8x8.png"
+    },
+    {
+      "id": "sticker-on-paw",
+      "category": "story",
+      "target": "stories/miu-story-sticker-on-paw-8x8.png"
+    },
+    {
+      "id": "paper-plane",
+      "category": "story",
+      "target": "stories/miu-story-paper-plane-8x8.png"
+    },
+    {
+      "id": "craft-stamp",
+      "category": "story",
+      "target": "stories/miu-story-craft-stamp-8x8.png"
+    },
+    {
+      "id": "paper-boat",
+      "category": "story",
+      "target": "stories/miu-story-paper-boat-8x8.png"
+    },
+    {
+      "id": "gift-wrap",
+      "category": "story",
+      "target": "stories/miu-story-gift-wrap-8x8.png"
+    },
+    {
+      "id": "hole-punch-confetti",
+      "category": "story",
+      "target": "stories/miu-story-hole-punch-confetti-8x8.png"
+    },
+    {
+      "id": "paper-pinwheel",
+      "category": "story",
+      "target": "stories/miu-story-paper-pinwheel-8x8.png"
+    },
+    {
+      "id": "paper-flower-crown",
+      "category": "story",
+      "target": "stories/miu-story-paper-flower-crown-8x8.png"
+    },
+    {
+      "id": "wool-pompom",
+      "category": "story",
+      "target": "stories/miu-story-wool-pompom-8x8.png"
+    },
+    {
+      "id": "paper-envelope",
+      "category": "story",
+      "target": "stories/miu-story-paper-envelope-8x8.png"
+    },
+    {
+      "id": "butterfly-prop",
+      "category": "prop",
+      "target": "props/butterfly-flight-8x8.png"
+    },
+    {
+      "id": "transition-idle-to-attention",
+      "category": "transition",
+      "target": "transitions/miu-transition-idle-to-attention-8x8.png"
+    },
+    {
+      "id": "transition-soft-recovery",
+      "category": "transition",
+      "target": "transitions/miu-transition-soft-recovery-8x8.png"
+    },
+    {
+      "id": "product-badges-grimace",
+      "category": "product",
+      "target": "products/miu-product-badges-grimace-8x8.png"
+    },
+    {
+      "id": "product-stickers-grimaces",
+      "category": "product",
+      "target": "products/miu-product-stickers-grimaces-8x8.png"
+    },
+    {
+      "id": "anime-attention-fx",
+      "category": "fx",
+      "target": "fx/anime-attention-fx-8x8.png"
+    },
+    {
+      "id": "anime-sparkles-fx",
+      "category": "fx",
+      "target": "fx/anime-sparkles-fx-8x8.png"
+    },
+    {
+      "id": "anime-watery-eyes-fx",
+      "category": "fx",
+      "target": "fx/anime-watery-eyes-fx-8x8.png"
+    },
+    {
+      "id": "anime-sweat-drop-fx",
+      "category": "fx",
+      "target": "fx/anime-sweat-drop-fx-8x8.png"
+    },
+    {
+      "id": "anime-blush-fx",
+      "category": "fx",
+      "target": "fx/anime-blush-fx-8x8.png"
+    },
+    {
+      "id": "anime-impact-lines-fx",
+      "category": "fx",
+      "target": "fx/anime-impact-lines-fx-8x8.png"
+    }
+  ],
+  "rejectedCandidates": [
+    {
+      "id": "paper-garland",
+      "reason": "Both generations returned seven columns; excluded because the library contract requires exact 8x8.",
+      "includedInManifest": false
+    },
+    {
+      "id": "wool-pompom",
+      "reason": "First two generations returned seven columns; a later layout-guided 8x8 generation replaced them.",
+      "includedInManifest": false,
+      "supersededBy": "stories/miu-story-wool-pompom-8x8.png"
+    },
+    {
+      "id": "paper-flower-crown",
+      "reason": "First two candidates returned seven columns; a third clean 8x8 generation replaced them.",
+      "includedInManifest": false,
+      "supersededBy": "stories/miu-story-paper-flower-crown-8x8.png"
+    },
+    {
+      "id": "paper-lantern",
+      "reason": "Initial generation returned seven columns; excluded because the library contract requires exact 8x8.",
+      "includedInManifest": false
+    },
+    {
+      "id": "rolling-pencil",
+      "reason": "Initial generation returned seven columns and six rows; excluded because the library contract requires exact 8x8.",
+      "includedInManifest": false
+    },
+    {
+      "id": "washi-tape",
+      "reason": "Initial generation returned six columns and seven rows; excluded because the library contract requires exact 8x8.",
+      "includedInManifest": false
+    },
+    {
+      "id": "paper-card-tower",
+      "reason": "Initial generation returned six columns and seven rows; excluded because the library contract requires exact 8x8.",
+      "includedInManifest": false
+    },
+    {
+      "id": "paper-scrap-nest",
+      "reason": "Initial generation returned seven columns; excluded because the library contract requires exact 8x8.",
+      "includedInManifest": false
+    },
+    {
+      "id": "ribbon-bow",
+      "reason": "Initial generation returned seven columns and seven rows; excluded because the library contract requires exact 8x8.",
+      "includedInManifest": false
+    },
+    {
+      "id": "paw-print-stamp",
+      "reason": "Initial generation returned seven columns; excluded because the library contract requires exact 8x8.",
+      "includedInManifest": false
+    },
+    {
+      "id": "product-gift-tags-miu-faces",
+      "reason": "Initial generation returned eight columns but only seven rows; excluded because the library contract requires exact 8x8.",
+      "includedInManifest": false
+    }
+  ]
+}

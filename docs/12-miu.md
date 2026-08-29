@@ -26,8 +26,12 @@ O Míu é o assistente virtual no canto inferior direito das páginas públicas.
 | `site/erros.php` | editor das mensagens públicas Default/Míu |
 | `site/bot-admin.css` / `.js` | interface própria do painel |
 | `site/miu-animation-lab.php` | laboratório experimental 8×8 multi-sheet e auto-centragem com in-betweens fluídos |
-| `site/miu-animation-lab.js` | motor de visão computacional (connected components) e leitor de sequências |
+| `site/miu-animation-lab.js` | leitor e comparador das sequências multi-sheet |
 | `site/miu-animation-lab.css` | estilos do laboratório experimental |
+| `site/miu-rig.php` | laboratório isolado V5: idle vivo, atenção durante a interacção e reacções ao gesto agregado |
+| `site/miu-rig.js` | Animation Director, leitor multi-sheet, reacções, recuperação e FX anime compostos |
+| `site/miu-sprite-grid.js` | extracção reutilizável de sprites por componentes conectados e âncoras anatómicas |
+| `site/miu-rig-v3.php` | arquivo da experiência V3 de frames reais com movimento secundário de mesh |
 | `private/miu.sqlite` | conversas, mensagens e contextos de passo (runtime) |
 | `private/miu-config.php` | chaves; nunca fica na raiz pública nem no Git |
 | `miu-old/` | arquivo externo com o protótipo do Míu modular descontinuado |
@@ -43,6 +47,12 @@ exclusivamente a **cara do Míu**. `miu-sprite.webp` é a folha normal,
 inteiro guardadas em `content/brand/miu/sprites/` formam uma biblioteca
 separada para outros contextos interactivos e nunca substituem a cara dentro
 do chat.
+
+**Regra dos assets novos:** sprites e spritesheets do Míu são guardados em PNG
+e nunca convertidos para WebP. A excepção existe porque a transparência alpha e
+as ilhas de píxeis separadas são parte do contrato do algoritmo de componentes
+conectados. Os WebP históricos do Míu mantêm-se como estão; a regra aplica-se a
+assets novos e não manda reconverter nem substituir os que já estão em produção.
 
 Para voltar a gerar as três folhas da cara sem alterar os nomes nem a ordem das poses:
 
@@ -173,6 +183,42 @@ O projeto conta com um ambiente de testes avançado para afinação de expressõ
 4. **Ficheiro de Configuração Ativo:**
    `site/content/brand/miu/experimental/experimental-full-spritesheet-animations_002.json` e `miu-fluid-animations-transparent.png`.
 
+## Míu Animation Director V5
+
+`site/miu-rig.php` é uma experiência autónoma e não é carregada pelo
+configurador. O valor absoluto deixou de escolher uma pose. O fluxo é agora:
+
+```text
+idle vivo → atenção → acompanhar o gesto → reacção → recovery → idle vivo
+```
+
+O director guarda o valor no início do gesto, o valor actual, direcção,
+velocidade, delta acumulado, origem do evento e importância do pack. Durante um
+arrasto aberto mantém uma única animação de atenção; não reinicia nem avança uma
+frame por unidade. Quando a pessoa larga ou abranda, classifica a mudança como
+pequena, média ou grande e toca uma única reacção. A oscilação que regressa ao
+valor inicial não produz uma sequência nervosa de reacções.
+
+O idle escolhe com pesos e pausas variáveis entre piscar/respirar, olhar para os
+lados, mexer uma orelha e fazer uma micro-careta. A biblioteca pode receber
+novas rotinas sem alterar a lógica de quantidade.
+Os efeitos `?`, `!`, linhas manga, estrelas, gota e água nos olhos são uma camada
+canvas independente. As alterações de olhos e boca continuam a ser keyframes
+desenhados; o rig limita-se a deslocação, rotação e squash/stretch global.
+
+A API experimental fica em `window.miu` e expõe `quantity.begin()`,
+`quantity.set()`, `quantity.end()`, `updateQuantityReaction()`, `selectPack()`,
+`playOneShot('rejoice')`, `reset()` e `debug()`. O `rejoice` mantém prioridade.
+Com movimento reduzido, os frames e a informação emocional continuam presentes,
+mas o bounce e o movimento secundário ficam suspensos.
+
+As folhas 8×8 vivem em
+`content/brand/miu/experimental/quantity-rig-v4/`, sempre em PNG. As Folhas 3 e
+4 preservam a primeira experiência V4. A Folha 5 contém idle/atenção/recovery e
+a Folha 6 contém as reacções por gesto do V5, incluindo boca aberta, olhos
+húmidos e pré-choro anime. Todas estão declaradas no manifesto multi-sheet e são
+recortadas pelo mesmo algoritmo de componentes conectados e medianas anatómicas.
+
 ## Fluxo e barreiras
 
 ```text
@@ -243,6 +289,8 @@ conversa pode ser aberta e apagada, com CSRF e confirmação, em `bot.php`.
    do passo “Cartão de Apresentação”.
 8. Confirmar em `bot.php` o IP, hora, contexto, modelo real e resposta guardados.
 9. Abrir `miu-animation-lab.php` para testar as animações fluídas 8×8 e o modo multi-sheet.
+10. Abrir `miu-rig.php` para testar os extremos, os saltos, a oscilação e o
+    regresso do `rejoice` ao estado-base.
 
 `miu-config.php` nunca é um endereço público. O ficheiro fica em
 `private-local/miu-config.php`; a gestão faz-se em `/bot.php` e o teste público

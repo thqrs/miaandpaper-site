@@ -177,6 +177,7 @@
   grid-template-rows: auto minmax(100px, 1fr) auto;
   width: min(310px, calc(100vw - 24px));
   height: min(420px, calc(100vh - 110px));
+  height: min(420px, calc(100dvh - 110px));
   min-height: 320px;
   overflow: hidden;
   border: 1px solid var(--line);

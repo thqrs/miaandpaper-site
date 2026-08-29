@@ -46,7 +46,10 @@ O **Míu** é o assistente virtual da Mia & Paper, localizado no canto inferior 
 
 Um dos maiores desafios técnicos ao usar **spritesheets geradas por Inteligência Artificial** é que as figuras nunca ficam perfeitamente alinhadas numa grelha matemática rígida: algumas poses ficam desenhadas mais à esquerda, outras mais abaixo e as linhas apresentam ondulações (*drift* vertical).
 
-Para resolver isto, foi desenvolvido um algoritmo inteligente de visão computacional em `site/miu-animation-lab.js` (função `detectConnectedGrid`), que substitui a grelha tradicional pelo **"Método dos Autocolantes"**:
+Para resolver isto, foi desenvolvido um algoritmo inteligente de visão computacional,
+hoje partilhado em `site/miu-sprite-grid.js` (função `detectConnectedGrid`) e
+mantido como fallback histórico em `site/miu-animation-lab.js`, que substitui a
+grelha tradicional pelo **"Método dos Autocolantes"**:
 
 ### Como Funciona (A Metáfora dos Autocolantes)
 
@@ -128,6 +131,10 @@ O laboratório em `site/miu-animation-lab.php` é um ambiente completo de testes
 * **Folhas Integradas no Sistema Multi-Sheet:**
   * **Folha 1 (`S1`):** `miu-fluid-animations-transparent.png` — PNG 32-bit lossless com 8 tiras contínuas de animação e in-betweens passo a passo.
   * **Folha 2 (`S2`):** `ChatGPT Image 19_08_2026, 22_36_20.png` — Spritesheet com 64 poses expressivas.
+  * **Folha 3 (`S3`):** `quantity-rig-v4/miu-v4-states-idle-8x8.png` — estados emocionais e micro-idles do Quantity Rig V4.
+  * **Folha 4 (`S4`):** `quantity-rig-v4/miu-v4-reactions-rejoice-8x8.png` — reacções por intensidade, descidas e `rejoice` do V4.
+  * **Folha 5 (`S5`):** `quantity-rig-v4/miu-v5-idle-attention-8x8.png` — idle vivo, atenção/tracking e recovery do Animation Director V5.
+  * **Folha 6 (`S6`):** `quantity-rig-v4/miu-v5-gesture-reactions-8x8.png` — reacções pequenas/médias/grandes ao gesto completo e `rejoice`.
 * **Manifesto:** `site/content/brand/miu/experimental/experimental-full-spritesheet-animations_002.json`.
 * **Funcionalidades Principais:**
   * **Loop Contínuo Automático (*Showcase*):** Por defeito, o Míu percorre todas as animações sequencialmente, atualizando o nome da animação, o seletor e os timings em tempo real.
@@ -226,6 +233,15 @@ O motor `site/js/24-miu.js` evita manipulações pesadas do DOM:
 | `ChatGPT Image 19_08_2026, 22_36_20.png` | **PNG** | $1024 \times 1024\text{ px}$ | $2.4\text{ MB}$ | **Folha 2:** 64 poses expressivas completas do ChatGPT. |
 | `miu-fluid-animations-magenta.jpg` | JPG | $1024 \times 1024\text{ px}$ | $440\text{ KB}$ | Ficheiro bruto gerado com fundo magenta. |
 | `miu-16x16-magenta-raw.jpg` | JPG | $1024 \times 1024\text{ px}$ | $520\text{ KB}$ | Ficheiro bruto da grelha de teste 16×16. |
+| `quantity-rig-v4/miu-v4-states-idle-8x8.png` | **PNG RGBA** | $1254 \times 1254\text{ px}$ | $\approx 1.9\text{ MB}$ | **Folha 3:** estados e micro-idles do Quantity Rig V4. |
+| `quantity-rig-v4/miu-v4-reactions-rejoice-8x8.png` | **PNG RGBA** | $1254 \times 1254\text{ px}$ | $\approx 1.9\text{ MB}$ | **Folha 4:** reacções de quantidade e `rejoice` do V4. |
+| `quantity-rig-v4/miu-v5-idle-attention-8x8.png` | **PNG RGBA** | $1254 \times 1254\text{ px}$ | $\approx 2.0\text{ MB}$ | **Folha 5:** idle vivo, atenção e recovery do Animation Director V5. |
+| `quantity-rig-v4/miu-v5-gesture-reactions-8x8.png` | **PNG RGBA** | $1254 \times 1254\text{ px}$ | $\approx 2.3\text{ MB}$ | **Folha 6:** reacções por gesto, olhos húmidos e `rejoice` do V5. |
+
+Os seis keyframes usados como âncoras das duas folhas permanecem também nessa
+pasta em PNG. Assets novos do Míu nunca são convertidos para WebP: o canal alpha
+e a separação das ilhas de píxeis pertencem ao contrato do algoritmo de
+auto-centragem. Os WebP históricos de produção não são reconvertidos.
 
 ### 10.4. Biblioteca Facial Expandida (13 Expressões Emocionais)
 > Pasta: `site/content/brand/miu/faces/` (26 ficheiros WebP)

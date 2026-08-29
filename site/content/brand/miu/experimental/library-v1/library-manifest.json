@@ -1,0 +1,321 @@
+{
+  "version": 1,
+  "kind": "miu-generated-sprite-library",
+  "name": "Míu · Biblioteca experimental 8×8 · V1",
+  "canonicalReference": "../../miu-sprite.webp",
+  "productionIntegrated": false,
+  "contract": {
+    "columns": 8,
+    "rows": 8,
+    "frameCount": 64,
+    "format": "png-rgba",
+    "background": "transparent-alpha",
+    "detector": "MiuSpriteGrid.detectConnectedGrid",
+    "anchorStrategy": "median-anatomical-centres",
+    "neverConvertToWebp": true
+  },
+  "totals": {
+    "sheets": 41,
+    "frames": 2624,
+    "emotions": 7,
+    "stories": 23,
+    "props": 1,
+    "transitions": 2,
+    "products": 2,
+    "fx": 6
+  },
+  "sheets": {
+    "ekman-happiness": {
+      "file": "emotions/miu-ekman-happiness-8x8.png",
+      "metadata": "emotions/miu-ekman-happiness-8x8.json",
+      "name": "Alegria",
+      "category": "emotion",
+      "status": "generated-validated"
+    },
+    "ekman-sadness": {
+      "file": "emotions/miu-ekman-sadness-8x8.png",
+      "metadata": "emotions/miu-ekman-sadness-8x8.json",
+      "name": "Tristeza suave",
+      "category": "emotion",
+      "status": "generated-validated"
+    },
+    "ekman-anger": {
+      "file": "emotions/miu-ekman-anger-8x8.png",
+      "metadata": "emotions/miu-ekman-anger-8x8.json",
+      "name": "Zanga brincalhona",
+      "category": "emotion",
+      "status": "generated-validated"
+    },
+    "ekman-fear": {
+      "file": "emotions/miu-ekman-fear-8x8.png",
+      "metadata": "emotions/miu-ekman-fear-8x8.json",
+      "name": "Medo seguro",
+      "category": "emotion",
+      "status": "generated-validated"
+    },
+    "ekman-surprise": {
+      "file": "emotions/miu-ekman-surprise-8x8.png",
+      "metadata": "emotions/miu-ekman-surprise-8x8.json",
+      "name": "Surpresa",
+      "category": "emotion",
+      "status": "generated-validated"
+    },
+    "ekman-disgust": {
+      "file": "emotions/miu-ekman-disgust-8x8.png",
+      "metadata": "emotions/miu-ekman-disgust-8x8.json",
+      "name": "Desagrado cómico",
+      "category": "emotion",
+      "status": "generated-validated"
+    },
+    "ekman-contempt": {
+      "file": "emotions/miu-ekman-contempt-8x8.png",
+      "metadata": "emotions/miu-ekman-contempt-8x8.json",
+      "name": "Desdém suave",
+      "category": "emotion",
+      "status": "generated-validated"
+    },
+    "butterfly-and-miu": {
+      "file": "stories/miu-story-butterfly-sneeze-8x8.png",
+      "metadata": "stories/miu-story-butterfly-sneeze-8x8.json",
+      "name": "Borboleta e Míu",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "yarn-ball": {
+      "file": "stories/miu-story-yarn-ball-8x8.png",
+      "metadata": "stories/miu-story-yarn-ball-8x8.json",
+      "name": "Novelo",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "scratch-behind-ear": {
+      "file": "stories/miu-story-scratch-behind-ear-8x8.png",
+      "metadata": "stories/miu-story-scratch-behind-ear-8x8.json",
+      "name": "Coçar atrás da orelha",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "paper-scissors": {
+      "file": "stories/miu-story-paper-scissors-8x8.png",
+      "metadata": "stories/miu-story-paper-scissors-8x8.json",
+      "name": "Tesouras de papel",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "cricut-helper": {
+      "file": "stories/miu-story-cricut-helper-8x8.png",
+      "metadata": "stories/miu-story-cricut-helper-8x8.json",
+      "name": "Ajudante da Cricut",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "origami-flowers": {
+      "file": "stories/miu-story-origami-flowers-8x8.png",
+      "metadata": "stories/miu-story-origami-flowers-8x8.json",
+      "name": "Flores de origami",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "push-and-break": {
+      "file": "stories/miu-story-push-break-paper-build-8x8.png",
+      "metadata": "stories/miu-story-push-break-paper-build-8x8.json",
+      "name": "Empurrar e desmontar",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "zoomies": {
+      "file": "stories/miu-story-zoomies-8x8.png",
+      "metadata": "stories/miu-story-zoomies-8x8.json",
+      "name": "Zoomies",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "yawn": {
+      "file": "stories/miu-story-yawn-8x8.png",
+      "metadata": "stories/miu-story-yawn-8x8.json",
+      "name": "Bocejo",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "sneeze": {
+      "file": "stories/miu-story-sneeze-8x8.png",
+      "metadata": "stories/miu-story-sneeze-8x8.json",
+      "name": "Espirro",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "ribbon-tangle": {
+      "file": "stories/miu-story-ribbon-tangle-8x8.png",
+      "metadata": "stories/miu-story-ribbon-tangle-8x8.json",
+      "name": "Embrulhado em fita",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "paper-box-hide": {
+      "file": "stories/miu-story-paper-box-hide-8x8.png",
+      "metadata": "stories/miu-story-paper-box-hide-8x8.json",
+      "name": "Esconder-se numa caixa",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "tape-roll-chase": {
+      "file": "stories/miu-story-tape-roll-chase-8x8.png",
+      "metadata": "stories/miu-story-tape-roll-chase-8x8.json",
+      "name": "Perseguir fita-cola",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "sticker-on-paw": {
+      "file": "stories/miu-story-sticker-on-paw-8x8.png",
+      "metadata": "stories/miu-story-sticker-on-paw-8x8.json",
+      "name": "Autocolante na patinha",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "paper-plane": {
+      "file": "stories/miu-story-paper-plane-8x8.png",
+      "metadata": "stories/miu-story-paper-plane-8x8.json",
+      "name": "Avião de papel",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "craft-stamp": {
+      "file": "stories/miu-story-craft-stamp-8x8.png",
+      "metadata": "stories/miu-story-craft-stamp-8x8.json",
+      "name": "Carimbo artesanal",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "paper-boat": {
+      "file": "stories/miu-story-paper-boat-8x8.png",
+      "metadata": "stories/miu-story-paper-boat-8x8.json",
+      "name": "Barco de papel",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "gift-wrap": {
+      "file": "stories/miu-story-gift-wrap-8x8.png",
+      "metadata": "stories/miu-story-gift-wrap-8x8.json",
+      "name": "Embrulhar uma caixa",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "hole-punch-confetti": {
+      "file": "stories/miu-story-hole-punch-confetti-8x8.png",
+      "metadata": "stories/miu-story-hole-punch-confetti-8x8.json",
+      "name": "Furador e confettis",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "paper-pinwheel": {
+      "file": "stories/miu-story-paper-pinwheel-8x8.png",
+      "metadata": "stories/miu-story-paper-pinwheel-8x8.json",
+      "name": "Catavento de papel",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "paper-flower-crown": {
+      "file": "stories/miu-story-paper-flower-crown-8x8.png",
+      "metadata": "stories/miu-story-paper-flower-crown-8x8.json",
+      "name": "Coroa de flores de papel",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "wool-pompom": {
+      "file": "stories/miu-story-wool-pompom-8x8.png",
+      "metadata": "stories/miu-story-wool-pompom-8x8.json",
+      "name": "Pompom de lã",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "paper-envelope": {
+      "file": "stories/miu-story-paper-envelope-8x8.png",
+      "metadata": "stories/miu-story-paper-envelope-8x8.json",
+      "name": "Envelope de papel",
+      "category": "story",
+      "status": "generated-validated"
+    },
+    "butterfly-prop": {
+      "file": "props/butterfly-flight-8x8.png",
+      "metadata": "props/butterfly-flight-8x8.json",
+      "name": "Borboleta independente",
+      "category": "prop",
+      "status": "generated-validated"
+    },
+    "transition-idle-to-attention": {
+      "file": "transitions/miu-transition-idle-to-attention-8x8.png",
+      "metadata": "transitions/miu-transition-idle-to-attention-8x8.json",
+      "name": "Transição · Idle para atenção",
+      "category": "transition",
+      "status": "generated-validated"
+    },
+    "transition-soft-recovery": {
+      "file": "transitions/miu-transition-soft-recovery-8x8.png",
+      "metadata": "transitions/miu-transition-soft-recovery-8x8.json",
+      "name": "Transição · Recovery suave",
+      "category": "transition",
+      "status": "generated-validated"
+    },
+    "product-badges-grimace": {
+      "file": "products/miu-product-badges-grimace-8x8.png",
+      "metadata": "products/miu-product-badges-grimace-8x8.json",
+      "name": "Crachás · careta do Míu",
+      "category": "product",
+      "status": "generated-validated"
+    },
+    "product-stickers-grimaces": {
+      "file": "products/miu-product-stickers-grimaces-8x8.png",
+      "metadata": "products/miu-product-stickers-grimaces-8x8.json",
+      "name": "Autocolantes · caretas do Míu",
+      "category": "product",
+      "status": "generated-validated"
+    },
+    "anime-attention-fx": {
+      "file": "fx/anime-attention-fx-8x8.png",
+      "metadata": "fx/anime-attention-fx-8x8.json",
+      "name": "FX · Atenção e surpresa",
+      "category": "fx",
+      "status": "generated-validated"
+    },
+    "anime-sparkles-fx": {
+      "file": "fx/anime-sparkles-fx-8x8.png",
+      "metadata": "fx/anime-sparkles-fx-8x8.json",
+      "name": "FX · Sparkles de alegria",
+      "category": "fx",
+      "status": "generated-validated"
+    },
+    "anime-watery-eyes-fx": {
+      "file": "fx/anime-watery-eyes-fx-8x8.png",
+      "metadata": "fx/anime-watery-eyes-fx-8x8.json",
+      "name": "FX · Olhos húmidos anime",
+      "category": "fx",
+      "status": "generated-validated"
+    },
+    "anime-sweat-drop-fx": {
+      "file": "fx/anime-sweat-drop-fx-8x8.png",
+      "metadata": "fx/anime-sweat-drop-fx-8x8.json",
+      "name": "FX · Gota anime",
+      "category": "fx",
+      "status": "generated-validated"
+    },
+    "anime-blush-fx": {
+      "file": "fx/anime-blush-fx-8x8.png",
+      "metadata": "fx/anime-blush-fx-8x8.json",
+      "name": "FX · Rubor anime",
+      "category": "fx",
+      "status": "generated-validated"
+    },
+    "anime-impact-lines-fx": {
+      "file": "fx/anime-impact-lines-fx-8x8.png",
+      "metadata": "fx/anime-impact-lines-fx-8x8.json",
+      "name": "FX · Impacto e velocidade",
+      "category": "fx",
+      "status": "generated-validated"
+    }
+  },
+  "validation": {
+    "date": "2026-08-28",
+    "method": "alpha-channel plus 8x8 non-empty logical-cell scan",
+    "result": "41 sheets, 2624 non-empty cells, genuine alpha, zero WebP"
+  }
+}

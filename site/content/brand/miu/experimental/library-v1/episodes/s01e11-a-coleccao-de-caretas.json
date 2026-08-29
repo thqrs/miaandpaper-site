@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "kind": "miu-mini-episode",
+  "id": "s01e11-a-coleccao-de-caretas",
+  "season": 1,
+  "episode": 11,
+  "title": "A colecção de caretas",
+  "logline": "Um autocolante cola-se à patinha do Míu e transforma-se numa pequena apresentação de caretas.",
+  "trigger": "product-stickers",
+  "productionIntegrated": false,
+  "durationMs": 4900,
+  "director": {
+    "priority": "one-shot-story",
+    "interruptPolicy": "finish-current-beat-then-yield",
+    "suppressQuantityReactions": true,
+    "returnTo": "live-idle-for-current-context"
+  },
+  "sheets": [
+    "transition-idle-to-attention",
+    "sticker-on-paw",
+    "product-stickers-grimaces",
+    "anime-attention-fx",
+    "anime-sparkles-fx",
+    "transition-soft-recovery"
+  ],
+  "timeline": [
+    {
+      "order": 0,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-idle-to-attention",
+      "beat": "paw-pause-and-focus",
+      "durationMs": 320,
+      "priority": "attention",
+      "interruptible": false
+    },
+    {
+      "order": 1,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "sticker-on-paw",
+      "beat": "touch-sticker",
+      "durationMs": 340,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 2,
+      "type": "overlay",
+      "layer": "prop",
+      "sheet": "product-stickers-grimaces",
+      "beat": "playful-bleps",
+      "durationMs": 360,
+      "blend": "source-over",
+      "anchor": "paw"
+    },
+    {
+      "order": 3,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "sticker-on-paw",
+      "beat": "sticker-clings",
+      "durationMs": 380,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 4,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "sticker-on-paw",
+      "beat": "gentle-shake",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 5,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-attention-fx",
+      "beat": "question-pop",
+      "durationMs": 240,
+      "blend": "source-over",
+      "anchor": "head"
+    },
+    {
+      "order": 6,
+      "type": "overlay",
+      "layer": "prop",
+      "sheet": "product-stickers-grimaces",
+      "beat": "mischievous-squints",
+      "durationMs": 360,
+      "blend": "source-over",
+      "anchor": "paw"
+    },
+    {
+      "order": 7,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "sticker-on-paw",
+      "beat": "try-other-paw",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 8,
+      "type": "overlay",
+      "layer": "prop",
+      "sheet": "product-stickers-grimaces",
+      "beat": "limited-edition-mix",
+      "durationMs": 520,
+      "blend": "source-over",
+      "anchor": "head-right"
+    },
+    {
+      "order": 9,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "sticker-on-paw",
+      "beat": "sticker-floats-off",
+      "durationMs": 420,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 10,
+      "type": "overlay",
+      "layer": "fx",
+      "sheet": "anime-sparkles-fx",
+      "beat": "three-star-arc",
+      "durationMs": 300,
+      "blend": "source-over",
+      "anchor": "head"
+    },
+    {
+      "order": 11,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "sticker-on-paw",
+      "beat": "paw-grooming",
+      "durationMs": 440,
+      "priority": "story",
+      "interruptible": false
+    },
+    {
+      "order": 12,
+      "type": "clip",
+      "layer": "character",
+      "sheet": "transition-soft-recovery",
+      "beat": "delighted-to-idle",
+      "durationMs": 380,
+      "priority": "recovery",
+      "interruptible": false
+    }
+  ],
+  "reducedMotion": {
+    "strategy": "key-pose-sequence",
+    "framePolicy": "first-middle-last-per-beat",
+    "keepEmotionAndProps": true,
+    "remove": [
+      "bounce",
+      "overshoot",
+      "rapid-looping-fx"
+    ]
+  },
+  "optionalEnhancements": [],
+  "missingSheets": [],
+  "status": "complete"
+}

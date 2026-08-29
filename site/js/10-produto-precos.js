@@ -114,9 +114,26 @@
   // OPTION_DRAWERS_V1: opções por unidade definidas inteiramente no JSON do
   // produto. Cada gaveta é uma escolha única e o servidor repete a mesma
   // validação/cálculo, por isso os preços mostrados não dependem do browser.
+  function optionDrawersForStep(product, step) {
+    var sourceId = String(step && step.drawersSourceStepId || "");
+    var sourceStep = sourceId ? findStep(product, sourceId) : step;
+    var overrides = step && step.drawerOverrides && typeof step.drawerOverrides === "object"
+      ? step.drawerOverrides
+      : {};
+
+    return sourceStep && Array.isArray(sourceStep.drawers) ? sourceStep.drawers.map(function (drawer) {
+      var key = String(drawer && (drawer.field || drawer.id) || "");
+      var override = overrides[key] && typeof overrides[key] === "object" ? overrides[key] : {};
+      return Object.assign({}, drawer, override);
+    }) : [];
+  }
+
   function optionDrawerSteps(product) {
     return product && Array.isArray(product.steps) ? product.steps.filter(function (step) {
-      return step && step.template === "option-drawers" && Array.isArray(step.drawers);
+      return step
+        && step.template === "option-drawers"
+        && stepConditionMatches(step)
+        && optionDrawersForStep(product, step).length > 0;
     }) : [];
   }
 
@@ -124,7 +141,7 @@
     var records = [];
 
     optionDrawerSteps(product).forEach(function (step) {
-      step.drawers.forEach(function (drawer) {
+      optionDrawersForStep(product, step).forEach(function (drawer) {
         if (drawer && drawer.field && Array.isArray(drawer.items)) {
           records.push({ step: step, drawer: drawer });
         }
@@ -1894,4 +1911,3 @@
 
     return Math.max(min, Math.min(max, value));
   }
-

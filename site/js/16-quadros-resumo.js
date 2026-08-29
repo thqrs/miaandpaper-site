@@ -1,7 +1,7 @@
 // js/16-quadros-resumo.js — parte 16/23 do antigo app.js (codigo intacto, so dividido).
 // Os modulos js/*.js partilham TODOS o mesmo escopo global (scripts classicos,
 // sem IIFE por ficheiro) e carregam pela ordem dos <script> nos HTML: 01 → 23.
-// Conteudo: resumo 'o que vais encomendar' de quadros/molduras: QUADROS_SUMMARY_LABELS, placeholders e tiles, texto de cores escolhidas, refreshQuadrosBuildSummary.
+// Conteudo: resumo 'o que vais encomendar' de quadros/molduras e produtos opt-in: QUADROS_SUMMARY_LABELS, placeholders e tiles, texto de cores escolhidas, refreshQuadrosBuildSummary.
   // MOLDURAS_SUMMARY_V1
   // O "O que vais encomendar:" das molduras passa a usar o mesmo bloco visual
   // do "Designs que vais encomendar:" dos crachas (.crachas-step2-summary) e
@@ -330,11 +330,90 @@
     ) + quadrosSummaryAttachmentTiles(step);
   }
 
+  function buildSummaryItem(step, value) {
+    var selected = String(value || "");
+
+    return selected && step && Array.isArray(step.items)
+      ? step.items.filter(function (item) {
+        return item && String(item.value || "") === selected;
+      })[0] || null
+      : null;
+  }
+
+  function renderPortaFolhetosBuildSummary(product, step) {
+    var config = product && product.buildSummary;
+    var sizeStep;
+    var coverStep;
+    var variationStep;
+    var size;
+    var sizeItem;
+    var groups;
+    var tiles = "";
+
+    if (!config || config.mode !== "porta-folhetos" || (step && step.template === "confirm")) {
+      return "";
+    }
+
+    sizeStep = findStep(product, config.sizeStepId || "size");
+    coverStep = findStep(product, config.coverStepId || "covers");
+    variationStep = findStep(product, config.variationStepId || "designs");
+    size = String(state.selections[sizeStep && sizeStep.field || "size"] || "");
+    sizeItem = buildSummaryItem(sizeStep, size);
+    groups = config.sizeGroups && Array.isArray(config.sizeGroups[size]) ? config.sizeGroups[size] : [];
+
+    if (!sizeItem) {
+      return "";
+    }
+
+    tiles += quadrosSummaryImageTile(sizeItem, sizeStep, "Tamanho", displayItemTitle(sizeItem));
+
+    groups.forEach(function (group) {
+      var groupConfig = config.groups && config.groups[group] || {};
+      var coverItem = buildSummaryItem(coverStep, state.selections[groupConfig.coverField]);
+      var variationItem = buildSummaryItem(variationStep, state.selections[groupConfig.variationField]);
+      var previewItem;
+
+      if (coverItem) {
+        previewItem = variationItem && variationItem.image
+          ? Object.assign({}, coverItem, { image: variationItem.image })
+          : coverItem;
+        tiles += quadrosSummaryImageTile(previewItem, coverStep, "Design " + group, displayItemTitle(coverItem));
+      }
+      if (variationItem) {
+        tiles += quadrosSummaryTextTile("Argolas + fita " + group, variationItem.title || variationItem.value || "");
+      }
+    });
+
+    selectedOptionDrawerRecords(product).forEach(function (record) {
+      var field = record && record.drawer && record.drawer.field || "";
+      var label = config.drawerLabels && config.drawerLabels[field]
+        || record.drawer && (record.drawer.title || record.drawer.label)
+        || "Opção";
+
+      if (record && record.item) {
+        tiles += record.item.image
+          ? quadrosSummaryImageTile(record.item, record.step, label, record.item.title || record.item.value || "")
+          : quadrosSummaryTextTile(label, record.item.title || record.item.value || "");
+      }
+    });
+
+    return [
+      '<section class="crachas-step2-summary quadros-summary porta-folhetos-build-summary" aria-label="O que vais encomendar">',
+      '<h3 class="crachas-step2-summary-title">' + escapeHtml(config.title || "O que vais encomendar:") + '</h3>',
+      '<div class="crachas-step2-summary-grid quadros-summary-grid">' + tiles + '</div>',
+      '</section>'
+    ].join("");
+  }
+
   function renderQuadrosBuildSummary(product, step) {
     var design = selectedDesignItems(product)[0];
     var frameStep;
     var info;
     var tiles = "";
+
+    if (product && product.buildSummary && product.buildSummary.mode === "porta-folhetos") {
+      return renderPortaFolhetosBuildSummary(product, step);
+    }
 
     if (!isQuadrosProduct(product) || !design || (step && step.template === "confirm")) {
       return "";
@@ -567,4 +646,3 @@
 
     return '<input type="text" value="' + escapeHtml(value) + '" autocomplete="' + escapeHtml(field.autocomplete || "off") + '"' + attributes + '>';
   }
-
