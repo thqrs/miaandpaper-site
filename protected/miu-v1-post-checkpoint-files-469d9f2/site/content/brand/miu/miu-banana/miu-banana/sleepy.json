@@ -1,0 +1,43 @@
+{
+  "id": "sleepy",
+  "name": "Míu — Sonolento",
+  "file": "miu-banana/sleepy.webp",
+  "masterSource": "sleepy_cleaned_nanobanana_1787050038214.jpg",
+  "columns": 4,
+  "rows": 1,
+  "frameWidth": 344,
+  "frameHeight": 768,
+  "sheetWidth": 1376,
+  "sheetHeight": 768,
+  "totalFrames": 4,
+  "sequence": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "frameDurationsMs": [
+    400,
+    450,
+    500,
+    600
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "durationMs": 400
+    },
+    {
+      "index": 1,
+      "durationMs": 450
+    },
+    {
+      "index": 2,
+      "durationMs": 500
+    },
+    {
+      "index": 3,
+      "durationMs": 600
+    }
+  ]
+}

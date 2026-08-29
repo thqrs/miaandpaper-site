@@ -1,0 +1,43 @@
+{
+  "id": "cheeky",
+  "name": "Míu — Maroto",
+  "file": "miu-banana/cheeky.webp",
+  "masterSource": "cheeky_cleaned_nanobanana_1787050060873.jpg",
+  "columns": 4,
+  "rows": 1,
+  "frameWidth": 344,
+  "frameHeight": 768,
+  "sheetWidth": 1376,
+  "sheetHeight": 768,
+  "totalFrames": 4,
+  "sequence": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "frameDurationsMs": [
+    250,
+    300,
+    300,
+    350
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "durationMs": 250
+    },
+    {
+      "index": 1,
+      "durationMs": 300
+    },
+    {
+      "index": 2,
+      "durationMs": 300
+    },
+    {
+      "index": 3,
+      "durationMs": 350
+    }
+  ]
+}

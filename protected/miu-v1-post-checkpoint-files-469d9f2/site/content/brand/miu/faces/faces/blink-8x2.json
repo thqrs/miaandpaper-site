@@ -1,0 +1,113 @@
+{
+  "id": "blink-8x2",
+  "baseExpressionId": "blink",
+  "name": "Piscar",
+  "file": "faces/blink-8x2.webp",
+  "columns": 8,
+  "rows": 2,
+  "frameWidth": 192,
+  "frameHeight": 192,
+  "totalFrames": 16,
+  "sequence": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "frameDurationsMs": [
+    120,
+    100,
+    80,
+    70,
+    90,
+    100,
+    110,
+    100,
+    90,
+    80,
+    80,
+    90,
+    80,
+    90,
+    120,
+    150
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "durationMs": 120
+    },
+    {
+      "index": 1,
+      "durationMs": 100
+    },
+    {
+      "index": 2,
+      "durationMs": 80
+    },
+    {
+      "index": 3,
+      "durationMs": 70
+    },
+    {
+      "index": 4,
+      "durationMs": 90
+    },
+    {
+      "index": 5,
+      "durationMs": 100
+    },
+    {
+      "index": 6,
+      "durationMs": 110
+    },
+    {
+      "index": 7,
+      "durationMs": 100
+    },
+    {
+      "index": 8,
+      "durationMs": 90
+    },
+    {
+      "index": 9,
+      "durationMs": 80
+    },
+    {
+      "index": 10,
+      "durationMs": 80
+    },
+    {
+      "index": 11,
+      "durationMs": 90
+    },
+    {
+      "index": 12,
+      "durationMs": 80
+    },
+    {
+      "index": 13,
+      "durationMs": 90
+    },
+    {
+      "index": 14,
+      "durationMs": 120
+    },
+    {
+      "index": 15,
+      "durationMs": 150
+    }
+  ]
+}

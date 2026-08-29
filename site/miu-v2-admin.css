@@ -1,0 +1,38 @@
+/* Painel exclusivo de miu-v2.php; usa apenas os tokens globais da marca. */
+.miu-v2-admin__shell { max-width: 1180px; }
+.miu-v2-admin__eyebrow { margin: 0 0 .35rem; color: var(--moss); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.miu-v2-admin__notice { margin: 0 0 1rem; padding: .9rem 1rem; border: 1px solid var(--sage); border-radius: 14px; background: var(--paper); }
+.miu-v2-admin__notice.is-error { border-color: var(--rose); }
+.miu-v2-admin__status { display: inline-flex; min-width: 3.4rem; justify-content: center; padding: .45rem .75rem; border: 1px solid var(--sage); border-radius: 999px; font-weight: 900; }
+.miu-v2-admin__status.is-v2 { background: var(--gold-soft); color: var(--moss); }
+.miu-v2-admin__status.is-v1 { background: var(--paper); color: var(--muted); }
+.miu-v2-admin__engine-actions,
+.miu-v2-admin__demo,
+.miu-v2-admin__checks { display: flex; flex-wrap: wrap; gap: .7rem; align-items: end; }
+.miu-v2-admin__primary { background: var(--moss); color: var(--paper); }
+.miu-v2-admin__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .85rem; }
+.miu-v2-admin__grid--animations { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.miu-v2-admin__form fieldset { margin: 1rem 0; padding: 1rem; border: 1px solid var(--sage); border-radius: 16px; }
+.miu-v2-admin__form legend { padding: 0 .45rem; color: var(--moss); font-weight: 850; }
+.miu-v2-admin label { display: grid; gap: .35rem; font-weight: 700; }
+.miu-v2-admin input,
+.miu-v2-admin select,
+.miu-v2-admin textarea { width: 100%; padding: .7rem .75rem; border: 1px solid var(--sage); border-radius: 10px; background: var(--paper); color: var(--ink); font: inherit; }
+.miu-v2-admin button { min-height: 42px; padding: .65rem .95rem; border: 1px solid var(--moss); border-radius: 999px; background: var(--paper); color: var(--moss); font: inherit; font-weight: 850; cursor: pointer; }
+.miu-v2-admin__check,
+.miu-v2-admin__checks label { display: flex; gap: .5rem; align-items: center; }
+.miu-v2-admin__check input,
+.miu-v2-admin__checks input { width: auto; }
+.miu-v2-admin__idle-weights { display: grid; gap: .55rem; margin-top: 1rem; }
+.miu-v2-admin__idle-weights label { grid-template-columns: minmax(180px, 1fr) 110px; align-items: center; }
+.miu-v2-admin__hint { color: var(--muted); }
+.miu-v2-admin__json,
+.miu-v2-admin__debug { tab-size: 2; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .82rem; line-height: 1.5; }
+.miu-v2-admin__debug { min-height: 9rem; max-height: 20rem; overflow: auto; margin: 1rem 0 0; padding: .9rem; border-radius: 12px; background: var(--ink); color: var(--paper); }
+.miu-v2-admin__demo label { width: 130px; }
+.miu-v2-admin code { overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .miu-v2-admin__demo { align-items: stretch; }
+  .miu-v2-admin__demo label,
+  .miu-v2-admin__demo button { width: 100%; }
+}

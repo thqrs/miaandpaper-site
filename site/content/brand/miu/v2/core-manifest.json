@@ -1,0 +1,2304 @@
+{
+    "schemaVersion":  2,
+    "kind":  "miu-production-director-core",
+    "generatedAt":  "2026-08-29T12:31:53.0139200Z",
+    "sourceCheckpoint":  "469d9f2",
+    "canonicalReference":  "../miu-sprite.webp",
+    "contract":  {
+                     "format":  "png-rgba",
+                     "columns":  8,
+                     "rows":  8,
+                     "frameCountPerSheet":  64,
+                     "neverConvertToWebp":  true,
+                     "anchorStrategy":  "precomputed-median-anatomical-centres",
+                     "runtimeFallbackDetector":  "MiuSpriteGrid.detectConnectedGrid"
+                 },
+    "sheets":  {
+                   "5":  {
+                             "file":  "core/miu-v5-idle-attention-8x8.png",
+                             "name":  "V2 Â· Idle vivo e atenÃ§Ã£o",
+                             "columns":  8,
+                             "rows":  8,
+                             "preload":  true,
+                             "grid":  {
+                                          "width":  1254,
+                                          "height":  1254,
+                                          "columns":  8,
+                                          "rows":  8,
+                                          "anchorStrategy":  "precomputed-median-anatomical-centres",
+                                          "bodySpanWidth":  156,
+                                          "bodySpanHeight":  146,
+                                          "rowCenters":  [
+                                                             98.5,
+                                                             233.75,
+                                                             393,
+                                                             548,
+                                                             700.25,
+                                                             862.25,
+                                                             1018,
+                                                             1159.5
+                                                         ],
+                                          "columnCenters":  [
+                                                                94,
+                                                                234.5,
+                                                                391,
+                                                                548.5,
+                                                                705.5,
+                                                                861.75,
+                                                                1018,
+                                                                1159
+                                                            ],
+                                          "cells":  [
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  94,
+                                                                "anchorY":  98.5
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  98.5
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78,
+                                                                "anchorY":  98.5
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  98.5
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  98.5
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.75,
+                                                                "anchorY":  98.5
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78,
+                                                                "anchorY":  98.5
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  62,
+                                                                "anchorY":  98.5
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  94,
+                                                                "anchorY":  77.75
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  77.75
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  77.75
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  77.75
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  77.75
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.75,
+                                                                "anchorY":  77.75
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  77.75
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  62,
+                                                                "anchorY":  77.75
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  94,
+                                                                "anchorY":  80
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  80
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  80
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  80
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  80
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.75,
+                                                                "anchorY":  80
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  80
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  62,
+                                                                "anchorY":  80
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  94,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.75,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  62,
+                                                                "anchorY":  78
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  94,
+                                                                "anchorY":  73.25
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  73.25
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78,
+                                                                "anchorY":  73.25
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  73.25
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  73.25
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.75,
+                                                                "anchorY":  73.25
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78,
+                                                                "anchorY":  73.25
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  62,
+                                                                "anchorY":  73.25
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  94,
+                                                                "anchorY":  79.25
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  79.25
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  79.25
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  79.25
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  79.25
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.75,
+                                                                "anchorY":  79.25
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  79.25
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  62,
+                                                                "anchorY":  79.25
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  94,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.75,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  62,
+                                                                "anchorY":  78
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  94,
+                                                                "anchorY":  62.5
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  62.5
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  62.5
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  62.5
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  62.5
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.75,
+                                                                "anchorY":  62.5
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  62.5
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  62,
+                                                                "anchorY":  62.5
+                                                            }
+                                                        ]
+                                                    ]
+                                      }
+                         },
+                   "6":  {
+                             "file":  "core/miu-v5-gesture-reactions-8x8.png",
+                             "name":  "V2 Â· ReacÃ§Ãµes por gesto e rejoice",
+                             "columns":  8,
+                             "rows":  8,
+                             "preload":  false,
+                             "grid":  {
+                                          "width":  1254,
+                                          "height":  1254,
+                                          "columns":  8,
+                                          "rows":  8,
+                                          "anchorStrategy":  "precomputed-median-anatomical-centres",
+                                          "bodySpanWidth":  156.5,
+                                          "bodySpanHeight":  157,
+                                          "rowCenters":  [
+                                                             91.75,
+                                                             234.5,
+                                                             391,
+                                                             548.5,
+                                                             705.5,
+                                                             861.5,
+                                                             1018,
+                                                             1175.5
+                                                         ],
+                                          "columnCenters":  [
+                                                                90,
+                                                                234.5,
+                                                                391,
+                                                                548.5,
+                                                                705.5,
+                                                                861.5,
+                                                                1018,
+                                                                1167
+                                                            ],
+                                          "cells":  [
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  90,
+                                                                "anchorY":  91.75
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  91.75
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78,
+                                                                "anchorY":  91.75
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  91.75
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  91.75
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  91.75
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78,
+                                                                "anchorY":  91.75
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  0,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  70,
+                                                                "anchorY":  91.75
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  90,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  156,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  70,
+                                                                "anchorY":  78.5
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  90,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  313,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  70,
+                                                                "anchorY":  78
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  90,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  470,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  70,
+                                                                "anchorY":  78.5
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  90,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  627,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  156,
+                                                                "anchorX":  70,
+                                                                "anchorY":  78.5
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  90,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  783,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  70,
+                                                                "anchorY":  78.5
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  90,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  940,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  70,
+                                                                "anchorY":  78
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "sourceX":  0,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  90,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  156,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  313,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  470,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  627,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  156,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  783,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78.5,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  940,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  78,
+                                                                "anchorY":  78.5
+                                                            },
+                                                            {
+                                                                "sourceX":  1097,
+                                                                "sourceY":  1097,
+                                                                "sourceWidth":  157,
+                                                                "sourceHeight":  157,
+                                                                "anchorX":  70,
+                                                                "anchorY":  78.5
+                                                            }
+                                                        ]
+                                                    ]
+                                      }
+                         }
+               },
+    "animations":  [
+                       {
+                           "id":  "v5_idle_blink",
+                           "name":  "V5 Â· Idle vivo Â· RespiraÃ§Ã£o e piscar",
+                           "group":  "Animation Director V5 Â· Idle",
+                           "loop":  false,
+                           "frames":  [
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           0,
+                                                           0
+                                                       ],
+                                              "durationMs":  900
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           1,
+                                                           0
+                                                       ],
+                                              "durationMs":  90
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           2,
+                                                           0
+                                                       ],
+                                              "durationMs":  70
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           3,
+                                                           0
+                                                       ],
+                                              "durationMs":  90
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           4,
+                                                           0
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           5,
+                                                           0
+                                                       ],
+                                              "durationMs":  90
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           6,
+                                                           0
+                                                       ],
+                                              "durationMs":  70
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           7,
+                                                           0
+                                                       ],
+                                              "durationMs":  650
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_idle_gaze",
+                           "name":  "V5 Â· Idle vivo Â· Olhar esquerda/direita",
+                           "group":  "Animation Director V5 Â· Idle",
+                           "loop":  false,
+                           "frames":  [
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           0,
+                                                           1
+                                                       ],
+                                              "durationMs":  300
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           1,
+                                                           1
+                                                       ],
+                                              "durationMs":  180
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           2,
+                                                           1
+                                                       ],
+                                              "durationMs":  220
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           3,
+                                                           1
+                                                       ],
+                                              "durationMs":  280
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           4,
+                                                           1
+                                                       ],
+                                              "durationMs":  220
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           5,
+                                                           1
+                                                       ],
+                                              "durationMs":  180
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           6,
+                                                           1
+                                                       ],
+                                              "durationMs":  200
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           7,
+                                                           1
+                                                       ],
+                                              "durationMs":  500
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_idle_ear_twitch",
+                           "name":  "V5 Â· Idle vivo Â· Orelha",
+                           "group":  "Animation Director V5 Â· Idle",
+                           "loop":  false,
+                           "frames":  [
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           0,
+                                                           2
+                                                       ],
+                                              "durationMs":  350
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           1,
+                                                           2
+                                                       ],
+                                              "durationMs":  100
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           2,
+                                                           2
+                                                       ],
+                                              "durationMs":  100
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           3,
+                                                           2
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           4,
+                                                           2
+                                                       ],
+                                              "durationMs":  160
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           5,
+                                                           2
+                                                       ],
+                                              "durationMs":  130
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           6,
+                                                           2
+                                                       ],
+                                              "durationMs":  110
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           7,
+                                                           2
+                                                       ],
+                                              "durationMs":  500
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_idle_micro_expression",
+                           "name":  "V5 Â· Idle vivo Â· Micro-careta",
+                           "group":  "Animation Director V5 Â· Idle",
+                           "loop":  false,
+                           "frames":  [
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           0,
+                                                           3
+                                                       ],
+                                              "durationMs":  350
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           1,
+                                                           3
+                                                       ],
+                                              "durationMs":  100
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           2,
+                                                           3
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           3,
+                                                           3
+                                                       ],
+                                              "durationMs":  160
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           4,
+                                                           3
+                                                       ],
+                                              "durationMs":  220
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           5,
+                                                           3
+                                                       ],
+                                              "durationMs":  140
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           6,
+                                                           3
+                                                       ],
+                                              "durationMs":  100
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           7,
+                                                           3
+                                                       ],
+                                              "durationMs":  600
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_attention_start",
+                           "name":  "V5 Â· AtenÃ§Ã£o Â· Oi?",
+                           "group":  "Animation Director V5 Â· AtenÃ§Ã£o",
+                           "loop":  true,
+                           "frames":  [
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           0,
+                                                           4
+                                                       ],
+                                              "durationMs":  80
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           1,
+                                                           4
+                                                       ],
+                                              "durationMs":  80
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           2,
+                                                           4
+                                                       ],
+                                              "durationMs":  90
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           3,
+                                                           4
+                                                       ],
+                                              "durationMs":  100
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           4,
+                                                           4
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           5,
+                                                           4
+                                                       ],
+                                              "durationMs":  140
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           6,
+                                                           4
+                                                       ],
+                                              "durationMs":  180
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           7,
+                                                           4
+                                                       ],
+                                              "durationMs":  260
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_tracking_up",
+                           "name":  "V5 Â· AtenÃ§Ã£o Â· Acompanhar subida",
+                           "group":  "Animation Director V5 Â· AtenÃ§Ã£o",
+                           "loop":  true,
+                           "frames":  [
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           0,
+                                                           5
+                                                       ],
+                                              "durationMs":  180
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           1,
+                                                           5
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           2,
+                                                           5
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           3,
+                                                           5
+                                                       ],
+                                              "durationMs":  140
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           4,
+                                                           5
+                                                       ],
+                                              "durationMs":  160
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           5,
+                                                           5
+                                                       ],
+                                              "durationMs":  140
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           6,
+                                                           5
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           7,
+                                                           5
+                                                       ],
+                                              "durationMs":  260
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_tracking_down",
+                           "name":  "V5 Â· AtenÃ§Ã£o Â· Acompanhar descida",
+                           "group":  "Animation Director V5 Â· AtenÃ§Ã£o",
+                           "loop":  true,
+                           "frames":  [
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           0,
+                                                           6
+                                                       ],
+                                              "durationMs":  180
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           1,
+                                                           6
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           2,
+                                                           6
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           3,
+                                                           6
+                                                       ],
+                                              "durationMs":  140
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           4,
+                                                           6
+                                                       ],
+                                              "durationMs":  160
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           5,
+                                                           6
+                                                       ],
+                                              "durationMs":  140
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           6,
+                                                           6
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           7,
+                                                           6
+                                                       ],
+                                              "durationMs":  260
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_recovery",
+                           "name":  "V5 Â· Recovery orgÃ¢nico",
+                           "group":  "Animation Director V5 Â· RecuperaÃ§Ã£o",
+                           "loop":  false,
+                           "frames":  [
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           0,
+                                                           7
+                                                       ],
+                                              "durationMs":  90
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           1,
+                                                           7
+                                                       ],
+                                              "durationMs":  90
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           2,
+                                                           7
+                                                       ],
+                                              "durationMs":  100
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           3,
+                                                           7
+                                                       ],
+                                              "durationMs":  110
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           4,
+                                                           7
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           5,
+                                                           7
+                                                       ],
+                                              "durationMs":  140
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           6,
+                                                           7
+                                                       ],
+                                              "durationMs":  180
+                                          },
+                                          {
+                                              "sheet":  "5",
+                                              "cell":  [
+                                                           7,
+                                                           7
+                                                       ],
+                                              "durationMs":  300
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_quantity_up_small",
+                           "name":  "V5 Â· Gesto sobe Â· Oh!",
+                           "group":  "Animation Director V5 Â· ReacÃ§Ãµes",
+                           "loop":  false,
+                           "frames":  [
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           0,
+                                                           0
+                                                       ],
+                                              "durationMs":  70
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           1,
+                                                           0
+                                                       ],
+                                              "durationMs":  70
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           2,
+                                                           0
+                                                       ],
+                                              "durationMs":  80
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           3,
+                                                           0
+                                                       ],
+                                              "durationMs":  90
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           4,
+                                                           0
+                                                       ],
+                                              "durationMs":  100
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           5,
+                                                           0
+                                                       ],
+                                              "durationMs":  110
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           6,
+                                                           0
+                                                       ],
+                                              "durationMs":  100
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           7,
+                                                           0
+                                                       ],
+                                              "durationMs":  170
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_quantity_up_medium",
+                           "name":  "V5 Â· Gesto sobe Â· Boa!",
+                           "group":  "Animation Director V5 Â· ReacÃ§Ãµes",
+                           "loop":  false,
+                           "frames":  [
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           0,
+                                                           1
+                                                       ],
+                                              "durationMs":  65
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           1,
+                                                           1
+                                                       ],
+                                              "durationMs":  65
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           2,
+                                                           1
+                                                       ],
+                                              "durationMs":  75
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           3,
+                                                           1
+                                                       ],
+                                              "durationMs":  85
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           4,
+                                                           1
+                                                       ],
+                                              "durationMs":  95
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           5,
+                                                           1
+                                                       ],
+                                              "durationMs":  105
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           6,
+                                                           1
+                                                       ],
+                                              "durationMs":  100
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           7,
+                                                           1
+                                                       ],
+                                              "durationMs":  180
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_quantity_up_large",
+                           "name":  "V5 Â· Gesto sobe Â· Uau!",
+                           "group":  "Animation Director V5 Â· ReacÃ§Ãµes",
+                           "loop":  false,
+                           "frames":  [
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           0,
+                                                           2
+                                                       ],
+                                              "durationMs":  60
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           1,
+                                                           2
+                                                       ],
+                                              "durationMs":  60
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           2,
+                                                           2
+                                                       ],
+                                              "durationMs":  70
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           3,
+                                                           2
+                                                       ],
+                                              "durationMs":  80
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           4,
+                                                           2
+                                                       ],
+                                              "durationMs":  100
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           5,
+                                                           2
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           6,
+                                                           2
+                                                       ],
+                                              "durationMs":  110
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           7,
+                                                           2
+                                                       ],
+                                              "durationMs":  190
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_quantity_down_small",
+                           "name":  "V5 Â· Gesto desce Â· Ohâ€¦",
+                           "group":  "Animation Director V5 Â· ReacÃ§Ãµes",
+                           "loop":  false,
+                           "frames":  [
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           0,
+                                                           3
+                                                       ],
+                                              "durationMs":  70
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           1,
+                                                           3
+                                                       ],
+                                              "durationMs":  70
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           2,
+                                                           3
+                                                       ],
+                                              "durationMs":  80
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           3,
+                                                           3
+                                                       ],
+                                              "durationMs":  90
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           4,
+                                                           3
+                                                       ],
+                                              "durationMs":  100
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           5,
+                                                           3
+                                                       ],
+                                              "durationMs":  110
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           6,
+                                                           3
+                                                       ],
+                                              "durationMs":  100
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           7,
+                                                           3
+                                                       ],
+                                              "durationMs":  180
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_quantity_down_medium",
+                           "name":  "V5 Â· Gesto desce Â· Olhos hÃºmidos",
+                           "group":  "Animation Director V5 Â· ReacÃ§Ãµes",
+                           "loop":  false,
+                           "frames":  [
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           0,
+                                                           4
+                                                       ],
+                                              "durationMs":  70
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           1,
+                                                           4
+                                                       ],
+                                              "durationMs":  75
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           2,
+                                                           4
+                                                       ],
+                                              "durationMs":  80
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           3,
+                                                           4
+                                                       ],
+                                              "durationMs":  90
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           4,
+                                                           4
+                                                       ],
+                                              "durationMs":  110
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           5,
+                                                           4
+                                                       ],
+                                              "durationMs":  130
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           6,
+                                                           4
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           7,
+                                                           4
+                                                       ],
+                                              "durationMs":  200
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_quantity_down_large",
+                           "name":  "V5 Â· Gesto desce Â· PrÃ©-choro anime",
+                           "group":  "Animation Director V5 Â· ReacÃ§Ãµes",
+                           "loop":  false,
+                           "frames":  [
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           0,
+                                                           5
+                                                       ],
+                                              "durationMs":  70
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           1,
+                                                           5
+                                                       ],
+                                              "durationMs":  75
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           2,
+                                                           5
+                                                       ],
+                                              "durationMs":  85
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           3,
+                                                           5
+                                                       ],
+                                              "durationMs":  95
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           4,
+                                                           5
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           5,
+                                                           5
+                                                       ],
+                                              "durationMs":  150
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           6,
+                                                           5
+                                                       ],
+                                              "durationMs":  130
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           7,
+                                                           5
+                                                       ],
+                                              "durationMs":  220
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_rejoice",
+                           "name":  "V5 Â· Rejoice",
+                           "group":  "Animation Director V5 Â· One-shots",
+                           "loop":  false,
+                           "frames":  [
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           0,
+                                                           6
+                                                       ],
+                                              "durationMs":  60
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           1,
+                                                           6
+                                                       ],
+                                              "durationMs":  60
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           2,
+                                                           6
+                                                       ],
+                                              "durationMs":  65
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           3,
+                                                           6
+                                                       ],
+                                              "durationMs":  70
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           4,
+                                                           6
+                                                       ],
+                                              "durationMs":  75
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           5,
+                                                           6
+                                                       ],
+                                              "durationMs":  80
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           6,
+                                                           6
+                                                       ],
+                                              "durationMs":  90
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           7,
+                                                           6
+                                                       ],
+                                              "durationMs":  100
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "v5_settle",
+                           "name":  "V5 Â· Settle universal",
+                           "group":  "Animation Director V5 Â· RecuperaÃ§Ã£o",
+                           "loop":  false,
+                           "frames":  [
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           0,
+                                                           7
+                                                       ],
+                                              "durationMs":  70
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           1,
+                                                           7
+                                                       ],
+                                              "durationMs":  75
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           2,
+                                                           7
+                                                       ],
+                                              "durationMs":  80
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           3,
+                                                           7
+                                                       ],
+                                              "durationMs":  90
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           4,
+                                                           7
+                                                       ],
+                                              "durationMs":  100
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           5,
+                                                           7
+                                                       ],
+                                              "durationMs":  120
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           6,
+                                                           7
+                                                       ],
+                                              "durationMs":  150
+                                          },
+                                          {
+                                              "sheet":  "6",
+                                              "cell":  [
+                                                           7,
+                                                           7
+                                                       ],
+                                              "durationMs":  240
+                                          }
+                                      ]
+                       }
+                   ]
+}

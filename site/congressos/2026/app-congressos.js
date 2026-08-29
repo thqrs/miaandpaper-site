@@ -10,6 +10,40 @@
   var homeContentPath = document.body.dataset.homeContent || (CONTENT_BASE + "content/home.json");
   var ORDER_HOME_CONTENT = "content/order-products.json";
 
+  // MIU_DIRECTOR_EVENTS_V2 — o Congresso publica o mesmo contrato de dados
+  // do catálogo. Nunca escolhe frames, emoções ou animações pelo slug.
+  function miuDispatchProductEvent(name, detail) {
+    if (typeof window.CustomEvent !== "function") { return false; }
+    try {
+      document.dispatchEvent(new CustomEvent("mia:" + String(name || ""), {
+        detail: detail && typeof detail === "object" ? detail : {}
+      }));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function miuReactionImportanceFromOptions(values, previousValue, currentValue) {
+    var options = (Array.isArray(values) ? values : []).map(Number).filter(function (value, index, list) {
+      return Number.isFinite(value) && list.indexOf(value) === index;
+    }).sort(function (a, b) { return a - b; });
+    if (options.length < 2) { return undefined; }
+    var nearestIndex = function (target) {
+      var result = 0;
+      var bestDistance = Infinity;
+      options.forEach(function (value, index) {
+        var distance = Math.abs(value - Number(target));
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          result = index;
+        }
+      });
+      return result;
+    };
+    return Math.abs(nearestIndex(currentValue) - nearestIndex(previousValue)) / (options.length - 1);
+  }
+
   function assetPath(value) {
     var path = String(value == null ? "" : value);
 
@@ -9672,6 +9706,7 @@
   function setFreeQuantity(product, value) {
     var minimum = effectiveMinimumFreeQuantity(product);
     var maximum = maximumFreeQuantity(product);
+    var previousQuantity = Number(state.selections.pack_quantity) || minimum;
     var quantity = Math.round(Number(value) || 0);
 
     quantity = Math.max(minimum, Math.min(maximum, quantity || minimum));
@@ -9680,6 +9715,13 @@
     state.quantitiesTouched = false;
     state.quantityPackBaseline = 0;
     state.errors = "";
+    miuDispatchProductEvent("miu-quantity-change", {
+      previousValue: previousQuantity,
+      currentValue: quantity,
+      min: minimum,
+      max: maximum,
+      source: "quantity"
+    });
     try { trackOptionSelected(product, "quantity", quantity, productQuantityLabel(product, quantity)); } catch (e) {}
     return quantity;
   }
@@ -13611,6 +13653,10 @@
       step_id: step ? step.id : '',
       step_index: state.currentStep
     });
+    miuDispatchProductEvent("step-completed", {
+      stepId: step ? String(step.id || "") : "",
+      stepTemplate: step ? String(step.template || "") : ""
+    });
     if (step && step.id === 'delivery_contact') {
       // FUNNEL_TRACKING_SQLITE_V2: deixou de enviar customer_name/email no
       // tracking. Os dados pessoais ficam em `orders` (Fase 2), não em
@@ -15163,6 +15209,7 @@
     document.querySelectorAll("[data-pack-quantity]").forEach(function (button) {
       button.addEventListener("click", function () {
         var newPackQuantity = Number(button.dataset.packQuantity);
+        var previousPackQuantity = getPackQuantity(product) || newPackQuantity;
 
         // CRACHAS_PACK_DISABLED_MESSAGE_V1: pack cinzento nao seleciona,
         // mostra mensagem curta junto aos packs.
@@ -15197,6 +15244,17 @@
         } catch (e) {}
 
         ensurePackAndQuantities(product);
+        var packValues = Array.prototype.map.call(document.querySelectorAll("[data-pack-quantity]"), function (packButton) {
+          return Number(packButton.dataset.packQuantity);
+        });
+        miuDispatchProductEvent("miu-quantity-change", {
+          previousValue: previousPackQuantity,
+          currentValue: newPackQuantity,
+          min: packValues.length ? Math.min.apply(Math, packValues) : newPackQuantity,
+          max: packValues.length ? Math.max.apply(Math, packValues) : newPackQuantity,
+          source: "pack",
+          importance: miuReactionImportanceFromOptions(packValues, previousPackQuantity, newPackQuantity)
+        });
         state.errors = "";
         rerenderProduct(product);
       });
@@ -15205,7 +15263,20 @@
     document.querySelectorAll("[data-caderno-order-quantity]").forEach(function (button) {
       button.addEventListener("click", function () {
         var qty = Number(button.dataset.cadernoOrderQuantity);
+        var previousQty = cadernoOrderQuantity(product);
+        var config = cadernoOrderQuantityConfig(product);
+        var cadernoQuantities = Array.prototype.map.call(document.querySelectorAll("[data-caderno-order-quantity]"), function (quantityButton) {
+          return Number(quantityButton.dataset.cadernoOrderQuantity);
+        });
         state.selections.caderno_order_quantity = qty;
+        miuDispatchProductEvent("miu-quantity-change", {
+          previousValue: previousQty,
+          currentValue: qty,
+          min: Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1),
+          max: Math.max(qty, parseInt(config.maximum, 10) || 9999),
+          source: "pack",
+          importance: miuReactionImportanceFromOptions(cadernoQuantities, previousQty, qty)
+        });
         // SEMANTIC_EVENTS_V1
         try { trackOptionSelected(product, 'caderno_qty', qty, ''); } catch (e) {}
         state.errors = "";
@@ -15219,8 +15290,16 @@
         var minimum = Math.max(1, parseInt(config.minimum, 10) || parseInt(product && product.minimumQuantity, 10) || 1);
         var maximum = Math.max(minimum, parseInt(config.maximum, 10) || 9999);
         var change = parseInt(button.dataset.cadernoOrderQuantityChange, 10) || 0;
-        var quantity = Math.max(minimum, Math.min(maximum, cadernoOrderQuantity(product) + change));
+        var previousQuantity = cadernoOrderQuantity(product);
+        var quantity = Math.max(minimum, Math.min(maximum, previousQuantity + change));
         state.selections.caderno_order_quantity = quantity;
+        miuDispatchProductEvent("miu-quantity-change", {
+          previousValue: previousQuantity,
+          currentValue: quantity,
+          min: minimum,
+          max: maximum,
+          source: "quantity"
+        });
         try { trackOptionSelected(product, "caderno_qty", quantity, ""); } catch (e) {}
         state.errors = "";
         rerenderProduct(product);
@@ -15238,11 +15317,19 @@
         if (!commit && (!isFinite(parsed) || parsed < minimum)) {
           return;
         }
+        var previousQuantity = cadernoOrderQuantity(product);
         quantity = Math.max(minimum, Math.min(maximum, parsed || minimum));
         state.selections.caderno_order_quantity = quantity;
         state.errors = "";
         if (commit) {
           input.value = quantity;
+          miuDispatchProductEvent("miu-quantity-change", {
+            previousValue: previousQuantity,
+            currentValue: quantity,
+            min: minimum,
+            max: maximum,
+            source: "quantity"
+          });
           try { trackOptionSelected(product, "caderno_qty", quantity, ""); } catch (e) {}
           rerenderProduct(product);
         }
@@ -15269,6 +15356,7 @@
         var quantity = Number(input.value);
         var minimum = effectiveMinimumFreeQuantity(product);
         var maximum = maximumFreeQuantity(product);
+        var previousQuantity = getPackQuantity(product) || minimum;
 
         state.selections.pack_quantity = Number.isInteger(quantity) && quantity >= minimum && quantity <= maximum
           ? quantity
@@ -15277,6 +15365,15 @@
         state.quantitiesTouched = false;
         state.quantityPackBaseline = 0;
         state.errors = "";
+        if (Number.isInteger(quantity) && quantity >= minimum && quantity <= maximum) {
+          miuDispatchProductEvent("miu-quantity-change", {
+            previousValue: previousQuantity,
+            currentValue: quantity,
+            min: minimum,
+            max: maximum,
+            source: "quantity"
+          });
+        }
         refreshFreeQuantityDraft(product, input);
       });
       input.addEventListener("change", function () {

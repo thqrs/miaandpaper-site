@@ -19,6 +19,7 @@ está a ficar desactualizado.
 | 10 | [Editores de admin](10-editores-admin.md) | `precos.php` e `homepage-menu-design.php`; a personalização |
 | 11 | [Parâmetros de URL](11-parametros-de-url.md) | tudo o que muda numa página através da query string |
 | 12 | [Míu](12-miu.md) | chatbot: configuração, fornecedores, filtros, SQLite e painel |
+| 13 | [Míu V2 em produção](13-miu-v2-producao.md) | integração reversível, arquivo V1, director, painel e rollback |
 
 ## Histórico
 

@@ -2941,7 +2941,11 @@
   function setFreeQuantity(product, value, mode, trackSelection, direction) {
     var minimum = effectiveMinimumFreeQuantity(product);
     var maximum = maximumFreeQuantity(product);
+    var previousQuantity = Number(state.selections.pack_quantity) || minimum;
     var quantity = Math.round(Number(value) || 0);
+    var reactionMaximum;
+    var reactionImportance;
+    var packValues;
 
     quantity = Math.max(minimum, Math.min(maximum, quantity || minimum));
     // Com packs combinados só existem certas quantidades; encosta-se à mais
@@ -2956,6 +2960,27 @@
     state.quantityPackBaseline = 0;
     state.errors = "";
     ensurePackAndQuantities(product);
+    reactionMaximum = freeQuantityRangeMaximum(product);
+    if (mode === "pack") {
+      packValues = Array.prototype.map.call(document.querySelectorAll("[data-pack-quantity]"), function (button) {
+        return Number(button.dataset.packQuantity);
+      }).filter(function (packValue, index, values) {
+        return Number.isFinite(packValue) && values.indexOf(packValue) === index;
+      }).sort(function (a, b) { return a - b; });
+      if (packValues.length > 1) {
+        reactionImportance = miuReactionImportanceFromOptions(packValues, previousQuantity, quantity);
+        minimum = packValues[0];
+        reactionMaximum = packValues[packValues.length - 1];
+      }
+    }
+    miuDispatchProductEvent("miu-quantity-change", {
+      previousValue: previousQuantity,
+      currentValue: quantity,
+      min: minimum,
+      max: reactionMaximum,
+      source: mode === "pack" ? "pack" : "quantity",
+      importance: reactionImportance
+    });
     if (trackSelection !== false) {
       try { trackOptionSelected(product, "quantity", quantity, productQuantityLabel(product, quantity)); } catch (e) {}
     }
@@ -3417,4 +3442,3 @@
       renderCrachasSelectedDesigns(product)
     ].join("");
   }
-

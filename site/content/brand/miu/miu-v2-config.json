@@ -1,0 +1,119 @@
+{
+    "schemaVersion": 2,
+    "updatedAt": "2026-08-29T12:23:43+00:00",
+    "engine": "v2",
+    "assets": {
+        "runtime": "miu-v2-runtime.js",
+        "cacheVersion": "2026082901",
+        "coreManifest": "content/brand/miu/v2/core-manifest.json",
+        "libraryManifest": "content/brand/miu/experimental/library-v1/library-manifest.json",
+        "episodeManifest": "content/brand/miu/experimental/library-v1/episodes/episode-manifest.json"
+    },
+    "appearance": {
+        "sizeDesktopPx": 118,
+        "sizeMobilePx": 98,
+        "canvasResolution": 360,
+        "offsetXPx": 0,
+        "offsetYPx": 5,
+        "scale": 0.96,
+        "rigIntensity": 0.62,
+        "showFx": true
+    },
+    "mesh": {
+        "enabled": true,
+        "rows": 6,
+        "maxOffsetPx": 2.4,
+        "followThrough": 0.18,
+        "squashInfluence": 0.012
+    },
+    "timing": {
+        "speed": 1,
+        "quietWindowMs": 190,
+        "minimumAttentionMs": 150,
+        "idleMinMs": 850,
+        "idleMaxMs": 2600,
+        "reactionHoldMs": 110,
+        "recoveryDelayMs": 90
+    },
+    "thresholds": {
+        "smallMax": 0.28,
+        "mediumMax": 0.62,
+        "velocityWeight": 0.045
+    },
+    "animations": {
+        "idle": [
+            {
+                "id": "v5_idle_blink",
+                "weight": 6
+            },
+            {
+                "id": "v5_idle_gaze",
+                "weight": 2.5
+            },
+            {
+                "id": "v5_idle_ear_twitch",
+                "weight": 1.8
+            },
+            {
+                "id": "v5_idle_micro_expression",
+                "weight": 1.2
+            }
+        ],
+        "attention": "v5_attention_start",
+        "trackingUp": "v5_tracking_up",
+        "trackingDown": "v5_tracking_down",
+        "upSmall": "v5_quantity_up_small",
+        "upMedium": "v5_quantity_up_medium",
+        "upLarge": "v5_quantity_up_large",
+        "downSmall": "v5_quantity_down_small",
+        "downMedium": "v5_quantity_down_medium",
+        "downLarge": "v5_quantity_down_large",
+        "recovery": "v5_recovery",
+        "rejoice": "v5_rejoice"
+    },
+    "triggers": {
+        "quantity": true,
+        "packs": true,
+        "continueRejoice": true,
+        "continueStepIds": [
+            "pack",
+            "quantity",
+            "quantidade"
+        ],
+        "launcherAttention": true,
+        "chatReactions": true
+    },
+    "library": {
+        "manualEmotions": true,
+        "manualEpisodes": true,
+        "ambientEpisodes": false,
+        "ambientMinMs": 60000,
+        "ambientMaxMs": 120000,
+        "ambientProbability": 0.12,
+        "episodeIds": [
+            "s01e01-borboleta-no-nariz",
+            "s01e02-o-novelo-rebelde",
+            "s01e03-a-flor-teimosa",
+            "s01e04-o-cracha-careta",
+            "s01e05-a-caixa-e-minha",
+            "s01e06-a-grande-corrida",
+            "s01e07-chuva-de-confettis",
+            "s01e08-o-catavento-hipnotico",
+            "s01e09-a-encomenda-perfeita",
+            "s01e10-um-dia-na-oficina",
+            "s01e11-a-coleccao-de-caretas",
+            "s01e12-a-coroa-da-oficina",
+            "s01e13-o-pompom-impossivel",
+            "s01e14-a-carta-sem-palavras"
+        ]
+    },
+    "reducedMotion": {
+        "enabled": true,
+        "keepEmotion": true,
+        "secondaryMotion": 0,
+        "framePolicy": "first-middle-last"
+    },
+    "debug": {
+        "console": false
+    }
+}

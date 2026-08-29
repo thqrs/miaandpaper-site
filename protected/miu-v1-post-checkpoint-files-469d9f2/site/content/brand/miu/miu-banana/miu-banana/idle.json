@@ -1,0 +1,43 @@
+{
+  "id": "idle",
+  "name": "Míu — Calmo / Idle",
+  "file": "miu-banana/idle.webp",
+  "masterSource": "idle_cleaned_nb_1787067987284.jpg",
+  "columns": 4,
+  "rows": 1,
+  "frameWidth": 344,
+  "frameHeight": 768,
+  "sheetWidth": 1376,
+  "sheetHeight": 768,
+  "totalFrames": 4,
+  "sequence": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "frameDurationsMs": [
+    350,
+    300,
+    300,
+    400
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "durationMs": 350
+    },
+    {
+      "index": 1,
+      "durationMs": 300
+    },
+    {
+      "index": 2,
+      "durationMs": 300
+    },
+    {
+      "index": 3,
+      "durationMs": 400
+    }
+  ]
+}

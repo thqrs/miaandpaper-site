@@ -1,0 +1,40 @@
+{
+  "id": "curious",
+  "name": "Curioso",
+  "file": "faces/curious.webp",
+  "columns": 4,
+  "rows": 1,
+  "frameWidth": 192,
+  "frameHeight": 192,
+  "totalFrames": 4,
+  "sequence": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "frameDurationsMs": [
+    150,
+    350,
+    450,
+    200
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "durationMs": 150
+    },
+    {
+      "index": 1,
+      "durationMs": 350
+    },
+    {
+      "index": 2,
+      "durationMs": 450
+    },
+    {
+      "index": 3,
+      "durationMs": 200
+    }
+  ]
+}

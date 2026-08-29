@@ -1,4 +1,5 @@
-Sprites do chat atualizados para a cara da Lili.
-Os ficheiros anteriores foram preservados com a extensão adicional .old
-(ex.: miu-sprite.webp.old).
-As sprites interativas de corpo inteiro em sprites/lili-*.webp foram mantidas.
+Sprites do chat actualizados para a cara da Lili.
+As cópias anteriores com extensão adicional .old foram retiradas da raiz
+pública em 2026-08-29 e preservadas em:
+protected/miu-v1-checkpoint-469d9f2/retired-public-copies/
+As sprites interactivas de corpo inteiro em sprites/lili-*.webp foram mantidas.

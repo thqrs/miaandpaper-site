@@ -8,6 +8,7 @@
 
 require_once __DIR__ . '/lib/miu-bot.php';
 require_once __DIR__ . '/lib/miu-animations.php';
+require_once __DIR__ . '/lib/miu-v2.php';
 require_once __DIR__ . '/lib/client-ip.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -205,6 +206,7 @@ if ($method === 'GET') {
         'greeting' => miu_text_slice($settings['greeting'], 160),
         'launcherPrompt' => miu_text_slice($settings['launcher_prompt'], 60),
         'animations' => miu_animation_public_config(),
+        'directorV2' => miu_v2_public_config(),
         'quickQuestions' => miu_quick_questions($settings),
         'quickReplies' => miu_quick_replies_global(),
         'localIntents' => array(

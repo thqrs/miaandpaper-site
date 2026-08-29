@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "variant": "small",
+  "sheet": "miu-sprite-small.webp",
+  "columns": 4,
+  "rows": 2,
+  "frameWidth": 192,
+  "frameHeight": 192,
+  "frames": [
+    {
+      "index": 0,
+      "name": "calmo",
+      "durationMs": 900,
+      "file": "miu-small-01-calmo.webp"
+    },
+    {
+      "index": 1,
+      "name": "piscar-inicio",
+      "durationMs": 110,
+      "file": "miu-small-02-piscar-inicio.webp"
+    },
+    {
+      "index": 2,
+      "name": "piscar-fechado",
+      "durationMs": 100,
+      "file": "miu-small-03-piscar-fechado.webp"
+    },
+    {
+      "index": 3,
+      "name": "piscar-fim",
+      "durationMs": 150,
+      "file": "miu-small-04-piscar-fim.webp"
+    },
+    {
+      "index": 4,
+      "name": "inclina-esquerda",
+      "durationMs": 420,
+      "file": "miu-small-05-inclina-esquerda.webp"
+    },
+    {
+      "index": 5,
+      "name": "inclina-direita",
+      "durationMs": 420,
+      "file": "miu-small-06-inclina-direita.webp"
+    },
+    {
+      "index": 6,
+      "name": "sorriso",
+      "durationMs": 320,
+      "file": "miu-small-07-sorriso.webp"
+    },
+    {
+      "index": 7,
+      "name": "orelha",
+      "durationMs": 760,
+      "file": "miu-small-08-orelha.webp"
+    }
+  ]
+}

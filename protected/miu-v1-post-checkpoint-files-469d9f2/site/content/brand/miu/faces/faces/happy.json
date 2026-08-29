@@ -1,0 +1,40 @@
+{
+  "id": "happy",
+  "name": "Feliz",
+  "file": "faces/happy.webp",
+  "columns": 4,
+  "rows": 1,
+  "frameWidth": 192,
+  "frameHeight": 192,
+  "totalFrames": 4,
+  "sequence": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "frameDurationsMs": [
+    120,
+    200,
+    450,
+    250
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "durationMs": 120
+    },
+    {
+      "index": 1,
+      "durationMs": 200
+    },
+    {
+      "index": 2,
+      "durationMs": 450
+    },
+    {
+      "index": 3,
+      "durationMs": 250
+    }
+  ]
+}

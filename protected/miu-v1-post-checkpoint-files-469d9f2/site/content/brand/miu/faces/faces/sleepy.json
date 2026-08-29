@@ -1,0 +1,40 @@
+{
+  "id": "sleepy",
+  "name": "Sonolento",
+  "file": "faces/sleepy.webp",
+  "columns": 4,
+  "rows": 1,
+  "frameWidth": 192,
+  "frameHeight": 192,
+  "totalFrames": 4,
+  "sequence": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "frameDurationsMs": [
+    600,
+    700,
+    800,
+    1000
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "durationMs": 600
+    },
+    {
+      "index": 1,
+      "durationMs": 700
+    },
+    {
+      "index": 2,
+      "durationMs": 800
+    },
+    {
+      "index": 3,
+      "durationMs": 1000
+    }
+  ]
+}

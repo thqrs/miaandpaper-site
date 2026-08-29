@@ -47,10 +47,62 @@ var miuDebugForceMotion = false;
 var miuDebugPanelStorageKey = "miaandpaper_miu_debug_lab_v2";
 var miuDebugObjectUrls = {};
 var miuDebugActiveTest = null;
+var miuV2Controller = null;
+var miuV2RuntimePromise = null;
 
 function miuIsAdminChatPage()
 {
   return !!(document.body && document.body.getAttribute("data-miu-admin-chat") === "1");
+}
+
+function miuV2LoadRuntime(config)
+{
+  if (window.MiuV2Production) { return Promise.resolve(window.MiuV2Production); }
+  if (miuV2RuntimePromise) { return miuV2RuntimePromise; }
+  var assets = config && config.assets ? config.assets : {};
+  var source = String(assets.runtime || "miu-v2-runtime.js");
+  var version = String(assets.cacheVersion || "").replace(/[^a-z0-9._-]/gi, "");
+  var runtimeUrl = new URL(source, miuSiteRootUrl);
+  if (version) { runtimeUrl.searchParams.set("v", version); }
+  miuV2RuntimePromise = new Promise(function (resolve, reject) {
+    var script = document.createElement("script");
+    script.src = runtimeUrl.href;
+    script.async = true;
+    script.onload = function () {
+      if (window.MiuV2Production) { resolve(window.MiuV2Production); }
+      else { reject(new Error("O runtime do Míu V2 não ficou disponível.")); }
+    };
+    script.onerror = function () { reject(new Error("Não foi possível carregar o runtime do Míu V2.")); };
+    document.head.appendChild(script);
+  });
+  return miuV2RuntimePromise;
+}
+
+function miuV2Boot()
+{
+  var config = miuConfig && miuConfig.directorV2 ? miuConfig.directorV2 : null;
+  if (!config || config.engine !== "v2" || !miuRoot || !miuLauncherSprite) { return; }
+  miuV2LoadRuntime(config).then(function (runtime) {
+    return runtime.mount({
+      config: config,
+      root: miuRoot,
+      launcher: miuRoot.querySelector(".miu-launcher"),
+      siteRoot: miuSiteRootUrl,
+      onReady: function (controller) {
+        miuV2Controller = controller;
+        // O V1 continua no DOM como fallback, mas deixa de gastar timers
+        // assim que o primeiro frame V2 está realmente pronto.
+        miuAnimationCancelTimer();
+        miuLauncherBodyStop();
+        miuInteractiveStop();
+      }
+    });
+  }).catch(function (error) {
+    // Falhar em silêncio para o cliente é intencional: o Míu V1 nunca chegou
+    // a ser escondido e continua operacional. A classe facilita o diagnóstico.
+    if (miuRoot) { miuRoot.classList.add("miu-v2-failed"); }
+    if (miuIsAdminChatPage() && window.console) { window.console.error(error); }
+  });
 }
 
 function miuAnimationSetup(config)
@@ -469,6 +521,9 @@ function miuAnimationCandidates(trigger)
 
 function miuAnimationTrigger(trigger)
 {
+  if (miuV2Controller && typeof miuV2Controller.trigger === "function" && miuV2Controller.trigger(trigger)) {
+    return true;
+  }
   var candidates = miuAnimationCandidates(trigger);
   if (!candidates.length) { return false; }
   var totalWeight = candidates.reduce(function (sum, animation) { return sum + Math.max(1, Number(animation.weight || 1)); }, 0);
@@ -1906,6 +1961,7 @@ function miuBuildInterface()
   miuRoot.classList.toggle("miu-no-circle-message", display.messageCircle === false);
   miuAnimationPlayBase();
   miuAnimationApplyStatic(miuRoot.querySelector(".miu-panel__mini-cat .miu-face"), 0);
+  miuV2Boot();
 
   launcher.addEventListener("click", function () { miuSetOpen(!miuRoot.classList.contains("is-open")); });
   launcher.addEventListener("mouseenter", function () {

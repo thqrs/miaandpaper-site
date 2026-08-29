@@ -1,0 +1,67 @@
+{
+  "id": "confused",
+  "name": "Míu — Confuso",
+  "file": "miu-banana/confused.webp",
+  "masterSource": "confused_cleaned_nb_v2_1787067894917.jpg",
+  "columns": 4,
+  "rows": 2,
+  "frameWidth": 344,
+  "frameHeight": 384,
+  "sheetWidth": 1376,
+  "sheetHeight": 768,
+  "totalFrames": 8,
+  "sequence": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "frameDurationsMs": [
+    200,
+    250,
+    300,
+    250,
+    200,
+    250,
+    300,
+    250
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "durationMs": 200
+    },
+    {
+      "index": 1,
+      "durationMs": 250
+    },
+    {
+      "index": 2,
+      "durationMs": 300
+    },
+    {
+      "index": 3,
+      "durationMs": 250
+    },
+    {
+      "index": 4,
+      "durationMs": 200
+    },
+    {
+      "index": 5,
+      "durationMs": 250
+    },
+    {
+      "index": 6,
+      "durationMs": 300
+    },
+    {
+      "index": 7,
+      "durationMs": 250
+    }
+  ]
+}

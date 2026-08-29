@@ -64,6 +64,41 @@
   var freeQuantityChartCleanup = function () {};
   var freeQuantityChartRefresh = function () {};
 
+  // MIU_DIRECTOR_EVENTS_V2 — ponte sem dependência entre o configurador e o
+  // actor visual. Os módulos de produto publicam factos (valor anterior,
+  // valor actual, limites e origem); nunca escolhem frames nem emoções.
+  function miuDispatchProductEvent(name, detail) {
+    if (!document || typeof window.CustomEvent !== "function") { return false; }
+    try {
+      document.dispatchEvent(new CustomEvent("mia:" + String(name || ""), {
+        detail: detail && typeof detail === "object" ? detail : {}
+      }));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function miuReactionImportanceFromOptions(values, previousValue, currentValue) {
+    var options = (Array.isArray(values) ? values : []).map(Number).filter(function (value, index, list) {
+      return Number.isFinite(value) && list.indexOf(value) === index;
+    }).sort(function (a, b) { return a - b; });
+    if (options.length < 2) { return undefined; }
+    var nearestIndex = function (target) {
+      var result = 0;
+      var bestDistance = Infinity;
+      options.forEach(function (value, index) {
+        var distance = Math.abs(value - Number(target));
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          result = index;
+        }
+      });
+      return result;
+    };
+    return Math.abs(nearestIndex(currentValue) - nearestIndex(previousValue)) / (options.length - 1);
+  }
+
   function installFavicon() {
     var link = document.querySelector('link[rel~="icon"]') || document.createElement("link");
     link.rel = "icon";

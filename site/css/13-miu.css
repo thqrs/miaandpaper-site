@@ -57,6 +57,44 @@
   transition: transform .18s ease;
 }
 
+/* MIU_DIRECTOR_V2_PRODUCTION — o canvas só substitui o launcher histórico
+   depois de o manifesto e o primeiro PNG 8×8 estarem prontos. Até esse
+   instante, e em qualquer falha, a cara V1 continua visível. */
+.miu-v2-canvas {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: var(--miu-v2-size-desktop, 118px);
+  height: var(--miu-v2-size-desktop, 118px);
+  max-width: none;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+.miu-root.is-miu-v2-ready {
+  --miu-launcher-box-size: var(--miu-v2-size-desktop, 118px);
+}
+
+.miu-root.is-miu-v2-ready .miu-launcher {
+  width: var(--miu-v2-size-desktop, 118px);
+  height: var(--miu-v2-size-desktop, 118px);
+  overflow: visible;
+}
+
+.miu-root.is-miu-v2-ready .miu-v2-canvas { opacity: 1; }
+.miu-root.is-miu-v2-ready .miu-launcher__bubble-outline,
+.miu-root.is-miu-v2-ready .miu-launcher__bubble-face,
+.miu-root.is-miu-v2-ready .miu-launcher__basket { opacity: 0; visibility: hidden; }
+
+@media (max-width: 720px) {
+  .miu-root.is-miu-v2-ready { --miu-launcher-box-size: var(--miu-v2-size-mobile, 98px); }
+  .miu-root.is-miu-v2-ready .miu-launcher,
+  .miu-root.is-miu-v2-ready .miu-v2-canvas {
+    width: var(--miu-v2-size-mobile, 98px);
+    height: var(--miu-v2-size-mobile, 98px);
+  }
+}
+
 .miu-launcher:hover { transform: translateY(-3px) rotate(-2deg); }
 
 /* O launcher usa a silhueta exterior de um balão tipo WhatsApp.

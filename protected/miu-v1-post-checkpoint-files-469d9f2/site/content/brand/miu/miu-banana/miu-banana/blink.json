@@ -1,0 +1,43 @@
+{
+  "id": "blink",
+  "name": "Míu — Piscar",
+  "file": "miu-banana/blink.webp",
+  "masterSource": "blink_cleaned_nanobanana_1787050016284.jpg",
+  "columns": 4,
+  "rows": 1,
+  "frameWidth": 344,
+  "frameHeight": 768,
+  "sheetWidth": 1376,
+  "sheetHeight": 768,
+  "totalFrames": 4,
+  "sequence": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "frameDurationsMs": [
+    200,
+    250,
+    300,
+    250
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "durationMs": 200
+    },
+    {
+      "index": 1,
+      "durationMs": 250
+    },
+    {
+      "index": 2,
+      "durationMs": 300
+    },
+    {
+      "index": 3,
+      "durationMs": 250
+    }
+  ]
+}

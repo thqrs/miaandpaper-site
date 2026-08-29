@@ -555,6 +555,10 @@
       step_id: step ? step.id : '',
       step_index: state.currentStep
     });
+    miuDispatchProductEvent("step-completed", {
+      stepId: step ? String(step.id || "") : "",
+      stepTemplate: step ? String(step.template || "") : ""
+    });
     if (step && step.id === 'delivery_contact') {
       // FUNNEL_TRACKING_SQLITE_V2: deixou de enviar customer_name/email no
       // tracking. Os dados pessoais ficam em `orders` (Fase 2), não em

@@ -15,6 +15,7 @@
     { id: "reviews", label: "Reviews", href: "reviews.html", files: ["reviews.html"] },
     { id: "faqs", label: "FAQs", href: "faqs.php", files: ["faqs.php"] },
     { id: "miu", label: "Míu", href: "bot.php", files: ["bot.php"] },
+    { id: "miu-v2", label: "Míu V2 · Produção", href: "miu-v2.php", files: ["miu-v2.php"] },
     { id: "sprites", label: "Sprites", href: "sprites.php", files: ["sprites.php"] },
     { id: "miu-lab", label: "Míu Lab · Experimental", href: "miu-animation-lab.php", files: ["miu-animation-lab.php"] },
     { id: "miu-rig", label: "Míu Director V5 · Experimental", href: "miu-rig.php", files: ["miu-rig.php"] },

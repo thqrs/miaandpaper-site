@@ -1,0 +1,327 @@
+{
+    "schemaVersion": 2,
+    "updatedAt": "2026-08-17T22:04:13+00:00",
+    "baseAnimationId": "lili-calma",
+    "display": {
+        "launcherPx": 46,
+        "launcherPxMobile": 46,
+        "headerPx": 45,
+        "headerPxMobile": 30,
+        "headerVisible": true,
+        "launcherMode": "circle",
+        "messagePx": 43,
+        "messagePxMobile": 26,
+        "interactivePx": 96,
+        "interactivePxMobile": 96,
+        "launcherCircle": true,
+        "headerCircle": false,
+        "messageCircle": false,
+        "promptSeconds": 3,
+        "errorsViaMiu": true,
+        "smallPx": 43,
+        "sleepAfterMs": 45000,
+        "idleRandomMinMs": 14000,
+        "idleRandomMaxMs": 28000,
+        "maxRoamPx": 180
+    },
+    "animations": [
+        {
+            "id": "lili-calma",
+            "name": "Lili — calma / piscar",
+            "file": "sprites/lili-idle.webp",
+            "columns": 4,
+            "rows": 2,
+            "sequence": [
+                0,
+                0,
+                0,
+                1,
+                2,
+                3,
+                0,
+                4,
+                5,
+                6,
+                0,
+                7
+            ],
+            "frameDurationsMs": [
+                1300,
+                1100,
+                900,
+                110,
+                110,
+                220,
+                700,
+                520,
+                520,
+                480,
+                900,
+                650
+            ],
+            "repeat": 0,
+            "enabled": true,
+            "triggers": [],
+            "products": [],
+            "probability": 1,
+            "weight": 1,
+            "cooldownMs": 0,
+            "flipX": false,
+            "staticFrame": 0,
+            "motion": {
+                "type": "none",
+                "distancePx": 0
+            },
+            "transform": {
+                "xPx": 0,
+                "yPx": 0,
+                "rotationDeg": 0
+            }
+        },
+        {
+            "id": "lili-dormir",
+            "name": "Lili — adormecer",
+            "file": "sprites/lili-sleep.webp",
+            "columns": 4,
+            "rows": 2,
+            "sequence": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                6,
+                7
+            ],
+            "frameDurationsMs": [
+                500,
+                450,
+                650,
+                700,
+                700,
+                900,
+                1200,
+                1500,
+                1300,
+                1500
+            ],
+            "repeat": 0,
+            "enabled": true,
+            "triggers": [
+                "inactivity"
+            ],
+            "products": [],
+            "probability": 1,
+            "weight": 1,
+            "cooldownMs": 0,
+            "flipX": false,
+            "staticFrame": 7,
+            "motion": {
+                "type": "none",
+                "distancePx": 0
+            },
+            "transform": {
+                "xPx": 0,
+                "yPx": 0,
+                "rotationDeg": 0
+            }
+        },
+        {
+            "id": "lili-andar-esquerda",
+            "name": "Lili — andar para a esquerda",
+            "file": "sprites/lili-walk.webp",
+            "columns": 4,
+            "rows": 2,
+            "sequence": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+            ],
+            "frameDurationsMs": [
+                130,
+                130,
+                130,
+                130,
+                130,
+                130,
+                130,
+                130
+            ],
+            "repeat": 2,
+            "enabled": true,
+            "triggers": [
+                "idle_random"
+            ],
+            "products": [],
+            "probability": 0.72,
+            "weight": 3,
+            "cooldownMs": 7000,
+            "flipX": true,
+            "staticFrame": 0,
+            "motion": {
+                "type": "left",
+                "distancePx": 72
+            },
+            "transform": {
+                "xPx": 0,
+                "yPx": 0,
+                "rotationDeg": 0
+            }
+        },
+        {
+            "id": "lili-andar-direita",
+            "name": "Lili — andar para a direita",
+            "file": "sprites/lili-walk.webp",
+            "columns": 4,
+            "rows": 2,
+            "sequence": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+            ],
+            "frameDurationsMs": [
+                130,
+                130,
+                130,
+                130,
+                130,
+                130,
+                130,
+                130
+            ],
+            "repeat": 2,
+            "enabled": true,
+            "triggers": [
+                "idle_random"
+            ],
+            "products": [],
+            "probability": 0.72,
+            "weight": 3,
+            "cooldownMs": 7000,
+            "flipX": false,
+            "staticFrame": 0,
+            "motion": {
+                "type": "right",
+                "distancePx": 72
+            },
+            "transform": {
+                "xPx": 0,
+                "yPx": 0,
+                "rotationDeg": 0
+            }
+        },
+        {
+            "id": "lili-saltar",
+            "name": "Lili — saltar",
+            "file": "sprites/lili-jump.webp",
+            "columns": 4,
+            "rows": 2,
+            "sequence": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                0
+            ],
+            "frameDurationsMs": [
+                180,
+                150,
+                120,
+                120,
+                130,
+                150,
+                180,
+                300
+            ],
+            "repeat": 1,
+            "enabled": true,
+            "triggers": [
+                "launcher_hover",
+                "message_sent",
+                "idle_random",
+                "product_enter"
+            ],
+            "products": [
+                "*"
+            ],
+            "probability": 0.38,
+            "weight": 2,
+            "cooldownMs": 9000,
+            "flipX": false,
+            "staticFrame": 0,
+            "motion": {
+                "type": "jump",
+                "distancePx": 34
+            },
+            "transform": {
+                "xPx": 0,
+                "yPx": 0,
+                "rotationDeg": 0
+            }
+        },
+        {
+            "id": "lili-atirar",
+            "name": "Lili — atirar coisas ao chão",
+            "file": "sprites/lili-knock.webp",
+            "columns": 4,
+            "rows": 2,
+            "sequence": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+            ],
+            "frameDurationsMs": [
+                300,
+                220,
+                220,
+                240,
+                220,
+                220,
+                350,
+                550
+            ],
+            "repeat": 1,
+            "enabled": true,
+            "triggers": [
+                "idle_random",
+                "reply_end"
+            ],
+            "products": [],
+            "probability": 0.28,
+            "weight": 1,
+            "cooldownMs": 18000,
+            "flipX": false,
+            "staticFrame": 7,
+            "motion": {
+                "type": "none",
+                "distancePx": 0
+            },
+            "transform": {
+                "xPx": 0,
+                "yPx": 0,
+                "rotationDeg": 0
+            }
+        }
+    ]
+}

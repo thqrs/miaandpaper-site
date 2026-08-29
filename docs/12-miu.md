@@ -185,6 +185,11 @@ O projeto conta com um ambiente de testes avançado para afinação de expressõ
 
 ## Míu Animation Director V5
 
+> **Produção V2:** o plano executado, o interruptor V1/V2, o arquivo protegido,
+> o contrato de eventos e os procedimentos completos de rollback estão em
+> [13 · Míu V2 em produção](13-miu-v2-producao.md). O painel de afinação é
+> `site/miu-v2.php`.
+
 `site/miu-rig.php` é uma experiência autónoma e não é carregada pelo
 configurador. O valor absoluto deixou de escolher uma pose. O fluxo é agora:
 

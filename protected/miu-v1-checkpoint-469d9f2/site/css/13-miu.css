@@ -1,0 +1,1019 @@
+/* css/13-miu.css — módulo autónomo do chatbot Míu.
+   Carrega depois dos 12 módulos públicos e usa apenas os tokens da marca.
+   Conteúdo: lançador-gato, painel, mensagens, sugestões e estados móveis. */
+
+.miu-root {
+  --miu-panel: var(--surface-panel, var(--card));
+  --miu-raised: var(--surface-raised, var(--card));
+  --miu-cream: var(--surface-cream, var(--paper));
+  --miu-stone: var(--surface-stone, var(--linen));
+  --miu-highlight: var(--surface-gold-soft, var(--linen));
+  --miu-soft: var(--gold-soft, var(--linen));
+  --miu-border-warm: var(--border-soft-gold, var(--line));
+  --miu-shadow-small: var(--shadow-header, var(--shadow));
+  --miu-shadow-large: var(--shadow-menu, var(--shadow));
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 970;
+  display: grid;
+  justify-items: end;
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Desktop é o valor base. O media query no fim troca apenas as variáveis
+     derivadas, permitindo tamanhos independentes em mobile. */
+  --miu-launcher-sprite-size: var(--miu-launcher-sprite-size-desktop, 46px);
+  --miu-header-sprite-size: var(--miu-header-sprite-size-desktop, 26px);
+  --miu-message-sprite-size: var(--miu-message-sprite-size-desktop, 26px);
+  --miu-interactive-sprite-size: var(--miu-interactive-sprite-size-desktop, 96px);
+  /* O launcher usa um ícone de balão circular em outline (estilo WhatsApp).
+     Reserva um pouco mais de folga à volta da cara para ela respirar dentro do contorno. */
+  --miu-launcher-box-size: max(56px, calc(var(--miu-launcher-sprite-size, 46px) + 14px));
+}
+
+.miu-root.miu-launcher-mode-basket {
+  --miu-launcher-box-size: max(50px, calc(var(--miu-launcher-sprite-size, 46px) * 1.22));
+}
+
+.miu-root *,
+.miu-root *::before,
+.miu-root *::after { box-sizing: border-box; }
+
+.miu-launcher {
+  position: relative;
+  display: grid;
+  width: var(--miu-launcher-box-size);
+  height: var(--miu-launcher-box-size);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--moss);
+  cursor: pointer;
+  isolation: isolate;
+  place-items: center;
+  overflow: visible;
+  transition: transform .18s ease;
+}
+
+.miu-launcher:hover { transform: translateY(-3px) rotate(-2deg); }
+
+/* O launcher usa a silhueta exterior de um balão tipo WhatsApp.
+   O fundo mantém o mesmo var(--miu-panel) usado pelo launcher original;
+   apenas o CONTORNO é simples/sem gradiente. O SVG é espelhado para a ponta ficar à direita. */
+.miu-launcher::before,
+.miu-launcher::after { display: none; }
+
+.miu-launcher__bubble-outline {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: var(--miu-panel);
+  stroke: var(--gold);
+  stroke-width: 1.55;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+  transform: scaleX(-1);
+  transform-origin: center;
+  filter: drop-shadow(0 4px 7px rgba(67,43,19,.12));
+}
+
+.miu-launcher__bubble-outline path {
+  vector-effect: non-scaling-stroke;
+}
+
+.miu-launcher__bubble-face {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  width: var(--miu-launcher-sprite-size, 46px);
+  height: var(--miu-launcher-sprite-size, 46px);
+  overflow: hidden;
+  border-radius: 50%;
+  background: transparent;
+  place-items: center;
+  transform: translate(-50%, -50%);
+}
+
+.miu-launcher .miu-face {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  flex: 0 0 100%;
+}
+
+.miu-launcher__callout {
+  position: absolute;
+  top: 7px;
+  right: calc(100% - 2px);
+  padding: 5px 8px;
+  border: 1px solid var(--miu-border-warm);
+  border-radius: 10px 10px 3px 10px;
+  background: var(--miu-panel);
+  box-shadow: var(--miu-shadow-small);
+  color: var(--moss);
+  font-size: .7rem;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+  filter: none;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity .16s ease, transform .16s ease;
+}
+
+.miu-launcher__callout::after {
+  position: absolute;
+  top: 50%;
+  right: -5px;
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid var(--miu-border-warm);
+  border-right: 1px solid var(--miu-border-warm);
+  background: var(--miu-panel);
+  content: "";
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.miu-root.is-open .miu-launcher__callout {
+  opacity: 0;
+  transform: translateX(4px);
+}
+
+.miu-launcher:focus-visible,
+.miu-panel button:focus-visible,
+.miu-panel textarea:focus-visible,
+.miu-panel a:focus-visible {
+  outline: 3px solid var(--miu-soft);
+  outline-offset: 3px;
+}
+
+.miu-face {
+  display: block;
+  width: 48px;
+  height: 48px;
+  background: url("../content/brand/miu/miu-sprite.webp") 0 0 / 400% 200% no-repeat;
+  transform-origin: center;
+}
+
+.miu-face--small {
+  background-image: url("../content/brand/miu/miu-sprite-small.webp");
+}
+
+.miu-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(var(--miu-launcher-box-size) + 18px);
+  display: grid;
+  grid-template-rows: auto minmax(100px, 1fr) auto;
+  width: min(310px, calc(100vw - 24px));
+  height: min(420px, calc(100vh - 110px));
+  height: min(420px, calc(100dvh - 110px));
+  min-height: 320px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px 18px 6px 18px;
+  background: var(--miu-panel);
+  box-shadow: var(--miu-shadow-large);
+  transform: translateY(10px) scale(.98);
+  transform-origin: bottom right;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.miu-root.is-open .miu-panel {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.miu-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(135deg, var(--miu-cream) 0%, var(--miu-soft) 100%);
+}
+
+.miu-panel__mini-cat {
+  display: grid;
+  flex: 0 0 auto;
+  width: calc(var(--miu-small-sprite-size, 26px) + 2px);
+  height: calc(var(--miu-small-sprite-size, 26px) + 2px);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--miu-panel);
+  place-items: center;
+}
+
+.miu-panel__mini-cat .miu-face {
+  width: var(--miu-small-sprite-size, 26px);
+  height: var(--miu-small-sprite-size, 26px);
+}
+
+.miu-panel__title { min-width: 0; flex: 1 1 auto; }
+.miu-panel__title strong { display: block; color: var(--moss); font: 800 .82rem/1.1 Georgia, "Times New Roman", serif; }
+
+.miu-panel__icon-button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--miu-panel);
+  color: var(--moss);
+  font-size: .95rem;
+  cursor: pointer;
+  place-items: center;
+}
+
+.miu-panel__new { font-size: .8rem; }
+
+.miu-messages {
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 9px 8px 7px;
+  background: linear-gradient(180deg, var(--miu-panel) 0%, var(--miu-cream) 100%);
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+.miu-message {
+  width: fit-content;
+  max-width: 86%;
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px 15px 15px 15px;
+  background: var(--miu-panel);
+  box-shadow: var(--miu-shadow-small);
+  color: var(--ink);
+  font-size: .8rem;
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.miu-message-row {
+  display: flex;
+  align-items: end;
+  gap: 5px;
+  width: 100%;
+  margin: 0 0 8px;
+}
+
+.miu-message-row .miu-message {
+  max-width: calc(100% - var(--miu-small-sprite-size, 26px) - 8px);
+  margin: 0;
+}
+
+.miu-message-avatar {
+  flex: 0 0 auto;
+  width: var(--miu-small-sprite-size, 26px);
+  height: var(--miu-small-sprite-size, 26px);
+  border: 1px solid var(--miu-border-warm);
+  border-radius: 50%;
+  background-color: var(--miu-panel);
+  box-shadow: var(--miu-shadow-small);
+}
+
+.miu-message--user {
+  margin-left: auto;
+  border-color: var(--miu-border-warm);
+  border-radius: 15px 5px 15px 15px;
+  background: var(--miu-highlight);
+}
+
+.miu-message--notice {
+  max-width: 100%;
+  border-style: dashed;
+  background: var(--miu-stone);
+  color: var(--muted);
+  font-size: .8rem;
+}
+
+.miu-message p { margin: 0; }
+.miu-message p + p { margin-top: 8px; }
+.miu-message a { color: var(--moss); font-weight: 850; text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 3px; }
+
+.miu-thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 48px;
+}
+
+.miu-thinking i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sage);
+  animation: miu-bounce 1s ease-in-out infinite;
+}
+
+.miu-thinking i:nth-child(2) { animation-delay: .14s; }
+.miu-thinking i:nth-child(3) { animation-delay: .28s; }
+
+@keyframes miu-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+.miu-suggestions {
+  display: grid;
+  gap: 7px;
+  margin: 2px 34px 9px 0;
+}
+
+.miu-suggestion {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--miu-panel);
+  color: var(--moss);
+  font-size: .72rem;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+
+.miu-suggestion:hover { border-color: var(--gold); background: var(--miu-highlight); }
+
+.miu-composer {
+  padding: 7px 8px calc(6px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: var(--miu-panel);
+}
+
+.miu-composer__row {
+  display: flex;
+  align-items: end;
+  gap: 6px;
+}
+
+.miu-composer textarea {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 36px;
+  max-height: 92px;
+  resize: none;
+  padding: 8px 9px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--miu-raised);
+  color: var(--ink);
+  font: inherit;
+  font-size: .78rem;
+  line-height: 1.4;
+}
+
+.miu-send {
+  display: grid;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--miu-panel);
+  cursor: pointer;
+  place-items: center;
+}
+
+.miu-send:disabled,
+.miu-suggestion:disabled { cursor: wait; opacity: .55; }
+.miu-send svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+
+.miu-composer__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 1em;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: .61rem;
+  line-height: 1.35;
+}
+
+.miu-composer__meta a { text-decoration: underline; text-underline-offset: 2px; }
+.miu-status { min-height: 1em; color: var(--rose); font-weight: 750; }
+.miu-count { flex: 0 0 auto; }
+
+@media (max-width: 520px) {
+  .miu-root {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .miu-launcher .miu-face {
+    width: 100%;
+    height: 100%;
+  }
+  .miu-panel {
+    right: 0;
+    bottom: calc(var(--miu-launcher-box-size) + 14px);
+    width: min(286px, calc(100vw - 56px));
+    height: min(360px, 52dvh);
+    min-height: 288px;
+    border-radius: 16px 16px 6px 16px;
+  }
+  .miu-panel__head { gap: 5px; padding: 4px 6px; }
+  .miu-panel__icon-button { width: 23px; height: 23px; }
+  .miu-messages { padding: 8px 7px 6px; }
+  .miu-message { max-width: 91%; padding: 7px 9px; font-size: .76rem; }
+  .miu-message-row .miu-message { max-width: calc(100% - var(--miu-small-sprite-size, 26px) - 6px); }
+  .miu-composer { padding: 6px 7px calc(5px + env(safe-area-inset-bottom)); }
+  .miu-composer textarea { min-height: 34px; padding: 7px 8px; }
+  .miu-send { width: 34px; height: 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .miu-launcher,
+  .miu-panel,
+  .miu-launcher__callout { transition: none; }
+  .miu-thinking i,
+  .miu-face { animation: none; }
+  .miu-messages { scroll-behavior: auto; }
+}
+
+@media print { .miu-root { display: none !important; } }
+
+/* MIU_APPEARANCE_V3 — tamanhos independentes e launcher balão/alcofinha. */
+
+/* O balão fica centrado verticalmente no círculo; a seta aponta para o centro
+   do Míu em vez de ficar alguns pixels acima. */
+.miu-launcher__callout {
+  top: 50%;
+  right: calc(100% + 7px);
+  opacity: 0;
+  transform: translateY(-50%) translateX(4px);
+  visibility: hidden;
+}
+.miu-launcher__callout.is-callout-visible {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+  visibility: visible;
+}
+.miu-root.is-open .miu-launcher__callout {
+  opacity: 0;
+  transform: translateY(-50%) translateX(4px);
+  visibility: hidden;
+}
+/* Erros/avisos pedidos pelo próprio site continuam visíveis mesmo se a caixa
+   de chat estiver aberta. Ao contrário do “Dúvidas?”, podem quebrar linha. */
+.miu-launcher__callout.is-site-message {
+  width: max-content;
+  max-width: min(280px, calc(100vw - 90px));
+  line-height: 1.3;
+  white-space: normal;
+}
+.miu-root.is-open .miu-launcher__callout.is-site-message.is-callout-visible {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+  visibility: visible;
+}
+.miu-launcher__callout::after { top: 50%; }
+
+.miu-panel__mini-cat {
+  width: calc(var(--miu-header-sprite-size, 26px) + 2px);
+  height: calc(var(--miu-header-sprite-size, 26px) + 2px);
+}
+.miu-panel__mini-cat .miu-face {
+  width: var(--miu-header-sprite-size, 26px);
+  height: var(--miu-header-sprite-size, 26px);
+}
+.miu-message-row .miu-message {
+  max-width: calc(100% - var(--miu-message-sprite-size, 26px) - 8px);
+}
+/* Se o avatar do Míu for mais alto do que o balão, centra o balão na
+   altura do avatar. Se o texto for mais alto, a própria mensagem define a
+   altura da linha e o avatar mantém-se apoiado em baixo. */
+.miu-message-row--assistant .miu-message {
+  align-self: center;
+}
+.miu-message-avatar {
+  flex: 0 0 var(--miu-message-sprite-size, 26px);
+  width: var(--miu-message-sprite-size, 26px);
+  height: var(--miu-message-sprite-size, 26px);
+}
+.miu-message-row--assistant {
+  min-height: var(--miu-message-sprite-size, 26px);
+}
+
+.miu-root.miu-no-circle-header .miu-panel__mini-cat {
+  border-color: transparent;
+  background: transparent;
+}
+.miu-root.miu-no-circle-message .miu-message-avatar {
+  border-color: transparent;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.miu-interactive-wrap {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  display: block;
+  width: var(--miu-interactive-sprite-size, 96px);
+  height: var(--miu-interactive-sprite-size, 96px);
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: bottom right;
+}
+.miu-interactive-sprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}
+.miu-root.is-interactive:not(.is-open) .miu-interactive-wrap { opacity: 1; }
+.miu-root.is-interactive:not(.is-open) .miu-launcher__bubble-face,
+.miu-root.is-interactive:not(.is-open) .miu-launcher__basket { opacity: 0; }
+
+/* No laboratório, uma animação de corpo inteiro tem de ser visível mesmo se a
+   chatbox estiver aberta. Isto evita que o estado do chat esconda o teste. */
+body[data-miu-admin-chat="1"] .miu-root.is-debug-interactive-active .miu-interactive-wrap {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+body[data-miu-admin-chat="1"] .miu-root.is-debug-interactive-active .miu-interactive-sprite {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+body[data-miu-admin-chat="1"] .miu-root.is-debug-interactive-active .miu-launcher__bubble-face,
+body[data-miu-admin-chat="1"] .miu-root.is-debug-interactive-active .miu-launcher__basket { opacity: 0 !important; }
+
+@media (max-width: 520px) {
+  .miu-root {
+    --miu-launcher-sprite-size: var(--miu-launcher-sprite-size-mobile, var(--miu-launcher-sprite-size-desktop, 46px));
+    --miu-header-sprite-size: var(--miu-header-sprite-size-mobile, var(--miu-header-sprite-size-desktop, 26px));
+    --miu-message-sprite-size: var(--miu-message-sprite-size-mobile, var(--miu-message-sprite-size-desktop, 26px));
+    --miu-interactive-sprite-size: var(--miu-interactive-sprite-size-mobile, var(--miu-interactive-sprite-size-desktop, 96px));
+  }
+  .miu-message-row .miu-message { max-width: calc(100% - var(--miu-message-sprite-size, 26px) - 6px); }
+}
+
+
+/* MIU_ADMIN_LAB_V1 — chat real + laboratório fixo de sprites no bot.php. */
+body[data-miu-admin-chat="1"] .miu-root {
+  z-index: 1300;
+}
+
+.miu-debug-dock {
+  position: fixed;
+  top: 50%;
+  left: max(8px, env(safe-area-inset-left));
+  z-index: 1400;
+  width: min(286px, calc(100vw - 24px));
+  max-height: calc(100dvh - 28px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--shadow-menu, var(--shadow));
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transform: translateY(-50%);
+  transition: width .16s ease, top .16s ease, bottom .16s ease, transform .16s ease;
+}
+
+.miu-debug-dock *,
+.miu-debug-dock *::before,
+.miu-debug-dock *::after {
+  box-sizing: border-box;
+}
+
+.miu-debug-dock__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.miu-debug-dock__head > div {
+  min-width: 0;
+}
+
+.miu-debug-dock__head strong {
+  display: block;
+  color: var(--moss);
+  font: 800 .86rem/1.15 Georgia, "Times New Roman", serif;
+}
+
+.miu-debug-dock__head small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: .64rem;
+}
+
+.miu-debug-dock__head button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--moss);
+  cursor: pointer;
+  place-items: center;
+}
+
+.miu-debug-dock__body {
+  max-height: calc(100dvh - 82px);
+  padding: 9px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.miu-debug-dock.is-collapsed {
+  top: auto;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: auto;
+  min-width: 148px;
+  transform: none;
+}
+
+.miu-debug-dock.is-collapsed .miu-debug-dock__head {
+  border-bottom: 0;
+}
+
+.miu-debug-dock.is-collapsed .miu-debug-dock__body {
+  display: none;
+}
+
+.miu-debug-dock section + section {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+
+.miu-debug-dock h2 {
+  margin: 0 0 6px;
+  color: var(--moss);
+  font-size: .7rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: .035em;
+}
+
+.miu-debug-buttons {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+}
+
+.miu-debug-animation-button,
+.miu-debug-play,
+.miu-debug-dock__actions button {
+  width: 100%;
+  padding: 6px 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: .68rem;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+}
+
+.miu-debug-animation-button:hover,
+.miu-debug-play:hover,
+.miu-debug-dock__actions button:hover {
+  border-color: var(--gold);
+  background: var(--linen);
+}
+
+.miu-debug-animation-button.is-disabled-config {
+  border-style: dashed;
+  opacity: .72;
+}
+
+.miu-debug-loading,
+.miu-debug-empty {
+  display: block;
+  padding: 6px 7px;
+  border-radius: 8px;
+  background: var(--linen);
+  color: var(--muted);
+  font-size: .66rem;
+}
+
+.miu-debug-sprite-lab > p {
+  margin: 0 0 7px;
+  color: var(--muted);
+  font-size: .62rem;
+  line-height: 1.35;
+}
+
+.miu-debug-sprite-lab code {
+  font-size: .6rem;
+  overflow-wrap: anywhere;
+}
+
+.miu-debug-lab-list {
+  display: grid;
+  gap: 7px;
+}
+
+.miu-debug-lab-row {
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--paper);
+}
+
+.miu-debug-lab-name {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  margin-bottom: 5px;
+}
+
+.miu-debug-lab-name strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: .66rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.miu-debug-lab-name small {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: .55rem;
+}
+
+.miu-debug-lab-fields {
+  display: grid;
+  grid-template-columns: .8fr .8fr 1.35fr;
+  gap: 4px;
+  margin-bottom: 5px;
+}
+
+.miu-debug-lab-fields label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: .58rem;
+}
+
+.miu-debug-lab-fields input {
+  width: 100%;
+  min-width: 0;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: .62rem;
+}
+
+.miu-debug-play {
+  text-align: center;
+}
+
+.miu-debug-dock__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+
+.miu-debug-dock__actions button {
+  text-align: center;
+}
+
+.miu-debug-status {
+  min-height: 1.1em;
+  margin: 6px 1px 0;
+  color: var(--muted);
+  font-size: .6rem;
+  line-height: 1.3;
+}
+
+@media (max-width: 760px) {
+  .miu-debug-dock {
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    max-height: min(62dvh, 520px);
+    transform: none;
+  }
+  .miu-debug-dock__body {
+    max-height: min(calc(62dvh - 48px), 472px);
+  }
+}
+
+/* MIU_LAUNCHER_MASCOT_V3 — a alcofinha pertence ao Míu principal no canto.
+   A barra do chat volta a usar apenas a cara, que pode ser mostrada/ocultada
+   e ter ou não círculo. */
+.miu-panel__mascot {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  align-self: center;
+  place-items: center;
+}
+.miu-root.miu-header-hidden .miu-panel__mascot { display: none; }
+
+.miu-launcher__basket {
+  position: relative;
+  z-index: 1;
+  display: none;
+  width: calc(var(--miu-launcher-sprite-size, 46px) * 1.36);
+  height: calc(var(--miu-launcher-sprite-size, 46px) * 1.22);
+  min-width: 34px;
+  min-height: 30px;
+  overflow: visible;
+}
+
+.miu-launcher__basket-body {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 1;
+  display: block;
+  width: var(--miu-launcher-sprite-size, 46px);
+  height: var(--miu-launcher-sprite-size, 46px);
+  margin-left: calc(var(--miu-launcher-sprite-size, 46px) / -2);
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  transform-origin: center bottom;
+}
+
+.miu-launcher__basket-front {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  height: 43%;
+  border: 1px solid color-mix(in srgb, var(--gold) 72%, #6f4a22 28%);
+  border-radius: 38% 38% 46% 46% / 24% 24% 54% 54%;
+  background:
+    repeating-linear-gradient(25deg, rgba(111,74,34,.16) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(-25deg, rgba(255,255,255,.24) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #dfbd75 0%, #c99b51 100%);
+  box-shadow: 0 2px 5px rgba(67,43,19,.18);
+}
+
+.miu-launcher__basket-front::before {
+  position: absolute;
+  right: -2px;
+  top: -4px;
+  left: -2px;
+  height: 6px;
+  content: "";
+  border: 1px solid color-mix(in srgb, var(--gold) 74%, #68441f 26%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #efd08c 0%, #c99649 100%);
+}
+
+.miu-root.miu-launcher-mode-circle.miu-launcher__bubble-face { display: grid; }
+.miu-root.miu-launcher-mode-circle .miu-launcher__bubble-outline { display: block; }
+.miu-root.miu-launcher-mode-circle .miu-launcher__basket { display: none; }
+.miu-root.miu-launcher-mode-basket.miu-launcher__bubble-face { display: none; }
+.miu-root.miu-launcher-mode-basket .miu-launcher__bubble-outline { display: none; }
+.miu-root.miu-launcher-mode-basket .miu-launcher__basket { display: block; }
+.miu-root.miu-launcher-mode-basket .miu-launcher {
+  width: max(50px, calc(var(--miu-launcher-sprite-size, 46px) * 1.36));
+  height: var(--miu-launcher-box-size);
+}
+.miu-root.miu-launcher-mode-basket .miu-launcher::before,
+.miu-root.miu-launcher-mode-basket .miu-launcher::after { display: none; }
+
+/* Opções da tab Aparência. São checkboxes a pedido, mas o JS mantém as duas
+   escolhas do Míu principal mutuamente exclusivas em tempo real. */
+.miu-launcher-mode-settings {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card, #fff);
+}
+.miu-launcher-mode-settings__title {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+.miu-launcher-mode-settings__choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.miu-launcher-mode-settings__choices .miu-toggle {
+  min-width: 0;
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .miu-launcher-mode-settings__choices { grid-template-columns: 1fr; }
+}
+
+
+/* MIU_CHAT_MORPH_V10 — mais respiro nos avatares e launcher <-> janela. */
+.miu-root {
+  --miu-header-avatar-padding: 4px;
+  --miu-message-avatar-padding: 4px;
+  --miu-header-avatar-box-size: calc(var(--miu-header-sprite-size, 26px) + (var(--miu-header-avatar-padding) * 2));
+  --miu-message-avatar-box-size: calc(var(--miu-message-sprite-size, 26px) + (var(--miu-message-avatar-padding) * 2));
+}
+
+/* O tamanho configurado continua a ser o tamanho da cara. O círculo ganha
+   padding próprio, para o Míu não ficar colado à borda. */
+.miu-panel__mini-cat {
+  width: var(--miu-header-avatar-box-size);
+  height: var(--miu-header-avatar-box-size);
+  padding: var(--miu-header-avatar-padding);
+}
+.miu-panel__mini-cat .miu-face {
+  width: var(--miu-header-sprite-size, 26px);
+  height: var(--miu-header-sprite-size, 26px);
+}
+
+.miu-message-avatar {
+  display: grid;
+  flex: 0 0 var(--miu-message-avatar-box-size);
+  width: var(--miu-message-avatar-box-size);
+  height: var(--miu-message-avatar-box-size);
+  padding: var(--miu-message-avatar-padding);
+  place-items: center;
+  overflow: hidden;
+}
+.miu-message-avatar .miu-face {
+  width: var(--miu-message-sprite-size, 26px);
+  height: var(--miu-message-sprite-size, 26px);
+  flex: 0 0 var(--miu-message-sprite-size, 26px);
+}
+.miu-message-row .miu-message {
+  max-width: calc(100% - var(--miu-message-avatar-box-size) - 8px);
+}
+.miu-message-row--assistant {
+  min-height: var(--miu-message-avatar-box-size);
+}
+
+/* Ao abrir, a janela ocupa o lugar visual do launcher; não ficam os dois
+   objetos visíveis ao mesmo tempo. Minimizar faz o inverso. */
+.miu-panel {
+  bottom: 0;
+}
+.miu-launcher {
+  transition: opacity .16s ease, visibility .16s ease, transform .18s ease;
+}
+.miu-root.is-open .miu-launcher {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(8px) scale(.92);
+}
+.miu-root.is-open .miu-interactive-wrap {
+  opacity: 0 !important;
+  visibility: hidden;
+}
+.miu-panel__minimize span {
+  display: block;
+  margin-top: -5px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+@media (max-width: 520px) {
+  .miu-panel { bottom: 0; }
+  .miu-message-row .miu-message {
+    max-width: calc(100% - var(--miu-message-avatar-box-size) - 6px);
+  }
+}
