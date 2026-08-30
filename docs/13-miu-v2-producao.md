@@ -18,8 +18,10 @@ bot-api.php
            ↓
 engine=v2? carrega miu-v2-runtime.js
            ↓
+oculta todas as artes V1; mantém apenas a casca do balão
+           ↓
 manifesto + primeiro PNG prontos?
-  ├─ não / erro → V1 nunca foi escondido
+  ├─ não / erro → repõe configuração e animações V1
   └─ sim        → canvas V2 visível; V1 pára os timers e fica no DOM
 ```
 
@@ -27,7 +29,8 @@ Há três formas independentes de voltar atrás:
 
 1. **Rollback lógico, imediato:** `site/miu-v2.php` → **Voltar ao V1**.
 2. **Fallback automático:** se runtime, manifesto, canvas ou PNG falharem, a
-   classe `is-miu-v2-ready` nunca é aplicada e o V1 permanece visível.
+   classe `is-miu-v2-ready` nunca é aplicada e o V1 retoma a configuração e
+   os timers históricos.
 3. **Rollback de código:** usar `git revert miu-v2-production` depois de criada
    a tag local final. O ponto anterior está marcado por
    `miu-v2-before-production` e pelo commit `469d9f2`.
@@ -132,11 +135,15 @@ Antes de mostrar o primeiro frame V2, o runtime público carrega
 `miu-sprite-grid.js` e executa o mesmo
 `MiuSpriteGrid.detectConnectedGrid` usado no laboratório. Cada pose core passa
 assim por Connected-Component Labelling, máscara de isolamento e âncoras de
-mediana reais. O V1 permanece visível durante esta preparação; se o detector ou
-a folha falhar, o V2 não recebe `is-miu-v2-ready` e o fallback não desaparece.
-Só a folha core 5 é processada no arranque. A folha 6 é preparada depois, em
-idle, e as folhas emocionais/histórias continuam a ser carregadas apenas a
-pedido.
+mediana reais. Durante esta preparação todas as artes V1 ficam ocultas; a
+primeira pose facial histórica é apenas a referência geométrica descrita
+abaixo, não um placeholder visível. O arranque cancela o `page_load` histórico
+e bloqueia também `product_enter`, que podia mostrar a Lili de corpo inteiro aos
+650 ms. Assim não há sucessão de personagens antigas enquanto o CCL trabalha.
+Se o detector ou a folha falhar, o V2 não recebe
+`is-miu-v2-ready` e o fallback V1 volta a animar normalmente. Só a folha core 5
+é processada no arranque. A folha 6 é preparada depois, em idle, e as folhas
+emocionais/histórias continuam a ser carregadas apenas a pedido.
 
 Para folhas emocionais ou histórias carregadas apenas a pedido, o runtime usa o
 mesmo detector exacto; esse custo só existe quando `setMood()` ou
@@ -180,6 +187,41 @@ final fica quieta durante um intervalo aleatório de 14–28 segundos. Só depoi
 pode ocorrer outro piscar, olhar ou movimento de orelha. Episódios ambientais
 continuam desligados por defeito; atenção e reacções imediatas ficam reservadas
 para interacções reais da pessoa.
+
+No idle, cada componente detectado pelo CCL recebe ainda uma correcção local que
+coloca o seu centro anatómico no centro exacto do canvas. Esta é a posição da
+primeira pose do sprite histórico (`miu-sprite.webp`, célula 0), cujo centro
+alpha coincide com o centro lógico da célula. A correcção não altera a arte nem
+as âncoras do resto da animação: aplica-se só ao repouso, antes do movimento
+secundário. O `offsetYPx` de origem é por isso `0`, e o interruptor
+`idleLockToBubbleCenter` permite afinar ou desligar a regra no painel.
+
+### Variação sem ruído
+
+O motor não repete imediatamente a mesma micro-animação de idle. Para atenção e
+reacções escolhe também uma de três versões temporais da sequência e exclui a
+versão acabada de usar. Estas versões seleccionam apenas frames PNG que já
+existem na animação: não sintetizam caras, não fazem morph nem misturam
+expressões.
+
+Uma assimetria máxima de `1.2 px` no rig altera subtilmente o lado do tilt ou do
+overshoot. Além disso, o `launcher_hover` tem uma janela de 4200 ms: atravessar
+repetidamente a borda do botão não reinicia o mesmo «Oi?» a cada passagem. Os
+parâmetros editáveis são:
+
+```json
+"variation": {
+  "enabled": true,
+  "hoverCooldownMs": 4200,
+  "rigBiasPx": 1.2,
+  "attentionPatterns": ["3 padrões de índices de frames"],
+  "reactionPatterns": ["3 padrões de índices de frames"]
+}
+```
+
+O painel `miu-v2.php` expõe o interruptor, o intervalo entre hovers e a
+assimetria do rig. Os padrões completos permanecem no editor JSON avançado para
+não transformar a afinação diária numa lista de índices difícil de ler.
 
 ## O modelo de actor
 

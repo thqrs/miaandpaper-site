@@ -88,7 +88,7 @@ function miu_v2_default_config()
         'engine' => 'v2',
         'assets' => array(
             'runtime' => 'miu-v2-runtime.js',
-            'cacheVersion' => '2026083001',
+            'cacheVersion' => '2026083002',
             'coreManifest' => 'content/brand/miu/v2/core-manifest.json',
             'libraryManifest' => 'content/brand/miu/experimental/library-v1/library-manifest.json',
             'episodeManifest' => 'content/brand/miu/experimental/library-v1/episodes/episode-manifest.json',
@@ -98,10 +98,11 @@ function miu_v2_default_config()
             'sizeMobilePx' => 60,
             'canvasResolution' => 360,
             'offsetXPx' => 0,
-            'offsetYPx' => 5,
+            'offsetYPx' => 0,
             'scale' => 0.96,
             'rigIntensity' => 0.62,
             'showFx' => true,
+            'idleLockToBubbleCenter' => true,
         ),
         'mesh' => array(
             'enabled' => true,
@@ -123,6 +124,21 @@ function miu_v2_default_config()
             'smallMax' => 0.28,
             'mediumMax' => 0.62,
             'velocityWeight' => 0.045,
+        ),
+        'variation' => array(
+            'enabled' => true,
+            'hoverCooldownMs' => 4200,
+            'rigBiasPx' => 1.2,
+            'attentionPatterns' => array(
+                array(0, 1, 2, 3, 4, 5, 6, 7),
+                array(0, 2, 3, 5, 6, 7),
+                array(0, 1, 3, 4, 6, 7),
+            ),
+            'reactionPatterns' => array(
+                array(0, 1, 2, 3, 4, 5, 6, 7),
+                array(0, 1, 3, 5, 6, 7),
+                array(0, 2, 4, 5, 7),
+            ),
         ),
         'animations' => array(
             'idle' => array(
@@ -209,6 +225,30 @@ function miu_v2_sanitize_idle($value, $fallback)
     return $result ? $result : $fallback;
 }
 
+function miu_v2_sanitize_patterns($value, $fallback)
+{
+    $patterns = array();
+    foreach (is_array($value) ? $value : array() as $pattern) {
+        if (!is_array($pattern)) {
+            continue;
+        }
+        $frames = array();
+        foreach ($pattern as $frame) {
+            $frames[] = miu_v2_int($frame, 0, 63, 0);
+            if (count($frames) >= 16) {
+                break;
+            }
+        }
+        if (count($frames) >= 2) {
+            $patterns[] = $frames;
+        }
+        if (count($patterns) >= 8) {
+            break;
+        }
+    }
+    return $patterns ? $patterns : $fallback;
+}
+
 function miu_v2_sanitize_config($raw)
 {
     $defaults = miu_v2_default_config();
@@ -218,6 +258,7 @@ function miu_v2_sanitize_config($raw)
     $mesh = isset($raw['mesh']) && is_array($raw['mesh']) ? $raw['mesh'] : array();
     $timing = isset($raw['timing']) && is_array($raw['timing']) ? $raw['timing'] : array();
     $thresholds = isset($raw['thresholds']) && is_array($raw['thresholds']) ? $raw['thresholds'] : array();
+    $variation = isset($raw['variation']) && is_array($raw['variation']) ? $raw['variation'] : array();
     $animations = isset($raw['animations']) && is_array($raw['animations']) ? $raw['animations'] : array();
     $triggers = isset($raw['triggers']) && is_array($raw['triggers']) ? $raw['triggers'] : array();
     $library = isset($raw['library']) && is_array($raw['library']) ? $raw['library'] : array();
@@ -266,10 +307,11 @@ function miu_v2_sanitize_config($raw)
             'sizeMobilePx' => miu_v2_int(isset($appearance['sizeMobilePx']) ? $appearance['sizeMobilePx'] : 60, 52, 200, 60),
             'canvasResolution' => miu_v2_int(isset($appearance['canvasResolution']) ? $appearance['canvasResolution'] : 360, 192, 720, 360),
             'offsetXPx' => miu_v2_int(isset($appearance['offsetXPx']) ? $appearance['offsetXPx'] : 0, -120, 120, 0),
-            'offsetYPx' => miu_v2_int(isset($appearance['offsetYPx']) ? $appearance['offsetYPx'] : 5, -120, 120, 5),
+            'offsetYPx' => miu_v2_int(isset($appearance['offsetYPx']) ? $appearance['offsetYPx'] : 0, -120, 120, 0),
             'scale' => round(miu_v2_float(isset($appearance['scale']) ? $appearance['scale'] : 0.96, 0.45, 1.8, 0.96), 3),
             'rigIntensity' => round(miu_v2_float(isset($appearance['rigIntensity']) ? $appearance['rigIntensity'] : 0.62, 0, 1.5, 0.62), 3),
             'showFx' => miu_v2_bool(isset($appearance['showFx']) ? $appearance['showFx'] : true, true),
+            'idleLockToBubbleCenter' => miu_v2_bool(isset($appearance['idleLockToBubbleCenter']) ? $appearance['idleLockToBubbleCenter'] : true, true),
         ),
         'mesh' => array(
             'enabled' => miu_v2_bool(isset($mesh['enabled']) ? $mesh['enabled'] : true, true),
@@ -291,6 +333,19 @@ function miu_v2_sanitize_config($raw)
             'smallMax' => round($smallMax, 3),
             'mediumMax' => round($mediumMax, 3),
             'velocityWeight' => round(miu_v2_float(isset($thresholds['velocityWeight']) ? $thresholds['velocityWeight'] : 0.045, 0, 0.3, 0.045), 4),
+        ),
+        'variation' => array(
+            'enabled' => miu_v2_bool(isset($variation['enabled']) ? $variation['enabled'] : true, true),
+            'hoverCooldownMs' => miu_v2_int(isset($variation['hoverCooldownMs']) ? $variation['hoverCooldownMs'] : 4200, 0, 60000, 4200),
+            'rigBiasPx' => round(miu_v2_float(isset($variation['rigBiasPx']) ? $variation['rigBiasPx'] : 1.2, 0, 6, 1.2), 3),
+            'attentionPatterns' => miu_v2_sanitize_patterns(
+                isset($variation['attentionPatterns']) ? $variation['attentionPatterns'] : array(),
+                $defaults['variation']['attentionPatterns']
+            ),
+            'reactionPatterns' => miu_v2_sanitize_patterns(
+                isset($variation['reactionPatterns']) ? $variation['reactionPatterns'] : array(),
+                $defaults['variation']['reactionPatterns']
+            ),
         ),
         'animations' => $cleanAnimations,
         'triggers' => array(

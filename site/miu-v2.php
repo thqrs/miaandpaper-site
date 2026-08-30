@@ -82,10 +82,11 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string)$_SERVER['REQUEST_ME
                 'sizeMobilePx' => miu_v2_admin_post('size_mobile_px', 60),
                 'canvasResolution' => miu_v2_admin_post('canvas_resolution', 360),
                 'offsetXPx' => miu_v2_admin_post('offset_x_px', 0),
-                'offsetYPx' => miu_v2_admin_post('offset_y_px', 5),
+                'offsetYPx' => miu_v2_admin_post('offset_y_px', 0),
                 'scale' => miu_v2_admin_post('scale', 0.96),
                 'rigIntensity' => miu_v2_admin_post('rig_intensity', 0.62),
                 'showFx' => miu_v2_admin_checkbox('show_fx'),
+                'idleLockToBubbleCenter' => miu_v2_admin_checkbox('idle_lock_to_bubble_center'),
             );
             $config['mesh'] = array(
                 'enabled' => miu_v2_admin_checkbox('mesh_enabled'),
@@ -108,6 +109,9 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string)$_SERVER['REQUEST_ME
                 'mediumMax' => miu_v2_admin_post('medium_max', 0.62),
                 'velocityWeight' => miu_v2_admin_post('velocity_weight', 0.045),
             );
+            $config['variation']['enabled'] = miu_v2_admin_checkbox('variation_enabled');
+            $config['variation']['hoverCooldownMs'] = miu_v2_admin_post('hover_cooldown_ms', 4200);
+            $config['variation']['rigBiasPx'] = miu_v2_admin_post('variation_rig_bias_px', 1.2);
             $config['triggers'] = array(
                 'quantity' => miu_v2_admin_checkbox('trigger_quantity'),
                 'packs' => miu_v2_admin_checkbox('trigger_packs'),
@@ -250,12 +254,25 @@ function miu_v2_admin_animation_select($name, $selected, $animationIds)
         <label>Escala da arte<input type="number" name="scale" min="0.45" max="1.8" step="0.01" value="<?= miu_v2_admin_h($config['appearance']['scale']) ?>"></label>
         <label>Intensidade do rig<input type="number" name="rig_intensity" min="0" max="1.5" step="0.01" value="<?= miu_v2_admin_h($config['appearance']['rigIntensity']) ?>"></label>
         <label class="miu-v2-admin__check"><input type="checkbox" name="show_fx" value="1" <?= $config['appearance']['showFx'] ? 'checked' : '' ?>> Mostrar FX anime</label>
+        <label class="miu-v2-admin__check"><input type="checkbox" name="idle_lock_to_bubble_center" value="1" <?= $config['appearance']['idleLockToBubbleCenter'] ? 'checked' : '' ?>> Centrar o idle como a primeira pose histórica</label>
         <label class="miu-v2-admin__check"><input type="checkbox" name="mesh_enabled" value="1" <?= $config['mesh']['enabled'] ? 'checked' : '' ?>> Activar mesh local</label>
         <label>Bandas da mesh<input type="number" name="mesh_rows" min="2" max="12" value="<?= (int)$config['mesh']['rows'] ?>"></label>
         <label>Offset máximo da mesh (px)<input type="number" name="mesh_max_offset_px" min="0" max="8" step="0.1" value="<?= miu_v2_admin_h($config['mesh']['maxOffsetPx']) ?>"></label>
         <label>Follow-through da mesh<input type="number" name="mesh_follow_through" min="0" max="1" step="0.01" value="<?= miu_v2_admin_h($config['mesh']['followThrough']) ?>"></label>
         <label>Squash local da base<input type="number" name="mesh_squash_influence" min="0" max="0.05" step="0.001" value="<?= miu_v2_admin_h($config['mesh']['squashInfluence']) ?>"></label>
       </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Variação sem repetição</legend>
+      <div class="miu-v2-admin__checks">
+        <label><input type="checkbox" name="variation_enabled" value="1" <?= $config['variation']['enabled'] ? 'checked' : '' ?>> Variar atenção e reacções sem repetir a versão anterior</label>
+      </div>
+      <div class="miu-v2-admin__grid">
+        <label>Intervalo entre hovers (ms)<input type="number" name="hover_cooldown_ms" min="0" max="60000" value="<?= (int)$config['variation']['hoverCooldownMs'] ?>"></label>
+        <label>Assimetria subtil do rig (px)<input type="number" name="variation_rig_bias_px" min="0" max="6" step="0.1" value="<?= miu_v2_admin_h($config['variation']['rigBiasPx']) ?>"></label>
+      </div>
+      <p class="miu-v2-admin__hint">As variações usam apenas frames artísticos existentes, em ordens temporais alternativas. Os padrões exactos continuam disponíveis no JSON avançado.</p>
     </fieldset>
 
     <fieldset>

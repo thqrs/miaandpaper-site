@@ -264,6 +264,11 @@
     this.navigationClearance = 0;
     this.layoutFrame = 0;
     this.layoutObserver = null;
+    this.lastIdleAnimationId = '';
+    this.lastVariationIndex = {};
+    this.activeVariation = 'none';
+    this.motionVariationBias = 0;
+    this.lastHoverAt = -Infinity;
   }
 
   Controller.prototype.log = function () {
@@ -343,17 +348,50 @@
     try { document.dispatchEvent(new CustomEvent('mia:miu-v2-state', { detail: detail })); } catch (error) {}
   };
 
+  Controller.prototype.animationVariant = function (animation, group) {
+    var variation = this.config.variation || {};
+    var patterns = group && Array.isArray(variation[group + 'Patterns'])
+      ? variation[group + 'Patterns'] : [];
+    if (variation.enabled === false || !patterns.length || !animation || !Array.isArray(animation.frames)) {
+      this.activeVariation = 'none';
+      this.motionVariationBias = 0;
+      return animation;
+    }
+
+    var available = [];
+    for (var index = 0; index < patterns.length; index += 1) {
+      if (patterns.length === 1 || index !== this.lastVariationIndex[group]) available.push(index);
+    }
+    var selectedIndex = available[Math.floor(Math.random() * available.length)];
+    var pattern = patterns[selectedIndex] || [];
+    var frames = pattern.map(function (frameIndex) {
+      return animation.frames[Math.round(finite(frameIndex, 0))];
+    }).filter(Boolean);
+    if (frames.length < 2) {
+      this.activeVariation = 'none';
+      this.motionVariationBias = 0;
+      return animation;
+    }
+
+    this.lastVariationIndex[group] = selectedIndex;
+    this.activeVariation = group + '-' + (selectedIndex + 1);
+    this.motionVariationBias = selectedIndex % 3 === 1 ? -1 : (selectedIndex % 3 === 2 ? 1 : 0);
+    return Object.assign({}, animation, { frames: frames });
+  };
+
   Controller.prototype.play = function (animationId, options) {
     var controller = this;
+    options = options || {};
     var serial = ++controller.playSerial;
     var animation = controller.actor.animations[String(animationId)];
     if (!animation) {
       controller.log('Animação V2 desconhecida:', animationId);
       return Promise.resolve(false);
     }
-    return controller.actor.prepare(animation).then(function () {
+    var playable = controller.animationVariant(animation, options.variantGroup || '');
+    return controller.actor.prepare(playable).then(function () {
       if (serial !== controller.playSerial) return false;
-      controller.actor.playDefinition(animation, options || {});
+      controller.actor.playDefinition(playable, options);
       controller.emitState();
       return true;
     }).catch(function (error) {
@@ -366,13 +404,21 @@
     var items = this.config.animations && Array.isArray(this.config.animations.idle)
       ? this.config.animations.idle : [];
     if (!items.length) return 'v5_idle_blink';
-    var total = items.reduce(function (sum, item) { return sum + Math.max(0.05, finite(item.weight, 1)); }, 0);
+    var controller = this;
+    var eligible = items.filter(function (item) {
+      return items.length === 1 || String(item.id) !== controller.lastIdleAnimationId;
+    });
+    var total = eligible.reduce(function (sum, item) { return sum + Math.max(0.05, finite(item.weight, 1)); }, 0);
     var cursor = Math.random() * total;
-    for (var index = 0; index < items.length; index += 1) {
-      cursor -= Math.max(0.05, finite(items[index].weight, 1));
-      if (cursor <= 0) return String(items[index].id);
+    for (var index = 0; index < eligible.length; index += 1) {
+      cursor -= Math.max(0.05, finite(eligible[index].weight, 1));
+      if (cursor <= 0) {
+        controller.lastIdleAnimationId = String(eligible[index].id);
+        return controller.lastIdleAnimationId;
+      }
     }
-    return String(items[0].id);
+    controller.lastIdleAnimationId = String(eligible[0].id);
+    return controller.lastIdleAnimationId;
   };
 
   Controller.prototype.startIdle = function (animationId) {
@@ -384,7 +430,9 @@
     this.magnitude = 'none';
     this.magnitudeScore = 0;
     this.setPhase('idle');
-    this.play(animationId || this.pickIdle(), { loop: false });
+    var selectedAnimationId = animationId || this.pickIdle();
+    if (animationId) this.lastIdleAnimationId = String(animationId);
+    this.play(selectedAnimationId, { loop: false });
     this.nextIdleAt = 0;
     this.scheduleAmbient();
   };
@@ -422,7 +470,7 @@
     this.direction = 'none';
     this.magnitude = 'pending';
     this.setPhase('attention');
-    this.play(this.config.animations.attention, { loop: true });
+    this.play(this.config.animations.attention, { loop: true, variantGroup: 'attention' });
     return true;
   };
 
@@ -513,7 +561,7 @@
       ? (magnitude === 'small' ? 'sparkle_soft' : (magnitude === 'medium' ? 'sparkles' : 'wow'))
       : (magnitude === 'small' ? 'sweat' : (magnitude === 'medium' ? 'wet_eyes' : 'tearful'));
     this.setPhase('reaction');
-    this.play(this.config.animations[key], { loop: false });
+    this.play(this.config.animations[key], { loop: false, variantGroup: 'reaction' });
     return true;
   };
 
@@ -533,7 +581,7 @@
     this.magnitudeScore = finite(score, 0.2);
     this.effect = direction === 'up' ? (magnitude === 'large' ? 'wow' : 'sparkle_soft') : 'sweat';
     this.setPhase('reaction');
-    this.play(this.config.animations[key], { loop: false });
+    this.play(this.config.animations[key], { loop: false, variantGroup: 'reaction' });
     return true;
   };
 
@@ -551,9 +599,9 @@
     return true;
   };
 
-  Controller.prototype.attentionPulse = function () {
+  Controller.prototype.attentionPulse = function (source) {
     if (this.oneShot || this.special || this.gesture) return false;
-    this.beginGesture({ previousValue: this.currentValue, source: 'attention', importance: 0 });
+    this.beginGesture({ previousValue: this.currentValue, source: source || 'attention', importance: 0 });
     if (this.gesture) this.gesture.endRequested = true;
     return true;
   };
@@ -587,9 +635,16 @@
   };
 
   Controller.prototype.trigger = function (name) {
-    if (name === 'launcher_hover' && this.config.triggers.launcherAttention) return this.attentionPulse();
+    if (name === 'launcher_hover' && this.config.triggers.launcherAttention) {
+      var now = performance.now();
+      var cooldown = finite(this.config.variation && this.config.variation.hoverCooldownMs, 4200);
+      if (now - this.lastHoverAt < cooldown) return false;
+      var played = this.attentionPulse('launcher-hover');
+      if (played) this.lastHoverAt = now;
+      return played;
+    }
     if (name === 'launcher_open' && this.config.triggers.chatReactions) return this.playReaction('up', 'small', 0.18);
-    if (name === 'message_sent' && this.config.triggers.chatReactions) return this.attentionPulse();
+    if (name === 'message_sent' && this.config.triggers.chatReactions) return this.attentionPulse('message');
     if (name === 'reply_end' && this.config.triggers.chatReactions) return this.playReaction('up', 'small', 0.2);
     if (name === 'inactivity' && this.phase === 'idle') {
       this.play(this.pickIdle(), { loop: false });
@@ -803,6 +858,10 @@
     var elapsed = now - this.phaseStartedAt;
     var progress = this.actor.progress();
     var score = Math.max(0.22, this.magnitudeScore || 0.22);
+    var variationScale = this.canvas && this.canvas.clientWidth > 0 ? this.canvas.width / this.canvas.clientWidth : 1;
+    var variationOffset = this.motionVariationBias
+      * finite(this.config.variation && this.config.variation.rigBiasPx, 1.2)
+      * variationScale * intensity;
     var motion = { x: 0, y: 0, rotate: 0, scaleX: 0, scaleY: 0 };
     if (!intensity) return motion;
     if (this.phase === 'idle') {
@@ -815,18 +874,22 @@
       var attention = easeOutCubic(elapsed / 180);
       var trend = this.direction === 'down' ? -1 : (this.direction === 'up' ? 1 : 0);
       motion.x = trend * Math.min(3.5, Math.abs(this.velocity) * 0.1) * intensity;
+      motion.x += variationOffset;
       motion.y = -5 * attention * intensity;
-      motion.rotate = trend * 0.012 * attention * intensity;
+      motion.rotate = (trend * 0.012 * attention * intensity) + (this.motionVariationBias * 0.005 * attention * intensity);
       motion.scaleX = 0.018 * attention * intensity;
       motion.scaleY = 0.018 * attention * intensity;
     } else if (this.phase === 'reaction') {
       var arc = Math.sin(progress * Math.PI);
       if (this.direction === 'up') {
         motion.y = -16 * arc * score * intensity;
-        motion.rotate = Math.sin(progress * Math.PI * 2) * 0.025 * score * intensity;
+        motion.x += variationOffset * arc * 0.65;
+        motion.rotate = (Math.sin(progress * Math.PI * 2) * 0.025 * score * intensity)
+          + (this.motionVariationBias * 0.004 * arc * intensity);
         motion.scaleX = -0.025 * arc * score * intensity;
         motion.scaleY = 0.04 * arc * score * intensity;
       } else {
+        motion.x += variationOffset * arc * 0.45;
         motion.y = 10 * arc * score * intensity;
         motion.rotate = -0.018 * arc * score * intensity;
         motion.scaleX = 0.035 * arc * score * intensity;
@@ -845,6 +908,22 @@
       motion.rotate = settle * 0.012 * intensity;
     }
     return motion;
+  };
+
+  Controller.prototype.idleAlignment = function (current, scale) {
+    var appearance = this.config.appearance || {};
+    var cell = current && current.cell;
+    var grid = current && current.grid;
+    if (this.phase !== 'idle' || appearance.idleLockToBubbleCenter === false || !cell || !grid || grid.kind !== 'detected') {
+      return { x: 0, y: 0 };
+    }
+    var localCenterX = finite(cell.centerX, NaN) - finite(cell.minX, NaN);
+    var localCenterY = finite(cell.centerY, NaN) - finite(cell.minY, NaN);
+    if (!Number.isFinite(localCenterX) || !Number.isFinite(localCenterY)) return { x: 0, y: 0 };
+    return {
+      x: (finite(cell.anchorX, localCenterX) - localCenterX) * scale,
+      y: (finite(cell.anchorY, localCenterY) - localCenterY) * scale
+    };
   };
 
   /**
@@ -1022,9 +1101,10 @@
     var motion = this.secondaryMotion(now);
     var bodyHeight = Math.max(1, finite(grid.bodySpanHeight, finite(cell.sourceHeight, canvas.height * 0.66)));
     var scale = ((canvas.height * 0.68) / bodyHeight) * finite(this.config.appearance.scale, 0.96);
+    var idleAlignment = this.idleAlignment(current, scale);
     var cssScale = canvas.clientWidth > 0 ? canvas.width / canvas.clientWidth : 1;
     var offsetX = finite(this.config.appearance.offsetXPx, 0) * cssScale;
-    var offsetY = finite(this.config.appearance.offsetYPx, 5) * cssScale;
+    var offsetY = finite(this.config.appearance.offsetYPx, 0) * cssScale;
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = 'high';
     context.save();
@@ -1034,7 +1114,10 @@
     context.beginPath();
     context.arc(canvas.width / 2, canvas.height * 0.47, canvas.width * 0.455, 0, Math.PI * 2);
     context.clip();
-    context.translate((canvas.width / 2) + offsetX + motion.x, (canvas.height / 2) + offsetY + motion.y);
+    context.translate(
+      (canvas.width / 2) + offsetX + motion.x + idleAlignment.x,
+      (canvas.height / 2) + offsetY + motion.y + idleAlignment.y
+    );
     context.rotate(motion.rotate);
     context.scale(1 + motion.scaleX, 1 + motion.scaleY);
     this.drawSprite(current, scale, now, cssScale);
@@ -1074,6 +1157,8 @@
       special: this.special || null,
       reducedMotion: this.reducedMotion,
       rigIntensity: finite(this.config.appearance.rigIntensity, 0.62),
+      variation: this.activeVariation,
+      hoverCooldownMs: finite(this.config.variation && this.config.variation.hoverCooldownMs, 4200),
       navigationClearancePx: this.navigationClearance,
       spriteIsolation: current && current.grid ? current.grid.kind : null,
       anchorStrategy: current && current.grid ? current.grid.anchorStrategy || null : null,
@@ -1154,6 +1239,7 @@
     }).then(function () {
       var resolution = finite(controller.config.appearance.canvasResolution, 360);
       return controller.actor.play('v5_idle_blink', { loop: false }).then(function () {
+        controller.lastIdleAnimationId = 'v5_idle_blink';
         controller.canvas = document.createElement('canvas');
         controller.canvas.className = 'miu-v2-canvas';
         controller.canvas.width = resolution;

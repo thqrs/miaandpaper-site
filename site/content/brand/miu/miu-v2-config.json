@@ -4,7 +4,7 @@
     "engine": "v2",
     "assets": {
         "runtime": "miu-v2-runtime.js",
-        "cacheVersion": "2026083001",
+        "cacheVersion": "2026083002",
         "coreManifest": "content/brand/miu/v2/core-manifest.json",
         "libraryManifest": "content/brand/miu/experimental/library-v1/library-manifest.json",
         "episodeManifest": "content/brand/miu/experimental/library-v1/episodes/episode-manifest.json"
@@ -14,10 +14,11 @@
         "sizeMobilePx": 60,
         "canvasResolution": 360,
         "offsetXPx": 0,
-        "offsetYPx": 5,
+        "offsetYPx": 0,
         "scale": 0.96,
         "rigIntensity": 0.62,
-        "showFx": true
+        "showFx": true,
+        "idleLockToBubbleCenter": true
     },
     "mesh": {
         "enabled": true,
@@ -39,6 +40,21 @@
         "smallMax": 0.28,
         "mediumMax": 0.62,
         "velocityWeight": 0.045
+    },
+    "variation": {
+        "enabled": true,
+        "hoverCooldownMs": 4200,
+        "rigBiasPx": 1.2,
+        "attentionPatterns": [
+            [0, 1, 2, 3, 4, 5, 6, 7],
+            [0, 2, 3, 5, 6, 7],
+            [0, 1, 3, 4, 6, 7]
+        ],
+        "reactionPatterns": [
+            [0, 1, 2, 3, 4, 5, 6, 7],
+            [0, 1, 3, 5, 6, 7],
+            [0, 2, 4, 5, 7]
+        ]
     },
     "animations": {
         "idle": [

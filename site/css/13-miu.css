@@ -73,6 +73,15 @@
   opacity: 0;
 }
 
+/* Enquanto o detector exacto prepara a primeira folha V2, a casca do balão
+   pode existir, mas nenhuma personagem V1 deve reaparecer por baixo dela. */
+.miu-root.is-miu-v2-loading .miu-launcher__bubble-face,
+.miu-root.is-miu-v2-loading .miu-launcher__basket,
+.miu-root.is-miu-v2-loading .miu-interactive-wrap {
+  opacity: 0;
+  visibility: hidden;
+}
+
 .miu-root.is-miu-v2-ready {
   --miu-launcher-box-size: var(--miu-v2-size-desktop, 60px);
 }
@@ -86,7 +95,8 @@
 .miu-root.is-miu-v2-ready .miu-v2-canvas { opacity: 1; }
 .miu-root.is-miu-v2-ready .miu-launcher__bubble-outline { opacity: 1; visibility: visible; }
 .miu-root.is-miu-v2-ready .miu-launcher__bubble-face,
-.miu-root.is-miu-v2-ready .miu-launcher__basket { opacity: 0; visibility: hidden; }
+.miu-root.is-miu-v2-ready .miu-launcher__basket,
+.miu-root.is-miu-v2-ready .miu-interactive-wrap { opacity: 0; visibility: hidden; }
 
 @media (max-width: 720px) {
   .miu-root.is-miu-v2-ready { --miu-launcher-box-size: var(--miu-v2-size-mobile, 60px); }

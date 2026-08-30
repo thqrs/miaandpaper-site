@@ -82,6 +82,15 @@ function miuV2Boot()
 {
   var config = miuConfig && miuConfig.directorV2 ? miuConfig.directorV2 : null;
   if (!config || config.engine !== "v2" || !miuRoot || !miuLauncherSprite) { return; }
+  // Enquanto o CCL prepara o primeiro PNG V2, nenhuma arte V1 fica visível.
+  // A primeira cara histórica serve apenas de referência geométrica para o
+  // idle; não volta a piscar no arranque, tal como a Lili de corpo inteiro.
+  miuRoot.classList.add("is-miu-v2-loading");
+  miuRoot.classList.remove("miu-launcher-mode-basket", "is-interactive", "is-sleeping");
+  miuRoot.classList.add("miu-launcher-mode-circle");
+  miuAnimationCancelTimer();
+  miuLauncherBodyStop();
+  miuInteractiveStop();
   miuV2LoadRuntime(config).then(function (runtime) {
     return runtime.mount({
       config: config,
@@ -90,6 +99,7 @@ function miuV2Boot()
       siteRoot: miuSiteRootUrl,
       onReady: function (controller) {
         miuV2Controller = controller;
+        miuRoot.classList.remove("is-miu-v2-loading");
         // O V1 continua no DOM como fallback, mas deixa de gastar timers
         // assim que o primeiro frame V2 está realmente pronto.
         miuAnimationCancelTimer();
@@ -100,7 +110,14 @@ function miuV2Boot()
   }).catch(function (error) {
     // Falhar em silêncio para o cliente é intencional: o Míu V1 nunca chegou
     // a ser escondido e continua operacional. A classe facilita o diagnóstico.
-    if (miuRoot) { miuRoot.classList.add("miu-v2-failed"); }
+    if (miuRoot) {
+      miuRoot.classList.remove("is-miu-v2-loading");
+      miuRoot.classList.add("miu-v2-failed");
+      miuApplyLauncherAppearance(miuAnimationConfig && miuAnimationConfig.display ? miuAnimationConfig.display : {});
+      miuAnimationPlayBase();
+      miuScheduleSleep();
+      miuAnimationScheduleRandom();
+    }
     if (miuIsAdminChatPage() && window.console) { window.console.error(error); }
   });
 }
@@ -499,6 +516,7 @@ function miuAnimationPlay(animation, restoreBase)
 
 function miuAnimationPlayBase()
 {
+  if (miuRoot && (miuRoot.classList.contains("is-miu-v2-loading") || miuRoot.classList.contains("is-miu-v2-ready"))) { return; }
   var base = miuAnimationBase();
   if (base) { miuAnimationPlay(base, false); }
 }
@@ -521,8 +539,9 @@ function miuAnimationCandidates(trigger)
 
 function miuAnimationTrigger(trigger)
 {
-  if (miuV2Controller && typeof miuV2Controller.trigger === "function" && miuV2Controller.trigger(trigger)) {
-    return true;
+  if (miuRoot && miuRoot.classList.contains("is-miu-v2-loading")) { return true; }
+  if (miuV2Controller && typeof miuV2Controller.trigger === "function") {
+    return !!miuV2Controller.trigger(trigger);
   }
   var candidates = miuAnimationCandidates(trigger);
   if (!candidates.length) { return false; }
@@ -542,7 +561,8 @@ function miuAnimationScheduleRandom()
 {
   window.clearTimeout(miuIdleActionTimer);
   miuIdleActionTimer = 0;
-  if (!miuRoot || miuBusy || miuRoot.classList.contains("is-open") || miuRoot.classList.contains("is-sleeping") || !miuAnimationConfig) { return; }
+  if (!miuRoot || miuBusy || miuRoot.classList.contains("is-open") || miuRoot.classList.contains("is-sleeping") || !miuAnimationConfig
+    || miuRoot.classList.contains("is-miu-v2-loading") || miuRoot.classList.contains("is-miu-v2-ready")) { return; }
   var display = miuAnimationConfig.display || {};
   var minimum = Math.max(3000, Number(display.idleRandomMinMs || 14000));
   var maximum = Math.max(minimum, Number(display.idleRandomMaxMs || 28000));
@@ -738,7 +758,8 @@ function miuScheduleSleep()
 {
   window.clearTimeout(miuSleepTimer);
   miuSleepTimer = 0;
-  if (!miuRoot || miuBusy || miuRoot.classList.contains("is-open")) { return; }
+  if (!miuRoot || miuBusy || miuRoot.classList.contains("is-open")
+    || miuRoot.classList.contains("is-miu-v2-loading") || miuRoot.classList.contains("is-miu-v2-ready")) { return; }
   miuSleepTimer = window.setTimeout(function () {
     if (miuRoot && !miuBusy && !miuRoot.classList.contains("is-open")) {
       miuRoot.classList.add("is-sleeping");
@@ -1404,6 +1425,7 @@ function miuInteractivePlay(animation)
 
 function miuInteractiveTrigger(trigger)
 {
+  if (miuRoot && (miuRoot.classList.contains("is-miu-v2-loading") || miuRoot.classList.contains("is-miu-v2-ready"))) { return false; }
   var candidates = miuInteractiveCandidates(trigger);
   if (!candidates.length) { return false; }
   var totalWeight = candidates.reduce(function (sum, animation) { return sum + Math.max(1, Number(animation.weight || 1)); }, 0);
