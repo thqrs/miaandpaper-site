@@ -400,10 +400,17 @@
     });
   };
 
+  Controller.prototype.baseIdleId = function () {
+    var items = this.config.animations && Array.isArray(this.config.animations.idle)
+      ? this.config.animations.idle : [];
+    return items.length && items[0] && items[0].id
+      ? String(items[0].id) : 'v1_idle_calm_complete';
+  };
+
   Controller.prototype.pickIdle = function () {
     var items = this.config.animations && Array.isArray(this.config.animations.idle)
       ? this.config.animations.idle : [];
-    if (!items.length) return 'v5_idle_blink';
+    if (!items.length) return this.baseIdleId();
     var controller = this;
     var eligible = items.filter(function (item) {
       return items.length === 1 || String(item.id) !== controller.lastIdleAnimationId;
@@ -1171,7 +1178,7 @@
     this.queuedQuantity = null;
     this.gesture = null;
     this.playSerial += 1;
-    this.startIdle('v5_idle_blink');
+    this.startIdle(this.baseIdleId());
     return this.snapshot();
   };
 
@@ -1235,11 +1242,11 @@
     ).href;
     return Promise.all([fetchJson(manifestUrl), loadScriptOnce(detectorUrl)]).then(function (parts) {
       controller.actor.configure(parts[0], manifestUrl, parts[1].detectConnectedGrid);
-      return controller.actor.loadSheet('5');
+      return controller.actor.play(controller.baseIdleId(), { loop: false });
     }).then(function () {
       var resolution = finite(controller.config.appearance.canvasResolution, 360);
-      return controller.actor.play('v5_idle_blink', { loop: false }).then(function () {
-        controller.lastIdleAnimationId = 'v5_idle_blink';
+      return Promise.resolve().then(function () {
+        controller.lastIdleAnimationId = controller.baseIdleId();
         controller.canvas = document.createElement('canvas');
         controller.canvas.className = 'miu-v2-canvas';
         controller.canvas.width = resolution;
@@ -1257,7 +1264,11 @@
         controller.watchNavigationClearance();
         controller.onReady(controller);
         controller.raf = window.requestAnimationFrame(controller.loop.bind(controller));
-        var preload = function () { controller.actor.loadSheet('6').catch(function (error) { controller.log(error.message); }); };
+        var preload = function () {
+          ['5', '6'].forEach(function (sheetId) {
+            controller.actor.loadSheet(sheetId).catch(function (error) { controller.log(error.message); });
+          });
+        };
         if (window.requestIdleCallback) window.requestIdleCallback(preload, { timeout: 2500 });
         else window.setTimeout(preload, 500);
         return controller;

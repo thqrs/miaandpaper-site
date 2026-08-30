@@ -227,7 +227,39 @@ foreach ($property in $sheetMap.GetEnumerator()) {
     }
 }
 
-$animations = @($sourceManifest.animations | Where-Object { $_.id -like 'v5_*' })
+$legacyFacePath = Assert-ChildPath (Join-Path $siteRoot 'content\brand\miu\miu-sprite.webp') $siteRoot 'A folha facial histórica'
+$productionSheets.Insert(0, 'legacy-face', [ordered]@{
+    file = '../miu-sprite.webp'
+    name = 'V1 histórico · Cara calma completa'
+    columns = 4
+    rows = 2
+    preload = $true
+    historicalAsset = $true
+    grid = Get-MiuPrecomputedGrid $legacyFacePath 4 2
+})
+
+$legacyIdle = [ordered]@{
+    id = 'v1_idle_calm_complete'
+    name = 'V1 histórico · Cara calma completa'
+    group = 'Animation Director V2 · Idle canónico'
+    loop = $false
+    frames = @(
+        [ordered]@{ sheet = 'legacy-face'; cell = @(0, 0); durationMs = 1300 }
+        [ordered]@{ sheet = 'legacy-face'; cell = @(0, 0); durationMs = 1100 }
+        [ordered]@{ sheet = 'legacy-face'; cell = @(0, 0); durationMs = 900 }
+        [ordered]@{ sheet = 'legacy-face'; cell = @(1, 0); durationMs = 110 }
+        [ordered]@{ sheet = 'legacy-face'; cell = @(2, 0); durationMs = 100 }
+        [ordered]@{ sheet = 'legacy-face'; cell = @(3, 0); durationMs = 150 }
+        [ordered]@{ sheet = 'legacy-face'; cell = @(0, 0); durationMs = 1200 }
+        [ordered]@{ sheet = 'legacy-face'; cell = @(0, 0); durationMs = 950 }
+        [ordered]@{ sheet = 'legacy-face'; cell = @(0, 0); durationMs = 1200 }
+        [ordered]@{ sheet = 'legacy-face'; cell = @(3, 1); durationMs = 700 }
+        [ordered]@{ sheet = 'legacy-face'; cell = @(0, 0); durationMs = 1000 }
+        [ordered]@{ sheet = 'legacy-face'; cell = @(0, 0); durationMs = 900 }
+        [ordered]@{ sheet = 'legacy-face'; cell = @(0, 0); durationMs = 1200 }
+    )
+}
+$animations = @($legacyIdle) + @($sourceManifest.animations | Where-Object { $_.id -like 'v5_*' })
 $coreManifest = [ordered]@{
     schemaVersion = 2
     kind = 'miu-production-director-core'

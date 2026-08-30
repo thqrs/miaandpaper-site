@@ -10,10 +10,42 @@
                      "rows":  8,
                      "frameCountPerSheet":  64,
                      "neverConvertToWebp":  true,
+                     "historicalIdleException":  "Reutiliza o WebP V1 já existente; não cria nem converte novos sprites para WebP.",
                      "anchorStrategy":  "precomputed-median-anatomical-centres",
                      "runtimeFallbackDetector":  "MiuSpriteGrid.detectConnectedGrid"
                  },
     "sheets":  {
+                   "legacy-face":  {
+                                       "file":  "../miu-sprite.webp",
+                                       "name":  "V1 histórico · Cara calma completa",
+                                       "columns":  4,
+                                       "rows":  2,
+                                       "preload":  true,
+                                       "historicalAsset":  true,
+                                       "grid":  {
+                                                    "width":  768,
+                                                    "height":  384,
+                                                    "columns":  4,
+                                                    "rows":  2,
+                                                    "anchorStrategy":  "connected-components-median-anatomical-centres",
+                                                    "bodySpanWidth":  180,
+                                                    "bodySpanHeight":  154,
+                                                    "cells":  [
+                                                                  [
+                                                                      { "sourceX": 0, "sourceY": 0, "sourceWidth": 192, "sourceHeight": 192, "anchorX": 96, "anchorY": 96 },
+                                                                      { "sourceX": 192, "sourceY": 0, "sourceWidth": 192, "sourceHeight": 192, "anchorX": 96, "anchorY": 96 },
+                                                                      { "sourceX": 384, "sourceY": 0, "sourceWidth": 192, "sourceHeight": 192, "anchorX": 96, "anchorY": 96 },
+                                                                      { "sourceX": 576, "sourceY": 0, "sourceWidth": 192, "sourceHeight": 192, "anchorX": 96, "anchorY": 96 }
+                                                                  ],
+                                                                  [
+                                                                      { "sourceX": 0, "sourceY": 192, "sourceWidth": 192, "sourceHeight": 192, "anchorX": 96, "anchorY": 96 },
+                                                                      { "sourceX": 192, "sourceY": 192, "sourceWidth": 192, "sourceHeight": 192, "anchorX": 96, "anchorY": 96 },
+                                                                      { "sourceX": 384, "sourceY": 192, "sourceWidth": 192, "sourceHeight": 192, "anchorX": 96, "anchorY": 96 },
+                                                                      { "sourceX": 576, "sourceY": 192, "sourceWidth": 192, "sourceHeight": 192, "anchorX": 96, "anchorY": 96 }
+                                                                  ]
+                                                              ]
+                                                }
+                                   },
                    "5":  {
                              "file":  "core/miu-v5-idle-attention-8x8.png",
                              "name":  "V2 Â· Idle vivo e atenÃ§Ã£o",
@@ -1148,6 +1180,27 @@
                          }
                },
     "animations":  [
+                       {
+                           "id":  "v1_idle_calm_complete",
+                           "name":  "V1 histórico · Cara calma completa",
+                           "group":  "Animation Director V2 · Idle canónico",
+                           "loop":  false,
+                           "frames":  [
+                                          { "sheet": "legacy-face", "cell": [0, 0], "durationMs": 1300 },
+                                          { "sheet": "legacy-face", "cell": [0, 0], "durationMs": 1100 },
+                                          { "sheet": "legacy-face", "cell": [0, 0], "durationMs": 900 },
+                                          { "sheet": "legacy-face", "cell": [1, 0], "durationMs": 110 },
+                                          { "sheet": "legacy-face", "cell": [2, 0], "durationMs": 100 },
+                                          { "sheet": "legacy-face", "cell": [3, 0], "durationMs": 150 },
+                                          { "sheet": "legacy-face", "cell": [0, 0], "durationMs": 1200 },
+                                          { "sheet": "legacy-face", "cell": [0, 0], "durationMs": 950 },
+                                          { "sheet": "legacy-face", "cell": [0, 0], "durationMs": 1200 },
+                                          { "sheet": "legacy-face", "cell": [3, 1], "durationMs": 700 },
+                                          { "sheet": "legacy-face", "cell": [0, 0], "durationMs": 1000 },
+                                          { "sheet": "legacy-face", "cell": [0, 0], "durationMs": 900 },
+                                          { "sheet": "legacy-face", "cell": [0, 0], "durationMs": 1200 }
+                                      ]
+                       },
                        {
                            "id":  "v5_idle_blink",
                            "name":  "V5 Â· Idle vivo Â· RespiraÃ§Ã£o e piscar",

@@ -4,7 +4,7 @@
     "engine": "v2",
     "assets": {
         "runtime": "miu-v2-runtime.js",
-        "cacheVersion": "2026083002",
+        "cacheVersion": "2026083003",
         "coreManifest": "content/brand/miu/v2/core-manifest.json",
         "libraryManifest": "content/brand/miu/experimental/library-v1/library-manifest.json",
         "episodeManifest": "content/brand/miu/experimental/library-v1/episodes/episode-manifest.json"
@@ -59,20 +59,8 @@
     "animations": {
         "idle": [
             {
-                "id": "v5_idle_blink",
-                "weight": 6
-            },
-            {
-                "id": "v5_idle_gaze",
-                "weight": 2.5
-            },
-            {
-                "id": "v5_idle_ear_twitch",
-                "weight": 1.8
-            },
-            {
-                "id": "v5_idle_micro_expression",
-                "weight": 1.2
+                "id": "v1_idle_calm_complete",
+                "weight": 1
             }
         ],
         "attention": "v5_attention_start",

@@ -97,7 +97,8 @@ fora do repositório e nunca lê `private/`.
 
 ### 3. Promoção dos sprites nucleares
 
-O arranque público precisa apenas de duas folhas:
+O arranque público reutiliza a primeira folha facial histórica e mantém duas
+folhas PNG para atenção/reacções:
 
 ```text
 site/content/brand/miu/v2/
@@ -105,11 +106,28 @@ site/content/brand/miu/v2/
 └─ core/
    ├─ miu-v5-idle-attention-8x8.png
    └─ miu-v5-gesture-reactions-8x8.png
+
+site/content/brand/miu/miu-sprite.webp   folha V1 4×2 já existente
 ```
 
-As folhas são cópias PNG dos assets derivados do Míu canónico. A origem não foi
-alterada nem substituída. Continuam 8×8, RGBA e com 64 células. **Nunca são
-convertidas para WebP.**
+As duas folhas novas são cópias PNG dos assets derivados do Míu canónico. A
+origem não foi alterada nem substituída. Continuam 8×8, RGBA e com 64 células.
+**Nunca são convertidas para WebP.** `miu-sprite.webp` é a excepção histórica
+já prevista pelo contrato do projecto: é reutilizado no caminho original, não
+é uma conversão nova nem uma cópia regenerada.
+
+O idle inicial é a primeira sequência de produção completa, não a primeira
+frame congelada:
+
+```text
+frames   0, 0, 0, 1, 2, 3, 0, 0, 0, 7, 0, 0, 0
+acção    repouso longo → piscar completo → repouso → orelha → repouso
+duração  10 810 ms
+```
+
+Os timings são exactamente os de `miu-cara-calma`. Assim o Míu conserva o
+piscar natural e as pausas antigas, mas a folha é desenhada pelo canvas V2, com
+CCL, rig e mesh disponíveis.
 
 O script de promoção calcula âncoras aproximadas para diagnóstico e fallback.
 Para cada célula mede a caixa alpha, calcula os centros e usa a mediana por
@@ -141,9 +159,10 @@ abaixo, não um placeholder visível. O arranque cancela o `page_load` históric
 e bloqueia também `product_enter`, que podia mostrar a Lili de corpo inteiro aos
 650 ms. Assim não há sucessão de personagens antigas enquanto o CCL trabalha.
 Se o detector ou a folha falhar, o V2 não recebe
-`is-miu-v2-ready` e o fallback V1 volta a animar normalmente. Só a folha core 5
-é processada no arranque. A folha 6 é preparada depois, em idle, e as folhas
-emocionais/histórias continuam a ser carregadas apenas a pedido.
+`is-miu-v2-ready` e o fallback V1 volta a animar normalmente. No arranque é
+processada apenas a folha facial histórica 4×2. As folhas core 5 e 6 são
+preparadas depois, em idle, e as folhas emocionais/histórias continuam a ser
+carregadas apenas a pedido.
 
 Para folhas emocionais ou histórias carregadas apenas a pedido, o runtime usa o
 mesmo detector exacto; esse custo só existe quando `setMood()` ou
@@ -182,9 +201,9 @@ inferior direito histórico, mesmo quando os botões estão visíveis. A mediç�
 mobile reage a resize, scroll e substituição do passo no DOM; não usa alturas
 fixas nem slugs.
 
-O idle não deve competir com o produto. Depois de uma micro-animação, a pose
-final fica quieta durante um intervalo aleatório de 14–28 segundos. Só depois
-pode ocorrer outro piscar, olhar ou movimento de orelha. Episódios ambientais
+O idle não deve competir com o produto. A sequência histórica toca uma vez,
+termina na pose calma e fica quieta durante um intervalo aleatório de 14–28
+segundos. Só depois volta a existir um piscar/orelha subtil. Episódios ambientais
 continuam desligados por defeito; atenção e reacções imediatas ficam reservadas
 para interacções reais da pessoa.
 
@@ -198,11 +217,10 @@ secundário. O `offsetYPx` de origem é por isso `0`, e o interruptor
 
 ### Variação sem ruído
 
-O motor não repete imediatamente a mesma micro-animação de idle. Para atenção e
-reacções escolhe também uma de três versões temporais da sequência e exclui a
-versão acabada de usar. Estas versões seleccionam apenas frames PNG que já
-existem na animação: não sintetizam caras, não fazem morph nem misturam
-expressões.
+O idle canónico conserva deliberadamente a sequência original completa. Para
+atenção e reacções, o motor escolhe uma de três versões temporais e exclui a
+versão acabada de usar. Estas versões seleccionam apenas frames artísticos que
+já existem: não sintetizam caras, não fazem morph nem misturam expressões.
 
 Uma assimetria máxima de `1.2 px` no rig altera subtilmente o lado do tilt ou do
 overshoot. Além disso, o `launcher_hover` tem uma janela de 4200 ms: atravessar
@@ -528,8 +546,9 @@ No browser, testar pelo menos:
    final idêntica;
 9. simular erro do manifesto: V1 visível;
 10. painel em `engine:v1` e depois `engine:v2`;
-11. DevTools: nenhum pedido WebP novo para sprites V2 e nenhuma folha de
-    episódio antes de ser chamada.
+11. DevTools: o único WebP usado pelo actor V2 é o histórico
+    `miu-sprite.webp`; nenhum sprite novo é WebP e nenhuma folha de episódio é
+    pedida antes de ser chamada.
 
 Antes de publicar, continua também a aplicar-se a checklist geral de
 `docs/08-deploy-e-ambiente.md`, incluindo fechar `MIA_ADMIN_OPEN`.
@@ -539,7 +558,8 @@ Antes de publicar, continua também a aplicar-se a checklist geral de
 - 64 ficheiros PHP e 27 ficheiros JavaScript passaram a verificação de
   sintaxe; 135 JSON abriram como UTF-8 sem BOM.
 - As 41 folhas da biblioteca, 2624 células e 14 episódios passaram o validador;
-  o core tem duas folhas PNG RGBA 1254×1254 e zero WebP.
+  o core tem duas folhas PNG RGBA 1254×1254 e referencia ainda o WebP facial
+  histórico 4×2, sem conversões novas.
 - O manifesto protegido tem 172 hashes válidos; `site/js/24-miu.js` no arquivo
   tem o mesmo object ID Git que o ficheiro do checkpoint `469d9f2`.
 - As 37 cascas HTML da raiz responderam HTTP 200 no servidor PHP local.
@@ -556,7 +576,7 @@ Antes de publicar, continua também a aplicar-se a checklist geral de
   ambos com regresso a idle e sem erros de consola.
 - Rollback pelo painel mostrou o V1 sem canvas; reactivar mostrou um canvas V2
   e ocultou o visual V1 apenas depois de `is-miu-v2-ready`.
-- Em 390×844 o canvas mediu 98×98 CSS px. Com reduced motion usou três poses,
+- Em 390×844 o canvas mediu 60×60 CSS px e ficou 8 px acima dos botões. Com reduced motion usou três poses,
   manteve a informação emocional e reportou `meshEnabled: false`.
 - A API ao vivo confirmou `engine: v2`, rig `0.62`, mesh activa com seis bandas;
   os métodos de ligar/desligar e afinar rig/mesh foram ensaiados e repostos.
@@ -572,7 +592,8 @@ Antes de publicar, continua também a aplicar-se a checklist geral de
 - Não há morph facial nem crossfade de caras.
 - Rig e mesh acrescentam apenas movimento secundário; desligá-los não muda a
   animação escolhida.
-- O PNG canónico/derivado chega intacto a cada keyframe.
+- O PNG canónico/derivado — ou o WebP histórico reutilizado no idle — chega
+  intacto a cada keyframe.
 - Oscilar não deixa o Míu tremelicante.
 - O V1 está disponível em um clique e numa falha de rede.
 - Nenhum asset do Míu foi convertido para WebP.
