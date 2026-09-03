@@ -2043,5 +2043,26 @@ function miuInit()
     }).catch(function () {});
 }
 
-if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", miuInit); }
-else { miuInit(); }
+function miuScheduleInit()
+{
+  function afterMainContent() {
+    if (miuIsAdminChatPage()) {
+      miuInit();
+      return;
+    }
+    // O conteúdo e a primeira imagem útil têm prioridade. Só depois do load
+    // procuramos uma janela ociosa; o timeout garante que o Míu não desaparece
+    // em equipamentos que nunca reportem idle.
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(miuInit, { timeout: 3500 });
+    } else {
+      window.setTimeout(miuInit, 900);
+    }
+  }
+
+  if (document.readyState === "complete") afterMainContent();
+  else window.addEventListener("load", afterMainContent, { once: true });
+}
+
+if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", miuScheduleInit); }
+else { miuScheduleInit(); }

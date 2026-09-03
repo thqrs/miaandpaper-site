@@ -3,7 +3,9 @@
 // sem IIFE por ficheiro) e carregam pela ordem dos <script> nos HTML: 01 → 23.
 // Conteudo: loadJson, catalogo de cores (applyColorCatalog), settings do site (ensureHomeSettings/applySiteSettings, suspensao de encomendas), carrosseis da home e do hero, countdown de deadline, cloneProduct.
   function loadJson(path) {
-    return fetch(path, { cache: "no-store" }).then(function (response) {
+    // O Apache mantém os JSON revalidáveis. `default` permite ao browser
+    // responder com 304/usar cache, sem os tornar imutáveis.
+    return fetch(path, { cache: "default" }).then(function (response) {
       if (!response.ok) {
         throw new Error("Não foi possível carregar " + path);
       }
@@ -529,6 +531,42 @@
       window.clearTimeout(timer);
     });
     state.homeCarouselTimers = [];
+    (state.homeCarouselObservers || []).forEach(function (observer) {
+      observer.disconnect();
+    });
+    state.homeCarouselObservers = [];
+  }
+
+  function loadDeferredCarouselFrame(frame, callback) {
+    var source = frame && frame.getAttribute("data-lazy-carousel-image");
+    var probe;
+    var done = typeof callback === "function" ? callback : function () {};
+    if (!frame || !source) {
+      done(true);
+      return;
+    }
+    if (frame.dataset.lazyCarouselLoading === "1") {
+      frame.addEventListener("mia:carousel-image-ready", function ready(event) {
+        frame.removeEventListener("mia:carousel-image-ready", ready);
+        done(!!(event.detail && event.detail.ok));
+      });
+      return;
+    }
+    frame.dataset.lazyCarouselLoading = "1";
+    probe = new Image();
+    probe.onload = function () {
+      frame.style.backgroundImage = 'url("' + source.replace(/"/g, "%22") + '")';
+      frame.removeAttribute("data-lazy-carousel-image");
+      delete frame.dataset.lazyCarouselLoading;
+      frame.dispatchEvent(new CustomEvent("mia:carousel-image-ready", { detail: { ok: true } }));
+      done(true);
+    };
+    probe.onerror = function () {
+      delete frame.dataset.lazyCarouselLoading;
+      frame.dispatchEvent(new CustomEvent("mia:carousel-image-ready", { detail: { ok: false } }));
+      done(false);
+    };
+    probe.src = source;
   }
 
   function startHomeCarousels(home) {
@@ -555,6 +593,7 @@
       var timer;
       var phaseDelay;
       var jitter;
+      var started = false;
 
       if (category) {
         if (typeof category.carouselEnabled === "boolean") {
@@ -589,15 +628,41 @@
       phaseDelay = Math.max(0, Math.min(speed - 250, phaseDelay));
 
       function avancar() {
-        frames[index].classList.remove("is-active");
-        index = (index + 1) % frames.length;
-        frames[index].classList.add("is-active");
-        timer = window.setTimeout(avancar, tempoDaMoldura(frames[index]));
+        var next = (index + 1) % frames.length;
+        loadDeferredCarouselFrame(frames[next], function (loaded) {
+          if (loaded) {
+            frames[index].classList.remove("is-active");
+            index = next;
+            frames[index].classList.add("is-active");
+          }
+          timer = window.setTimeout(avancar, tempoDaMoldura(frames[index]));
+          state.homeCarouselTimers.push(timer);
+        });
+      }
+
+      function startNearViewport() {
+        if (started) return;
+        started = true;
+        // A primeira imagem tem sempre direito ao seu intervalo completo.
+        // Além de evitar uma troca instantânea no primeiro cartão, garante
+        // que a segunda imagem nunca entra no lote crítico do arranque.
+        timer = window.setTimeout(avancar, tempoDaMoldura(frames[0]) + phaseDelay);
         state.homeCarouselTimers.push(timer);
       }
 
-      timer = window.setTimeout(avancar, phaseDelay);
-      state.homeCarouselTimers.push(timer);
+      if (window.IntersectionObserver) {
+        var observer = new IntersectionObserver(function (entries) {
+          if (entries.some(function (entry) { return entry.isIntersecting; })) {
+            observer.disconnect();
+            startNearViewport();
+          }
+        }, { rootMargin: "240px 0px" });
+        state.homeCarouselObservers = state.homeCarouselObservers || [];
+        state.homeCarouselObservers.push(observer);
+        observer.observe(element);
+      } else {
+        startNearViewport();
+      }
     });
   }
 
@@ -625,7 +690,10 @@
       images.map(function (image, index) {
         return '<span class="home-hero-carousel__frame" data-mia-image="' + escapeHtml(image)
           + '" data-mia-item-id="hero" data-mia-slot-name="home-hero-carousel" data-mia-slide-index="' + index
-          + '" style="background-image:url(&quot;' + escapeHtml(image) + '&quot;)" aria-hidden="true"></span>';
+          + (index === 0
+            ? '" style="background-image:url(&quot;' + escapeHtml(image) + '&quot;)"'
+            : '" data-lazy-carousel-image="' + escapeHtml(image) + '"')
+          + ' aria-hidden="true"></span>';
       }).join(""),
       '</div>',
       '</div>'
@@ -662,11 +730,15 @@
     if (!section || !carousel || !track || frames.length <= 1) { return; }
 
     function show(next) {
-      index = (Number(next) + frames.length) % frames.length;
-      carousel.dataset.index = String(index);
-      track.style.transform = "translate3d(" + (-index * 100) + "%,0,0)";
-      dots.forEach(function (dot, dotIndex) {
-        dot.setAttribute("aria-current", dotIndex === index ? "true" : "false");
+      var requested = (Number(next) + frames.length) % frames.length;
+      loadDeferredCarouselFrame(frames[requested], function (loaded) {
+        if (!loaded) return;
+        index = requested;
+        carousel.dataset.index = String(index);
+        track.style.transform = "translate3d(" + (-index * 100) + "%,0,0)";
+        dots.forEach(function (dot, dotIndex) {
+          dot.setAttribute("aria-current", dotIndex === index ? "true" : "false");
+        });
       });
     }
 
@@ -795,4 +867,3 @@
     }
     return clone;
   }
-

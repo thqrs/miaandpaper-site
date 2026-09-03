@@ -1265,12 +1265,14 @@
         controller.onReady(controller);
         controller.raf = window.requestAnimationFrame(controller.loop.bind(controller));
         var preload = function () {
-          ['5', '6'].forEach(function (sheetId) {
+          // A folha 5 já foi carregada para o primeiro idle. A folha 6, com
+          // reacções, só entra numa segunda janela ociosa após o conteúdo.
+          ['6'].forEach(function (sheetId) {
             controller.actor.loadSheet(sheetId).catch(function (error) { controller.log(error.message); });
           });
         };
-        if (window.requestIdleCallback) window.requestIdleCallback(preload, { timeout: 2500 });
-        else window.setTimeout(preload, 500);
+        if (window.requestIdleCallback) window.requestIdleCallback(preload, { timeout: 7000 });
+        else window.setTimeout(preload, 1800);
         return controller;
       });
     });

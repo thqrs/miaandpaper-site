@@ -705,6 +705,7 @@
       // FUNNEL_DASHBOARD_V1: link rápido para a dashboard do funil. Abre em
       // nova tab para não perder o estado da edição.
       '<a class="admin-funnel-link" href="admin-funnel.php" target="_blank" rel="noopener">Funil</a>',
+      '<a class="admin-funnel-link" href="tracking.php" target="_blank" rel="noopener">Tracking</a>',
       // ADMIN_ORDERS_V1: link para o painel de encomendas.
       '<a class="admin-funnel-link" href="admin-orders.php" target="_blank" rel="noopener">Encomendas</a>',
       '<a class="admin-funnel-link" href="admin-colors.html" target="_blank" rel="noopener">Cores</a>',
@@ -1381,7 +1382,9 @@
           + '" data-mia-item-id="' + escapeHtml(category.id || "")
           + '" data-mia-slot-name="home-carousel" data-mia-slide-index="' + index
           + '" data-carousel-interval="' + escapeHtml(slide.intervalMs)
-          + '" style="background-image:url(&quot;' + escapeHtml(slide.image) + '&quot;)'
+          + (index === 0
+            ? '" style="background-image:url(&quot;' + escapeHtml(slide.image) + '&quot;)'
+            : '" data-lazy-carousel-image="' + escapeHtml(slide.image) + '" style="')
           + ';--carousel-pan-x:' + panX + '%;--carousel-pan-y:' + panY + '%'
           + ';--carousel-speed:' + escapeHtml(slide.speedSeconds) + 's'
           + ';--carousel-zoom-scale:' + escapeHtml((slide.zoomPercent / 100).toFixed(3))

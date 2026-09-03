@@ -1,21 +1,22 @@
 <?php
+/**
+ * Compatibilidade com URLs antigas. O cliente actual lê directamente
+ * content/colors.json; este endpoint já não abre a base de dados.
+ */
 
-require_once __DIR__ . '/lib/color-catalog.php';
+$path = __DIR__ . '/content/colors.json';
 
 header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store, max-age=0');
+header('Cache-Control: no-cache, must-revalidate');
 header('X-Content-Type-Options: nosniff');
 
-try {
-    echo json_encode(array(
-        'ok' => true,
-        'catalog' => mp_color_catalog_data(),
-    ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-} catch (Exception $error) {
-    http_response_code(500);
+if (!is_file($path)) {
+    http_response_code(503);
     echo json_encode(array(
         'ok' => false,
-        'message' => 'Não foi possível carregar as cores disponíveis.',
+        'message' => 'O catálogo de cores ainda não foi publicado.',
     ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
 }
 
+readfile($path);

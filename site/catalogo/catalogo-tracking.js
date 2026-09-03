@@ -21,6 +21,62 @@
   var catalogStartedKey = "mp_catalog_started_v2";
   var eventIndex = 0;
   var pageInstanceId = Math.random().toString(36).slice(2, 10);
+  var trackingLevel = "medium";
+  var trackingReady = false;
+  var trackingQueue = [];
+  var trackingTimer = 0;
+  var trackingDelay = 750;
+  var trackingMax = 12;
+
+  function eventEnabled(name) {
+    if (trackingLevel === "off") return false;
+    if (trackingLevel === "maximum") return true;
+    if (trackingLevel === "medium") return name !== "catalog_scroll_depth";
+    return name === "catalog_session_started" || name === "catalog_page_view" || /_clicked$/.test(name);
+  }
+
+  function transmit(events) {
+    var json;
+    if (!events.length) return;
+    json = JSON.stringify({ events: events });
+    if (navigator.sendBeacon) {
+      try {
+        var blob = new Blob([json], { type: "application/json" });
+        if (navigator.sendBeacon(endpoint, blob)) return;
+      } catch (error) {}
+    }
+    fetch(endpoint, { method:"POST", keepalive:true, headers:{ "Content-Type":"application/json" }, body:json }).catch(function () {});
+  }
+
+  function flush() {
+    var batch;
+    window.clearTimeout(trackingTimer);
+    trackingTimer = 0;
+    if (!trackingReady) return;
+    trackingQueue = trackingQueue.filter(function (payload) { return eventEnabled(payload.event_name); });
+    if (!trackingQueue.length) return;
+    batch = trackingQueue.splice(0, trackingMax);
+    transmit(batch);
+    if (trackingQueue.length) trackingTimer = window.setTimeout(flush, 0);
+  }
+
+  function queue(payload) {
+    trackingQueue.push(payload);
+    if (trackingQueue.length > 60) trackingQueue.shift();
+    if (!trackingReady) return;
+    if (trackingQueue.length >= trackingMax) { flush(); return; }
+    window.clearTimeout(trackingTimer);
+    trackingTimer = window.setTimeout(flush, trackingDelay);
+  }
+
+  fetch(new URL("../content/tracking.json", script.src).href, { cache:"default" }).then(function (response) {
+    return response.ok ? response.json() : {};
+  }).then(function (config) {
+    var level = String(config.level || "medium").toLowerCase();
+    trackingLevel = ["off","minimum","medium","maximum"].indexOf(level) !== -1 ? level : "medium";
+    trackingDelay = Math.max(250, Math.min(3000, Number(config.batchDelayMs) || 750));
+    trackingMax = Math.max(2, Math.min(30, Number(config.batchMaxEvents) || 12));
+  }).catch(function () {}).then(function () { trackingReady = true; flush(); });
 
   function randomId() {
     if (window.crypto && crypto.getRandomValues) {
@@ -111,6 +167,7 @@
   }
 
   function send(eventName, extra) {
+    if (trackingReady && !eventEnabled(eventName)) return;
     var attr = attribution();
     var payload = Object.assign({
       session_id: sessionId(),
@@ -142,17 +199,7 @@
       gclid: attr.gclid || ""
     }, extra || {});
 
-    var json = JSON.stringify(payload);
-    if (navigator.sendBeacon) {
-      var blob = new Blob([json], { type: "application/json" });
-      if (navigator.sendBeacon(endpoint, blob)) return;
-    }
-    fetch(endpoint, {
-      method: "POST",
-      keepalive: true,
-      headers: { "Content-Type": "application/json" },
-      body: json
-    }).catch(function () {});
+    queue(payload);
   }
 
   window.addEventListener("pageshow", function () {
@@ -189,6 +236,7 @@
     });
   }
   window.addEventListener("scroll", trackCatalogScrollDepth, { passive: true });
+  window.addEventListener("pagehide", flush);
 
   function initCatalogAdmin(trackEndpoint, slug) {
     var ADMIN_KEY = "miaandpaper-admin-session-v1";

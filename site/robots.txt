@@ -9,6 +9,7 @@ Disallow: /multimedia.html
 Disallow: /produtos.html
 Disallow: /reviews.html
 Disallow: /admin-colors.html
+Disallow: /tracking.php
 Disallow: /styleguide.html
 Disallow: /modulos.php
 Disallow: /modulos-preview.html

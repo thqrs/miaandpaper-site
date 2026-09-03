@@ -9,6 +9,13 @@ Formato activo: **WebP, sempre.** As extensões antigas continuam reconhecidas
 para não esconder referências históricas, mas ficheiros publicados e uploads
 novos ficam em `.webp`.
 
+Nas páginas públicas, as imagens de fundo dos cartões de design só recebem o
+URL quando ficam a 320 px do viewport. A preview da Galeria é a excepção: cada
+iframe carrega logo a sua imagem para conseguir medir o enquadramento real. Os
+carrosséis da homepage emitem apenas a primeira imagem; as restantes carregam
+quando o cartão se aproxima do ecrã e imediatamente antes da primeira vez que
+cada moldura é mostrada.
+
 ---
 
 ## Ficheiros

@@ -88,14 +88,33 @@ raiz web com nome aleatório e permissões `0600`; só são servidos por
 
 `track-order-event.php` recebe JSON por POST e escreve em três sítios: SQLite
 (`funnel_events`, a fonte), um JSONL diário e um JSONL legado (auditoria).
+O cliente acumula eventos durante 750 ms e envia até 12 de cada vez; o endpoint
+aceita o formato antigo de evento único e o novo `{ "events": [...] }`. Um lote
+usa uma só abertura/migração da base e uma transacção SQLite.
 
 - Guarda o **IP completo** — decisão explícita, e o `privacy.html` declara-o.
 - **Não** guarda nome, email, telefone nem morada. Esses só existem em `orders`.
-- Limite de 60 eventos por IP por minuto; acima disso, descarte silencioso da
+- Limite de 600 eventos por IP por minuto; acima disso, descarte silencioso da
   escrita em base de dados.
 - Lista de IPs a ignorar (`tracking_ignore_ips`) para o próprio admin não poluir
   os números.
 - Responde sempre `204`. O cliente nunca sabe se resultou — nem precisa.
+
+### Nível de detalhe
+
+A fonte pública é `content/tracking.json`; é um ficheiro estático e revalidável,
+por isso consultar a configuração não abre PHP. Edita-se em `tracking.php`, com
+sessão administrativa e CSRF:
+
+| nível | o que guarda |
+|---|---|
+| `maximum` | todos os eventos, incluindo diagnóstico de cliques, dead taps, ampliações, heartbeat e alterações intermédias |
+| `medium` | funil, escolhas importantes, snapshots, carrinho, uploads e encomendas — **predefinição** |
+| `minimum` | entrada, passos, validações, contacto, uploads, carrinho e resultado da encomenda |
+| `off` | nenhum evento de utilização |
+
+O mesmo JSON governa o site principal, catálogo, ofertas e Congresso. Mudar de
+nível não muda preços, encomendas nem o funcionamento da interface.
 
 ### Os painéis
 

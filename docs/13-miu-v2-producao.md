@@ -356,14 +356,15 @@ passado. O rejoice ocorre apenas para IDs de passo configurados em
 
 ## Carregamento e peso
 
-O arranque faz:
+O arranque faz, depois do evento `load` da página e numa janela ociosa:
 
 1. HTML/CSS e Míu V1 habituais;
 2. GET `bot-api.php`, que inclui `directorV2`;
 3. runtime V2 pequeno;
 4. manifesto core;
 5. PNG de idle/atenção;
-6. mostra o canvas e agenda o PNG de reacções para `requestIdleCallback`.
+6. mostra o canvas e agenda apenas o PNG de reacções para uma segunda
+   `requestIdleCallback` (timeout de 7 s).
 
 A biblioteca de 41 folhas/2624 frames **não** é descarregada no arranque.
 Emoções e episódios são lazy-load e ficam na cache HTTP do browser. Episódios

@@ -15,6 +15,36 @@ function mp_color_catalog_product_files()
     return is_array($paths) ? $paths : array();
 }
 
+function mp_color_catalog_public_path()
+{
+    return __DIR__ . '/../content/colors.json';
+}
+
+function mp_color_catalog_publish(array $catalog)
+{
+    $path = mp_color_catalog_public_path();
+    $json = json_encode(array(
+        'ok' => true,
+        'catalog' => $catalog,
+    ), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($json === false) {
+        throw new RuntimeException('Não foi possível preparar o catálogo público de cores.');
+    }
+
+    $tmp = $path . '.tmp-' . bin2hex(random_bytes(6));
+    if (file_put_contents($tmp, $json . "\n", LOCK_EX) === false) {
+        throw new RuntimeException('Não foi possível escrever o catálogo público de cores.');
+    }
+    @chmod($tmp, 0644);
+    if (!@rename($tmp, $path)) {
+        // No Windows, rename() não substitui sempre um destino existente.
+        if (!is_file($path) || !@unlink($path) || !@rename($tmp, $path)) {
+            @unlink($tmp);
+            throw new RuntimeException('Não foi possível publicar o catálogo de cores.');
+        }
+    }
+}
+
 function mp_color_catalog_flows()
 {
     $flows = array();
@@ -127,11 +157,13 @@ function mp_color_catalog_data()
     }
     unset($flow);
 
-    return array(
+    $catalog = array(
         'colors' => $rows,
         'flows' => $flows,
         'statuses' => $statusMap,
     );
+    mp_color_catalog_publish($catalog);
+    return $catalog;
 }
 
 function mp_color_catalog_save($payload)

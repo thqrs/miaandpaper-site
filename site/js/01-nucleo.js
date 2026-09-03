@@ -10,7 +10,9 @@
   var ADMIN_KEY = "miaandpaper-admin-session-v1";
   var ADMIN_PANEL_HIDDEN_KEY = "miaandpaper-admin-panel-hidden-v1";
   var ADMIN_API = "admin-api.php";
-  var COLORS_API = "colors-api.php";
+  // Catálogo publicado como ficheiro estático. A grelha administrativa
+  // regenera-o quando as cores mudam; uma visita pública nunca abre SQLite.
+  var COLORS_API = "content/colors.json";
   var ORDER_UPLOAD_API = "upload-order-photo.php";
   // Igual a ORDER_MEDIA_*_MAX_BYTES no upload-order-photo.php. Aqui serve só
   // para não gastar a ligação de alguém a subir 200 MB que vão ser recusados no

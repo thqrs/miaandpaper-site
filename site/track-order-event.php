@@ -96,13 +96,24 @@ function funnel_rate_limit_should_log($ip)
 }
 
 $raw = file_get_contents('php://input');
-if ($raw === false || strlen($raw) === 0 || strlen($raw) > 12288) {
+// Até 40 eventos por pedido. O cliente usa lotes de 12, mas a folga permite
+// descarregar a fila em pagehide sem partir um evento a meio.
+if ($raw === false || strlen($raw) === 0 || strlen($raw) > 196608) {
     http_response_code(204);
     exit;
 }
 
-$payload = json_decode($raw, true);
-if (!is_array($payload)) {
+$decodedPayload = json_decode($raw, true);
+if (!is_array($decodedPayload)) {
+    http_response_code(204);
+    exit;
+}
+
+$payloads = isset($decodedPayload['events']) && is_array($decodedPayload['events'])
+    ? array_slice(array_values($decodedPayload['events']), 0, 40)
+    : array($decodedPayload);
+$payloads = array_values(array_filter($payloads, 'is_array'));
+if (empty($payloads)) {
     http_response_code(204);
     exit;
 }
@@ -280,6 +291,20 @@ $floatFields = array(
     'y_percent',
 );
 
+$batchPdo = null;
+if (count($payloads) > 1) {
+    try {
+        $batchPdo = mp_db();
+        if (!$batchPdo->inTransaction()) {
+            $batchPdo->beginTransaction();
+        }
+    } catch (Exception $error) {
+        $batchPdo = null;
+        @error_log('[miaandpaper] funnel não conseguiu iniciar o lote SQLite: ' . $error->getMessage());
+    }
+}
+
+foreach ($payloads as $payload) {
 $cleaned = array();
 foreach ($stringFields as $key => $maxLen) {
     if (isset($payload[$key])) {
@@ -327,8 +352,7 @@ if (isset($payload['selection_json'])) {
 
 // Eventos sem identificador mínimo são descartados.
 if (empty($cleaned['event_name']) || empty($cleaned['session_id'])) {
-    http_response_code(204);
-    exit;
+    continue;
 }
 
 // REFERRER_FALLBACK_V1 (Phase B): se o cliente não enviou referrer_type,
@@ -478,6 +502,19 @@ if ($skipReason === '') {
             @file_put_contents($logPath, $encoded . "\n", FILE_APPEND | LOCK_EX);
             @chmod($logPath, 0600);
         }
+    }
+}
+
+}
+
+if ($batchPdo && $batchPdo->inTransaction()) {
+    try {
+        $batchPdo->commit();
+    } catch (Exception $error) {
+        if ($batchPdo->inTransaction()) {
+            $batchPdo->rollBack();
+        }
+        @error_log('[miaandpaper] funnel não conseguiu concluir o lote SQLite: ' . $error->getMessage());
     }
 }
 

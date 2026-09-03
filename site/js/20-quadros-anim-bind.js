@@ -1814,6 +1814,7 @@
       });
     }
 
+    bindLazyDesignImages();
     bindImageViewerTriggers();
     bindAdminItemEditing(product);
   }

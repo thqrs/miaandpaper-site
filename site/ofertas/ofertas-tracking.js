@@ -17,9 +17,66 @@
   var maxScrollSent = 0;
   var heartbeatTimer = null;
   var lastUserAt = Date.now();
+  var trackingLevel = "medium";
+  var trackingReady = false;
+  var trackingQueue = [];
+  var trackingTimer = 0;
+  var trackingDelay = 750;
+  var trackingMax = 12;
 
   if (location.protocol === "file:") return;
   if (location.hostname === "localhost" || location.hostname === "127.0.0.1") return;
+
+  function eventEnabled(name) {
+    var maximumOnly = { ui_interaction:true, heartbeat:true, offer_scroll_depth:true, offer_image_zoom_clicked:true };
+    if (trackingLevel === "off") return false;
+    if (trackingLevel === "maximum") return true;
+    if (trackingLevel === "minimum") return name === "site_landed" || name === "offer_page_view" || name === "offer_pdf_download_clicked";
+    return !maximumOnly[name];
+  }
+
+  function transmit(events) {
+    var json;
+    if (!events.length) return;
+    json = JSON.stringify({ events: events });
+    if (navigator.sendBeacon) {
+      try {
+        var blob = new Blob([json], { type: "application/json" });
+        if (navigator.sendBeacon(endpoint, blob)) return;
+      } catch (error) {}
+    }
+    window.fetch(endpoint, { method:"POST", headers:{ "Content-Type":"application/json" }, body:json, keepalive:true, credentials:"same-origin" }).catch(function () {});
+  }
+
+  function flush() {
+    var batch;
+    window.clearTimeout(trackingTimer);
+    trackingTimer = 0;
+    if (!trackingReady) return;
+    trackingQueue = trackingQueue.filter(function (payload) { return eventEnabled(payload.event_name); });
+    if (!trackingQueue.length) return;
+    batch = trackingQueue.splice(0, trackingMax);
+    transmit(batch);
+    if (trackingQueue.length) trackingTimer = window.setTimeout(flush, 0);
+  }
+
+  function queue(payload) {
+    trackingQueue.push(payload);
+    if (trackingQueue.length > 60) trackingQueue.shift();
+    if (!trackingReady) return;
+    if (trackingQueue.length >= trackingMax) { flush(); return; }
+    window.clearTimeout(trackingTimer);
+    trackingTimer = window.setTimeout(flush, trackingDelay);
+  }
+
+  window.fetch(new URL("../content/tracking.json", script.src).href, { cache:"default" }).then(function (response) {
+    return response.ok ? response.json() : {};
+  }).then(function (config) {
+    var level = String(config.level || "medium").toLowerCase();
+    trackingLevel = ["off","minimum","medium","maximum"].indexOf(level) !== -1 ? level : "medium";
+    trackingDelay = Math.max(250, Math.min(3000, Number(config.batchDelayMs) || 750));
+    trackingMax = Math.max(2, Math.min(30, Number(config.batchMaxEvents) || 12));
+  }).catch(function () {}).then(function () { trackingReady = true; flush(); });
 
   function randomId() {
     if (window.crypto && crypto.getRandomValues) {
@@ -201,6 +258,7 @@
 
   function send(eventName, extra) {
     try {
+      if (trackingReady && !eventEnabled(eventName)) return;
       var session = currentSession();
       var now = Date.now();
       var payload = contextFields();
@@ -221,23 +279,7 @@
       session.lastEventAt = now;
       saveSession(session);
 
-      var json = JSON.stringify(payload);
-      if (navigator.sendBeacon) {
-        try {
-          var blob = new Blob([json], { type: "application/json" });
-          if (navigator.sendBeacon(endpoint, blob)) return;
-        } catch (error) {}
-      }
-
-      if (window.fetch) {
-        window.fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: json,
-          keepalive: true,
-          credentials: "same-origin"
-        }).catch(function () {});
-      }
+      queue(payload);
     } catch (error) {}
   }
 
@@ -459,5 +501,6 @@
 
   window.addEventListener("pagehide", function () {
     if (heartbeatTimer) window.clearInterval(heartbeatTimer);
+    flush();
   });
 }());

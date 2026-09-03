@@ -2,6 +2,7 @@
 // Os modulos js/*.js partilham TODOS o mesmo escopo global (scripts classicos,
 // sem IIFE por ficheiro) e carregam pela ordem dos <script> nos HTML: 01 → 23.
 // Conteudo: media dos cartoes de design: isUploadedImage, uploadedStackStyle, visualizador de imagem (closeImageViewer), renderDesignCardMedia.
+  var designLazyObserver = null;
   function isUploadedImage(item) {
     return !!(item && item.image && (/^data:image\//.test(item.image) || /^content\/(?:uploads|designs)\/[^"'<>]+$/.test(item.image)));
   }
@@ -22,7 +23,7 @@
     return template === "media-list" ? 70 : 102;
   }
 
-  function uploadedFrameInfo(item, template, step) {
+  function uploadedFrameInfo(item, template, step, deferImage) {
     var defaultSize = template === "media-list" ? 100 : 168;
     var baseFrameSize = defaultFrameBaseSize(item, template, step);
     var frameScale = frameEditNumber(item, step, false, "frameScale", 100, 40, 300) / 100;
@@ -43,7 +44,7 @@
 
     return {
       style: [
-        '--uploaded-image:url(&quot;' + escapeHtml(siteAssetUrl(item.image)) + '&quot;)',
+        deferImage ? '--uploaded-image:none' : '--uploaded-image:url(&quot;' + escapeHtml(siteAssetUrl(item.image)) + '&quot;)',
         "--image-zoom-scale:" + imageZoom,
         "--image-position-x:" + imagePositionX + "%",
         "--image-position-y:" + imagePositionY + "%",
@@ -64,6 +65,7 @@
         "--image-frame-margin-bottom:" + frameMarginBottom + "px",
         "--image-frame-margin-left:" + frameMarginLeft + "px"
       ].join(";"),
+      imageUrl: siteAssetUrl(item.image),
       debug: miaSlotDebugFramePayload(item, step, false, item && item.image, {
         defaultZoom: defaultSize,
         zoom: imageZoom,
@@ -198,6 +200,7 @@
     var adminAttrs = "";
     var frameInfo;
     var renderEditKey;
+    var deferImage;
 
     if (isUploadedImage(item)) {
       renderEditKey = step ? miaSlotDebugEditKey(item, step, false) : "";
@@ -215,9 +218,15 @@
           adminAttrs += ' data-admin-image-store-item="' + escapeHtml(item._imageEditStoreItemId) + '"';
         }
       }
-      frameInfo = uploadedFrameInfo(item, template, step);
+      // Os fundos dos cartões só recebem URL quando se aproximam do viewport.
+      // A preview da Galeria é a excepção: precisa de medir imediatamente a
+      // imagem real dentro de cada iframe.
+      deferImage = page !== "preview" && (template === "design-grid" || template === "media-list");
+      frameInfo = uploadedFrameInfo(item, template, step, deferImage);
 
-      return '<span class="' + className + itemRectOrientationClass(item) + itemFrameShapeClass(item) + ' uploaded-image' + (isActive ? ' is-admin-image-active' : '') + '" style="' + frameInfo.style + '"' + (adminAttrs ? "" : ' aria-hidden="true"') + adminAttrs + miaSlotDebugFrameAttrs(frameInfo.debug) + '><span class="uploaded-image-inner"></span></span>';
+      return '<span class="' + className + itemRectOrientationClass(item) + itemFrameShapeClass(item) + ' uploaded-image' + (isActive ? ' is-admin-image-active' : '') + '" style="' + frameInfo.style + '"'
+        + (deferImage ? ' data-lazy-uploaded-image="' + escapeHtml(frameInfo.imageUrl) + '"' : '')
+        + (adminAttrs ? "" : ' aria-hidden="true"') + adminAttrs + miaSlotDebugFrameAttrs(frameInfo.debug) + '><span class="uploaded-image-inner"></span></span>';
     }
 
     return '<span class="' + className + " " + escapeHtml(visual) + '" aria-hidden="true">' + escapeHtml(text) + '</span>';
@@ -385,7 +394,7 @@
   function renderDesignCardMedia(product, step, item) {
     var visual = renderVisual(item, "design-grid", step);
     var zoomButton = renderDesignZoomButton(product, step, item);
-    var mediaStyle = isUploadedImage(item) ? ' style="' + uploadedFrameStyle(item, "design-grid", step) + '"' : "";
+    var mediaStyle = isUploadedImage(item) ? ' style="' + uploadedFrameInfo(item, "design-grid", step, page !== "preview").style + '"' : "";
 
     if (!zoomButton) {
       return visual;
@@ -416,6 +425,36 @@
         openImageViewer(button.dataset.imageViewerSrc, button.dataset.imageViewerAlt);
       });
     });
+  }
+
+  function bindLazyDesignImages() {
+    var pending = Array.prototype.slice.call(document.querySelectorAll("[data-lazy-uploaded-image]"));
+    var observer;
+
+    function load(element) {
+      var source = element && element.getAttribute("data-lazy-uploaded-image");
+      if (!source) return;
+      element.style.setProperty("--uploaded-image", 'url("' + source.replace(/"/g, "%22") + '")');
+      element.removeAttribute("data-lazy-uploaded-image");
+      if (observer) observer.unobserve(element);
+    }
+
+    if (designLazyObserver) {
+      designLazyObserver.disconnect();
+      designLazyObserver = null;
+    }
+    if (!pending.length) return;
+    if (!window.IntersectionObserver) {
+      pending.forEach(load);
+      return;
+    }
+    observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) load(entry.target);
+      });
+    }, { rootMargin: "320px 0px" });
+    designLazyObserver = observer;
+    pending.forEach(function (element) { observer.observe(element); });
   }
 
   function selectedValues(step) {

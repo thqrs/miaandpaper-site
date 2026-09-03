@@ -56,7 +56,8 @@
   var ADMIN_KEY = "miaandpaper-admin-session-v1";
   var ADMIN_PANEL_HIDDEN_KEY = "miaandpaper-admin-panel-hidden-v1";
   var ADMIN_API = "admin-api.php";
-  var COLORS_API = "colors-api.php";
+  // O catálogo público é estático e partilhado com o site principal.
+  var COLORS_API = "../../content/colors.json";
   var ORDER_UPLOAD_API = "upload-order-photo.php";
   var ORDER_MEDIA_PREVIEW_API = "order-media-preview.php";
   var CART_KEY = "miaandpaper_cart_v1";
@@ -623,7 +624,7 @@
   }
 
   function loadJson(path) {
-    return fetch(path, { cache: "no-store" }).then(function (response) {
+    return fetch(path, { cache: "default" }).then(function (response) {
       if (!response.ok) {
         throw new Error("Não foi possível carregar " + path);
       }
@@ -1203,12 +1204,19 @@
   // navigator.sendBeacon (com fallback fetch keepalive) para
   // track-order-event.php. Cada erro é silencioso — nunca bloqueia a UI
   // nem a encomenda.
-  var FUNNEL_ENDPOINT = "track-order-event.php";
+  var FUNNEL_ENDPOINT = "../../track-order-event.php";
   var FUNNEL_SESSION_KEY = "mp_funnel_session_v1";
   var FUNNEL_CONTACT_STARTED_FLAG = "mp_funnel_contact_started_v1";
   // ORIGINAL_ATTRIBUTION_V1 (Phase 3)
   var FUNNEL_ATTRIBUTION_KEY = "mp_funnel_attribution_v1";
   var FUNNEL_SITE_LANDED_FLAG = "mp_funnel_site_landed_v1";
+  var FUNNEL_TRACKING_CONFIG_URL = "../../content/tracking.json";
+  var funnelTrackingLevel = "medium";
+  var funnelTrackingReady = false;
+  var funnelTrackingBatchDelayMs = 750;
+  var funnelTrackingBatchMaxEvents = 12;
+  var funnelTrackingQueue = [];
+  var funnelTrackingFlushTimer = 0;
   // SELECTION_SNAPSHOT_V1 (Phase 4)
   var FUNNEL_SELECTION_DEBOUNCE_MS = 800;
   var funnelSelectionDebounceTimer = null;
@@ -1421,9 +1429,71 @@
     return { referrer_type: refType, external_referrer: externalRef };
   }
 
+  function funnelNormalizeTrackingLevel(value) {
+    value = String(value || "").toLowerCase();
+    return ["off", "minimum", "medium", "maximum"].indexOf(value) !== -1 ? value : "medium";
+  }
+
+  function funnelEventEnabled(eventName) {
+    var maximumOnly = { ui_interaction:true, dead_tap:true, image_magnified:true, heartbeat:true, selection_updated:true, catalog_scroll_depth:true, offer_scroll_depth:true, offer_image_zoom_clicked:true };
+    var minimumEvents = { site_landed:true, wizard_started:true, step_view:true, step_completed:true, confirmation_view:true, validation_error:true, contact_started:true, contact_completed:true, cart_item_added:true, cart_item_updated:true, cart_checkout_started:true, cart_order_submitted:true, order_submitted:true, artwork_upload_started:true, artwork_upload_completed:true, artwork_upload_failed:true, catalog_session_started:true, catalog_page_view:true, offer_page_view:true, offer_pdf_download_clicked:true };
+    if (funnelTrackingLevel === "off") return false;
+    if (funnelTrackingLevel === "maximum") return true;
+    if (funnelTrackingLevel === "minimum") return !!minimumEvents[String(eventName || "")];
+    return !maximumOnly[String(eventName || "")];
+  }
+
+  function funnelSendTrackingBatch(events) {
+    var body;
+    if (!events.length) return;
+    body = JSON.stringify({ events: events });
+    if (navigator && typeof navigator.sendBeacon === "function") {
+      try {
+        var blob = new Blob([body], { type: "application/json" });
+        if (navigator.sendBeacon(FUNNEL_ENDPOINT, blob)) return;
+      } catch (error) {}
+    }
+    if (window.fetch) {
+      window.fetch(FUNNEL_ENDPOINT, { method:"POST", headers:{ "Content-Type":"application/json" }, body:body, keepalive:true, credentials:"same-origin" }).catch(function () {});
+    }
+  }
+
+  function funnelFlushTracking() {
+    var batch;
+    window.clearTimeout(funnelTrackingFlushTimer);
+    funnelTrackingFlushTimer = 0;
+    if (!funnelTrackingReady) return;
+    funnelTrackingQueue = funnelTrackingQueue.filter(function (payload) { return funnelEventEnabled(payload && payload.event_name); });
+    if (!funnelTrackingQueue.length) return;
+    batch = funnelTrackingQueue.splice(0, funnelTrackingBatchMaxEvents);
+    funnelSendTrackingBatch(batch);
+    if (funnelTrackingQueue.length) funnelTrackingFlushTimer = window.setTimeout(funnelFlushTracking, 0);
+  }
+
+  function funnelQueueTracking(payload) {
+    funnelTrackingQueue.push(payload);
+    if (funnelTrackingQueue.length > 60) funnelTrackingQueue.shift();
+    if (!funnelTrackingReady) return;
+    if (funnelTrackingQueue.length >= funnelTrackingBatchMaxEvents) { funnelFlushTracking(); return; }
+    window.clearTimeout(funnelTrackingFlushTimer);
+    funnelTrackingFlushTimer = window.setTimeout(funnelFlushTracking, funnelTrackingBatchDelayMs);
+  }
+
+  function funnelLoadTrackingConfig() {
+    loadJson(FUNNEL_TRACKING_CONFIG_URL).then(function (config) {
+      funnelTrackingLevel = funnelNormalizeTrackingLevel(config && config.level);
+      funnelTrackingBatchDelayMs = Math.max(250, Math.min(3000, Number(config && config.batchDelayMs) || 750));
+      funnelTrackingBatchMaxEvents = Math.max(2, Math.min(30, Number(config && config.batchMaxEvents) || 12));
+    }).catch(function () { funnelTrackingLevel = "medium"; }).then(function () {
+      funnelTrackingReady = true;
+      funnelFlushTracking();
+    });
+  }
+
   function trackOrderEvent(eventName, data) {
     try {
       if (!eventName) return;
+      if (funnelTrackingReady && !funnelEventEnabled(eventName)) return;
       var session = funnelSession();
       var now = Date.now();
       funnelClientEventIndex++;
@@ -1463,32 +1533,15 @@
         });
       }
 
-      var body = JSON.stringify(payload);
-
-      // sendBeacon é preferido — sobrevive a unload; fetch keepalive como
-      // fallback (Safari < 13 não tem sendBeacon).
-      if (navigator && typeof navigator.sendBeacon === 'function') {
-        try {
-          var blob = new Blob([body], { type: 'application/json' });
-          if (navigator.sendBeacon(FUNNEL_ENDPOINT, blob)) {
-            return;
-          }
-        } catch (err) { /* fallthrough */ }
-      }
-
-      if (window.fetch) {
-        window.fetch(FUNNEL_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: body,
-          keepalive: true,
-          credentials: 'same-origin'
-        }).catch(function () { /* silent */ });
-      }
+      funnelQueueTracking(payload);
     } catch (err) {
       /* falha silenciosa: tracking não pode quebrar encomenda */
     }
   }
+
+  funnelLoadTrackingConfig();
+  window.addEventListener("pagehide", funnelFlushTracking);
+  document.addEventListener("visibilitychange", function () { if (document.hidden) funnelFlushTracking(); });
 
   // Helper que injecta o contexto do produto e selecções actuais.
   function trackProductEvent(product, eventName, extra) {
@@ -1754,6 +1807,7 @@
     try {
       if (funnelHeartbeatTimer) return;
       if (!product) return;
+      if (!funnelEventEnabled('heartbeat')) return;
       funnelHeartbeatTimer = setInterval(function () {
         try {
           if (document.hidden) return; // só com tab visível

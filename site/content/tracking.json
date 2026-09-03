@@ -1,0 +1,5 @@
+{
+  "level": "medium",
+  "batchDelayMs": 750,
+  "batchMaxEvents": 12
+}

@@ -1053,7 +1053,11 @@
 
   applyTheme(currentTheme());
   bindThemeToggle();
-  loadJson("content/erros.json").then(function (catalog) { state.errorCatalog = catalog; }).catch(function () {});
+  // Nas páginas de produto o catálogo de erros faz parte do Promise.all de
+  // initProduct; assim não é pedido duas vezes no mesmo arranque.
+  if (page !== "product") {
+    loadJson("content/erros.json").then(function (catalog) { state.errorCatalog = catalog; }).catch(function () {});
+  }
   if (page !== "preview") {
     initPaletteLiquidEffects();
   }

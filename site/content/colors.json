@@ -1,0 +1,200 @@
+{
+    "ok": true,
+    "catalog": {
+        "colors": [
+            {
+                "id": "branco-creme",
+                "name": "Branco / creme",
+                "hex": "#f3ead6",
+                "light_hex": "#fffdf7",
+                "dark_hex": "#dfcda7",
+                "sort_order": 0
+            },
+            {
+                "id": "amarelo",
+                "name": "Amarelo",
+                "hex": "#efbd25",
+                "light_hex": "#ffe78a",
+                "dark_hex": "#cf8c1d",
+                "sort_order": 1
+            },
+            {
+                "id": "laranja",
+                "name": "Laranja",
+                "hex": "#ef7b2d",
+                "light_hex": "#ffc27b",
+                "dark_hex": "#c95627",
+                "sort_order": 2
+            },
+            {
+                "id": "vermelho",
+                "name": "Vermelho",
+                "hex": "#b7342c",
+                "light_hex": "#d94a3c",
+                "dark_hex": "#8f2727",
+                "sort_order": 3
+            },
+            {
+                "id": "rosa-bebe",
+                "name": "Rosa-bebé",
+                "hex": "#ecafc1",
+                "light_hex": "#f7d3dd",
+                "dark_hex": "#d88da7",
+                "sort_order": 4
+            },
+            {
+                "id": "rosa",
+                "name": "Rosa",
+                "hex": "#cb6d8c",
+                "light_hex": "#e795b0",
+                "dark_hex": "#a8456f",
+                "sort_order": 5
+            },
+            {
+                "id": "bordeaux",
+                "name": "Bordeaux",
+                "hex": "#6f203c",
+                "light_hex": "#8c3450",
+                "dark_hex": "#4f142d",
+                "sort_order": 6
+            },
+            {
+                "id": "lilas-roxo",
+                "name": "Lilás / roxo",
+                "hex": "#a77cb8",
+                "light_hex": "#d6b6df",
+                "dark_hex": "#6e4b8b",
+                "sort_order": 7
+            },
+            {
+                "id": "azul-claro",
+                "name": "Azul-claro",
+                "hex": "#8cc8d5",
+                "light_hex": "#c7e8ee",
+                "dark_hex": "#4a9bb4",
+                "sort_order": 8
+            },
+            {
+                "id": "azul",
+                "name": "Azul",
+                "hex": "#224d7b",
+                "light_hex": "#4d84b5",
+                "dark_hex": "#173358",
+                "sort_order": 9
+            },
+            {
+                "id": "turquesa",
+                "name": "Turquesa",
+                "hex": "#2f8e9c",
+                "light_hex": "#69c4c4",
+                "dark_hex": "#1d6876",
+                "sort_order": 10
+            },
+            {
+                "id": "verde",
+                "name": "Verde",
+                "hex": "#6da76f",
+                "light_hex": "#b8d5a1",
+                "dark_hex": "#356642",
+                "sort_order": 11
+            },
+            {
+                "id": "verde-salvia",
+                "name": "Verde-sálvia",
+                "hex": "#9eaf8b",
+                "light_hex": "#d6dfca",
+                "dark_hex": "#6c7f5f",
+                "sort_order": 12
+            },
+            {
+                "id": "castanho",
+                "name": "Castanho",
+                "hex": "#875638",
+                "light_hex": "#c79164",
+                "dark_hex": "#593725",
+                "sort_order": 13
+            },
+            {
+                "id": "cinzento",
+                "name": "Cinzento",
+                "hex": "#a9aaa7",
+                "light_hex": "#e2e0db",
+                "dark_hex": "#676b6b",
+                "sort_order": 14
+            }
+        ],
+        "flows": [
+            {
+                "key": "quadros:baby_color",
+                "productSlug": "quadros",
+                "stepId": "baby_color",
+                "label": "Moldura personalizada — Escolhe a cor"
+            },
+            {
+                "key": "quadros:colors",
+                "productSlug": "quadros",
+                "stepId": "colors",
+                "label": "Moldura personalizada — Escolhe as cores das Flores 3D"
+            },
+            {
+                "key": "quadros:heart_background_colors",
+                "productSlug": "quadros",
+                "stepId": "heart_background_colors",
+                "label": "Moldura personalizada — Escolhe a cor do fundo"
+            }
+        ],
+        "statuses": {
+            "quadros:baby_color": {
+                "branco-creme": "available",
+                "amarelo": "available",
+                "laranja": "available",
+                "vermelho": "available",
+                "rosa-bebe": "available",
+                "rosa": "available",
+                "bordeaux": "available",
+                "lilas-roxo": "available",
+                "azul-claro": "available",
+                "azul": "available",
+                "turquesa": "available",
+                "verde": "available",
+                "verde-salvia": "available",
+                "castanho": "available",
+                "cinzento": "available"
+            },
+            "quadros:colors": {
+                "branco-creme": "available",
+                "amarelo": "available",
+                "laranja": "available",
+                "vermelho": "available",
+                "rosa-bebe": "available",
+                "rosa": "available",
+                "bordeaux": "available",
+                "lilas-roxo": "available",
+                "azul-claro": "available",
+                "azul": "available",
+                "turquesa": "available",
+                "verde": "available",
+                "verde-salvia": "available",
+                "castanho": "available",
+                "cinzento": "available"
+            },
+            "quadros:heart_background_colors": {
+                "branco-creme": "available",
+                "amarelo": "available",
+                "laranja": "available",
+                "vermelho": "available",
+                "rosa-bebe": "available",
+                "rosa": "available",
+                "bordeaux": "available",
+                "lilas-roxo": "available",
+                "azul-claro": "available",
+                "azul": "available",
+                "turquesa": "available",
+                "verde": "available",
+                "verde-salvia": "available",
+                "castanho": "available",
+                "cinzento": "available"
+            }
+        }
+    }
+}

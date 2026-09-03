@@ -27,6 +27,7 @@
     { id: "carousels", label: "Carrosséis", href: "carrousel.php", files: ["carrousel.php"] },
     { id: "funnel", label: "Funil", href: "admin-funnel.php", files: ["admin-funnel.php", "admin-live-dashboard.php"] },
     { id: "orders", label: "Encomendas", href: "admin-orders.php", files: ["admin-orders.php"] },
+    { id: "tracking", label: "Tracking", href: "tracking.php", files: ["tracking.php"] },
     { id: "colors", label: "Cores", href: "admin-colors.html", files: ["admin-colors.html"] },
     { id: "uploads", label: "Uploads", href: "admin-uploads.php", files: ["admin-uploads.php"] },
     { id: "tools", label: "Ferramentas", href: "tools/index.php", files: ["comando.php"] }
