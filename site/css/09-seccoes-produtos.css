@@ -1490,7 +1490,7 @@ html[data-theme="dark"] .quadros-summary-colors > span {
 
 /* iPad/WebKit: não depender de height: 100% quando a altura do card
    é calculada por aspect-ratio. O frame ocupa o pai por inset. */
-.pasta-de-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media > .uploaded-image {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .choice-card .cadernos-cover-media > .uploaded-image {
   position: absolute;
   inset: 0;
   width: auto !important;
@@ -2423,8 +2423,8 @@ html[data-theme="dark"] .pf-fluid-variation {
   background: var(--surface-image);
 }
 
-.pf-size-card .crachas-size-card-visual .option-image,
-.pf-size-card .crachas-size-card-visual .uploaded-image {
+.pf-size-card.choice-card.cadernos-purchase-card .crachas-size-card-visual .option-image,
+.pf-size-card.choice-card.cadernos-purchase-card .crachas-size-card-visual .uploaded-image {
   width: 100% !important;
   height: 100% !important;
   min-width: 0 !important;
@@ -2667,6 +2667,12 @@ html[data-theme="dark"] .pf-fluid-variation {
 }
 
 .pf-details-variation-image .uploaded-image-inner {
+  inset: 0;
+  background-size: contain !important;
+}
+
+/* O resumo reutiliza o zoom das opções; não somar o inset de -30% genérico. */
+.pasta-de-folhetos-build-summary .uploaded-image-inner {
   inset: 0;
   background-size: contain !important;
 }

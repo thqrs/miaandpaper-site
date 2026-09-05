@@ -75,7 +75,7 @@ function pd_passo1_receitas()
             'directUploadTargets' => array('image'),
             'expectedSections' => array(),
             'imageRequired' => true,
-            'note' => 'O fluxo público simples tem tamanho, design, acabamento e detalhes; no PACK, cada design e cada acabamento abre uma pré-visualização onde se atribui a escolha ao A4, ao A6 ou aos dois, e os detalhes dos dois tamanhos ficam no mesmo passo. As mesmas 13 capas existem nos dois tamanhos e este editor mantém as fotografias finais de fita/argolas no passo de dados designs. Criar ou remover exige replicar a capa nos grupos A4 e A6, ligar todas as variações e actualizar o mapa de atribuição entre tamanhos, por isso fica bloqueado. Uma fotografia existente pode ser substituída diretamente.',
+            'note' => 'O fluxo público simples tem tamanho, design, acabamento e detalhes; no PACK, cada design e cada acabamento abre uma pré-visualização onde se atribui a escolha ao A4, ao A6 ou aos dois, e os detalhes dos dois tamanhos ficam no mesmo passo. As mesmas 13 capas existem nos dois tamanhos. O passo de dados designs mantém 23 fotografias por tamanho: 13 originais e 10 variantes de fita/argolas. Criar ou remover exige replicar a capa nos grupos A4 e A6, ligar todas as variações e actualizar o mapa de atribuição entre tamanhos, por isso fica bloqueado. Uma fotografia existente pode ser substituída diretamente.',
             'defaults' => array('visual' => 'neutral', 'imageFit' => 'contain', 'frameWidth' => 96, 'frameHeight' => 120),
         ),
         'imanes-loja' => array(

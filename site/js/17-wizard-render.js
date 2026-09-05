@@ -1270,6 +1270,15 @@
   function assignmentPickerAssignedItem(product, step, group) {
     var field = String(group && group.field || "");
     var selected = field ? String(state.selections[field] || "") : "";
+    var sourceStep = assignmentPickerSourceStep(product, step);
+    var sourceItems = sourceStep && Array.isArray(sourceStep.items) ? sourceStep.items : [];
+    var exactItem = selected ? sourceItems.filter(function (item) {
+      return item && String(item.value || "") === selected;
+    })[0] : null;
+    // O mapa pode atribuir a outro tamanho: mostrar a fotografia desse item.
+    if (exactItem) {
+      return exactItem;
+    }
     return selected ? assignmentPickerItems(product, step).filter(function (item) {
       return assignmentPickerValue(group, item) === selected;
     })[0] || null : null;

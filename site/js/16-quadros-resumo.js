@@ -375,12 +375,12 @@
 
       if (coverItem) {
         previewItem = variationItem && variationItem.image
-          ? Object.assign({}, coverItem, { image: variationItem.image })
+          ? variationItem
           : coverItem;
-        tiles += quadrosSummaryImageTile(previewItem, coverStep, "Design " + group, displayItemTitle(coverItem));
+        tiles += quadrosSummaryImageTile(previewItem, previewItem === variationItem ? variationStep : coverStep, "Design " + group, displayItemTitle(coverItem));
       }
       if (variationItem) {
-        tiles += quadrosSummaryTextTile("Argolas + fita " + group, variationItem.title || variationItem.value || "");
+        tiles += quadrosSummaryTextTile("Argolas + fita " + group, (variationItem.title || variationItem.value || "") + (variationItem.subtitle ? " · " + variationItem.subtitle : ""));
       }
     });
 
