@@ -237,15 +237,10 @@
     // Gavetas de opções extra dos produtos. Tal como builderOpenGroups, é
     // apenas estado de interface e nunca segue no pedido.
     optionDrawerOpen: {},
-    // Cartão cujos controlos A4/A6 estão expandidos em cada passo. Enquanto
-    // está aberto mostra ambos; ao abrir outro ficam só as escolhas guardadas.
-    assignmentPickerControlsExpanded: {},
-    // Transição curta usada apenas quando A6 fica sozinho ou volta à segunda
-    // posição. Nunca altera os dados da encomenda.
-    assignmentPickerMotion: null,
-    assignmentPickerMotionTimer: null,
     // Substituições reversíveis durante cinco segundos, mantidas como pilha
     // para que vários undo possam coexistir sem se sobreporem.
+    assignmentPickerOpening: {},
+    assignmentPickerSwitching: false,
     assignmentPickerUndos: [],
     assignmentPickerUndoSequence: 0,
     assignmentPickerUndoInterval: null,
@@ -328,7 +323,7 @@
     "color-grid": "Cores",
     "palette-grid": "Combinações de cores",
     "photo-upload": "Envio de fotos",
-    "lamination-choice": "Laminação",
+    "lamination-choice": "Acabamento da Capa",
     "purchase-option": "Opções de compra",
     "cover-personalization": "Personalização da capa",
     "option-drawers": "Gavetas de opções extra",

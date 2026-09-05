@@ -530,7 +530,7 @@ foreach ($contextRows as $contextRow) {
               <label class="miu-field"><span>Linhas</span><input type="number" name="rows" min="1" max="16" value="<?= (int)$animation['rows'] ?>"></label>
             </div>
             <fieldset class="miu-animation-triggers"><legend>Quando pode acontecer</legend><?php foreach ($animationTriggers as $triggerId => $triggerLabel): ?><label><input type="checkbox" name="triggers[]" value="<?= bot_h($triggerId) ?>" <?= in_array($triggerId, $animation['triggers'], true) ? 'checked' : '' ?>> <span><?= bot_h($triggerLabel) ?></span></label><?php endforeach; ?></fieldset>
-            <label class="miu-field"><span>Produtos desta animação</span><input type="text" name="product_scopes" value="<?= bot_h(implode(', ', isset($animation['products']) ? $animation['products'] : array())) ?>" placeholder="Ex.: porta-folhetos, porta-chaves ou *"><small>Separados por vírgulas. <code>*</code> = todos os produtos. É usado sobretudo com “Ao entrar num produto”.</small></label>
+            <label class="miu-field"><span>Produtos desta animação</span><input type="text" name="product_scopes" value="<?= bot_h(implode(', ', isset($animation['products']) ? $animation['products'] : array())) ?>" placeholder="Ex.: pasta-de-folhetos, porta-chaves ou *"><small>Separados por vírgulas. <code>*</code> = todos os produtos. É usado sobretudo com “Ao entrar num produto”.</small></label>
             <details class="miu-animation-advanced">
               <summary>Frames e comportamento avançado</summary>
               <div class="miu-settings-grid">
@@ -570,7 +570,7 @@ foreach ($contextRows as $contextRow) {
         <label class="miu-field"><span>Linhas</span><input type="number" name="rows" min="1" max="16" value="1" required></label>
       </div>
       <fieldset class="miu-animation-triggers"><legend>Quando pode acontecer</legend><?php foreach ($animationTriggers as $triggerId => $triggerLabel): ?><label><input type="checkbox" name="triggers[]" value="<?= bot_h($triggerId) ?>"> <span><?= bot_h($triggerLabel) ?></span></label><?php endforeach; ?></fieldset>
-      <label class="miu-field"><span>Produtos desta animação</span><input type="text" name="product_scopes" placeholder="Ex.: porta-folhetos, porta-chaves ou *"><small>Separados por vírgulas. <code>*</code> = todos os produtos.</small></label>
+      <label class="miu-field"><span>Produtos desta animação</span><input type="text" name="product_scopes" placeholder="Ex.: pasta-de-folhetos, porta-chaves ou *"><small>Separados por vírgulas. <code>*</code> = todos os produtos.</small></label>
       <details class="miu-animation-advanced">
         <summary>Frames e comportamento avançado</summary>
         <div class="miu-settings-grid">

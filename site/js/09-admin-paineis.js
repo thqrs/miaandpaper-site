@@ -1508,7 +1508,7 @@
         id: "novidades",
         layout: "feature",
         maxCards: 3,
-        repeatInGrid: true,
+        repeatInGrid: false,
         eyebrow: news.eyebrow || "",
         title: news.title || "O que há de novo",
         text: news.text || ""
@@ -1540,10 +1540,9 @@
       var id = String(seccao.id);
       porId[id] = [];
       if (homeSectionIsFeature(seccao)) {
-        // `repeatInGrid`: o cartão aparece em destaque E continua na grelha.
-        // É o que a homepage sempre fez com os destaques, por isso vem ligado
-        // na migração — desligá-lo tira-os da grelha.
-        repetem[id] = seccao.repeatInGrid !== false;
+        // `repeatInGrid`: o cartão aparece em destaque E continua na grelha
+        // apenas quando a repetição foi pedida explicitamente.
+        repetem[id] = seccao.repeatInGrid === true;
         if (!primeiroDestaque) { primeiroDestaque = id; }
       } else if (!refugio) {
         refugio = id;
@@ -1570,6 +1569,24 @@
       if (repetem[id] && refugio && porId[refugio] && refugio !== id) {
         porId[refugio].push(record);
       }
+    });
+    Object.keys(porId).forEach(function (id) {
+      if (!Object.prototype.hasOwnProperty.call(repetem, id)) {
+        return;
+      }
+      porId[id].sort(function (a, b) {
+        var orderA = Number(a.category.sectionOrder);
+        var orderB = Number(b.category.sectionOrder);
+        var hasOrderA = Number.isFinite(orderA);
+        var hasOrderB = Number.isFinite(orderB);
+
+        if (hasOrderA || hasOrderB) {
+          if (!hasOrderA) { return 1; }
+          if (!hasOrderB) { return -1; }
+          if (orderA !== orderB) { return orderA - orderB; }
+        }
+        return a.originalIndex - b.originalIndex;
+      });
     });
     return porId;
   }

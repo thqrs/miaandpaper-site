@@ -445,11 +445,11 @@ html[data-theme="dark"] .image-viewer-controls button {
   }
 
   .choice-card.design-grid .design-card-media .design-image.uploaded-image {
-    position: absolute;
-    inset: 0;
-    width: auto !important;
+    position: relative;
+    inset: auto;
+    width: 100% !important;
     height: auto !important;
-    aspect-ratio: auto !important;
+    aspect-ratio: var(--frame-aspect, 1) !important;
   }
 
   .design-zoom-button {
@@ -801,7 +801,7 @@ body:has(.home-shell--brand) .cart-floating-button {
   z-index: 50;
   width: 100%;
   margin: 0;
-  padding: 12px max(16px, calc((100vw - 1180px) / 2));
+  padding: 12px max(20px, env(safe-area-inset-right)) 12px max(20px, env(safe-area-inset-left));
   border-bottom: none;
   background: transparent;
   box-shadow: none;
@@ -1065,7 +1065,6 @@ body:has(.home-shell--brand) .cart-floating-button {
 
 .home-hero-action:hover,
 .home-hero-action:focus-visible {
-  transform: translateY(-1px);
   box-shadow: var(--hero-action-shadow);
 }
 
@@ -1128,21 +1127,19 @@ body:has(.home-shell--brand) .cart-floating-button {
 
 .home-news-card__media {
   position: relative;
-  min-height: 100%;
+  min-width: 0;
+  min-height: 300px;
   overflow: hidden;
   background: var(--surface-image);
 }
 
 .home-news-card__media img {
+  position: absolute;
+  inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 240ms ease;
-}
-
-.home-news-card:hover .home-news-card__media img,
-.home-news-card:focus-visible .home-news-card__media img {
-  transform: scale(1.025);
 }
 
 .home-news-card__copy {
@@ -1405,14 +1402,13 @@ html[data-theme="dark"] .home-products-section {
   color: var(--ink);
   text-align: left;
   box-shadow: var(--shadow-editorial);
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .home-products-section a.category-card:hover,
 .home-products-section a.category-card:focus-visible {
   border-color: var(--moss);
   box-shadow: var(--shadow-editorial);
-  transform: translateY(-1px);
 }
 
 .home-products-section a.category-card:focus-visible {
@@ -1815,7 +1811,7 @@ html[data-theme="dark"] .home-products-section .category-grid:not(.is-admin-home
   z-index: 50;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  padding: 12px max(16px, calc((100vw - 1180px) / 2));
+  padding: 12px max(20px, env(safe-area-inset-right)) 12px max(20px, env(safe-area-inset-left));
   border-bottom: none;
   background: transparent;
   box-shadow: none;

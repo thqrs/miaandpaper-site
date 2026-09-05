@@ -340,7 +340,7 @@
       : null;
   }
 
-  function renderPortaFolhetosBuildSummary(product, step) {
+  function renderPastaDeFolhetosBuildSummary(product, step) {
     var config = product && product.buildSummary;
     var sizeStep;
     var coverStep;
@@ -350,7 +350,7 @@
     var groups;
     var tiles = "";
 
-    if (!config || config.mode !== "porta-folhetos" || (step && step.template === "confirm")) {
+    if (!config || config.mode !== "pasta-de-folhetos" || (step && step.template === "confirm")) {
       return "";
     }
 
@@ -398,7 +398,7 @@
     });
 
     return [
-      '<section class="crachas-step2-summary quadros-summary porta-folhetos-build-summary" aria-label="O que vais encomendar">',
+      '<section class="crachas-step2-summary quadros-summary pasta-de-folhetos-build-summary" aria-label="O que vais encomendar">',
       '<h3 class="crachas-step2-summary-title">' + escapeHtml(config.title || "O que vais encomendar:") + '</h3>',
       '<div class="crachas-step2-summary-grid quadros-summary-grid">' + tiles + '</div>',
       '</section>'
@@ -411,8 +411,8 @@
     var info;
     var tiles = "";
 
-    if (product && product.buildSummary && product.buildSummary.mode === "porta-folhetos") {
-      return renderPortaFolhetosBuildSummary(product, step);
+    if (product && product.buildSummary && product.buildSummary.mode === "pasta-de-folhetos") {
+      return renderPastaDeFolhetosBuildSummary(product, step);
     }
 
     if (!isQuadrosProduct(product) || !design || (step && step.template === "confirm")) {

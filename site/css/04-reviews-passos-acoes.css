@@ -383,39 +383,58 @@ html[data-theme="dark"] .review-bubble-text {
 @media (max-width: 540px) {
   .review-bubbles-host {
     left: max(10px, env(safe-area-inset-left));
-    width: min(350px, calc(100vw - 20px));
+    width: min(290px, calc(100vw - 84px - env(safe-area-inset-right)));
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
-  .review-bubble-card {
-    grid-template-columns: 76px minmax(0, 1fr);
-    gap: 9px;
-    min-height: 94px;
-    padding: 8px 10px 8px 8px;
-    border-radius: 17px;
+  .review-bubbles-host.review-position-right {
+    right: max(10px, env(safe-area-inset-right));
+    left: auto;
+    bottom: calc(var(--review-bottom, 12px) + 72px);
   }
 
-  .review-bubble-image-wrap {
-    width: 76px;
-    height: 76px;
+  .review-bubble-card,
+  .review-bubble-card.review-size-compact,
+  .review-bubble-card.review-size-large,
+  .review-bubble-card.without-image {
+    grid-template-columns: 1fr;
+    gap: 0;
+    min-height: 0;
+    padding: 8px 30px 8px 12px;
+    border-radius: 14px;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  .review-bubble-image-wrap,
+  .review-size-compact .review-bubble-image-wrap,
+  .review-size-large .review-bubble-image-wrap {
+    display: none;
   }
 
   .review-bubble-name {
     margin-bottom: 2px;
-    font-size: 0.78rem;
+    font-size: 0.84rem;
   }
 
   .review-bubble-text {
-    margin-bottom: 6px;
-    font-size: 0.78rem;
-    line-height: 1.18;
+    margin-bottom: 5px;
+    font-size: 0.85rem;
+    line-height: 1.2;
   }
 
   .review-bubble-stars {
-    font-size: 0.96rem;
+    font-size: 1.02rem;
   }
 
   .review-bubble-card::after {
-    left: 38px;
+    left: 24px;
+  }
+
+  .review-position-right .review-bubble-card::after {
+    right: 24px;
+    left: auto;
   }
 }
 
@@ -423,6 +442,7 @@ html[data-theme="dark"] .review-bubble-text {
 .review-bubbles-host.review-position-right {
   right: max(14px, env(safe-area-inset-right));
   left: auto;
+  bottom: calc(var(--review-bottom, 18px) + 74px);
   transform-origin: right bottom;
 }
 
@@ -459,6 +479,19 @@ html[data-theme="dark"] .review-bubble-text {
 .review-size-large .review-bubble-name { font-size: 0.92rem; }
 .review-size-large .review-bubble-text { font-size: 0.94rem; line-height: 1.28; }
 
+/* REVIEW_MOBILE_COPY_V1: o nome genérico lê-se como introdução ao testemunho.
+   Os tamanhos repetem explicitamente os de desktop para não encolherem no
+   telemóvel, incluindo nas variantes compacta e grande. */
+@media (max-width: 540px) {
+  .review-bubble-name--fallback::after { content: ":"; }
+  .review-bubble-name { font-size: 0.84rem; }
+  .review-bubble-text { font-size: 0.85rem; }
+  .review-size-compact .review-bubble-name,
+  .review-size-compact .review-bubble-text { font-size: 0.76rem; }
+  .review-size-large .review-bubble-name { font-size: 0.92rem; }
+  .review-size-large .review-bubble-text { font-size: 0.94rem; line-height: 1.28; }
+}
+
 .review-image-rounded .review-bubble-image { border-radius: 16px; }
 .review-image-square .review-bubble-image { border-radius: 2px; }
 .review-image-circle .review-bubble-image { border-radius: 50%; }
@@ -479,13 +512,6 @@ html[data-theme="dark"] .review-bubble-text {
 
 .review-bubble-card.without-image {
   grid-template-columns: 1fr;
-}
-
-@media (max-width: 540px) {
-  .review-bubbles-host.review-position-right { right: max(10px, env(safe-area-inset-right)); }
-  .review-position-right .review-bubble-card::after { right: 38px; }
-  .review-bubble-card.review-size-large { grid-template-columns: 86px minmax(0, 1fr); min-height: 106px; }
-  .review-size-large .review-bubble-image-wrap { width: 86px; height: 86px; }
 }
 
 /* REVIEW_BALLOON_EGG_V1: enquanto o balao esta em modo bola, o reviews-egg.js

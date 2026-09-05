@@ -12,6 +12,7 @@
     { id: "gallery", label: "Galeria", href: "galeria.html", files: ["galeria.html"] },
     { id: "media", label: "Multimédia", href: "multimedia.html", files: ["multimedia.html"] },
     { id: "photo-wizard", label: "Photo Wizard", href: "photo-wizard.php", files: ["photo-wizard.php"] },
+    { id: "mockup-studio", label: "Mockups", href: "mockup-studio.php", files: ["mockup-studio.php"] },
     { id: "reviews", label: "Reviews", href: "reviews.html", files: ["reviews.html"] },
     { id: "faqs", label: "FAQs", href: "faqs.php", files: ["faqs.php"] },
     { id: "miu", label: "Míu", href: "bot.php", files: ["bot.php"] },
@@ -26,10 +27,11 @@
     { id: "home", label: "Homepage & Menu", href: "homepage-menu-design.php", files: ["homepage-menu-design.php"] },
     { id: "carousels", label: "Carrosséis", href: "carrousel.php", files: ["carrousel.php"] },
     { id: "funnel", label: "Funil", href: "admin-funnel.php", files: ["admin-funnel.php", "admin-live-dashboard.php"] },
-    { id: "orders", label: "Encomendas", href: "admin-orders.php", files: ["admin-orders.php"] },
     { id: "tracking", label: "Tracking", href: "tracking.php", files: ["tracking.php"] },
+    { id: "orders", label: "Encomendas", href: "admin-orders.php", files: ["admin-orders.php"] },
     { id: "colors", label: "Cores", href: "admin-colors.html", files: ["admin-colors.html"] },
     { id: "uploads", label: "Uploads", href: "admin-uploads.php", files: ["admin-uploads.php"] },
+    { id: "comparador-argolas", label: "Comparador Argolas", href: "tools/comparador-argolas.php", files: ["comparador-argolas.php"] },
     { id: "tools", label: "Ferramentas", href: "tools/index.php", files: ["comando.php"] }
   ];
   var nav;

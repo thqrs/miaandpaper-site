@@ -95,7 +95,8 @@ e [generateContent do Gemini](https://ai.google.dev/gemini-api/docs/generate-con
 - alterar ou esconder o texto “Fala comigo!” junto ao botão;
 - na TAB **Aparência**, definir separadamente o tamanho da cara no canto, na barra do chat e após cada resposta;
 - mostrar ou esconder o círculo em cada um desses três locais;
-- definir durante quantos segundos aparece o balão inicial junto ao Míu;
+- definir durante quantos segundos aparece o balão inicial junto ao Míu; este
+  balão só aparece uma vez por dia em cada browser, mesmo ao mudar de página;
 - escolher se os erros/avisos públicos aparecem no formulário ou são ditos pelo Míu no mesmo balão;
 - configurar o tamanho das animações interactivas de corpo inteiro;
 - fornecedor principal e fallback;
@@ -105,6 +106,11 @@ e [generateContent do Gemini](https://ai.google.dev/gemini-api/docs/generate-con
 - objectivos próprios de cada produto e passo;
 - passos em que a tabela de preços actual deve ser injectada;
 - tamanho de mensagem, turnos por conversa, rate limits e resposta máxima.
+
+Quando esta opção põe um erro na voz do Míu, o pequeno balão junto ao lançador
+usa texto maior e um glow vermelho que pulsa suavemente três vezes; depois fica
+estável até a mensagem desaparecer. O pulso reinicia em cada erro, mesmo quando
+o balão anterior ainda está visível.
 
 `content/miu-defaults.json` é a **fonte única da verdade** para as definições
 globais do Míu. Guardar alterações no painel `bot.php` grava directamente

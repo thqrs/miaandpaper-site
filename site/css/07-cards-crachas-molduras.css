@@ -122,6 +122,28 @@
   }
 }
 
+/* Molduras no mobile (≤620px): a regra genérica de 11-home-marca tira a
+   .design-image de fluxo (absolute inset:0) dentro de um pai cuja altura vem
+   de aspect-ratio. Essa altura não é definitiva para o filho absoluto — o
+   Chromium colapsa para as bordas (4px) e a miniatura some, embora a lupa e a
+   gaveta (img/background directo) continuem a aparecer. Aqui a imagem volta
+   ao fluxo e é ela a dona do ratio; o pai acompanha por altura automática. */
+@media (max-width: 620px) {
+  .product-quadros .choice-card.design-grid .design-card-media {
+    height: auto !important;
+    aspect-ratio: auto;
+  }
+
+  .product-quadros .choice-card.design-grid .design-card-media .design-image.uploaded-image,
+  .product-quadros .choice-card.design-grid .design-card-media .design-image {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: var(--frame-aspect, 1) !important;
+  }
+}
+
 .product-shape-round .quantity-visual-wrap {
   width: max-content !important;
   max-width: none !important;

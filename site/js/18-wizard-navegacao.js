@@ -397,12 +397,12 @@
 
     if (step.template === "option-drawers") {
       var stepDrawers = optionDrawersForStep(product, step);
-      if (step.portaFolhetosDetails) {
-        var detailsVariationStep = portaFolhetosDetailsVariationStep(product, step);
+      if (step.pastaDeFolhetosDetails) {
+        var detailsVariationStep = pastaDeFolhetosDetailsVariationStep(product, step);
         var detailsGroups;
-        syncPortaFolhetosDetailSelections(product, step);
+        syncPastaDeFolhetosDetailSelections(product, step);
         if (detailsVariationStep) {
-          detailsGroups = portaFolhetosDetailsGroups(step, detailsVariationStep);
+          detailsGroups = pastaDeFolhetosDetailsGroups(step, detailsVariationStep);
           for (i = 0; i < detailsGroups.length; i += 1) {
             var detailsGroup = detailsGroups[i];
             var detailsField = groupedDesignField(detailsVariationStep, detailsGroup);

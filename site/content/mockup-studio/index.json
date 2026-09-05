@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "presets": [
+    {
+      "id": "a6-front",
+      "label": "A6 Front",
+      "path": "a6-front/preset.json",
+      "ready": true
+    }
+  ]
+}

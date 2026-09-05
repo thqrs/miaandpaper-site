@@ -1259,32 +1259,32 @@ html[data-theme="dark"] .quadros-summary-colors > span {
 
 
 
-/* PORTA_FOLHETOS_CONTINUOUS_CONFIGURATOR_V3
+/* PASTA_DE_FOLHETOS_CONTINUOUS_CONFIGURATOR_V3
    Fluxos opt-in por dados: configurador contínuo e atribuição A4/A6 dentro da
    preview. Mantêm os campos reais enviados ao checkout. */
-.porta-folhetos-fluid {
+.pasta-de-folhetos-fluid {
   display: grid;
   gap: 22px;
 }
 
-.porta-folhetos-fluid .grouped-format-section {
+.pasta-de-folhetos-fluid .grouped-format-section {
   margin: 0;
   padding: 0 0 20px;
   border-bottom: 1px solid var(--line);
 }
 
-.porta-folhetos-fluid .grouped-format-section .design-grid-section-title {
+.pasta-de-folhetos-fluid .grouped-format-section .design-grid-section-title {
   margin-top: 0;
 }
 
 /* Formato: três cartões verticais, como no mockup. */
-.porta-folhetos-fluid .grouped-format-section .cadernos-purchase-list {
+.pasta-de-folhetos-fluid .grouped-format-section .cadernos-purchase-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
-.porta-folhetos-fluid .grouped-format-section .choice-card.cadernos-purchase-card {
+.pasta-de-folhetos-fluid .grouped-format-section .choice-card.cadernos-purchase-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto auto;
@@ -1299,17 +1299,17 @@ html[data-theme="dark"] .quadros-summary-colors > span {
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.porta-folhetos-fluid .grouped-format-section .choice-card.cadernos-purchase-card:hover {
+.pasta-de-folhetos-fluid .grouped-format-section .choice-card.cadernos-purchase-card:hover {
   border-color: color-mix(in srgb, var(--moss) 42%, var(--line));
 }
 
-.porta-folhetos-fluid .grouped-format-section .choice-card.cadernos-purchase-card.is-selected,
-.porta-folhetos-fluid .grouped-format-section .choice-card.cadernos-purchase-card:has(input:checked) {
+.pasta-de-folhetos-fluid .grouped-format-section .choice-card.cadernos-purchase-card.is-selected,
+.pasta-de-folhetos-fluid .grouped-format-section .choice-card.cadernos-purchase-card:has(input:checked) {
   border-color: var(--moss);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--moss) 11%, transparent);
 }
 
-.porta-folhetos-fluid .grouped-format-section .crachas-size-card-visual {
+.pasta-de-folhetos-fluid .grouped-format-section .crachas-size-card-visual {
   position: relative;
   display: block;
   width: 100%;
@@ -1320,8 +1320,8 @@ html[data-theme="dark"] .quadros-summary-colors > span {
   background: var(--surface-image);
 }
 
-.porta-folhetos-fluid .grouped-format-section .crachas-size-card-visual .option-image,
-.porta-folhetos-fluid .grouped-format-section .crachas-size-card-visual .uploaded-image {
+.pasta-de-folhetos-fluid .grouped-format-section .crachas-size-card-visual .option-image,
+.pasta-de-folhetos-fluid .grouped-format-section .crachas-size-card-visual .uploaded-image {
   display: block;
   width: 100% !important;
   height: 100% !important;
@@ -1332,7 +1332,7 @@ html[data-theme="dark"] .quadros-summary-colors > span {
 }
 
 /* WebKit: o pai é quem define o 4:3; a imagem apenas preenche o frame. */
-.porta-folhetos-fluid .grouped-format-section .crachas-size-card-visual > .uploaded-image {
+.pasta-de-folhetos-fluid .grouped-format-section .crachas-size-card-visual > .uploaded-image {
   position: absolute;
   inset: 0;
   width: auto !important;
@@ -1340,24 +1340,24 @@ html[data-theme="dark"] .quadros-summary-colors > span {
   aspect-ratio: auto !important;
 }
 
-.porta-folhetos-fluid .grouped-format-section .crachas-size-card-text {
+.pasta-de-folhetos-fluid .grouped-format-section .crachas-size-card-text {
   display: grid;
   gap: 3px;
   padding: 4px 4px 0;
 }
 
-.porta-folhetos-fluid .grouped-format-section .crachas-size-card-text strong {
+.pasta-de-folhetos-fluid .grouped-format-section .crachas-size-card-text strong {
   color: var(--ink);
   font: 700 1.05rem/1.15 Georgia, "Times New Roman", serif;
 }
 
-.porta-folhetos-fluid .grouped-format-section .crachas-size-card-text span {
+.pasta-de-folhetos-fluid .grouped-format-section .crachas-size-card-text span {
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.25;
 }
 
-.porta-folhetos-fluid .grouped-format-section .cadernos-purchase-price {
+.pasta-de-folhetos-fluid .grouped-format-section .cadernos-purchase-price {
   justify-self: start;
   padding: 0 4px 5px;
   color: var(--moss);
@@ -1421,23 +1421,23 @@ html[data-theme="dark"] .quadros-summary-colors > span {
 }
 
 /* Capas: fotografia grande em cima + título em baixo. */
-.porta-folhetos-fluid .pf-fluid-cover-list {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 11px;
   margin-bottom: 0;
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .grouped-design-choice {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .grouped-design-choice {
   display: grid;
   min-width: 0;
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .grouped-design-choice:not(:has(input:checked)) {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .grouped-design-choice:not(:has(input:checked)) {
   opacity: 1;
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .choice-card.cadernos-cover-card {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .choice-card.cadernos-cover-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto;
@@ -1453,17 +1453,17 @@ html[data-theme="dark"] .quadros-summary-colors > span {
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .choice-card.cadernos-cover-card:hover {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .choice-card.cadernos-cover-card:hover {
   border-color: color-mix(in srgb, var(--moss) 42%, var(--line));
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .choice-card.cadernos-cover-card.is-selected,
-.porta-folhetos-fluid .pf-fluid-cover-list .choice-card.cadernos-cover-card:has(input:checked) {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .choice-card.cadernos-cover-card.is-selected,
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .choice-card.cadernos-cover-card:has(input:checked) {
   border-color: var(--moss);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--moss) 11%, transparent);
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media {
   position: relative;
   display: grid;
   width: 100%;
@@ -1475,10 +1475,10 @@ html[data-theme="dark"] .quadros-summary-colors > span {
   background: var(--surface-image);
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media .option-image,
-.porta-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media .uploaded-image,
-.porta-folhetos-fluid .pf-fluid-cover-list .crachas-size-card-visual .option-image,
-.porta-folhetos-fluid .pf-fluid-cover-list .crachas-size-card-visual .uploaded-image {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media .option-image,
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media .uploaded-image,
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .crachas-size-card-visual .option-image,
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .crachas-size-card-visual .uploaded-image {
   display: block;
   width: 100% !important;
   height: 100% !important;
@@ -1490,7 +1490,7 @@ html[data-theme="dark"] .quadros-summary-colors > span {
 
 /* iPad/WebKit: não depender de height: 100% quando a altura do card
    é calculada por aspect-ratio. O frame ocupa o pai por inset. */
-.porta-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media > .uploaded-image {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media > .uploaded-image {
   position: absolute;
   inset: 0;
   width: auto !important;
@@ -1498,15 +1498,15 @@ html[data-theme="dark"] .quadros-summary-colors > span {
   aspect-ratio: auto !important;
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media .uploaded-image-inner,
-.porta-folhetos-fluid .pf-fluid-cover-list .crachas-size-card-visual .uploaded-image-inner {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media .uploaded-image-inner,
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .crachas-size-card-visual .uploaded-image-inner {
   inset: 0;
   background-size: contain !important;
   background-repeat: no-repeat;
   background-position: center;
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media .design-zoom-button {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .cadernos-cover-media .design-zoom-button {
   right: 7px;
   bottom: 7px;
 }
@@ -1524,7 +1524,7 @@ html[data-theme="dark"] .quadros-summary-colors > span {
   border-radius: var(--radius);
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .choice-copy {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .choice-copy {
   display: grid;
   gap: 2px;
   min-width: 0;
@@ -1532,19 +1532,19 @@ html[data-theme="dark"] .quadros-summary-colors > span {
   text-align: left;
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .choice-copy strong {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .choice-copy strong {
   color: var(--ink);
   font-size: 0.82rem;
   line-height: 1.24;
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .choice-copy span {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .choice-copy span {
   color: var(--muted);
   font-size: 0.72rem;
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .crachas-size-card-selected,
-.porta-folhetos-fluid .grouped-format-section .crachas-size-card-selected {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .crachas-size-card-selected,
+.pasta-de-folhetos-fluid .grouped-format-section .crachas-size-card-selected {
   top: 15px;
   right: 15px;
   transform: none;
@@ -1565,9 +1565,8 @@ html[data-theme="dark"] .quadros-summary-colors > span {
 
 .pf-assignment-slots-title {
   width: min(100%, 250px);
-  margin: 0 auto 6px;
-  color: var(--ink);
-  font: 800 0.88rem/1.2 Georgia, "Times New Roman", serif;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .pf-assignment-slot {
@@ -1647,47 +1646,132 @@ html[data-theme="dark"] .quadros-summary-colors > span {
   cursor: pointer;
 }
 
-.porta-folhetos-fluid .pf-fluid-cover-list .pf-assignment-card.is-open {
+.pf-assignment-card-media {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: calc(var(--radius) + 1px);
+  background: var(--surface-image);
+  isolation: isolate;
+}
+
+.pf-assignment-card-trigger {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  cursor: pointer;
+}
+
+.pf-assignment-card:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--gold) 42%, transparent);
+  outline-offset: 2px;
+}
+
+.pf-assignment-card-footer {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .pf-assignment-card.is-open {
   border-color: var(--moss);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--moss) 11%, transparent);
 }
 
 .pf-assignment-card-controls {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 3;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  z-index: 4;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
+  align-items: stretch;
+  gap: 7px;
+  width: auto;
+  margin: 0;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
 }
 
-.pf-assignment-card.is-admin-editable .pf-assignment-card-controls {
-  top: 44px;
+.pf-assignment-card.is-open .pf-assignment-card-controls,
+.pf-assignment-card.is-assigned .pf-assignment-card-controls {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+/* A entrada pertence apenas ao cartão acabado de abrir e ainda sem atribuição.
+   Cartões já atribuídos aparecem logo, sem voltar a piscar. */
+.pf-assignment-card.is-opening .pf-assignment-card-controls {
+  animation: pf-assignment-controls-enter 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes pf-assignment-controls-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Depois de atribuído, apenas o botão escolhido fica visível sobre o nome;
+   a outra metade permanece reservada para não deslocar A4/A6. Ao reabrir a
+   imagem aparecem novamente as duas possibilidades. */
+.pf-assignment-card.is-assigned:not(.is-open) .pf-assignment-card-toggle:not(.is-selected) {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .pf-assignment-card-toggle {
   display: inline-flex;
+  flex: 1 1 0;
   align-items: center;
+  justify-content: center;
   gap: 7px;
-  min-width: 58px;
+  min-width: 0;
+  height: 44px;
   min-height: 44px;
-  padding: 8px 9px 8px 11px;
+  padding: 8px;
   border: 1px solid color-mix(in srgb, var(--moss) 55%, var(--line));
-  border-radius: 7px;
-  background: color-mix(in srgb, var(--surface-panel) 95%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-panel) 92%, transparent);
   color: var(--moss);
   font: 800 0.86rem/1 Georgia, "Times New Roman", serif;
+  white-space: nowrap;
   box-shadow: 0 2px 8px rgba(46, 36, 19, 0.18);
+  backdrop-filter: blur(7px);
   cursor: pointer;
+}
+
+.pf-assignment-card-toggle > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pf-assignment-card-check {
   display: grid;
+  flex: 0 0 22px;
   width: 22px;
   height: 22px;
+  aspect-ratio: 1 / 1;
+  padding: 0;
   place-items: center;
+  box-sizing: border-box;
   border: 1px solid color-mix(in srgb, var(--moss) 25%, transparent);
   border-radius: 50%;
   background: var(--surface-panel);
@@ -1708,48 +1792,6 @@ html[data-theme="dark"] .quadros-summary-colors > span {
 .pf-assignment-card-toggle:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--gold) 34%, transparent);
   outline-offset: 2px;
-}
-
-.pf-assignment-card-controls.is-leaving .pf-assignment-card-toggle.is-fading {
-  animation: pf-assignment-control-fade 240ms ease-in-out forwards;
-}
-
-.pf-assignment-card-controls.is-leaving .pf-assignment-card-toggle.is-promoted {
-  animation: pf-assignment-control-promote 210ms ease-in-out forwards;
-}
-
-.pf-assignment-card-controls.is-revealing .pf-assignment-card-toggle.is-restoring {
-  animation: pf-assignment-control-restore 210ms ease-out both;
-}
-
-.pf-assignment-card-controls.is-revealing .pf-assignment-card-toggle.is-revealed {
-  animation: pf-assignment-control-reveal 180ms ease-out both;
-}
-
-@keyframes pf-assignment-control-fade {
-  to {
-    opacity: 0;
-    transform: translateX(8px) scale(0.96);
-  }
-}
-
-@keyframes pf-assignment-control-promote {
-  to {
-    transform: translateY(-50px);
-  }
-}
-
-@keyframes pf-assignment-control-restore {
-  from {
-    transform: translateY(-50px);
-  }
-}
-
-@keyframes pf-assignment-control-reveal {
-  from {
-    opacity: 0;
-    transform: translateY(-9px) scale(0.96);
-  }
 }
 
 .pf-assignment-preview-row {
@@ -2173,8 +2215,8 @@ html[data-theme="dark"] .quadros-summary-colors > span {
 html[data-theme="dark"] .pf-fluid-size-section,
 html[data-theme="dark"] .pf-fluid-extras,
 html[data-theme="dark"] .pf-fluid-variation-choice,
-html[data-theme="dark"] .porta-folhetos-fluid .grouped-format-section .choice-card.cadernos-purchase-card,
-html[data-theme="dark"] .porta-folhetos-fluid .pf-fluid-cover-list .choice-card.cadernos-cover-card {
+html[data-theme="dark"] .pasta-de-folhetos-fluid .grouped-format-section .choice-card.cadernos-purchase-card,
+html[data-theme="dark"] .pasta-de-folhetos-fluid .pf-fluid-cover-list .choice-card.cadernos-cover-card {
   background: var(--ui-card, var(--surface-panel));
 }
 
@@ -2183,7 +2225,7 @@ html[data-theme="dark"] .pf-fluid-variation {
 }
 
 @media (max-width: 850px) {
-  .porta-folhetos-fluid .pf-fluid-cover-list {
+  .pasta-de-folhetos-fluid .pf-fluid-cover-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
@@ -2199,11 +2241,11 @@ html[data-theme="dark"] .pf-fluid-variation {
     padding: 14px;
   }
 
-  .porta-folhetos-fluid .grouped-format-section .cadernos-purchase-list {
+  .pasta-de-folhetos-fluid .grouped-format-section .cadernos-purchase-list {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .porta-folhetos-fluid .grouped-format-section .choice-card.cadernos-purchase-card {
+  .pasta-de-folhetos-fluid .grouped-format-section .choice-card.cadernos-purchase-card {
     grid-template-columns: 92px minmax(0, 1fr);
     grid-template-rows: auto auto;
     align-items: center;
@@ -2211,22 +2253,22 @@ html[data-theme="dark"] .pf-fluid-variation {
     padding: 10px;
   }
 
-  .porta-folhetos-fluid .grouped-format-section .crachas-size-card-visual {
+  .pasta-de-folhetos-fluid .grouped-format-section .crachas-size-card-visual {
     grid-row: 1 / 3;
   }
 
-  .porta-folhetos-fluid .grouped-format-section .crachas-size-card-visual .option-image,
-  .porta-folhetos-fluid .grouped-format-section .crachas-size-card-visual .uploaded-image {
+  .pasta-de-folhetos-fluid .grouped-format-section .crachas-size-card-visual .option-image,
+  .pasta-de-folhetos-fluid .grouped-format-section .crachas-size-card-visual .uploaded-image {
     aspect-ratio: 4 / 5;
   }
 
-  .porta-folhetos-fluid .grouped-format-section .crachas-size-card-text,
-  .porta-folhetos-fluid .grouped-format-section .cadernos-purchase-price {
+  .pasta-de-folhetos-fluid .grouped-format-section .crachas-size-card-text,
+  .pasta-de-folhetos-fluid .grouped-format-section .cadernos-purchase-price {
     grid-column: 2;
     padding-inline: 0;
   }
 
-  .porta-folhetos-fluid .pf-fluid-cover-list {
+  .pasta-de-folhetos-fluid .pf-fluid-cover-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -2236,6 +2278,30 @@ html[data-theme="dark"] .pf-fluid-variation {
 
   .pf-assignment-preview-row {
     grid-row: var(--assignment-preview-row-two);
+  }
+
+  .pf-assignment-card-controls {
+    right: 6px;
+    bottom: 6px;
+    left: 6px;
+    gap: 5px;
+  }
+
+  .pf-assignment-card-toggle {
+    gap: 4px;
+    padding: 7px 5px;
+    font-size: 0.78rem;
+  }
+
+  .pf-assignment-card-check {
+    flex-basis: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .pf-assignment-card-check svg {
+    width: 11px;
+    height: 11px;
   }
 
   .pf-fluid-variation-list {
@@ -2275,7 +2341,7 @@ html[data-theme="dark"] .pf-fluid-variation {
   }
 }
 
-/* PORTA_FOLHETOS_FOUR_STEPS_V1: tamanho, design, acabamento e detalhes. */
+/* PASTA_DE_FOLHETOS_FOUR_STEPS_V1: tamanho, design, acabamento e detalhes. */
 .pf-size-list,
 .pf-finish-step,
 .pf-details-step {

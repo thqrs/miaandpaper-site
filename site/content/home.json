@@ -6,7 +6,7 @@
   "intro": {
     "eyebrow": "Bem-vindos à",
     "title": "Mia & Paper",
-    "text": "Papelaria, presentes e peças personalizadas, preparados por encomenda."
+    "text": "Papelaria, presentes e peças personalizadas, preparados pela Mia por encomenda."
   },
   "hero": {
     "image": "content/designs/cadernos/process/caderno_normal_com_pin/caderno_normal_com_pin_6.webp",
@@ -25,7 +25,7 @@
     "primaryLabel": "Ver novidades",
     "primaryHref": "#novidades",
     "secondaryKicker": "Produtos",
-    "secondaryLabel": "Explorar produtos",
+    "secondaryLabel": "Explorar os clássicos",
     "secondaryHref": "#produtos"
   },
   "homeSections": [
@@ -33,7 +33,7 @@
       "id": "novidades",
       "layout": "feature",
       "maxCards": 3,
-      "repeatInGrid": true,
+      "repeatInGrid": false,
       "eyebrow": "",
       "title": "Novidades",
       "text": ""
@@ -42,7 +42,14 @@
       "id": "produtos",
       "layout": "grid",
       "eyebrow": "",
-      "title": "Produtos",
+      "title": "Os Nossos Clássicos",
+      "text": ""
+    },
+    {
+      "id": "felicidade-eterna",
+      "layout": "grid",
+      "eyebrow": "",
+      "title": "Congressos",
       "text": ""
     }
   ],
@@ -53,24 +60,30 @@
   "customPromoEnabled": true,
   "categories": [
     {
-      "id": "personalizacao",
-      "title": "Personalização",
-      "menuTitle": "Personalização",
+      "id": "pasta-de-folhetos",
+      "title": "Pasta de folhetos",
+      "menuTitle": "Pasta de folhetos",
       "menuOrder": 1,
-      "menuGroup": "Personalizados",
+      "menuGroup": "Novidades",
       "menuGroupOrder": 1,
-      "subtitle": "Os teus desenhos e fotos em crachás, porta-chaves, porta-folhetos, ímanes, marcadores e cadernos",
-      "href": "personalizacao.html",
-      "menuHref": "personalizacao.html",
-      "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
-      "accent": "rose",
+      "subtitle": "Para guardares os folhetos da pregação",
+      "href": "pasta-de-folhetos.html",
+      "menuHref": "pasta-de-folhetos.html",
+      "image": "content/designs/loja/pasta-de-folhetos/oficiais/quao-lindos-passeio.webp",
+      "accent": "gold",
       "available": true,
       "carouselEnabled": true,
       "clickable": true,
-      "section": "produtos",
+      "featureLabel": "Papelaria",
+      "featureTitle": "Pasta de folhetos A4 e A6",
+      "featureText": "Escolhe uma pasta individual ou o pack A4 + A6, com capas e acabamentos à tua escolha.",
+      "featureCta": "Escolher a pasta",
+      "featureImage": "content/designs/loja/pasta-de-folhetos/oficiais/quao-lindos-passeio.webp",
+      "section": "novidades",
+      "sectionOrder": 1,
       "carouselSlides": [
         {
-          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
+          "image": "content/designs/loja/pasta-de-folhetos/oficiais/quao-lindos-passeio.webp",
           "visible": true,
           "speedSeconds": null,
           "zoomPercent": null,
@@ -79,7 +92,7 @@
           "intervalMs": null
         },
         {
-          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-01.webp",
+          "image": "content/designs/loja/pasta-de-folhetos/oficiais/declara-boas-novas-bicicleta-rosa.webp",
           "visible": true,
           "speedSeconds": null,
           "zoomPercent": null,
@@ -88,7 +101,25 @@
           "intervalMs": null
         },
         {
-          "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
+          "image": "content/designs/loja/pasta-de-folhetos/oficiais/realiza-ministerio-flores-vermelhas.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/pasta-de-folhetos/oficiais/realiza-ministerio-lavanda.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/pasta-de-folhetos/oficiais/realiza-ministerio-sapatos.webp",
           "visible": true,
           "speedSeconds": null,
           "zoomPercent": null,
@@ -97,14 +128,14 @@
           "intervalMs": null
         }
       ],
-      "carouselRandomizeOnLoad": true
+      "menuIcon": "cadernos"
     },
     {
       "id": "quadros",
       "title": "Molduras",
       "menuTitle": "Molduras",
       "menuOrder": 2,
-      "menuGroup": "Personalizados",
+      "menuGroup": "Novidades",
       "menuGroupOrder": 1,
       "subtitle": "Peças personalizadas para a tua casa",
       "href": "molduras.html",
@@ -119,6 +150,7 @@
       "featureText": "Escolhe o estilo, as cores e o texto, e envia as fotos diretamente no pedido.",
       "featureCta": "Criar uma moldura",
       "section": "novidades",
+      "sectionOrder": 2,
       "carouselSlides": [
         {
           "image": "content/designs/quadros/fotos-reais/foto-flores-azul-amarelo-frontal.webp",
@@ -187,29 +219,356 @@
       "carouselRandomizeOnLoad": true
     },
     {
+      "id": "personalizacao",
+      "title": "Personalização",
+      "menuTitle": "Personalização",
+      "menuOrder": 3,
+      "menuGroup": "Novidades",
+      "menuGroupOrder": 1,
+      "subtitle": "Os teus desenhos e fotos em crachás, porta-chaves, pasta de folhetos, ímanes, marcadores e cadernos",
+      "href": "personalizacao.html",
+      "menuHref": "personalizacao.html",
+      "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
+      "accent": "rose",
+      "available": true,
+      "carouselEnabled": true,
+      "clickable": true,
+      "featureLabel": "Ao teu gosto",
+      "featureTitle": "Personalização com o teu design",
+      "featureText": "Envia uma fotografia, um desenho ou um ficheiro e escolhe onde o queres aplicar.",
+      "featureCta": "Começar a personalizar",
+      "section": "novidades",
+      "sectionOrder": 3,
+      "carouselSlides": [
+        {
+          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-01.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        }
+      ],
+      "carouselRandomizeOnLoad": true
+    },
+    {
+      "id": "crachas-geral",
+      "title": "Crachás",
+      "menuTitle": "Crachás",
+      "menuOrder": 1,
+      "menuGroup": "Os Nossos Clássicos",
+      "menuGroupOrder": 2,
+      "subtitle": "Pequenos detalhes com significado",
+      "href": "crachas.html",
+      "menuHref": "crachas.html",
+      "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
+      "accent": "blue",
+      "available": true,
+      "carouselEnabled": true,
+      "clickable": true,
+      "section": "produtos",
+      "carouselSlides": [
+        {
+          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-01.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/lingua-gestual-01.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-02.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-03.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-04.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/lingua-gestual-02.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/crachas-loja/catalog/pins/pin-01.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/crachas-loja/catalog/pins/pin-02.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/crachas-loja/catalog/pins/pin-03.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/crachas-loja/catalog/pins/pin-04.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/crachas-loja/catalog/pins/pin-05.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        }
+      ],
+      "carouselRandomizeOnLoad": true
+    },
+    {
       "id": "agendas",
       "title": "Agendas",
       "menuTitle": "Agenda 2026",
-      "menuOrder": 3,
-      "menuGroup": "Cadernos e papelaria",
+      "menuOrder": 2,
+      "menuGroup": "Os Nossos Clássicos",
       "menuGroupOrder": 2,
       "subtitle": "Para organizar os teus dias",
       "href": "agendas.html",
       "menuHref": "agendas.html",
       "image": "",
       "accent": "sage",
-      "available": true,
+      "available": false,
       "carouselEnabled": false,
       "clickable": true,
       "section": "produtos",
-      "carouselSlides": []
+      "carouselSlides": [],
+      "menuHidden": false
+    },
+    {
+      "id": "imanes-geral",
+      "title": "Ímanes",
+      "menuTitle": "Ímanes",
+      "menuOrder": 3,
+      "menuGroup": "Os Nossos Clássicos",
+      "menuGroupOrder": 2,
+      "subtitle": "Um toque especial no frigorífico",
+      "href": "imanes.html",
+      "menuHref": "imanes.html",
+      "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-01.webp",
+      "accent": "blue",
+      "available": true,
+      "carouselEnabled": true,
+      "clickable": true,
+      "section": "produtos",
+      "carouselSlides": [
+        {
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-01.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/cornfield/cornfield-01.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132982.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-02.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-03.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-04.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-05.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132974.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132976.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132978.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132980.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        },
+        {
+          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132984.webp",
+          "visible": true,
+          "speedSeconds": null,
+          "zoomPercent": null,
+          "panPercent": null,
+          "overlayOpacity": null,
+          "intervalMs": null
+        }
+      ],
+      "carouselRandomizeOnLoad": true
+    },
+    {
+      "id": "imanes-recortados",
+      "title": "Ímanes recortados",
+      "menuTitle": "Ímanes recortados",
+      "menuOrder": 4,
+      "menuGroup": "Os Nossos Clássicos",
+      "menuGroupOrder": 2,
+      "subtitle": "Cortados à volta do desenho",
+      "href": "imanes-recortados.html",
+      "menuHref": "imanes-recortados.html",
+      "accent": "blue",
+      "available": false,
+      "carouselEnabled": true,
+      "clickable": true,
+      "section": "produtos",
+      "carouselSlides": [],
+      "menuHidden": true
     },
     {
       "id": "cadernos-geral",
       "title": "Cadernos",
       "menuTitle": "Cadernos",
-      "menuOrder": 4,
-      "menuGroup": "Cadernos e papelaria",
+      "menuOrder": 5,
+      "menuGroup": "Os Nossos Clássicos",
       "menuGroupOrder": 2,
       "subtitle": "Para escrever, guardar e oferecer",
       "href": "cadernos-anuais.html",
@@ -336,8 +695,8 @@
       "id": "mini-cadernos-geral",
       "title": "Mini-cadernos",
       "menuTitle": "Mini-cadernos",
-      "menuOrder": 5,
-      "menuGroup": "Cadernos e papelaria",
+      "menuOrder": 6,
+      "menuGroup": "Os Nossos Clássicos",
       "menuGroupOrder": 2,
       "subtitle": "Pequenos cadernos para levar contigo",
       "href": "mini-cadernos.html",
@@ -455,15 +814,15 @@
       "id": "blocos-a6",
       "title": "Blocos A6",
       "menuTitle": "Blocos A6",
-      "menuOrder": 6,
-      "menuGroup": "Cadernos e papelaria",
+      "menuOrder": 7,
+      "menuGroup": "Os Nossos Clássicos",
       "menuGroupOrder": 2,
       "subtitle": "Blocos de argolas para apontamentos",
       "href": "blocos-a6.html",
       "menuHref": "blocos-a6.html",
       "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
       "accent": "gold",
-      "available": true,
+      "available": false,
       "carouselEnabled": true,
       "clickable": true,
       "section": "produtos",
@@ -556,231 +915,40 @@
           "overlayOpacity": null,
           "intervalMs": null
         }
-      ]
+      ],
+      "menuHidden": true
     },
     {
       "id": "bloquinhos",
       "title": "Bloquinhos",
       "menuTitle": "Bloquinhos",
-      "menuOrder": 7,
-      "menuGroup": "Cadernos e papelaria",
+      "menuOrder": 8,
+      "menuGroup": "Os Nossos Clássicos",
       "menuGroupOrder": 2,
       "subtitle": "Blocos de notas para o dia a dia",
       "href": "bloquinhos.html",
       "menuHref": "bloquinhos.html",
       "accent": "gold",
-      "available": true,
+      "available": false,
       "carouselEnabled": true,
       "clickable": true,
       "section": "produtos",
-      "carouselSlides": []
-    },
-    {
-      "id": "porta-folhetos",
-      "title": "Porta-folhetos",
-      "menuTitle": "Porta-folhetos",
-      "menuOrder": 8,
-      "menuGroup": "Cadernos e papelaria",
-      "menuGroupOrder": 2,
-      "subtitle": "Para guardares os folhetos da pregação",
-      "href": "porta-folhetos.html",
-      "menuHref": "porta-folhetos.html",
-      "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.webp",
-      "accent": "gold",
-      "available": true,
-      "carouselEnabled": true,
-      "clickable": true,
-      "section": "produtos",
-      "carouselSlides": [
-        {
-          "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/o_jovem_cadeira/o_jovem_cadeira_matte.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/idosa_jovem/idosa_jovem_matte.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/idoso_jovem/idoso_jovem_matte.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/reencontro/reencontro_matte.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        }
-      ],
-      "menuIcon": "cadernos"
-    },
-    {
-      "id": "crachas-geral",
-      "title": "Crachás",
-      "menuTitle": "Crachás",
-      "menuOrder": 9,
-      "menuGroup": "Crachás e ímanes",
-      "menuGroupOrder": 3,
-      "subtitle": "Pequenos detalhes com significado",
-      "href": "crachas.html",
-      "menuHref": "crachas.html",
-      "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
-      "accent": "blue",
-      "available": true,
-      "carouselEnabled": true,
-      "clickable": true,
-      "section": "produtos",
-      "carouselSlides": [
-        {
-          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-01.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/lingua-gestual-01.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-02.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-03.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/esperanca-04.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/lingua-gestual-02.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/crachas-loja/catalog/pins/pin-01.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/crachas-loja/catalog/pins/pin-02.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/crachas-loja/catalog/pins/pin-03.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/crachas-loja/catalog/pins/pin-04.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/crachas-loja/catalog/pins/pin-05.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        }
-      ],
-      "carouselRandomizeOnLoad": true
+      "carouselSlides": [],
+      "menuHidden": true
     },
     {
       "id": "porta-chaves",
       "title": "Porta-chaves",
       "menuTitle": "Porta-chaves",
-      "menuOrder": 10,
-      "menuGroup": "Crachás e ímanes",
-      "menuGroupOrder": 3,
+      "menuOrder": 9,
+      "menuGroup": "Os Nossos Clássicos",
+      "menuGroupOrder": 2,
       "subtitle": "Os teus designs para levar contigo",
       "href": "porta-chaves.html",
       "menuHref": "porta-chaves.html",
       "image": "content/designs/loja/crachas-loja/catalog/crachas/novidades/braille-01.webp",
       "accent": "rose",
-      "available": true,
+      "available": false,
       "carouselEnabled": true,
       "clickable": true,
       "section": "produtos",
@@ -849,218 +1017,94 @@
           "intervalMs": null
         }
       ],
-      "menuIcon": "crachas"
-    },
-    {
-      "id": "imanes-geral",
-      "title": "Ímanes",
-      "menuTitle": "Ímanes",
-      "menuOrder": 11,
-      "menuGroup": "Crachás e ímanes",
-      "menuGroupOrder": 3,
-      "subtitle": "Um toque especial no frigorífico",
-      "href": "imanes.html",
-      "menuHref": "imanes.html",
-      "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-01.webp",
-      "accent": "blue",
-      "available": true,
-      "carouselEnabled": true,
-      "clickable": true,
-      "section": "produtos",
-      "carouselSlides": [
-        {
-          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-01.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/cornfield/cornfield-01.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132982.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-02.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-03.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-04.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/esperanca/esperanca-05.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132974.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132976.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132978.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132980.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        },
-        {
-          "image": "content/designs/loja/imanes-loja/catalog/Fotos_dos_Imans/1000132984.webp",
-          "visible": true,
-          "speedSeconds": null,
-          "zoomPercent": null,
-          "panPercent": null,
-          "overlayOpacity": null,
-          "intervalMs": null
-        }
-      ],
-      "carouselRandomizeOnLoad": true
-    },
-    {
-      "id": "imanes-recortados",
-      "title": "Ímanes recortados",
-      "menuTitle": "Ímanes recortados",
-      "menuOrder": 12,
-      "menuGroup": "Crachás e ímanes",
-      "menuGroupOrder": 3,
-      "subtitle": "Cortados à volta do desenho",
-      "href": "imanes-recortados.html",
-      "menuHref": "imanes-recortados.html",
-      "accent": "blue",
-      "available": true,
-      "carouselEnabled": true,
-      "clickable": true,
-      "section": "produtos",
-      "carouselSlides": []
+      "menuIcon": "crachas",
+      "menuHidden": true
     },
     {
       "id": "stickers",
       "title": "Stickers",
       "menuTitle": "Stickers",
-      "menuOrder": 13,
-      "menuGroup": "Cadernos e papelaria",
+      "menuOrder": 10,
+      "menuGroup": "Os Nossos Clássicos",
       "menuGroupOrder": 2,
       "subtitle": "Para colar onde quiseres",
       "href": "stickers.html",
       "menuHref": "stickers.html",
       "accent": "rose",
-      "available": true,
+      "available": false,
       "carouselEnabled": true,
       "clickable": true,
       "section": "produtos",
-      "carouselSlides": []
+      "carouselSlides": [],
+      "menuHidden": true
     },
     {
       "id": "marcadores",
       "title": "Marcadores",
       "menuTitle": "Marcadores",
-      "menuOrder": 14,
-      "menuGroup": "Cadernos e papelaria",
+      "menuOrder": 11,
+      "menuGroup": "Os Nossos Clássicos",
       "menuGroupOrder": 2,
       "subtitle": "Para não perderes a página",
       "href": "marcadores.html",
       "menuHref": "marcadores.html",
       "accent": "sage",
-      "available": true,
+      "available": false,
       "carouselEnabled": true,
       "clickable": true,
       "section": "produtos",
-      "carouselSlides": []
+      "carouselSlides": [],
+      "menuHidden": true
     },
     {
       "id": "marcadores-magneticos",
       "title": "Marcadores magnéticos",
       "menuTitle": "Marcadores magnéticos",
-      "menuOrder": 15,
-      "menuGroup": "Cadernos e papelaria",
+      "menuOrder": 12,
+      "menuGroup": "Os Nossos Clássicos",
       "menuGroupOrder": 2,
       "subtitle": "Fecham a página com um toque magnético",
       "href": "marcadores-magneticos.html",
       "menuHref": "marcadores-magneticos.html",
       "image": "",
       "accent": "gold",
-      "available": true,
+      "available": false,
       "carouselEnabled": false,
       "clickable": true,
       "section": "produtos",
-      "carouselSlides": []
+      "carouselSlides": [],
+      "menuHidden": true
+    },
+    {
+      "id": "ofertas",
+      "title": "Ofertas",
+      "menuTitle": "Ofertas",
+      "menuOrder": 13,
+      "menuGroup": "Os Nossos Clássicos",
+      "menuGroupOrder": 2,
+      "subtitle": "Recursos gratuitos para descarregar",
+      "href": "ofertas/index.html",
+      "menuHref": "ofertas/index.html",
+      "available": false,
+      "clickable": true,
+      "showOnHome": false,
+      "section": "produtos",
+      "carouselSlides": [],
+      "menuHidden": true
     },
     {
       "id": "postais",
       "title": "Postais",
       "menuTitle": "Postais",
-      "menuOrder": 15,
-      "menuGroup": "Cadernos e papelaria",
+      "menuOrder": 14,
+      "menuGroup": "Os Nossos Clássicos",
       "menuGroupOrder": 2,
       "subtitle": "Mensagens para guardar",
       "href": "postais.html",
       "menuHref": "postais.html",
       "image": "ofertas/convite-congresso/assets/modelo-casal.webp",
       "accent": "rose",
-      "available": true,
+      "available": false,
       "carouselEnabled": true,
       "clickable": true,
       "section": "produtos",
@@ -1089,15 +1133,16 @@
           "overlayOpacity": null,
           "intervalMs": null
         }
-      ]
+      ],
+      "menuHidden": true
     },
     {
       "id": "congressos",
-      "title": "Congressos",
+      "title": "Felicidade Eterna - 2026",
       "menuTitle": "Congresso 2026",
-      "menuOrder": 16,
-      "menuGroup": "Coleções e ofertas",
-      "menuGroupOrder": 4,
+      "menuOrder": 1,
+      "menuGroup": "Congressos",
+      "menuGroupOrder": 3,
       "subtitle": "Lembranças e cadernos do congresso",
       "href": "congressos.html",
       "menuHref": "congressos.html",
@@ -1110,7 +1155,7 @@
       "featureTitle": "Cadernos e lembranças",
       "featureText": "Consulta os packs disponíveis e prepara a tua encomenda para o congresso.",
       "featureCta": "Ver produtos do congresso",
-      "section": "novidades",
+      "section": "felicidade-eterna",
       "carouselSlides": [
         {
           "image": "content/designs/cadernos/process/pack_com_crachas/pack_com_crachas_1.webp",
@@ -1137,22 +1182,6 @@
           "intervalMs": null
         }
       ]
-    },
-    {
-      "id": "ofertas",
-      "title": "Ofertas",
-      "menuTitle": "Ofertas",
-      "menuOrder": 17,
-      "menuGroup": "Coleções e ofertas",
-      "menuGroupOrder": 4,
-      "subtitle": "Recursos gratuitos para descarregar",
-      "href": "ofertas/index.html",
-      "menuHref": "ofertas/index.html",
-      "available": true,
-      "clickable": true,
-      "showOnHome": false,
-      "section": "produtos",
-      "carouselSlides": []
     }
   ],
   "theme": {
@@ -1192,5 +1221,6 @@
   },
   "showThemeToggle": false,
   "deadlineNoticeEnabled": false,
-  "menuShowIcons": false
+  "menuShowIcons": false,
+  "menuOpenAll": true
 }

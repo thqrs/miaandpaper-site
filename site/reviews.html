@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Reviews · Administração | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="reviews-admin.css?v=2026072601">
+  <link rel="stylesheet" href="reviews-admin.css?v=2026083101">
   <link rel="stylesheet" href="admin-nav.css?v=2026081001">
   <script src="admin-nav.js?v=2026081702" defer></script>
 </head>
@@ -50,7 +50,7 @@
         </div>
         <div class="inline-checks">
           <label><input type="checkbox" data-setting="showImage"> Mostrar imagem</label>
-          <label><input type="checkbox" data-setting="showName"> Mostrar nome</label>
+          <label class="is-disabled" title="Opção desligada: o balão mostra sempre “Palavras de quem encomendou”"><input type="checkbox" data-setting="showName" disabled> Mostrar nome <small>Desligado — o balão mostra sempre “Palavras de quem encomendou”</small></label>
           <label><input type="checkbox" data-setting="showText"> Mostrar texto</label>
         </div>
       </section>
@@ -90,7 +90,10 @@
         </div>
         <div class="review-copy-column">
           <label>Nome<input type="text" maxlength="120" data-field="name"></label>
-          <label>Texto<textarea rows="4" maxlength="1000" data-field="text"></textarea></label>
+          <div class="review-text-fields">
+            <label>Texto original<textarea rows="4" maxlength="2000" data-field="originalText"></textarea></label>
+            <label>Como aparece no site<textarea rows="4" maxlength="1000" data-field="text"></textarea></label>
+          </div>
           <label class="switch inline"><input type="checkbox" data-field="linkEnabled"><span>A review tem link</span></label>
           <label>Destino do link<input type="text" maxlength="500" data-field="link" placeholder="cadernos.html ou https://…"></label>
           <label>Data <small>(só para registo, não aparece no site)</small><input type="text" maxlength="40" data-field="date" placeholder="2-Agosto-2026"></label>
@@ -109,6 +112,6 @@
       </div>
     </article>
   </template>
-  <script src="reviews-admin.js?v=2026072701" defer></script>
+  <script src="reviews-admin.js?v=2026083101" defer></script>
 </body>
 </html>

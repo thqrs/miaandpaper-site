@@ -7,7 +7,7 @@
             "id": "como-faco-uma-encomenda",
             "enabled": true,
             "question": "Como faço uma encomenda?",
-            "answerHtml": "<p>Escolhe o produto e segue os passos de personalização:</p><ol><li>selecciona o design, as opções e a quantidade;</li><li>confirma os detalhes no resumo;</li><li>preenche o teu contacto e envia o pedido.</li></ol><p>Depois de receber o pedido, confirmo contigo o que for necessário. <strong>A encomenda só começa a ser preparada após confirmação do pagamento.</strong></p>"
+            "answerHtml": "<p>Escolhe o produto e segue os passos de personalização:</p><ol><li>selecciona o design, as opções e a quantidade;</li><li>confirma os detalhes no resumo;</li><li>preenche o teu contacto e envia o pedido.</li></ol><p>Depois de receber o pedido, confirmo contigo o que for necessário. <strong>Começo a preparar a encomenda quando os detalhes e o pagamento estiverem confirmados.</strong></p>"
         },
         {
             "id": "antecedencia-da-encomenda",
@@ -49,13 +49,13 @@
             "id": "como-funciona-o-pagamento",
             "enabled": true,
             "question": "Como funciona o pagamento?",
-            "answerHtml": "<p>Depois de enviares o pedido, o site pode mostrar logo os dados para pagamento por <strong>MB WAY</strong> quando o valor total e a entrega já estão definidos.</p><p>Nos restantes casos, entro em contacto contigo com o valor confirmado e os próximos passos. A encomenda só começa a ser preparada após confirmação do pagamento.</p>"
+            "answerHtml": "<p>Depois de enviares o pedido, o site pode mostrar logo os dados para pagamento por <strong>MB WAY</strong> quando o valor total e a entrega já estão definidos.</p><p>Nos restantes casos, falo contigo para confirmar o valor e combinar o pagamento. Começo a preparar a encomenda quando os detalhes e o pagamento estiverem confirmados.</p>"
         },
         {
             "id": "opcoes-de-entrega",
             "enabled": true,
             "question": "Que opções de entrega existem?",
-            "answerHtml": "<p>Consoante a encomenda, podes encontrar estas opções:</p><ul><li>recolha combinada;</li><li>envio por CTT;</li><li>juntar a outra encomenda ainda aberta.</li></ul><p>No envio por CTT, o valor apresentado pode ser uma estimativa mínima. A morada e o valor final são confirmados depois por contacto directo.</p>"
+            "answerHtml": "<p>Consoante a encomenda, podes encontrar estas opções:</p><ul><li>recolha combinada;</li><li>envio por CTT;</li><li>juntar a outra encomenda ainda aberta.</li></ul><p>No envio por CTT, o valor apresentado pode ser uma estimativa mínima. Se escolheres envio por CTT, confirmo contigo a morada e o valor final dos portes.</p>"
         },
         {
             "id": "alterar-pedido-enviado",
@@ -67,13 +67,13 @@
             "id": "qualidade-dos-ficheiros",
             "enabled": true,
             "question": "Que cuidados devo ter com os ficheiros que envio?",
-            "answerHtml": "<ul><li>Envia a imagem original e com boa resolução.</li><li>Evita capturas de ecrã, imagens desfocadas ou ficheiros recebidos várias vezes por mensagem.</li><li>Confirma que tens autorização para usar as fotografias, ilustrações e logótipos enviados.</li></ul><p>Se a qualidade não for suficiente para o resultado pretendido, entro em contacto contigo.</p>"
+            "answerHtml": "<ul><li>Envia a imagem original e com boa resolução.</li><li>Evita capturas de ecrã, imagens desfocadas ou ficheiros recebidos várias vezes por mensagem.</li><li>Confirma que tens autorização para usar as fotografias, ilustrações e logótipos enviados.</li></ul><p>Se o ficheiro não tiver qualidade suficiente para imprimir, aviso-te antes de avançar.</p>"
         },
         {
             "id": "diferencas-das-imagens",
             "enabled": true,
             "question": "O artigo final fica exactamente igual às imagens do site?",
-            "answerHtml": "<p>As fotografias mostram o aspecto e a escala aproximados. Pode haver pequenas diferenças de cor entre o ecrã e a impressão, e variações naturais do papel, do corte e do acabamento.</p><p>Estas pequenas diferenças fazem parte de uma produção em pequena escala. Se uma cor ou medida for essencial para o teu pedido, <a href=\"contacto.html\">confirma comigo antes de encomendar</a>.</p>"
+            "answerHtml": "<p>As fotografias mostram o aspecto e a escala aproximados. Pode haver pequenas diferenças de cor entre o ecrã e a impressão, e variações naturais do papel, do corte e do acabamento.</p><p>Estas pequenas diferenças são naturais no trabalho manual e nos materiais usados. Se uma cor ou medida for essencial para o teu pedido, <a href=\"contacto.html\">confirma comigo antes de encomendar</a>.</p>"
         }
     ]
 }

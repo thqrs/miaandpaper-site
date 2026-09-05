@@ -189,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 if (field('website') !== '') {
-    render_page('Mensagem enviada.', 'Mensagem enviada. A Mia, ou um representante, vai entrar em contacto contigo em breve.', 'success');
+    render_page('Mensagem enviada.', 'A tua mensagem foi enviada. A Mia responde-te assim que puder.', 'success');
 }
 
 $name = clean_header(field('name'));
@@ -248,7 +248,7 @@ if (mp_db_form_rate_limited('contact', mp_client_ip(), 5)) {
     ));
     render_page(
         'Já recebemos várias mensagens tuas.',
-        'Recebemos as mensagens que enviaste há pouco. Espera um bocado antes de enviar outra, ou fala connosco pelo Instagram.',
+        'As tuas mensagens já chegaram. Espera uns minutos antes de enviares outra ou fala com a Mia pelo Instagram.',
         'error'
     );
 }
@@ -296,7 +296,7 @@ $headers = array(
 $sent = mail($recipient, $subject, implode("\r\n", $body), implode("\r\n", $headers), '-f' . $from);
 
 if (!$sent) {
-    render_page('Não foi possível enviar.', 'O servidor não conseguiu enviar o email. Tenta novamente ou envia mensagem pelo Instagram.', 'error');
+    render_page('Não foi possível enviar.', 'Não foi possível enviar a tua mensagem. Tenta novamente daqui a pouco ou fala com a Mia pelo Instagram.', 'error');
 }
 
 if ($sendCopy && filter_var($contact, FILTER_VALIDATE_EMAIL)) {
@@ -321,4 +321,4 @@ if ($sendCopy && filter_var($contact, FILTER_VALIDATE_EMAIL)) {
     mail($contact, 'Cópia da tua mensagem - Mia & Paper', implode("\r\n", $copyBody), implode("\r\n", $copyHeaders), '-f' . $from);
 }
 
-render_page('Mensagem enviada.', 'Mensagem enviada. A Mia, ou um representante, vai entrar em contacto contigo em breve. Podes voltar à página inicial ou fazer outro pedido.', 'success');
+render_page('Mensagem enviada.', 'A tua mensagem foi enviada. A Mia responde-te assim que puder. Podes voltar à página inicial ou fazer outro pedido.', 'success');

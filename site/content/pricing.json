@@ -1051,14 +1051,14 @@
         }
       }
     },
-    "porta-folhetos": {
-      "id": "porta-folhetos",
-      "family": "porta-folhetos",
+    "pasta-de-folhetos": {
+      "id": "pasta-de-folhetos",
+      "family": "pasta-de-folhetos",
       "catalogContext": "main-v2",
-      "label": "Porta-folhetos",
-      "unitLabel": "porta-folhetos",
-      "unitSingular": "porta-folhetos",
-      "unitShort": "porta-folhetos",
+      "label": "Pasta de folhetos",
+      "unitLabel": "pasta de folhetos",
+      "unitSingular": "pasta de folhetos",
+      "unitShort": "pasta de folhetos",
       "defaultPriceKey": "A4",
       "minimumQuantity": 1,
       "pricingMode": "flat-unit",

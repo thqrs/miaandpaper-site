@@ -1058,7 +1058,7 @@
       parts += [
         '<article class="cadernos-build-part">',
         renderVisual(cadernoSummaryLaminationPreviewItem(product, lamination), "media-list", findStep(product, "lamination")),
-        '<span><strong>Laminação</strong><em>' + escapeHtml(lamination.title) + '</em></span>',
+        '<span><strong>Acabamento da Capa</strong><em>' + escapeHtml(lamination.title) + '</em></span>',
         '</article>'
       ].join("");
     }
@@ -1162,4 +1162,3 @@
       '</section>'
     ].join("");
   }
-

@@ -70,7 +70,7 @@ function pd_passo1_receitas()
             'note' => 'Porta-chaves redondo: catálogo e enquadramento seguem a família dos crachás.',
             'defaults' => array('visual' => 'neutral', 'imageZoom' => 100, 'imagePositionX' => 0, 'imagePositionY' => 0, 'imageRotation' => 0, 'frameScale' => 130, 'frameMarginX' => 0, 'frameMarginY' => 10),
         ),
-        'porta-folhetos' => array(
+        'pasta-de-folhetos' => array(
             'stepId' => 'designs', 'strategy' => 'standard', 'allowCreate' => false, 'allowRemove' => false, 'allowDirectUpload' => true,
             'directUploadTargets' => array('image'),
             'expectedSections' => array(),

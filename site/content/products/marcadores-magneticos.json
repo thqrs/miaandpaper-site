@@ -392,8 +392,8 @@
       "contact": {
         "title": "Dados de Contacto",
         "notesAfter": [
-          "Se quiseres fatura com número de contribuinte, preenche este campo. Se deixares em branco, a fatura será emitida como consumidor final.",
-          "A fatura será emitida após confirmação do pagamento. Se indicares email, enviamos por email. Se indicares telemóvel, podemos enviar por WhatsApp."
+          "Se quiseres incluir o NIF na fatura, escreve-o aqui. Se deixares o campo em branco, a fatura será emitida como consumidor final.",
+          "A fatura é emitida depois de o pagamento ser confirmado. Se indicares um email, é enviada por email; se indicares um telemóvel, pode ser enviada por WhatsApp."
         ],
         "fields": [
           {

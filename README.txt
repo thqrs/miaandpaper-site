@@ -6,7 +6,7 @@ Alterações:
    - Objetivo: não depender de justify-self em block layout no WebKit.
 
 2) site/css/09-seccoes-produtos.css
-   - apenas nos cards de capas dos porta-folhetos, .uploaded-image passa a preencher
+   - apenas nos cards de capas das pastas de folhetos, .uploaded-image passa a preencher
      .cadernos-cover-media com position:absolute + inset:0.
    - remove nesse override width/height 100% e aspect-ratio do filho.
    - Objetivo: não depender de height:100% dentro de pai cuja altura vem de aspect-ratio.

@@ -13,7 +13,7 @@
     "intro": {
         "eyebrow": "Cadernos de Apontamentos",
         "title": "Escolhe o design da capa.",
-        "text": "Escolhe a capa, a laminação e a opção de compra para preparar o teu pedido."
+        "text": "Escolhe a capa, o acabamento e a opção de compra para preparar o teu pedido."
     },
     "deliveryOptions": [
         {
@@ -59,7 +59,7 @@
         },
         {
             "id": "lamination-choice",
-            "label": "Laminação"
+            "label": "Acabamento da Capa"
         },
         {
             "id": "purchase-option",
@@ -823,8 +823,8 @@
         },
         {
             "id": "lamination",
-            "label": "Laminação",
-            "title": "Escolhe o tipo de laminação",
+            "label": "Acabamento da Capa",
+            "title": "Escolhe o acabamento da capa",
             "text": "Escolhe o acabamento da capa.",
             "template": "lamination-choice",
             "field": "lamination",
@@ -838,7 +838,7 @@
                     "image": "content/designs/cadernos/laminacao/laminacao-matte.webp",
                     "exampleImage": "content/designs/cadernos/laminacao/laminacao-matte.webp",
                     "imageFit": "cover",
-                    "note": "Exemplo visual de laminação matte.",
+                    "note": "Exemplo visual do acabamento matte.",
                     "laminationKey": "matte",
                     "frameWidth": 120,
                     "frameHeight": 124,
@@ -1165,7 +1165,7 @@
                     "image": "content/designs/cadernos/laminacao/laminacao-glossy-normal.webp",
                     "exampleImage": "content/designs/cadernos/laminacao/laminacao-glossy-normal.webp",
                     "imageFit": "cover",
-                    "note": "Exemplo visual de laminação glossy normal.",
+                    "note": "Exemplo visual do acabamento glossy normal.",
                     "laminationKey": "glossy",
                     "frameWidth": 120,
                     "frameHeight": 124,
@@ -1492,7 +1492,7 @@
                     "image": "content/designs/cadernos/laminacao/laminacao-holografica.webp",
                     "exampleImage": "content/designs/cadernos/laminacao/laminacao-holografica.webp",
                     "imageFit": "cover",
-                    "note": "Exemplo visual de laminação holográfica.",
+                    "note": "Exemplo visual do acabamento holográfico.",
                     "laminationKey": "holografico",
                     "frameWidth": 120,
                     "frameHeight": 124,
@@ -1802,7 +1802,7 @@
                     "image": "content/designs/cadernos/laminacao/laminacao-glitter-branco.webp",
                     "exampleImage": "content/designs/cadernos/laminacao/laminacao-glitter-branco.webp",
                     "imageFit": "cover",
-                    "note": "Exemplo visual de laminação com glitter branco.",
+                    "note": "Exemplo visual do acabamento com glitter branco.",
                     "laminationKey": "glitter",
                     "frameWidth": 120,
                     "frameHeight": 124,
@@ -2116,7 +2116,7 @@
             "selection": "pack",
             "orderQuantity": {
                 "title": "Quantidade",
-                "text": "Podes encomendar mais do que um caderno ou pack com a mesma capa, laminação e personalização.",
+                "text": "Podes encomendar mais do que um caderno ou pack com a mesma capa, acabamento e personalização.",
                 "default": 1,
                 "minimum": 1,
                 "maximum": 9999,
@@ -2879,8 +2879,8 @@
             "contact": {
                 "title": "Dados de Contacto",
                 "notesAfter": [
-                  "Se quiseres fatura com número de contribuinte, preenche este campo. Se deixares em branco, a fatura será emitida como consumidor final.",
-                  "A fatura será emitida após confirmação do pagamento. Se indicares email, enviamos por email. Se indicares telemóvel, podemos enviar por WhatsApp."
+                  "Se quiseres incluir o NIF na fatura, escreve-o aqui. Se deixares o campo em branco, a fatura será emitida como consumidor final.",
+                  "A fatura é emitida depois de o pagamento ser confirmado. Se indicares um email, é enviada por email; se indicares um telemóvel, pode ser enviada por WhatsApp."
                 ],
                 "fields": [
                     {

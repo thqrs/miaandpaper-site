@@ -64,7 +64,7 @@ function reviews_read()
     $raw = is_file(REVIEWS_FILE) ? file_get_contents(REVIEWS_FILE) : '';
     $data = json_decode((string)$raw, true);
     if (!is_array($data)) {
-        $data = array('schemaVersion' => 1, 'settings' => array(), 'reviews' => array());
+        $data = array('schemaVersion' => 2, 'settings' => array(), 'reviews' => array());
     }
     if (!isset($data['settings']) || !is_array($data['settings'])) $data['settings'] = array();
     if (!isset($data['reviews']) || !is_array($data['reviews'])) $data['reviews'] = array();
@@ -131,6 +131,9 @@ function reviews_normalize($input)
             'enabled' => reviews_bool(isset($row['enabled']) ? $row['enabled'] : true, true),
             'order' => max(1, min(9999, (int)(isset($row['order']) ? $row['order'] : ($index + 1)))),
             'name' => reviews_text(isset($row['name']) ? $row['name'] : '', 120),
+            // O original fica guardado apenas para comparação no editor. O
+            // site público continua a ler exclusivamente `text`.
+            'originalText' => reviews_text(isset($row['originalText']) ? $row['originalText'] : (isset($row['text']) ? $row['text'] : ''), 2000),
             'text' => reviews_text(isset($row['text']) ? $row['text'] : '', 1000),
             // Registo interno: quando chegou e de que encomenda veio. Nao sai
             // no site — serve para a Mia saber a origem de cada review.
@@ -151,7 +154,7 @@ function reviews_normalize($input)
     foreach ($reviews as $index => &$review) $review['order'] = $index + 1;
     unset($review);
 
-    return array('schemaVersion' => 1, 'settings' => $settings, 'reviews' => $reviews);
+    return array('schemaVersion' => 2, 'settings' => $settings, 'reviews' => $reviews);
 }
 
 function reviews_save($data)

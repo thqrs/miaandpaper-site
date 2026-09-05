@@ -1,0 +1,902 @@
+{
+  "updated_at": "2026-08-31T12:35:00Z",
+  "total_designs": 15,
+  "stats": {
+    "completed": 0,
+    "incorrect": 0,
+    "pending": 15
+  },
+  "items": [
+    {
+      "id": 1,
+      "design": "Lavanda (2 Timóteo 4:5)",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_1_2026-08-31_11-41-01.jpg",
+        "name": "photo_1_2026-08-31_11-41-01.jpg",
+        "notes": "Layout limpo de lavanda com citação de 2 Timóteo 4:5 e tipografia oficial."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/ChatGPT Image 30_08_2026, 13_43_35 (1).png",
+          "name": "ChatGPT Image 30_08_2026, 13_43_35 (1).png",
+          "match": 98,
+          "notes": "Ilustração idêntica de lavanda com texto quase final."
+        },
+        {
+          "file": "../content/argolas/ChatGPT Image 30_08_2026, 13_43_36 (2).png",
+          "name": "ChatGPT Image 30_08_2026, 13_43_36 (2).png",
+          "match": 98,
+          "notes": "Segunda versão gerada de lavanda."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+          "name": "catalog/lavanda-dourado.webp",
+          "label": "Catálogo · Frente Dourado",
+          "variant": "Dourado"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a6/a6-07.webp",
+          "name": "a6/a6-07.webp",
+          "label": "A6 · Argolas Rosa Metálico",
+          "variant": "Argolas Rosa"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a6/a6-08.webp",
+          "name": "a6/a6-08.webp",
+          "label": "A6 · Argolas Douradas",
+          "variant": "Argolas Douradas"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+          "name": "catalog/lavanda-dourado.webp",
+          "label": "Catálogo · Dourado Frente",
+          "variant": "Dourado"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/lavanda-rosa-frente.webp",
+          "name": "catalog/lavanda-rosa-frente.webp",
+          "label": "Catálogo · Rosa Frente",
+          "variant": "Rosa Frente"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/lavanda-rosa-angulo.webp",
+          "name": "catalog/lavanda-rosa-angulo.webp",
+          "label": "Catálogo · Rosa Ângulo",
+          "variant": "Rosa Ângulo"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/lavanda-rosa-aberto.webp",
+          "name": "catalog/lavanda-rosa-aberto.webp",
+          "label": "Catálogo · Aberto Interior",
+          "variant": "Aberto"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 2,
+      "design": "Agenda Rosa (2 Timóteo 4:5)",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_2_2026-08-31_11-41-01.jpg",
+        "name": "photo_2_2026-08-31_11-41-01.jpg",
+        "notes": "Mala rosa, caneca, livro e texto 'Realiza plenamente o teu ministério 2 Timóteo 4:5'."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/Realiza Plenamente o Teu Ministério(16).png",
+          "name": "Realiza Plenamente o Teu Ministério(16).png",
+          "match": 100,
+          "notes": "Arte 100% idêntica da Agenda Rosa."
+        },
+        {
+          "file": "../content/argolas/Realiza Plenamente o Teu Ministério(16) (1).png",
+          "name": "Realiza Plenamente o Teu Ministério(16) (1).png",
+          "match": 100,
+          "notes": "Duplicado de alta resolução."
+        },
+        {
+          "file": "../content/argolas/Realiza plenamente o teu ministério(17).png",
+          "name": "Realiza plenamente o teu ministério(17).png",
+          "match": 95,
+          "notes": "Variante de texto e ajuste de composição."
+        },
+        {
+          "file": "../content/argolas/Realiza Plenamente o Teu Ministério(18).png",
+          "name": "Realiza Plenamente o Teu Ministério(18).png",
+          "match": 95,
+          "notes": "Variante com espaçamento tipográfico alternativo."
+        },
+        {
+          "file": "../content/argolas/Realiza plenamente o teu ministério(19).png",
+          "name": "Realiza plenamente o teu ministério(19).png",
+          "match": 95,
+          "notes": "Variante de cor de fundo ligeiramente mais quente."
+        },
+        {
+          "file": "../content/argolas/Realiza plenamente o teu ministério(29).png",
+          "name": "Realiza plenamente o teu ministério(29).png",
+          "match": 90,
+          "notes": "Variante 29 de composição."
+        },
+        {
+          "file": "../content/argolas/Realiza plenamente o teu ministério(30).png",
+          "name": "Realiza plenamente o teu ministério(30).png",
+          "match": 90,
+          "notes": "Variante 30 de composição."
+        },
+        {
+          "file": "../content/argolas/Realize plenamente o seu ministério.png",
+          "name": "Realize plenamente o seu ministério.png",
+          "match": 90,
+          "notes": "Variante gramatical em português brasileiro."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a4/a4-02.webp",
+          "name": "a4/a4-02.webp",
+          "label": "A4 · Argolas Douradas",
+          "variant": "Argolas Douradas"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a4/a4-07.webp",
+          "name": "a4/a4-07.webp",
+          "label": "A4 · Argolas Rosa Metálico",
+          "variant": "Argolas Rosa"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a6/a6-02.webp",
+          "name": "a6/a6-02.webp",
+          "label": "A6 · Argolas Rosa Metálico",
+          "variant": "Argolas Rosa"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a6/a6-06.webp",
+          "name": "a6/a6-06.webp",
+          "label": "A6 · Argolas Douradas",
+          "variant": "Argolas Douradas"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 3,
+      "design": "Caminho de Flores (2 Timóteo 4:2)",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_3_2026-08-31_11-41-01.jpg",
+        "name": "photo_3_2026-08-31_11-41-01.jpg",
+        "notes": "Caminho bucólica florido com mala pousada e texto 'Prega a palavra 2 Timóteo 4:2'."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/Capa pastoral em aguarela_ prega a palavra.png",
+          "name": "Capa pastoral em aguarela_ prega a palavra.png",
+          "match": 100,
+          "notes": "Arte 100% idêntica com o texto 'Prega a Palavra'."
+        },
+        {
+          "file": "../content/argolas/Caminho Florido até à Aldeia(2).png",
+          "name": "Caminho Florido até à Aldeia(2).png",
+          "match": 95,
+          "notes": "Variante de paisagem sem mala."
+        },
+        {
+          "file": "../content/argolas/Caminho Florido rumo à Aldeia(1).png",
+          "name": "Caminho Florido rumo à Aldeia(1).png",
+          "match": 90,
+          "notes": "Variante com iluminação matinal."
+        },
+        {
+          "file": "../content/argolas/Caminho Florido sob o Céu Azul.png",
+          "name": "Caminho Florido sob o Céu Azul.png",
+          "match": 90,
+          "notes": "Variante de céu aberto."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a4/a4-05.webp",
+          "name": "a4/a4-05.webp",
+          "label": "A4 · Argolas Douradas",
+          "variant": "Argolas Douradas"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a6/a6-05.webp",
+          "name": "a6/a6-05.webp",
+          "label": "A6 · Argolas Rosa Metálico",
+          "variant": "Argolas Rosa"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a6/a6-12.webp",
+          "name": "a6/a6-12.webp",
+          "label": "A6 · Argolas Douradas",
+          "variant": "Argolas Douradas"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 4,
+      "design": "Bicicleta Rosa (Romanos 10:15)",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_4_2026-08-31_11-41-01.jpg",
+        "name": "photo_4_2026-08-31_11-41-01.jpg",
+        "notes": "Bicicleta verde-água com peónias rosa, cestinho de vime e mala bege pendurada."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/Flores e Boas Novas no Campo.png",
+          "name": "Flores e Boas Novas no Campo.png",
+          "match": 100,
+          "notes": "Arte 100% idêntica com a bicicleta e texto de Romanos 10:15."
+        },
+        {
+          "file": "../content/argolas/Flores e Boas Novas no Campo (1).png",
+          "name": "Flores e Boas Novas no Campo (1).png",
+          "match": 100,
+          "notes": "Duplicado de alta resolução."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a4/a4-03.webp",
+          "name": "a4/a4-03.webp",
+          "label": "A4 · Argolas Rosa Metálico",
+          "variant": "Argolas Rosa"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a4/a4-10.webp",
+          "name": "a4/a4-10.webp",
+          "label": "A4 · Argolas Douradas",
+          "variant": "Argolas Douradas"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/bicicleta-rosa-rosa-metalico.webp",
+          "name": "catalog/bicicleta-rosa-rosa-metalico.webp",
+          "label": "Catálogo · Rosa Metálico",
+          "variant": "Rosa Metálico"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a6/a6-11.webp",
+          "name": "a6/a6-11.webp",
+          "label": "A6 · Argolas Douradas",
+          "variant": "Argolas Douradas"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 5,
+      "design": "Bicicleta Azul (Romanos 10:15)",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_5_2026-08-31_11-41-01.jpg",
+        "name": "photo_5_2026-08-31_11-41-01.jpg",
+        "notes": "Bicicleta azul com hortênsias azuis e peónias brancas no cesto."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/Capa primaveril da Escola de Pioneiros.png",
+          "name": "Capa primaveril da Escola de Pioneiros.png",
+          "match": 100,
+          "notes": "Arte 100% idêntica com bicicleta azul e borboleta."
+        },
+        {
+          "file": "../content/argolas/Capa primaveril da Escola de Pioneiros (1).png",
+          "name": "Capa primaveril da Escola de Pioneiros (1).png",
+          "match": 100,
+          "notes": "Duplicado de alta resolução."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a4/a4-09.webp",
+          "name": "a4/a4-09.webp",
+          "label": "A4 · Argolas Rosa Metálico",
+          "variant": "Argolas Rosa"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a4/a4-11.webp",
+          "name": "a4/a4-11.webp",
+          "label": "A4 · Argolas Douradas",
+          "variant": "Argolas Douradas"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/bicicleta-rosa-dourado.webp",
+          "name": "catalog/bicicleta-rosa-dourado.webp",
+          "label": "Catálogo · Dourado",
+          "variant": "Dourado"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a6/a6-04.webp",
+          "name": "a6/a6-04.webp",
+          "label": "A6 · Argolas Rosa Metálico",
+          "variant": "Argolas Rosa"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 6,
+      "design": "Declara Boas Novas no Campo",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_6_2026-08-31_11-41-01.jpg",
+        "name": "photo_6_2026-08-31_11-41-01.jpg",
+        "notes": "Bicicleta com alforge de publicações no campo florido e cerca de madeira."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/Declara Boas Novas no Campo.png",
+          "name": "Declara Boas Novas no Campo.png",
+          "match": 100,
+          "notes": "Arte 100% idêntica com texto e paisagem completa."
+        },
+        {
+          "file": "../content/argolas/Declara Boas Novas no Campo(2).png",
+          "name": "Declara Boas Novas no Campo(2).png",
+          "match": 100,
+          "notes": "Variante 2 de alta resolução."
+        },
+        {
+          "file": "../content/argolas/Declara boas novas no campo(1).png",
+          "name": "Declara boas novas no campo(1).png",
+          "match": 100,
+          "notes": "Variante 1 com recorte ajustado."
+        },
+        {
+          "file": "../content/argolas/Declara as Boas Novas_ Jardim em Aguarela.png",
+          "name": "Declara as Boas Novas_ Jardim em Aguarela.png",
+          "match": 95,
+          "notes": "Variante com tonalidade aguarela suave."
+        },
+        {
+          "file": "../content/argolas/Declara as boas novas no jardim.png",
+          "name": "Declara as boas novas no jardim.png",
+          "match": 95,
+          "notes": "Variante de jardim pastel."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a4/a4-04.webp",
+          "name": "a4/a4-04.webp",
+          "label": "A4 · Argolas Douradas",
+          "variant": "Argolas Douradas"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/declara-campo-colorido-dourado.webp",
+          "name": "catalog/declara-campo-colorido-dourado.webp",
+          "label": "Catálogo · Dourado",
+          "variant": "Dourado"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/declara-campo-colorido-dourado.webp",
+          "name": "catalog/declara-campo-colorido-dourado.webp",
+          "label": "Catálogo · Dourado",
+          "variant": "Dourado"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 7,
+      "design": "Quão Lindos São os Pés · Campo Colorido",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_7_2026-08-31_11-41-01.jpg",
+        "name": "photo_7_2026-08-31_11-41-01.jpg",
+        "notes": "Rapariga de saia turquesa, mala bordada com flores no campo e texto completo de Romanos 10:15."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/Escola de Pioneiros_ Amanhecer no Vale.png",
+          "name": "Escola de Pioneiros_ Amanhecer no Vale.png",
+          "match": 85,
+          "notes": "Arte conceptual de amanhecer no vale para a mesma série."
+        },
+        {
+          "file": "../content/argolas/Escola de Pioneiros_ Amanhecer no Vale (1).png",
+          "name": "Escola de Pioneiros_ Amanhecer no Vale (1).png",
+          "match": 85,
+          "notes": "Duplicado de alta resolução."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a4/a4-08.webp",
+          "name": "a4/a4-08.webp",
+          "label": "A4 · Argolas Douradas",
+          "variant": "Argolas Douradas"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/quao-campo-colorido-dourado.webp",
+          "name": "catalog/quao-campo-colorido-dourado.webp",
+          "label": "Catálogo · Dourado",
+          "variant": "Dourado"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/quao-campo-colorido-dourado.webp",
+          "name": "catalog/quao-campo-colorido-dourado.webp",
+          "label": "Catálogo · Dourado",
+          "variant": "Dourado"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 8,
+      "design": "Quão Lindos São os Pés · Variante Lilás",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_8_2026-08-31_11-41-01.jpg",
+        "name": "photo_8_2026-08-31_11-41-01.jpg",
+        "notes": "Variante de catálogo com vestido de flores lilás e xaile roxo."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/Pés floridos no caminho luminoso.png",
+          "name": "Pés floridos no caminho luminoso.png",
+          "match": 90,
+          "notes": "Arte com caminho luminoso floral."
+        },
+        {
+          "file": "../content/argolas/Caminho das Boas Novas.png",
+          "name": "Caminho das Boas Novas.png",
+          "match": 90,
+          "notes": "Caminho florido de boas novas."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a4/a4-08.webp",
+          "name": "a4/a4-08.webp",
+          "label": "A4 · Argolas Douradas",
+          "variant": "Argolas Douradas"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/quao-campo-colorido-dourado.webp",
+          "name": "catalog/quao-campo-colorido-dourado.webp",
+          "label": "Catálogo · Dourado",
+          "variant": "Dourado"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 9,
+      "design": "Passeio / Quão Lindos São os Pés",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_9_2026-08-31_11-41-01.jpg",
+        "name": "photo_9_2026-08-31_11-41-01.jpg",
+        "notes": "Rapariga de costas com vestido floral bege, xaile verde e borboleta laranja."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/Caminho Dourado dos Pioneiros(1).png",
+          "name": "Caminho Dourado dos Pioneiros(1).png",
+          "match": 100,
+          "notes": "Arte 100% idêntica de Passeio."
+        },
+        {
+          "file": "../content/argolas/Caminho Dourado dos Pioneiros(2).png",
+          "name": "Caminho Dourado dos Pioneiros(2).png",
+          "match": 100,
+          "notes": "Segunda versão da arte."
+        },
+        {
+          "file": "../content/argolas/Caminho Dourado para 2026.png",
+          "name": "Caminho Dourado para 2026.png",
+          "match": 100,
+          "notes": "Versão com ano 2026."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a4/a4-01.webp",
+          "name": "a4/a4-01.webp",
+          "label": "A4 · Argolas Douradas",
+          "variant": "Argolas Douradas"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/passeio-dourado.webp",
+          "name": "catalog/passeio-dourado.webp",
+          "label": "Catálogo · Dourado",
+          "variant": "Dourado"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/pack-a4-a6.webp",
+          "name": "pack-a4-a6.webp",
+          "label": "Pack A4 + A6 (Esquerda)",
+          "variant": "Pack A4"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/passeio-dourado.webp",
+          "name": "catalog/passeio-dourado.webp",
+          "label": "Catálogo · Dourado",
+          "variant": "Dourado"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 10,
+      "design": "Castanho Masculino (2 Timóteo 4:5)",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_10_2026-08-31_11-41-01.jpg",
+        "name": "photo_10_2026-08-31_11-41-01.jpg",
+        "notes": "Kit masculino clássico: chapéu cinzento, mala castanha, livro e sapatos de pele."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/Póster Inspiracional com Bíblia e Ministério.png",
+          "name": "Póster Inspiracional com Bíblia e Ministério.png",
+          "match": 100,
+          "notes": "Arte 100% idêntica com todos os elementos masculinos."
+        },
+        {
+          "file": "../content/argolas/Póster Inspiracional com Bíblia e Ministério (1).png",
+          "name": "Póster Inspiracional com Bíblia e Ministério (1).png",
+          "match": 100,
+          "notes": "Duplicado de alta resolução."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a4/a4-06.webp",
+          "name": "a4/a4-06.webp",
+          "label": "A4 · Argolas Rosa Metálico",
+          "variant": "Argolas Rosa"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/castanho-rosa-metalico.webp",
+          "name": "catalog/castanho-rosa-metalico.webp",
+          "label": "Catálogo · Rosa Metálico",
+          "variant": "Rosa Metálico"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/castanho-rosa-metalico.webp",
+          "name": "catalog/castanho-rosa-metalico.webp",
+          "label": "Catálogo · Rosa Metálico",
+          "variant": "Rosa Metálico"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 11,
+      "design": "Sapatos Feminino / Chapéu de Palha",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_11_2026-08-31_11-41-01.jpg",
+        "name": "photo_11_2026-08-31_11-41-01.jpg",
+        "notes": "Chapéu de palha com laço, mala bege com argola dourada e sapatos com laço."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/image-gen-1(17).png",
+          "name": "image-gen-1(17).png",
+          "match": 85,
+          "notes": "Arte conceptual de sapatos de ministério com acessórios."
+        },
+        {
+          "file": "../content/argolas/image-gen-1(20260816-141156).png",
+          "name": "image-gen-1(20260816-141156).png",
+          "match": 85,
+          "notes": "Variante de alta resolução."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/sapatos-dourado.webp",
+          "name": "catalog/sapatos-dourado.webp",
+          "label": "Catálogo · Dourado",
+          "variant": "Dourado"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a6/a6-09.webp",
+          "name": "a6/a6-09.webp",
+          "label": "A6 · Argolas Rosa Metálico",
+          "variant": "Argolas Rosa"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/sapatos-dourado.webp",
+          "name": "catalog/sapatos-dourado.webp",
+          "label": "Catálogo · Dourado Frente",
+          "variant": "Dourado Frente"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/sapatos-rosa-metalico.webp",
+          "name": "catalog/sapatos-rosa-metalico.webp",
+          "label": "Catálogo · Rosa Metálico",
+          "variant": "Rosa Metálico"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/sapatos-rosa-aberto.webp",
+          "name": "catalog/sapatos-rosa-aberto.webp",
+          "label": "Catálogo · Aberto Interior",
+          "variant": "Aberto"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 12,
+      "design": "Sapatos Feminino · Variante Manta",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_12_2026-08-31_11-41-01.jpg",
+        "name": "photo_12_2026-08-31_11-41-01.jpg",
+        "notes": "Variante oficial com mala estruturada e manta/écharpe rosa."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/image-gen-1(17).png",
+          "name": "image-gen-1(17).png",
+          "match": 85,
+          "notes": "Arte conceptual de sapatos femininos."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/sapatos-dourado.webp",
+          "name": "catalog/sapatos-dourado.webp",
+          "label": "Catálogo · Dourado",
+          "variant": "Dourado"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a6/a6-09.webp",
+          "name": "a6/a6-09.webp",
+          "label": "A6 · Argolas Rosa Metálico",
+          "variant": "Argolas Rosa"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/sapatos-rosa-metalico.webp",
+          "name": "catalog/sapatos-rosa-metalico.webp",
+          "label": "Catálogo · Rosa Metálico",
+          "variant": "Rosa Metálico"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 13,
+      "design": "Flores Salmão",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_13_2026-08-31_11-41-01.jpg",
+        "name": "photo_13_2026-08-31_11-41-01.jpg",
+        "notes": "Rosas salmão/pêssego em aguarela na base e texto oficial com aspas."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/Realiza Plenamente o Teu Ministério(20260805-204221).png",
+          "name": "Realiza Plenamente o Teu Ministério(20260805-204221).png",
+          "match": 100,
+          "notes": "Arte 100% com rosas salmão na base."
+        },
+        {
+          "file": "../content/argolas/Realiza Plenamente o Teu Ministério(20260805-204637).png",
+          "name": "Realiza Plenamente o Teu Ministério(20260805-204637).png",
+          "match": 100,
+          "notes": "Variante 204637 com arranjo floral."
+        },
+        {
+          "file": "../content/argolas/Realiza Plenamente o Teu Ministério(20260816-141151).png",
+          "name": "Realiza Plenamente o Teu Ministério(20260816-141151).png",
+          "match": 100,
+          "notes": "Variante 141151 de alta resolução."
+        },
+        {
+          "file": "../content/argolas/Realiza Plenamente o Teu Ministério(20260816-141200).png",
+          "name": "Realiza Plenamente o Teu Ministério(20260816-141200).png",
+          "match": 100,
+          "notes": "Variante 141200 com texto centrado."
+        },
+        {
+          "file": "../content/argolas/Realiza Plenamente o Teu Ministério(20260816-141410).png",
+          "name": "Realiza Plenamente o Teu Ministério(20260816-141410).png",
+          "match": 100,
+          "notes": "Variante 141410 final."
+        },
+        {
+          "file": "../content/argolas/Realiza plenamente o teu ministério(20260816-141155).png",
+          "name": "Realiza plenamente o teu ministério(20260816-141155).png",
+          "match": 100,
+          "notes": "Variante 141155 minúscula."
+        },
+        {
+          "file": "../content/argolas/Realiza plenamente o teu ministério(20260816-141158).png",
+          "name": "Realiza plenamente o teu ministério(20260816-141158).png",
+          "match": 100,
+          "notes": "Variante 141158 minúscula."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-dourado.webp",
+          "name": "catalog/flores-salmao-dourado.webp",
+          "label": "Catálogo · Dourado",
+          "variant": "Dourado"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a6/a6-03.webp",
+          "name": "a6/a6-03.webp",
+          "label": "A6 · Argolas Rosa Metálico",
+          "variant": "Argolas Rosa"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-dourado.webp",
+          "name": "catalog/flores-salmao-dourado.webp",
+          "label": "Catálogo · Dourado Frente",
+          "variant": "Dourado Frente"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-rosa-frente.webp",
+          "name": "catalog/flores-salmao-rosa-frente.webp",
+          "label": "Catálogo · Rosa Frente",
+          "variant": "Rosa Frente"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-rosa-aberto.webp",
+          "name": "catalog/flores-salmao-rosa-aberto.webp",
+          "label": "Catálogo · Aberto Interior",
+          "variant": "Aberto"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 14,
+      "design": "Folhagem Azul",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_14_2026-08-31_11-41-01.jpg",
+        "name": "photo_14_2026-08-31_11-41-01.jpg",
+        "notes": "Espigas de lavanda e folhagem de eucalipto azul/verde sobre fundo branco."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/texto_mais_a_esquerda_warp.png",
+          "name": "texto_mais_a_esquerda_warp.png",
+          "match": 100,
+          "notes": "Arte 100% com folhagem azul e texto curvado."
+        },
+        {
+          "file": "../content/argolas/texto_mais_a_esquerda_warp (1).png",
+          "name": "texto_mais_a_esquerda_warp (1).png",
+          "match": 100,
+          "notes": "Duplicado de alta resolução."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-dourado.webp",
+          "name": "catalog/folhagem-azul-dourado.webp",
+          "label": "Catálogo · Dourado",
+          "variant": "Dourado"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a6/a6-10.webp",
+          "name": "a6/a6-10.webp",
+          "label": "A6 · Argolas Douradas",
+          "variant": "Argolas Douradas"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-dourado.webp",
+          "name": "catalog/folhagem-azul-dourado.webp",
+          "label": "Catálogo · Dourado Frente",
+          "variant": "Dourado Frente"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-rosa-frente.webp",
+          "name": "catalog/folhagem-azul-rosa-frente.webp",
+          "label": "Catálogo · Rosa Frente",
+          "variant": "Rosa Frente"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-rosa-aberto.webp",
+          "name": "catalog/folhagem-azul-rosa-aberto.webp",
+          "label": "Catálogo · Aberto Interior",
+          "variant": "Aberto"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    },
+    {
+      "id": 15,
+      "design": "Flores Vermelhas",
+      "oficial": {
+        "file": "../content/argolas/oficiais/photo_15_2026-08-31_11-41-02.jpg",
+        "name": "photo_15_2026-08-31_11-41-02.jpg",
+        "notes": "Papoilas vermelhas e cosmos rosa na base sobre fundo branco."
+      },
+      "argolas": [
+        {
+          "file": "../content/argolas/Poster Inspiracional com Flores em Aguarela.png",
+          "name": "Poster Inspiracional com Flores em Aguarela.png",
+          "match": 100,
+          "notes": "Arte 100% com papoilas e flores vermelhas."
+        }
+      ],
+      "a4_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-dourado.webp",
+          "name": "catalog/flores-vermelhas-dourado.webp",
+          "label": "Catálogo · Dourado",
+          "variant": "Dourado"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/pack-a4-a6.webp",
+          "name": "pack-a4-a6.webp",
+          "label": "Pack A4 + A6 (Direita)",
+          "variant": "Pack A6"
+        }
+      ],
+      "a6_mockups": [
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/a6/a6-01.webp",
+          "name": "a6/a6-01.webp",
+          "label": "A6 · Argolas Rosa Metálico",
+          "variant": "Argolas Rosa"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-dourado.webp",
+          "name": "catalog/flores-vermelhas-dourado.webp",
+          "label": "Catálogo · Dourado Frente",
+          "variant": "Dourado Frente"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-rosa-frente.webp",
+          "name": "catalog/flores-vermelhas-rosa-frente.webp",
+          "label": "Catálogo · Rosa Frente",
+          "variant": "Rosa Frente"
+        },
+        {
+          "file": "../content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-rosa-angulo.webp",
+          "name": "catalog/flores-vermelhas-rosa-angulo.webp",
+          "label": "Catálogo · Rosa Ângulo",
+          "variant": "Rosa Ângulo"
+        }
+      ],
+      "status": "pending",
+      "user_notes": ""
+    }
+  ]
+}

@@ -67,6 +67,10 @@ if (empty($_SESSION['miaandpaper_admin'])) {
             <a class="tools-link-lado" href="README-url-cartoes.md">Instruções de URL para o ChatGPT</a>
           </span>
         </div>
+        <a class="catalog-product-card" href="comparador-argolas.php">
+          <span class="catalog-product-thumb" aria-hidden="true">🔍</span>
+          <span class="catalog-product-copy"><strong>Comparador de Argolas</strong><span>Comparação visual a 4 colunas ([A4] [A6] [Argolas] [Oficiais]) com zoom e pan sincronizados.</span><span class="catalog-product-action">Abrir comparador</span></span>
+        </a>
         <a class="catalog-product-card" href="../precos.php">
           <span class="catalog-product-thumb" aria-hidden="true">€</span>
           <span class="catalog-product-copy"><strong>Preços</strong><span>Todos os valores do site num sítio: packs, descontos, extras, portes, custos e lucro.</span><span class="catalog-product-action">Abrir editor</span></span>

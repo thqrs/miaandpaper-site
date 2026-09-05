@@ -241,16 +241,16 @@
       "lead": "Porta-chaves personalizados em 32 mm ou 58 mm. Escolhe um design Mia & Paper ou envia o teu próprio desenho."
     },
     {
-      "file": "porta-folhetos.html",
-      "url": "/porta-folhetos.html",
+      "file": "pasta-de-folhetos.html",
+      "url": "/pasta-de-folhetos.html",
       "priority": "0.8",
       "changefreq": "monthly",
-      "product": "porta-folhetos",
-      "title": "Porta-folhetos A4 e A6 personalizados | Mia & Paper",
-      "description": "Porta-folhetos A4 e A6 com capa personalizada, argolas, fita e bolsas interiores de plástico para organizar os folhetos usados na pregação.",
-      "ogDescription": "Porta-folhetos personalizados A4 e A6 para organizar os folhetos da pregação.",
-      "h1": "Porta-folhetos personalizados",
-      "lead": "Porta-folhetos com capa e contracapa em cartão de 2 mm, argolas e bolsas interiores de plástico. Escolhe A4, A6 ou PACK, a capa de cada tamanho e, no passo seguinte, a combinação de fita e argolas disponível para essa capa."
+      "product": "pasta-de-folhetos",
+      "title": "Pasta de folhetos personalizada em A4 e A6 | Mia & Paper",
+      "description": "Pasta de folhetos A4 e A6 com capa personalizada, argolas, fita e bolsas interiores de plástico para organizar os folhetos usados na pregação.",
+      "ogDescription": "Pasta de folhetos personalizada em A4 e A6 para organizar os folhetos da pregação.",
+      "h1": "Pasta de folhetos personalizada",
+      "lead": "Pasta de folhetos com capa e contracapa em cartão de 2 mm, argolas e bolsas interiores de plástico. Escolhe A4, A6 ou PACK, a capa de cada tamanho e, no passo seguinte, a combinação de fita e argolas disponível para essa capa."
     }
   ],
   "extraSitemapUrls": [

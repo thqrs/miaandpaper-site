@@ -235,8 +235,8 @@
     {
       "id": "checkout.contact",
       "label": "Contacto no checkout",
-      "source": "Indica um email ou telemóvel válido para podermos confirmar a encomenda.",
-      "default": "Indica um email ou telemóvel válido para podermos confirmar a encomenda.",
+      "source": "Indica um email ou telemóvel válido para a Mia poder confirmar a tua encomenda.",
+      "default": "Indica um email ou telemóvel válido para a Mia poder confirmar a tua encomenda.",
       "miu": "Indica um email ou telemóvel válido para a Mia poder confirmar a encomenda."
     },
     {
@@ -382,8 +382,8 @@
     {
       "id": "orders.suspended",
       "label": "Encomendas encerradas",
-      "source": "Lamento, mas já não é possível fazer encomendas para o Congresso de 2026.",
-      "default": "Lamento, mas já não é possível fazer encomendas para o Congresso de 2026.",
+      "source": "As encomendas para o Congresso de 2026 já se encontram encerradas.",
+      "default": "As encomendas para o Congresso de 2026 já se encontram encerradas.",
       "miu": "Já não é possível fazer encomendas para o Congresso de 2026."
     },
     {
@@ -394,25 +394,25 @@
       "miu": "Com este pack poupas {rest}"
     },
     {
-      "id": "porta-folhetos.rings",
+      "id": "pasta-de-folhetos.rings",
       "source": "Escolhe a cor das argolas.",
       "default": "Escolhe a cor das argolas.",
       "miu": "Escolhe a cor das argolas para continuares."
     },
     {
-      "id": "porta-folhetos.ribbon",
+      "id": "pasta-de-folhetos.ribbon",
       "source": "Escolhe a cor da fita.",
       "default": "Escolhe a cor da fita.",
       "miu": "Escolhe a cor da fita para continuares."
     },
     {
-      "id": "porta-folhetos.finish",
+      "id": "pasta-de-folhetos.finish",
       "source": "Escolhe o acabamento.",
       "default": "Escolhe o acabamento.",
-      "miu": "Escolhe o acabamento que queres para o porta-folhetos."
+      "miu": "Escolhe o acabamento que queres para a pasta de folhetos."
     },
     {
-      "id": "porta-folhetos.size",
+      "id": "pasta-de-folhetos.size",
       "source": "Escolhe o formato que queres.",
       "default": "Escolhe o formato que queres.",
       "miu": "Escolhe A4, A6 ou o conjunto A4 + A6."

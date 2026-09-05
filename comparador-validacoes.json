@@ -1,0 +1,1117 @@
+{
+  "updated_at": "2026-08-31T12:12:00Z",
+  "total": 46,
+  "stats": {
+    "completed": 0,
+    "incorrect": 0,
+    "pending": 46
+  },
+  "items": [
+    {
+      "id": 1,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/passeio-dourado.webp",
+      "mockup_name": "catalog/passeio-dourado.webp",
+      "argolas": [
+        "argolas/Caminho Florido até à Aldeia(2).png"
+      ],
+      "argolas_name": "Caminho Florido até à Aldeia(2).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_9_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_9_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Quão lindos são os pés · Passeio",
+      "notes": "Rapariga de costas com xaile e mala com ramo; borboleta laranja junto a “pés”; aldeia ao fundo. Argolas e elástico dourados.",
+      "oficiais_notes": "Vestido bege floral, xaile verde, mala de tiracolo com motivo floral, borboleta laranja.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-01.webp",
+      "a4_label": "a4/a4-01.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/passeio-dourado.webp",
+      "a6_label": "catalog/passeio-dourado.webp"
+    },
+    {
+      "id": 2,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-01.webp",
+      "mockup_name": "a4/a4-01.webp",
+      "argolas": [
+        "argolas/Caminho Florido até à Aldeia(2).png"
+      ],
+      "argolas_name": "Caminho Florido até à Aldeia(2).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_9_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_9_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Quão lindos são os pés · Passeio (A4)",
+      "notes": "Formato A4; mesma arte e proporções. Argolas e elástico dourados.",
+      "oficiais_notes": "Formato A4. Idêntica a photo_9.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-01.webp",
+      "a4_label": "a4/a4-01.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/passeio-dourado.webp",
+      "a6_label": "catalog/passeio-dourado.webp"
+    },
+    {
+      "id": 3,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/bicicleta-rosa-rosa-metalico.webp",
+      "mockup_name": "catalog/bicicleta-rosa-rosa-metalico.webp",
+      "argolas": [
+        "argolas/Declara as boas novas no jardim.png"
+      ],
+      "argolas_name": "Declara as boas novas no jardim.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_4_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_4_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Declara as boas novas · Bicicleta rosa",
+      "notes": "Bicicleta verde-água, peónias cor-de-rosa, cestinho de vime com livros lisos, texto rosa.",
+      "oficiais_notes": "Bicicleta verde-água com peónias rosa, cestinho de vime, mala bege e texto rosa.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-03.webp",
+      "a4_label": "a4/a4-03.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-11.webp",
+      "a6_label": "a6/a6-11.webp (A6)"
+    },
+    {
+      "id": 4,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-03.webp",
+      "mockup_name": "a4/a4-03.webp",
+      "argolas": [
+        "argolas/Declara as boas novas no jardim.png"
+      ],
+      "argolas_name": "Declara as boas novas no jardim.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_4_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_4_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Declara as boas novas · Bicicleta rosa (A4)",
+      "notes": "Formato A4; peónias rosa. Argolas rosa metálico e elástico rosa.",
+      "oficiais_notes": "Formato A4 com peónias rosa. Idêntica a photo_4.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-03.webp",
+      "a4_label": "a4/a4-03.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-11.webp",
+      "a6_label": "a6/a6-11.webp (A6)"
+    },
+    {
+      "id": 5,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-10.webp",
+      "mockup_name": "a4/a4-10.webp",
+      "argolas": [
+        "argolas/Declara as boas novas no jardim.png"
+      ],
+      "argolas_name": "Declara as boas novas no jardim.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_4_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_4_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Declara as boas novas · Bicicleta rosa (A4)",
+      "notes": "Formato A4; peónias rosa. Argolas douradas e elástico dourado.",
+      "oficiais_notes": "Formato A4 com peónias rosa e argolas douradas. Idêntica a photo_4.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-10.webp",
+      "a4_label": "a4/a4-10.webp (A4 Dourado)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-11.webp",
+      "a6_label": "a6/a6-11.webp (A6)"
+    },
+    {
+      "id": 6,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-11.webp",
+      "mockup_name": "a6/a6-11.webp",
+      "argolas": [
+        "argolas/Declara as boas novas no jardim.png"
+      ],
+      "argolas_name": "Declara as boas novas no jardim.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_4_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_4_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Declara as boas novas · Bicicleta rosa (A6)",
+      "notes": "Formato A6; peónias rosa. Argolas rosa metálico e elástico rosa.",
+      "oficiais_notes": "Formato A6 com peónias rosa e argolas rosa metálico. Idêntica a photo_4.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-03.webp",
+      "a4_label": "a4/a4-03.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-11.webp",
+      "a6_label": "a6/a6-11.webp (A6)"
+    },
+    {
+      "id": 7,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/bicicleta-rosa-dourado.webp",
+      "mockup_name": "catalog/bicicleta-rosa-dourado.webp",
+      "argolas": [
+        "argolas/Declara as Boas Novas_ Jardim em Aguarela.png"
+      ],
+      "argolas_name": "Declara as Boas Novas_ Jardim em Aguarela.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_5_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_5_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Declara as boas novas · Bicicleta azul",
+      "notes": "(Apesar do nome do ficheiro, a imagem é da versão azul): hortênsias azuis, texto verde sálvia e borboleta azul.",
+      "oficiais_notes": "Bicicleta com hortênsias azuis, peónias brancas e borboleta azul.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-03.webp",
+      "a4_label": "a4/a4-03.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-11.webp",
+      "a6_label": "a6/a6-11.webp (A6)"
+    },
+    {
+      "id": 8,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-09.webp",
+      "mockup_name": "a4/a4-09.webp",
+      "argolas": [
+        "argolas/Declara as Boas Novas_ Jardim em Aguarela.png"
+      ],
+      "argolas_name": "Declara as Boas Novas_ Jardim em Aguarela.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_5_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_5_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Declara as boas novas · Bicicleta azul (A4)",
+      "notes": "Formato A4; hortênsias azuis. Argolas douradas e elástico azul.",
+      "oficiais_notes": "Formato A4 com hortênsias azuis e elástico azul. Idêntica a photo_5.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-09.webp",
+      "a4_label": "a4/a4-09.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-04.webp",
+      "a6_label": "a6/a6-04.webp (A6)"
+    },
+    {
+      "id": 9,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-11.webp",
+      "mockup_name": "a4/a4-11.webp",
+      "argolas": [
+        "argolas/Declara as Boas Novas_ Jardim em Aguarela.png"
+      ],
+      "argolas_name": "Declara as Boas Novas_ Jardim em Aguarela.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_5_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_5_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Declara as boas novas · Bicicleta azul (A4)",
+      "notes": "Formato A4; hortênsias azuis. Argolas douradas e elástico dourado.",
+      "oficiais_notes": "Formato A4 com hortênsias azuis e elástico dourado. Idêntica a photo_5.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-11.webp",
+      "a4_label": "a4/a4-11.webp (A4 Dourado)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-04.webp",
+      "a6_label": "a6/a6-04.webp (A6)"
+    },
+    {
+      "id": 10,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-04.webp",
+      "mockup_name": "a6/a6-04.webp",
+      "argolas": [
+        "argolas/Declara as Boas Novas_ Jardim em Aguarela.png"
+      ],
+      "argolas_name": "Declara as Boas Novas_ Jardim em Aguarela.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_5_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_5_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Declara as boas novas · Bicicleta azul (A6)",
+      "notes": "Formato A6; hortênsias azuis. Argolas douradas e elástico azul.",
+      "oficiais_notes": "Formato A6 com hortênsias azuis. Idêntica a photo_5.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-09.webp",
+      "a4_label": "a4/a4-09.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-04.webp",
+      "a6_label": "a6/a6-04.webp (A6)"
+    },
+    {
+      "id": 11,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/declara-campo-colorido-dourado.webp",
+      "mockup_name": "catalog/declara-campo-colorido-dourado.webp",
+      "argolas": [
+        "argolas/Declara Boas Novas no Campo.png"
+      ],
+      "argolas_name": "Declara Boas Novas no Campo.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_6_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_6_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Declara as boas novas · Campo colorido",
+      "notes": "Bicicleta azul com alforge castanho e publicações, cerca de madeira e papoila vermelha. Diferencia-se de Caminho das Boas Novas.png que tem o texto 'Leva as boas novas'.",
+      "oficiais_notes": "Bicicleta azul com alforge castanho e publicações, cerca e papoila.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-04.webp",
+      "a4_label": "a4/a4-04.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/declara-campo-colorido-dourado.webp",
+      "a6_label": "catalog/declara-campo-colorido-dourado.webp"
+    },
+    {
+      "id": 12,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-04.webp",
+      "mockup_name": "a4/a4-04.webp",
+      "argolas": [
+        "argolas/Declara Boas Novas no Campo.png"
+      ],
+      "argolas_name": "Declara Boas Novas no Campo.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_6_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_6_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Declara as boas novas · Campo colorido (A4)",
+      "notes": "Formato A4; mesma arte campestre com bicicleta e alforge. Argolas douradas.",
+      "oficiais_notes": "Formato A4. Idêntica a photo_6.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-04.webp",
+      "a4_label": "a4/a4-04.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/declara-campo-colorido-dourado.webp",
+      "a6_label": "catalog/declara-campo-colorido-dourado.webp"
+    },
+    {
+      "id": 13,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-02.webp",
+      "mockup_name": "a4/a4-02.webp",
+      "argolas": [
+        "argolas/Realiza Plenamente o Teu Ministério(20260805-204221).png"
+      ],
+      "argolas_name": "Realiza Plenamente o Teu Ministério(20260805-204221).png",
+      "match": 90,
+      "oficiais": [
+        "argolas/oficiais/photo_2_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_2_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 90,
+      "design": "Prega a palavra · Agenda rosa (A4)",
+      "notes": "Formato A4; mala rosa, caneca com coração, perfume, jarra com margaridas. Texto adaptado para 'Prega a palavra 2 Timóteo 4:2'. Argolas douradas.",
+      "oficiais_notes": "Ilustração 100% idêntica; texto oficial impresso é 'Realiza plenamente o teu ministério 2 Timóteo 4:5'.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-02.webp",
+      "a4_label": "a4/a4-02.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-02.webp",
+      "a6_label": "a6/a6-02.webp (A6)"
+    },
+    {
+      "id": 14,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-07.webp",
+      "mockup_name": "a4/a4-07.webp",
+      "argolas": [
+        "argolas/Realiza Plenamente o Teu Ministério(20260805-204221).png"
+      ],
+      "argolas_name": "Realiza Plenamente o Teu Ministério(20260805-204221).png",
+      "match": 90,
+      "oficiais": [
+        "argolas/oficiais/photo_2_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_2_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 90,
+      "design": "Prega a palavra · Agenda rosa (A4)",
+      "notes": "Formato A4; agenda rosa. Argolas rosa metálico e elástico rosa.",
+      "oficiais_notes": "Formato A4 com argolas rosa metálico. Ilustração 100% idêntica a photo_2.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-07.webp",
+      "a4_label": "a4/a4-07.webp (A4 Rosa)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-02.webp",
+      "a6_label": "a6/a6-02.webp (A6 Rosa)"
+    },
+    {
+      "id": 15,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-02.webp",
+      "mockup_name": "a6/a6-02.webp",
+      "argolas": [
+        "argolas/Realiza Plenamente o Teu Ministério(20260805-204221).png"
+      ],
+      "argolas_name": "Realiza Plenamente o Teu Ministério(20260805-204221).png",
+      "match": 90,
+      "oficiais": [
+        "argolas/oficiais/photo_2_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_2_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 90,
+      "design": "Prega a palavra · Agenda rosa (A6)",
+      "notes": "Formato A6; agenda rosa. Argolas rosa metálico e elástico rosa.",
+      "oficiais_notes": "Formato A6 com argolas rosa metálico. Ilustração 100% idêntica a photo_2.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-07.webp",
+      "a4_label": "a4/a4-07.webp (A4 Rosa)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-02.webp",
+      "a6_label": "a6/a6-02.webp (A6 Rosa)"
+    },
+    {
+      "id": 16,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-06.webp",
+      "mockup_name": "a6/a6-06.webp",
+      "argolas": [
+        "argolas/Realiza Plenamente o Teu Ministério(20260805-204221).png"
+      ],
+      "argolas_name": "Realiza Plenamente o Teu Ministério(20260805-204221).png",
+      "match": 90,
+      "oficiais": [
+        "argolas/oficiais/photo_2_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_2_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 90,
+      "design": "Prega a palavra · Agenda rosa (A6)",
+      "notes": "Formato A6; agenda rosa. Argolas douradas e elástico dourado.",
+      "oficiais_notes": "Formato A6 com argolas douradas. Ilustração 100% idêntica a photo_2.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-02.webp",
+      "a4_label": "a4/a4-02.webp (A4 Dourado)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-06.webp",
+      "a6_label": "a6/a6-06.webp (A6 Dourado)"
+    },
+    {
+      "id": 17,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-05.webp",
+      "mockup_name": "a4/a4-05.webp",
+      "argolas": [
+        "argolas/Capa pastoral em aguarela_ prega a palavra.png"
+      ],
+      "argolas_name": "Capa pastoral em aguarela_ prega a palavra.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_3_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_3_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Prega a palavra · Caminho de flores (A4)",
+      "notes": "Formato A4; paisagem bucólica de colinas, mala de campo à direita com folhetos. Argolas rosa metálico e elástico rosa.",
+      "oficiais_notes": "Caminho florido no vale com colinas e mala de campo pousada à direita.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-05.webp",
+      "a4_label": "a4/a4-05.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-05.webp",
+      "a6_label": "a6/a6-05.webp (A6)"
+    },
+    {
+      "id": 18,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-05.webp",
+      "mockup_name": "a6/a6-05.webp",
+      "argolas": [
+        "argolas/Capa pastoral em aguarela_ prega a palavra.png"
+      ],
+      "argolas_name": "Capa pastoral em aguarela_ prega a palavra.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_3_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_3_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Prega a palavra · Caminho de flores (A6)",
+      "notes": "Formato A6; caminho de flores e mala à direita. Argolas rosa metálico e elástico rosa.",
+      "oficiais_notes": "Formato A6 com argolas rosa metálico. Idêntica a photo_3.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-05.webp",
+      "a4_label": "a4/a4-05.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-05.webp",
+      "a6_label": "a6/a6-05.webp (A6)"
+    },
+    {
+      "id": 19,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-12.webp",
+      "mockup_name": "a6/a6-12.webp",
+      "argolas": [
+        "argolas/Capa pastoral em aguarela_ prega a palavra.png"
+      ],
+      "argolas_name": "Capa pastoral em aguarela_ prega a palavra.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_3_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_3_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Prega a palavra · Caminho de flores (A6)",
+      "notes": "Formato A6; caminho de flores. Argolas douradas e elástico dourado.",
+      "oficiais_notes": "Formato A6 com argolas douradas. Idêntica a photo_3.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-05.webp",
+      "a4_label": "a4/a4-05.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-12.webp",
+      "a6_label": "a6/a6-12.webp (A6 Dourado)"
+    },
+    {
+      "id": 20,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/castanho-rosa-metalico.webp",
+      "mockup_name": "catalog/castanho-rosa-metalico.webp",
+      "argolas": [
+        "argolas/Realiza Plenamente o Teu Ministério(20260816-141151).png"
+      ],
+      "argolas_name": "Realiza Plenamente o Teu Ministério(20260816-141151).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_10_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_10_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Castanho",
+      "notes": "Kit masculino: chapéu cinzento, livro com elástico castanho vertical, mala gravada com fecho central e sapatos castanhos. Distingue-se das versões 141200 (que tem manta) e 141410 (livro sem elástico).",
+      "oficiais_notes": "Kit masculino castanho com chapéu, mala gravada, livro e sapatos.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-06.webp",
+      "a4_label": "a4/a4-06.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/castanho-rosa-metalico.webp",
+      "a6_label": "catalog/castanho-rosa-metalico.webp"
+    },
+    {
+      "id": 21,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-06.webp",
+      "mockup_name": "a4/a4-06.webp",
+      "argolas": [
+        "argolas/Realiza Plenamente o Teu Ministério(20260816-141151).png"
+      ],
+      "argolas_name": "Realiza Plenamente o Teu Ministério(20260816-141151).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_10_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_10_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Castanho (A4)",
+      "notes": "Formato A4; kit masculino castanho. Argolas douradas e elástico dourado.",
+      "oficiais_notes": "Formato A4. Idêntica a photo_10.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-06.webp",
+      "a4_label": "a4/a4-06.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/castanho-rosa-metalico.webp",
+      "a6_label": "catalog/castanho-rosa-metalico.webp"
+    },
+    {
+      "id": 22,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/quao-campo-colorido-dourado.webp",
+      "mockup_name": "catalog/quao-campo-colorido-dourado.webp",
+      "argolas": [
+        "argolas/Pés floridos no caminho luminoso.png"
+      ],
+      "argolas_name": "Pés floridos no caminho luminoso.png (série)",
+      "match": 85,
+      "oficiais": [
+        "argolas/oficiais/photo_7_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_7_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Quão lindos são os pés · Campo colorido",
+      "notes": "Rapariga com saia turquesa e blusa branca, mala castanha com flor bordada e texto completo 'Quão lindos são os pés daqueles que declaram boas novas de coisas boas! Romanos 10:15'.",
+      "oficiais_notes": "Correspondência exata de 100%! Rapariga com saia turquesa, mala bordada e texto completo.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-08.webp",
+      "a4_label": "a4/a4-08.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/quao-campo-colorido-dourado.webp",
+      "a6_label": "catalog/quao-campo-colorido-dourado.webp"
+    },
+    {
+      "id": 23,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-08.webp",
+      "mockup_name": "a4/a4-08.webp",
+      "argolas": [
+        "argolas/Pés floridos no caminho luminoso.png"
+      ],
+      "argolas_name": "Pés floridos no caminho luminoso.png (série)",
+      "match": 85,
+      "oficiais": [
+        "argolas/oficiais/photo_7_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_7_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Quão lindos são os pés · Campo colorido (A4)",
+      "notes": "Formato A4; rapariga com saia turquesa no campo colorido. Argolas douradas.",
+      "oficiais_notes": "Formato A4. Correspondência exata de 100% com photo_7.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-08.webp",
+      "a4_label": "a4/a4-08.webp (A4)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/quao-campo-colorido-dourado.webp",
+      "a6_label": "catalog/quao-campo-colorido-dourado.webp"
+    },
+    {
+      "id": 24,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-dourado.webp",
+      "mockup_name": "catalog/flores-vermelhas-dourado.webp",
+      "argolas": [
+        "argolas/Poster Inspiracional com Flores em Aguarela.png"
+      ],
+      "argolas_name": "Poster Inspiracional com Flores em Aguarela.png",
+      "match": 98,
+      "oficiais": [
+        "argolas/oficiais/photo_15_2026-08-31_11-41-02.jpg"
+      ],
+      "oficiais_name": "photo_15_2026-08-31_11-41-02.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Flores vermelhas",
+      "notes": "Papoilas vermelhas e cosmos rosa na base sobre fundo branco, texto com aspas e divisor dourado com coração. Argolas douradas.",
+      "oficiais_notes": "Papoilas vermelhas e cosmos rosa sobre fundo branco com '2 Timóteo 4:5'. 100% exato.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-dourado.webp",
+      "a4_label": "catalog/flores-vermelhas-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-01.webp",
+      "a6_label": "a6/a6-01.webp (A6)"
+    },
+    {
+      "id": 25,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-rosa-frente.webp",
+      "mockup_name": "catalog/flores-vermelhas-rosa-frente.webp",
+      "argolas": [
+        "argolas/Poster Inspiracional com Flores em Aguarela.png"
+      ],
+      "argolas_name": "Poster Inspiracional com Flores em Aguarela.png",
+      "match": 98,
+      "oficiais": [
+        "argolas/oficiais/photo_15_2026-08-31_11-41-02.jpg"
+      ],
+      "oficiais_name": "photo_15_2026-08-31_11-41-02.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Flores vermelhas",
+      "notes": "Mesma arte de papoilas. Argolas ouro rosa e elástico rosa.",
+      "oficiais_notes": "Mesma arte de papoilas vermelhas. 100% idêntica a photo_15.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-dourado.webp",
+      "a4_label": "catalog/flores-vermelhas-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-01.webp",
+      "a6_label": "a6/a6-01.webp (A6)"
+    },
+    {
+      "id": 26,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-rosa-angulo.webp",
+      "mockup_name": "catalog/flores-vermelhas-rosa-angulo.webp",
+      "argolas": [
+        "argolas/Poster Inspiracional com Flores em Aguarela.png"
+      ],
+      "argolas_name": "Poster Inspiracional com Flores em Aguarela.png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_15_2026-08-31_11-41-02.jpg"
+      ],
+      "oficiais_name": "photo_15_2026-08-31_11-41-02.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Flores vermelhas",
+      "notes": "Vista angular 3D; arte com papoilas e '2 Timóteo 4:5'. Argolas ouro rosa.",
+      "oficiais_notes": "Vista angular 3D do design photo_15.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-dourado.webp",
+      "a4_label": "catalog/flores-vermelhas-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-01.webp",
+      "a6_label": "a6/a6-01.webp (A6)"
+    },
+    {
+      "id": 27,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-01.webp",
+      "mockup_name": "a6/a6-01.webp",
+      "argolas": [
+        "argolas/Poster Inspiracional com Flores em Aguarela.png"
+      ],
+      "argolas_name": "Poster Inspiracional com Flores em Aguarela.png",
+      "match": 98,
+      "oficiais": [
+        "argolas/oficiais/photo_15_2026-08-31_11-41-02.jpg"
+      ],
+      "oficiais_name": "photo_15_2026-08-31_11-41-02.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Flores vermelhas (A6)",
+      "notes": "Formato A6; papoilas vermelhas. Argolas douradas e elástico dourado.",
+      "oficiais_notes": "Formato A6. Idêntica a photo_15.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-dourado.webp",
+      "a4_label": "catalog/flores-vermelhas-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-01.webp",
+      "a6_label": "a6/a6-01.webp (A6)"
+    },
+    {
+      "id": 28,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-dourado.webp",
+      "mockup_name": "catalog/flores-salmao-dourado.webp",
+      "argolas": [
+        "argolas/Realiza plenamente o teu ministério(29).png"
+      ],
+      "argolas_name": "Realiza plenamente o teu ministério(29).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_13_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_13_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Flores salmão",
+      "notes": "Rosas salmão/pêssego em aguarela na base, caligrafia ornamentada em 'plenamente' e pontos '• o teu •'. Argolas douradas.",
+      "oficiais_notes": "Rosas salmão/bege em aguarela na base e texto com aspas. 100% exato.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-dourado.webp",
+      "a4_label": "catalog/flores-salmao-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-03.webp",
+      "a6_label": "a6/a6-03.webp (A6)"
+    },
+    {
+      "id": 29,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-rosa-frente.webp",
+      "mockup_name": "catalog/flores-salmao-rosa-frente.webp",
+      "argolas": [
+        "argolas/Realiza plenamente o teu ministério(29).png"
+      ],
+      "argolas_name": "Realiza plenamente o teu ministério(29).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_13_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_13_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Flores salmão",
+      "notes": "Formato A6 frontal; rosas salmão. Argolas ouro rosa e elástico rosa.",
+      "oficiais_notes": "Formato A6 frontal com rosas salmão. Idêntica a photo_13.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-dourado.webp",
+      "a4_label": "catalog/flores-salmao-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-03.webp",
+      "a6_label": "a6/a6-03.webp (A6)"
+    },
+    {
+      "id": 30,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-rosa-aberto.webp",
+      "mockup_name": "catalog/flores-salmao-rosa-aberto.webp",
+      "argolas": [
+        "argolas/Realiza plenamente o teu ministério(29).png"
+      ],
+      "argolas_name": "Realiza plenamente o teu ministério(29).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_13_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_13_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Flores salmão",
+      "notes": "Rosas salmão. Argolas ouro rosa e elástico rosa.",
+      "oficiais_notes": "Vista aberta. Idêntica a photo_13.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-dourado.webp",
+      "a4_label": "catalog/flores-salmao-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-03.webp",
+      "a6_label": "a6/a6-03.webp (A6)"
+    },
+    {
+      "id": 31,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-03.webp",
+      "mockup_name": "a6/a6-03.webp",
+      "argolas": [
+        "argolas/Realiza plenamente o teu ministério(29).png"
+      ],
+      "argolas_name": "Realiza plenamente o teu ministério(29).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_13_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_13_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Flores salmão (A6)",
+      "notes": "Formato A6; rosas salmão. Argolas douradas e elástico dourado.",
+      "oficiais_notes": "Formato A6 com argolas douradas. Idêntica a photo_13.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-dourado.webp",
+      "a4_label": "catalog/flores-salmao-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-03.webp",
+      "a6_label": "a6/a6-03.webp (A6)"
+    },
+    {
+      "id": 32,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+      "mockup_name": "catalog/lavanda-dourado.webp",
+      "argolas": [
+        "argolas/image-gen-1(17).png"
+      ],
+      "argolas_name": "image-gen-1(17).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_1_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_1_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 98,
+      "design": "Realiza plenamente o teu ministério · Lavanda",
+      "notes": "Fotografia de campo de lavanda com colinas, texto roxo com coração no 'o' de 'ministério' e citação bíblica adicional. Argolas douradas.",
+      "oficiais_notes": "Campo de lavanda suave com tipografia roxa e coração.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+      "a4_label": "catalog/lavanda-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-07.webp",
+      "a6_label": "a6/a6-07.webp (A6)"
+    },
+    {
+      "id": 33,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-rosa-frente.webp",
+      "mockup_name": "catalog/lavanda-rosa-frente.webp",
+      "argolas": [
+        "argolas/image-gen-1(17).png"
+      ],
+      "argolas_name": "image-gen-1(17).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_1_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_1_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 98,
+      "design": "Realiza plenamente o teu ministério · Lavanda",
+      "notes": "Campo de lavanda. Argolas ouro rosa e elástico rosa.",
+      "oficiais_notes": "Campo de lavanda com argolas ouro rosa.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+      "a4_label": "catalog/lavanda-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-07.webp",
+      "a6_label": "a6/a6-07.webp (A6)"
+    },
+    {
+      "id": 34,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-rosa-angulo.webp",
+      "mockup_name": "catalog/lavanda-rosa-angulo.webp",
+      "argolas": [
+        "argolas/image-gen-1(17).png"
+      ],
+      "argolas_name": "image-gen-1(17).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_1_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_1_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 98,
+      "design": "Realiza plenamente o teu ministério · Lavanda",
+      "notes": "Vista angular 3D do campo de lavanda. Argolas ouro rosa.",
+      "oficiais_notes": "Vista angular do campo de lavanda.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+      "a4_label": "catalog/lavanda-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-07.webp",
+      "a6_label": "a6/a6-07.webp (A6)"
+    },
+    {
+      "id": 35,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-rosa-aberto.webp",
+      "mockup_name": "catalog/lavanda-rosa-aberto.webp",
+      "argolas": [
+        "argolas/image-gen-1(17).png"
+      ],
+      "argolas_name": "image-gen-1(17).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_1_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_1_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 98,
+      "design": "Realiza plenamente o teu ministério · Lavanda",
+      "notes": "Campo de lavanda em A6. Argolas ouro rosa e elástico rosa.",
+      "oficiais_notes": "Vista aberta do campo de lavanda.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+      "a4_label": "catalog/lavanda-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-07.webp",
+      "a6_label": "a6/a6-07.webp (A6)"
+    },
+    {
+      "id": 36,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-07.webp",
+      "mockup_name": "a6/a6-07.webp",
+      "argolas": [
+        "argolas/image-gen-1(17).png"
+      ],
+      "argolas_name": "image-gen-1(17).png",
+      "match": 95,
+      "oficiais": [
+        "argolas/oficiais/photo_1_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_1_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Lavanda (A6)",
+      "notes": "Formato A6; campo de lavanda com texto principal (sem a linha de citação intermédia para respiro no formato A6). Argolas ouro rosa.",
+      "oficiais_notes": "Correspondência exata de 100%! Layout A6 limpo com '2 Timóteo 4:5' e campo de lavanda.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+      "a4_label": "catalog/lavanda-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-07.webp",
+      "a6_label": "a6/a6-07.webp (A6)"
+    },
+    {
+      "id": 37,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-08.webp",
+      "mockup_name": "a6/a6-08.webp",
+      "argolas": [
+        "argolas/image-gen-1(17).png"
+      ],
+      "argolas_name": "image-gen-1(17).png",
+      "match": 95,
+      "oficiais": [
+        "argolas/oficiais/photo_1_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_1_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Lavanda (A6)",
+      "notes": "Formato A6; mesma arte de lavanda. Argolas douradas e elástico dourado.",
+      "oficiais_notes": "Formato A6 com argolas douradas. 100% idêntica a photo_1.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+      "a4_label": "catalog/lavanda-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-08.webp",
+      "a6_label": "a6/a6-08.webp (A6 Dourado)"
+    },
+    {
+      "id": 38,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-dourado.webp",
+      "mockup_name": "catalog/sapatos-dourado.webp",
+      "argolas": [
+        "argolas/Realiza Plenamente o Teu Ministério(20260816-141151).png"
+      ],
+      "argolas_name": "Realiza Plenamente o Teu Ministério(20260816-141151).png (série)",
+      "match": 85,
+      "oficiais": [
+        "argolas/oficiais/photo_11_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_11_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Sapatos",
+      "notes": "Kit ministerial feminino clássico: chapéu de palha com laço, livro cinzento, mala bege com fecho de argola e sapatos de salto baixo com lacinho. Tipografia idêntica à versão masculina 20260816-141151.",
+      "oficiais_notes": "Correspondência exata de 100%! Chapéu de palha com laço, mala bege com argola, livro cinzento e sapatos de salto baixo com lacinho.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-dourado.webp",
+      "a4_label": "catalog/sapatos-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-09.webp",
+      "a6_label": "a6/a6-09.webp (A6)"
+    },
+    {
+      "id": 39,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-rosa-metalico.webp",
+      "mockup_name": "catalog/sapatos-rosa-metalico.webp",
+      "argolas": [
+        "argolas/Realiza Plenamente o Teu Ministério(20260816-141151).png"
+      ],
+      "argolas_name": "Realiza Plenamente o Teu Ministério(20260816-141151).png (série)",
+      "match": 85,
+      "oficiais": [
+        "argolas/oficiais/photo_11_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_11_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Sapatos",
+      "notes": "Mesma arte de sapatos femininos e chapéu de palha. Argolas ouro rosa e elástico rosa.",
+      "oficiais_notes": "Idêntica a photo_11 (100% correspondência).",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-dourado.webp",
+      "a4_label": "catalog/sapatos-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-09.webp",
+      "a6_label": "a6/a6-09.webp (A6)"
+    },
+    {
+      "id": 40,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-rosa-aberto.webp",
+      "mockup_name": "catalog/sapatos-rosa-aberto.webp",
+      "argolas": [
+        "argolas/Realiza Plenamente o Teu Ministério(20260816-141151).png"
+      ],
+      "argolas_name": "Realiza Plenamente o Teu Ministério(20260816-141151).png (série)",
+      "match": 85,
+      "oficiais": [
+        "argolas/oficiais/photo_11_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_11_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Sapatos",
+      "notes": "Formato A6; sapatos femininos. Argolas ouro rosa e elástico rosa.",
+      "oficiais_notes": "Vista aberta. Idêntica a photo_11.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-dourado.webp",
+      "a4_label": "catalog/sapatos-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-09.webp",
+      "a6_label": "a6/a6-09.webp (A6)"
+    },
+    {
+      "id": 41,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-09.webp",
+      "mockup_name": "a6/a6-09.webp",
+      "argolas": [
+        "argolas/Realiza Plenamente o Teu Ministério(20260816-141151).png"
+      ],
+      "argolas_name": "Realiza Plenamente o Teu Ministério(20260816-141151).png (série)",
+      "match": 85,
+      "oficiais": [
+        "argolas/oficiais/photo_11_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_11_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Sapatos (A6)",
+      "notes": "Formato A6; sapatos femininos. Argolas ouro rosa e elástico rosa.",
+      "oficiais_notes": "Formato A6. 100% idêntica a photo_11.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-dourado.webp",
+      "a4_label": "catalog/sapatos-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-09.webp",
+      "a6_label": "a6/a6-09.webp (A6)"
+    },
+    {
+      "id": 42,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-dourado.webp",
+      "mockup_name": "catalog/folhagem-azul-dourado.webp",
+      "argolas": [
+        "argolas/Realiza plenamente o teu ministério(30).png"
+      ],
+      "argolas_name": "Realiza plenamente o teu ministério(30).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_14_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_14_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Folhagem azul",
+      "notes": "Ilustração botânica em aguarela de espigas de lavanda roxa e folhagem de eucalipto azul/verde-água sobre fundo branco limpo. Argolas douradas.",
+      "oficiais_notes": "Ilustração botânica com espigas de lavanda e folhagem de eucalipto sobre fundo branco. 100% exato.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-dourado.webp",
+      "a4_label": "catalog/folhagem-azul-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-10.webp",
+      "a6_label": "a6/a6-10.webp (A6)"
+    },
+    {
+      "id": 43,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-rosa-frente.webp",
+      "mockup_name": "catalog/folhagem-azul-rosa-frente.webp",
+      "argolas": [
+        "argolas/Realiza plenamente o teu ministério(30).png"
+      ],
+      "argolas_name": "Realiza plenamente o teu ministério(30).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_14_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_14_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Folhagem azul",
+      "notes": "Mesma composição botânica. Argolas ouro rosa e elástico rosa.",
+      "oficiais_notes": "Formato A6 frontal. Idêntica a photo_14.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-dourado.webp",
+      "a4_label": "catalog/folhagem-azul-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-10.webp",
+      "a6_label": "a6/a6-10.webp (A6)"
+    },
+    {
+      "id": 44,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-rosa-aberto.webp",
+      "mockup_name": "catalog/folhagem-azul-rosa-aberto.webp",
+      "argolas": [
+        "argolas/Realiza plenamente o teu ministério(30).png"
+      ],
+      "argolas_name": "Realiza plenamente o teu ministério(30).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_14_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_14_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Folhagem azul",
+      "notes": "Formato A6; ramos botânicos. Argolas ouro rosa e elástico rosa.",
+      "oficiais_notes": "Vista aberta. Idêntica a photo_14.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-dourado.webp",
+      "a4_label": "catalog/folhagem-azul-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-10.webp",
+      "a6_label": "a6/a6-10.webp (A6)"
+    },
+    {
+      "id": 45,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-10.webp",
+      "mockup_name": "a6/a6-10.webp",
+      "argolas": [
+        "argolas/Realiza plenamente o teu ministério(30).png"
+      ],
+      "argolas_name": "Realiza plenamente o teu ministério(30).png",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_14_2026-08-31_11-41-01.jpg"
+      ],
+      "oficiais_name": "photo_14_2026-08-31_11-41-01.jpg",
+      "oficiais_match": 100,
+      "design": "Realiza plenamente o teu ministério · Folhagem azul (A6)",
+      "notes": "Formato A6; ramos botânicos. Argolas douradas e elástico verde/dourado.",
+      "oficiais_notes": "Formato A6 com argolas douradas. Idêntica a photo_14.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-dourado.webp",
+      "a4_label": "catalog/folhagem-azul-dourado.webp",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-10.webp",
+      "a6_label": "a6/a6-10.webp (A6)"
+    },
+    {
+      "id": 46,
+      "mockup": "site/content/designs/loja/pasta-de-folhetos/pack-a4-a6.webp",
+      "mockup_name": "pack-a4-a6.webp",
+      "argolas": [
+        "argolas/Caminho Florido até à Aldeia(2).png",
+        "argolas/Poster Inspiracional com Flores em Aguarela.png"
+      ],
+      "argolas_name": "Caminho Florido até à Aldeia(2).png (Esq.) + Poster Inspiracional com Flores em Aguarela.png (Dir.)",
+      "match": 100,
+      "oficiais": [
+        "argolas/oficiais/photo_9_2026-08-31_11-41-01.jpg",
+        "argolas/oficiais/photo_15_2026-08-31_11-41-02.jpg"
+      ],
+      "oficiais_name": "photo_9_2026-08-31_11-41-01.jpg (Esq.) + photo_15_2026-08-31_11-41-02.jpg (Dir.)",
+      "oficiais_match": 100,
+      "design": "Pack A4 + A6",
+      "notes": "Composição mista de pack: lado esquerdo = Capa A4 Passeio; lado direito = Capa A6 Flores Vermelhas.",
+      "oficiais_notes": "Pack combinado: Passeio (photo_9) à esquerda + Flores Vermelhas (photo_15) à direita.",
+      "status": "pending",
+      "user_notes": "",
+      "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-01.webp",
+      "a4_label": "a4/a4-01.webp (A4 Passeio)",
+      "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-01.webp",
+      "a6_label": "a6/a6-01.webp (A6 Flores Vermelhas)"
+    }
+  ]
+}

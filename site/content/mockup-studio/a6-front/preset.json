@@ -1,0 +1,360 @@
+{
+  "schemaVersion": 1,
+  "assetVersion": "2026083010",
+  "id": "a6-front",
+  "label": "A6 Front",
+  "canvas": {
+    "width": 1200,
+    "height": 1200
+  },
+  "cover": {
+    "x": 315,
+    "y": 120,
+    "width": 620,
+    "height": 940,
+    "cornerRadius": 28,
+    "artZoom": 1,
+    "artX": 0,
+    "artY": 0,
+    "placeholderColor": "#eee4d3"
+  },
+  "holes": {
+    "shape": "square",
+    "count": 8,
+    "x": 332,
+    "firstY": 292,
+    "pitch": 81,
+    "width": 30,
+    "height": 30,
+    "positionsY": [],
+    "pitchSystem": "2:1",
+    "pitchMm": 12.7
+  },
+  "rings": {
+    "mode": "atlas",
+    "style": "gold-01",
+    "frameWidth": 160,
+    "atlasGap": 8,
+    "xOffset": -105,
+    "yOffset": -6,
+    "scale": 1,
+    "frontOpacity": 1,
+    "backOpacity": 1,
+    "shadowOpacity": 0.72,
+    "styles": {
+      "gold-01": {
+        "label": "Cinch 2:1 · Dourado",
+        "frame": 0
+      },
+      "rose-gold-01": {
+        "label": "Cinch 2:1 · Rosa metálico",
+        "frame": 1
+      },
+      "silver-01": {
+        "label": "Cinch 2:1 · Prateado",
+        "frame": 2
+      },
+      "black-01": {
+        "label": "Cinch 2:1 · Preto",
+        "frame": 3
+      }
+    },
+    "atlases": {
+      "8": {
+        "back": "ring.atlas.8.back",
+        "front": "ring.atlas.8.front",
+        "shadow": "ring.atlas.8.shadow",
+        "frameWidth": 160,
+        "gap": 8
+      },
+      "9": {
+        "back": "ring.atlas.9.back",
+        "front": "ring.atlas.9.front",
+        "shadow": "ring.atlas.9.shadow",
+        "frameWidth": 160,
+        "gap": 8
+      },
+      "16": {
+        "back": "ring.atlas.16.back",
+        "front": "ring.atlas.16.front",
+        "shadow": "ring.atlas.16.shadow",
+        "frameWidth": 160,
+        "gap": 8
+      },
+      "17": {
+        "back": "ring.atlas.17.back",
+        "front": "ring.atlas.17.front",
+        "shadow": "ring.atlas.17.shadow",
+        "frameWidth": 160,
+        "gap": 8
+      },
+      "18": {
+        "back": "ring.atlas.18.back",
+        "front": "ring.atlas.18.front",
+        "shadow": "ring.atlas.18.shadow",
+        "frameWidth": 160,
+        "gap": 8
+      }
+    }
+  },
+  "elastic": {
+    "style": "gold",
+    "x": 853,
+    "y": 200,
+    "width": 32,
+    "scale": 1,
+    "opacity": 0.96,
+    "shadowOpacity": 0.6,
+    "styles": {
+      "gold": {
+        "label": "Dourado",
+        "asset": "elastic.gold",
+        "shadow": "shadow.elastic"
+      },
+      "rose": {
+        "label": "Rosa metálico",
+        "asset": "elastic.rose",
+        "shadow": "shadow.elastic"
+      },
+      "pink": {
+        "label": "Rosa",
+        "asset": "elastic.pink",
+        "shadow": "shadow.elastic"
+      },
+      "blue": {
+        "label": "Azul",
+        "asset": "elastic.blue",
+        "shadow": "shadow.elastic"
+      },
+      "green": {
+        "label": "Verde",
+        "asset": "elastic.green",
+        "shadow": "shadow.elastic"
+      }
+    }
+  },
+  "background": {
+    "asset": "background.paper",
+    "opacity": 1,
+    "x": 0,
+    "y": 0,
+    "scale": 1
+  },
+  "base": {
+    "depth": {
+      "asset": "base.cover-depth",
+      "opacity": 0.88,
+      "xOffset": 5,
+      "yOffset": 7,
+      "scale": 1
+    }
+  },
+  "shadows": {
+    "cover": {
+      "asset": "shadow.cover",
+      "opacity": 0.74,
+      "xOffset": -34,
+      "yOffset": -28,
+      "scale": 1
+    },
+    "holes": {
+      "asset": "shadow.holes",
+      "opacity": 0.78,
+      "xOffset": -14,
+      "yOffset": -14,
+      "scale": 1
+    }
+  },
+  "overlays": {
+    "highlights": {
+      "asset": "overlay.highlights",
+      "opacity": 0.65,
+      "xOffset": 0,
+      "yOffset": 0,
+      "scale": 1,
+      "blendMode": "screen"
+    },
+    "reflections": {
+      "asset": "overlay.reflections",
+      "opacity": 0.35,
+      "xOffset": 0,
+      "yOffset": 0,
+      "scale": 1,
+      "blendMode": "screen"
+    },
+    "texture": {
+      "asset": "overlay.texture",
+      "opacity": 0.2,
+      "xOffset": 0,
+      "yOffset": 0,
+      "scale": 1,
+      "blendMode": "soft-light"
+    }
+  },
+  "assets": {
+    "background.paper": {
+      "label": "Fundo · papel natural",
+      "path": "background/paper.png",
+      "group": "Fundo"
+    },
+    "base.cover-depth": {
+      "label": "Base · profundidade da capa",
+      "path": "base/cover-depth.png",
+      "group": "Base"
+    },
+    "ring.atlas.8.back": {
+      "label": "Atlas 8 · traseira · 4 cores",
+      "path": "rings/atlases/8/back-atlas.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.8.front": {
+      "label": "Atlas 8 · frente · 4 cores",
+      "path": "rings/atlases/8/front-atlas.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.8.shadow": {
+      "label": "Atlas 8 · sombra",
+      "path": "rings/atlases/8/shadow.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.9.back": {
+      "label": "Atlas 9 · traseira · 4 cores",
+      "path": "rings/atlases/9/back-atlas.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.9.front": {
+      "label": "Atlas 9 · frente · 4 cores",
+      "path": "rings/atlases/9/front-atlas.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.9.shadow": {
+      "label": "Atlas 9 · sombra",
+      "path": "rings/atlases/9/shadow.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.16.back": {
+      "label": "Atlas 16 · traseira · 4 cores",
+      "path": "rings/atlases/16/back-atlas.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.16.front": {
+      "label": "Atlas 16 · frente · 4 cores",
+      "path": "rings/atlases/16/front-atlas.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.16.shadow": {
+      "label": "Atlas 16 · sombra",
+      "path": "rings/atlases/16/shadow.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.17.back": {
+      "label": "Atlas 17 · traseira · 4 cores",
+      "path": "rings/atlases/17/back-atlas.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.17.front": {
+      "label": "Atlas 17 · frente · 4 cores",
+      "path": "rings/atlases/17/front-atlas.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.17.shadow": {
+      "label": "Atlas 17 · sombra",
+      "path": "rings/atlases/17/shadow.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.18.back": {
+      "label": "Atlas 18 · traseira · 4 cores",
+      "path": "rings/atlases/18/back-atlas.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.18.front": {
+      "label": "Atlas 18 · frente · 4 cores",
+      "path": "rings/atlases/18/front-atlas.svg",
+      "group": "Argolas"
+    },
+    "ring.atlas.18.shadow": {
+      "label": "Atlas 18 · sombra",
+      "path": "rings/atlases/18/shadow.svg",
+      "group": "Argolas"
+    },
+    "elastic.gold": {
+      "label": "Elástico · dourado",
+      "path": "elastic/gold.png",
+      "group": "Elástico"
+    },
+    "elastic.rose": {
+      "label": "Elástico · rosa metálico",
+      "path": "elastic/rose.png",
+      "group": "Elástico"
+    },
+    "elastic.pink": {
+      "label": "Elástico · rosa",
+      "path": "elastic/pink.png",
+      "group": "Elástico"
+    },
+    "elastic.blue": {
+      "label": "Elástico · azul",
+      "path": "elastic/blue.png",
+      "group": "Elástico"
+    },
+    "elastic.green": {
+      "label": "Elástico · verde",
+      "path": "elastic/green.png",
+      "group": "Elástico"
+    },
+    "shadow.cover": {
+      "label": "Sombra · capa",
+      "path": "shadows/cover.png",
+      "group": "Sombras"
+    },
+    "shadow.holes": {
+      "label": "Sombra · buracos",
+      "path": "shadows/holes.png",
+      "group": "Sombras"
+    },
+    "shadow.elastic": {
+      "label": "Sombra · elástico",
+      "path": "shadows/elastic.png",
+      "group": "Sombras"
+    },
+    "overlay.highlights": {
+      "label": "Overlay · brilhos",
+      "path": "overlays/highlights.png",
+      "group": "Overlays"
+    },
+    "overlay.reflections": {
+      "label": "Overlay · reflexos",
+      "path": "overlays/reflections.png",
+      "group": "Overlays"
+    },
+    "overlay.texture": {
+      "label": "Overlay · textura IA",
+      "path": "overlays/texture.png",
+      "group": "Overlays"
+    }
+  },
+  "assetCreation": {
+    "rings": {
+      "method": "Deterministic mathematical SVG: closed cubic paths, position-dependent perspective, metallic multi-stop gradients and independent vector shadow",
+      "source": "tools/mockup-studio/build_ring_svg_atlases.py",
+      "counts": [8, 9, 16, 17, 18]
+    },
+    "elastic": {
+      "method": "OpenAI built-in image generation and transparent-background extraction; deterministic recolouring preserves one geometry and weave across every colour",
+      "source": "tools/mockup-studio/sources/elastic-gold-ai.png",
+      "prompt": "One isolated narrow vertical woven elastic closure band matching the elastic ribbons used on the existing pasta-de-folhetos products, gold satin thread with fine longitudinal ribs, perfectly straight, transparent background, no folder, paper, buckle, shadow, text or watermark."
+    },
+    "texture": {
+      "method": "OpenAI built-in image generation, converted to transparent PNG",
+      "prompt": "Seamless, very subtle translucent pearlescent paper-and-lamination surface texture tile with natural paper fibres and restrained satin sheen; no object, text, logo or watermark."
+    },
+    "otherAssets": {
+      "method": "deterministic raster generation",
+      "sources": [
+        "tools/mockup-studio/generate_a6_assets.py",
+        "tools/mockup-studio/build_generated_hardware.py",
+        "tools/mockup-studio/build_ring_svg_atlases.py"
+      ]
+    }
+  }
+}

@@ -20,6 +20,17 @@
     return !!(state.home && state.home.menuAccordion);
   }
 
+  // MENU_ABRIR_TODOS_V1: por omissao, abrir o hamburguer mostra todas as
+  // seccoes. Quando esta opcao esta ligada, tem precedencia sobre o acordeao
+  // para que a abertura inicial nao volte a fechar as restantes seccoes.
+  function siteMenuOpenAllEnabled() {
+    return !(state.home && state.home.menuOpenAll === false);
+  }
+
+  function siteMenuCategoryIsVisible(category) {
+    return homeCategoryIsVisible(category) && !(category && category.menuHidden === true);
+  }
+
   function renderSiteMenuIcon(iconName, modifier) {
     if (!siteMenuIconsEnabled()) {
       return "";
@@ -296,6 +307,10 @@
         surface.querySelectorAll("[data-site-menu-group]").forEach(function (group) {
           group.removeAttribute("open");
         });
+      } else if (siteMenuOpenAllEnabled()) {
+        surface.querySelectorAll("[data-site-menu-group]").forEach(function (group) {
+          group.setAttribute("open", "");
+        });
       }
     }
     if (trigger) {
@@ -359,7 +374,9 @@
         // se `menuAccordion` estiver ligado no content/home.json. Antes era
         // sempre — o interruptor em homepage-menu-design.php nao fazia nada.
         // Desligado, as seccoes ficam todas abertas a medida que se abrem.
-        if (!group.open || !siteMenuAccordionEnabled()) {
+        // Com MENU_ABRIR_TODOS_V1 ligado, o acordeao nao pode fechar as
+        // restantes — e essa opcao tem precedencia.
+        if (!group.open || !siteMenuAccordionEnabled() || siteMenuOpenAllEnabled()) {
           return;
         }
         surface.querySelectorAll("[data-site-menu-group][open]").forEach(function (otherGroup) {
@@ -384,7 +401,7 @@
 
   function renderBrand(brand, homeUrl, instagramUrl, menuCategories) {
     var brandLabel = brand || "Mia & Paper";
-    var categories = Array.isArray(menuCategories) ? menuCategories.filter(homeCategoryIsVisible) : [];
+    var categories = Array.isArray(menuCategories) ? menuCategories.filter(siteMenuCategoryIsVisible) : [];
     var hasSiteMenu = categories.length > 0;
     var actions = hasSiteMenu ? [
       renderCartHeaderButton(),
@@ -412,7 +429,7 @@
   function installStaticSiteNavigation(home) {
     var header = document.querySelector(".site-header");
     var footer = document.querySelector(".site-footer");
-    var categories = home && Array.isArray(home.categories) ? home.categories.filter(homeCategoryIsVisible) : [];
+    var categories = home && Array.isArray(home.categories) ? home.categories.filter(siteMenuCategoryIsVisible) : [];
     var template;
 
     if (!header || !categories.length) {

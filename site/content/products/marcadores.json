@@ -459,7 +459,7 @@
       "id": "details",
       "label": "Dados",
       "title": "Vamos personalizar o teu Cartão de Apresentação?",
-      "text": "Estes dados ajudam-nos a tornar a tua encomenda única",
+      "text": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda",
       "template": "details-form",
       "fields": [
         {
@@ -485,7 +485,7 @@
           "required": false,
           "autocomplete": "organization",
           "section": "Dados para o Cartão de Apresentação",
-          "sectionText": "Atenção: Estes dados pessoais serão imprimidos e colocados no Cartão de Apresentação que acompanha a tua encomenda"
+          "sectionText": "Estes dados serão impressos no Cartão de Apresentação que acompanha a tua encomenda"
         }
       ]
     },
@@ -502,8 +502,8 @@
       "contact": {
         "title": "Dados de Contacto",
         "notesAfter": [
-          "Se quiseres fatura com número de contribuinte, preenche este campo. Se deixares em branco, a fatura será emitida como consumidor final.",
-          "A fatura será emitida após confirmação do pagamento. Se indicares email, enviamos por email. Se indicares telemóvel, podemos enviar por WhatsApp."
+          "Se quiseres incluir o NIF na fatura, escreve-o aqui. Se deixares o campo em branco, a fatura será emitida como consumidor final.",
+          "A fatura é emitida depois de o pagamento ser confirmado. Se indicares um email, é enviada por email; se indicares um telemóvel, pode ser enviada por WhatsApp."
         ],
         "fields": [
           {

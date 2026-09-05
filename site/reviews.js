@@ -95,6 +95,68 @@
   // sessionStorage e não localStorage de propósito: quem fecha está a dizer
   // "agora não", não "nunca mais".
   var dismissKey = "miaandpaper:reviews-dismissed";
+  var queueKey = "miaandpaper:reviews-queue";
+  var indexKey = "miaandpaper:reviews-index";
+
+  function shuffleArray(arr) {
+    var copy = arr.slice();
+    for (var i = copy.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var temp = copy[i];
+      copy[i] = copy[j];
+      copy[j] = temp;
+    }
+    return copy;
+  }
+
+  // REVIEW_TIERED_SHUFFLE_V1: divide a lista em patamares de qualidade
+  // (Top 6 Ouro, 7-15 Prata, 16+ Bronze) e baralha internamente cada um.
+  function buildTieredQueue(items) {
+    var tier1 = items.slice(0, 6);
+    var tier2 = items.slice(6, 15);
+    var tier3 = items.slice(15);
+    return shuffleArray(tier1).concat(shuffleArray(tier2), shuffleArray(tier3));
+  }
+
+  // REVIEW_SESSION_CONTINUITY_V1: recupera a playlist da sessão do separador
+  // para dar continuidade entre páginas e não repetir sempre as mesmas.
+  function initSessionPlaylist(sortedReviews) {
+    var reviewMap = {};
+    sortedReviews.forEach(function (r) { reviewMap[r.id] = r; });
+    var queueIds = [];
+    var startIndex = 0;
+    try {
+      var storedQueue = window.sessionStorage.getItem(queueKey);
+      var storedIndex = window.sessionStorage.getItem(indexKey);
+      if (storedQueue) {
+        var parsed = JSON.parse(storedQueue);
+        if (Array.isArray(parsed) && parsed.length === sortedReviews.length && parsed.every(function (id) { return Boolean(reviewMap[id]); })) {
+          queueIds = parsed;
+        }
+      }
+      if (storedIndex !== null && !isNaN(Number(storedIndex))) {
+        startIndex = (Number(storedIndex) + 1) % sortedReviews.length;
+      }
+    } catch (error) {}
+
+    if (!queueIds.length) {
+      var shuffled = buildTieredQueue(sortedReviews);
+      queueIds = shuffled.map(function (r) { return r.id; });
+      startIndex = 0;
+      try {
+        window.sessionStorage.setItem(queueKey, JSON.stringify(queueIds));
+        window.sessionStorage.setItem(indexKey, String(startIndex));
+      } catch (error) {}
+      return { list: shuffled, start: startIndex };
+    }
+
+    try {
+      window.sessionStorage.setItem(indexKey, String(startIndex));
+    } catch (error) {}
+
+    var activeReviews = queueIds.map(function (id) { return reviewMap[id]; });
+    return { list: activeReviews, start: startIndex };
+  }
 
   function reviewsDismissed() {
     try { return window.sessionStorage.getItem(dismissKey) === "1"; } catch (error) { return false; }
@@ -177,17 +239,28 @@
 
   function showReview(index, direction) {
     if (!reviews.length) return;
+    if (reviews.length > 1 && index >= reviews.length) {
+      try {
+        var sorted = reviews.slice().sort(function (a, b) { return (Number(a.order) || 0) - (Number(b.order) || 0); });
+        reviews = buildTieredQueue(sorted);
+        window.sessionStorage.setItem(queueKey, JSON.stringify(reviews.map(function (r) { return r.id; })));
+      } catch (error) {}
+    }
     currentIndex = (index + reviews.length) % reviews.length;
+    try { window.sessionStorage.setItem(indexKey, String(currentIndex)); } catch (error) {}
     var review = reviews[currentIndex];
     var link = review.linkEnabled ? safeReviewLink(review.link) : "";
     var ratingData = reviewRating(review);
     productImage.src = review.image || fallbackImage;
-    reviewName.textContent = review.name || "Cliente Mia & Paper";
+    // Privacidade: o balão público nunca revela o nome do cliente —
+    // mostra sempre o título genérico.
+    reviewName.textContent = "Palavras de quem encomendou";
+    reviewName.classList.add("review-bubble-name--fallback");
     reviewText.textContent = review.text || "";
     rating.textContent = ratingData.text;
     rating.setAttribute("aria-label", ratingData.label);
     imageWrap.hidden = settings.showImage === false;
-    reviewName.hidden = settings.showName === false;
+    reviewName.hidden = false;
     reviewText.hidden = settings.showText === false;
     rating.hidden = !ratingData.text;
 
@@ -269,12 +342,14 @@
       // Lido pelo reviews-egg.js: movimentos necessários até o balão saltar.
       eggPumps = String(Math.max(0, Math.min(20, Number(settings.eggPumps) >= 0 ? Number(settings.eggPumps) : 7)));
       intervalMs = Math.max(2000, Math.min(60000, Number(settings.intervalMs) || 5500));
-      reviews = (Array.isArray(data.reviews) ? data.reviews : []).filter(function (review) { return review && review.enabled !== false && review.text; }).sort(function (a, b) { return (Number(a.order) || 0) - (Number(b.order) || 0); });
-      if (!reviews.length) return;
+      var sortedReviews = (Array.isArray(data.reviews) ? data.reviews : []).filter(function (review) { return review && review.enabled !== false && review.text; }).sort(function (a, b) { return (Number(a.order) || 0) - (Number(b.order) || 0); });
+      if (!sortedReviews.length) return;
+      var playlist = initSessionPlaylist(sortedReviews);
+      reviews = playlist.list;
       host.classList.add("review-position-" + settings.position);
       card.classList.add("review-size-" + settings.size, "review-theme-" + settings.theme, "review-image-" + settings.imageShape);
       if (settings.showImage === false) card.classList.add("without-image");
-      showReview(0, "next");
+      showReview(playlist.start, "next");
 
       // Escondidas de propósito: prepara-se tudo na mesma, para a pega as
       // trazer de volta sem ter de recarregar nada.

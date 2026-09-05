@@ -891,11 +891,20 @@
     var entry = builderEntry(product, line && line.productId);
     var record = builderPricing(entry);
     var priceKey = builderPriceKey(product, line);
+    var mode = builderPricingMode(entry, priceKey);
     var config = record && record.quantityPricingSwitchByPriceKey && record.quantityPricingSwitchByPriceKey[priceKey];
     var configurado = Math.max(0, parseInt(config && config.sliderMaximum, 10) || 0);
     var opcoes = builderQuantityOptions(product, line);
     var maiorPack = opcoes.length ? opcoes[opcoes.length - 1] : 0;
 
+    // Em flat-unit a tabela costuma ter apenas a chave 1 porque qualquer
+    // quantidade usa esse preço unitário. Essa chave não é um limite máximo:
+    // usá-la prendia a pasta de folhetos e os restantes artigos deste modo a
+    // uma única unidade no construtor de personalização. Nestes artigos, o
+    // selector livre vai até 20 unidades, salvo configuração explícita.
+    if (mode === "flat-unit") {
+      return Math.max(builderMinimumQuantity(product, line), configurado || 20);
+    }
     return Math.max(builderMinimumQuantity(product, line), configurado || maiorPack || 100);
   }
 

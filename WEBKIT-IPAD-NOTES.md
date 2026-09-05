@@ -75,7 +75,7 @@ https://caniuse.com/wf-justify-self-block
 ### 1.2 Filho `height: 100%` dentro de pai cuja altura vem de `aspect-ratio`
 
 #### Sintoma real
-Em **Porta-folhetos → Escolhe o design**, as imagens dos cards não apareciam no
+Em **Pasta de folhetos → Escolhe o design**, as imagens dos cards não apareciam no
 iPad, mas a preview grande aparecia normalmente.
 
 A preview usava `<img src="...">`; o card usava a camada genérica
@@ -175,12 +175,12 @@ Na correção preventiva de 28/08/2026, os casos abaixo passaram a deixar o
 
 ### Prioridade alta — mesmo padrão `aspect-ratio` + `height:100%`
 
-#### A. Porta-folhetos — formato/tamanho
+#### A. Pasta de folhetos — formato/tamanho
 
 `site/css/09-seccoes-produtos.css`, aproximadamente linhas 1312–1330:
 
 ```css
-.porta-folhetos-fluid .grouped-format-section .crachas-size-card-visual {
+.pasta-de-folhetos-fluid .grouped-format-section .crachas-size-card-visual {
   width: 100%;
   aspect-ratio: 4 / 3;
 }
@@ -195,7 +195,7 @@ Na correção preventiva de 28/08/2026, os casos abaixo passaram a deixar o
 
 ---
 
-#### B. Porta-folhetos — slots de atribuição
+#### B. Pasta de folhetos — slots de atribuição
 
 Aproximadamente linhas 1567–1581:
 
@@ -214,7 +214,7 @@ Aproximadamente linhas 1567–1581:
 
 ---
 
-#### C. Porta-folhetos — extras/acabamento
+#### C. Pasta de folhetos — extras/acabamento
 
 Aproximadamente linhas 2006–2023:
 
@@ -246,8 +246,11 @@ Aproximadamente linhas 2006–2023:
   }
 
   .choice-card.design-grid .design-card-media .design-image.uploaded-image {
+    position: relative;
+    inset: auto;
     width: 100% !important;
-    height: 100% !important;
+    height: auto !important;
+    aspect-ratio: var(--frame-aspect, 1) !important;
   }
 }
 ```
@@ -257,7 +260,11 @@ Este é praticamente o mesmo padrão do bug confirmado.
 É mais provável aparecer num **iPhone** ou numa janela estreita do que no iPad
 em portrait normal.
 
-**Estado:** corrigido preventivamente com `position:absolute; inset:0`.
+**Estado:** a tentativa com `position:absolute; inset:0` no filho colapsava no
+Chromium (altura de 4px: só as bordas), porque a altura do pai vinda de
+`aspect-ratio` não é definitiva para o filho absoluto — confirmado em
+molduras, crachás, ímanes, mini-cadernos, blocos e porta-chaves. A imagem fica
+em fluxo e é ela a dona do ratio; o pai acompanha por altura automática.
 
 ---
 
@@ -512,7 +519,7 @@ o atributo.
 Não fazer uma substituição global disto só porque um card não apareceu no
 Safari.
 
-No bug real dos porta-folhetos, corrigir o sizing (`aspect-ratio` +
+No bug real das pastas de folhetos, corrigir o sizing (`aspect-ratio` +
 `height:100%`) resolveu efetivamente o problema no iPad sem mexer em
 `--uploaded-image`.
 
@@ -750,10 +757,10 @@ backdrop-filter: ...;
 | Prioridade | Área | Estado |
 |---|---|---|
 | ✅ Resolvido | Foto e Flores 3D — centragem das cores | Confirmado no iPad |
-| ✅ Resolvido | Porta-folhetos — cards de design sem imagem | Confirmado no iPad |
+| ✅ Resolvido | Pasta de folhetos — cards de design sem imagem | Confirmado no iPad |
 | ✅ Corrigido preventivamente | Outros cards PF com `aspect-ratio` + `height:100%` | Mesmo padrão do bug real removido |
 | ✅ Corrigido | Compressão Canvas WebP | Feature detection + fallback JPEG com MIME/extensão corretos |
-| ✅ Corrigido preventivamente | Design cards ≤620 px | Camada absoluta dentro do frame |
+| ✅ Corrigido | Design cards ≤620 px | Imagem em fluxo com ratio próprio |
 | ✅ Melhorado | `100vh` em viewer/carrinho/Míu | Mantém fallback `vh` e prefere `dvh` |
 | ✅ Melhorado | `backdrop-filter` nos dots da homepage | Adicionado `-webkit-backdrop-filter` |
 

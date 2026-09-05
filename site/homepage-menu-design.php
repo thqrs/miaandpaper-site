@@ -148,6 +148,11 @@
   .mini-icone select { font-size: .72rem; padding: 2px 5px; }
   .mini-check { flex: none; display: grid; place-items: center; }
 
+  /* O título de uma secção do menu é o nome do seu grupo (`menuGroup`). */
+  .grupo-menu > header { cursor: default; }
+  .grupo-menu > header .grupo-pega { cursor: grab; }
+  .grupo-titulo { flex: 1; min-width: 0; font-size: .9rem; font-weight: 600; }
+
   /* SECCOES_HOMEPAGE_V1: o cabeçalho de uma secção da homepage é editável,
      por isso cresce para duas linhas e leva os seus próprios controlos. */
   .grupo-seccao > header { flex-wrap: wrap; align-items: flex-start; cursor: default; }
@@ -389,10 +394,10 @@
           ? '<label>Máximo<input type="number" min="1" max="12" value="' + esc(s.maxCards || 3) + '"'
             + ' data-op="seccao" data-seccao="' + esc(s.id) + '" data-campo="maxCards"'
             + ' data-original="' + esc(s.maxCards || 3) + '"></label>'
-            + '<label title="Os cartões em destaque continuam a aparecer na grelha, como sempre fizeram">'
-            + '<input type="checkbox"' + (s.repeatInGrid ? " checked" : "")
+            + '<label title="Retira da grelha os cartões que já aparecem nesta secção de destaques">'
+            + '<input type="checkbox"' + (!s.repeatInGrid ? " checked" : "")
             + ' data-op="seccao" data-seccao="' + esc(s.id) + '" data-campo="repeatInGrid"'
-            + ' data-original="' + (s.repeatInGrid ? "1" : "") + '">repetir na grelha</label>'
+            + ' data-inverter="1" data-original="' + (!s.repeatInGrid ? "1" : "") + '">não repetir na grelha</label>'
           : "")
       + '<button class="leve seccao-remover" data-remover-seccao="' + esc(s.id) + '">Remover secção</button>'
       + '</span>'
@@ -403,21 +408,62 @@
   }
 
   function cartaoGrupo(titulo, itens, contexto, arrastavel, chave) {
-    return '<section class="grupo" data-grupo="' + esc(titulo) + '" data-ctx="' + contexto + '"'
+    var tituloHtml = contexto === "menu"
+      ? '<input type="text" class="grupo-titulo" value="' + esc(titulo) + '"'
+        + ' aria-label="Título da secção do menu" data-op="menu-grupo-titulo"'
+        + ' data-original="' + esc(titulo) + '">'
+      : '<h3>' + esc(titulo) + '</h3>';
+
+    return '<section class="grupo' + (contexto === "menu" ? ' grupo-menu' : '')
+      + '" data-grupo="' + esc(titulo) + '" data-ctx="' + contexto + '"'
       + (chave ? ' data-chave="' + esc(chave) + '"' : '')
       + (arrastavel ? ' draggable="true"' : '') + '>'
       + '<header>' + (arrastavel ? '<span class="grupo-pega" aria-hidden="true">⠿</span>' : '')
-      + '<h3>' + esc(titulo) + '</h3>'
+      + tituloHtml
       + '<span class="selo">' + itens.length + '</span></header>'
       + '<div class="grupo-itens" data-alvo="' + esc(titulo) + '">'
       + itens.map(function (c) { return miniCartao(c, contexto); }).join('')
       + '</div></section>';
   }
 
+  // Uma operação de menu pendente pode ter mudado grupos, nomes e ordens sem
+  // ainda alterar `dados`. Usa-se esta vista derivada ao redesenhar a aba para
+  // que uma herança ou uma edição do título não desapareça ao trocar de aba.
+  function categoriasDoMenuPendente() {
+    var op = fila["ordem-menu"];
+    var porId = {};
+    var vistas = {};
+    var resultado = [];
+
+    if (!op || !Array.isArray(op.grupos)) { return dados.categorias.slice(); }
+
+    dados.categorias.forEach(function (c) { porId[c.id] = c; });
+    op.grupos.forEach(function (grupo, indiceGrupo) {
+      var nome = String(grupo.nome == null ? "" : grupo.nome);
+      (Array.isArray(grupo.itens) ? grupo.itens : []).forEach(function (id, indiceItem) {
+        var base = porId[String(id)];
+        if (!base || vistas[base.id]) { return; }
+        var copia = Object.assign({}, base);
+        copia.menuGroup = nome;
+        copia.menuGroupOrder = indiceGrupo + 1;
+        copia.menuOrder = indiceItem + 1;
+        resultado.push(copia);
+        vistas[base.id] = true;
+      });
+    });
+
+    // Se a fila estiver incompleta por causa de uma operação antiga, não se
+    // perde nenhum cartão no editor. A API continua a validar a lista completa.
+    dados.categorias.forEach(function (c) {
+      if (!vistas[c.id]) { resultado.push(c); }
+    });
+    return resultado;
+  }
+
   function abaMenu() {
     var grupos = {};
     var ordem = [];
-    dados.categorias.slice().sort(function (a, b) {
+    categoriasDoMenuPendente().sort(function (a, b) {
       return (a.menuGroupOrder || 0) - (b.menuGroupOrder || 0) || (a.menuOrder || 0) - (b.menuOrder || 0);
     }).forEach(function (c) {
       var g = c.menuGroup || "(sem grupo)";
@@ -430,11 +476,14 @@
       + 'Esta ordem é só do menu — a da homepage é independente.</div>';
 
     html += '<section class="cartao"><header><h2>Definições do menu</h2>'
-      + '<button class="leve" data-herdar="menu">Herdar a ordem da homepage</button></header>'
+      + '<button class="leve" data-herdar="menu">Herdar ordem, títulos e visibilidade da homepage</button></header>'
       + '<div class="corpo">'
       + '<label class="linha-flex"><input type="checkbox" data-op="menu-accordion"'
       + (dados.menuAccordion ? " checked" : "") + ' data-original="' + (dados.menuAccordion ? "1" : "") + '">'
       + '<span>Abrir uma secção fecha as outras (acordeão)</span></label>'
+      + '<label class="linha-flex"><input type="checkbox" data-op="menu-open-all"'
+      + (dados.menuOpenAll ? " checked" : "") + ' data-original="' + (dados.menuOpenAll ? "1" : "") + '">'
+      + '<span>Abrir todas as secções ao abrir o hamburguer</span></label>'
       + '<label class="linha-flex"><input type="checkbox" data-op="menu-icones"'
       + (dados.menuShowIcons ? " checked" : "") + ' data-original="' + (dados.menuShowIcons ? "1" : "") + '">'
       + '<span>Mostrar os ícones ao lado de cada entrada</span></label>'
@@ -495,7 +544,11 @@
         return;
       }
       [].forEach.call(document.querySelectorAll(selector), function (campo) {
-        if (campo.type === "checkbox") { campo.checked = !!o.valor; } else { campo.value = o.valor; }
+        if (campo.type === "checkbox") {
+          campo.checked = campo.dataset.inverter === "1" ? !o.valor : !!o.valor;
+        } else {
+          campo.value = o.valor;
+        }
         campo.classList.add("sujo");
       });
     });
@@ -518,9 +571,10 @@
     if (!alvo.dataset || !alvo.dataset.op) { return; }
     var op = alvo.dataset.op;
     var eBool = alvo.type === "checkbox";
-    var valor = eBool ? alvo.checked : alvo.value;
+    var valorVisivel = eBool ? alvo.checked : alvo.value;
+    var valor = eBool && alvo.dataset.inverter === "1" ? !valorVisivel : valorVisivel;
     var original = alvo.dataset.original;
-    var igual = eBool ? ((original === "1") === valor) : (String(original) === String(valor));
+    var igual = eBool ? ((original === "1") === valorVisivel) : (String(original) === String(valor));
 
     alvo.classList.toggle("sujo", !igual);
 
@@ -534,6 +588,18 @@
       var chaveA = "menu-accordion";
       if (igual) { delete fila[chaveA]; actualizar(); return; }
       enfileirar(chaveA, { op: "menu-accordion", valor: valor });
+      return;
+    }
+    if (op === "menu-open-all") {
+      var chaveO = "menu-open-all";
+      if (igual) { delete fila[chaveO]; actualizar(); return; }
+      enfileirar(chaveO, { op: "menu-open-all", valor: valor });
+      return;
+    }
+    if (op === "menu-grupo-titulo") {
+      // O nome do grupo é enviado juntamente com a ordem completa do menu,
+      // para que todos os itens desse grupo recebam o novo título no Save.
+      guardarOrdemDoDom("menu");
       return;
     }
     if (op === "seccao") {
@@ -638,13 +704,93 @@
     }
 
     var grupos = [].map.call(document.querySelectorAll('.grupos[data-ctx="menu"] .grupo'), function (g) {
+      var titulo = g.querySelector(".grupo-titulo");
       return {
-        nome: g.dataset.grupo,
+        nome: titulo ? titulo.value : g.dataset.grupo,
         itens: [].map.call(g.querySelectorAll(".mini"), function (m) { return m.dataset.id; })
       };
     }).filter(function (g) { return g.itens.length; });
 
     enfileirar("ordem-menu", { op: "ordem-menu", grupos: grupos });
+  }
+
+  function seccoesParaHeranca() {
+    return (dados.seccoes || []).map(function (s) {
+      var copia = Object.assign({}, s);
+      var pendente = fila["seccao:" + s.id + ":title"];
+      if (pendente && pendente.op === "seccao" && pendente.campo === "title") {
+        copia.title = pendente.valor;
+      }
+      return copia;
+    });
+  }
+
+  // A ordem da homepage pode ter sido arrastada mas ainda não gravada. Nesse
+  // caso, a herança deve usar essa ordem e essas secções, e não o JSON antigo.
+  function categoriasDaHomepageParaHeranca() {
+    var porId = {};
+    var vistas = {};
+    var resultado = [];
+    var op = fila["ordem-homepage"];
+
+    dados.categorias.forEach(function (c) { porId[c.id] = c; });
+
+    if (op && Array.isArray(op.seccoes)) {
+      op.seccoes.forEach(function (bloco) {
+        var sid = String(bloco.id == null ? "" : bloco.id);
+        (Array.isArray(bloco.itens) ? bloco.itens : []).forEach(function (id) {
+          var base = porId[String(id)];
+          if (!base || vistas[base.id]) { return; }
+          var copia = Object.assign({}, base);
+          copia.section = sid;
+          resultado.push(copia);
+          vistas[base.id] = true;
+        });
+      });
+    } else if (op && Array.isArray(op.ids)) {
+      op.ids.forEach(function (id) {
+        var base = porId[String(id)];
+        if (!base || vistas[base.id]) { return; }
+        resultado.push(base);
+        vistas[base.id] = true;
+      });
+    }
+
+    dados.categorias.forEach(function (c) {
+      if (!vistas[c.id]) { resultado.push(c); }
+    });
+    return resultado.length ? resultado : dados.categorias.slice();
+  }
+
+  // A herança do menu usa a mesma divisão que a homepage: cada grupo recebe o
+  // título da secção correspondente e os cartões conservam a ordem em que
+  // aparecem nessa secção. Títulos vazios usam o id, porque a API não aceita
+  // um grupo de menu sem nome.
+  function ordemMenuDaHomepage() {
+    var seccoes = seccoesParaHeranca();
+    var porId = {};
+    var refugio = "";
+    var grupos = {};
+    var ordem = [];
+
+    seccoes.forEach(function (s) {
+      var id = String(s.id);
+      porId[id] = s;
+      if (!refugio && s.layout !== "feature") { refugio = id; }
+    });
+    if (!refugio && seccoes.length) { refugio = String(seccoes[0].id); }
+
+    categoriasDaHomepageParaHeranca().forEach(function (c) {
+      var id = porId[c.section] ? String(c.section) : refugio;
+      var s = porId[id];
+      var nome = String(s && s.title != null ? s.title : id).trim() || id || "Produtos";
+      if (!grupos[nome]) {
+        grupos[nome] = { nome: nome, itens: [] };
+        ordem.push(nome);
+      }
+      grupos[nome].itens.push(c.id);
+    });
+    return ordem.map(function (nome) { return grupos[nome]; });
   }
 
   // SECCOES_HOMEPAGE_V1: acrescentar e remover secções. Ambas mexem no
@@ -696,20 +842,30 @@
     if (!botao) { return; }
 
     if (botao.dataset.herdar === "menu") {
-      if (!window.confirm("Pôr o menu pela mesma ordem da homepage?")) { return; }
-      // A homepage é a ordem do array; o menu passa a segui-la, mantendo os grupos.
-      var porGrupo = {};
-      var ordemGrupos = [];
+      if (!window.confirm("Pôr o menu pela mesma ordem da homepage, com os títulos das suas secções e a mesma visibilidade?")) { return; }
+      // A ordem, a divisão em grupos e os títulos usam também alterações da
+      // homepage ainda não gravadas.
+      marcarUndo("herdar-menu");
       dados.categorias.forEach(function (c) {
-        var g = c.menuGroup || "(sem grupo)";
-        if (!porGrupo[g]) { porGrupo[g] = []; ordemGrupos.push(g); }
-        porGrupo[g].push(c.id);
+        var pendente = fila["cat:" + c.indice + ":available"];
+        var disponivel = pendente ? !!pendente.valor : !!c.available;
+        var esconder = !disponivel;
+        var chave = "cat:" + c.indice + ":menuHidden";
+
+        if (!!c.menuHidden === esconder) {
+          delete fila[chave];
+        } else {
+          fila[chave] = {
+            op: "categoria", indice: c.indice, campo: "menuHidden", valor: esconder
+          };
+        }
       });
-      enfileirar("ordem-menu", {
+      fila["ordem-menu"] = {
         op: "ordem-menu",
-        grupos: ordemGrupos.map(function (g) { return { nome: g, itens: porGrupo[g] }; })
-      });
-      alerta("O menu passou a seguir a ordem da homepage. Falta gravar.", "ok");
+        grupos: ordemMenuDaHomepage()
+      };
+      desenhar();
+      alerta("O menu passou a seguir a ordem, os títulos e a visibilidade da homepage. Falta gravar.", "ok");
       return;
     }
 

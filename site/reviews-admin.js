@@ -34,7 +34,7 @@
 
   function defaults() {
     return {
-      schemaVersion: 1,
+      schemaVersion: 2,
       settings: { enabled: true, intervalMs: 5500, position: "left", size: "normal", theme: "paper", imageShape: "rounded", showImage: true, showName: true, showText: true, defaultRatingMode: "stars", defaultStars: 5, defaultIcon: "heart", defaultCustomIcon: "✦", eggPumps: 7 },
       reviews: []
     };
@@ -50,6 +50,7 @@
       review.order = Number(review.order) || index + 1;
       if (typeof review.enabled !== "boolean") review.enabled = true;
       if (typeof review.linkEnabled !== "boolean") review.linkEnabled = false;
+      if (typeof review.originalText !== "string") review.originalText = typeof review.text === "string" ? review.text : "";
       // Reviews antigas nao tinham estes campos: sem isto o input ficava
       // "undefined" em vez de vazio.
       if (typeof review.date !== "string") review.date = "";
@@ -88,7 +89,7 @@
     image.src = review.image || "content/brand/logo.webp";
     image.onerror = function () { image.onerror = null; image.src = "content/brand/logo.webp"; };
     var preview = card.querySelector("[data-live-preview]");
-    preview.innerHTML = "<strong>" + escapeHtml(review.name || "Cliente Mia & Paper") + "</strong> · " + escapeHtml(review.text || "Sem texto") + " · " + escapeHtml(ratingPreview(review));
+    preview.innerHTML = "<strong>" + escapeHtml(review.name || "Palavras de quem encomendou") + "</strong> · " + escapeHtml(review.text || "Sem texto") + " · " + escapeHtml(ratingPreview(review));
   }
 
   function escapeHtml(value) {
@@ -136,7 +137,7 @@
 
   function addReview(source) {
     var review = source ? JSON.parse(JSON.stringify(source)) : {
-      enabled: true, name: "", text: "", date: "", orderNote: "", image: "", linkEnabled: false, link: "", ratingMode: "default", stars: 5, icon: "default", customIcon: ""
+      enabled: true, name: "", originalText: "", text: "", date: "", orderNote: "", image: "", linkEnabled: false, link: "", ratingMode: "default", stars: 5, icon: "default", customIcon: ""
     };
     review.id = newId();
     review.order = state.data.reviews.length + 1;

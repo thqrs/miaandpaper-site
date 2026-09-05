@@ -58,6 +58,9 @@ input:focus, textarea:focus, select:focus { outline: 3px solid rgba(104,123,82,.
 .inline-checks { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 16px; }
 .inline-checks label, .switch { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
 .switch input, .inline-checks input { width: 18px; height: 18px; accent-color: var(--sage); }
+.inline-checks label.is-disabled { color: var(--muted); cursor: not-allowed; opacity: .66; }
+.inline-checks label.is-disabled input { cursor: not-allowed; }
+.inline-checks label.is-disabled small { font-weight: 600; }
 
 button, .upload-button {
   min-height: 40px; padding: 8px 14px; border: 1px solid var(--sage); border-radius: 9px; background: var(--sage); color: #fff; font-weight: 800;
@@ -74,6 +77,7 @@ button.secondary, .upload-button { background: transparent; color: var(--sage); 
 .review-order-actions input { width: 64px; min-height: 35px; }
 .review-card-grid { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 18px; padding: 16px; }
 .review-image-column, .review-copy-column { display: grid; align-content: start; gap: 11px; }
+.review-text-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .review-image-preview { width: 100%; aspect-ratio: 4/3; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: #f3ead3; }
 .review-image-preview img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .review-rating-row { display: grid; grid-template-columns: 1.4fr .7fr 1fr .8fr; gap: 10px; padding: 0 16px 16px; }
@@ -97,7 +101,7 @@ button.secondary, .upload-button { background: transparent; color: var(--sage); 
   .review-rating-row { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 @media (max-width: 570px) {
-  .settings-grid, .review-card-grid, .review-rating-row { grid-template-columns: 1fr; }
+  .settings-grid, .review-card-grid, .review-rating-row, .review-text-fields { grid-template-columns: 1fr; }
   .section-heading { flex-direction: column; }
   .review-card-head { grid-template-columns: auto 1fr; }
   .review-order-actions { grid-column: 1 / -1; }

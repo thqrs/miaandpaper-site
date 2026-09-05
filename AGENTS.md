@@ -28,6 +28,11 @@ com uma única excepção: **sprites e spritesheets do Míu permanecem em PNG e
 nunca são convertidos para WebP**. A transparência e os componentes isolados
 são parte do contrato do motor de auto-centragem.
 
+**Ignorar sempre `prefers-reduced-motion`.** As animações e transições do site
+mantêm-se activas mesmo quando o sistema operativo pede movimento reduzido. Não
+criar media queries nem ramos JavaScript que as desliguem ou encurtem por esse
+motivo.
+
 Não pôr segredos, passwords, chaves de API ou dados de clientes no repositório.
 
 ---

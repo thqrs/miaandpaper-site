@@ -1,7 +1,7 @@
 // js/17-wizard-render.js — parte 17/23 do antigo app.js (codigo intacto, so dividido).
 // Os modulos js/*.js partilham TODOS o mesmo escopo global (scripts classicos,
 // sem IIFE por ficheiro) e carregam pela ordem dos <script> nos HTML: 01 → 23.
-// Conteudo: render dos passos do wizard, incluindo escolhas agrupadas de capa/variação e o fluxo dos porta-folhetos (atribuição A4/A6 dentro da preview): media composer dos detalhes, open order hint, aviso de pagamento e antecedencia, pedido de oferta, slideshow do interior, numeracao e labels dos passos, historico do browser (handleWizardPopState).
+// Conteudo: render dos passos do wizard, incluindo escolhas agrupadas de capa/variação e o fluxo das pastas de folhetos (atribuição A4/A6 dentro da preview): media composer dos detalhes, open order hint, aviso de pagamento e antecedencia, pedido de oferta, slideshow do interior, numeracao e labels dos passos, historico do browser (handleWizardPopState).
   function isDetailsMediaComposer(step) {
     var fields = step && Array.isArray(step.fields) ? step.fields : [];
     return !!(
@@ -508,8 +508,8 @@
 
       var cadernoOrderRows = [
         ["Capa escolhida:", cover ? displayItemTitle(cover) : ""],
-        ["Laminação escolhida:", lamination ? lamination.title : ""],
-        ["Add-ons:", addOnLabels.join(", ")],
+        ["Acabamento da Capa:", lamination ? lamination.title : ""],
+        ["Extras:", addOnLabels.join(", ")],
         ["Opção escolhida:", option ? option.title : ""]
       ];
       var cadernoPriceRows = [
@@ -666,7 +666,7 @@
   function renderPaymentNotice() {
     return [
       '<aside class="payment-notice" role="note" aria-label="Informação sobre pagamento">',
-      '<strong>A encomenda só começa a ser preparada após confirmação do pagamento.</strong>',
+      '<strong>A Mia começa a preparar a encomenda quando os detalhes e o pagamento estiverem confirmados.</strong>',
       '<span>Depois de enviares o pedido, a Mia entra em contacto contigo com os dados para pagamento.</span>',
       '</aside>'
     ].join("");
@@ -964,7 +964,7 @@
     return '<div class="option-list size-choice-list crachas-size-card-list cadernos-purchase-list">' + html + '</div>';
   }
 
-  function renderPortaFolhetosSizeStep(product, step) {
+  function renderPastaDeFolhetosSizeStep(product, step) {
     var selected = String(state.selections[step.field || "size"] || "");
     var html = "";
 
@@ -991,27 +991,27 @@
     return '<div class="pf-size-list">' + html + '</div>';
   }
 
-  function portaFolhetosDetailsVariationStep(product, step) {
-    var config = step && step.portaFolhetosDetails;
+  function pastaDeFolhetosDetailsVariationStep(product, step) {
+    var config = step && step.pastaDeFolhetosDetails;
     var stepId = config ? String(config.variationStepId || "") : "";
     return stepId ? findStep(product, stepId) : null;
   }
 
-  function portaFolhetosDetailsGroups(step, variationStep) {
-    var config = step && step.portaFolhetosDetails;
+  function pastaDeFolhetosDetailsGroups(step, variationStep) {
+    var config = step && step.pastaDeFolhetosDetails;
     return config && Array.isArray(config.fixedGroups)
       ? config.fixedGroups.map(String)
       : designGroupsForStep(variationStep);
   }
 
-  function syncPortaFolhetosDetailSelections(product, step) {
-    var variationStep = portaFolhetosDetailsVariationStep(product, step);
+  function syncPastaDeFolhetosDetailSelections(product, step) {
+    var variationStep = pastaDeFolhetosDetailsVariationStep(product, step);
 
     if (!variationStep) {
       return;
     }
 
-    portaFolhetosDetailsGroups(step, variationStep).forEach(function (group) {
+    pastaDeFolhetosDetailsGroups(step, variationStep).forEach(function (group) {
       var field = groupedDesignField(variationStep, group);
       var items = groupedDesignItems(variationStep, group);
       var current = field ? String(state.selections[field] || "") : "";
@@ -1032,8 +1032,8 @@
     syncGroupedDesignSelections(product, variationStep);
   }
 
-  function renderPortaFolhetosMetalCorners(product, step) {
-    var config = step && step.portaFolhetosDetails || {};
+  function renderPastaDeFolhetosMetalCorners(product, step) {
+    var config = step && step.pastaDeFolhetosDetails || {};
     var sourceStepId = String(config.metalCornersSourceStepId || "");
     var sourceStep = sourceStepId ? findStep(product, sourceStepId) : step;
     var drawers = optionDrawersForStep(product, sourceStep);
@@ -1076,17 +1076,17 @@
     ].join("");
   }
 
-  function renderPortaFolhetosDetails(product, step) {
-    var config = step && step.portaFolhetosDetails || {};
-    var variationStep = portaFolhetosDetailsVariationStep(product, step);
-    var html = '<div class="pf-details-step">' + renderPortaFolhetosMetalCorners(product, step);
+  function renderPastaDeFolhetosDetails(product, step) {
+    var config = step && step.pastaDeFolhetosDetails || {};
+    var variationStep = pastaDeFolhetosDetailsVariationStep(product, step);
+    var html = '<div class="pf-details-step">' + renderPastaDeFolhetosMetalCorners(product, step);
 
     if (!variationStep) {
       return html + '</div>';
     }
 
-    syncPortaFolhetosDetailSelections(product, step);
-    portaFolhetosDetailsGroups(step, variationStep).forEach(function (group) {
+    syncPastaDeFolhetosDetailSelections(product, step);
+    pastaDeFolhetosDetailsGroups(step, variationStep).forEach(function (group) {
       var field = groupedDesignField(variationStep, group);
       var items = groupedDesignItems(variationStep, group);
       var selected = field ? String(state.selections[field] || "") : "";
@@ -1279,7 +1279,7 @@
     var config = assignmentPickerConfig(step) || {};
     var sourceStep = assignmentPickerSourceStep(product, step);
 
-    return (config.slotsTitle ? '<h3 class="pf-assignment-slots-title">' + escapeHtml(config.slotsTitle) + '</h3>' : '')
+    return (config.slotsTitle ? '<h3 class="section-title pf-assignment-slots-title">' + escapeHtml(config.slotsTitle) + '</h3>' : '')
       + '<div class="pf-assignment-slots" aria-label="Escolhas atribuídas">' + config.groups.map(function (group) {
       var item = assignmentPickerAssignedItem(product, step, group);
       return [
@@ -1331,45 +1331,39 @@
       return String(item.value || "") === openValue;
     })[0] || null : null;
     var openIndex = openItem ? items.indexOf(openItem) : -1;
-    var motion = state.assignmentPickerMotion && String(state.assignmentPickerMotion.stepId || "") === String(step.id || "")
-      ? state.assignmentPickerMotion
-      : null;
     var cards = items.map(function (item) {
       var itemGroups = config.groups.filter(function (group) {
         var field = String(group && group.field || "");
         return field && String(state.selections[field] || "") === assignmentPickerValue(group, item);
       });
       var open = openItem === item;
-      var leaving = motion && String(motion.leavingValue || "") === String(item.value || "");
-      var revealing = motion && String(motion.revealingValue || "") === String(item.value || "");
-      var expanded = open
-        && state.assignmentPickerControlsExpanded
-        && String(state.assignmentPickerControlsExpanded[step.id] || "") === String(item.value || "");
-      var visibleGroups = expanded || leaving ? config.groups : itemGroups;
-      var controls = (open || itemGroups.length || leaving) ? '<span class="pf-assignment-card-controls' + (expanded ? ' is-expanded' : ' is-collapsed') + (leaving ? ' is-leaving' : '') + (revealing ? ' is-revealing' : '') + '" role="group" aria-label="Atribuir esta escolha">' + visibleGroups.map(function (group) {
+      var opening = state.assignmentPickerOpening
+        && String(state.assignmentPickerOpening[step.id] || "") === String(item.value || "");
+      var controls = '<span class="pf-assignment-card-controls" role="group" aria-label="Atribuir esta escolha">' + config.groups.map(function (group) {
         var field = String(group && group.field || "");
         var value = assignmentPickerValue(group, item);
         var selected = field && value && String(state.selections[field] || "") === value;
-        var groupIndex = config.groups.indexOf(group);
-        var fading = leaving && !selected && groupIndex === 0;
-        var promoted = leaving && selected && groupIndex > 0;
-        var restoring = revealing && selected && groupIndex > 0;
-        var revealed = revealing && !selected && groupIndex === 0;
 
         return [
-          '<button type="button" class="pf-assignment-card-toggle' + (selected ? ' is-selected' : '') + (fading ? ' is-fading' : '') + (promoted ? ' is-promoted' : '') + (restoring ? ' is-restoring' : '') + (revealed ? ' is-revealed' : '') + '" data-assignment-toggle data-assignment-step="' + escapeHtml(step.id || "") + '" data-assignment-group="' + escapeHtml(group.id || group.label || "") + '" data-assignment-field="' + escapeHtml(field) + '" data-assignment-value="' + escapeHtml(value) + '" data-assignment-item="' + escapeHtml(item.value || "") + '" aria-pressed="' + (selected ? 'true' : 'false') + '">',
+          '<button type="button" class="pf-assignment-card-toggle' + (selected ? ' is-selected' : '') + '" data-assignment-toggle data-assignment-step="' + escapeHtml(step.id || "") + '" data-assignment-group="' + escapeHtml(group.id || group.label || "") + '" data-assignment-field="' + escapeHtml(field) + '" data-assignment-value="' + escapeHtml(value) + '" data-assignment-item="' + escapeHtml(item.value || "") + '" aria-pressed="' + (selected ? 'true' : 'false') + '">',
           '<span>' + escapeHtml(group.label || group.id || "") + '</span>',
           '<span class="pf-assignment-card-check" aria-hidden="true">' + ICON_CHECK + '</span>',
           '</button>'
         ].join("");
-      }).join("") + '</span>' : '';
+      }).join("") + '</span>';
 
       return [
         '<div class="cadernos-cover-choice pf-assignment-choice">',
-        '<div class="choice-card crachas-size-card cadernos-cover-card pf-assignment-card' + (itemGroups.length ? ' is-assigned' : '') + (open ? ' is-open' : '') + '" data-assignment-preview-open data-assignment-step="' + escapeHtml(step.id || "") + '" data-assignment-value="' + escapeHtml(item.value || "") + '" role="button" tabindex="0" aria-expanded="' + (open ? 'true' : 'false') + '">',
+        '<div class="choice-card crachas-size-card cadernos-cover-card pf-assignment-card' + (itemGroups.length ? ' is-assigned' : '') + (open ? ' is-open' : '') + (opening ? ' is-opening' : '') + '" data-assignment-preview-open data-assignment-step="' + escapeHtml(step.id || "") + '" data-assignment-value="' + escapeHtml(item.value || "") + '" role="button" tabindex="0" aria-label="Mostrar opções para ' + escapeHtml(item.title || item.value || "este design") + '" aria-expanded="' + (open ? 'true' : 'false') + '">',
+        '<div class="pf-assignment-card-media">',
+        '<div class="pf-assignment-card-trigger">',
         renderCadernoCoverCardMedia(product, Object.assign({}, sourceStep || step, { showDesignZoom: false }), item),
-        '<span class="choice-copy crachas-size-card-text"><strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>' + (item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '') + '</span>',
+        '</div>',
         controls,
+        '</div>',
+        '<span class="pf-assignment-card-footer">',
+        '<span class="choice-copy crachas-size-card-text"><strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>' + (item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '') + '</span>',
+        '</span>',
         adminItemControls(sourceStep, item),
         '</div>',
         '</div>'
@@ -1380,7 +1374,7 @@
       : "";
 
     return [
-      '<div class="porta-folhetos-fluid pf-assignment-picker">',
+      '<div class="pasta-de-folhetos-fluid pf-assignment-picker">',
       renderAssignmentPickerSlots(product, step),
       '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list pf-fluid-cover-list pf-assignment-list">',
       cards,
@@ -1551,7 +1545,7 @@
 
     syncContinuousConfigurator(product, step);
     groups = designGroupsForStep(step);
-    html = '<div class="porta-folhetos-fluid">' + renderGroupedFormatChoices(product, step) + renderDesignActionControls(product, step);
+    html = '<div class="pasta-de-folhetos-fluid">' + renderGroupedFormatChoices(product, step) + renderDesignActionControls(product, step);
 
     if (!groups.length) {
       return html + '<p class="open-order-hint" role="status">Escolhe primeiro A4, A6 ou PACK.</p></div>';
@@ -1613,8 +1607,8 @@
 
     var groups = designGroupsForStep(step);
     var titles = step && step.groupTitles && typeof step.groupTitles === "object" ? step.groupTitles : {};
-    var verticalColumns = step && step.display === "porta-folhetos-design-columns";
-    var html = (verticalColumns ? '<div class="porta-folhetos-fluid pf-design-step">' : '')
+    var verticalColumns = step && step.display === "pasta-de-folhetos-design-columns";
+    var html = (verticalColumns ? '<div class="pasta-de-folhetos-fluid pf-design-step">' : '')
       + renderCopySelectionButton(step)
       + renderGroupedFormatChoices(product, step)
       + renderDesignActionControls(product, step);
@@ -1716,19 +1710,19 @@
       return renderInteriorSlideshow(product) + renderQuantityBuilder(product);
     }
 
-    if (step.display === "porta-folhetos-size") {
-      return renderPortaFolhetosSizeStep(product, step);
+    if (step.display === "pasta-de-folhetos-size") {
+      return renderPastaDeFolhetosSizeStep(product, step);
     }
 
-    if (step.portaFolhetosDetails) {
-      return renderPortaFolhetosDetails(product, step);
+    if (step.pastaDeFolhetosDetails) {
+      return renderPastaDeFolhetosDetails(product, step);
     }
 
     if (step.template === "option-drawers" && step.display === "cards") {
-      return (productFamily(product) === "porta-folhetos" ? '<div class="pf-finish-step">' : '')
+      return (productFamily(product) === "pasta-de-folhetos" ? '<div class="pf-finish-step">' : '')
         + renderCopySelectionButton(step)
         + renderOptionDrawerCards(product, step)
-        + (productFamily(product) === "porta-folhetos" ? '</div>' : '')
+        + (productFamily(product) === "pasta-de-folhetos" ? '</div>' : '')
         + (isCadernosProduct(product) ? renderCadernosBuildSummaryV2(product, step) : "");
     }
 
@@ -2160,14 +2154,19 @@
       '<ol class="wizard-progress__ticks">',
       steps.map(function (step, index) {
         var stepIndex = visible.indexOf(step);
+        var isVisited;
         var position = steps.length <= 1 ? 100 : (index / (steps.length - 1)) * 100;
         var classes = index < activeIndex ? "is-complete" : (index === activeIndex ? "is-active" : "is-future");
-        var disabled = index > activeIndex;
+        var disabled;
         var stepLabel = "Passo " + (index + 1) + ": " + (step.label || "Pedido");
+
+        stepIndex = stepIndex >= 0 ? stepIndex : index;
+        isVisited = stepIndex <= state.maxVisitedStep;
+        disabled = !state.admin && !isVisited;
 
         return [
           '<li class="' + classes + '" style="left:' + position.toFixed(3) + '%">',
-          '<button type="button" data-jump-step="' + (stepIndex >= 0 ? stepIndex : index) + '" aria-label="' + escapeHtml(stepLabel) + '" title="' + escapeHtml(stepLabel) + '"' + (index === activeIndex ? ' aria-current="step"' : '') + (disabled ? ' disabled' : '') + '>',
+          '<button type="button" data-jump-step="' + stepIndex + '" aria-label="' + escapeHtml(stepLabel) + '" title="' + escapeHtml(stepLabel) + '"' + (index === activeIndex ? ' aria-current="step"' : '') + (disabled ? ' disabled' : '') + '>',
           '<span aria-hidden="true"></span>',
           '</button>',
           '</li>'
@@ -2564,44 +2563,15 @@
     var steps = visibleSteps(product);
     var next = Math.max(0, Math.min(stepIndex, steps.length - 1));
     var previous = state.currentStep;
-    var historyDelta;
 
     if (next === previous) {
       return;
     }
 
     state.errors = "";
-    // STEP_JUMP_CONFIRM_V1: só se entrega o salto ao histórico quando é para
-    // trás. `wizardHistoryEntries` é um espelho do stack do browser e um salto
-    // para a frente aponta para entradas que qualquer `pushState` entretanto
-    // truncou — `history.go(+n)` sobre uma entrada que já não existe não faz
-    // nada e, como isto retornava logo, o passo nunca mudava e o utilizador não
-    // via nada acontecer. Para a frente aplicamos o passo à mão, como quem
-    // carrega em "Continuar".
-    historyDelta = wizardHistorySupported() && next < previous ? wizardHistoryDeltaToStep(next) : 0;
-
-    if (historyDelta < 0) {
-      // Mesmo para trás a entrada pode não ser deste wizard (o carrinho e as
-      // outras páginas também empilham histórico). Guardamos o pedido e, se o
-      // `popstate` não o resolver, aplicamos o salto directamente.
-      wizardPendingJumpStep = next;
-      if (wizardPendingJumpTimer) {
-        window.clearTimeout(wizardPendingJumpTimer);
-      }
-      wizardPendingJumpTimer = window.setTimeout(function () {
-        wizardPendingJumpTimer = null;
-        if (wizardPendingJumpStep !== next) {
-          return;
-        }
-        wizardPendingJumpStep = null;
-        if (state.currentStep !== next) {
-          applyWizardStep(product, next, state.currentStep);
-        }
-      }, 150);
-      window.history.go(historyDelta);
-      return;
-    }
-
+    // STEP_JUMP_DIRECT_V1: um clique nos números tem resposta imediata. Esperar
+    // por `history.go()` tornava o rato intermitente quando o stack real e o
+    // espelho do wizard não estavam perfeitamente alinhados.
     applyWizardStep(product, next, previous);
   }
 

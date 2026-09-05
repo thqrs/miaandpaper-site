@@ -25,6 +25,7 @@ var miuSleepTimer = 0;
 var miuSleepDelayMs = 45000;
 var miuAnimationConfig = null;
 var miuInteractiveAnimationConfig = null; // biblioteca do Míu de corpo inteiro, usada nos contextos interactivos
+var miuLauncherPromptDayKey = "miaandpaper_miu_launcher_prompt_day_v1";
 var miuInteractiveSprite = null;
 var miuInteractiveWrap = null;
 var miuLauncherBodySprite = null;
@@ -702,7 +703,7 @@ function miuRenderMessages()
   if (!miuMessagesHost || !miuConfig) { return; }
   miuMessagesHost.innerHTML = "";
   var avatarIndex = 0;
-  miuMessagesHost.appendChild(miuMessageNode("assistant", miuConfig.greeting || "Em que posso ajudar?", "", avatarIndex));
+  miuMessagesHost.appendChild(miuMessageNode("assistant", miuConfig.greeting || "Olá! Em que posso ajudar?", "", avatarIndex));
   miuMessages.forEach(function (message) {
     if (message.role === "assistant") { avatarIndex += 1; }
     miuMessagesHost.appendChild(miuMessageNode(message.role, message.text, "", avatarIndex));
@@ -1899,6 +1900,7 @@ function miuHideLauncherMessage()
   if (miuLauncherCallout) {
     miuLauncherCallout.classList.remove("is-callout-visible");
     miuLauncherCallout.classList.remove("is-site-message");
+    miuLauncherCallout.classList.remove("is-site-message-pulsing");
   }
 }
 
@@ -1909,9 +1911,37 @@ function miuShowLauncherMessage(text, durationMs, siteMessage)
   window.clearTimeout(miuLauncherCalloutTimer);
   miuLauncherCallout.textContent = clean;
   miuLauncherCallout.classList.toggle("is-site-message", siteMessage === true);
+  miuLauncherCallout.classList.remove("is-site-message-pulsing");
+  if (siteMessage === true) {
+    /* Reinicia o aviso visual mesmo quando dois erros chegam enquanto o
+       mesmo balão ainda está visível. */
+    void miuLauncherCallout.offsetWidth;
+    miuLauncherCallout.classList.add("is-site-message-pulsing");
+  }
   miuLauncherCallout.classList.add("is-callout-visible");
   var duration = durationMs == null || durationMs === "" ? 5200 : Math.max(250, Number(durationMs));
   miuLauncherCalloutTimer = window.setTimeout(miuHideLauncherMessage, duration);
+  return true;
+}
+
+function miuClaimDailyLauncherPrompt()
+{
+  var now = new Date();
+  var day = [
+    now.getFullYear(),
+    ("0" + (now.getMonth() + 1)).slice(-2),
+    ("0" + now.getDate()).slice(-2)
+  ].join("-");
+
+  try {
+    if (window.localStorage.getItem(miuLauncherPromptDayKey) === day) {
+      return false;
+    }
+    window.localStorage.setItem(miuLauncherPromptDayKey, day);
+  } catch (error) {
+    // Sem storage, o balão continua disponível em vez de desaparecer para
+    // sempre neste browser.
+  }
   return true;
 }
 
@@ -2009,7 +2039,7 @@ function miuBuildInterface()
   miuWatchContext();
   miuScheduleSleep();
   miuAnimationScheduleRandom();
-  if (launcherPrompt && Number(display.promptSeconds || 0) > 0) {
+  if (launcherPrompt && Number(display.promptSeconds || 0) > 0 && miuClaimDailyLauncherPrompt()) {
     window.setTimeout(function () { miuShowLauncherMessage(launcherPrompt, Number(display.promptSeconds) * 1000); }, 280);
   }
   window.setTimeout(function () { miuAnimationTrigger("page_load"); }, 220);

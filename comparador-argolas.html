@@ -1,0 +1,2826 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comparador Visual 4 Colunas · [A4][A6][Argolas][Oficiais]</title>
+  <style>
+    :root {
+      --bg-main: #f8f6f0;
+      --bg-card: #ffffff;
+      --bg-header: #ffffff;
+      --text-main: #2d312e;
+      --text-muted: #6b7269;
+      --border-color: #e5e0d4;
+      --accent: #5a7b69;
+      --accent-light: #edf2ee;
+      --accent-hover: #466354;
+      --gold: #b38b4d;
+      --rose: #b86b77;
+      
+      --col-a4-border: #8e5836;
+      --col-a6-border: #b86b77;
+      --col-argolas-border: #2e7d32;
+      --col-oficiais-border: #6a4c93;
+      
+      --match-100: #2e7d32;
+      --match-98: #388e3c;
+      --match-95: #689f38;
+      --match-90: #f57c00;
+      --match-85: #e65100;
+
+      --status-completed: #2e7d32;
+      --status-completed-bg: #f1f8f3;
+      --status-completed-border: #a5d6a7;
+      --status-incorrect: #c62828;
+      --status-incorrect-bg: #fdf2f2;
+      --status-incorrect-border: #ef9a9a;
+      
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    /* Top Sticky Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header-content {
+      max-width: 1880px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header-title h1 {
+      font-size: 1.22rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-title p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* Interactive Stats Bar (Pills) */
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: #fdfcfa;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease-in-out;
+    }
+    .stat-pill:hover {
+      background: #f0ece1;
+      border-color: #c9c2b1;
+      transform: translateY(-1px);
+    }
+    .stat-pill.active {
+      background: var(--text-main);
+      color: #fff;
+      border-color: var(--text-main);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .stat-pill .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .stat-pill.m100 .dot { background: var(--match-100); }
+    .stat-pill.m98 .dot { background: var(--match-98); }
+    .stat-pill.m95 .dot { background: var(--match-95); }
+    .stat-pill.m90 .dot { background: var(--match-90); }
+    .stat-pill.m85 .dot { background: var(--match-85); }
+
+    .stat-pill.active .dot {
+      box-shadow: 0 0 0 2px #fff;
+    }
+
+    /* Controls Bar */
+    .controls-bar {
+      background: #fcfbfa;
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 24px;
+    }
+
+    .controls-inner {
+      max-width: 1880px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      padding: 7px 12px 7px 32px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      width: 240px;
+      background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%23888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>') no-repeat 10px center;
+      transition: border-color 0.2s, width 0.2s;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      width: 280px;
+    }
+
+    .btn-filter {
+      padding: 5px 11px;
+      border: 1px solid var(--border-color);
+      background: #fff;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-filter:hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+    }
+    .btn-filter.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .toggle-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      user-select: none;
+      padding: 5px 10px;
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      transition: all 0.15s;
+    }
+    .toggle-checkbox:hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+    }
+    .toggle-checkbox input {
+      cursor: pointer;
+      accent-color: var(--accent);
+      width: 15px;
+      height: 15px;
+    }
+    .toggle-checkbox.checked {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* JSON Actions Bar */
+    .json-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-action-primary {
+      padding: 6px 13px;
+      background: var(--accent);
+      color: #fff;
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn-action-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-action-secondary {
+      padding: 6px 12px;
+      background: #fff;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn-action-secondary:hover {
+      background: #f4f1ea;
+    }
+
+    .tip-box {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .tip-box kbd {
+      background: #eee;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-size: 0.72rem;
+    }
+
+    /* Progress Banner */
+    .progress-banner {
+      max-width: 1880px;
+      margin: 14px auto 0;
+      padding: 0 24px;
+    }
+    .progress-box {
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .progress-stats {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 0.85rem;
+    }
+    .progress-bar-container {
+      flex: 1;
+      min-width: 180px;
+      height: 8px;
+      background: #eee;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--match-100);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1880px;
+      margin: 18px auto;
+      padding: 0 24px;
+    }
+
+    /* Comparison Card */
+    .comparison-list {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .comparison-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+    }
+    .comparison-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: #d1caba;
+    }
+
+    /* Status based card styling */
+    .comparison-card.status-completed {
+      border-color: var(--status-completed-border);
+      background: #ffffff;
+    }
+    .comparison-card.status-completed .card-header {
+      background: var(--status-completed-bg);
+    }
+    .comparison-card.status-incorrect {
+      border-color: var(--status-incorrect-border);
+      background: #ffffff;
+    }
+    .comparison-card.status-incorrect .card-header {
+      background: var(--status-incorrect-bg);
+    }
+
+    .card-header {
+      padding: 12px 18px;
+      background: #faf8f5;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .card-num {
+      background: var(--text-main);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .card-design-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .match-tag {
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .match-tag.oficial-tag {
+      background: var(--col-oficiais-border);
+    }
+    .match-100 { background: var(--match-100); }
+    .match-98  { background: var(--match-98); }
+    .match-95  { background: var(--match-95); }
+    .match-90  { background: var(--match-90); }
+    .match-85  { background: var(--match-85); }
+
+    /* Validation Action Buttons in Card */
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-status {
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border-color);
+      background: #fff;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .btn-status.btn-concluido:hover {
+      background: #e8f5e9;
+      border-color: var(--status-completed);
+      color: var(--status-completed);
+    }
+    .btn-status.btn-concluido.active {
+      background: var(--status-completed);
+      color: #fff;
+      border-color: var(--status-completed);
+    }
+
+    .btn-status.btn-incorrecto:hover {
+      background: #ffebee;
+      border-color: var(--status-incorrect);
+      color: var(--status-incorrect);
+    }
+    .btn-status.btn-incorrecto.active {
+      background: var(--status-incorrect);
+      color: #fff;
+      border-color: var(--status-incorrect);
+    }
+
+    .btn-status.btn-reset-status {
+      padding: 6px 8px;
+      color: var(--text-muted);
+    }
+    .btn-status.btn-reset-status:hover {
+      background: #eee;
+      color: var(--text-main);
+    }
+
+    .card-notes {
+      padding: 10px 18px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      background: #fff;
+      border-bottom: 1px dashed var(--border-color);
+      line-height: 1.45;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 900px) {
+      .notes-grid { grid-template-columns: 1fr; }
+    }
+
+    .note-col {
+      background: #fafaf8;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid #eee;
+    }
+
+    .user-comment-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .user-notes-input {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      background: #fafaf8;
+      transition: all 0.15s;
+    }
+    .user-notes-input:focus {
+      outline: none;
+      background: #fff;
+      border-color: var(--accent);
+    }
+
+    /* 4 COLUMNS COMPARISON BODY */
+    .card-body-4cols {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 16px;
+      background: #faf9f6;
+    }
+
+    @media (max-width: 1400px) {
+      .card-body-4cols {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 768px) {
+      .card-body-4cols {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .image-panel {
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .image-panel.panel-a4 {
+      border-top: 3px solid var(--col-a4-border);
+    }
+    .image-panel.panel-a6 {
+      border-top: 3px solid var(--col-a6-border);
+    }
+    .image-panel.panel-argolas {
+      border-top: 3px solid var(--col-argolas-border);
+    }
+    .image-panel.panel-oficiais {
+      border-top: 3px solid var(--col-oficiais-border);
+    }
+
+    .image-panel-header {
+      padding: 8px 10px;
+      background: #f4f1ea;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+    }
+
+    .panel-label {
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .panel-label.a4-label { color: var(--col-a4-border); }
+    .panel-label.a6-label { color: var(--col-a6-border); }
+    .panel-label.argolas-label { color: var(--col-argolas-border); }
+    .panel-label.oficiais-label { color: var(--col-oficiais-border); }
+
+    .panel-filename {
+      font-family: monospace;
+      font-size: 0.71rem;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 140px;
+    }
+
+    /* Interactive Zoom & Pan Viewport */
+    .viewport {
+      position: relative;
+      height: 400px;
+      background: #f0ede6;
+      background-image: 
+        linear-gradient(45deg, #e7e3db 25%, transparent 25%), 
+        linear-gradient(-45deg, #e7e3db 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #e7e3db 75%), 
+        linear-gradient(-45deg, transparent 75%, #e7e3db 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+      overflow: hidden;
+      cursor: grab;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .viewport.grabbing {
+      cursor: grabbing;
+    }
+
+    .viewport img {
+      max-width: 95%;
+      max-height: 95%;
+      object-fit: contain;
+      transform-origin: 0 0;
+      transition: transform 0.04s ease-out;
+      pointer-events: none;
+      display: block;
+    }
+
+    /* Overlay Toolbar on Viewport */
+    .viewport-tools {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(4px);
+      padding: 3px 5px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: var(--shadow-sm);
+      z-index: 10;
+    }
+
+    .tool-btn {
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #444;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tool-btn:hover {
+      background: var(--accent-light);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .zoom-badge {
+      font-size: 0.7rem;
+      font-family: monospace;
+      font-weight: 600;
+      color: #555;
+      padding: 0 3px;
+      min-width: 38px;
+      text-align: center;
+    }
+
+    /* Modal Fullscreen Inspect */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      z-index: 1000;
+      flex-direction: column;
+    }
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-header {
+      padding: 14px 24px;
+      background: rgba(20, 20, 20, 0.95);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #333;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: 1px solid #555;
+      color: #fff;
+      font-size: 1.2rem;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .modal-close:hover {
+      background: #e65100;
+      border-color: #e65100;
+    }
+
+    .modal-body-4cols {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .modal-viewport-container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: #1e1e1e;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .modal-viewport-header {
+      padding: 8px 12px;
+      background: #2a2a2a;
+      color: #ddd;
+      font-size: 0.82rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .modal-viewport {
+      flex: 1;
+      height: calc(100vh - 140px);
+      background: #141414;
+    }
+
+    /* Notification Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #2d312e;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      z-index: 2000;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: #fff;
+      border-radius: var(--radius-lg);
+      border: 1px dashed var(--border-color);
+      color: var(--text-muted);
+    }
+
+    /* Scroll to top button */
+    .scroll-top {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      box-shadow: var(--shadow-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      transition: all 0.2s;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 90;
+    }
+    .scroll-top.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .scroll-top:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hidden File Input for JSON Import -->
+  <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <div class="header-title">
+        <h1>🔍 Comparador Visual 4 Colunas · [Versão A4][Versão A6][Argolas][Oficiais]</h1>
+        <p>Validação quádrupla par a par com Zoom (Ctrl + Scroll) e Pan sincronizados em 4 imagens</p>
+      </div>
+
+      <!-- Interactive Stats / Match Degree Pills -->
+      <div class="stats-bar" id="statsBar">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </header>
+
+  <!-- Controls Bar -->
+  <div class="controls-bar">
+    <div class="controls-inner">
+      <div class="filter-group">
+        <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar mockup, arte ou design...">
+        
+        <button class="btn-filter active" data-filter-type="category" data-value="all">Todos os Formatos</button>
+        <button class="btn-filter" data-filter-type="category" data-value="catalog">Catálogo</button>
+        <button class="btn-filter" data-filter-type="category" data-value="a4">A4</button>
+        <button class="btn-filter" data-filter-type="category" data-value="a6">A6</button>
+        <button class="btn-filter" data-filter-type="category" data-value="pack">Pack</button>
+
+        <span style="color: #ccc; margin: 0 4px;">|</span>
+
+        <!-- Hide Completed Toggle -->
+        <label class="toggle-checkbox" id="hideCompletedToggle" title="Ocultar pares já marcados como Concluídos">
+          <input type="checkbox" id="hideCompletedCheckbox">
+          <span>Esconder Concluídos</span>
+        </label>
+
+        <!-- Filter by Status -->
+        <button class="btn-filter" data-filter-type="status" data-value="pending">Só Pendentes</button>
+        <button class="btn-filter" data-filter-type="status" data-value="incorrect">Só Incorretos</button>
+      </div>
+
+      <div class="filter-group">
+        <label class="toggle-checkbox checked" title="Sincroniza o movimento de zoom e pan entre as 4 colunas">
+          <input type="checkbox" id="syncPanZoom" checked>
+          <span>Sincronizar Zoom & Pan (4 Vistas)</span>
+        </label>
+        
+        <button class="btn-filter" id="resetAllZoomBtn" title="Repor zoom de todas as imagens">⟲ Reset Zoom</button>
+
+        <div class="json-actions">
+          <button class="btn-action-primary" id="exportJsonBtn" title="Gravar e descarregar o ficheiro JSON de validações">
+            💾 Gravar JSON
+          </button>
+          <button class="btn-action-secondary" id="importJsonBtn" title="Carregar um ficheiro JSON anteriormente guardado">
+            📂 Importar JSON
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Bar Banner -->
+  <div class="progress-banner">
+    <div class="progress-box">
+      <div class="progress-stats">
+        <span>Progresso da Revisão: <strong id="progReviewedCount">0</strong> / <strong id="progTotalCount">46</strong></span>
+        <span style="color: var(--status-completed); font-weight: 600;">✓ Concluídos: <span id="progCompletedCount">0</span></span>
+        <span style="color: var(--status-incorrect); font-weight: 600;">✗ Incorretos: <span id="progIncorrectCount">0</span></span>
+        <span style="color: var(--text-muted);">⏳ Pendentes: <span id="progPendingCount">46</span></span>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
+      <div class="tip-box">
+        <span>💡 Arraste para fazer <strong>Pan</strong> &bull; <kbd>Ctrl</kbd> + Scroll = <strong>Zoom</strong> nas 4 vistas</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <main>
+    <div class="comparison-list" id="comparisonList">
+      <!-- Items generated dynamically -->
+    </div>
+  </main>
+
+  <!-- Fullscreen Modal -->
+  <div class="modal" id="inspectModal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Inspeção Detalhada 1:1 (4 Colunas)</div>
+      <button class="modal-close" id="modalCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body-4cols" id="modalBody">
+      <!-- Viewports in modal -->
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="toast" id="toastMessage">Ficheiro guardado com sucesso!</div>
+
+  <!-- Scroll Top Button -->
+  <button class="scroll-top" id="scrollTopBtn" title="Voltar ao topo">↑</button>
+
+  <script>
+    // Dataset enriched with A4 and A6 columns
+    let itemsData = [
+  {
+    "id": 1,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/passeio-dourado.webp",
+    "mockup_name": "catalog/passeio-dourado.webp",
+    "argolas": [
+      "argolas/Caminho Florido até à Aldeia(2).png"
+    ],
+    "argolas_name": "Caminho Florido até à Aldeia(2).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_9_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_9_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Quão lindos são os pés · Passeio",
+    "notes": "Rapariga de costas com xaile e mala com ramo; borboleta laranja junto a “pés”; aldeia ao fundo. Argolas e elástico dourados.",
+    "oficiais_notes": "Vestido bege floral, xaile verde, mala de tiracolo com motivo floral, borboleta laranja.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-01.webp",
+    "a4_label": "a4/a4-01.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/passeio-dourado.webp",
+    "a6_label": "catalog/passeio-dourado.webp"
+  },
+  {
+    "id": 2,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-01.webp",
+    "mockup_name": "a4/a4-01.webp",
+    "argolas": [
+      "argolas/Caminho Florido até à Aldeia(2).png"
+    ],
+    "argolas_name": "Caminho Florido até à Aldeia(2).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_9_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_9_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Quão lindos são os pés · Passeio (A4)",
+    "notes": "Formato A4; mesma arte e proporções. Argolas e elástico dourados.",
+    "oficiais_notes": "Formato A4. Idêntica a photo_9.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-01.webp",
+    "a4_label": "a4/a4-01.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/passeio-dourado.webp",
+    "a6_label": "catalog/passeio-dourado.webp"
+  },
+  {
+    "id": 3,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/bicicleta-rosa-rosa-metalico.webp",
+    "mockup_name": "catalog/bicicleta-rosa-rosa-metalico.webp",
+    "argolas": [
+      "argolas/Declara as boas novas no jardim.png"
+    ],
+    "argolas_name": "Declara as boas novas no jardim.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_4_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_4_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Declara as boas novas · Bicicleta rosa",
+    "notes": "Bicicleta verde-água, peónias cor-de-rosa, cestinho de vime com livros lisos, texto rosa.",
+    "oficiais_notes": "Bicicleta verde-água com peónias rosa, cestinho de vime, mala bege e texto rosa.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-03.webp",
+    "a4_label": "a4/a4-03.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-11.webp",
+    "a6_label": "a6/a6-11.webp (A6)"
+  },
+  {
+    "id": 4,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-03.webp",
+    "mockup_name": "a4/a4-03.webp",
+    "argolas": [
+      "argolas/Declara as boas novas no jardim.png"
+    ],
+    "argolas_name": "Declara as boas novas no jardim.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_4_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_4_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Declara as boas novas · Bicicleta rosa (A4)",
+    "notes": "Formato A4; peónias rosa. Argolas rosa metálico e elástico rosa.",
+    "oficiais_notes": "Formato A4 com peónias rosa. Idêntica a photo_4.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-03.webp",
+    "a4_label": "a4/a4-03.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-11.webp",
+    "a6_label": "a6/a6-11.webp (A6)"
+  },
+  {
+    "id": 5,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-10.webp",
+    "mockup_name": "a4/a4-10.webp",
+    "argolas": [
+      "argolas/Declara as boas novas no jardim.png"
+    ],
+    "argolas_name": "Declara as boas novas no jardim.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_4_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_4_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Declara as boas novas · Bicicleta rosa (A4)",
+    "notes": "Formato A4; peónias rosa. Argolas douradas e elástico dourado.",
+    "oficiais_notes": "Formato A4 com peónias rosa e argolas douradas. Idêntica a photo_4.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-10.webp",
+    "a4_label": "a4/a4-10.webp (A4 Dourado)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-11.webp",
+    "a6_label": "a6/a6-11.webp (A6)"
+  },
+  {
+    "id": 6,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-11.webp",
+    "mockup_name": "a6/a6-11.webp",
+    "argolas": [
+      "argolas/Declara as boas novas no jardim.png"
+    ],
+    "argolas_name": "Declara as boas novas no jardim.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_4_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_4_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Declara as boas novas · Bicicleta rosa (A6)",
+    "notes": "Formato A6; peónias rosa. Argolas rosa metálico e elástico rosa.",
+    "oficiais_notes": "Formato A6 com peónias rosa e argolas rosa metálico. Idêntica a photo_4.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-03.webp",
+    "a4_label": "a4/a4-03.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-11.webp",
+    "a6_label": "a6/a6-11.webp (A6)"
+  },
+  {
+    "id": 7,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/bicicleta-rosa-dourado.webp",
+    "mockup_name": "catalog/bicicleta-rosa-dourado.webp",
+    "argolas": [
+      "argolas/Declara as Boas Novas_ Jardim em Aguarela.png"
+    ],
+    "argolas_name": "Declara as Boas Novas_ Jardim em Aguarela.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_5_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_5_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Declara as boas novas · Bicicleta azul",
+    "notes": "(Apesar do nome do ficheiro, a imagem é da versão azul): hortênsias azuis, texto verde sálvia e borboleta azul.",
+    "oficiais_notes": "Bicicleta com hortênsias azuis, peónias brancas e borboleta azul.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-03.webp",
+    "a4_label": "a4/a4-03.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-11.webp",
+    "a6_label": "a6/a6-11.webp (A6)"
+  },
+  {
+    "id": 8,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-09.webp",
+    "mockup_name": "a4/a4-09.webp",
+    "argolas": [
+      "argolas/Declara as Boas Novas_ Jardim em Aguarela.png"
+    ],
+    "argolas_name": "Declara as Boas Novas_ Jardim em Aguarela.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_5_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_5_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Declara as boas novas · Bicicleta azul (A4)",
+    "notes": "Formato A4; hortênsias azuis. Argolas douradas e elástico azul.",
+    "oficiais_notes": "Formato A4 com hortênsias azuis e elástico azul. Idêntica a photo_5.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-09.webp",
+    "a4_label": "a4/a4-09.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-04.webp",
+    "a6_label": "a6/a6-04.webp (A6)"
+  },
+  {
+    "id": 9,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-11.webp",
+    "mockup_name": "a4/a4-11.webp",
+    "argolas": [
+      "argolas/Declara as Boas Novas_ Jardim em Aguarela.png"
+    ],
+    "argolas_name": "Declara as Boas Novas_ Jardim em Aguarela.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_5_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_5_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Declara as boas novas · Bicicleta azul (A4)",
+    "notes": "Formato A4; hortênsias azuis. Argolas douradas e elástico dourado.",
+    "oficiais_notes": "Formato A4 com hortênsias azuis e elástico dourado. Idêntica a photo_5.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-11.webp",
+    "a4_label": "a4/a4-11.webp (A4 Dourado)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-04.webp",
+    "a6_label": "a6/a6-04.webp (A6)"
+  },
+  {
+    "id": 10,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-04.webp",
+    "mockup_name": "a6/a6-04.webp",
+    "argolas": [
+      "argolas/Declara as Boas Novas_ Jardim em Aguarela.png"
+    ],
+    "argolas_name": "Declara as Boas Novas_ Jardim em Aguarela.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_5_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_5_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Declara as boas novas · Bicicleta azul (A6)",
+    "notes": "Formato A6; hortênsias azuis. Argolas douradas e elástico azul.",
+    "oficiais_notes": "Formato A6 com hortênsias azuis. Idêntica a photo_5.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-09.webp",
+    "a4_label": "a4/a4-09.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-04.webp",
+    "a6_label": "a6/a6-04.webp (A6)"
+  },
+  {
+    "id": 11,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/declara-campo-colorido-dourado.webp",
+    "mockup_name": "catalog/declara-campo-colorido-dourado.webp",
+    "argolas": [
+      "argolas/Declara Boas Novas no Campo.png"
+    ],
+    "argolas_name": "Declara Boas Novas no Campo.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_6_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_6_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Declara as boas novas · Campo colorido",
+    "notes": "Bicicleta azul com alforge castanho e publicações, cerca de madeira e papoila vermelha. Diferencia-se de Caminho das Boas Novas.png que tem o texto 'Leva as boas novas'.",
+    "oficiais_notes": "Bicicleta azul com alforge castanho e publicações, cerca e papoila.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-04.webp",
+    "a4_label": "a4/a4-04.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/declara-campo-colorido-dourado.webp",
+    "a6_label": "catalog/declara-campo-colorido-dourado.webp"
+  },
+  {
+    "id": 12,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-04.webp",
+    "mockup_name": "a4/a4-04.webp",
+    "argolas": [
+      "argolas/Declara Boas Novas no Campo.png"
+    ],
+    "argolas_name": "Declara Boas Novas no Campo.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_6_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_6_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Declara as boas novas · Campo colorido (A4)",
+    "notes": "Formato A4; mesma arte campestre com bicicleta e alforge. Argolas douradas.",
+    "oficiais_notes": "Formato A4. Idêntica a photo_6.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-04.webp",
+    "a4_label": "a4/a4-04.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/declara-campo-colorido-dourado.webp",
+    "a6_label": "catalog/declara-campo-colorido-dourado.webp"
+  },
+  {
+    "id": 13,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-02.webp",
+    "mockup_name": "a4/a4-02.webp",
+    "argolas": [
+      "argolas/Realiza Plenamente o Teu Ministério(20260805-204221).png"
+    ],
+    "argolas_name": "Realiza Plenamente o Teu Ministério(20260805-204221).png",
+    "match": 90,
+    "oficiais": [
+      "argolas/oficiais/photo_2_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_2_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 90,
+    "design": "Prega a palavra · Agenda rosa (A4)",
+    "notes": "Formato A4; mala rosa, caneca com coração, perfume, jarra com margaridas. Texto adaptado para 'Prega a palavra 2 Timóteo 4:2'. Argolas douradas.",
+    "oficiais_notes": "Ilustração 100% idêntica; texto oficial impresso é 'Realiza plenamente o teu ministério 2 Timóteo 4:5'.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-02.webp",
+    "a4_label": "a4/a4-02.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-02.webp",
+    "a6_label": "a6/a6-02.webp (A6)"
+  },
+  {
+    "id": 14,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-07.webp",
+    "mockup_name": "a4/a4-07.webp",
+    "argolas": [
+      "argolas/Realiza Plenamente o Teu Ministério(20260805-204221).png"
+    ],
+    "argolas_name": "Realiza Plenamente o Teu Ministério(20260805-204221).png",
+    "match": 90,
+    "oficiais": [
+      "argolas/oficiais/photo_2_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_2_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 90,
+    "design": "Prega a palavra · Agenda rosa (A4)",
+    "notes": "Formato A4; agenda rosa. Argolas rosa metálico e elástico rosa.",
+    "oficiais_notes": "Formato A4 com argolas rosa metálico. Ilustração 100% idêntica a photo_2.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-07.webp",
+    "a4_label": "a4/a4-07.webp (A4 Rosa)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-02.webp",
+    "a6_label": "a6/a6-02.webp (A6 Rosa)"
+  },
+  {
+    "id": 15,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-02.webp",
+    "mockup_name": "a6/a6-02.webp",
+    "argolas": [
+      "argolas/Realiza Plenamente o Teu Ministério(20260805-204221).png"
+    ],
+    "argolas_name": "Realiza Plenamente o Teu Ministério(20260805-204221).png",
+    "match": 90,
+    "oficiais": [
+      "argolas/oficiais/photo_2_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_2_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 90,
+    "design": "Prega a palavra · Agenda rosa (A6)",
+    "notes": "Formato A6; agenda rosa. Argolas rosa metálico e elástico rosa.",
+    "oficiais_notes": "Formato A6 com argolas rosa metálico. Ilustração 100% idêntica a photo_2.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-07.webp",
+    "a4_label": "a4/a4-07.webp (A4 Rosa)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-02.webp",
+    "a6_label": "a6/a6-02.webp (A6 Rosa)"
+  },
+  {
+    "id": 16,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-06.webp",
+    "mockup_name": "a6/a6-06.webp",
+    "argolas": [
+      "argolas/Realiza Plenamente o Teu Ministério(20260805-204221).png"
+    ],
+    "argolas_name": "Realiza Plenamente o Teu Ministério(20260805-204221).png",
+    "match": 90,
+    "oficiais": [
+      "argolas/oficiais/photo_2_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_2_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 90,
+    "design": "Prega a palavra · Agenda rosa (A6)",
+    "notes": "Formato A6; agenda rosa. Argolas douradas e elástico dourado.",
+    "oficiais_notes": "Formato A6 com argolas douradas. Ilustração 100% idêntica a photo_2.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-02.webp",
+    "a4_label": "a4/a4-02.webp (A4 Dourado)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-06.webp",
+    "a6_label": "a6/a6-06.webp (A6 Dourado)"
+  },
+  {
+    "id": 17,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-05.webp",
+    "mockup_name": "a4/a4-05.webp",
+    "argolas": [
+      "argolas/Capa pastoral em aguarela_ prega a palavra.png"
+    ],
+    "argolas_name": "Capa pastoral em aguarela_ prega a palavra.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_3_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_3_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Prega a palavra · Caminho de flores (A4)",
+    "notes": "Formato A4; paisagem bucólica de colinas, mala de campo à direita com folhetos. Argolas rosa metálico e elástico rosa.",
+    "oficiais_notes": "Caminho florido no vale com colinas e mala de campo pousada à direita.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-05.webp",
+    "a4_label": "a4/a4-05.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-05.webp",
+    "a6_label": "a6/a6-05.webp (A6)"
+  },
+  {
+    "id": 18,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-05.webp",
+    "mockup_name": "a6/a6-05.webp",
+    "argolas": [
+      "argolas/Capa pastoral em aguarela_ prega a palavra.png"
+    ],
+    "argolas_name": "Capa pastoral em aguarela_ prega a palavra.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_3_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_3_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Prega a palavra · Caminho de flores (A6)",
+    "notes": "Formato A6; caminho de flores e mala à direita. Argolas rosa metálico e elástico rosa.",
+    "oficiais_notes": "Formato A6 com argolas rosa metálico. Idêntica a photo_3.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-05.webp",
+    "a4_label": "a4/a4-05.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-05.webp",
+    "a6_label": "a6/a6-05.webp (A6)"
+  },
+  {
+    "id": 19,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-12.webp",
+    "mockup_name": "a6/a6-12.webp",
+    "argolas": [
+      "argolas/Capa pastoral em aguarela_ prega a palavra.png"
+    ],
+    "argolas_name": "Capa pastoral em aguarela_ prega a palavra.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_3_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_3_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Prega a palavra · Caminho de flores (A6)",
+    "notes": "Formato A6; caminho de flores. Argolas douradas e elástico dourado.",
+    "oficiais_notes": "Formato A6 com argolas douradas. Idêntica a photo_3.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-05.webp",
+    "a4_label": "a4/a4-05.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-12.webp",
+    "a6_label": "a6/a6-12.webp (A6 Dourado)"
+  },
+  {
+    "id": 20,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/castanho-rosa-metalico.webp",
+    "mockup_name": "catalog/castanho-rosa-metalico.webp",
+    "argolas": [
+      "argolas/Realiza Plenamente o Teu Ministério(20260816-141151).png"
+    ],
+    "argolas_name": "Realiza Plenamente o Teu Ministério(20260816-141151).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_10_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_10_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Castanho",
+    "notes": "Kit masculino: chapéu cinzento, livro com elástico castanho vertical, mala gravada com fecho central e sapatos castanhos. Distingue-se das versões 141200 (que tem manta) e 141410 (livro sem elástico).",
+    "oficiais_notes": "Kit masculino castanho com chapéu, mala gravada, livro e sapatos.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-06.webp",
+    "a4_label": "a4/a4-06.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/castanho-rosa-metalico.webp",
+    "a6_label": "catalog/castanho-rosa-metalico.webp"
+  },
+  {
+    "id": 21,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-06.webp",
+    "mockup_name": "a4/a4-06.webp",
+    "argolas": [
+      "argolas/Realiza Plenamente o Teu Ministério(20260816-141151).png"
+    ],
+    "argolas_name": "Realiza Plenamente o Teu Ministério(20260816-141151).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_10_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_10_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Castanho (A4)",
+    "notes": "Formato A4; kit masculino castanho. Argolas douradas e elástico dourado.",
+    "oficiais_notes": "Formato A4. Idêntica a photo_10.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-06.webp",
+    "a4_label": "a4/a4-06.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/castanho-rosa-metalico.webp",
+    "a6_label": "catalog/castanho-rosa-metalico.webp"
+  },
+  {
+    "id": 22,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/quao-campo-colorido-dourado.webp",
+    "mockup_name": "catalog/quao-campo-colorido-dourado.webp",
+    "argolas": [
+      "argolas/Pés floridos no caminho luminoso.png"
+    ],
+    "argolas_name": "Pés floridos no caminho luminoso.png (série)",
+    "match": 85,
+    "oficiais": [
+      "argolas/oficiais/photo_7_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_7_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Quão lindos são os pés · Campo colorido",
+    "notes": "Rapariga com saia turquesa e blusa branca, mala castanha com flor bordada e texto completo 'Quão lindos são os pés daqueles que declaram boas novas de coisas boas! Romanos 10:15'.",
+    "oficiais_notes": "Correspondência exata de 100%! Rapariga com saia turquesa, mala bordada e texto completo.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-08.webp",
+    "a4_label": "a4/a4-08.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/quao-campo-colorido-dourado.webp",
+    "a6_label": "catalog/quao-campo-colorido-dourado.webp"
+  },
+  {
+    "id": 23,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a4/a4-08.webp",
+    "mockup_name": "a4/a4-08.webp",
+    "argolas": [
+      "argolas/Pés floridos no caminho luminoso.png"
+    ],
+    "argolas_name": "Pés floridos no caminho luminoso.png (série)",
+    "match": 85,
+    "oficiais": [
+      "argolas/oficiais/photo_7_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_7_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Quão lindos são os pés · Campo colorido (A4)",
+    "notes": "Formato A4; rapariga com saia turquesa no campo colorido. Argolas douradas.",
+    "oficiais_notes": "Formato A4. Correspondência exata de 100% com photo_7.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-08.webp",
+    "a4_label": "a4/a4-08.webp (A4)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/catalog/quao-campo-colorido-dourado.webp",
+    "a6_label": "catalog/quao-campo-colorido-dourado.webp"
+  },
+  {
+    "id": 24,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-dourado.webp",
+    "mockup_name": "catalog/flores-vermelhas-dourado.webp",
+    "argolas": [
+      "argolas/Poster Inspiracional com Flores em Aguarela.png"
+    ],
+    "argolas_name": "Poster Inspiracional com Flores em Aguarela.png",
+    "match": 98,
+    "oficiais": [
+      "argolas/oficiais/photo_15_2026-08-31_11-41-02.jpg"
+    ],
+    "oficiais_name": "photo_15_2026-08-31_11-41-02.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Flores vermelhas",
+    "notes": "Papoilas vermelhas e cosmos rosa na base sobre fundo branco, texto com aspas e divisor dourado com coração. Argolas douradas.",
+    "oficiais_notes": "Papoilas vermelhas e cosmos rosa sobre fundo branco com '2 Timóteo 4:5'. 100% exato.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-dourado.webp",
+    "a4_label": "catalog/flores-vermelhas-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-01.webp",
+    "a6_label": "a6/a6-01.webp (A6)"
+  },
+  {
+    "id": 25,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-rosa-frente.webp",
+    "mockup_name": "catalog/flores-vermelhas-rosa-frente.webp",
+    "argolas": [
+      "argolas/Poster Inspiracional com Flores em Aguarela.png"
+    ],
+    "argolas_name": "Poster Inspiracional com Flores em Aguarela.png",
+    "match": 98,
+    "oficiais": [
+      "argolas/oficiais/photo_15_2026-08-31_11-41-02.jpg"
+    ],
+    "oficiais_name": "photo_15_2026-08-31_11-41-02.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Flores vermelhas",
+    "notes": "Mesma arte de papoilas. Argolas ouro rosa e elástico rosa.",
+    "oficiais_notes": "Mesma arte de papoilas vermelhas. 100% idêntica a photo_15.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-dourado.webp",
+    "a4_label": "catalog/flores-vermelhas-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-01.webp",
+    "a6_label": "a6/a6-01.webp (A6)"
+  },
+  {
+    "id": 26,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-rosa-angulo.webp",
+    "mockup_name": "catalog/flores-vermelhas-rosa-angulo.webp",
+    "argolas": [
+      "argolas/Poster Inspiracional com Flores em Aguarela.png"
+    ],
+    "argolas_name": "Poster Inspiracional com Flores em Aguarela.png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_15_2026-08-31_11-41-02.jpg"
+    ],
+    "oficiais_name": "photo_15_2026-08-31_11-41-02.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Flores vermelhas",
+    "notes": "Vista angular 3D; arte com papoilas e '2 Timóteo 4:5'. Argolas ouro rosa.",
+    "oficiais_notes": "Vista angular 3D do design photo_15.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-dourado.webp",
+    "a4_label": "catalog/flores-vermelhas-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-01.webp",
+    "a6_label": "a6/a6-01.webp (A6)"
+  },
+  {
+    "id": 27,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-01.webp",
+    "mockup_name": "a6/a6-01.webp",
+    "argolas": [
+      "argolas/Poster Inspiracional com Flores em Aguarela.png"
+    ],
+    "argolas_name": "Poster Inspiracional com Flores em Aguarela.png",
+    "match": 98,
+    "oficiais": [
+      "argolas/oficiais/photo_15_2026-08-31_11-41-02.jpg"
+    ],
+    "oficiais_name": "photo_15_2026-08-31_11-41-02.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Flores vermelhas (A6)",
+    "notes": "Formato A6; papoilas vermelhas. Argolas douradas e elástico dourado.",
+    "oficiais_notes": "Formato A6. Idêntica a photo_15.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-vermelhas-dourado.webp",
+    "a4_label": "catalog/flores-vermelhas-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-01.webp",
+    "a6_label": "a6/a6-01.webp (A6)"
+  },
+  {
+    "id": 28,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-dourado.webp",
+    "mockup_name": "catalog/flores-salmao-dourado.webp",
+    "argolas": [
+      "argolas/Realiza plenamente o teu ministério(29).png"
+    ],
+    "argolas_name": "Realiza plenamente o teu ministério(29).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_13_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_13_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Flores salmão",
+    "notes": "Rosas salmão/pêssego em aguarela na base, caligrafia ornamentada em 'plenamente' e pontos '• o teu •'. Argolas douradas.",
+    "oficiais_notes": "Rosas salmão/bege em aguarela na base e texto com aspas. 100% exato.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-dourado.webp",
+    "a4_label": "catalog/flores-salmao-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-03.webp",
+    "a6_label": "a6/a6-03.webp (A6)"
+  },
+  {
+    "id": 29,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-rosa-frente.webp",
+    "mockup_name": "catalog/flores-salmao-rosa-frente.webp",
+    "argolas": [
+      "argolas/Realiza plenamente o teu ministério(29).png"
+    ],
+    "argolas_name": "Realiza plenamente o teu ministério(29).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_13_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_13_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Flores salmão",
+    "notes": "Formato A6 frontal; rosas salmão. Argolas ouro rosa e elástico rosa.",
+    "oficiais_notes": "Formato A6 frontal com rosas salmão. Idêntica a photo_13.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-dourado.webp",
+    "a4_label": "catalog/flores-salmao-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-03.webp",
+    "a6_label": "a6/a6-03.webp (A6)"
+  },
+  {
+    "id": 30,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-rosa-aberto.webp",
+    "mockup_name": "catalog/flores-salmao-rosa-aberto.webp",
+    "argolas": [
+      "argolas/Realiza plenamente o teu ministério(29).png"
+    ],
+    "argolas_name": "Realiza plenamente o teu ministério(29).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_13_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_13_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Flores salmão",
+    "notes": "Rosas salmão. Argolas ouro rosa e elástico rosa.",
+    "oficiais_notes": "Vista aberta. Idêntica a photo_13.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-dourado.webp",
+    "a4_label": "catalog/flores-salmao-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-03.webp",
+    "a6_label": "a6/a6-03.webp (A6)"
+  },
+  {
+    "id": 31,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-03.webp",
+    "mockup_name": "a6/a6-03.webp",
+    "argolas": [
+      "argolas/Realiza plenamente o teu ministério(29).png"
+    ],
+    "argolas_name": "Realiza plenamente o teu ministério(29).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_13_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_13_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Flores salmão (A6)",
+    "notes": "Formato A6; rosas salmão. Argolas douradas e elástico dourado.",
+    "oficiais_notes": "Formato A6 com argolas douradas. Idêntica a photo_13.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-dourado.webp",
+    "a4_label": "catalog/flores-salmao-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-03.webp",
+    "a6_label": "a6/a6-03.webp (A6)"
+  },
+  {
+    "id": 32,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+    "mockup_name": "catalog/lavanda-dourado.webp",
+    "argolas": [
+      "argolas/image-gen-1(17).png"
+    ],
+    "argolas_name": "image-gen-1(17).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_1_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_1_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 98,
+    "design": "Realiza plenamente o teu ministério · Lavanda",
+    "notes": "Fotografia de campo de lavanda com colinas, texto roxo com coração no 'o' de 'ministério' e citação bíblica adicional. Argolas douradas.",
+    "oficiais_notes": "Campo de lavanda suave com tipografia roxa e coração.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+    "a4_label": "catalog/lavanda-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-07.webp",
+    "a6_label": "a6/a6-07.webp (A6)"
+  },
+  {
+    "id": 33,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-rosa-frente.webp",
+    "mockup_name": "catalog/lavanda-rosa-frente.webp",
+    "argolas": [
+      "argolas/image-gen-1(17).png"
+    ],
+    "argolas_name": "image-gen-1(17).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_1_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_1_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 98,
+    "design": "Realiza plenamente o teu ministério · Lavanda",
+    "notes": "Campo de lavanda. Argolas ouro rosa e elástico rosa.",
+    "oficiais_notes": "Campo de lavanda com argolas ouro rosa.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+    "a4_label": "catalog/lavanda-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-07.webp",
+    "a6_label": "a6/a6-07.webp (A6)"
+  },
+  {
+    "id": 34,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-rosa-angulo.webp",
+    "mockup_name": "catalog/lavanda-rosa-angulo.webp",
+    "argolas": [
+      "argolas/image-gen-1(17).png"
+    ],
+    "argolas_name": "image-gen-1(17).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_1_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_1_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 98,
+    "design": "Realiza plenamente o teu ministério · Lavanda",
+    "notes": "Vista angular 3D do campo de lavanda. Argolas ouro rosa.",
+    "oficiais_notes": "Vista angular do campo de lavanda.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+    "a4_label": "catalog/lavanda-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-07.webp",
+    "a6_label": "a6/a6-07.webp (A6)"
+  },
+  {
+    "id": 35,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-rosa-aberto.webp",
+    "mockup_name": "catalog/lavanda-rosa-aberto.webp",
+    "argolas": [
+      "argolas/image-gen-1(17).png"
+    ],
+    "argolas_name": "image-gen-1(17).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_1_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_1_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 98,
+    "design": "Realiza plenamente o teu ministério · Lavanda",
+    "notes": "Campo de lavanda em A6. Argolas ouro rosa e elástico rosa.",
+    "oficiais_notes": "Vista aberta do campo de lavanda.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+    "a4_label": "catalog/lavanda-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-07.webp",
+    "a6_label": "a6/a6-07.webp (A6)"
+  },
+  {
+    "id": 36,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-07.webp",
+    "mockup_name": "a6/a6-07.webp",
+    "argolas": [
+      "argolas/image-gen-1(17).png"
+    ],
+    "argolas_name": "image-gen-1(17).png",
+    "match": 95,
+    "oficiais": [
+      "argolas/oficiais/photo_1_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_1_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Lavanda (A6)",
+    "notes": "Formato A6; campo de lavanda com texto principal (sem a linha de citação intermédia para respiro no formato A6). Argolas ouro rosa.",
+    "oficiais_notes": "Correspondência exata de 100%! Layout A6 limpo com '2 Timóteo 4:5' e campo de lavanda.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+    "a4_label": "catalog/lavanda-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-07.webp",
+    "a6_label": "a6/a6-07.webp (A6)"
+  },
+  {
+    "id": 37,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-08.webp",
+    "mockup_name": "a6/a6-08.webp",
+    "argolas": [
+      "argolas/image-gen-1(17).png"
+    ],
+    "argolas_name": "image-gen-1(17).png",
+    "match": 95,
+    "oficiais": [
+      "argolas/oficiais/photo_1_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_1_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Lavanda (A6)",
+    "notes": "Formato A6; mesma arte de lavanda. Argolas douradas e elástico dourado.",
+    "oficiais_notes": "Formato A6 com argolas douradas. 100% idêntica a photo_1.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/lavanda-dourado.webp",
+    "a4_label": "catalog/lavanda-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-08.webp",
+    "a6_label": "a6/a6-08.webp (A6 Dourado)"
+  },
+  {
+    "id": 38,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-dourado.webp",
+    "mockup_name": "catalog/sapatos-dourado.webp",
+    "argolas": [
+      "argolas/Realiza Plenamente o Teu Ministério(20260816-141151).png"
+    ],
+    "argolas_name": "Realiza Plenamente o Teu Ministério(20260816-141151).png (série)",
+    "match": 85,
+    "oficiais": [
+      "argolas/oficiais/photo_11_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_11_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Sapatos",
+    "notes": "Kit ministerial feminino clássico: chapéu de palha com laço, livro cinzento, mala bege com fecho de argola e sapatos de salto baixo com lacinho. Tipografia idêntica à versão masculina 20260816-141151.",
+    "oficiais_notes": "Correspondência exata de 100%! Chapéu de palha com laço, mala bege com argola, livro cinzento e sapatos de salto baixo com lacinho.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-dourado.webp",
+    "a4_label": "catalog/sapatos-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-09.webp",
+    "a6_label": "a6/a6-09.webp (A6)"
+  },
+  {
+    "id": 39,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-rosa-metalico.webp",
+    "mockup_name": "catalog/sapatos-rosa-metalico.webp",
+    "argolas": [
+      "argolas/Realiza Plenamente o Teu Ministério(20260816-141151).png"
+    ],
+    "argolas_name": "Realiza Plenamente o Teu Ministério(20260816-141151).png (série)",
+    "match": 85,
+    "oficiais": [
+      "argolas/oficiais/photo_11_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_11_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Sapatos",
+    "notes": "Mesma arte de sapatos femininos e chapéu de palha. Argolas ouro rosa e elástico rosa.",
+    "oficiais_notes": "Idêntica a photo_11 (100% correspondência).",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-dourado.webp",
+    "a4_label": "catalog/sapatos-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-09.webp",
+    "a6_label": "a6/a6-09.webp (A6)"
+  },
+  {
+    "id": 40,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-rosa-aberto.webp",
+    "mockup_name": "catalog/sapatos-rosa-aberto.webp",
+    "argolas": [
+      "argolas/Realiza Plenamente o Teu Ministério(20260816-141151).png"
+    ],
+    "argolas_name": "Realiza Plenamente o Teu Ministério(20260816-141151).png (série)",
+    "match": 85,
+    "oficiais": [
+      "argolas/oficiais/photo_11_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_11_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Sapatos",
+    "notes": "Formato A6; sapatos femininos. Argolas ouro rosa e elástico rosa.",
+    "oficiais_notes": "Vista aberta. Idêntica a photo_11.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-dourado.webp",
+    "a4_label": "catalog/sapatos-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-09.webp",
+    "a6_label": "a6/a6-09.webp (A6)"
+  },
+  {
+    "id": 41,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-09.webp",
+    "mockup_name": "a6/a6-09.webp",
+    "argolas": [
+      "argolas/Realiza Plenamente o Teu Ministério(20260816-141151).png"
+    ],
+    "argolas_name": "Realiza Plenamente o Teu Ministério(20260816-141151).png (série)",
+    "match": 85,
+    "oficiais": [
+      "argolas/oficiais/photo_11_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_11_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Sapatos (A6)",
+    "notes": "Formato A6; sapatos femininos. Argolas ouro rosa e elástico rosa.",
+    "oficiais_notes": "Formato A6. 100% idêntica a photo_11.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/sapatos-dourado.webp",
+    "a4_label": "catalog/sapatos-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-09.webp",
+    "a6_label": "a6/a6-09.webp (A6)"
+  },
+  {
+    "id": 42,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-dourado.webp",
+    "mockup_name": "catalog/folhagem-azul-dourado.webp",
+    "argolas": [
+      "argolas/Realiza plenamente o teu ministério(30).png"
+    ],
+    "argolas_name": "Realiza plenamente o teu ministério(30).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_14_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_14_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Folhagem azul",
+    "notes": "Ilustração botânica em aguarela de espigas de lavanda roxa e folhagem de eucalipto azul/verde-água sobre fundo branco limpo. Argolas douradas.",
+    "oficiais_notes": "Ilustração botânica com espigas de lavanda e folhagem de eucalipto sobre fundo branco. 100% exato.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-dourado.webp",
+    "a4_label": "catalog/folhagem-azul-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-10.webp",
+    "a6_label": "a6/a6-10.webp (A6)"
+  },
+  {
+    "id": 43,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-rosa-frente.webp",
+    "mockup_name": "catalog/folhagem-azul-rosa-frente.webp",
+    "argolas": [
+      "argolas/Realiza plenamente o teu ministério(30).png"
+    ],
+    "argolas_name": "Realiza plenamente o teu ministério(30).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_14_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_14_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Folhagem azul",
+    "notes": "Mesma composição botânica. Argolas ouro rosa e elástico rosa.",
+    "oficiais_notes": "Formato A6 frontal. Idêntica a photo_14.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-dourado.webp",
+    "a4_label": "catalog/folhagem-azul-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-10.webp",
+    "a6_label": "a6/a6-10.webp (A6)"
+  },
+  {
+    "id": 44,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-rosa-aberto.webp",
+    "mockup_name": "catalog/folhagem-azul-rosa-aberto.webp",
+    "argolas": [
+      "argolas/Realiza plenamente o teu ministério(30).png"
+    ],
+    "argolas_name": "Realiza plenamente o teu ministério(30).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_14_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_14_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Folhagem azul",
+    "notes": "Formato A6; ramos botânicos. Argolas ouro rosa e elástico rosa.",
+    "oficiais_notes": "Vista aberta. Idêntica a photo_14.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-dourado.webp",
+    "a4_label": "catalog/folhagem-azul-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-10.webp",
+    "a6_label": "a6/a6-10.webp (A6)"
+  },
+  {
+    "id": 45,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/a6/a6-10.webp",
+    "mockup_name": "a6/a6-10.webp",
+    "argolas": [
+      "argolas/Realiza plenamente o teu ministério(30).png"
+    ],
+    "argolas_name": "Realiza plenamente o teu ministério(30).png",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_14_2026-08-31_11-41-01.jpg"
+    ],
+    "oficiais_name": "photo_14_2026-08-31_11-41-01.jpg",
+    "oficiais_match": 100,
+    "design": "Realiza plenamente o teu ministério · Folhagem azul (A6)",
+    "notes": "Formato A6; ramos botânicos. Argolas douradas e elástico verde/dourado.",
+    "oficiais_notes": "Formato A6 com argolas douradas. Idêntica a photo_14.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/catalog/folhagem-azul-dourado.webp",
+    "a4_label": "catalog/folhagem-azul-dourado.webp",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-10.webp",
+    "a6_label": "a6/a6-10.webp (A6)"
+  },
+  {
+    "id": 46,
+    "mockup": "site/content/designs/loja/pasta-de-folhetos/pack-a4-a6.webp",
+    "mockup_name": "pack-a4-a6.webp",
+    "argolas": [
+      "argolas/Caminho Florido até à Aldeia(2).png",
+      "argolas/Poster Inspiracional com Flores em Aguarela.png"
+    ],
+    "argolas_name": "Caminho Florido até à Aldeia(2).png (Esq.) + Poster Inspiracional com Flores em Aguarela.png (Dir.)",
+    "match": 100,
+    "oficiais": [
+      "argolas/oficiais/photo_9_2026-08-31_11-41-01.jpg",
+      "argolas/oficiais/photo_15_2026-08-31_11-41-02.jpg"
+    ],
+    "oficiais_name": "photo_9_2026-08-31_11-41-01.jpg (Esq.) + photo_15_2026-08-31_11-41-02.jpg (Dir.)",
+    "oficiais_match": 100,
+    "design": "Pack A4 + A6",
+    "notes": "Composição mista de pack: lado esquerdo = Capa A4 Passeio; lado direito = Capa A6 Flores Vermelhas.",
+    "oficiais_notes": "Pack combinado: Passeio (photo_9) à esquerda + Flores Vermelhas (photo_15) à direita.",
+    "status": "pending",
+    "user_notes": "",
+    "a4_image": "site/content/designs/loja/pasta-de-folhetos/a4/a4-01.webp",
+    "a4_label": "a4/a4-01.webp (A4 Passeio)",
+    "a6_image": "site/content/designs/loja/pasta-de-folhetos/a6/a6-01.webp",
+    "a6_label": "a6/a6-01.webp (A6 Flores Vermelhas)"
+  }
+];
+
+    // State
+    let activeMatchFilter = 'all';
+    let activeCategoryFilter = 'all';
+    let activeStatusFilter = 'all';
+    let hideCompleted = false;
+    let searchQuery = '';
+    let syncEnabled = true;
+
+    const LOCAL_STORAGE_KEY = 'mia_argolas_validacoes_v3';
+    const viewports = new Map();
+
+    async function init() {
+      await loadValidationData();
+      renderStatsPills();
+      updateProgressDisplay();
+      renderItems();
+      setupEventListeners();
+    }
+
+    async function loadValidationData() {
+      const savedLocal = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (savedLocal) {
+        try {
+          const parsed = JSON.parse(savedLocal);
+          if (parsed && Array.isArray(parsed.items)) {
+            mergeLoadedItems(parsed.items);
+            console.log('Loaded validation state from localStorage.');
+            return;
+          }
+        } catch (e) {
+          console.warn('Error reading localStorage:', e);
+        }
+      }
+
+      try {
+        const res = await fetch('comparador-validacoes.json');
+        if (res.ok) {
+          const json = await res.json();
+          if (json && Array.isArray(json.items)) {
+            mergeLoadedItems(json.items);
+            console.log('Loaded validation state from comparador-validacoes.json.');
+          }
+        }
+      } catch (err) {
+        console.log('Using default embedded dataset.');
+      }
+    }
+
+    function mergeLoadedItems(loadedItems) {
+      const map = new Map(loadedItems.map(i => [i.id, i]));
+      itemsData.forEach(item => {
+        const loaded = map.get(item.id);
+        if (loaded) {
+          if (loaded.status) item.status = loaded.status;
+          if (loaded.user_notes !== undefined) item.user_notes = loaded.user_notes;
+        }
+      });
+    }
+
+    function saveState() {
+      const completedCount = itemsData.filter(i => i.status === 'completed').length;
+      const incorrectCount = itemsData.filter(i => i.status === 'incorrect').length;
+      const pendingCount = itemsData.filter(i => i.status === 'pending' || !i.status).length;
+
+      const payload = {
+        updated_at: new Date().toISOString(),
+        total: itemsData.length,
+        stats: {
+          completed: completedCount,
+          incorrect: incorrectCount,
+          pending: pendingCount
+        },
+        items: itemsData
+      };
+
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+      } catch (e) {
+        console.warn('Could not save to localStorage:', e);
+      }
+
+      updateProgressDisplay();
+      renderStatsPills();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastMessage');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    function updateProgressDisplay() {
+      const completed = itemsData.filter(i => i.status === 'completed').length;
+      const incorrect = itemsData.filter(i => i.status === 'incorrect').length;
+      const pending = itemsData.filter(i => i.status === 'pending' || !i.status).length;
+      const reviewed = completed + incorrect;
+      const total = itemsData.length;
+
+      document.getElementById('progTotalCount').textContent = total;
+      document.getElementById('progReviewedCount').textContent = reviewed;
+      document.getElementById('progCompletedCount').textContent = completed;
+      document.getElementById('progIncorrectCount').textContent = incorrect;
+      document.getElementById('progPendingCount').textContent = pending;
+
+      const pct = total > 0 ? (reviewed / total) * 100 : 0;
+      document.getElementById('progressBarFill').style.width = `${pct}%`;
+    }
+
+    function renderStatsPills() {
+      const statsBar = document.getElementById('statsBar');
+      const counts = { total: itemsData.length, 100: 0, 98: 0, 95: 0, 90: 0, 85: 0 };
+      
+      itemsData.forEach(d => {
+        if (counts[d.match] !== undefined) counts[d.match]++;
+      });
+
+      statsBar.innerHTML = `
+        <button class="stat-pill ${activeMatchFilter === 'all' ? 'active' : ''}" data-match="all">
+          Total: <strong>${counts.total}</strong> mockups
+        </button>
+        <button class="stat-pill m100 ${activeMatchFilter === '100' ? 'active' : ''}" data-match="100">
+          <span class="dot"></span> 100% (${counts[100]})
+        </button>
+        <button class="stat-pill m98 ${activeMatchFilter === '98' ? 'active' : ''}" data-match="98">
+          <span class="dot"></span> 98% (${counts[98]})
+        </button>
+        <button class="stat-pill m95 ${activeMatchFilter === '95' ? 'active' : ''}" data-match="95">
+          <span class="dot"></span> 95% (${counts[95]})
+        </button>
+        <button class="stat-pill m90 ${activeMatchFilter === '90' ? 'active' : ''}" data-match="90">
+          <span class="dot"></span> 90% (${counts[90]})
+        </button>
+        <button class="stat-pill m85 ${activeMatchFilter === '85' ? 'active' : ''}" data-match="85">
+          <span class="dot"></span> 85% (${counts[85]})
+        </button>
+      `;
+
+      statsBar.querySelectorAll('.stat-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          const matchVal = pill.getAttribute('data-match');
+          activeMatchFilter = matchVal;
+          renderStatsPills();
+          renderItems();
+        });
+      });
+    }
+
+    function renderItems() {
+      const listEl = document.getElementById('comparisonList');
+      viewports.clear();
+
+      const filtered = itemsData.filter(item => {
+        if (hideCompleted && item.status === 'completed') return false;
+        if (activeMatchFilter !== 'all' && String(item.match) !== activeMatchFilter) return false;
+        if (activeStatusFilter === 'pending' && (item.status === 'completed' || item.status === 'incorrect')) return false;
+        if (activeStatusFilter === 'incorrect' && item.status !== 'incorrect') return false;
+        if (activeStatusFilter === 'completed' && item.status !== 'completed') return false;
+
+        if (activeCategoryFilter !== 'all') {
+          const m = item.mockup.toLowerCase();
+          if (activeCategoryFilter === 'catalog' && !m.includes('/catalog/')) return false;
+          if (activeCategoryFilter === 'a4' && !m.includes('/a4/')) return false;
+          if (activeCategoryFilter === 'a6' && !m.includes('/a6/')) return false;
+          if (activeCategoryFilter === 'pack' && !m.includes('pack-')) return false;
+        }
+
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          const targetStr = `${item.id} ${item.design} ${item.mockup_name} ${item.argolas_name} ${item.oficiais_name || ''} ${item.notes || ''} ${item.oficiais_notes || ''} ${item.user_notes || ''}`.toLowerCase();
+          if (!targetStr.includes(q)) return false;
+        }
+
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="empty-state">
+            <h3>Nenhum resultado encontrado</h3>
+            <p>Tenta ajustar os filtros de percentagem, formato, estado ou o termo de pesquisa.</p>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(item => {
+        const isPack = item.argolas.length > 1;
+        const matchClass = `match-${item.match}`;
+        const itemStatus = item.status || 'pending';
+        const cardStatusClass = `status-${itemStatus}`;
+
+        // Column 1: A4 Site Version
+        const a4VpId = `vp-${item.id}-a4`;
+        const a4Filename = item.a4_image.split('/').pop();
+
+        // Column 2: A6 Site Version
+        const a6VpId = `vp-${item.id}-a6`;
+        const a6Filename = item.a6_image.split('/').pop();
+
+        // Column 3: Argolas (Raiz)
+        const argolaPath = item.argolas[0];
+        const argolaFilename = argolaPath.split('/').pop();
+        const argolaVpId = `vp-${item.id}-argola`;
+
+        // Column 4: Oficiais
+        const oficialPath = item.oficiais[0];
+        const oficialFilename = oficialPath.split('/').pop();
+        const oficialVpId = `vp-${item.id}-oficial`;
+
+        return `
+          <div class="comparison-card ${cardStatusClass}" id="card-${item.id}" data-item-id="${item.id}">
+            <div class="card-header">
+              <div class="card-meta">
+                <span class="card-num">#${item.id}</span>
+                <span class="card-design-name">${item.design}</span>
+                <span class="match-tag ${matchClass}">✓ ${item.match}% Argolas</span>
+                <span class="match-tag oficial-tag">⭐ ${item.oficiais_match}% Oficial</span>
+              </div>
+              
+              <!-- Validation Status Controls -->
+              <div class="card-actions">
+                <button class="btn-status btn-concluido ${itemStatus === 'completed' ? 'active' : ''}" 
+                        onclick="setItemStatus(${item.id}, 'completed')" 
+                        title="Marcar como Concluído">
+                  ✓ Concluído
+                </button>
+                <button class="btn-status btn-incorrecto ${itemStatus === 'incorrect' ? 'active' : ''}" 
+                        onclick="setItemStatus(${item.id}, 'incorrect')" 
+                        title="Marcar como Incorreto">
+                  ✗ Incorreto
+                </button>
+                <button class="btn-status btn-reset-status" 
+                        onclick="setItemStatus(${item.id}, 'pending')" 
+                        title="Repor estado para pendente">
+                  ⟲
+                </button>
+                <button class="btn-filter btn-inspect" data-item-id="${item.id}" title="Abrir 4 colunas em ecrã inteiro">
+                  🔍 Ecrã Cheio (4 Colunas)
+                </button>
+              </div>
+            </div>
+            
+            <div class="card-notes">
+              <div class="notes-grid">
+                <div class="note-col">
+                  <strong>💡 Notas Argolas:</strong> ${item.notes || ''}
+                </div>
+                <div class="note-col">
+                  <strong>⭐ Proximidade Oficial (${item.oficiais_name}):</strong> ${item.oficiais_notes || ''}
+                </div>
+              </div>
+              
+              <div class="user-comment-row">
+                <label style="font-weight: 600; font-size: 0.8rem; color: #555; white-space: nowrap;">📝 Tuas Notas:</label>
+                <input type="text" 
+                       class="user-notes-input" 
+                       placeholder="Adicionar nota pessoal sobre esta comparação..." 
+                       value="${escapeHtml(item.user_notes || '')}"
+                       onchange="updateUserNotes(${item.id}, this.value)">
+              </div>
+            </div>
+
+            <!-- 4 COLUMNS BODY -->
+            <div class="card-body-4cols">
+              
+              <!-- Column 1: Versão A4 do Site -->
+              <div class="image-panel panel-a4">
+                <div class="image-panel-header">
+                  <div class="panel-label a4-label">📐 1. Versão A4 (Site)</div>
+                  <div class="panel-filename" title="${item.a4_label}">${a4Filename}</div>
+                </div>
+                <div class="viewport" id="${a4VpId}" data-group="item-${item.id}" data-type="a4">
+                  <img src="${item.a4_image}" alt="${a4Filename}" loading="lazy">
+                  <div class="viewport-tools">
+                    <button class="tool-btn zoom-out" title="Diminuir zoom">-</button>
+                    <span class="zoom-badge">100%</span>
+                    <button class="tool-btn zoom-in" title="Aumentar zoom">+</button>
+                    <button class="tool-btn zoom-reset" title="Repor zoom">⟲</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column 2: Versão A6 do Site -->
+              <div class="image-panel panel-a6">
+                <div class="image-panel-header">
+                  <div class="panel-label a6-label">📐 2. Versão A6 (Site)</div>
+                  <div class="panel-filename" title="${item.a6_label}">${a6Filename}</div>
+                </div>
+                <div class="viewport" id="${a6VpId}" data-group="item-${item.id}" data-type="a6">
+                  <img src="${item.a6_image}" alt="${a6Filename}" loading="lazy">
+                  <div class="viewport-tools">
+                    <button class="tool-btn zoom-out" title="Diminuir zoom">-</button>
+                    <span class="zoom-badge">100%</span>
+                    <button class="tool-btn zoom-in" title="Aumentar zoom">+</button>
+                    <button class="tool-btn zoom-reset" title="Repor zoom">⟲</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column 3: Arte Original (Argolas Raiz) -->
+              <div class="image-panel panel-argolas">
+                <div class="image-panel-header">
+                  <div class="panel-label argolas-label">🖼️ 3. Arte Argolas (Raiz)</div>
+                  <div class="panel-filename" title="${item.argolas_name}">${argolaFilename}</div>
+                </div>
+                <div class="viewport" id="${argolaVpId}" data-group="item-${item.id}" data-type="argola">
+                  <img src="${argolaPath}" alt="${argolaFilename}" loading="lazy">
+                  <div class="viewport-tools">
+                    <button class="tool-btn zoom-out" title="Diminuir zoom">-</button>
+                    <span class="zoom-badge">100%</span>
+                    <button class="tool-btn zoom-in" title="Aumentar zoom">+</button>
+                    <button class="tool-btn zoom-reset" title="Repor zoom">⟲</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column 4: Foto Oficial (Oficiais) -->
+              <div class="image-panel panel-oficiais">
+                <div class="image-panel-header">
+                  <div class="panel-label oficiais-label">⭐ 4. Foto Oficial (Oficiais)</div>
+                  <div class="panel-filename" title="${item.oficiais_name}">${oficialFilename}</div>
+                </div>
+                <div class="viewport" id="${oficialVpId}" data-group="item-${item.id}" data-type="oficial">
+                  <img src="${oficialPath}" alt="${oficialFilename}" loading="lazy">
+                  <div class="viewport-tools">
+                    <button class="tool-btn zoom-out" title="Diminuir zoom">-</button>
+                    <span class="zoom-badge">100%</span>
+                    <button class="tool-btn zoom-in" title="Aumentar zoom">+</button>
+                    <button class="tool-btn zoom-reset" title="Repor zoom">⟲</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Initialize zoom/pan on all rendered viewports
+      document.querySelectorAll('.viewport').forEach(vpEl => {
+        initViewport(vpEl);
+      });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    window.setItemStatus = function(itemId, newStatus) {
+      const item = itemsData.find(d => d.id === itemId);
+      if (!item) return;
+
+      if (item.status === newStatus && newStatus !== 'pending') {
+        item.status = 'pending';
+      } else {
+        item.status = newStatus;
+      }
+
+      saveState();
+
+      if (hideCompleted && item.status === 'completed') {
+        renderItems();
+      } else {
+        const card = document.getElementById(`card-${itemId}`);
+        if (card) {
+          card.classList.remove('status-pending', 'status-completed', 'status-incorrect');
+          card.classList.add(`status-${item.status}`);
+
+          const btnConcluido = card.querySelector('.btn-concluido');
+          const btnIncorrecto = card.querySelector('.btn-incorrecto');
+
+          if (btnConcluido) btnConcluido.classList.toggle('active', item.status === 'completed');
+          if (btnIncorrecto) btnIncorrecto.classList.toggle('active', item.status === 'incorrect');
+        }
+      }
+    };
+
+    window.updateUserNotes = function(itemId, notesText) {
+      const item = itemsData.find(d => d.id === itemId);
+      if (item) {
+        item.user_notes = notesText.trim();
+        saveState();
+      }
+    };
+
+    /* Pan & Zoom Engine (4 Views Synced) */
+    function initViewport(vpEl) {
+      const img = vpEl.querySelector('img');
+      const zoomBadge = vpEl.querySelector('.zoom-badge');
+      const groupKey = vpEl.getAttribute('data-group');
+
+      const vpState = {
+        el: vpEl,
+        img: img,
+        badge: zoomBadge,
+        groupKey: groupKey,
+        scale: 1,
+        x: 0,
+        y: 0,
+        isDragging: false,
+        startX: 0,
+        startY: 0
+      };
+
+      viewports.set(vpEl.id, vpState);
+
+      function updateTransform(applySync = true) {
+        img.style.transform = `translate(${vpState.x}px, ${vpState.y}px) scale(${vpState.scale})`;
+        if (zoomBadge) {
+          zoomBadge.textContent = `${Math.round(vpState.scale * 100)}%`;
+        }
+
+        if (applySync && syncEnabled && groupKey) {
+          viewports.forEach(otherVp => {
+            if (otherVp.groupKey === groupKey && otherVp !== vpState) {
+              otherVp.scale = vpState.scale;
+              otherVp.x = vpState.x;
+              otherVp.y = vpState.y;
+              updateTransformSync(otherVp);
+            }
+          });
+        }
+      }
+
+      function updateTransformSync(targetVp) {
+        targetVp.img.style.transform = `translate(${targetVp.x}px, ${targetVp.y}px) scale(${targetVp.scale})`;
+        if (targetVp.badge) {
+          targetVp.badge.textContent = `${Math.round(targetVp.scale * 100)}%`;
+        }
+      }
+
+      // Wheel Zoom: Only active when Ctrl key is pressed
+      vpEl.addEventListener('wheel', (e) => {
+        if (!e.ctrlKey) {
+          return; // Allow normal page scroll
+        }
+
+        e.preventDefault();
+        const rect = vpEl.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const zoomFactor = e.deltaY < 0 ? 1.18 : 0.847;
+        const newScale = Math.min(Math.max(0.5, vpState.scale * zoomFactor), 16);
+
+        vpState.x = mouseX - (mouseX - vpState.x) * (newScale / vpState.scale);
+        vpState.y = mouseY - (mouseY - vpState.y) * (newScale / vpState.scale);
+        vpState.scale = newScale;
+
+        updateTransform(true);
+      }, { passive: false });
+
+      // Pan with Mouse Drag
+      vpEl.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.viewport-tools')) return;
+        e.preventDefault();
+        vpState.isDragging = true;
+        vpState.startX = e.clientX - vpState.x;
+        vpState.startY = e.clientY - vpState.y;
+        vpEl.classList.add('grabbing');
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!vpState.isDragging) return;
+        vpState.x = e.clientX - vpState.startX;
+        vpState.y = e.clientY - vpState.startY;
+        updateTransform(true);
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (vpState.isDragging) {
+          vpState.isDragging = false;
+          vpEl.classList.remove('grabbing');
+        }
+      });
+
+      // Double click to reset
+      vpEl.addEventListener('dblclick', (e) => {
+        if (e.target.closest('.viewport-tools')) return;
+        vpState.scale = 1;
+        vpState.x = 0;
+        vpState.y = 0;
+        updateTransform(true);
+      });
+
+      // Toolbar buttons
+      const btnIn = vpEl.querySelector('.zoom-in');
+      const btnOut = vpEl.querySelector('.zoom-out');
+      const btnReset = vpEl.querySelector('.zoom-reset');
+
+      if (btnIn) {
+        btnIn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rect = vpEl.getBoundingClientRect();
+          const cx = rect.width / 2;
+          const cy = rect.height / 2;
+          const newScale = Math.min(16, vpState.scale * 1.3);
+          vpState.x = cx - (cx - vpState.x) * (newScale / vpState.scale);
+          vpState.y = cy - (cy - vpState.y) * (newScale / vpState.scale);
+          vpState.scale = newScale;
+          updateTransform(true);
+        });
+      }
+
+      if (btnOut) {
+        btnOut.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rect = vpEl.getBoundingClientRect();
+          const cx = rect.width / 2;
+          const cy = rect.height / 2;
+          const newScale = Math.max(0.5, vpState.scale / 1.3);
+          vpState.x = cx - (cx - vpState.x) * (newScale / vpState.scale);
+          vpState.y = cy - (cy - vpState.y) * (newScale / vpState.scale);
+          vpState.scale = newScale;
+          updateTransform(true);
+        });
+      }
+
+      if (btnReset) {
+        btnReset.addEventListener('click', (e) => {
+          e.stopPropagation();
+          vpState.scale = 1;
+          vpState.x = 0;
+          vpState.y = 0;
+          updateTransform(true);
+        });
+      }
+    }
+
+    function setupEventListeners() {
+      const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim();
+        renderItems();
+      });
+
+      const hideCompletedCheckbox = document.getElementById('hideCompletedCheckbox');
+      const hideCompletedToggle = document.getElementById('hideCompletedToggle');
+      hideCompletedCheckbox.addEventListener('change', (e) => {
+        hideCompleted = e.target.checked;
+        hideCompletedToggle.classList.toggle('checked', hideCompleted);
+        renderItems();
+      });
+
+      document.querySelectorAll('.btn-filter[data-filter-type]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const type = btn.getAttribute('data-filter-type');
+          const val = btn.getAttribute('data-value');
+
+          document.querySelectorAll(`.btn-filter[data-filter-type="${type}"]`).forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          if (type === 'category') activeCategoryFilter = val;
+          if (type === 'status') {
+            activeStatusFilter = activeStatusFilter === val ? 'all' : val;
+            if (activeStatusFilter === 'all') btn.classList.remove('active');
+          }
+
+          renderItems();
+        });
+      });
+
+      const syncCheckbox = document.getElementById('syncPanZoom');
+      syncCheckbox.addEventListener('change', (e) => {
+        syncEnabled = e.target.checked;
+      });
+
+      document.getElementById('resetAllZoomBtn').addEventListener('click', () => {
+        viewports.forEach(vp => {
+          vp.scale = 1;
+          vp.x = 0;
+          vp.y = 0;
+          vp.img.style.transform = `translate(0px, 0px) scale(1)`;
+          if (vp.badge) vp.badge.textContent = '100%';
+        });
+        showToast('Zoom reposto em todas as 4 colunas.');
+      });
+
+      // Export JSON Button
+      document.getElementById('exportJsonBtn').addEventListener('click', () => {
+        const completedCount = itemsData.filter(i => i.status === 'completed').length;
+        const incorrectCount = itemsData.filter(i => i.status === 'incorrect').length;
+        const pendingCount = itemsData.filter(i => i.status === 'pending' || !i.status).length;
+
+        const payload = {
+          updated_at: new Date().toISOString(),
+          total: itemsData.length,
+          stats: {
+            completed: completedCount,
+            incorrect: incorrectCount,
+            pending: pendingCount
+          },
+          items: itemsData
+        };
+
+        const jsonStr = JSON.stringify(payload, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'comparador-validacoes.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast('💾 Ficheiro comparador-validacoes.json descarregado!');
+      });
+
+      // Import JSON Button
+      const fileInput = document.getElementById('jsonFileInput');
+      document.getElementById('importJsonBtn').addEventListener('click', () => {
+        fileInput.click();
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const parsed = JSON.parse(event.target.result);
+            if (parsed && Array.isArray(parsed.items)) {
+              mergeLoadedItems(parsed.items);
+              saveState();
+              renderItems();
+              showToast(`📂 Importado com sucesso (${parsed.items.length} itens)!`);
+            } else {
+              alert('Ficheiro JSON com formato inválido.');
+            }
+          } catch (err) {
+            alert('Erro ao processar ficheiro JSON: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      // Inspect Modal triggers
+      document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-inspect')) {
+          const itemId = parseInt(e.target.getAttribute('data-item-id'), 10);
+          openInspectModal(itemId);
+        }
+      });
+
+      document.getElementById('modalCloseBtn').addEventListener('click', () => {
+        document.getElementById('inspectModal').classList.remove('active');
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          document.getElementById('inspectModal').classList.remove('active');
+        }
+      });
+
+      const scrollBtn = document.getElementById('scrollTopBtn');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+          scrollBtn.classList.add('visible');
+        } else {
+          scrollBtn.classList.remove('visible');
+        }
+      });
+      scrollBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    function openInspectModal(itemId) {
+      const item = itemsData.find(d => d.id === itemId);
+      if (!item) return;
+
+      const modal = document.getElementById('inspectModal');
+      const title = document.getElementById('modalTitle');
+      const body = document.getElementById('modalBody');
+
+      title.innerHTML = `<span>#${item.id} · ${item.design}</span> <span class="match-tag match-${item.match}">✓ ${item.match}% Argolas</span> <span class="match-tag oficial-tag">⭐ ${item.oficiais_match}% Oficial</span>`;
+
+      const a4Path = item.a4_image;
+      const a6Path = item.a6_image;
+      const argolaPath = item.argolas[0];
+      const oficialPath = item.oficiais[0];
+
+      body.innerHTML = `
+        <!-- Col 1: A4 -->
+        <div class="modal-viewport-container">
+          <div class="modal-viewport-header">
+            <span>📐 1. Versão A4 (Site)</span>
+            <code>${a4Path}</code>
+          </div>
+          <div class="viewport modal-viewport" id="modal-vp-a4" data-group="modal-group">
+            <img src="${a4Path}" alt="A4">
+            <div class="viewport-tools">
+              <button class="tool-btn zoom-out">-</button>
+              <span class="zoom-badge">100%</span>
+              <button class="tool-btn zoom-in">+</button>
+              <button class="tool-btn zoom-reset">⟲</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 2: A6 -->
+        <div class="modal-viewport-container">
+          <div class="modal-viewport-header">
+            <span>📐 2. Versão A6 (Site)</span>
+            <code>${a6Path}</code>
+          </div>
+          <div class="viewport modal-viewport" id="modal-vp-a6" data-group="modal-group">
+            <img src="${a6Path}" alt="A6">
+            <div class="viewport-tools">
+              <button class="tool-btn zoom-out">-</button>
+              <span class="zoom-badge">100%</span>
+              <button class="tool-btn zoom-in">+</button>
+              <button class="tool-btn zoom-reset">⟲</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 3: Argolas -->
+        <div class="modal-viewport-container">
+          <div class="modal-viewport-header">
+            <span>🖼️ 3. Arte Argolas (Raiz)</span>
+            <code>${argolaPath}</code>
+          </div>
+          <div class="viewport modal-viewport" id="modal-vp-argola" data-group="modal-group">
+            <img src="${argolaPath}" alt="Argolas">
+            <div class="viewport-tools">
+              <button class="tool-btn zoom-out">-</button>
+              <span class="zoom-badge">100%</span>
+              <button class="tool-btn zoom-in">+</button>
+              <button class="tool-btn zoom-reset">⟲</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 4: Oficiais -->
+        <div class="modal-viewport-container">
+          <div class="modal-viewport-header">
+            <span>⭐ 4. Foto Oficial (Oficiais)</span>
+            <code>${oficialPath}</code>
+          </div>
+          <div class="viewport modal-viewport" id="modal-vp-oficial" data-group="modal-group">
+            <img src="${oficialPath}" alt="Oficial">
+            <div class="viewport-tools">
+              <button class="tool-btn zoom-out">-</button>
+              <span class="zoom-badge">100%</span>
+              <button class="tool-btn zoom-in">+</button>
+              <button class="tool-btn zoom-reset">⟲</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      modal.classList.add('active');
+
+      body.querySelectorAll('.modal-viewport').forEach(vpEl => {
+        initViewport(vpEl);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

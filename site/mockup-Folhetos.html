@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mockup · Escolha A4 e A6 nas pastas de folhetos</title>
+  <link rel="stylesheet" href="css/01-tokens-agua.css">
+  <style>
+    :root {
+      --mock-phone-width: 340px;
+      --mock-button-size: 44px;
+      --mock-button-opacity: 0.9;
+      --mock-button-radius: 10px;
+      --mock-button-gap: 7px;
+      --mock-button-offset: 9px;
+    }
+
+    body {
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--gold-soft) 34%, transparent), transparent 34rem),
+        var(--surface-page);
+    }
+
+    button,
+    input {
+      accent-color: var(--moss);
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--gold) 45%, transparent);
+      outline-offset: 3px;
+    }
+
+    .mockup-shell {
+      width: min(100% - 24px, 1440px);
+      margin: 0 auto;
+      padding: 28px 0 64px;
+    }
+
+    .mockup-intro {
+      display: grid;
+      gap: 12px;
+      max-width: 760px;
+      margin-bottom: 22px;
+    }
+
+    .mockup-kicker,
+    .proposal-number,
+    .phone-kicker {
+      margin: 0;
+      color: var(--moss);
+      font-size: 0.72rem;
+      font-weight: 850;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .mockup-intro h1 {
+      margin: 0;
+      font: 700 clamp(2rem, 5vw, 3.6rem)/0.98 Georgia, "Times New Roman", serif;
+      text-wrap: balance;
+    }
+
+    .mockup-intro p:last-child {
+      max-width: 65ch;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .lab-controls {
+      position: sticky;
+      top: 10px;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(118px, 1fr)) auto;
+      gap: 12px;
+      margin-bottom: 26px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 8px);
+      background: color-mix(in srgb, var(--surface-panel) 93%, transparent);
+      box-shadow: var(--shadow-editorial);
+      backdrop-filter: blur(14px);
+    }
+
+    .control {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px 10px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 750;
+    }
+
+    .control output {
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .control input {
+      grid-column: 1 / -1;
+      width: 100%;
+      min-height: 24px;
+    }
+
+    .reset-button {
+      align-self: end;
+      min-height: 40px;
+      padding: 8px 13px;
+      border: 1px solid var(--moss);
+      border-radius: var(--radius);
+      background: var(--moss);
+      color: var(--card);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .touch-note {
+      grid-column: 1 / -1;
+      min-height: 1.2em;
+      margin: -2px 0 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .touch-note.is-warning {
+      color: var(--admin-edit-accent);
+      font-weight: 800;
+    }
+
+    .proposal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+      align-items: start;
+    }
+
+    .proposal {
+      display: grid;
+      grid-template-columns: minmax(230px, var(--mock-phone-width)) minmax(210px, 1fr);
+      gap: 18px;
+      min-width: 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 10px);
+      background: var(--surface-panel);
+      box-shadow: var(--shadow-editorial);
+    }
+
+    .proposal-copy {
+      display: grid;
+      align-content: start;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .proposal-copy h2 {
+      margin: 0;
+      font: 700 1.45rem/1.08 Georgia, "Times New Roman", serif;
+    }
+
+    .proposal-copy p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .proposal-verdict {
+      padding: 9px 10px;
+      border-left: 3px solid var(--gold);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      background: var(--surface-gold-soft);
+      color: var(--ink) !important;
+      font-size: 0.82rem !important;
+    }
+
+    .proposal-badge {
+      justify-self: start;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: var(--moss);
+      color: var(--card);
+      font-size: 0.7rem;
+      font-weight: 850;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .phone {
+      width: min(100%, var(--mock-phone-width));
+      min-width: 230px;
+      overflow: hidden;
+      border: 7px solid var(--ink);
+      border-radius: calc(var(--radius) + 18px);
+      background: var(--surface-page);
+      box-shadow: 0 15px 32px color-mix(in srgb, var(--ink) 18%, transparent);
+      transition: width 180ms ease;
+    }
+
+    .phone-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px 8px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-panel);
+      font-size: 0.68rem;
+      font-weight: 800;
+    }
+
+    .phone-progress {
+      display: flex;
+      gap: 3px;
+    }
+
+    .phone-progress i {
+      width: 18px;
+      height: 3px;
+      border-radius: 99px;
+      background: var(--line);
+    }
+
+    .phone-progress i:first-child,
+    .phone-progress i:nth-child(2) {
+      background: var(--moss);
+    }
+
+    .phone-content {
+      padding: 13px 10px 15px;
+    }
+
+    .phone-content h3 {
+      margin: 2px 0 4px;
+      font: 700 1.05rem/1.1 Georgia, "Times New Roman", serif;
+    }
+
+    .phone-help {
+      margin: 0 0 11px;
+      color: var(--muted);
+      font-size: 0.68rem;
+      line-height: 1.35;
+    }
+
+    .design-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .design-card {
+      position: relative;
+      display: grid;
+      align-content: start;
+      min-width: 0;
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 3px);
+      background: var(--surface-panel);
+    }
+
+    .design-card.is-active {
+      border-color: var(--moss);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--moss) 12%, transparent);
+    }
+
+    .design-media {
+      position: relative;
+      aspect-ratio: 4 / 5;
+      overflow: hidden;
+      border-radius: var(--radius);
+      background: var(--surface-image);
+    }
+
+    .design-media img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .design-title {
+      min-height: 2.6em;
+      padding: 7px 2px 2px;
+      color: var(--ink);
+      font-size: 0.67rem;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .format-controls {
+      display: flex;
+      gap: var(--mock-button-gap);
+    }
+
+    .format-button,
+    .reveal-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: var(--mock-button-size);
+      min-height: var(--mock-button-size);
+      padding: 6px 9px;
+      border: 1px solid color-mix(in srgb, var(--moss) 55%, var(--line));
+      border-radius: var(--mock-button-radius);
+      background: color-mix(in srgb, var(--surface-panel) calc(var(--mock-button-opacity) * 100%), transparent);
+      color: var(--moss);
+      font: 850 0.72rem/1 Georgia, "Times New Roman", serif;
+      box-shadow: 0 2px 8px color-mix(in srgb, var(--ink) 18%, transparent);
+      cursor: pointer;
+      backdrop-filter: blur(7px);
+    }
+
+    .format-button.is-selected {
+      border-color: var(--moss);
+      background: color-mix(in srgb, var(--moss) calc(var(--mock-button-opacity) * 100%), transparent);
+      color: var(--card);
+    }
+
+    .format-button::after {
+      content: "";
+      width: 7px;
+      height: 7px;
+      margin-left: 5px;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+    }
+
+    .format-button.is-selected::after {
+      background: currentColor;
+      box-shadow: inset 0 0 0 2px var(--moss);
+    }
+
+    .proposal--above .format-controls {
+      justify-content: stretch;
+      margin-bottom: var(--mock-button-gap);
+    }
+
+    .proposal--above .format-button,
+    .proposal--below .format-button {
+      flex: 1 1 0;
+    }
+
+    .proposal--below .format-controls {
+      justify-content: stretch;
+      margin-top: var(--mock-button-gap);
+    }
+
+    .proposal--current .format-controls,
+    .proposal--circle .format-controls,
+    .proposal--edge .format-controls {
+      position: absolute;
+      z-index: 3;
+    }
+
+    .proposal--current .format-controls {
+      top: var(--mock-button-offset);
+      right: var(--mock-button-offset);
+      flex-direction: column;
+    }
+
+    .proposal--circle .format-controls {
+      top: var(--mock-button-offset);
+      right: var(--mock-button-offset);
+      flex-direction: column;
+    }
+
+    .proposal--circle .format-button {
+      width: var(--mock-button-size);
+      min-width: var(--mock-button-size);
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    .proposal--circle .format-button::after {
+      display: none;
+    }
+
+    .proposal--edge .format-controls {
+      right: var(--mock-button-offset);
+      bottom: var(--mock-button-offset);
+      left: var(--mock-button-offset);
+      justify-content: center;
+    }
+
+    .proposal--edge .format-button {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .proposal--reveal .reveal-wrap {
+      position: absolute;
+      right: var(--mock-button-offset);
+      bottom: var(--mock-button-offset);
+      left: var(--mock-button-offset);
+      z-index: 3;
+      display: grid;
+      gap: var(--mock-button-gap);
+    }
+
+    .proposal--reveal .reveal-button {
+      width: 100%;
+      min-width: 0;
+      min-height: var(--mock-button-size);
+    }
+
+    .proposal--reveal .format-controls {
+      display: none;
+      justify-content: stretch;
+    }
+
+    .proposal--reveal .design-card.is-expanded .format-controls {
+      display: flex;
+    }
+
+    .proposal--reveal .design-card.is-expanded .format-button {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .proposal--reveal .design-card.is-expanded .reveal-button {
+      display: none;
+    }
+
+    .recommendation {
+      margin-top: 28px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 10px);
+      background: var(--surface-cream);
+    }
+
+    .recommendation h2 {
+      margin: 0 0 8px;
+      font: 700 1.5rem/1.1 Georgia, "Times New Roman", serif;
+    }
+
+    .recommendation p {
+      max-width: 78ch;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    @media (max-width: 1120px) {
+      .proposal-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .lab-controls {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .mockup-shell {
+        width: min(100% - 16px, 540px);
+        padding-top: 18px;
+      }
+
+      .lab-controls {
+        position: relative;
+        top: auto;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .proposal {
+        grid-template-columns: 1fr;
+        padding: 13px;
+      }
+
+      .phone {
+        justify-self: center;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .lab-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .phone {
+        min-width: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="mockup-shell">
+    <header class="mockup-intro">
+      <p class="mockup-kicker">Laboratório visual · smartphone</p>
+      <h1>Onde pôr os botões A4 e A6?</h1>
+      <p>As propostas abaixo usam a mesma grelha estreita e as fotografias reais das pastas de folhetos. Altera os controlos para perceberes quanto espaço se ganha e quando os botões deixam de ser confortáveis ao toque.</p>
+    </header>
+
+    <section class="lab-controls" aria-label="Controlos do mockup">
+      <label class="control">Largura do ecrã <output for="screen-width" data-output="screen-width">340 px</output><input id="screen-width" type="range" min="280" max="390" value="340" step="2" data-variable="--mock-phone-width" data-unit="px"></label>
+      <label class="control">Altura dos botões <output for="button-size" data-output="button-size">44 px</output><input id="button-size" type="range" min="34" max="64" value="44" step="2" data-variable="--mock-button-size" data-unit="px"></label>
+      <label class="control">Transparência <output for="button-opacity" data-output="button-opacity">90%</output><input id="button-opacity" type="range" min="35" max="100" value="90" step="5" data-variable="--mock-button-opacity" data-divisor="100" data-unit="%"></label>
+      <label class="control">Arredondamento <output for="button-radius" data-output="button-radius">10 px</output><input id="button-radius" type="range" min="4" max="28" value="10" step="2" data-variable="--mock-button-radius" data-unit="px"></label>
+      <label class="control">Espaço entre botões <output for="button-gap" data-output="button-gap">7 px</output><input id="button-gap" type="range" min="2" max="18" value="7" step="1" data-variable="--mock-button-gap" data-unit="px"></label>
+      <label class="control">Distância da margem <output for="button-offset" data-output="button-offset">9 px</output><input id="button-offset" type="range" min="3" max="22" value="9" step="1" data-variable="--mock-button-offset" data-unit="px"></label>
+      <button class="reset-button" type="button" data-reset>Repor</button>
+      <p class="touch-note" data-touch-note role="status">44 px mantém uma área de toque confortável.</p>
+    </section>
+
+    <div class="proposal-grid">
+      <article class="proposal proposal--below" data-layout="below">
+        <div class="phone" data-phone></div>
+        <div class="proposal-copy">
+          <span class="proposal-badge">Recomendada</span>
+          <p class="proposal-number">Proposta 01</p>
+          <h2>Botões abaixo da fotografia</h2>
+          <p>A imagem fica totalmente livre e os dois formatos continuam sempre visíveis. A leitura é natural: primeiro vê-se o design, depois escolhe-se onde o usar.</p>
+          <p class="proposal-verdict"><strong>Melhor equilíbrio.</strong> Não tapa o produto e não obriga a diminuir a área de toque.</p>
+        </div>
+      </article>
+
+      <article class="proposal proposal--circle" data-layout="circle">
+        <div class="phone" data-phone></div>
+        <div class="proposal-copy">
+          <p class="proposal-number">Proposta 02</p>
+          <h2>Círculos sobre a fotografia</h2>
+          <p>Ocupa menos largura e deixa ver mais do design. Funciona especialmente bem porque as etiquetas são muito curtas: A4 e A6.</p>
+          <p class="proposal-verdict"><strong>Boa alternativa compacta.</strong> Convém manter pelo menos 44 px; abaixo disso perde conforto.</p>
+        </div>
+      </article>
+
+      <article class="proposal proposal--edge" data-layout="edge">
+        <div class="phone" data-phone></div>
+        <div class="proposal-copy">
+          <p class="proposal-number">Proposta 03</p>
+          <h2>Barra transparente no fundo</h2>
+          <p>Os botões ficam numa zona onde normalmente há menos informação importante, lado a lado e com uma transparência regulável.</p>
+          <p class="proposal-verdict"><strong>Compacta e familiar.</strong> Continua a tapar uma faixa da imagem, mas muito menos do que a coluna actual.</p>
+        </div>
+      </article>
+
+      <article class="proposal proposal--reveal" data-layout="reveal">
+        <div class="phone" data-phone></div>
+        <div class="proposal-copy">
+          <p class="proposal-number">Proposta 04</p>
+          <h2>Mostrar A4 e A6 só depois do toque</h2>
+          <p>Em repouso aparece apenas “Escolher formato”. Ao tocar, surgem A4 e A6. Experimenta o botão dentro de uma fotografia.</p>
+          <p class="proposal-verdict"><strong>A que mais protege a imagem.</strong> Acrescenta um toque ao percurso, por isso é melhor como opção secundária.</p>
+        </div>
+      </article>
+
+      <article class="proposal proposal--above" data-layout="above">
+        <div class="phone" data-phone></div>
+        <div class="proposal-copy">
+          <p class="proposal-number">Proposta 05</p>
+          <h2>Botões acima da fotografia</h2>
+          <p>Não tapa o design e apresenta a decisão antes da imagem. É muito claro, embora aumente um pouco a altura de cada cartão.</p>
+          <p class="proposal-verdict"><strong>Segura, mas mais pesada.</strong> Numa grelha longa cria bastante repetição visual.</p>
+        </div>
+      </article>
+
+      <article class="proposal proposal--current" data-layout="current">
+        <div class="phone" data-phone></div>
+        <div class="proposal-copy">
+          <p class="proposal-number">Proposta 06</p>
+          <h2>Como está, com transparência</h2>
+          <p>Mantém a coluna rectangular no canto superior, mas permite testar uma superfície translúcida e mais próxima da margem.</p>
+          <p class="proposal-verdict"><strong>Mudança mínima.</strong> Mesmo transparente, continua a ocupar a zona central do design em ecrãs estreitos.</p>
+        </div>
+      </article>
+    </div>
+
+    <aside class="recommendation">
+      <h2>Leitura inicial</h2>
+      <p>Eu começaria pela proposta 01, abaixo da fotografia. Mantém botões grandes, não esconde nada e não muda a lógica da escolha. Se quiseres a solução mais compacta, a proposta 02 em círculos é a segunda mais forte. Este ficheiro é apenas para decisão visual; a página real da pasta de folhetos não foi alterada.</p>
+    </aside>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var designs = [
+        {
+          title: "Quão lindos são os pés · Passeio",
+          image: "content/designs/loja/pasta-de-folhetos/catalog/passeio-dourado.webp"
+        },
+        {
+          title: "Realiza o teu ministério · Flores salmão",
+          image: "content/designs/loja/pasta-de-folhetos/catalog/flores-salmao-rosa-frente.webp"
+        }
+      ];
+
+      function formatControls(selected) {
+        return '<div class="format-controls" role="group" aria-label="Escolher formato">'
+          + '<button class="format-button' + (selected === "A4" ? " is-selected" : "") + '" type="button" data-format="A4" aria-pressed="' + (selected === "A4") + '">A4</button>'
+          + '<button class="format-button' + (selected === "A6" ? " is-selected" : "") + '" type="button" data-format="A6" aria-pressed="' + (selected === "A6") + '">A6</button>'
+          + '</div>';
+      }
+
+      function designCard(design, layout, index) {
+        var controls = formatControls(index === 0 ? "A4" : "");
+        var mediaInner = '<img src="' + design.image + '" alt="">';
+
+        if (layout === "current" || layout === "circle" || layout === "edge") {
+          mediaInner += controls;
+        } else if (layout === "reveal") {
+          mediaInner += '<div class="reveal-wrap"><button class="reveal-button" type="button" data-reveal>Escolher formato</button>' + controls + '</div>';
+        }
+
+        return '<article class="design-card' + (index === 0 ? " is-active" : "") + '">'
+          + (layout === "above" ? controls : "")
+          + '<div class="design-media">' + mediaInner + '</div>'
+          + (layout === "below" ? controls : "")
+          + '<div class="design-title">' + design.title + '</div>'
+          + '</article>';
+      }
+
+      function phoneMarkup(layout) {
+        return '<div class="phone-bar"><span>Passo 2 de 5</span><span class="phone-progress" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>'
+          + '<div class="phone-content">'
+          + '<p class="phone-kicker">Pack A4 + A6</p>'
+          + '<h3>Escolhe os designs</h3>'
+          + '<p class="phone-help">Podes usar o mesmo design nos dois tamanhos ou escolher um diferente.</p>'
+          + '<div class="design-grid">' + designs.map(function (design, index) { return designCard(design, layout, index); }).join("") + '</div>'
+          + '</div>';
+      }
+
+      document.querySelectorAll("[data-layout]").forEach(function (proposal) {
+        proposal.querySelector("[data-phone]").innerHTML = phoneMarkup(proposal.dataset.layout);
+      });
+
+      document.addEventListener("click", function (event) {
+        var formatButton = event.target.closest("[data-format]");
+        var revealButton = event.target.closest("[data-reveal]");
+
+        if (revealButton) {
+          revealButton.closest(".design-card").classList.add("is-expanded");
+        }
+
+        if (formatButton) {
+          var card = formatButton.closest(".design-card");
+          card.querySelectorAll("[data-format]").forEach(function (button) {
+            var selected = button === formatButton;
+            button.classList.toggle("is-selected", selected);
+            button.setAttribute("aria-pressed", String(selected));
+          });
+          card.classList.add("is-active");
+        }
+      });
+
+      var sliders = Array.from(document.querySelectorAll("[data-variable]"));
+
+      function applySlider(input) {
+        var divisor = Number(input.dataset.divisor || 1);
+        var cssValue = Number(input.value) / divisor;
+        var unit = input.dataset.unit || "";
+        var output = document.querySelector('[data-output="' + input.id + '"]');
+
+        document.documentElement.style.setProperty(input.dataset.variable, cssValue + (divisor === 1 ? unit : ""));
+        if (output) {
+          output.value = input.value + (unit === "%" ? "%" : " " + unit);
+        }
+      }
+
+      function updateTouchNote() {
+        var size = Number(document.querySelector("#button-size").value);
+        var note = document.querySelector("[data-touch-note]");
+        var warning = size < 44;
+        note.classList.toggle("is-warning", warning);
+        note.textContent = warning
+          ? size + " px já fica abaixo da área de toque confortável recomendada."
+          : size + " px mantém uma área de toque confortável.";
+      }
+
+      sliders.forEach(function (input) {
+        input.addEventListener("input", function () {
+          applySlider(input);
+          updateTouchNote();
+        });
+        applySlider(input);
+      });
+
+      document.querySelector("[data-reset]").addEventListener("click", function () {
+        sliders.forEach(function (input) {
+          input.value = input.defaultValue;
+          applySlider(input);
+        });
+        updateTouchNote();
+      });
+
+      updateTouchNote();
+    }());
+  </script>
+</body>
+</html>

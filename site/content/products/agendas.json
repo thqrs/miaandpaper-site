@@ -41,11 +41,11 @@
     },
     {
       "id": "lamination-choice",
-      "label": "Acabamento"
+      "label": "Acabamento da Capa"
     },
     {
       "id": "add-ons",
-      "label": "Add-ons"
+      "label": "Extras"
     },
     {
       "id": "purchase-option",
@@ -354,8 +354,8 @@
     },
     {
       "id": "lamination",
-      "label": "Acabamento",
-      "title": "Escolhe o acabamento",
+      "label": "Acabamento da Capa",
+      "title": "Escolhe o acabamento da capa",
       "text": "Escolhe o acabamento da capa.",
       "template": "lamination-choice",
       "field": "lamination",
@@ -413,8 +413,8 @@
     },
     {
       "id": "add_ons",
-      "label": "Add-ons",
-      "title": "Queres acrescentar algum add-on?",
+      "label": "Extras",
+      "title": "Queres acrescentar algum extra?",
       "text": "Podes escolher vários. Cada escolha acrescenta o valor indicado ao preço de cada agenda.",
       "template": "add-ons",
       "field": "add_ons[]",
@@ -463,7 +463,7 @@
         {
           "id": "add-on-outro",
           "value": "outro-add-on",
-          "title": "Outro add-on",
+          "title": "Outro extra",
           "subtitle": "Acrescenta 2 €",
           "drawerText": "Placeholder para acrescentar outro add-on mais tarde.",
           "extraPriceCents": 200,
@@ -485,7 +485,7 @@
       "selection": "pack",
       "orderQuantity": {
         "title": "Quantidade",
-        "text": "Podes encomendar mais do que uma agenda com a mesma capa, laminação, add-ons e opção de compra.",
+        "text": "Podes encomendar mais do que uma agenda com a mesma capa, acabamento, extras e opção de compra.",
         "default": 1,
         "minimum": 1,
         "maximum": 9999,
@@ -610,8 +610,8 @@
       "contact": {
         "title": "Dados de Contacto",
         "notesAfter": [
-          "Se quiseres fatura com número de contribuinte, preenche este campo. Se deixares em branco, a fatura será emitida como consumidor final.",
-          "A fatura será emitida após confirmação do pagamento. Se indicares email, enviamos por email. Se indicares telemóvel, podemos enviar por WhatsApp."
+          "Se quiseres incluir o NIF na fatura, escreve-o aqui. Se deixares o campo em branco, a fatura será emitida como consumidor final.",
+          "A fatura é emitida depois de o pagamento ser confirmado. Se indicares um email, é enviada por email; se indicares um telemóvel, pode ser enviada por WhatsApp."
         ],
         "fields": [
           {

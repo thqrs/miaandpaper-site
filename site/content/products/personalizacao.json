@@ -13,7 +13,7 @@
   },
   "intro": {
     "eyebrow": "Personalização",
-    "title": "Os teus designs, feitos por nós",
+    "title": "Os teus designs, preparados pela Mia",
     "text": "Envia os teus ficheiros e escolhe em que produtos os queres."
   },
   "customArtwork": {
@@ -21,7 +21,7 @@
     "customValue": "custom",
     "feePerFileCents": 300,
     "feeLabel": "Ajuste do design ao produto",
-    "feeDescription": "Preço de ajuste do design ao formato do produto.",
+    "feeDescription": "Inclui a adaptação do ficheiro ao formato do produto e os testes necessários.",
     "acceptedMimeTypes": [
       "image/jpeg",
       "image/png",
@@ -299,11 +299,11 @@
           ]
         },
         {
-          "id": "porta-folhetos",
+          "id": "pasta-de-folhetos",
           "group": "Apontamentos",
-          "title": "Porta-folhetos",
+          "title": "Pasta de folhetos",
           "subtitle": "A4, A6 ou conjunto",
-          "slug": "porta-folhetos",
+          "slug": "pasta-de-folhetos",
           "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.webp",
           "imageShape": "rect",
           "choices": [

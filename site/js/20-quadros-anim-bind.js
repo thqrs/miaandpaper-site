@@ -969,68 +969,89 @@
         var stepId = String(button.dataset.assignmentStep || "");
         var value = String(button.dataset.assignmentValue || "");
         var currentValue;
-        var previousCard;
-        var step;
-        var config;
-        var previousHasOnlyA6 = false;
-        var nextHasOnlyA6 = false;
+        var targetCard;
+        var targetIsAssigned;
+        var scrollX;
+        var scrollY;
+        var anchorTop;
+        var restoreFocus;
+        var focusRestored = false;
 
-        function hasOnlySecondaryAssignment(card) {
-          var selected = card ? Array.prototype.filter.call(card.querySelectorAll("[data-assignment-toggle]"), function (candidate) {
-            return candidate.getAttribute("aria-pressed") === "true";
-          }) : [];
-          var secondary = config && config.groups[1];
-          return selected.length === 1 && secondary
-            && String(selected[0].dataset.assignmentGroup || "") === String(secondary.id || secondary.label || "");
+        function restoreAssignmentPickerViewport() {
+          var replacement;
+          var currentScrollY;
+          var replacementTop;
+          var correction;
+
+          if (restoreFocus && !focusRestored) {
+            replacement = Array.prototype.filter.call(document.querySelectorAll("[data-assignment-preview-open]"), function (candidate) {
+              return String(candidate.dataset.assignmentStep || "") === stepId
+                && String(candidate.dataset.assignmentValue || "") === value;
+            })[0] || null;
+            if (replacement) {
+              try {
+                replacement.focus({ preventScroll: true });
+              } catch (e) {
+                replacement.focus();
+              }
+              focusRestored = true;
+            }
+          }
+
+          replacement = replacement || Array.prototype.filter.call(document.querySelectorAll("[data-assignment-preview-open]"), function (candidate) {
+            return String(candidate.dataset.assignmentStep || "") === stepId
+              && String(candidate.dataset.assignmentValue || "") === value;
+          })[0] || null;
+          currentScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+          if (replacement) {
+            replacementTop = replacement.getBoundingClientRect().top;
+            correction = replacementTop - anchorTop;
+            window.scrollTo(scrollX, currentScrollY + correction);
+            return;
+          }
+
+          window.scrollTo(scrollX, scrollY);
         }
 
-        if (event && event.type === "click" && event.target && event.target.closest("button")) {
+        function showAssignmentPreview() {
+          if (!state.assignmentPickerOpen || typeof state.assignmentPickerOpen !== "object") {
+            state.assignmentPickerOpen = {};
+          }
+          if (!state.assignmentPickerOpening || typeof state.assignmentPickerOpening !== "object") {
+            state.assignmentPickerOpening = {};
+          }
+          state.assignmentPickerOpen[stepId] = value;
+          if (targetIsAssigned) {
+            delete state.assignmentPickerOpening[stepId];
+          } else {
+            state.assignmentPickerOpening[stepId] = value;
+          }
+          state.assignmentPickerSwitching = false;
+          state.errors = "";
+          rerenderProduct(product);
+          delete state.assignmentPickerOpening[stepId];
+          restoreAssignmentPickerViewport();
+          window.requestAnimationFrame(restoreAssignmentPickerViewport);
+        }
+
+        if (event && event.target && event.target.closest && event.target.closest("button")) {
           return;
         }
         if (!stepId || !value) {
           return;
         }
-        step = findStep(product, stepId);
-        config = assignmentPickerConfig(step);
         currentValue = state.assignmentPickerOpen && String(state.assignmentPickerOpen[stepId] || "");
-        if (currentValue === value
-          && state.assignmentPickerControlsExpanded
-          && String(state.assignmentPickerControlsExpanded[stepId] || "") === value) {
+        if (currentValue === value) {
           return;
         }
-        previousCard = Array.prototype.filter.call(document.querySelectorAll("[data-assignment-preview-open]"), function (candidate) {
-          return String(candidate.dataset.assignmentStep || "") === stepId
-            && String(candidate.dataset.assignmentValue || "") === currentValue;
-        })[0] || null;
-        previousHasOnlyA6 = currentValue && hasOnlySecondaryAssignment(previousCard);
-        nextHasOnlyA6 = hasOnlySecondaryAssignment(button);
 
-        if (state.assignmentPickerMotionTimer) {
-          window.clearTimeout(state.assignmentPickerMotionTimer);
-        }
-        state.assignmentPickerMotion = previousHasOnlyA6 || nextHasOnlyA6 ? {
-          stepId: stepId,
-          leavingValue: previousHasOnlyA6 ? currentValue : "",
-          revealingValue: nextHasOnlyA6 ? value : ""
-        } : null;
-        if (!state.assignmentPickerOpen || typeof state.assignmentPickerOpen !== "object") {
-          state.assignmentPickerOpen = {};
-        }
-        if (!state.assignmentPickerControlsExpanded || typeof state.assignmentPickerControlsExpanded !== "object") {
-          state.assignmentPickerControlsExpanded = {};
-        }
-        state.assignmentPickerOpen[stepId] = value;
-        state.assignmentPickerControlsExpanded[stepId] = value;
-        state.errors = "";
-        rerenderProduct(product);
-
-        if (state.assignmentPickerMotion) {
-          state.assignmentPickerMotionTimer = window.setTimeout(function () {
-            state.assignmentPickerMotion = null;
-            state.assignmentPickerMotionTimer = null;
-            rerenderProduct(product);
-          }, 250);
-        }
+        scrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
+        scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+        anchorTop = button.getBoundingClientRect().top;
+        restoreFocus = document.activeElement === button || button.contains(document.activeElement);
+        targetCard = button.closest(".pf-assignment-card");
+        targetIsAssigned = !!(targetCard && targetCard.classList.contains("is-assigned"));
+        showAssignmentPreview();
       }
 
       button.addEventListener("click", openAssignmentPreview);
@@ -1060,11 +1081,6 @@
         if (!step || !group || !field || !value) {
           return;
         }
-        if (state.assignmentPickerMotionTimer) {
-          window.clearTimeout(state.assignmentPickerMotionTimer);
-          state.assignmentPickerMotionTimer = null;
-        }
-        state.assignmentPickerMotion = null;
         resetKeys = step.resetFieldsByGroup && Array.isArray(step.resetFieldsByGroup[groupId])
           ? step.resetFieldsByGroup[groupId].map(String)
           : [];
@@ -1101,9 +1117,6 @@
               message: String(config.undoMessage || "Escolha {group} atualizada.").replace("{group}", group.label || group.id || "")
             });
           }
-        }
-        if (state.assignmentPickerControlsExpanded && step.id) {
-          state.assignmentPickerControlsExpanded[step.id] = itemValue;
         }
         resetKeys.forEach(function (key) { delete state.selections[key]; });
         resetQuantityState();

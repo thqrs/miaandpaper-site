@@ -190,7 +190,7 @@ function miu_settings_schema()
     return array(
         'enabled' => array('jsonKey' => 'enabled', 'type' => 'bool', 'default' => '1'),
         'name' => array('jsonKey' => 'name', 'type' => 'string', 'default' => 'Míu'),
-        'greeting' => array('jsonKey' => 'greeting', 'type' => 'string', 'default' => 'Em que posso ajudar?'),
+        'greeting' => array('jsonKey' => 'greeting', 'type' => 'string', 'default' => 'Olá! Em que posso ajudar?'),
         'launcher_prompt' => array('jsonKey' => 'launcherPrompt', 'type' => 'string', 'default' => 'Fala comigo!'),
         'provider' => array('jsonKey' => 'provider', 'type' => 'string', 'default' => 'openrouter'),
         'fallback_enabled' => array('jsonKey' => 'fallbackEnabled', 'type' => 'bool', 'default' => '1'),

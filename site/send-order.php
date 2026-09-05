@@ -76,7 +76,7 @@ function parse_email_recipients($value)
 function safe_return_to()
 {
     $returnTo = field('return_to');
-    $allowed = array('index.html', 'molduras.html', 'quadros.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'mini-cadernos.html', 'blocos-a6.html', 'bloquinhos.html', 'cadernos-anuais.html', 'agendas.html', 'imanes.html', 'imanes-recortados.html', 'stickers.html', 'marcadores.html', 'marcadores-magneticos.html', 'porta-chaves.html', 'porta-folhetos.html', 'lembrancas.html', 'personalizacao.html', 'adicionar-produto.html', 'checkout.html');
+    $allowed = array('index.html', 'molduras.html', 'quadros.html', 'crachas.html', 'pins.html', 'cadernos.html', 'caderninhos.html', 'mini-cadernos.html', 'blocos-a6.html', 'bloquinhos.html', 'cadernos-anuais.html', 'agendas.html', 'imanes.html', 'imanes-recortados.html', 'stickers.html', 'marcadores.html', 'marcadores-magneticos.html', 'porta-chaves.html', 'pasta-de-folhetos.html', 'lembrancas.html', 'personalizacao.html', 'adicionar-produto.html', 'checkout.html');
 
     if (in_array($returnTo, $allowed, true)) {
         return $returnTo;
@@ -88,7 +88,7 @@ function safe_return_to()
 function safe_product_slug()
 {
     $slug = strtolower(field('product_slug'));
-    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'porta-chaves', 'porta-folhetos', 'personalizacao');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'porta-chaves', 'pasta-de-folhetos', 'personalizacao');
 
     if (in_array($slug, $allowed, true)) {
         return $slug;
@@ -629,7 +629,7 @@ function cart_allowed_product_slug($slug)
     // aqui de proposito: e a pagina de origem, nao um produto — cada linha
     // que sai de la traz o slug do produto real (crachas-loja, marcadores...).
     $slug = strtolower(trim((string)$slug));
-    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'porta-chaves', 'porta-folhetos');
+    $allowed = array('quadros', 'crachas', 'pins', 'cadernos', 'caderninhos', 'imanes', 'lembrancas', 'crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'porta-chaves', 'pasta-de-folhetos');
 
     return in_array($slug, $allowed, true) ? $slug : '';
 }
@@ -1106,7 +1106,7 @@ function cart_assoc_text_selection($selections, $name)
 
 function cart_is_main_v2_slug($slug)
 {
-    return in_array((string)$slug, array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'porta-chaves', 'porta-folhetos'), true);
+    return in_array((string)$slug, array('crachas-loja', 'imanes-loja', 'imanes-recortados', 'mini-cadernos', 'blocos-a6', 'bloquinhos', 'cadernos-anuais', 'agendas', 'stickers', 'marcadores', 'marcadores-magneticos', 'porta-chaves', 'pasta-de-folhetos'), true);
 }
 
 function cart_is_congress_slug($slug)
@@ -2324,7 +2324,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         }
 
         if (empty($laminationItem)) {
-            $errors[] = 'Escolhe um tipo de laminação válido para ' . $productName . '.';
+            $errors[] = 'Escolhe um acabamento da capa válido para ' . $productName . '.';
         }
 
         if (empty($purchaseItem)) {
@@ -2950,9 +2950,9 @@ function cart_item_owner_lines($line)
             $rows[] = 'Contexto: Congresso 2026';
         }
         $rows[] = 'Capa escolhida: ' . $line['cover_line_owner'];
-        $rows[] = 'Laminação escolhida: ' . $line['lamination_label'];
+        $rows[] = 'Acabamento da Capa: ' . $line['lamination_label'];
         if (!empty($line['add_on_labels'])) {
-            $rows[] = 'Add-ons: ' . implode(', ', $line['add_on_labels']);
+            $rows[] = 'Extras: ' . implode(', ', $line['add_on_labels']);
             $rows[] = 'Acréscimo dos add-ons: ' . $line['add_ons_extra_line'];
         }
         $rows[] = 'Opção escolhida: ' . $line['purchase_option_label'];
@@ -3158,9 +3158,9 @@ function cart_item_customer_lines($line)
             $rows[] = 'Contexto: Congresso 2026';
         }
         $rows[] = 'Capa escolhida: ' . $line['cover_line_customer'];
-        $rows[] = 'Laminação escolhida: ' . $line['lamination_label'];
+        $rows[] = 'Acabamento da Capa: ' . $line['lamination_label'];
         if (!empty($line['add_on_labels'])) {
-            $rows[] = 'Add-ons: ' . implode(', ', $line['add_on_labels']);
+            $rows[] = 'Extras: ' . implode(', ', $line['add_on_labels']);
             $rows[] = 'Acréscimo dos add-ons: ' . $line['add_ons_extra_line'];
         }
         $rows[] = 'Opção escolhida: ' . $line['purchase_option_label'];
@@ -3200,7 +3200,7 @@ function cart_item_customer_lines($line)
     $rows[] = 'Designs escolhidos:';
     $rows[] = '- ' . implode("\n- ", $line['design_lines_customer']);
     $rows[] = '';
-    $rows[] = 'Dados que vão ser usados para preencher o Cartão de Apresentação:';
+    $rows[] = 'Dados para o teu Cartão de Apresentação:';
     $rows[] = 'Nome: ' . ($line['recipient_name'] !== '' ? $line['recipient_name'] : 'Não indicado');
     $rows[] = 'Telemóvel ou Email: ' . ($line['card_contact'] !== '' ? $line['card_contact'] : 'Não indicado');
     $rows[] = 'Congregação: ' . ($line['congregation'] !== '' ? $line['congregation'] : 'Não indicado');
@@ -3216,8 +3216,8 @@ function customer_email_footer_lines()
     return array(
         '',
         'Precisas de fazer alguma alteração à tua encomenda ou tens alguma dúvida?',
-        'Não respondas a este email, porque esta caixa não é monitorizada.',
-        'Usa o nosso formulário de contacto:',
+        'Este email é enviado automaticamente e as respostas não são recebidas.',
+        'Se precisares de alterar alguma coisa ou esclarecer uma dúvida, fala com a Mia:',
         'contacto.html',
         '',
         'Mia & Paper',
@@ -3636,7 +3636,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
 
         <p>
           Se tiveres dificuldade em pagar desta forma, ou se preferires pagar
-          pessoalmente em numerário, entra em contacto connosco.
+          pessoalmente em numerário, combina diretamente com a Mia.
         </p>
         <div class="payment-success-actions">
           <a class="button primary" href="contacto.html">Formulário de contacto</a>
@@ -3645,7 +3645,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
 
         <aside class="payment-success-note">
           <strong>Nota importante</strong>
-          <p>Dependendo do peso final da encomenda, o preço dos portes pode sofrer um pequeno ajuste. Se isso acontecer, entraremos em contacto contigo para pedir ou devolver a diferença. Na maioria dos casos, o valor apresentado é o valor final.</p>
+          <p>Dependendo do peso final da encomenda, o preço dos portes pode sofrer um pequeno ajuste. Se for necessário acertar alguma diferença, a Mia fala contigo primeiro. Na maioria dos casos, o valor apresentado é o valor final.</p>
         </aside>
 
         <?php if ($orderCode !== '') : ?>
@@ -3971,7 +3971,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     $customerBodyLines = array(
         'Olá ' . $customerName . ',',
         '',
-        'Obrigada pelo teu pedido. Em breve a Mia vai entrar em contacto contigo com os detalhes do pagamento.',
+        'Obrigada pelo teu pedido. A Mia fala contigo em breve para confirmar os detalhes do pagamento.',
         '',
         'Resumo do pedido',
         'Produtos: ' . count($preparedItems),
@@ -4071,7 +4071,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     $orderId = 0;
     $orderStored = false;
     try {
-        $customerCopySubject = 'Recebemos o teu pedido (' . $orderCode . ') - Mia & Paper';
+        $customerCopySubject = 'Recebemos o teu pedido (' . $orderCode . ') · Mia & Paper';
         $rawOrderSnapshot['order_code'] = $orderCode;
         $rawOrderSnapshot['post_success_copy_available'] = !$sendCopy;
         $rawOrderSnapshot['post_success_copy_token_hash'] = hash('sha256', $postSuccessCopyToken);
@@ -4216,10 +4216,10 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     }
 
     render_page(
-        is_array($paymentDetails) ? 'Obrigado pela tua encomenda.' : 'Pedido feito com sucesso!',
+        is_array($paymentDetails) ? 'Obrigada pela tua encomenda.' : 'Pedido feito com sucesso!',
         is_array($paymentDetails)
             ? 'Vamos começar a prepará-la assim que o pagamento estiver confirmado.'
-            : 'O teu pedido foi recebido. A Mia vai entrar em contacto contigo com os próximos passos.',
+            : 'O teu pedido foi recebido. A Mia fala contigo em breve para confirmar os detalhes.',
         'success',
         array(),
         $orderCode,
@@ -4240,7 +4240,7 @@ $productSlug = safe_product_slug();
 
 if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'GET' && payment_debug_requested()) {
     render_page(
-        'Obrigado pela tua encomenda.',
+        'Obrigada pela tua encomenda.',
         'Vamos começar a prepará-la assim que o pagamento estiver confirmado.',
         'success',
         array(),
@@ -4325,7 +4325,7 @@ if (
     ));
     render_page(
         'Recebemos vários pedidos deste dispositivo.',
-        'Já registámos os pedidos que enviaste há pouco. Espera um bocado antes de enviar outro, ou fala connosco pelo Instagram para confirmarmos o que falta.',
+        'Os teus pedidos já chegaram. Espera uns minutos antes de enviares outro ou fala com a Mia pelo Instagram para confirmar o que falta.',
         'error',
         array()
     );
@@ -4520,7 +4520,7 @@ if ($isCadernos) {
     }
 
     if (empty($laminationItem)) {
-        $errors[] = 'Escolhe um tipo de laminação válido.';
+        $errors[] = 'Escolhe um acabamento da capa válido.';
     }
 
     if (empty($purchaseItem)) {
@@ -4728,7 +4728,7 @@ if ($isCadernos) {
         '',
         'Produto: ' . $productName,
         'Capa escolhida: ' . $coverLineOwner,
-        'Laminação escolhida: ' . $laminationLabel,
+        'Acabamento da Capa: ' . $laminationLabel,
         'Opção escolhida: ' . $purchaseOptionLabel,
         'Quantidade: ' . $cadernoOrderQuantity . ' x ' . $purchaseOptionLabel,
         'Preço base: ' . $basePriceLine,
@@ -4768,7 +4768,7 @@ $ownerBody = implode("\n", $ownerBodyLines);
 $customerBodyLines = array(
     'Olá ' . $customerNameLine . ',',
     '',
-    'Obrigada pelo teu pedido. Em breve a Mia vai entrar em contacto contigo com os detalhes do pagamento.',
+    'Obrigada pelo teu pedido. A Mia fala contigo em breve para confirmar os detalhes do pagamento.',
     '',
     'Resumo do pedido',
     'Produto: ' . $productName,
@@ -4781,7 +4781,7 @@ $customerBodyLines = array(
     'Designs escolhidos:',
     '- ' . implode("\n- ", $designLinesCustomer),
     '',
-    'Dados que vão ser usados para preencher o Cartão de Apresentação:',
+    'Dados para o teu Cartão de Apresentação:',
     'Nome: ' . $recipientNameLine,
     'Telemóvel ou Email: ' . $contactLine,
     'Congregação: ' . $congregationLine,
@@ -4801,12 +4801,12 @@ if ($isCadernos) {
     $customerBodyLines = array(
         'Olá ' . $customerNameLine . ',',
         '',
-        'Obrigada pelo teu pedido. Em breve a Mia vai entrar em contacto contigo com os detalhes do pagamento.',
+        'Obrigada pelo teu pedido. A Mia fala contigo em breve para confirmar os detalhes do pagamento.',
         '',
         'Resumo do pedido',
         'Produto: ' . $productName,
         'Capa escolhida: ' . $coverLineCustomer,
-        'Laminação escolhida: ' . $laminationLabel,
+        'Acabamento da Capa: ' . $laminationLabel,
         'Opção escolhida: ' . $purchaseOptionLabel,
         'Quantidade: ' . $cadernoOrderQuantity . ' x ' . $purchaseOptionLabel,
         'Preço base: ' . $basePriceLine,
@@ -4926,7 +4926,7 @@ $orderCode = '';
 $orderId = 0;
 try {
     $orderCode = mp_db_generate_order_code();
-    $customerCopySubject = 'Recebemos o teu pedido (' . $orderCode . ') - Mia & Paper';
+    $customerCopySubject = 'Recebemos o teu pedido (' . $orderCode . ') · Mia & Paper';
     $rawOrderSnapshot['order_code'] = $orderCode;
     $rawOrderSnapshot['post_success_copy_available'] = !$sendCopy;
     $rawOrderSnapshot['post_success_copy_token_hash'] = hash('sha256', $postSuccessCopyToken);
@@ -5065,10 +5065,10 @@ if (is_array($paymentDetails)) {
 }
 
 render_page(
-    is_array($paymentDetails) ? 'Obrigado pela tua encomenda.' : 'Pedido feito com sucesso!',
+    is_array($paymentDetails) ? 'Obrigada pela tua encomenda.' : 'Pedido feito com sucesso!',
     is_array($paymentDetails)
         ? 'Vamos começar a prepará-la assim que o pagamento estiver confirmado.'
-        : 'O teu pedido foi recebido. A Mia vai entrar em contacto contigo com os próximos passos.',
+        : 'O teu pedido foi recebido. A Mia fala contigo em breve para confirmar os detalhes.',
     'success',
     array(),
     $orderCode,

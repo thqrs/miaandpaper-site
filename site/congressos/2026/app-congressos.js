@@ -303,7 +303,7 @@
     "color-grid": "Cores",
     "palette-grid": "Combinações de cores",
     "photo-upload": "Envio de fotos",
-    "lamination-choice": "Laminação",
+    "lamination-choice": "Acabamento da Capa",
     "purchase-option": "Opções de compra",
     "cover-personalization": "Personalização da capa",
     "details-form": "Formulário",
@@ -10977,7 +10977,7 @@
       parts += [
         '<article class="cadernos-build-part">',
         renderVisual(cadernoSummaryLaminationPreviewItem(product, lamination), "media-list", findStep(product, "lamination")),
-        '<span><strong>Laminação</strong><em>' + escapeHtml(lamination.title) + '</em></span>',
+        '<span><strong>Acabamento da Capa</strong><em>' + escapeHtml(lamination.title) + '</em></span>',
         '</article>'
       ].join("");
     }
@@ -11020,7 +11020,7 @@
     parts += renderCadernosBuildPart("Capa", displayItemTitle(cover), cadernoSummaryCoverPreviewItem(product, cover), findStep(product, "designs"), "cadernos-build-part--cover");
 
     if (currentIndex >= laminationIndex && lamination) {
-      parts += renderCadernosBuildPart("Laminação", lamination.title, cadernoSummaryLaminationPreviewItem(product, lamination), findStep(product, "lamination"), "cadernos-build-part--lamination");
+      parts += renderCadernosBuildPart("Acabamento da Capa", lamination.title, cadernoSummaryLaminationPreviewItem(product, lamination), findStep(product, "lamination"), "cadernos-build-part--lamination");
     }
 
     if (currentIndex >= optionIndex && option) {
@@ -12119,7 +12119,7 @@
 
       var cadernoOrderRows = [
         ["Capa escolhida:", cover ? displayItemTitle(cover) : ""],
-        ["Laminação escolhida:", lamination ? lamination.title : ""],
+        ["Acabamento da Capa:", lamination ? lamination.title : ""],
         ["Opção escolhida:", option ? option.title : ""]
       ];
       var cadernoPriceRows = [
@@ -12274,7 +12274,7 @@
   function renderPaymentNotice() {
     return [
       '<aside class="payment-notice" role="note" aria-label="Informação sobre pagamento">',
-      '<strong>A encomenda só começa a ser preparada após confirmação do pagamento.</strong>',
+      '<strong>A Mia começa a preparar a encomenda quando os detalhes e o pagamento estiverem confirmados.</strong>',
       '<span>Depois de enviares o pedido, a Mia entra em contacto contigo com os dados para pagamento.</span>',
       '</aside>'
     ].join("");
@@ -12867,14 +12867,19 @@
       '<ol class="wizard-progress__ticks">',
       steps.map(function (step, index) {
         var stepIndex = visible.indexOf(step);
+        var isVisited;
         var position = steps.length <= 1 ? 100 : (index / (steps.length - 1)) * 100;
         var classes = index < activeIndex ? "is-complete" : (index === activeIndex ? "is-active" : "is-future");
-        var disabled = index > activeIndex;
+        var disabled;
         var stepLabel = "Passo " + (index + 1) + ": " + (step.label || "Pedido");
+
+        stepIndex = stepIndex >= 0 ? stepIndex : index;
+        isVisited = stepIndex <= state.maxVisitedStep;
+        disabled = !state.admin && !isVisited;
 
         return [
           '<li class="' + classes + '" style="left:' + position.toFixed(3) + '%">',
-          '<button type="button" data-jump-step="' + (stepIndex >= 0 ? stepIndex : index) + '" aria-label="' + escapeHtml(stepLabel) + '" title="' + escapeHtml(stepLabel) + '"' + (index === activeIndex ? ' aria-current="step"' : '') + (disabled ? ' disabled' : '') + '>',
+          '<button type="button" data-jump-step="' + stepIndex + '" aria-label="' + escapeHtml(stepLabel) + '" title="' + escapeHtml(stepLabel) + '"' + (index === activeIndex ? ' aria-current="step"' : '') + (disabled ? ' disabled' : '') + '>',
           '<span aria-hidden="true"></span>',
           '</button>',
           '</li>'
@@ -13233,23 +13238,17 @@
     var steps = visibleSteps(product);
     var next = Math.max(0, Math.min(stepIndex, steps.length - 1));
     var previous = state.currentStep;
-    var historyDelta;
 
     if (next === previous) {
       return;
     }
 
     state.errors = "";
-    historyDelta = wizardHistorySupported() ? wizardHistoryDeltaToStep(next) : 0;
-
-    if (historyDelta) {
-      window.history.go(historyDelta);
-      return;
-    }
-
     setCurrentStep(product, next);
 
-    // Forward steps get new browser history entries; backward jumps replace the current one to avoid duplicates.
+    // STEP_JUMP_DIRECT_V1: um clique nos números tem resposta imediata. Esperar
+    // por `history.go()` tornava o rato intermitente quando o stack real e o
+    // espelho do wizard não estavam perfeitamente alinhados.
     if (next > previous) {
       pushWizardHistory(product);
     } else {
@@ -16289,8 +16288,8 @@
       '<label class="dc-field"><span>Email ou telemóvel</span><input class="' + (state.invalidFields.indexOf("customer_contact") !== -1 ? "is-missing" : "") + '" type="text" name="customer_contact" value="' + escapeHtml(state.checkout.customer_contact) + '" autocomplete="email" data-checkout-field required></label>',
       '<div class="dc-field"><label><span>Número de Contribuinte (NIF) <small>(opcional)</small></span><input class="' + (state.invalidFields.indexOf("customer_nif") !== -1 ? "is-missing" : "") + '" type="text" name="customer_nif" value="' + escapeHtml(state.checkout.customer_nif) + '" placeholder="" autocomplete="off" inputmode="numeric" data-checkout-field' + (state.invalidFields.indexOf("customer_nif") !== -1 ? ' aria-invalid="true"' : '') + '></label></div>',
       '</div>',
-      '<p class="dc-block-note">Se deixares em branco, a fatura será emitida como consumidor final.</p>',
-      '<p class="dc-block-note">A fatura será emitida após confirmação do pagamento. Se indicares email, enviamos por email. Se indicares telemóvel, podemos enviar por WhatsApp.</p>',
+      '<p class="dc-block-note">Se quiseres incluir o NIF na fatura, escreve-o aqui. Se deixares o campo em branco, a fatura será emitida como consumidor final.</p>',
+      '<p class="dc-block-note">A fatura é emitida depois de o pagamento ser confirmado. Se indicares um email, é enviada por email; se indicares um telemóvel, pode ser enviada por WhatsApp.</p>',
       '</section>',
       '<section class="dc-block dc-delivery' + (hasDeliveryError ? ' is-missing' : '') + '"' + (hasDeliveryError ? ' data-checkout-delivery-error tabindex="-1"' : '') + '>',
       '<h3 class="dc-block-title">Como queres receber a tua encomenda?</h3>',

@@ -17,7 +17,7 @@
       {
         "id": "global-entrega",
         "question": "Como funcionam as entregas?",
-        "answer": "Consoante a encomenda, podes recolher na casa da Mia, receber por CTT ou juntar a outra encomenda que ainda não tenha sido enviada. No envio por CTT, o valor mostrado pode ser um mínimo e a morada e o valor final são confirmados depois por contacto directo."
+        "answer": "Consoante a encomenda, podes recolher na casa da Mia, receber por CTT ou juntar a outra encomenda que ainda não tenha sido enviada. No envio por CTT, o valor mostrado pode ser um mínimo; a Mia confirma contigo a morada e o valor final dos portes."
       },
       {
         "id": "global-precos",
@@ -87,7 +87,7 @@
       "productSlug": "agendas",
       "productName": "Agendas",
       "stepId": "lamination",
-      "stepName": "Escolhe o acabamento",
+      "stepName": "Acabamento da Capa",
       "stepOrder": 2,
       "items": [
         {
@@ -198,12 +198,12 @@
         {
           "id": "main-agendas-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-agendas-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -223,12 +223,12 @@
         {
           "id": "main-agendas-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-agendas-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -293,7 +293,7 @@
         {
           "id": "main-blocos-a6-details-what-card",
           "question": "Para que servem estes dados?",
-          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+          "answer": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda; não são os dados de entrega."
         },
         {
           "id": "main-blocos-a6-details-card-data",
@@ -323,12 +323,12 @@
         {
           "id": "main-blocos-a6-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-blocos-a6-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -348,12 +348,12 @@
         {
           "id": "main-blocos-a6-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-blocos-a6-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -418,7 +418,7 @@
         {
           "id": "main-bloquinhos-details-what-card",
           "question": "Para que servem estes dados?",
-          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+          "answer": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda; não são os dados de entrega."
         },
         {
           "id": "main-bloquinhos-details-card-data",
@@ -448,12 +448,12 @@
         {
           "id": "main-bloquinhos-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-bloquinhos-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -473,12 +473,12 @@
         {
           "id": "main-bloquinhos-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-bloquinhos-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -537,7 +537,7 @@
       "productSlug": "cadernos-anuais",
       "productName": "Cadernos Anuais",
       "stepId": "lamination",
-      "stepName": "Escolhe o acabamento",
+      "stepName": "Acabamento da Capa",
       "stepOrder": 2,
       "items": [
         {
@@ -623,12 +623,12 @@
         {
           "id": "main-cadernos-anuais-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-cadernos-anuais-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -648,12 +648,12 @@
         {
           "id": "main-cadernos-anuais-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-cadernos-anuais-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -743,7 +743,7 @@
         {
           "id": "main-crachas-loja-details-what-card",
           "question": "Para que servem estes dados?",
-          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+          "answer": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda; não são os dados de entrega."
         },
         {
           "id": "main-crachas-loja-details-card-data",
@@ -773,12 +773,12 @@
         {
           "id": "main-crachas-loja-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-crachas-loja-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -798,12 +798,12 @@
         {
           "id": "main-crachas-loja-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-crachas-loja-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -893,7 +893,7 @@
         {
           "id": "main-imanes-loja-details-what-card",
           "question": "Para que servem estes dados?",
-          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+          "answer": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda; não são os dados de entrega."
         },
         {
           "id": "main-imanes-loja-details-card-data",
@@ -923,12 +923,12 @@
         {
           "id": "main-imanes-loja-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-imanes-loja-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -948,12 +948,12 @@
         {
           "id": "main-imanes-loja-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-imanes-loja-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -1018,7 +1018,7 @@
         {
           "id": "main-imanes-recortados-details-what-card",
           "question": "Para que servem estes dados?",
-          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+          "answer": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda; não são os dados de entrega."
         },
         {
           "id": "main-imanes-recortados-details-card-data",
@@ -1048,12 +1048,12 @@
         {
           "id": "main-imanes-recortados-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-imanes-recortados-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -1073,12 +1073,12 @@
         {
           "id": "main-imanes-recortados-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-imanes-recortados-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -1168,7 +1168,7 @@
         {
           "id": "main-marcadores-magneticos-details-what-card",
           "question": "Para que servem estes dados?",
-          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+          "answer": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda; não são os dados de entrega."
         },
         {
           "id": "main-marcadores-magneticos-details-card-data",
@@ -1198,12 +1198,12 @@
         {
           "id": "main-marcadores-magneticos-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-marcadores-magneticos-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -1223,12 +1223,12 @@
         {
           "id": "main-marcadores-magneticos-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-marcadores-magneticos-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -1318,7 +1318,7 @@
         {
           "id": "main-marcadores-details-what-card",
           "question": "Para que servem estes dados?",
-          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+          "answer": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda; não são os dados de entrega."
         },
         {
           "id": "main-marcadores-details-card-data",
@@ -1348,12 +1348,12 @@
         {
           "id": "main-marcadores-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-marcadores-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -1373,12 +1373,12 @@
         {
           "id": "main-marcadores-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-marcadores-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -1443,7 +1443,7 @@
         {
           "id": "main-mini-cadernos-details-what-card",
           "question": "Para que servem estes dados?",
-          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+          "answer": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda; não são os dados de entrega."
         },
         {
           "id": "main-mini-cadernos-details-card-data",
@@ -1473,12 +1473,12 @@
         {
           "id": "main-mini-cadernos-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-mini-cadernos-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -1498,12 +1498,12 @@
         {
           "id": "main-mini-cadernos-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-mini-cadernos-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -1598,12 +1598,12 @@
         {
           "id": "main-personalizacao-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-personalizacao-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -1623,12 +1623,12 @@
         {
           "id": "main-personalizacao-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-personalizacao-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -2123,12 +2123,12 @@
         {
           "id": "main-quadros-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-quadros-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -2148,12 +2148,12 @@
         {
           "id": "main-quadros-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-quadros-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -2218,7 +2218,7 @@
         {
           "id": "main-stickers-details-what-card",
           "question": "Para que servem estes dados?",
-          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+          "answer": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda; não são os dados de entrega."
         },
         {
           "id": "main-stickers-details-card-data",
@@ -2248,12 +2248,12 @@
         {
           "id": "main-stickers-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-stickers-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -2273,12 +2273,12 @@
         {
           "id": "main-stickers-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-stickers-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -2343,7 +2343,7 @@
         {
           "id": "c26-caderninhos-details-what-card",
           "question": "Para que servem estes dados?",
-          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+          "answer": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda; não são os dados de entrega."
         },
         {
           "id": "c26-caderninhos-details-card-data",
@@ -2373,12 +2373,12 @@
         {
           "id": "c26-caderninhos-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "c26-caderninhos-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -2398,12 +2398,12 @@
         {
           "id": "c26-caderninhos-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "c26-caderninhos-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -2437,7 +2437,7 @@
       "productSlug": "cadernos",
       "productName": "Cadernos de Apontamentos",
       "stepId": "lamination",
-      "stepName": "Escolhe o tipo de laminação",
+      "stepName": "Acabamento da Capa",
       "stepOrder": 1,
       "items": [
         {
@@ -2523,12 +2523,12 @@
         {
           "id": "c26-cadernos-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "c26-cadernos-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -2548,12 +2548,12 @@
         {
           "id": "c26-cadernos-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "c26-cadernos-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -2643,7 +2643,7 @@
         {
           "id": "c26-crachas-details-what-card",
           "question": "Para que servem estes dados?",
-          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+          "answer": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda; não são os dados de entrega."
         },
         {
           "id": "c26-crachas-details-card-data",
@@ -2673,12 +2673,12 @@
         {
           "id": "c26-crachas-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "c26-crachas-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -2698,12 +2698,12 @@
         {
           "id": "c26-crachas-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "c26-crachas-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -2793,7 +2793,7 @@
         {
           "id": "c26-imanes-details-what-card",
           "question": "Para que servem estes dados?",
-          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+          "answer": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda; não são os dados de entrega."
         },
         {
           "id": "c26-imanes-details-card-data",
@@ -2823,12 +2823,12 @@
         {
           "id": "c26-imanes-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "c26-imanes-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -2848,12 +2848,12 @@
         {
           "id": "c26-imanes-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "c26-imanes-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
@@ -2943,7 +2943,7 @@
         {
           "id": "main-porta-chaves-details-what-card",
           "question": "Para que servem estes dados?",
-          "answer": "Estes campos destinam-se ao Cartão de Apresentação associado à encomenda; não são os dados de entrega."
+          "answer": "Estes dados servem para preparar o Cartão de Apresentação que acompanha a tua encomenda; não são os dados de entrega."
         },
         {
           "id": "main-porta-chaves-details-card-data",
@@ -2973,12 +2973,12 @@
         {
           "id": "main-porta-chaves-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
           "id": "main-porta-chaves-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
@@ -2998,132 +2998,132 @@
         {
           "id": "main-porta-chaves-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
           "id": "main-porta-chaves-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     },
-    "main:porta-folhetos:designs": {
+    "main:pasta-de-folhetos:designs": {
       "scope": "main",
-      "productSlug": "porta-folhetos",
-      "productName": "Porta-folhetos",
+      "productSlug": "pasta-de-folhetos",
+      "productName": "Pasta de folhetos",
       "stepId": "designs",
       "stepName": "Design",
       "items": [
         {
-          "id": "main-porta-folhetos-designs-drawer",
+          "id": "main-pasta-de-folhetos-designs-drawer",
           "question": "Posso ver mais imagens?",
           "answer": "Sim. Clica numa capa e abre uma gaveta com mais imagens desse design."
         },
         {
-          "id": "main-porta-folhetos-designs-own",
+          "id": "main-pasta-de-folhetos-designs-own",
           "question": "Posso usar o meu design?",
-          "answer": "Sim. Para usares um ficheiro teu, entra em [Personalização](personalizacao.html) e escolhe Porta-folhetos."
+          "answer": "Sim. Para usares um ficheiro teu, entra em [Personalização](personalizacao.html) e escolhe Pasta de folhetos."
         }
       ],
       "stepOrder": 0
     },
-    "main:porta-folhetos:hardware": {
+    "main:pasta-de-folhetos:hardware": {
       "scope": "main",
-      "productSlug": "porta-folhetos",
-      "productName": "Porta-folhetos",
+      "productSlug": "pasta-de-folhetos",
+      "productName": "Pasta de folhetos",
       "stepId": "hardware",
       "stepName": "Argolas e fita",
       "items": [
         {
-          "id": "main-porta-folhetos-hardware-colors",
+          "id": "main-pasta-de-folhetos-hardware-colors",
           "question": "Que cores existem?",
           "answer": "Em geral tens dourado e rosa metálico. As opções mostradas neste passo são as que estão disponíveis para a capa escolhida."
         }
       ],
       "stepOrder": 1
     },
-    "main:porta-folhetos:finish": {
+    "main:pasta-de-folhetos:finish": {
       "scope": "main",
-      "productSlug": "porta-folhetos",
-      "productName": "Porta-folhetos",
+      "productSlug": "pasta-de-folhetos",
+      "productName": "Pasta de folhetos",
       "stepId": "finish",
       "stepName": "Acabamento",
       "items": [
         {
-          "id": "main-porta-folhetos-finish-options",
+          "id": "main-pasta-de-folhetos-finish-options",
           "question": "Que acabamentos existem?",
           "answer": "Podes escolher Matte, Glossy ou um dos três acabamentos holográficos. Clica numa opção para veres a imagem de referência."
         }
       ],
       "stepOrder": 2
     },
-    "main:porta-folhetos:size": {
+    "main:pasta-de-folhetos:size": {
       "scope": "main",
-      "productSlug": "porta-folhetos",
-      "productName": "Porta-folhetos",
+      "productSlug": "pasta-de-folhetos",
+      "productName": "Pasta de folhetos",
       "stepId": "size",
       "stepName": "Formato",
       "items": [
         {
-          "id": "main-porta-folhetos-size-prices",
+          "id": "main-pasta-de-folhetos-size-prices",
           "question": "Quanto custa?",
           "answer": "O A4 custa 15 €, o A6 custa 10 € e o conjunto A4 + A6 custa 22 €."
         },
         {
-          "id": "main-porta-folhetos-size-both",
+          "id": "main-pasta-de-folhetos-size-both",
           "question": "Posso encomendar os dois?",
           "answer": "Sim. Escolhe “A4 + A6”; o conjunto fica a 22 €."
         }
       ],
       "stepOrder": 3
     },
-    "main:porta-folhetos:delivery_contact": {
+    "main:pasta-de-folhetos:delivery_contact": {
       "scope": "main",
-      "productSlug": "porta-folhetos",
-      "productName": "Porta-folhetos",
+      "productSlug": "pasta-de-folhetos",
+      "productName": "Pasta de folhetos",
       "stepId": "delivery_contact",
       "stepName": "Entrega e contacto",
       "stepOrder": 4,
       "items": [
         {
-          "id": "main-porta-folhetos-delivery_contact-delivery-methods",
+          "id": "main-pasta-de-folhetos-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
           "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
-          "id": "main-porta-folhetos-delivery_contact-contact-info",
+          "id": "main-pasta-de-folhetos-delivery_contact-contact-info",
           "question": "Que dados tenho de preencher aqui?",
-          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário: se escolheres CTT, é confirmada depois por contacto directo."
+          "answer": "O nome e um email ou telemóvel são obrigatórios; o NIF é opcional. A morada não é pedida neste formulário. Se escolheres envio por CTT, a Mia confirma-a contigo depois."
         },
         {
-          "id": "main-porta-folhetos-delivery_contact-nif",
+          "id": "main-pasta-de-folhetos-delivery_contact-nif",
           "question": "O NIF é obrigatório?",
-          "answer": "Não. Se quiseres fatura com NIF, preenche-o; se deixares em branco, a fatura é emitida como consumidor final. A fatura é emitida após confirmação do pagamento."
+          "answer": "Não. Se quiseres incluir o NIF na fatura, escreve-o aqui. Se não o preencheres, a fatura será emitida como consumidor final."
         }
       ]
     },
-    "main:porta-folhetos:confirm": {
+    "main:pasta-de-folhetos:confirm": {
       "scope": "main",
-      "productSlug": "porta-folhetos",
-      "productName": "Porta-folhetos",
+      "productSlug": "pasta-de-folhetos",
+      "productName": "Pasta de folhetos",
       "stepId": "confirm",
       "stepName": "Confirma o teu pedido",
       "stepOrder": 5,
       "items": [
         {
-          "id": "main-porta-folhetos-confirm-after-submit",
+          "id": "main-pasta-de-folhetos-confirm-after-submit",
           "question": "O que acontece depois de enviar o pedido?",
           "answer": "O pedido é enviado para a Mia. Quando o total e a entrega já estão definidos, o site pode mostrar logo os dados para pagamento por MB WAY; nos restantes casos, a Mia entra em contacto para confirmar o que faltar. A preparação só começa após confirmação do pagamento."
         },
         {
-          "id": "main-porta-folhetos-confirm-payment-methods",
+          "id": "main-pasta-de-folhetos-confirm-payment-methods",
           "question": "Como funciona o pagamento?",
-          "answer": "Depois de enviares o pedido, o site pode apresentar MB WAY quando o valor total e a entrega já estão definidos. Se não apresentar, a Mia contacta-te com o valor confirmado e os próximos passos."
+          "answer": "Se o site não mostrar os dados para pagamento, a Mia fala contigo para confirmar o valor e combinar o pagamento."
         },
         {
-          "id": "main-porta-folhetos-confirm-change-before-send",
+          "id": "main-pasta-de-folhetos-confirm-change-before-send",
           "question": "Posso alterar alguma coisa antes de enviar?",
-          "answer": "Sim. Antes de submeter, podes voltar aos passos anteriores e corrigir as escolhas. Se só reparares num erro depois de enviar, contacta a Mia o mais depressa possível; nessa fase já não é garantido que a alteração seja possível."
+          "answer": "Sim. Antes de enviares o pedido, podes voltar aos passos anteriores e corrigir as escolhas. Se encontrares um erro depois do envio, fala com a Mia o mais depressa possível; nessa altura, a alteração pode já não ser possível."
         }
       ]
     }

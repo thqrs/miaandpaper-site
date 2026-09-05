@@ -1749,7 +1749,7 @@
 
     parts = ["Preço base: " + info.baseTotal];
     if (info.addOnsTotal) {
-      parts.push("Add-ons: " + info.addOnsTotal);
+      parts.push("Extras: " + info.addOnsTotal);
     }
     if (info.personalizationTotal) {
       parts.push("Personalização: " + info.personalizationTotal);

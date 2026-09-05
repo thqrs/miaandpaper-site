@@ -140,6 +140,7 @@ function hm_recolher()
         'categorias' => $categorias,
         'seccoes' => hm_seccoes($data),
         'menuAccordion' => !empty($data['menuAccordion']),
+        'menuOpenAll' => !isset($data['menuOpenAll']) || !empty($data['menuOpenAll']),
         'menuShowIcons' => !isset($data['menuShowIcons']) || !empty($data['menuShowIcons']),
         'iconesDisponiveis' => hm_icones_disponiveis(),
         'aberto' => !HOMEPAGE_REQUIRE_ADMIN,
@@ -179,7 +180,7 @@ function hm_seccoes($data)
     $produtos = isset($data['productsIntro']) && is_array($data['productsIntro']) ? $data['productsIntro'] : array();
     return array(
         array(
-            'id' => 'novidades', 'layout' => 'feature', 'maxCards' => 3, 'repeatInGrid' => true,
+            'id' => 'novidades', 'layout' => 'feature', 'maxCards' => 3, 'repeatInGrid' => false,
             'eyebrow' => isset($news['eyebrow']) ? (string)$news['eyebrow'] : '',
             'title' => isset($news['title']) ? (string)$news['title'] : 'Novidades',
             'text' => isset($news['text']) ? (string)$news['text'] : '',
@@ -277,6 +278,12 @@ function hm_aplicar()
         // Comportamento das secções do menu.
         if ($op === 'menu-accordion') {
             $data['menuAccordion'] = !empty($a['valor']);
+            continue;
+        }
+
+        // Abrir todas as secções ao abrir o menu do hamburguer.
+        if ($op === 'menu-open-all') {
+            $data['menuOpenAll'] = !empty($a['valor']);
             continue;
         }
 
@@ -424,6 +431,9 @@ function hm_aplicar()
                 $nome = isset($grupo['nome']) ? trim((string)$grupo['nome']) : '';
                 if ($nome === '') {
                     hm_erro('Um dos grupos do menu ficou sem nome.');
+                }
+                if (strlen($nome) > 400 || preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', $nome)) {
+                    hm_erro('Título de secção do menu inválido.');
                 }
                 $itens = isset($grupo['itens']) && is_array($grupo['itens']) ? $grupo['itens'] : array();
                 foreach ($itens as $iItem => $id) {

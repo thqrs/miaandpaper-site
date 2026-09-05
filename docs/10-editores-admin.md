@@ -103,23 +103,30 @@ revisão SHA-256 contra edições concorrentes.
 | homepage | a ordem do array `categories` | `renderHome` em `js/09-admin-paineis.js` |
 | menu | `menuGroup` + `menuGroupOrder` + `menuOrder` | `renderSiteMenu` em `js/08-menu-site.js` |
 
-Cada separador tem um botão para **herdar a ordem do outro**.
+Cada separador tem um botão para **herdar a ordem do outro**. Ao herdar da
+homepage, o menu passa também a usar a divisão por secções e os respectivos
+títulos da homepage; uma categoria escondida na homepage fica com `menuHidden`
+ligado. A herança inclui títulos editados ainda não gravados e só fica efectiva
+no `Save`.
 
 ### Editor visual
 
-Cartão grande = grupo; mini-cartão = entrada. Arrastam-se mini-cartões dentro de
-um grupo, entre grupos, e os grupos entre si. Ao largar, o editor lê o DOM e
-envia a ordem completa numa operação — não uma por linha.
+Cartão grande = grupo/secção; mini-cartão = entrada. No separador Menu, o título
+do cartão grande é editável; no separador Homepage, o título da secção também é
+editável, assim como o sobretítulo e o texto de apoio. Arrastam-se mini-cartões
+dentro de um grupo, entre grupos, e os grupos entre si. Ao largar, o editor lê o
+DOM e envia a ordem completa numa operação — não uma por linha. Alterar
+manualmente um título do Menu fica guardado em `menuGroup`; uma herança posterior
+volta a usar o título da secção da homepage.
 
 Campos por entrada: nome, subtítulo, **texto de acção** (o "Ver opções →"),
 visibilidade, e no menu o **ícone**.
 
 A caixa de cada mini-cartão muda conforme o separador: na homepage é o
-`available` (o cartão fica clicável ou não — desligado, mostra o
-`unavailableMessage` a quem lhe toca); no menu é o `menuHidden` (esconde a
-entrada do hamburguer sem a esconder da homepage). O `auto` no lugar do ícone
-quer dizer que aquela entrada não tem `menuIcon` escolhido e o site decide pelo
-`id` — é o comportamento de sempre.
+`available` (esconde o cartão); no menu é o `menuHidden` (esconde a entrada do
+hamburguer sem a esconder da homepage). O `auto` no lugar do ícone quer dizer
+que aquela entrada não tem `menuIcon` escolhido e o site decide pelo `id` — é o
+comportamento de sempre.
 
 ### As secções da homepage
 
@@ -130,7 +137,7 @@ secção, e arrastar um mini-cartão entre elas muda a secção onde aparece.
 
 ```json
 "homeSections": [
-  { "id": "novidades", "layout": "feature", "maxCards": 3, "repeatInGrid": true,
+  { "id": "novidades", "layout": "feature", "maxCards": 3, "repeatInGrid": false,
     "eyebrow": "", "title": "Novidades", "text": "" },
   { "id": "produtos",  "layout": "grid", "eyebrow": "", "title": "Produtos", "text": "" }
 ]
@@ -141,7 +148,7 @@ secção, e arrastar um mini-cartão entre elas muda a secção onde aparece.
 | `id` | âncora da secção (`#produtos`) **e** a chave do `section` de cada categoria. Sai do título ao criar; não se muda depois, senão partem-se links |
 | `layout` | `grid` (a grelha normal) ou `feature` (os cartões grandes das novidades) |
 | `maxCards` | só em `feature`: quantos cartões mostra |
-| `repeatInGrid` | só em `feature`: os cartões em destaque **também** aparecem na grelha. É o que a homepage sempre fez, por isso veio ligado na migração |
+| `repeatInGrid` | só em `feature`: os cartões em destaque **também** aparecem na grelha. Por omissão é falso, para não repetir as novidades |
 
 Regras que evitam perder cartões:
 
@@ -171,6 +178,7 @@ mesmo. O contexto do Congresso **não** passa por aqui: tem o seu
 | `menuIcon` | ícone da entrada. `MENU_ICONE_POR_ENTRADA_V1` | escolhido pelo `id` |
 | `menuShowIcons` | mostrar ícones no menu. `MENU_ICONES_V1` | ligado |
 | `menuAccordion` | abrir uma secção fecha as outras. `MENU_ACORDEAO_V1` | desligado |
+| `menuOpenAll` | abrir todas as secções ao abrir o hamburguer. `MENU_ABRIR_TODOS_V1` | ligado |
 | `menuHidden` | esconder do menu sem esconder da homepage | falso |
 | `section` | em que secção da homepage o cartão aparece. `SECCOES_HOMEPAGE_V1` | a primeira grelha |
 | `featureLabel` | etiqueta por cima do título, só usada em secções `feature` | sem etiqueta |

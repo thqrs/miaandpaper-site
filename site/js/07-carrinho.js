@@ -207,7 +207,7 @@
     }
     if (slug === "crachas-loja") return "crachas.html";
     if (slug === "porta-chaves") return "porta-chaves.html";
-    if (slug === "porta-folhetos") return "porta-folhetos.html";
+    if (slug === "pasta-de-folhetos") return "pasta-de-folhetos.html";
     if (slug === "imanes-loja") return "imanes.html";
     if (slug === "mini-cadernos") return "mini-cadernos.html";
     if (slug === "cadernos-anuais") return "cadernos-anuais.html";
