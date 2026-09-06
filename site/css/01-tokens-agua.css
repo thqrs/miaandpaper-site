@@ -197,6 +197,26 @@ button {
   touch-action: manipulation;
 }
 
+/* TAP_HIGHLIGHT_V1: desligar o quadrado azul translucido do toque em mobile
+   (o browser pinta a caixa toda do alvo). O :focus-visible para teclado
+   mantem-se nos ficheiros 03-12. */
+a,
+button,
+label,
+summary,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Em toque ha :focus sem :focus-visible: sem isto o browser mostra o anel
+   azul de origem nos cartoes grandes. Teclado continua com o contorno gold. */
+a:focus:not(:focus-visible),
+button:focus:not(:focus-visible),
+summary:focus:not(:focus-visible),
+[role="button"]:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .app-shell {
   min-height: 100vh;
 }
