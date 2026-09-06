@@ -31,7 +31,8 @@
     { id: "tracking", label: "Tracking", href: "tracking.php", files: ["tracking.php"] },
     { id: "orders", label: "Encomendas", href: "admin-orders.php", files: ["admin-orders.php"] },
     { id: "colors", label: "Cores", href: "admin-colors.html", files: ["admin-colors.html"] },
-    { id: "uploads", label: "Uploads", href: "admin-uploads.php", files: ["admin-uploads.php"] },
+    { id: "view-uploads", label: "Ficheiros clientes", href: "view-uploads.php", files: ["view-uploads.php"] },
+    { id: "uploads", label: "Uploads assistidos", href: "admin-uploads.php", files: ["admin-uploads.php"] },
     { id: "comparador-argolas", label: "Comparador Argolas", href: "tools/comparador-argolas.php", files: ["comparador-argolas.php"] },
     { id: "tools", label: "Ferramentas", href: "tools/index.php", files: ["comando.php"] }
   ];

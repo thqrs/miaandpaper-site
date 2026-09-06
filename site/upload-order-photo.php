@@ -761,6 +761,8 @@ foreach ($files as $file) {
         'dpi' => $dpi,
         'stored_name' => $storedName,
         'created_at' => gmdate('c'),
+        'page' => isset($_SERVER['HTTP_REFERER']) ? trim((string)$_SERVER['HTTP_REFERER']) : '',
+        'ip' => mp_client_ip(),
     );
     if ($customArtwork) {
         $metadata['purpose'] = 'custom-artwork';
@@ -900,6 +902,13 @@ if (!empty($uploads)) {
     $linhas[] = 'Atenção: isto é só o envio do ficheiro. Se a pessoa não terminar o';
     $linhas[] = 'pedido, o ficheiro fica em private/order-uploads/tmp/ e não há';
     $linhas[] = 'encomenda nenhuma associada.';
+    $linhas[] = '';
+    $linhas[] = 'Para ouvir ou ver no painel admin:';
+    if (count($uploads) === 1 && !empty($uploads[0]['token'])) {
+        $linhas[] = 'https://miaandpaper.com/view-uploads.php?token=' . $uploads[0]['token'];
+    } else {
+        $linhas[] = 'https://miaandpaper.com/view-uploads.php';
+    }
     $linhas[] = '';
 
     mp_aviso(

@@ -255,3 +255,51 @@ parcial. Linhas incompletas esperam pela consulta seguinte; linhas inválidas
 são ignoradas com aviso. Os eventos mais antigos dentro desta janela podem
 ser abertos em grupos de 200. O painel só mostra o que o nível de tracking
 registou, não reconstrói acções que não foram guardadas.
+
+
+O selector de `funilv2.php` é uma grelha de quadrados com a hora de entrada,
+ordenados pela primeira entrada (não pela actividade mais recente). Quando
+existe `seconds_since_session_start`, esse valor recupera o início da sessão.
+Cada escolha abre o percurso por baixo da grelha. A apresentação vive em
+`funilv2.css` e `funilv2.js`, com cache por data de modificação; apenas este
+painel os carrega.
+
+`lib/funilv2-presenter.php` descobre os produtos da loja e do Congresso nos
+respectivos JSON, resolve nomes de passos, opções e designs e só permite
+miniaturas WebP públicas existentes dentro do site. Mostra a imagem completa,
+sem recalcular enquadramentos do editor. As imagens e nomes são os actuais do
+catálogo, não uma fotografia histórica do momento da visita. Se um design já
+não tiver imagem, o painel indica-o. Não adivinha um design para toques sem ID.
+
+Os tempos agrupam eventos consecutivos do mesmo produto/página/passo. Uma
+transição com `from_step` na mesma página ou uma conclusão fecha o intervalo.
+Sem confirmação de saída, mostra o mínimo observado até ao último evento;
+não acrescenta tempo até agora. Mudanças de separador não provam saída e
+regressos a passos anteriores criam um novo bloco. Os dados técnicos continuam
+disponíveis num detalhe recolhido; a leitura principal usa frases, escolhas,
+miniaturas e quantidades.
+
+Verificação: `node tests/funilv2.test.js` e
+`php tests/funilv2-presenter.php`, mais DOM móvel com dados fictícios.
+
+## Visualizador de uploads de clientes (`view-uploads.php`)
+
+Painel protegido (`admin-open.php`) para consultar, ouvir e descarregar todos os
+ficheiros enviados por clientes através do fluxo de fotos/áudio
+(`upload-order-photo.php`), personalização de artes e encomendas concluídas.
+
+Lê os anexos e ficheiros de metadados JSON em `private/order-uploads/tmp/`
+(pedidos em curso ou abandonados), `private/order-uploads/orders/` (encomendas) e
+`private/order-uploads/assisted/`. Ordena cronologicamente (mais recentes primeiro).
+
+Para ficheiros de áudio (`.webm`, `.ogg`, `.wav`, `.mp3`, `.m4a`), disponibiliza
+um leitor nativo com suporte a streaming parcial HTTP Range (`Accept-Ranges: bytes`
+e 206 Partial Content). Para imagens, gera miniaturas com proporções e ampliação em
+modal. Inclui pesquisa em tempo real, filtros por tipo/estado e eliminação controlada
+de ficheiros temporários com CSRF.
+
+Os avisos automáticos por email em `upload-order-photo.php` incluem um link direto
+`view-uploads.php?token=<token>`, permitindo reproduzir imediatamente o ficheiro
+ao abrir o email.
+
+Verificação: `php tests/view-uploads.test.php`.

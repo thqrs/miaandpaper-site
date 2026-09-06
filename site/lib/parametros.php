@@ -86,14 +86,27 @@ function mp_parametros_registo()
 
         // ── Páginas de admin ────────────────────────────────────────────────
 
+        'view-uploads.php' => array(
+            'titulo' => 'Ficheiros enviados por clientes',
+            'tipo' => 'pagina', 'guarda' => 'admin', 'metodos' => array('GET', 'POST'),
+            'descricao' => 'Visualizador de gravações de áudio, fotos e anexos de clientes em tmp e encomendas.',
+            'parametros' => array(
+                'token' => array('tipo'=>'texto', 'omissao'=>'', 'maximo'=>40, 'descricao'=>'Token do ficheiro para destaque ou streaming.', 'lido'=>'view-uploads.php:28,349'),
+                'action' => array('tipo'=>'enum', 'omissao'=>'', 'valores'=>array('stream'=>'streaming de media'), 'descricao'=>'Stream seguro com suporte de HTTP range.', 'lido'=>'view-uploads.php:26'),
+                'scope' => array('tipo'=>'enum', 'omissao'=>'tmp', 'valores'=>array('tmp'=>'temporários','orders'=>'encomendas','assisted'=>'assistidos'), 'descricao'=>'Pasta de origem do ficheiro.', 'lido'=>'view-uploads.php:33'),
+                'order' => array('tipo'=>'texto', 'omissao'=>'', 'maximo'=>32, 'descricao'=>'Código de encomenda para ficheiros em orders.', 'lido'=>'view-uploads.php:69'),
+                'ref' => array('tipo'=>'texto', 'omissao'=>'', 'maximo'=>32, 'descricao'=>'Referência de upload assistido.', 'lido'=>'view-uploads.php:90'),
+                'download' => array('tipo'=>'flag', 'omissao'=>'', 'descricao'=>'Força o descarregamento em vez de reprodução inline.', 'lido'=>'view-uploads.php:132'),
+            ),
+        ),
         'funilv2.php' => array(
             'titulo' => 'Funil live · Percurso',
             'tipo' => 'pagina', 'guarda' => 'admin', 'metodos' => array('GET'),
             'descricao' => 'Linha do tempo por sessão, directamente dos JSONL privados, sem snapshots.',
             'parametros' => array(
-                'date' => array('tipo'=>'data', 'omissao'=>'', 'descricao'=>'Dia UTC; por omissão, hoje.', 'invalido'=>'erro', 'lido'=>'funilv2.php:15'),
-                'sid' => array('tipo'=>'texto', 'omissao'=>'', 'maximo'=>64, 'descricao'=>'Sessão de navegação seleccionada.', 'lido'=>'funilv2.php:16'),
-                'action' => array('tipo'=>'enum', 'omissao'=>'', 'valores'=>array('data'=>'dados live'), 'descricao'=>'Devolve visitantes e eventos em JSON autenticado.', 'lido'=>'funilv2.php:14'),
+                'date' => array('tipo'=>'data', 'omissao'=>'', 'descricao'=>'Dia UTC; por omissão, hoje.', 'invalido'=>'erro', 'lido'=>'funilv2.php:16'),
+                'sid' => array('tipo'=>'texto', 'omissao'=>'', 'maximo'=>64, 'descricao'=>'Sessão de navegação seleccionada.', 'lido'=>'funilv2.php:17'),
+                'action' => array('tipo'=>'enum', 'omissao'=>'', 'valores'=>array('data'=>'dados live'), 'descricao'=>'Devolve visitantes e eventos em JSON autenticado.', 'lido'=>'funilv2.php:15'),
             ),
         ),
         'admin-funnel.php' => array(

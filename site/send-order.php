@@ -3677,19 +3677,19 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260906213600">
-  <link rel="stylesheet" href="css/02-base-chrome.css?v=20260906213600">
-  <link rel="stylesheet" href="css/03-grelha-designs-tons.css?v=20260906213600">
-  <link rel="stylesheet" href="css/04-reviews-passos-acoes.css?v=20260906213600">
-  <link rel="stylesheet" href="css/05-cookies-packs-entrega.css?v=20260906213600">
-  <link rel="stylesheet" href="css/06-admin.css?v=20260906213600">
-  <link rel="stylesheet" href="css/07-cards-crachas-molduras.css?v=20260906213600">
-  <link rel="stylesheet" href="css/08-dark-mode.css?v=20260906213600">
-  <link rel="stylesheet" href="css/09-seccoes-produtos.css?v=20260906213600">
-  <link rel="stylesheet" href="css/10-entrega-uniformizacao.css?v=20260906213600">
-  <link rel="stylesheet" href="css/11-home-marca.css?v=20260906213600">
-  <link rel="stylesheet" href="css/12-composer-glitter-chart.css?v=20260906213600">
-  <link rel="stylesheet" href="css/13-miu.css?v=20260906213600">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260906224024">
+  <link rel="stylesheet" href="css/02-base-chrome.css?v=20260906224024">
+  <link rel="stylesheet" href="css/03-grelha-designs-tons.css?v=20260906224024">
+  <link rel="stylesheet" href="css/04-reviews-passos-acoes.css?v=20260906224024">
+  <link rel="stylesheet" href="css/05-cookies-packs-entrega.css?v=20260906224024">
+  <link rel="stylesheet" href="css/06-admin.css?v=20260906224024">
+  <link rel="stylesheet" href="css/07-cards-crachas-molduras.css?v=20260906224024">
+  <link rel="stylesheet" href="css/08-dark-mode.css?v=20260906224024">
+  <link rel="stylesheet" href="css/09-seccoes-produtos.css?v=20260906224024">
+  <link rel="stylesheet" href="css/10-entrega-uniformizacao.css?v=20260906224024">
+  <link rel="stylesheet" href="css/11-home-marca.css?v=20260906224024">
+  <link rel="stylesheet" href="css/12-composer-glitter-chart.css?v=20260906224024">
+  <link rel="stylesheet" href="css/13-miu.css?v=20260906224024">
 </head>
 <body class="result-body">
   <main class="result-card <?php echo h($kind); ?>">
@@ -3882,7 +3882,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
       } catch (error) {}
     </script>
   <?php endif; ?>
-  <script src="js/24-miu.js?v=20260906213600"></script>
+  <script src="js/24-miu.js?v=20260906224024"></script>
 </body>
 </html>
     <?php
