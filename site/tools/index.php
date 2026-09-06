@@ -23,8 +23,8 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="../catalogo/catalogo.css?v=2026072601">
   <link rel="stylesheet" href="../ofertas/ofertas.css?v=2026062809">
-  <link rel="stylesheet" href="../admin-nav.css?v=2026081001">
-  <script src="../admin-nav.js?v=2026081702" data-prefix="../" defer></script>
+  <link rel="stylesheet" href="../admin-nav.css?v=20260906225352">
+  <script src="../admin-nav.js?v=20260906225352" data-prefix="../" defer></script>
   <style>
     /* O card tem dois destinos, por isso deixa de ser um <a>: o título estica-se
        sobre o card inteiro e o segundo link fica por cima, na sua área. */
@@ -135,6 +135,14 @@ if (empty($_SESSION['miaandpaper_admin'])) {
           <span class="catalog-product-thumb" aria-hidden="true">F</span>
           <span class="catalog-product-copy"><strong>Funil</strong><span>Acompanhar visitas, catálogo, escolhas e encomendas.</span><span class="catalog-product-action">Abrir painel</span></span>
         </a>
+        <a class="catalog-product-card" href="../funilv2.php">
+          <span class="catalog-product-thumb" aria-hidden="true">⏱</span>
+          <span class="catalog-product-copy"><strong>Funil live · Percurso</strong><span>Visitantes em tempo real, matriz de seleção e percurso cronológico.</span><span class="catalog-product-action">Abrir funil live</span></span>
+        </a>
+        <a class="catalog-product-card" href="../tracking.php">
+          <span class="catalog-product-thumb" aria-hidden="true">📍</span>
+          <span class="catalog-product-copy"><strong>Tracking</strong><span>Histórico de sessões, eventos e atividade detalhada.</span><span class="catalog-product-action">Abrir tracking</span></span>
+        </a>
         <a class="catalog-product-card" href="../admin-orders.php">
           <span class="catalog-product-thumb" aria-hidden="true">E</span>
           <span class="catalog-product-copy"><strong>Encomendas</strong><span>Consultar os pedidos recebidos e o respetivo estado.</span><span class="catalog-product-action">Abrir painel</span></span>
@@ -146,6 +154,10 @@ if (empty($_SESSION['miaandpaper_admin'])) {
         <a class="catalog-product-card" href="../admin-uploads.php">
           <span class="catalog-product-thumb" aria-hidden="true">U</span>
           <span class="catalog-product-copy"><strong>Uploads assistidos</strong><span>Preparar e acompanhar ficheiros enviados para encomendas.</span><span class="catalog-product-action">Abrir gestão</span></span>
+        </a>
+        <a class="catalog-product-card" href="../view-uploads.php">
+          <span class="catalog-product-thumb" aria-hidden="true">📁</span>
+          <span class="catalog-product-copy"><strong>Ficheiros clientes</strong><span>Visualizar e reproduzir áudios, fotos e ficheiros enviados por clientes.</span><span class="catalog-product-action">Abrir ficheiros</span></span>
         </a>
       </div>
     </section>

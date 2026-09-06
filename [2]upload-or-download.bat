@@ -279,7 +279,7 @@ if not defined HAS_CHANGES (
         exit /b 0
     )
 
-    git add -A site "[2]upload-or-download.bat"
+    git add -A site tools docs "[2]upload-or-download.bat"
     git diff --check --cached
     if errorlevel 1 (
         echo ERRO: git diff --check encontrou problemas.

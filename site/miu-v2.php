@@ -177,13 +177,13 @@ function miu_v2_admin_animation_select($name, $selected, $animationIds)
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Míu V2 · Produção | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=2026080501">
-  <link rel="stylesheet" href="admin-nav.css?v=2026081001">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260906225352">
+  <link rel="stylesheet" href="admin-nav.css?v=20260906225352">
   <link rel="stylesheet" href="bot-admin.css?v=2026081501">
   <link rel="stylesheet" href="miu-v2-admin.css?v=2026082901">
-  <link rel="stylesheet" href="css/13-miu.css?v=2026082901">
-  <script src="admin-nav.js?v=2026082901" defer></script>
-  <script src="js/24-miu.js?v=2026082901" defer></script>
+  <link rel="stylesheet" href="css/13-miu.css?v=20260906225352">
+  <script src="admin-nav.js?v=20260906225352" defer></script>
+  <script src="js/24-miu.js?v=20260906225352" defer></script>
 </head>
 <body class="miu-admin-body miu-v2-admin" data-miu-admin-chat="1" data-page="miu-v2-admin">
 <main class="miu-admin-shell miu-v2-admin__shell">

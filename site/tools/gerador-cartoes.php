@@ -32,8 +32,8 @@ if (preg_match('/^(localhost|127\.0\.0\.1)(:|$)/i', $miaHost)) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mia &amp; Paper — Gerador de Cartões</title>
-<link rel="stylesheet" href="../admin-nav.css?v=2026081001">
-<script src="../admin-nav.js?v=2026081001" data-prefix="../" defer></script>
+<link rel="stylesheet" href="../admin-nav.css?v=20260906225352">
+<script src="../admin-nav.js?v=20260906225352" data-prefix="../" defer></script>
 <style>
   :root { --ink:#2a2a2a; --line:#ddd; --accent:#3b6ea5; --bg:#faf9f7; }
   * { box-sizing: border-box; }

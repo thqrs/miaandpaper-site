@@ -119,7 +119,7 @@ Não mudar o caminho de destino sem o Tiago pedir.
 
 | passo | o quê |
 |---|---|
-| 1/5 | `tools/update-cache-version.ps1` — regenera o `?v=` de todos os `css/*.css` e `js/*.js` nas cascas, em `send-message.php` e em `send-order.php` |
+| 1/5 | `tools/update-cache-version.ps1` — regenera o `?v=` de todos os `css/*.css`, `js/*.js`, `admin-nav.js` e `admin-nav.css` nas cascas HTML e páginas PHP |
 | 2/5 | valida `node --check` nos módulos JS e todos os JSON, e corre `node site/tools/seo-build.js` |
 | 3/5 | commit e push, se houver alterações |
 | 4/5 | deploy no cPanel por SSH |

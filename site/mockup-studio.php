@@ -26,9 +26,9 @@ $bootstrap = [
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Criador de Mockups · Mia &amp; Paper</title>
-  <link rel="stylesheet" href="admin-nav.css?v=2026081001">
+  <link rel="stylesheet" href="admin-nav.css?v=20260906225352">
   <link rel="stylesheet" href="mockup-studio/studio.css?v=2026083009">
-  <script src="admin-nav.js?v=2026081702" defer></script>
+  <script src="admin-nav.js?v=20260906225352" defer></script>
   <script src="mockup-studio/renderer.js?v=2026083009" defer></script>
   <script src="mockup-studio/app.js?v=2026083009" defer></script>
 </head>

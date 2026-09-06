@@ -25,8 +25,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Preços · Mia &amp; Paper</title>
-<link rel="stylesheet" href="admin-nav.css?v=2026081001">
-<script src="admin-nav.js?v=2026081702" defer></script>
+<link rel="stylesheet" href="admin-nav.css?v=20260906225352">
+<script src="admin-nav.js?v=20260906225352" defer></script>
 <style>
   /* Painel escuro azul-marinho, ao estilo dos dashboards de parede: fundo
      profundo, cartoes com um pouco mais de luz, numeros grandes e um acento

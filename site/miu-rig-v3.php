@@ -28,9 +28,9 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Míu Rig V3 · Frames + movimento secundário</title>
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=2026080501">
-  <link rel="stylesheet" href="admin-nav.css?v=2026081001">
-  <script src="admin-nav.js?v=2026081901" defer></script>
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260906225352">
+  <link rel="stylesheet" href="admin-nav.css?v=20260906225352">
+  <script src="admin-nav.js?v=20260906225352" defer></script>
   <style>
     .rig3-page{min-height:100vh;margin:0;background:var(--surface-page,Canvas);color:var(--ink,CanvasText);font-family:system-ui,sans-serif}
     .rig3-shell{width:min(100% - 28px,1180px);margin:auto;padding:32px 0 70px}
@@ -603,5 +603,3 @@ if (empty($_SESSION['miaandpaper_admin'])) {
 </script>
 </body>
 </html>
-
-
