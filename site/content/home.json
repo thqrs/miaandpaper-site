@@ -239,6 +239,7 @@
       "clickable": true,
       "featureLabel": "Novidade",
       "featureTitle": "Os produtos da Mia com uma imagem tua",
+      "featureImage": "content/designs/home/personalizacao-amizade.webp",
       "featureText": "",
       "featureCta": "Enviar a minha foto",
       "section": "novidades",

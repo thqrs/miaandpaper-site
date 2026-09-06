@@ -10344,7 +10344,7 @@
 
   function cadernoPreviewLabel(image, isCover) {
     if (isCover) {
-      return "Capa estilo holográfico estrelinhas";
+      return "Capa estilo matte";
     }
 
     return String(image || "").indexOf("-PR") !== -1 ? "Exclusivo Pioneiros" : "Interior";

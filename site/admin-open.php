@@ -19,7 +19,7 @@ require_once __DIR__ . '/lib/admin-session.php';
 mp_admin_session_start();
 
 if (!defined('MIA_ADMIN_OPEN')) {
-    define('MIA_ADMIN_OPEN', true);
+    define('MIA_ADMIN_OPEN', false);
 }
 
 if (MIA_ADMIN_OPEN && empty($_SESSION['miaandpaper_admin'])) {

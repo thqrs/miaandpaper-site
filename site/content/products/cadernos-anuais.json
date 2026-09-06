@@ -831,6 +831,7 @@
       "title": "Escolhe a capa",
       "text": "A capa dura é mais resistente e mantém-se direita. A capa mole já está incluída no preço e é mais versátil.",
       "template": "option-drawers",
+      "hidden": true,
       "display": "cards",
       "drawers": [
         {
@@ -838,6 +839,7 @@
           "title": "Capa",
           "label": "Capa",
           "field": "cover_type",
+          "defaultValue": "capa-mole",
           "required": true,
           "selectionError": "Escolhe um tipo de capa.",
           "items": [

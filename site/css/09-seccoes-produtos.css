@@ -1434,12 +1434,14 @@ html[data-theme="dark"] .quadros-summary-colors > span {
   margin-bottom: 0;
 }
 
-.pasta-de-folhetos-fluid .pf-fluid-cover-list .grouped-design-choice {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .grouped-design-choice,
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .pf-finish-choice {
   display: grid;
   min-width: 0;
 }
 
-.pasta-de-folhetos-fluid .pf-fluid-cover-list .grouped-design-choice:not(:has(input:checked)) {
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .grouped-design-choice:not(:has(input:checked)),
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .pf-finish-choice:not(:has(input:checked)) {
   opacity: 1;
 }
 
@@ -2534,7 +2536,7 @@ html[data-theme="dark"] .pf-fluid-variation {
   text-align: left;
 }
 
-.pf-finish-step .crachas-size-card-visual {
+.pf-finish-step .cadernos-add-on-card .crachas-size-card-visual {
   width: 96px;
   height: 74px;
   overflow: hidden;
@@ -2542,8 +2544,8 @@ html[data-theme="dark"] .pf-fluid-variation {
   background: var(--surface-image);
 }
 
-.pf-finish-step .crachas-size-card-visual .option-image,
-.pf-finish-step .crachas-size-card-visual .uploaded-image {
+.pf-finish-step .cadernos-add-on-card .crachas-size-card-visual .option-image,
+.pf-finish-step .cadernos-add-on-card .crachas-size-card-visual .uploaded-image {
   width: 100% !important;
   height: 100% !important;
   min-width: 0 !important;
@@ -2552,9 +2554,40 @@ html[data-theme="dark"] .pf-fluid-variation {
   border-radius: 10px !important;
 }
 
-.pf-finish-step .crachas-size-card-visual .uploaded-image-inner {
+.pf-finish-step .cadernos-add-on-card .crachas-size-card-visual .uploaded-image-inner {
   inset: 0;
   background-size: contain !important;
+}
+
+.pf-finish-card {
+  cursor: pointer;
+  user-select: none;
+}
+
+.pf-finish-card:focus-within {
+  border-color: var(--moss);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--moss) 20%, transparent);
+}
+
+.pf-finish-step .pf-fluid-cover-list .crachas-size-card-visual.cadernos-cover-media {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 4 / 5 !important;
+  border-radius: calc(var(--radius) + 1px) !important;
+}
+
+.pf-finish-step .pf-fluid-cover-list .cadernos-cover-media .option-image,
+.pf-finish-step .pf-fluid-cover-list .cadernos-cover-media .uploaded-image {
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 4 / 5 !important;
+  border-radius: calc(var(--radius) + 1px) !important;
+}
+
+.pf-finish-step .pf-fluid-cover-list .cadernos-cover-media .uploaded-image-inner {
+  inset: 0;
+  background-size: cover !important;
+  background-position: center !important;
 }
 
 .pf-finish-step .cadernos-add-on-drawer {

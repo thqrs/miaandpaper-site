@@ -316,6 +316,14 @@
                 {
                   "value": "rosa-metalico",
                   "title": "Rosa"
+                },
+                {
+                  "value": "azul",
+                  "title": "Azul"
+                },
+                {
+                  "value": "castanha",
+                  "title": "Castanha"
                 }
               ]
             },
@@ -334,15 +342,15 @@
                 },
                 {
                   "value": "holografico-1",
-                  "title": "Holográfico 1"
+                  "title": "Holográfico Estrelinhas"
                 },
                 {
                   "value": "holografico-2",
-                  "title": "Holográfico 2"
+                  "title": "Holográfico Pontinhos"
                 },
                 {
                   "value": "holografico-3",
-                  "title": "Holográfico 3"
+                  "title": "Holográfico Triângulos"
                 }
               ]
             }

@@ -193,7 +193,8 @@
                     "value": "A4 + A6",
                     "priceKey": "A4 + A6",
                     "title": "Conjunto A4+A6",
-                    "subtitle": "",
+                    "previewLabel": "Capa estilo holográfico estrelinhas",
+                    "subtitle": "Ambas as pastas com 4.90€ de desconto",
                     "priceCents": 4990,
                     "image": "content/designs/loja/pasta-de-folhetos/pack-a4-a6.webp",
                     "imageFit": "contain",
@@ -215,7 +216,7 @@
             "selectedImagePreview": {
                 "label": "Imagem ilustrativa",
                 "variationStepId": "designs",
-                "drawerHint": "Depois podes escolher a cor da fita no Passo 4"
+                "drawerHint": "Depois podes escolher a cor da fita no Passo 5"
             },
             "when": {
                 "field": "size",
@@ -229,7 +230,7 @@
                 {
                     "id": "pasta-de-folhetos-a4-passeio",
                     "value": "A4 · Opção 01",
-                    "title": "Quão lindos são os pés · Passeio",
+                    "title": "Design 01",
                     "subtitle": "",
                     "sizeGroup": "A4",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/quao-lindos-sao-os-pes-original.webp",
@@ -252,7 +253,7 @@
                 {
                     "id": "pasta-de-folhetos-a4-agenda-rosa",
                     "value": "A4 · Opção 02",
-                    "title": "Realiza plenamente o teu ministério · Bíblia cinzenta",
+                    "title": "Design 02",
                     "subtitle": "",
                     "sizeGroup": "A4",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/biblia-cinzenta-original.webp",
@@ -275,7 +276,7 @@
                 {
                     "id": "pasta-de-folhetos-a4-bicicleta-rosa",
                     "value": "A4 · Opção 03",
-                    "title": "Declara as boas novas · Bicicleta rosa",
+                    "title": "Design 03",
                     "subtitle": "",
                     "sizeGroup": "A4",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/bicicleta-rosa-original.webp",
@@ -298,7 +299,7 @@
                 {
                     "id": "pasta-de-folhetos-a4-declara-campo-colorido",
                     "value": "A4 · Opção 04",
-                    "title": "Declara as boas novas · Campo colorido",
+                    "title": "Design 04",
                     "subtitle": "",
                     "sizeGroup": "A4",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/declara-boas-novas-original.webp",
@@ -321,7 +322,7 @@
                 {
                     "id": "pasta-de-folhetos-a4-prega-caminho-flores",
                     "value": "A4 · Opção 05",
-                    "title": "Prega a palavra · Caminho de flores",
+                    "title": "Design 05",
                     "subtitle": "",
                     "sizeGroup": "A4",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/caminho-original.webp",
@@ -344,7 +345,7 @@
                 {
                     "id": "pasta-de-folhetos-a4-castanho",
                     "value": "A4 · Opção 06",
-                    "title": "Realiza plenamente o teu ministério · Mala e sapatos castanhos",
+                    "title": "Design 06",
                     "subtitle": "",
                     "sizeGroup": "A4",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/mala-sapatos-chapeu-original.webp",
@@ -367,7 +368,7 @@
                 {
                     "id": "pasta-de-folhetos-a4-quao-campo-colorido",
                     "value": "A4 · Opção 07",
-                    "title": "Quão lindos são os pés · Campo colorido",
+                    "title": "Design 07",
                     "subtitle": "",
                     "sizeGroup": "A4",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/quao-lindos-sao-os-pes-declarar-boas-novas-original.webp",
@@ -390,7 +391,7 @@
                 {
                     "id": "pasta-de-folhetos-a4-bicicleta-azul",
                     "value": "A4 · Opção 08",
-                    "title": "Declara as boas novas · Bicicleta verde",
+                    "title": "Design 08",
                     "subtitle": "",
                     "sizeGroup": "A4",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/bicicleta-verde-original.webp",
@@ -413,7 +414,7 @@
                 {
                     "id": "pasta-de-folhetos-a4-flores-vermelhas",
                     "value": "A4 · Opção 09",
-                    "title": "Realiza plenamente o teu ministério · Flores roxas",
+                    "title": "Design 09",
                     "subtitle": "",
                     "sizeGroup": "A4",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/flores-roxas-original.webp",
@@ -436,7 +437,7 @@
                 {
                     "id": "pasta-de-folhetos-a4-flores-salmao",
                     "value": "A4 · Opção 10",
-                    "title": "Realiza plenamente o teu ministério · Flores rosa e marfim",
+                    "title": "Design 10",
                     "subtitle": "",
                     "sizeGroup": "A4",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/flores-original.webp",
@@ -459,7 +460,7 @@
                 {
                     "id": "pasta-de-folhetos-a4-lavanda",
                     "value": "A4 · Opção 11",
-                    "title": "Realiza plenamente o teu ministério · Papoilas",
+                    "title": "Design 11",
                     "subtitle": "",
                     "sizeGroup": "A4",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/papoilas-original.webp",
@@ -482,7 +483,7 @@
                 {
                     "id": "pasta-de-folhetos-a4-sapatos",
                     "value": "A4 · Opção 12",
-                    "title": "Realiza plenamente o teu ministério · Mala rosa",
+                    "title": "Design 12",
                     "subtitle": "",
                     "sizeGroup": "A4",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/mala-rosa-original.webp",
@@ -505,7 +506,7 @@
                 {
                     "id": "pasta-de-folhetos-a4-folhagem-azul",
                     "value": "A4 · Opção 13",
-                    "title": "Realiza plenamente o teu ministério · Campo de lavanda",
+                    "title": "Design 13",
                     "subtitle": "",
                     "sizeGroup": "A4",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/campo-flores-original.webp",
@@ -528,7 +529,7 @@
                 {
                     "id": "pasta-de-folhetos-a6-passeio",
                     "value": "A6 · Opção 01",
-                    "title": "Quão lindos são os pés · Passeio",
+                    "title": "Design 01",
                     "subtitle": "",
                     "sizeGroup": "A6",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/quao-lindos-sao-os-pes-original.webp",
@@ -551,7 +552,7 @@
                 {
                     "id": "pasta-de-folhetos-a6-agenda-rosa",
                     "value": "A6 · Opção 02",
-                    "title": "Realiza plenamente o teu ministério · Bíblia cinzenta",
+                    "title": "Design 02",
                     "subtitle": "",
                     "sizeGroup": "A6",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/biblia-cinzenta-original.webp",
@@ -574,7 +575,7 @@
                 {
                     "id": "pasta-de-folhetos-a6-bicicleta-rosa",
                     "value": "A6 · Opção 03",
-                    "title": "Declara as boas novas · Bicicleta rosa",
+                    "title": "Design 03",
                     "subtitle": "",
                     "sizeGroup": "A6",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/bicicleta-rosa-original.webp",
@@ -597,7 +598,7 @@
                 {
                     "id": "pasta-de-folhetos-a6-declara-campo-colorido",
                     "value": "A6 · Opção 04",
-                    "title": "Declara as boas novas · Campo colorido",
+                    "title": "Design 04",
                     "subtitle": "",
                     "sizeGroup": "A6",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/declara-boas-novas-original.webp",
@@ -620,7 +621,7 @@
                 {
                     "id": "pasta-de-folhetos-a6-prega-caminho-flores",
                     "value": "A6 · Opção 05",
-                    "title": "Prega a palavra · Caminho de flores",
+                    "title": "Design 05",
                     "subtitle": "",
                     "sizeGroup": "A6",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/caminho-original.webp",
@@ -643,7 +644,7 @@
                 {
                     "id": "pasta-de-folhetos-a6-castanho",
                     "value": "A6 · Opção 06",
-                    "title": "Realiza plenamente o teu ministério · Mala e sapatos castanhos",
+                    "title": "Design 06",
                     "subtitle": "",
                     "sizeGroup": "A6",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/mala-sapatos-chapeu-original.webp",
@@ -666,7 +667,7 @@
                 {
                     "id": "pasta-de-folhetos-a6-quao-campo-colorido",
                     "value": "A6 · Opção 07",
-                    "title": "Quão lindos são os pés · Campo colorido",
+                    "title": "Design 07",
                     "subtitle": "",
                     "sizeGroup": "A6",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/quao-lindos-sao-os-pes-declarar-boas-novas-original.webp",
@@ -689,7 +690,7 @@
                 {
                     "id": "pasta-de-folhetos-a6-bicicleta-azul",
                     "value": "A6 · Opção 08",
-                    "title": "Declara as boas novas · Bicicleta verde",
+                    "title": "Design 08",
                     "subtitle": "",
                     "sizeGroup": "A6",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/bicicleta-verde-original.webp",
@@ -712,7 +713,7 @@
                 {
                     "id": "pasta-de-folhetos-a6-flores-vermelhas",
                     "value": "A6 · Opção 09",
-                    "title": "Realiza plenamente o teu ministério · Flores roxas",
+                    "title": "Design 09",
                     "subtitle": "",
                     "sizeGroup": "A6",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/flores-roxas-original.webp",
@@ -735,7 +736,7 @@
                 {
                     "id": "pasta-de-folhetos-a6-flores-salmao",
                     "value": "A6 · Opção 10",
-                    "title": "Realiza plenamente o teu ministério · Flores rosa e marfim",
+                    "title": "Design 10",
                     "subtitle": "",
                     "sizeGroup": "A6",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/flores-original.webp",
@@ -758,7 +759,7 @@
                 {
                     "id": "pasta-de-folhetos-a6-lavanda",
                     "value": "A6 · Opção 11",
-                    "title": "Realiza plenamente o teu ministério · Papoilas",
+                    "title": "Design 11",
                     "subtitle": "",
                     "sizeGroup": "A6",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/papoilas-original.webp",
@@ -781,7 +782,7 @@
                 {
                     "id": "pasta-de-folhetos-a6-sapatos",
                     "value": "A6 · Opção 12",
-                    "title": "Realiza plenamente o teu ministério · Mala rosa",
+                    "title": "Design 12",
                     "subtitle": "",
                     "sizeGroup": "A6",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/mala-rosa-original.webp",
@@ -804,7 +805,7 @@
                 {
                     "id": "pasta-de-folhetos-a6-folhagem-azul",
                     "value": "A6 · Opção 13",
-                    "title": "Realiza plenamente o teu ministério · Campo de lavanda",
+                    "title": "Design 13",
                     "subtitle": "",
                     "sizeGroup": "A6",
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/campo-flores-original.webp",
@@ -874,7 +875,7 @@
                 "sourceGroup": "A4",
                 "previewLabel": "Imagem ilustrativa",
                 "variationStepId": "designs",
-                "drawerHint": "Depois podes escolher a cor da fita no Passo 4",
+                "drawerHint": "Depois podes escolher a cor da fita no Passo 5",
                 "slotsTitle": "Designs escolhidos:",
                 "undoMessage": "Capa {group} atualizada.",
                 "groups": [
@@ -950,38 +951,6 @@
             "groupSelectionError": "Atribui um acabamento ao {group} para continuar."
         },
         {
-            "id": "pack-details",
-            "label": "Detalhes",
-            "title": "Afina os detalhes",
-            "text": "",
-            "template": "option-drawers",
-            "when": {
-                "field": "size",
-                "equals": "A4 + A6"
-            },
-            "pastaDeFolhetosDetails": {
-                "variationStepId": "designs",
-                "variationTitle": "Escolhe as argolas e fita",
-                "fixedGroups": [
-                    "A4",
-                    "A6"
-                ],
-                "metalCornersSourceStepId": "details",
-                "metalCornersGroups": [
-                    {
-                        "id": "A4",
-                        "label": "A4",
-                        "field": "metal_corners_a4"
-                    },
-                    {
-                        "id": "A6",
-                        "label": "A6",
-                        "field": "metal_corners_a6"
-                    }
-                ]
-            }
-        },
-        {
             "id": "pack-cover-a4",
             "dataOnly": true,
             "label": "Capa A4",
@@ -993,7 +962,7 @@
             "selectedImagePreview": {
                 "label": "Imagem ilustrativa",
                 "variationStepId": "designs",
-                "drawerHint": "Depois podes escolher a cor da fita no Passo 4"
+                "drawerHint": "Depois podes escolher a cor da fita no Passo 5"
             },
             "when": {
                 "field": "size",
@@ -1027,7 +996,7 @@
             "title": "Escolhe o acabamento do A4",
             "text": "",
             "template": "option-drawers",
-            "display": "cards",
+            "display": "pasta-de-folhetos-finish-cards",
             "hideIncludedLabel": true,
             "when": {
                 "field": "size",
@@ -1040,7 +1009,8 @@
                     "label": "acabamento A4",
                     "selectionError": "Escolhe o acabamento do A4."
                 }
-            }
+            },
+            "cardStyle": "cover"
         },
         {
             "id": "pack-details-a4",
@@ -1080,7 +1050,7 @@
             "selectedImagePreview": {
                 "label": "Imagem ilustrativa",
                 "variationStepId": "designs",
-                "drawerHint": "Depois podes escolher a cor da fita no Passo 4"
+                "drawerHint": "Depois podes escolher a cor da fita no Passo 5"
             },
             "when": {
                 "field": "size",
@@ -1138,7 +1108,7 @@
             "title": "Escolhe o acabamento do A6",
             "text": "",
             "template": "option-drawers",
-            "display": "cards",
+            "display": "pasta-de-folhetos-finish-cards",
             "hideIncludedLabel": true,
             "when": {
                 "field": "size",
@@ -1156,7 +1126,8 @@
                 "title": "Quero o mesmo acabamento do A4",
                 "sourceField": "finish_a4",
                 "targetField": "finish_a6"
-            }
+            },
+            "cardStyle": "cover"
         },
         {
             "id": "pack-details-a6",
@@ -2108,7 +2079,8 @@
             "title": "Escolhe o acabamento da capa",
             "text": "",
             "template": "option-drawers",
-            "display": "cards",
+            "display": "pasta-de-folhetos-finish-cards",
+            "cardStyle": "cover",
             "hideIncludedLabel": true,
             "when": {
                 "field": "size",
@@ -2172,6 +2144,91 @@
                     "customArtworkEnabled": true
                 }
             ]
+        },
+        {
+            "id": "cover_personalization",
+            "label": "Personalização",
+            "title": "Personaliza os nomes das capas",
+            "text": "",
+            "template": "cover-personalization",
+            "selection": "single",
+            "extraPriceCents": 200,
+            "maxLength": 25,
+            "showExample": false,
+            "items": [
+                {
+                    "id": "cover-personalization-yes",
+                    "value": "yes",
+                    "title": "Sim, quero personalizar",
+                    "subtitle": "2 €"
+                },
+                {
+                    "id": "cover-personalization-no",
+                    "value": "no",
+                    "title": "Não",
+                    "subtitle": "Sem personalização"
+                }
+            ],
+            "questions": [
+                {
+                    "id": "cover-personalization-a4",
+                    "label": "Pasta de Folhetos A4",
+                    "size": "A4",
+                    "sizes": [
+                        "A4",
+                        "A4 + A6"
+                    ],
+                    "title": "Queres personalizar a capa da Pasta de Folhetos A4 com um nome?",
+                    "text": "A personalização acrescenta 2 € ao preço",
+                    "field": "cover_personalization_a4",
+                    "textField": "cover_personalization_a4_text"
+                },
+                {
+                    "id": "cover-personalization-a6",
+                    "label": "Pasta de Folhetos A6",
+                    "size": "A6",
+                    "sizes": [
+                        "A6",
+                        "A4 + A6"
+                    ],
+                    "title": "Queres personalizar a capa da Pasta de Folhetos A6 com um nome?",
+                    "text": "A personalização acrescenta 2 € ao preço",
+                    "field": "cover_personalization_a6",
+                    "textField": "cover_personalization_a6_text"
+                }
+            ]
+        },
+        {
+            "id": "pack-details",
+            "label": "Detalhes",
+            "title": "Afina os detalhes",
+            "text": "",
+            "template": "option-drawers",
+            "when": {
+                "field": "size",
+                "equals": "A4 + A6"
+            },
+            "pastaDeFolhetosDetails": {
+                "variationStepId": "designs",
+                "variationTitle": "Escolhe as argolas e fita",
+                "fixedGroups": [
+                    "A4",
+                    "A6"
+                ],
+                "metalCornersSourceStepId": "details",
+                "metalCornersGroups": [
+                    {
+                        "id": "A4",
+                        "label": "A4",
+                        "field": "metal_corners_a4"
+                    },
+                    {
+                        "id": "A6",
+                        "label": "A6",
+                        "field": "metal_corners_a6"
+                    }
+                ]
+            }
         },
         {
             "id": "details",

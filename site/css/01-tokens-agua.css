@@ -40,7 +40,7 @@
   --home-hero-mobile-title-size: 2.3rem;
   /* No telemóvel, sombra mais forte na base, atrás do texto. */
   --hero-mobile-overlay-bottom: 68%;
-  --hero-mobile-overlay-top: 30%;
+  --hero-mobile-overlay-top: 40%;
   --hero-mobile-overlay: linear-gradient(to top,
     color-mix(in srgb, var(--ink) var(--hero-mobile-overlay-bottom), transparent),
     color-mix(in srgb, var(--ink) var(--hero-mobile-overlay-top), transparent));

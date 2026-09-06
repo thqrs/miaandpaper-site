@@ -103,6 +103,7 @@
           "id": "quadro-bebe",
           "value": "Quadro para bebé",
           "title": "Moldura para Bebé",
+          "hidden": true,
           "subtitle": "Silhueta de animal personalizável",
           "priceCents": 4500,
           "frameSize": "20 × 25 cm",
@@ -174,6 +175,7 @@
           "id": "jardim-frase",
           "value": "Jardim de Flores e Frase",
           "title": "Jardim de Flores",
+          "hidden": true,
           "subtitle": "Flores 3D com texto opcional",
           "priceCents": 4500,
           "frameSize": "20 × 25 cm",
@@ -212,6 +214,7 @@
           "id": "super-personalizado",
           "value": "Super Personalizado",
           "title": "Super Personalizado",
+          "hidden": true,
           "subtitle": "Descreve livremente a tua ideia",
           "quoteOnly": true,
           "priceMinCents": 4500,
@@ -390,105 +393,165 @@
           "value": "Branco / creme",
           "title": "Branco / creme",
           "swatch": "#f3ead6",
-          "colorStops": ["#fffdf7", "#f3ead6", "#dfcda7"]
+          "colorStops": [
+            "#fffdf7",
+            "#f3ead6",
+            "#dfcda7"
+          ]
         },
         {
           "id": "amarelo",
           "value": "Amarelo",
           "title": "Amarelo",
           "swatch": "#efbd25",
-          "colorStops": ["#ffe78a", "#efbd25", "#cf8c1d"]
+          "colorStops": [
+            "#ffe78a",
+            "#efbd25",
+            "#cf8c1d"
+          ]
         },
         {
           "id": "laranja",
           "value": "Laranja",
           "title": "Laranja",
           "swatch": "#ef7b2d",
-          "colorStops": ["#ffc27b", "#ef7b2d", "#c95627"]
+          "colorStops": [
+            "#ffc27b",
+            "#ef7b2d",
+            "#c95627"
+          ]
         },
         {
           "id": "vermelho",
           "value": "Vermelho",
           "title": "Vermelho",
           "swatch": "#b7342c",
-          "colorStops": ["#d94a3c", "#b7342c", "#8f2727"]
+          "colorStops": [
+            "#d94a3c",
+            "#b7342c",
+            "#8f2727"
+          ]
         },
         {
           "id": "rosa-bebe",
           "value": "Rosa-bebé",
           "title": "Rosa-bebé",
           "swatch": "#ecafc1",
-          "colorStops": ["#f7d3dd", "#ecafc1", "#d88da7"]
+          "colorStops": [
+            "#f7d3dd",
+            "#ecafc1",
+            "#d88da7"
+          ]
         },
         {
           "id": "rosa",
           "value": "Rosa",
           "title": "Rosa",
           "swatch": "#cb6d8c",
-          "colorStops": ["#e795b0", "#cb6d8c", "#a8456f"]
+          "colorStops": [
+            "#e795b0",
+            "#cb6d8c",
+            "#a8456f"
+          ]
         },
         {
           "id": "bordeaux",
           "value": "Bordeaux",
           "title": "Bordeaux",
           "swatch": "#6f203c",
-          "colorStops": ["#8c3450", "#6f203c", "#4f142d"]
+          "colorStops": [
+            "#8c3450",
+            "#6f203c",
+            "#4f142d"
+          ]
         },
         {
           "id": "lilas-roxo",
           "value": "Lilás / roxo",
           "title": "Lilás / roxo",
           "swatch": "#a77cb8",
-          "colorStops": ["#d6b6df", "#a77cb8", "#6e4b8b"]
+          "colorStops": [
+            "#d6b6df",
+            "#a77cb8",
+            "#6e4b8b"
+          ]
         },
         {
           "id": "azul-claro",
           "value": "Azul-claro",
           "title": "Azul-claro",
           "swatch": "#8cc8d5",
-          "colorStops": ["#c7e8ee", "#8cc8d5", "#4a9bb4"]
+          "colorStops": [
+            "#c7e8ee",
+            "#8cc8d5",
+            "#4a9bb4"
+          ]
         },
         {
           "id": "azul",
           "value": "Azul",
           "title": "Azul",
           "swatch": "#224d7b",
-          "colorStops": ["#4d84b5", "#224d7b", "#173358"]
+          "colorStops": [
+            "#4d84b5",
+            "#224d7b",
+            "#173358"
+          ]
         },
         {
           "id": "turquesa",
           "value": "Turquesa",
           "title": "Turquesa",
           "swatch": "#2f8e9c",
-          "colorStops": ["#69c4c4", "#2f8e9c", "#1d6876"]
+          "colorStops": [
+            "#69c4c4",
+            "#2f8e9c",
+            "#1d6876"
+          ]
         },
         {
           "id": "verde",
           "value": "Verde",
           "title": "Verde",
           "swatch": "#6da76f",
-          "colorStops": ["#b8d5a1", "#6da76f", "#356642"]
+          "colorStops": [
+            "#b8d5a1",
+            "#6da76f",
+            "#356642"
+          ]
         },
         {
           "id": "verde-salvia",
           "value": "Verde-sálvia",
           "title": "Verde-sálvia",
           "swatch": "#9eaf8b",
-          "colorStops": ["#d6dfca", "#9eaf8b", "#6c7f5f"]
+          "colorStops": [
+            "#d6dfca",
+            "#9eaf8b",
+            "#6c7f5f"
+          ]
         },
         {
           "id": "castanho",
           "value": "Castanho",
           "title": "Castanho",
           "swatch": "#875638",
-          "colorStops": ["#c79164", "#875638", "#593725"]
+          "colorStops": [
+            "#c79164",
+            "#875638",
+            "#593725"
+          ]
         },
         {
           "id": "cinzento",
           "value": "Cinzento",
           "title": "Cinzento",
           "swatch": "#a9aaa7",
-          "colorStops": ["#e2e0db", "#a9aaa7", "#676b6b"]
+          "colorStops": [
+            "#e2e0db",
+            "#a9aaa7",
+            "#676b6b"
+          ]
         }
       ]
     },
@@ -572,49 +635,25 @@
           "id": "silhueta-casal",
           "value": "Casal",
           "title": "Casal",
-          "subtitle": "Duas pessoas",
-          "image": "content/designs/quadros/fotos-reais/silhueta-bodas-frontal.webp",
-          "imageFit": "contain",
-          "imageZoom": 60,
-          "frameWidth": 96,
-          "frameHeight": 76,
-          "rectOrientation": "landscape"
+          "subtitle": "Duas pessoas"
         },
         {
           "id": "silhueta-familia",
           "value": "Família",
           "title": "Família",
-          "subtitle": "Adultos e crianças",
-          "image": "content/designs/quadros/fotos-reais/silhueta-familia.webp",
-          "imageFit": "contain",
-          "imageZoom": 60,
-          "frameWidth": 96,
-          "frameHeight": 76,
-          "rectOrientation": "landscape"
+          "subtitle": "Adultos e crianças"
         },
         {
           "id": "silhueta-pessoa",
           "value": "Pessoa",
           "title": "Pessoa",
-          "subtitle": "Uma pessoa",
-          "image": "content/designs/quadros/fotos-reais/silhueta-pessoa.webp",
-          "imageFit": "contain",
-          "imageZoom": 60,
-          "frameWidth": 96,
-          "frameHeight": 76,
-          "rectOrientation": "landscape"
+          "subtitle": "Uma pessoa"
         },
         {
           "id": "silhueta-outro",
           "value": "Outra silhueta",
           "title": "Outra silhueta",
-          "subtitle": "Descreve o que imaginas no próximo passo",
-          "image": "content/designs/quadros/fotos-reais/silhueta-arvore.webp",
-          "imageFit": "contain",
-          "imageZoom": 60,
-          "frameWidth": 96,
-          "frameHeight": 76,
-          "rectOrientation": "landscape"
+          "subtitle": "Descreve o que imaginas no próximo passo"
         }
       ]
     },
@@ -868,105 +907,165 @@
           "value": "Branco / creme",
           "title": "Branco / creme",
           "swatch": "#f3ead6",
-          "colorStops": ["#fffdf7", "#f3ead6", "#dfcda7"]
+          "colorStops": [
+            "#fffdf7",
+            "#f3ead6",
+            "#dfcda7"
+          ]
         },
         {
           "id": "amarelo",
           "value": "Amarelo",
           "title": "Amarelo",
           "swatch": "#efbd25",
-          "colorStops": ["#ffe78a", "#efbd25", "#cf8c1d"]
+          "colorStops": [
+            "#ffe78a",
+            "#efbd25",
+            "#cf8c1d"
+          ]
         },
         {
           "id": "laranja",
           "value": "Laranja",
           "title": "Laranja",
           "swatch": "#ef7b2d",
-          "colorStops": ["#ffc27b", "#ef7b2d", "#c95627"]
+          "colorStops": [
+            "#ffc27b",
+            "#ef7b2d",
+            "#c95627"
+          ]
         },
         {
           "id": "vermelho",
           "value": "Vermelho",
           "title": "Vermelho",
           "swatch": "#b7342c",
-          "colorStops": ["#d94a3c", "#b7342c", "#8f2727"]
+          "colorStops": [
+            "#d94a3c",
+            "#b7342c",
+            "#8f2727"
+          ]
         },
         {
           "id": "rosa-bebe",
           "value": "Rosa-bebé",
           "title": "Rosa-bebé",
           "swatch": "#ecafc1",
-          "colorStops": ["#f7d3dd", "#ecafc1", "#d88da7"]
+          "colorStops": [
+            "#f7d3dd",
+            "#ecafc1",
+            "#d88da7"
+          ]
         },
         {
           "id": "rosa",
           "value": "Rosa",
           "title": "Rosa",
           "swatch": "#cb6d8c",
-          "colorStops": ["#e795b0", "#cb6d8c", "#a8456f"]
+          "colorStops": [
+            "#e795b0",
+            "#cb6d8c",
+            "#a8456f"
+          ]
         },
         {
           "id": "bordeaux",
           "value": "Bordeaux",
           "title": "Bordeaux",
           "swatch": "#6f203c",
-          "colorStops": ["#8c3450", "#6f203c", "#4f142d"]
+          "colorStops": [
+            "#8c3450",
+            "#6f203c",
+            "#4f142d"
+          ]
         },
         {
           "id": "lilas-roxo",
           "value": "Lilás / roxo",
           "title": "Lilás / roxo",
           "swatch": "#a77cb8",
-          "colorStops": ["#d6b6df", "#a77cb8", "#6e4b8b"]
+          "colorStops": [
+            "#d6b6df",
+            "#a77cb8",
+            "#6e4b8b"
+          ]
         },
         {
           "id": "azul-claro",
           "value": "Azul-claro",
           "title": "Azul-claro",
           "swatch": "#8cc8d5",
-          "colorStops": ["#c7e8ee", "#8cc8d5", "#4a9bb4"]
+          "colorStops": [
+            "#c7e8ee",
+            "#8cc8d5",
+            "#4a9bb4"
+          ]
         },
         {
           "id": "azul",
           "value": "Azul",
           "title": "Azul",
           "swatch": "#224d7b",
-          "colorStops": ["#4d84b5", "#224d7b", "#173358"]
+          "colorStops": [
+            "#4d84b5",
+            "#224d7b",
+            "#173358"
+          ]
         },
         {
           "id": "turquesa",
           "value": "Turquesa",
           "title": "Turquesa",
           "swatch": "#2f8e9c",
-          "colorStops": ["#69c4c4", "#2f8e9c", "#1d6876"]
+          "colorStops": [
+            "#69c4c4",
+            "#2f8e9c",
+            "#1d6876"
+          ]
         },
         {
           "id": "verde",
           "value": "Verde",
           "title": "Verde",
           "swatch": "#6da76f",
-          "colorStops": ["#b8d5a1", "#6da76f", "#356642"]
+          "colorStops": [
+            "#b8d5a1",
+            "#6da76f",
+            "#356642"
+          ]
         },
         {
           "id": "verde-salvia",
           "value": "Verde-sálvia",
           "title": "Verde-sálvia",
           "swatch": "#9eaf8b",
-          "colorStops": ["#d6dfca", "#9eaf8b", "#6c7f5f"]
+          "colorStops": [
+            "#d6dfca",
+            "#9eaf8b",
+            "#6c7f5f"
+          ]
         },
         {
           "id": "castanho",
           "value": "Castanho",
           "title": "Castanho",
           "swatch": "#875638",
-          "colorStops": ["#c79164", "#875638", "#593725"]
+          "colorStops": [
+            "#c79164",
+            "#875638",
+            "#593725"
+          ]
         },
         {
           "id": "cinzento",
           "value": "Cinzento",
           "title": "Cinzento",
           "swatch": "#a9aaa7",
-          "colorStops": ["#e2e0db", "#a9aaa7", "#676b6b"]
+          "colorStops": [
+            "#e2e0db",
+            "#a9aaa7",
+            "#676b6b"
+          ]
         }
       ]
     },

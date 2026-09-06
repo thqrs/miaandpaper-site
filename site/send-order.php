@@ -441,6 +441,50 @@ function product_step($product, $id)
     return array();
 }
 
+function product_cover_personalization_questions($personalizationStep, $selectedSize = '')
+{
+    if (empty($personalizationStep) || !is_array($personalizationStep)) {
+        return array();
+    }
+
+    $questions = !empty($personalizationStep['questions']) && is_array($personalizationStep['questions'])
+        ? $personalizationStep['questions']
+        : array(array(
+            'id' => 'cover_personalization',
+            'label' => 'Personalização da capa',
+            'field' => 'cover_personalization',
+            'textField' => 'cover_personalization_text',
+            'title' => !empty($personalizationStep['title']) ? $personalizationStep['title'] : 'Personalização da capa',
+            'maxLength' => isset($personalizationStep['maxLength']) ? (int)$personalizationStep['maxLength'] : 25,
+            'extraPriceCents' => isset($personalizationStep['extraPriceCents']) ? (int)$personalizationStep['extraPriceCents'] : 0,
+            'sizes' => array()
+        ));
+
+    $currentSize = (string)$selectedSize;
+    $result = array();
+    foreach ($questions as $q) {
+        if (!is_array($q)) {
+            continue;
+        }
+        $sizes = isset($q['sizes']) && is_array($q['sizes']) ? array_map('strval', $q['sizes']) : array();
+        if (!empty($sizes) && $currentSize !== '' && !in_array($currentSize, $sizes, true)) {
+            continue;
+        }
+        $result[] = array(
+            'id' => isset($q['id']) ? (string)$q['id'] : 'cover_personalization',
+            'label' => isset($q['label']) ? (string)$q['label'] : 'Personalização da capa',
+            'field' => isset($q['field']) ? (string)$q['field'] : 'cover_personalization',
+            'textField' => isset($q['textField']) ? (string)$q['textField'] : 'cover_personalization_text',
+            'title' => isset($q['title']) ? (string)$q['title'] : 'Personalização da capa',
+            'maxLength' => isset($q['maxLength']) ? (int)$q['maxLength'] : (isset($personalizationStep['maxLength']) ? (int)$personalizationStep['maxLength'] : 25),
+            'extraPriceCents' => isset($q['extraPriceCents']) ? (int)$q['extraPriceCents'] : (isset($personalizationStep['extraPriceCents']) ? (int)$personalizationStep['extraPriceCents'] : 0),
+            'sizes' => $sizes
+        );
+    }
+
+    return $result;
+}
+
 function product_design_values($product, $fallback)
 {
     $step = product_step($product, 'designs');
@@ -1921,6 +1965,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $purchaseStep = product_step($productConfig, 'pack');
     $personalizationStep = product_step($productConfig, 'cover_personalization');
     $hasPersonalizationStep = !empty($personalizationStep);
+    $coverPersonalizationQuestions = product_cover_personalization_questions($personalizationStep, $size);
     $laminationItem = $isCadernos ? product_step_item_by_value($laminationStep, $lamination) : array();
     $purchaseItem = $isCadernos ? product_step_item_by_quantity($purchaseStep, $packQuantity) : array();
     $cadernoOrderQuantityOptions = $isCadernos ? product_order_quantity_options($purchaseStep) : array(1);
@@ -2337,29 +2382,26 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
             $errors[] = 'Escolhe uma quantidade válida para ' . $productName . '.';
         }
 
-        // COVER_PERSONALIZATION_BY_DATA_V1: quem manda é o produto ter (ou não)
-        // o passo `cover_personalization`, não o contexto do catálogo. Assim o
-        // mesmo código serve os cadernos anuais e a cápsula do Congresso.
-        if ($hasPersonalizationStep && $coverPersonalization !== 'yes' && $coverPersonalization !== 'no') {
-            $errors[] = 'Escolhe se queres personalizar a capa de ' . $productName . '.';
-        }
+    }
 
-        if ($hasPersonalizationStep && $coverPersonalization === 'yes') {
-            $personalizationLimit = isset($personalizationStep['maxLength']) ? (int)$personalizationStep['maxLength'] : 25;
-            $personalizationLength = function_exists('mb_strlen')
-                ? mb_strlen($coverPersonalizationText, 'UTF-8')
-                : strlen($coverPersonalizationText);
+    if ($hasPersonalizationStep) {
+        foreach ($coverPersonalizationQuestions as $q) {
+            $qVal = cart_string_selection($selections, $q['field']);
+            $qText = cart_string_selection($selections, $q['textField']);
+            $qLabel = !empty($q['label']) ? $q['label'] : 'capa';
 
-            if ($coverPersonalizationText === '') {
-                $errors[] = 'Escreve o nome/frase para a capa de ' . $productName . '.';
-            } elseif ($personalizationLength > $personalizationLimit) {
-                $errors[] = 'O nome/frase da capa de ' . $productName . ' tem de ter no máximo ' . $personalizationLimit . ' caracteres.';
+            if ($qVal !== 'yes' && $qVal !== 'no') {
+                $errors[] = 'Escolhe se queres personalizar a ' . $qLabel . ' em ' . $productName . '.';
+            } elseif ($qVal === 'yes') {
+                $qLimit = $q['maxLength'];
+                $qLength = function_exists('mb_strlen') ? mb_strlen($qText, 'UTF-8') : strlen($qText);
+
+                if ($qText === '') {
+                    $errors[] = 'Escreve o nome/frase para personalizar a ' . $qLabel . ' em ' . $productName . '.';
+                } elseif ($qLength > $qLimit) {
+                    $errors[] = 'O nome/frase da ' . $qLabel . ' em ' . $productName . ' tem de ter no máximo ' . $qLimit . ' caracteres.';
+                }
             }
-        } elseif ($hasPersonalizationStep) {
-            $coverPersonalizationText = '';
-        } else {
-            $coverPersonalization = '';
-            $coverPersonalizationText = '';
         }
     }
 
@@ -2514,9 +2556,14 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
             ? 0
             : ($quadroFixedPriceCents > 0 ? $quadroFixedPriceCents : $quadroFramePriceCents);
     }
-    $personalizationExtraCents = $hasPersonalizationStep && $isCadernos && $coverPersonalization === 'yes'
-        ? (isset($personalizationStep['extraPriceCents']) ? (int)$personalizationStep['extraPriceCents'] : 0)
-        : 0;
+    $personalizationExtraCents = 0;
+    if ($hasPersonalizationStep) {
+        foreach ($coverPersonalizationQuestions as $q) {
+            if (cart_string_selection($selections, $q['field']) === 'yes') {
+                $personalizationExtraCents += $q['extraPriceCents'];
+            }
+        }
+    }
     $packagingExtraCents = $isQuadros ? $quadroPackagingExtraCents : 0;
     $quoteOnly = $quadroQuoteOnly || $sizeQuoteOnly;
     $unitPriceCents = $quoteOnly
@@ -2631,8 +2678,21 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
                     : ($isCadernos && $cadernoOrderQuantity > 1 ? format_euros($basePriceCents) . ' x ' . $cadernoOrderQuantity . ' = ' . format_euros($basePriceCents * $cadernoOrderQuantity) : format_euros($basePriceCents))))
             : 'Não calculado');
     $personalizationExtraLine = $personalizationExtraCents
-        ? ($isCadernos && $cadernoOrderQuantity > 1 ? format_euros($personalizationExtraCents) . ' x ' . $cadernoOrderQuantity . ' = ' . format_euros($personalizationExtraCents * $cadernoOrderQuantity) : format_euros($personalizationExtraCents))
+        ? ($productQuantity > 1 ? format_euros($personalizationExtraCents) . ' x ' . $productQuantity . ' = ' . format_euros($personalizationExtraCents * $productQuantity) : format_euros($personalizationExtraCents))
         : '';
+
+    $coverPersonalizationSummaryLines = array();
+    if ($hasPersonalizationStep) {
+        foreach ($coverPersonalizationQuestions as $q) {
+            $qVal = cart_string_selection($selections, $q['field']);
+            $qText = cart_string_selection($selections, $q['textField']);
+            if ($qVal === 'yes') {
+                $coverPersonalizationSummaryLines[] = 'Personalização (' . $q['label'] . '): Sim' . ($qText !== '' ? ' — ' . $qText : '');
+            } elseif ($qVal === 'no') {
+                $coverPersonalizationSummaryLines[] = 'Personalização (' . $q['label'] . '): Não';
+            }
+        }
+    }
     $addOnsExtraLine = $addOnsExtraCents
         ? ($isCadernos && $cadernoOrderQuantity > 1 ? format_euros($addOnsExtraCents) . ' x ' . $cadernoOrderQuantity . ' = ' . format_euros($addOnsExtraCents * $cadernoOrderQuantity) : format_euros($addOnsExtraCents))
         : '';
@@ -2747,6 +2807,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         'cover_personalization' => $coverPersonalization,
         'cover_personalization_text' => $coverPersonalizationText,
         'cover_personalization_line' => $coverPersonalization === 'yes' ? 'Sim' : 'Não',
+        'cover_personalization_summary_lines' => $coverPersonalizationSummaryLines,
         'personalization_extra_cents' => $personalizationExtraCents,
         'personalization_extra_line' => $personalizationExtraLine,
         'unit_price_cents' => $unitPriceCents,
@@ -2987,6 +3048,14 @@ function cart_item_owner_lines($line)
     if ($line['option_drawer_extra_line'] !== '') {
         $rows[] = 'Acréscimo das opções: ' . $line['option_drawer_extra_line'];
     }
+    if (!empty($line['cover_personalization_summary_lines'])) {
+        foreach ($line['cover_personalization_summary_lines'] as $persSummaryLine) {
+            $rows[] = $persSummaryLine;
+        }
+        if (!empty($line['personalization_extra_line'])) {
+            $rows[] = 'Acréscimo da personalização: ' . $line['personalization_extra_line'];
+        }
+    }
     $rows[] = 'Preço do produto: ' . $line['price_line'] . ($line['unit_price_line'] !== '' ? ' (' . $line['unit_price_line'] . ')' : '');
     $rows[] = '';
     $rows[] = 'Designs e quantidades:';
@@ -3194,6 +3263,14 @@ function cart_item_customer_lines($line)
     }
     if ($line['option_drawer_extra_line'] !== '') {
         $rows[] = 'Acréscimo das opções: ' . $line['option_drawer_extra_line'];
+    }
+    if (!empty($line['cover_personalization_summary_lines'])) {
+        foreach ($line['cover_personalization_summary_lines'] as $persSummaryLine) {
+            $rows[] = $persSummaryLine;
+        }
+        if (!empty($line['personalization_extra_line'])) {
+            $rows[] = 'Acréscimo da personalização: ' . $line['personalization_extra_line'];
+        }
     }
     $rows[] = 'Preço do produto: ' . $line['price_line'] . ($line['unit_price_line'] !== '' ? ', ou seja: ' . $line['unit_price_line'] : '');
     $rows[] = '';
@@ -3575,19 +3652,19 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=2026081701">
-  <link rel="stylesheet" href="css/02-base-chrome.css?v=2026081701">
-  <link rel="stylesheet" href="css/03-grelha-designs-tons.css?v=2026081701">
-  <link rel="stylesheet" href="css/04-reviews-passos-acoes.css?v=2026081701">
-  <link rel="stylesheet" href="css/05-cookies-packs-entrega.css?v=2026081701">
-  <link rel="stylesheet" href="css/06-admin.css?v=2026081701">
-  <link rel="stylesheet" href="css/07-cards-crachas-molduras.css?v=2026081701">
-  <link rel="stylesheet" href="css/08-dark-mode.css?v=2026081701">
-  <link rel="stylesheet" href="css/09-seccoes-produtos.css?v=2026081701">
-  <link rel="stylesheet" href="css/10-entrega-uniformizacao.css?v=2026081701">
-  <link rel="stylesheet" href="css/11-home-marca.css?v=2026081701">
-  <link rel="stylesheet" href="css/12-composer-glitter-chart.css?v=2026081701">
-  <link rel="stylesheet" href="css/13-miu.css?v=2026081701">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260906193556">
+  <link rel="stylesheet" href="css/02-base-chrome.css?v=20260906193556">
+  <link rel="stylesheet" href="css/03-grelha-designs-tons.css?v=20260906193556">
+  <link rel="stylesheet" href="css/04-reviews-passos-acoes.css?v=20260906193556">
+  <link rel="stylesheet" href="css/05-cookies-packs-entrega.css?v=20260906193556">
+  <link rel="stylesheet" href="css/06-admin.css?v=20260906193556">
+  <link rel="stylesheet" href="css/07-cards-crachas-molduras.css?v=20260906193556">
+  <link rel="stylesheet" href="css/08-dark-mode.css?v=20260906193556">
+  <link rel="stylesheet" href="css/09-seccoes-produtos.css?v=20260906193556">
+  <link rel="stylesheet" href="css/10-entrega-uniformizacao.css?v=20260906193556">
+  <link rel="stylesheet" href="css/11-home-marca.css?v=20260906193556">
+  <link rel="stylesheet" href="css/12-composer-glitter-chart.css?v=20260906193556">
+  <link rel="stylesheet" href="css/13-miu.css?v=20260906193556">
 </head>
 <body class="result-body">
   <main class="result-card <?php echo h($kind); ?>">
@@ -3780,7 +3857,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
       } catch (error) {}
     </script>
   <?php endif; ?>
-  <script src="js/24-miu.js?v=2026081701"></script>
+  <script src="js/24-miu.js?v=20260906193556"></script>
 </body>
 </html>
     <?php

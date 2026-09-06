@@ -74,7 +74,8 @@
       state.invalidFields = [];
     }
 
-    state.selections[step.id] = input.value;
+    var selectionKey = input.dataset.choiceField || step.field || step.id;
+    state.selections[selectionKey] = input.value;
     if (Array.isArray(step.resetSelectionKeys)) {
       step.resetSelectionKeys.forEach(function (key) {
         delete state.selections[String(key)];
@@ -296,26 +297,30 @@
       return "";
     }
 
-    if (isCadernosProduct(product) && step.id === "cover_personalization") {
-      if (!state.selections.cover_personalization) {
-        return "Escolhe se queres personalizar a capa.";
-      }
-
-      if (state.selections.cover_personalization === "yes") {
-        var personalizationText = cadernoPersonalizationText();
-        var personalizationLimit = cadernoPersonalizationLimit(product);
-
-        if (!personalizationText) {
-          state.invalidFields = ["cover_personalization_text"];
-          return "Escreve o nome ou frase para personalizar a capa.";
+    if (step.template === "cover-personalization") {
+      var personalizationQuestions = coverPersonalizationQuestions(product);
+      for (var personalizationIndex = 0; personalizationIndex < personalizationQuestions.length; personalizationIndex += 1) {
+        var personalizationQuestion = personalizationQuestions[personalizationIndex];
+        var personalizationValue = String(state.selections[personalizationQuestion.field] || "");
+        var personalizationLabel = personalizationQuestion.label || "capa";
+        if (personalizationValue !== "yes" && personalizationValue !== "no") {
+          state.invalidFields = [personalizationQuestion.field];
+          return "Escolhe se queres personalizar a " + personalizationLabel + ".";
         }
-
-        if (personalizationText.length > personalizationLimit) {
-          state.invalidFields = ["cover_personalization_text"];
-          return "O nome/frase tem de ter no máximo " + personalizationLimit + " caracteres.";
+        if (personalizationValue === "yes") {
+          var personalizationText = coverPersonalizationQuestionText(personalizationQuestion);
+          if (!personalizationText) {
+            state.invalidFields = [personalizationQuestion.textField];
+            return "Escreve o nome ou frase para personalizar a " + personalizationLabel + ".";
+          }
+          if (personalizationText.length > personalizationQuestion.maxLength) {
+            state.invalidFields = [personalizationQuestion.textField];
+            return "O nome/frase da " + personalizationLabel + " tem de ter no máximo " + personalizationQuestion.maxLength + " caracteres.";
+          }
+        } else {
+          state.selections[personalizationQuestion.textField] = "";
         }
       }
-
       return "";
     }
 

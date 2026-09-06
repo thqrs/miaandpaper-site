@@ -337,9 +337,9 @@
     return cadernoCommonInteriorImages(product);
   }
 
-  function cadernoPreviewLabel(image, isCover) {
+  function cadernoPreviewLabel(image, isCover, item) {
     if (isCover) {
-      return "Capa estilo holográfico estrelinhas";
+      return item && item.previewLabel ? item.previewLabel : "Capa estilo matte";
     }
 
     return String(image || "").indexOf("-PR") !== -1 ? "Exclusivo Pioneiros" : "Interior";
@@ -392,7 +392,7 @@
     var interior = cadernoItemInteriorImages(product, item);
 
     if (cover) {
-      frames.push({ image: cover, label: cadernoPreviewLabel(cover, true) });
+      frames.push({ image: cover, label: cadernoPreviewLabel(cover, true, item) });
     }
 
     interior.forEach(function (image) {
@@ -665,7 +665,7 @@
 
   function renderQuadrosDesignStep(product, step) {
     var selected = selectedValues(step);
-    var html = (step.items || []).map(function (item) {
+    var html = (step.items || []).filter(function (item) { return state.admin || !item.hidden; }).map(function (item) {
       var checked = selected.indexOf(item.value) !== -1 ? " checked" : "";
       var frameSize = String(item.frameSize || "Tamanho à escolha");
       var price = quadroDesignCardPrice(item);
@@ -959,51 +959,70 @@
   }
 
   function renderCadernoPersonalizationStep(product, step) {
-    var selected = selectedValues(step);
-    var limit = cadernoPersonalizationLimit(product);
-    var text = cadernoPersonalizationText();
-    var tooLong = text.length > limit;
-    var missingText = state.invalidFields.indexOf("cover_personalization_text") !== -1 && !text;
-    var textError = missingText
-      ? "Escreve o nome ou frase para personalizar a capa."
-      : (tooLong ? "O nome/frase tem de ter no máximo " + limit + " caracteres." : "");
-    var showExample = step.showExample !== false && !!step.exampleImage;
+    var questions = coverPersonalizationQuestions(product);
+    var showExample = questions.length === 1 && step.showExample !== false && !!step.exampleImage;
     var exampleVisible = state.selections.show_caderno_personalization_example !== false;
     var html = "";
 
-    (step.items || []).forEach(function (item) {
-      var checked = selected.indexOf(item.value) !== -1 ? " checked" : "";
-      var muted = selected.length && !checked ? " is-muted" : "";
-      var drawer = item.value === "yes" && checked ? [
-        '<div class="cadernos-personalization-drawer">',
-        '<label class="cadernos-personalization-field">',
-        '<span>Nome/frase <small data-cover-personalization-count>(' + text.length + ' / ' + limit + ')</small></span>',
-        '<input class="' + (textError ? "is-missing" : "") + '" type="text" value="' + escapeHtml(state.selections.cover_personalization_text || "") + '" data-cover-personalization-text data-cover-personalization-limit="' + limit + '" aria-describedby="cover-personalization-help"' + (textError ? ' aria-invalid="true"' : '') + '>',
-        '</label>',
-        textError ? siteErrorMarkup(textError, "form-error", "cover-personalization-help") : '<p class="details-section-note" id="cover-personalization-help">Máximo de ' + limit + ' caracteres.</p>',
-        '</div>'
-      ].join("") : "";
+    questions.forEach(function (question, questionIndex) {
+      var selectedValue = String(state.selections[question.field] || "");
+      var text = coverPersonalizationQuestionText(question);
+      var tooLong = text.length > question.maxLength;
+      var textField = question.textField;
+      var helpId = "cover-personalization-help-" + questionIndex;
+      var textError = state.invalidFields.indexOf(textField) !== -1 && (!text || tooLong)
+        ? (!text
+          ? "Escreve o nome ou frase para personalizar a capa."
+          : "O nome/frase tem de ter no máximo " + question.maxLength + " caracteres.")
+        : "";
+      var questionTitle = question.title && question.title !== step.title
+        ? '<h3 class="cadernos-personalization-question-title">' + escapeHtml(question.title) + '</h3>'
+        : "";
+      var questionText = question.text && question.text !== step.text
+        ? '<p class="cadernos-personalization-question-text">' + escapeHtml(question.text) + '</p>'
+        : "";
+      var choices = (question.items || []).map(function (item) {
+        var checked = String(item.value) === selectedValue ? " checked" : "";
+        var muted = selectedValue && !checked ? " is-muted" : "";
+        var drawer = item.value === "yes" && checked ? [
+          '<div class="cadernos-personalization-drawer">',
+          '<label class="cadernos-personalization-field">',
+          '<span>Nome/frase <small data-cover-personalization-count>(' + text.length + ' / ' + question.maxLength + ')</small></span>',
+          '<input class="' + (textError ? "is-missing" : "") + '" type="text" value="' + escapeHtml(text) + '" data-cover-personalization-text data-cover-personalization-text-field="' + escapeHtml(textField) + '" data-cover-personalization-help-id="' + escapeHtml(helpId) + '" data-cover-personalization-limit="' + question.maxLength + '" aria-describedby="' + helpId + '"' + (textError ? ' aria-invalid="true"' : '') + '>',
+          '</label>',
+          textError ? siteErrorMarkup(textError, "form-error", helpId) : '<p class="details-section-note" id="' + helpId + '">Máximo de ' + question.maxLength + ' caracteres.</p>',
+          '</div>'
+        ].join("") : "";
+
+        return [
+          '<div class="cadernos-personalization-choice">',
+          '<label class="choice-card crachas-size-card cadernos-personalization-card' + (checked ? ' is-selected' : '') + muted + '">',
+          '<input type="radio" name="' + escapeHtml(textField === question.textField ? question.field : question.field) + '" value="' + escapeHtml(item.value) + '" data-choice-step="' + escapeHtml(step.id) + '" data-choice-field="' + escapeHtml(question.field) + '" data-cover-personalization-text-field="' + escapeHtml(textField) + '"' + checked + '>',
+          '<span class="choice-copy crachas-size-card-text">',
+          '<strong>' + escapeHtml(item.title || "") + '</strong>',
+          '<span>' + escapeHtml(item.subtitle || "") + '</span>',
+          '</span>',
+          '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+          adminItemControls(step, item),
+          '</label>',
+          drawer,
+          '</div>'
+        ].join("");
+      }).join("");
 
       html += [
-        '<div class="cadernos-personalization-choice">',
-        '<label class="choice-card crachas-size-card cadernos-personalization-card' + (checked ? ' is-selected' : '') + muted + '">',
-        '<input type="radio" name="' + escapeHtml(step.field) + '" value="' + escapeHtml(item.value) + '" data-choice-step="' + escapeHtml(step.id) + '"' + checked + '>',
-        '<span class="choice-copy crachas-size-card-text">',
-        '<strong>' + escapeHtml(item.title || "") + '</strong>',
-        '<span>' + escapeHtml(item.subtitle || "") + '</span>',
-        '</span>',
-        '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
-        adminItemControls(step, item),
-        '</label>',
-        drawer,
-        '</div>'
+        '<section class="cadernos-personalization-question" data-cover-personalization-question="' + escapeHtml(question.field) + '">',
+        questionTitle,
+        questionText,
+        '<div class="option-list size-choice-list crachas-size-card-list cadernos-personalization-list">' + choices + '</div>',
+        '</section>'
       ].join("");
     });
 
     return [
       showExample ? '<button class="example-toggle" type="button" data-caderno-personalization-example-toggle>' + (exampleVisible ? "Ocultar exemplo" : "Ver exemplo") + '</button>' : "",
       showExample ? '<div class="details-example cadernos-personalization-example"' + (exampleVisible ? "" : " hidden") + '><img class="example-image" src="' + escapeHtml(step.exampleImage) + '" alt="' + escapeHtml(step.exampleAlt || "Exemplo de personalização da capa") + '" loading="lazy"></div>' : "",
-      '<div class="option-list size-choice-list crachas-size-card-list cadernos-personalization-list">' + html + '</div>',
+      html,
       step.note ? '<p class="cadernos-info-note cadernos-info-note--important" role="note">' + escapeHtml(step.note) + '</p>' : ""
     ].join("");
   }

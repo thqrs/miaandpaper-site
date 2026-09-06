@@ -412,6 +412,26 @@
   // preço do produto + portes + total separadamente. Para "Vou recolher" ou
   // "Junta as minhas encomendas" os portes aparecem como "Grátis"; para
   // "Envio CTT" aparecem como estimativa.
+  function coverPersonalizationSummaryRows(product) {
+    if (!coverPersonalizationStep(product)) {
+      return [];
+    }
+
+    return coverPersonalizationQuestions(product).reduce(function (rows, question) {
+      var value = String(state.selections[question.field] || "");
+      if (value !== "yes" && value !== "no") {
+        return rows;
+      }
+      rows.push([
+        question.label + ":",
+        value === "yes"
+          ? "Sim" + (coverPersonalizationQuestionText(question) ? " — " + coverPersonalizationQuestionText(question) : "")
+          : "Não"
+      ]);
+      return rows;
+    }, []);
+  }
+
   function summarySections(product) {
     var info = priceInfo(product);
     var deliveryOption = getDeliveryOption(product);
@@ -562,7 +582,7 @@
     var orderRows = [
       ["Encomendaste:", getPackQuantity(product) ? productQuantityLabel(product, getPackQuantity(product)) : ""],
       ["Tamanho:", selectedSizeLabel(product)]
-    ].concat(optionDrawerSummaryRows(product), [
+    ].concat(optionDrawerSummaryRows(product), coverPersonalizationSummaryRows(product), [
       ["Preço do produto:", priceLine],
       ["Portes:", shippingLine],
       [totalLabel, totalLine],
@@ -889,9 +909,36 @@
     ].join("");
   }
 
+  function isCoverCardStep(product, step) {
+    return !!(step && (step.cardStyle === "cover" || step.display === "pasta-de-folhetos-finish-cards" || (product && productFamily(product) === "pasta-de-folhetos" && step.id === "extras")));
+  }
+
+  function renderOptionDrawerCoverCard(product, step, drawer, item) {
+    var selected = String(state.selections[drawer.field] || "") === String(item.value || "");
+    var mediaStep = Object.assign({}, step, { showDesignZoom: false });
+
+    return [
+      '<div class="cadernos-cover-choice pf-finish-choice">',
+      '<label class="choice-card crachas-size-card cadernos-cover-card pf-finish-card' + (selected ? ' is-selected' : '') + '">',
+      '<input type="radio" name="' + escapeHtml(drawer.field) + '" value="' + escapeHtml(item.value || "") + '" data-option-drawer-choice data-option-drawer-field="' + escapeHtml(drawer.field) + '"' + (selected ? ' checked' : '') + '>',
+      renderCadernoCoverCardMedia(product, mediaStep, item),
+      '<span class="pf-assignment-card-footer">',
+      '<span class="choice-copy crachas-size-card-text">',
+      '<strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>',
+      item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '',
+      '</span>',
+      '</span>',
+      '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+      adminItemControls(step, item),
+      '</label>',
+      '</div>'
+    ].join("");
+  }
+
   function renderOptionDrawerCards(product, step) {
     ensureOptionDrawerSelections(product);
     var drawers = optionDrawersForStep(product, step);
+    var isCover = isCoverCardStep(product, step);
 
     return drawers.map(function (drawer) {
       // Com uma gaveta so, o titulo do passo ja diz o que se escolhe; com
@@ -901,6 +948,14 @@
         : "";
 
       var drawerClass = String(drawer.field || drawer.id || "option").toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+
+      if (isCover) {
+        return heading + '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list pf-fluid-cover-list pf-finish-list pf-fluid-drawer-list--' + escapeHtml(drawerClass) + '" data-pf-drawer-field="' + escapeHtml(drawer.field || "") + '">'
+          + optionDrawerAvailableItems(product, drawer).map(function (item) {
+            return renderOptionDrawerCoverCard(product, step, drawer, item);
+          }).join("")
+          + '</div>';
+      }
 
       return heading + '<div class="option-list size-choice-list crachas-size-card-list cadernos-add-on-list pf-fluid-drawer-list pf-fluid-drawer-list--' + escapeHtml(drawerClass) + '" data-pf-drawer-field="' + escapeHtml(drawer.field || "") + '">'
         + optionDrawerAvailableItems(product, drawer).map(function (item) {
@@ -1947,8 +2002,8 @@
       return renderCadernosPurchaseOptions(product, step) + renderInteriorSlideshow(product) + renderCadernosBuildSummaryV2(product, step);
     }
 
-    if (isCadernosProduct(product) && step.template === "cover-personalization") {
-      return renderCadernoPersonalizationStep(product, step) + renderCadernosBuildSummaryV2(product, step);
+    if (step.template === "cover-personalization") {
+      return renderCadernoPersonalizationStep(product, step) + (isCadernosProduct(product) ? renderCadernosBuildSummaryV2(product, step) : "");
     }
 
     if (step.template === "quantity-builder") {
@@ -1963,8 +2018,8 @@
       return renderPastaDeFolhetosDetails(product, step);
     }
 
-    if (step.template === "option-drawers" && step.display === "cards") {
-      return (productFamily(product) === "pasta-de-folhetos" ? '<div class="pf-finish-step">' : '')
+    if (step.template === "option-drawers" && (step.display === "cards" || step.display === "pasta-de-folhetos-finish-cards")) {
+      return (productFamily(product) === "pasta-de-folhetos" ? '<div class="pasta-de-folhetos-fluid pf-finish-step">' : '')
         + renderCopySelectionButton(step)
         + renderOptionDrawerCards(product, step)
         + (productFamily(product) === "pasta-de-folhetos" ? '</div>' : '')

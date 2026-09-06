@@ -734,6 +734,17 @@
     return labels;
   }
 
+  function cartDesignSummaryTitle(product, item) {
+    var buildSummary = product && product.buildSummary;
+
+    if (buildSummary && buildSummary.mode === "pasta-de-folhetos"
+        && typeof groupedDesignOrderTitle === "function") {
+      return groupedDesignOrderTitle(product, item);
+    }
+
+    return displayItemTitle(item);
+  }
+
   function cartDesignQuantities(product) {
     var quantities = {};
 
@@ -822,6 +833,17 @@
       selections.cover_personalization = selections.cover_personalization || "";
       selections.cover_personalization_text = selections.cover_personalization === "yes" ? cadernoPersonalizationText() : "";
       selections.pack_promo_note = cadernoOption && cadernoOption.isPack ? cadernoPromoNote(product) : "";
+    }
+
+    if (typeof coverPersonalizationQuestions === "function") {
+      coverPersonalizationQuestions(product).forEach(function (question) {
+        if (state.selections[question.field]) {
+          selections[question.field] = state.selections[question.field];
+        }
+        if (state.selections[question.field] === "yes") {
+          selections[question.textField] = coverPersonalizationQuestionText(question);
+        }
+      });
     }
 
     selections.congregation_gift = shouldShowGiftRequest(product) && state.selections.congregation_gift ? "1" : "";
@@ -956,7 +978,7 @@
 
     designs = selectedDesignItems(product);
     names = designs.slice(0, 3).map(function (item) {
-      return displayItemTitle(item);
+      return cartDesignSummaryTitle(product, item);
     });
 
     if (designs.length > 3) {
@@ -970,6 +992,11 @@
     selectedOptionDrawerRecords(product).forEach(function (record) {
       parts.push(String(record.drawer.label || record.drawer.title || "Opção") + ": " + String(record.item.title || record.item.value || ""));
     });
+    if (!isCadernosProduct(product) && typeof coverPersonalizationCartLabels === "function") {
+      coverPersonalizationCartLabels(product).forEach(function (label) {
+        parts.push(label);
+      });
+    }
     return parts.join(" · ");
   }
 

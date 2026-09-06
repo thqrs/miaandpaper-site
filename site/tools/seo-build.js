@@ -88,6 +88,8 @@ function collectDesignNames(product) {
     if (step.template !== "design-grid") return;
     const items = Array.isArray(step.items) ? step.items : [];
     items.forEach(function (item) {
+      // Hidden designs stay available to the editor but are not advertised publicly.
+      if (item && item.hidden === true) return;
       const label = String(item.title || item.value || "").trim();
       if (!label || seen[label.toLowerCase()]) return;
       seen[label.toLowerCase()] = true;
@@ -374,6 +376,17 @@ function buildSitemap(lastmods) {
   );
 }
 
+function safeWriteFileSync(filePath, content) {
+  try {
+    const fd = fs.openSync(filePath, "r+");
+    fs.writeSync(fd, content, 0, "utf8");
+    fs.ftruncateSync(fd, Buffer.byteLength(content, "utf8"));
+    fs.closeSync(fd);
+  } catch (e) {
+    fs.writeFileSync(filePath, content, "utf8");
+  }
+}
+
 function main() {
   let touched = 0;
   const today = new Date().toISOString().slice(0, 10);
@@ -429,7 +442,7 @@ function main() {
     }
 
     if (html !== originalHtml) {
-      fs.writeFileSync(full, html, "utf8");
+      safeWriteFileSync(full, html);
       touched += 1;
       console.log(`  + ${page.file}`);
     } else {
@@ -446,8 +459,8 @@ function main() {
     lastmods[page.url] = lastmod;
   });
 
-  fs.writeFileSync(path.join(ROOT, "sitemap.xml"), buildSitemap(lastmods), "utf8");
-  fs.writeFileSync(STATE_PATH, JSON.stringify(nextState, null, 2) + "\n", "utf8");
+  safeWriteFileSync(path.join(ROOT, "sitemap.xml"), buildSitemap(lastmods));
+  safeWriteFileSync(STATE_PATH, JSON.stringify(nextState, null, 2) + "\n");
   console.log("  + sitemap.xml");
   console.log(`\n${touched} paginas alteradas.`);
 }

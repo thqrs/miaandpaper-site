@@ -268,8 +268,67 @@
     })[0] || null;
   }
 
-  function cadernoPersonalizationStep(product) {
+  function coverPersonalizationStep(product) {
     return product ? findStep(product, "cover_personalization") : null;
+  }
+
+  function cadernoPersonalizationStep(product) {
+    return coverPersonalizationStep(product);
+  }
+
+  function coverPersonalizationQuestions(product, selectedSize) {
+    var step = coverPersonalizationStep(product);
+    var source = step && Array.isArray(step.questions) && step.questions.length
+      ? step.questions
+      : [{}];
+    var currentSize = selectedSize == null
+      ? String(state.selections.size || "")
+      : String(selectedSize || "");
+
+    return source.map(function (rawQuestion, index) {
+      var question = rawQuestion && typeof rawQuestion === "object" ? rawQuestion : {};
+      var field = String(question.field || (step && step.field) || "cover_personalization");
+      var textField = String(question.textField || (step && step.textField) || (field + "_text"));
+      var sizes = Array.isArray(question.sizes)
+        ? question.sizes.map(function (size) { return String(size); })
+        : (question.size ? [String(question.size)] : []);
+
+      return {
+        id: String(question.id || field || ("question-" + index)),
+        label: String(question.label || question.size || "Personalização da capa"),
+        size: question.size ? String(question.size) : "",
+        sizes: sizes,
+        title: String(question.title || (step && step.title) || "Queres personalizar a capa com um nome?"),
+        text: String(question.text || (step && step.text) || ""),
+        field: field,
+        textField: textField,
+        maxLength: Math.max(1, parseInt(question.maxLength != null ? question.maxLength : (step && step.maxLength), 10) || 25),
+        extraPriceCents: Math.max(0, parseInt(question.extraPriceCents != null ? question.extraPriceCents : (step && step.extraPriceCents), 10) || 0),
+        items: Array.isArray(question.items) && question.items.length ? question.items : ((step && step.items) || [])
+      };
+    }).filter(function (question) {
+      return !question.sizes.length || !currentSize || question.sizes.indexOf(currentSize) !== -1;
+    });
+  }
+
+  function coverPersonalizationQuestionText(question) {
+    return String(state.selections[question.textField] || "").trim();
+  }
+
+  function coverPersonalizationExtraCents(product, selectedSize) {
+    return coverPersonalizationQuestions(product, selectedSize).reduce(function (total, question) {
+      return total + (String(state.selections[question.field] || "") === "yes" ? question.extraPriceCents : 0);
+    }, 0);
+  }
+
+  function coverPersonalizationCartLabels(product) {
+    return coverPersonalizationQuestions(product).reduce(function (labels, question) {
+      if (String(state.selections[question.field] || "") === "yes") {
+        var text = coverPersonalizationQuestionText(question);
+        labels.push(question.label + (text ? ": " + text : " personalizada"));
+      }
+      return labels;
+    }, []);
   }
 
   function cadernoPersonalizationLimit(product) {
@@ -278,10 +337,7 @@
   }
 
   function cadernoPersonalizationExtraCents(product) {
-    var step = cadernoPersonalizationStep(product);
-    return state.selections.cover_personalization === "yes"
-      ? Math.max(0, parseInt(step && step.extraPriceCents, 10) || 0)
-      : 0;
+    return coverPersonalizationExtraCents(product);
   }
 
   function cadernoAddOnsStep(product) {
@@ -1660,7 +1716,9 @@
     var basePriceCents = cents;
     var optionExtraPerUnitCents = optionDrawerExtraPerUnitCents(product);
     var optionExtraCents = optionExtraPerUnitCents * packQuantity;
-    var productPriceCents = basePriceCents + optionExtraCents;
+    var personalizationExtraPerUnitCents = coverPersonalizationExtraCents(product, size);
+    var personalizationExtraCents = personalizationExtraPerUnitCents * packQuantity;
+    var productPriceCents = basePriceCents + optionExtraCents + personalizationExtraCents;
     var artworkFeeCents = customArtworkFeeCents(product);
     cents = productPriceCents + artworkFeeCents;
 
@@ -1671,6 +1729,8 @@
       baseCents: Math.max(0, basePriceCents),
       optionExtraPerUnitCents: optionExtraPerUnitCents,
       optionExtraCents: optionExtraCents,
+      personalizationExtraPerUnitCents: personalizationExtraPerUnitCents,
+      personalizationCents: personalizationExtraCents,
       customizationFeeCents: artworkFeeCents,
       total: cents ? formatCents(cents) : "",
       perPin: productPriceCents ? formatUnitPrice(productPriceCents, packQuantity, productUnitShort(product)) : "",

@@ -50,7 +50,16 @@ foreach ($f in $files) {
     $t = $t.TrimEnd("`r", "`n")
 
     if ($t -ne $old) {
-        [System.IO.File]::WriteAllText($f.FullName, $t, $utf8NoBom)
+        try {
+            $stream = [System.IO.File]::Open($f.FullName, [System.IO.FileMode]::Open, [System.IO.FileAccess]::ReadWrite, [System.IO.FileShare]::ReadWrite)
+            $bytes = $utf8NoBom.GetBytes($t)
+            $stream.Position = 0
+            $stream.Write($bytes, 0, $bytes.Length)
+            $stream.SetLength($bytes.Length)
+            $stream.Close()
+        } catch {
+            [System.IO.File]::WriteAllText($f.FullName, $t, $utf8NoBom)
+        }
     }
 }
 

@@ -1377,8 +1377,9 @@
           state.selections.order_flow = "catalog";
           state.selections.design_source = "catalog";
         }
-        if (step && step.id === "cover_personalization" && input.value === "no") {
-          state.selections.cover_personalization_text = "";
+        if (step && step.template === "cover-personalization" && input.value === "no") {
+          var personalizationTextField = input.dataset.coverPersonalizationTextField || "cover_personalization_text";
+          state.selections[personalizationTextField] = "";
         }
         state.errors = "";
         state.packDisabledMessage = "";
@@ -1741,14 +1742,17 @@
     document.querySelectorAll("[data-cover-personalization-text]").forEach(function (input) {
       input.addEventListener("input", function () {
         var limit = Number(input.dataset.coverPersonalizationLimit || 25);
-        var help = document.querySelector("#cover-personalization-help");
-        var count = document.querySelector("[data-cover-personalization-count]");
+        var textField = input.dataset.coverPersonalizationTextField || "cover_personalization_text";
+        var helpId = input.dataset.coverPersonalizationHelpId || "cover-personalization-help";
+        var help = document.getElementById(helpId);
+        var drawer = input.closest ? input.closest(".cadernos-personalization-drawer") : null;
+        var count = drawer ? drawer.querySelector("[data-cover-personalization-count]") : document.querySelector("[data-cover-personalization-count]");
 
-        state.selections.cover_personalization_text = input.value;
+        state.selections[textField] = input.value;
         if (count) {
           count.textContent = "(" + input.value.length + " / " + limit + ")";
         }
-        if (!input.value.trim() && state.invalidFields.indexOf("cover_personalization_text") !== -1) {
+        if (!input.value.trim() && state.invalidFields.indexOf(textField) !== -1) {
           input.classList.add("is-missing");
           input.setAttribute("aria-invalid", "true");
           if (help) {
@@ -1761,7 +1765,7 @@
           input.setAttribute("aria-invalid", "true");
           if (help) {
             help.className = "form-error";
-            help.setAttribute("role", "alert");
+            help.setAttribute("aria-invalid", "true");
             help.textContent = "O nome/frase tem de ter no máximo " + limit + " caracteres.";
           }
         } else {
@@ -1773,13 +1777,14 @@
             help.textContent = "Máximo de " + limit + " caracteres.";
           }
           state.invalidFields = state.invalidFields.filter(function (name) {
-            return name !== "cover_personalization_text";
+            return name !== textField;
           });
         }
         refreshCadernosBuildSummary(product);
       });
       input.addEventListener("change", function () {
-        state.selections.cover_personalization_text = input.value;
+        var textField = input.dataset.coverPersonalizationTextField || "cover_personalization_text";
+        state.selections[textField] = input.value;
       });
     });
 

@@ -1607,7 +1607,9 @@
     var type = step.selection === "multi" ? "checkbox" : "radio";
     var selected = selectedValues(step);
     var gridClass = template === "media-list" ? "option-list" : template;
-    var items = step.items || [];
+    var items = (step.items || []).filter(function (item) {
+      return !item || !item.hidden || state.admin;
+    });
     var maxSelections = Math.max(0, parseInt(step.maxSelections, 10) || 0);
     var limitReached = maxSelections > 0 && selected.length >= maxSelections;
     var selectionCounter = maxSelections > 0
