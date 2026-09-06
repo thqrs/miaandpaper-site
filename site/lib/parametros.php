@@ -86,6 +86,16 @@ function mp_parametros_registo()
 
         // ── Páginas de admin ────────────────────────────────────────────────
 
+        'funilv2.php' => array(
+            'titulo' => 'Funil live · Percurso',
+            'tipo' => 'pagina', 'guarda' => 'admin', 'metodos' => array('GET'),
+            'descricao' => 'Linha do tempo por sessão, directamente dos JSONL privados, sem snapshots.',
+            'parametros' => array(
+                'date' => array('tipo'=>'data', 'omissao'=>'', 'descricao'=>'Dia UTC; por omissão, hoje.', 'invalido'=>'erro', 'lido'=>'funilv2.php:15'),
+                'sid' => array('tipo'=>'texto', 'omissao'=>'', 'maximo'=>64, 'descricao'=>'Sessão de navegação seleccionada.', 'lido'=>'funilv2.php:16'),
+                'action' => array('tipo'=>'enum', 'omissao'=>'', 'valores'=>array('data'=>'dados live'), 'descricao'=>'Devolve visitantes e eventos em JSON autenticado.', 'lido'=>'funilv2.php:14'),
+            ),
+        ),
         'admin-funnel.php' => array(
             'titulo' => 'Funil',
             'tipo' => 'pagina',

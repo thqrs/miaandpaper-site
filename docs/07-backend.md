@@ -123,6 +123,7 @@ nível não muda preços, encomendas nem o funcionamento da interface.
 | `admin-funnel.php` | tabelas: visitantes, origens, interesse, downloads, mapa |
 | `admin-live-dashboard.php?view=metro` | replay passo a passo sobre um mapa tipo metro |
 | `admin-live-dashboard.php?view=teia` | a "teia" de produtos, em iframe do `produtos.html` |
+| `funilv2.php` | percurso vertical live por visitante, com detalhes na página e leitura directa dos JSONL |
 | `admin-orders.php` | encomendas, estados, anexos |
 | `modulos.php` | os módulos de interface, desenhados a sério — ver [03](03-modulos-css.md) |
 | `admin-snapshots.php` | criar/apagar os snapshots das páginas pesadas |
@@ -234,3 +235,23 @@ de propósito, para recuperação parcial.
 
 Todos os acessos usam *prepared statements*. Os nomes de coluna vêm de arrays
 fixos no código, nunca de input.
+
+### Funil vertical (`funilv2.php`)
+
+Usa a sessão administrativa existente e lê directamente os ficheiros privados
+`funnel-jsonl/YYYY-MM-DD.jsonl`; se o diário não existir, tenta o JSONL legado.
+Não abre SQLite, não grava dados e não usa snapshots. Basta o deploy normal e
+abrir `funilv2.php` (também na navegação central).
+
+Escolhe-se um dia UTC e uma sessão; as horas aparecem em Europe/Lisbon. O live
+consulta a cada 5 segundos, suspende em separadores ocultos e permite pausa.
+Os detalhes expandem na própria linha e mantêm-se abertos nas actualizações.
+Cada sessão só mostra os produtos que visitou, pela ordem dos eventos.
+
+Para limitar memória e I/O em alojamento partilhado, lê os últimos 16 MiB do
+ficheiro, até 3000 sessões e os últimos 2000 eventos / 2 MiB de detalhes da
+sessão escolhida. Qualquer corte é indicado na página; o percurso pode ser
+parcial. Linhas incompletas esperam pela consulta seguinte; linhas inválidas
+são ignoradas com aviso. Os eventos mais antigos dentro desta janela podem
+ser abertos em grupos de 200. O painel só mostra o que o nível de tracking
+registou, não reconstrói acções que não foram guardadas.

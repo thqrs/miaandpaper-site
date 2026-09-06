@@ -1,4 +1,5 @@
 User-agent: *
+Disallow: /funilv2.php
 
 # Paginas e endpoints de administracao: nao devem aparecer em pesquisas.
 # Isto e sobre indexacao, nao sobre acesso — o acesso continua a ser

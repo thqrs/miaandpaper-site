@@ -27,6 +27,7 @@
     { id: "home", label: "Homepage & Menu", href: "homepage-menu-design.php", files: ["homepage-menu-design.php"] },
     { id: "carousels", label: "Carrosséis", href: "carrousel.php", files: ["carrousel.php"] },
     { id: "funnel", label: "Funil", href: "admin-funnel.php", files: ["admin-funnel.php", "admin-live-dashboard.php"] },
+    { id: "funnel-v2", label: "Funil live · Percurso", href: "funilv2.php", files: ["funilv2.php"] },
     { id: "tracking", label: "Tracking", href: "tracking.php", files: ["tracking.php"] },
     { id: "orders", label: "Encomendas", href: "admin-orders.php", files: ["admin-orders.php"] },
     { id: "colors", label: "Cores", href: "admin-colors.html", files: ["admin-colors.html"] },

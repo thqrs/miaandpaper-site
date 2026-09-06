@@ -170,6 +170,7 @@ está em `tools/parametros.php`. Aqui fica só o índice — o que existe e onde
 
 | ficheiro | tipo | guarda | parâmetros |
 |---|---|---|---|
+| `funilv2.php` | página/API | admin | `date`, `sid`, `action=data` |
 | `admin-funnel.php` | página | admin | `period`, `enrich`, `snapshot` |
 | `admin-live-dashboard.php` | página | admin | `period`, `view`, `start`, `end`, `sid`, `snapshot` |
 | `admin-orders.php` | página | admin | `view`, `id`, `f`, `p`, `q`, `page`, `saved`, `paid`, `shipped`, `cancelled`, `created`, `email` |
