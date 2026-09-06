@@ -26,7 +26,44 @@
   --hero-foreground-muted: rgba(255, 253, 248, 0.94);
   --hero-accent: #f6df99;
   --hero-button-ink: #3b2d18;
-  --hero-overlay: rgba(31, 25, 15, 0.52);
+  /* Hero: ajustar aqui altura, luz e proporção sem alterar as regras de layout. */
+  --home-hero-height: 72svh;
+  --home-hero-min-height: 620px;
+  --home-hero-max-height: 680px;
+  --home-hero-mobile-ratio: 16 / 9;
+  --home-hero-mobile-min-height: 280px;
+  --home-hero-mobile-narrow-min-height: 340px;
+  --home-hero-mobile-image-fit: contain;
+  /* As fotografias verticais ocupam toda a largura no telemóvel. */
+  --home-hero-mobile-vertical-fit: cover;
+  --home-hero-mobile-vertical-position: center center;
+  --home-hero-mobile-title-size: 2.3rem;
+  /* No telemóvel, sombra mais forte na base, atrás do texto. */
+  --hero-mobile-overlay-bottom: 68%;
+  --hero-mobile-overlay-top: 30%;
+  --hero-mobile-overlay: linear-gradient(to top,
+    color-mix(in srgb, var(--ink) var(--hero-mobile-overlay-bottom), transparent),
+    color-mix(in srgb, var(--ink) var(--hero-mobile-overlay-top), transparent));
+  --home-hero-mobile-copy-padding: 16px 16px;
+  /* Foco por slide: horizontal vertical; 50% 50% = centro. */
+  --home-hero-focus-1: 50% 50%;
+  --home-hero-focus-2: 50% 50%;
+  --home-hero-focus-3: 50% 50%;
+  --home-hero-focus-4: 50% 50%;
+  --home-hero-focus-5: 50% 50%;
+  --home-hero-focus-6: 50% 50%;
+  --home-hero-focus-7: 50% 50%;
+  --home-hero-focus-8: 50% 50%;
+  --home-hero-focus-9: 50% 50%;
+  --hero-overlay-color: var(--ink);
+  --hero-overlay-start: 60%;
+  --hero-overlay-middle: 44%;
+  --hero-overlay-end: 25%;
+  --hero-overlay-angle: 90deg;
+  --hero-overlay: linear-gradient(var(--hero-overlay-angle),
+    color-mix(in srgb, var(--hero-overlay-color) var(--hero-overlay-start), transparent) 0%,
+    color-mix(in srgb, var(--hero-overlay-color) var(--hero-overlay-middle), transparent) 45%,
+    color-mix(in srgb, var(--hero-overlay-color) var(--hero-overlay-end), transparent) 100%);
   --accent-hover: var(--rose);
   --admin-edit-accent: #c74438;
   --shadow-header: 0 8px 28px rgba(46, 36, 19, 0.07);

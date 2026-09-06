@@ -148,39 +148,6 @@
           ]
         },
         {
-          "id": "crachas-grandes",
-          "group": "Crachás",
-          "title": "Crachás grandes",
-          "subtitle": "5,8 cm x 5,8 cm (58 mm)",
-          "slug": "crachas-loja",
-          "size": "58 mm",
-          "image": "content/designs/loja/crachas-loja/uploads/crachas-32-accc814bd59f.webp",
-          "imageShape": "round",
-          "finishes": [
-            "holografica"
-          ]
-        },
-        {
-          "id": "porta-chaves-32",
-          "group": "Porta-chaves",
-          "title": "Porta-chaves 32 mm",
-          "subtitle": "3,2 cm",
-          "slug": "porta-chaves",
-          "size": "32 mm",
-          "image": "content/designs/loja/crachas-loja/uploads/crachas-32-accc814bd59f.webp",
-          "imageShape": "round"
-        },
-        {
-          "id": "porta-chaves-58",
-          "group": "Porta-chaves",
-          "title": "Porta-chaves 58 mm",
-          "subtitle": "5,8 cm",
-          "slug": "porta-chaves",
-          "size": "58 mm",
-          "image": "content/designs/loja/crachas-loja/uploads/crachas-32-accc814bd59f.webp",
-          "imageShape": "round"
-        },
-        {
           "id": "imanes-finos",
           "group": "Ímanes",
           "title": "Ímanes finos",
@@ -207,23 +174,12 @@
           ]
         },
         {
-          "id": "imanes-recortados",
-          "group": "Ímanes",
-          "title": "Ímanes recortados",
-          "subtitle": "Cortados à volta do desenho",
-          "slug": "imanes-recortados",
-          "imageShape": "rect",
-          "finishes": [
-            "holografica"
-          ]
-        },
-        {
           "id": "cadernos-anuais",
           "group": "Apontamentos",
           "title": "Caderno Anual Argolas A5",
           "subtitle": "Capa com o teu design",
           "slug": "cadernos-anuais",
-          "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp",
+          "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.webp",
           "imageShape": "rect",
           "quantityField": "caderno_order_quantity",
           "fixedSelections": {
@@ -300,11 +256,11 @@
         },
         {
           "id": "pasta-de-folhetos",
-          "group": "Apontamentos",
+          "group": "Testemunho",
           "title": "Pasta de folhetos",
           "subtitle": "A4, A6 ou conjunto",
           "slug": "pasta-de-folhetos",
-          "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/novos/a_jovem_cadeira/a_jovem_cadeira_matte.webp",
+          "image": "content/designs/loja/pasta-de-folhetos/pack-a4-a6.webp",
           "imageShape": "rect",
           "choices": [
             {
@@ -316,19 +272,19 @@
                 {
                   "value": "A4",
                   "title": "A4",
-                  "subtitle": "15 €",
+                  "subtitle": "34,90 €",
                   "quantity": 1
                 },
                 {
                   "value": "A6",
                   "title": "A6",
-                  "subtitle": "10 €",
+                  "subtitle": "19,90 €",
                   "quantity": 1
                 },
                 {
                   "value": "A4 + A6",
                   "title": "A4 + A6",
-                  "subtitle": "22 €",
+                  "subtitle": "49,90 €",
                   "quantity": 1
                 }
               ]
@@ -390,159 +346,6 @@
                 }
               ]
             }
-          ]
-        },
-        {
-          "id": "agendas",
-          "group": "Apontamentos",
-          "title": "Agenda Anual Argolas A5",
-          "subtitle": "Capa com o teu design",
-          "slug": "agendas",
-          "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/opcoes/caderno-normal.webp",
-          "imageShape": "rect",
-          "quantityField": "caderno_order_quantity",
-          "fixedSelections": {
-            "cover_personalization": "no",
-            "cover_personalization_text": ""
-          },
-          "choices": [
-            {
-              "field": "purchase_option",
-              "label": "Opção de compra",
-              "required": true,
-              "isPriceKey": true,
-              "items": [
-                {
-                  "value": "agenda_normal",
-                  "title": "Agenda Normal",
-                  "subtitle": "29,90 €",
-                  "quantity": 1
-                },
-                {
-                  "value": "agenda_pioneiro",
-                  "title": "Agenda Pioneiro",
-                  "subtitle": "34,90 €",
-                  "quantity": 2
-                },
-                {
-                  "value": "pack_normal",
-                  "title": "Pack Normal",
-                  "subtitle": "37,90 €",
-                  "quantity": 3,
-                  "isPack": true
-                },
-                {
-                  "value": "pack_pioneiro",
-                  "title": "Pack Pioneiro",
-                  "subtitle": "42,90 €",
-                  "quantity": 4,
-                  "isPack": true
-                }
-              ]
-            },
-            {
-              "field": "lamination",
-              "label": "Acabamento",
-              "required": true,
-              "items": [
-                {
-                  "value": "matte",
-                  "title": "Matte",
-                  "subtitle": "Acabamento suave, sem brilho"
-                },
-                {
-                  "value": "normal",
-                  "title": "Glossy",
-                  "subtitle": "Acabamento brilhante normal"
-                },
-                {
-                  "value": "holografica",
-                  "title": "Holográfica",
-                  "subtitle": "Brilho com reflexos coloridos"
-                },
-                {
-                  "value": "glitter_branco",
-                  "title": "Glitter branco",
-                  "subtitle": "Brilho tipo purpurinas brancas"
-                }
-              ]
-            }
-          ],
-          "finishes": [
-            "capa-mole",
-            "capa-dura"
-          ]
-        },
-        {
-          "id": "blocos-a6",
-          "group": "Apontamentos",
-          "title": "Bloco Argolas A6",
-          "subtitle": "Capa com o teu design",
-          "slug": "blocos-a6",
-          "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
-          "imageShape": "rect",
-          "finishes": [
-            "holografica"
-          ]
-        },
-        {
-          "id": "bloquinhos",
-          "group": "Apontamentos",
-          "title": "Bloquinho A7",
-          "subtitle": "Capa com o teu design",
-          "slug": "bloquinhos",
-          "imageShape": "rect",
-          "finishes": [
-            "holografica"
-          ]
-        },
-        {
-          "id": "mini-cadernos",
-          "group": "Apontamentos",
-          "title": "Mini-Caderno Argolas",
-          "subtitle": "Capa com o teu design",
-          "slug": "mini-cadernos",
-          "image": "content/designs/loja/mini-cadernos/catalog/Fotos_dos_Mini_Cadernos/novos/a_jovem_cadeira_minicaderno.webp",
-          "imageShape": "rect",
-          "finishes": [
-            "holografica"
-          ]
-        },
-        {
-          "id": "stickers",
-          "group": "Papel",
-          "title": "Stickers",
-          "subtitle": "Autocolantes recortados",
-          "slug": "stickers",
-          "imageShape": "rect",
-          "finishes": [
-            "holografica"
-          ]
-        },
-        {
-          "id": "marcadores",
-          "group": "Papel",
-          "title": "Marcadores",
-          "subtitle": "Com opções de impressão e acabamento",
-          "slug": "marcadores",
-          "imageShape": "rect",
-          "finishes": [
-            "holografica-marcador",
-            "dois-lados-marcador",
-            "buraquinho-marcador",
-            "margem-plastico-marcador"
-          ]
-        },
-        {
-          "id": "marcadores-magneticos",
-          "group": "Papel",
-          "title": "Marcadores magnéticos",
-          "subtitle": "Com acabamento glossy ou holográfico",
-          "slug": "marcadores-magneticos",
-          "image": "",
-          "imageShape": "rect",
-          "finishes": [
-            "holografica-marcador"
           ]
         }
       ],

@@ -290,12 +290,6 @@
   Controller.prototype.updateNavigationClearance = function () {
     if (!this.root || !this.root.isConnected) return;
     var viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
-    if (viewportWidth > 700) {
-      if (!this.navigationClearance) return;
-      this.navigationClearance = 0;
-      this.root.style.setProperty('--miu-navigation-clearance', '0px');
-      return;
-    }
     var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
     var rootRect = this.root.getBoundingClientRect();
     var computedBottom = parseFloat(window.getComputedStyle(this.root).bottom) || 0;
@@ -303,20 +297,35 @@
     var baselineTop = viewportHeight - baseBottom - rootRect.height;
     var targetTop = Infinity;
 
-    Array.prototype.forEach.call(document.querySelectorAll('.step-actions'), function (actions) {
-      var style = window.getComputedStyle(actions);
-      if (style.display === 'none' || style.visibility === 'hidden') return;
-      var rect = actions.getBoundingClientRect();
-      if (rect.height <= 0 || rect.width <= 0 || rect.bottom <= 0 || rect.top >= viewportHeight) return;
-      var pinnedToBottom = (style.position === 'sticky' || style.position === 'fixed') && rect.bottom >= viewportHeight - 3;
-      var overlapsBaseline = rect.bottom > baselineTop && rect.top < viewportHeight - baseBottom;
-      var navigationIsLow = rect.top >= viewportHeight * 0.52;
-      if (pinnedToBottom || overlapsBaseline || navigationIsLow) targetTop = Math.min(targetTop, rect.top);
-    });
+    // Em mobile (<=700px) o Míu sobe por cima da barra sticky Voltar/Continuar.
+    if (viewportWidth <= 700) {
+      Array.prototype.forEach.call(document.querySelectorAll('.step-actions'), function (actions) {
+        var style = window.getComputedStyle(actions);
+        if (style.display === 'none' || style.visibility === 'hidden') return;
+        var rect = actions.getBoundingClientRect();
+        if (rect.height <= 0 || rect.width <= 0 || rect.bottom <= 0 || rect.top >= viewportHeight) return;
+        var pinnedToBottom = (style.position === 'sticky' || style.position === 'fixed') && rect.bottom >= viewportHeight - 3;
+        var overlapsBaseline = rect.bottom > baselineTop && rect.top < viewportHeight - baseBottom;
+        var navigationIsLow = rect.top >= viewportHeight * 0.52;
+        if (pinnedToBottom || overlapsBaseline || navigationIsLow) targetTop = Math.min(targetTop, rect.top);
+      });
+    }
 
     var clearance = targetTop < Infinity
       ? Math.max(0, viewportHeight - targetTop + 8 - baseBottom)
       : 0;
+
+    // Tal como o balão das reviews (reviews.js syncReviewOffset), o Míu sobe
+    // quando o footer ou o aviso de cookies entram no viewport, em todos os
+    // tamanhos de ecrã — senão tapa o footer ao chegar ao fundo da página.
+    Array.prototype.forEach.call(document.querySelectorAll('.cookie-banner.is-visible, .site-footer'), function (element) {
+      if (!element) return;
+      var rect = element.getBoundingClientRect();
+      if (rect.height > 0 && rect.top < viewportHeight && rect.bottom > 0) {
+        clearance = Math.max(clearance, viewportHeight - rect.top + 14 - baseBottom);
+      }
+    });
+    clearance = Math.max(0, clearance);
     clearance = Math.min(clearance, Math.max(0, viewportHeight - rootRect.height - baseBottom - 8));
     if (Math.abs(clearance - this.navigationClearance) < 0.5) return;
     this.navigationClearance = clearance;
@@ -329,7 +338,9 @@
     document.addEventListener('scroll', controller.boundLayout, { passive: true, capture: true });
     if (window.MutationObserver && document.body) {
       controller.layoutObserver = new MutationObserver(controller.boundLayout);
-      controller.layoutObserver.observe(document.body, { childList: true, subtree: true });
+      // O `class` é preciso para apanhar o .cookie-banner.is-visible a
+      // aparecer/desaparecer, tal como o reviews.js faz para o balão.
+      controller.layoutObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
     }
     controller.scheduleNavigationClearance();
   };

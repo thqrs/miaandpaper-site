@@ -816,8 +816,7 @@ body:has(.home-shell--brand) .cart-floating-button {
   position: relative;
   isolation: isolate;
   display: grid;
-  height: min(58svh, 540px);
-  min-height: 440px;
+  height: clamp(var(--home-hero-min-height), var(--home-hero-height), var(--home-hero-max-height));
   overflow: hidden;
   background-color: var(--linen);
   background-image: var(--home-hero-image);
@@ -862,6 +861,16 @@ body:has(.home-shell--brand) .cart-floating-button {
   background-size: cover;
 }
 
+.home-hero-carousel__frame:nth-child(1) { background-position: var(--home-hero-focus-1, var(--home-hero-position, center)); }
+.home-hero-carousel__frame:nth-child(2) { background-position: var(--home-hero-focus-2, var(--home-hero-position, center)); }
+.home-hero-carousel__frame:nth-child(3) { background-position: var(--home-hero-focus-3, var(--home-hero-position, center)); }
+.home-hero-carousel__frame:nth-child(4) { background-position: var(--home-hero-focus-4, var(--home-hero-position, center)); }
+.home-hero-carousel__frame:nth-child(5) { background-position: var(--home-hero-focus-5, var(--home-hero-position, center)); }
+.home-hero-carousel__frame:nth-child(6) { background-position: var(--home-hero-focus-6, var(--home-hero-position, center)); }
+.home-hero-carousel__frame:nth-child(7) { background-position: var(--home-hero-focus-7, var(--home-hero-position, center)); }
+.home-hero-carousel__frame:nth-child(8) { background-position: var(--home-hero-focus-8, var(--home-hero-position, center)); }
+.home-hero-carousel__frame:nth-child(9) { background-position: var(--home-hero-focus-9, var(--home-hero-position, center)); }
+
 .home-hero-carousel__dots {
   position: absolute;
   z-index: 3;
@@ -876,6 +885,11 @@ body:has(.home-shell--brand) .cart-floating-button {
   backdrop-filter: blur(7px);
   pointer-events: auto;
   transform: translateX(-50%);
+}
+
+/* A selecção por bolinhas fica desactivada; o carrossel mantém avanço e gesto. */
+.home-hero-carousel__dots {
+  display: none;
 }
 
 .home-hero-carousel__dots button {
@@ -908,10 +922,6 @@ body:has(.home-shell--brand) .cart-floating-button {
   height: 100%;
   margin: 0 auto;
   padding: 54px 32px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-hero-carousel__track { transition: none; }
 }
 
 .home-brand-hero__copy {
@@ -1250,26 +1260,44 @@ html[data-theme="dark"] .home-products-section {
   }
 
   .home-brand-hero {
-    height: 55svh;
-    min-height: 430px;
-    max-height: 500px;
-    background-position: 58% center;
+    height: auto;
+    aspect-ratio: var(--home-hero-mobile-ratio);
+    min-height: var(--home-hero-mobile-min-height);
+    background-size: var(--home-hero-mobile-image-fit);
+    background-repeat: no-repeat;
+  }
+
+  .home-brand-hero .home-hero-carousel__frame {
+    background-size: var(--home-hero-mobile-image-fit);
+    background-repeat: no-repeat;
+  }
+
+  /* hero-07 e hero-08 são verticais: ampliar até à largura e manter o foco no centro. */
+  .home-brand-hero .home-hero-carousel__frame:nth-child(7),
+  .home-brand-hero .home-hero-carousel__frame:nth-child(8) {
+    background-size: var(--home-hero-mobile-vertical-fit, cover);
+    background-position: var(--home-hero-mobile-vertical-position, center center);
+  }
+
+  .home-brand-hero::before {
+    background: var(--hero-mobile-overlay);
   }
 
   .home-brand-hero__inner {
-    padding: 38px 20px;
+    height: auto;
+    padding: var(--home-hero-mobile-copy-padding);
   }
-
   .home-brand-hero h1 {
-    font-size: 3.35rem;
+    font-size: var(--home-hero-mobile-title-size);
   }
 
   .home-brand-hero__copy > p:last-of-type {
-    font-size: 1rem;
+    margin-top: 10px;
+    font-size: 0.9rem;
   }
 
   .home-brand-hero__actions {
-    margin-top: 22px;
+    margin-top: 12px;
   }
 
   .home-brand-hero__copy > .home-hero-carousel__dots {
@@ -1347,12 +1375,13 @@ html[data-theme="dark"] .home-products-section {
 }
 
 @media (max-width: 370px) {
+  .home-brand-hero { min-height: var(--home-hero-mobile-narrow-min-height); }
   .home-shell--brand .brand-text {
     display: none;
   }
 
   .home-brand-hero h1 {
-    font-size: clamp(2.5rem, 12.5vw, 3rem);
+    font-size: var(--home-hero-mobile-title-size);
   }
 
   .home-hero-action {
@@ -1489,7 +1518,7 @@ html[data-theme="dark"] .home-products-section {
 .home-products-section .category-card::after,
 .home-products-section .category-card.has-image::after,
 .home-products-section .category-card.has-carousel::after {
-  content: "Ver opções \2192";
+  content: "Escolher os designs \2192";
   position: static;
   inset: auto;
   z-index: 1;

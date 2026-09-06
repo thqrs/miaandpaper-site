@@ -150,7 +150,7 @@
                     "priceKey": "A4",
                     "title": "A4",
                     "subtitle": "Pasta de folhetos A4",
-                    "priceCents": 3290,
+                    "priceCents": 3490,
                     "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/quao-lindos-sao-os-pes-original.webp",
                     "imageFit": "contain",
                     "frameWidth": 100,
@@ -194,7 +194,7 @@
                     "priceKey": "A4 + A6",
                     "title": "Conjunto A4+A6",
                     "subtitle": "",
-                    "priceCents": 4490,
+                    "priceCents": 4990,
                     "image": "content/designs/loja/pasta-de-folhetos/pack-a4-a6.webp",
                     "imageFit": "contain",
                     "frameWidth": 120,
@@ -2127,8 +2127,8 @@
                             "value": "matte",
                             "title": "Matte",
                             "subtitle": "Suave, sem brilho",
-                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-matte.webp",
-                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-matte.webp",
+                            "image": "content/designs/loja/pasta-de-folhetos/acabamentos/matte.webp",
+                            "exampleImage": "content/designs/loja/pasta-de-folhetos/acabamentos/matte.webp",
                             "drawerText": "Exemplo visual de acabamento matte.",
                             "extraPriceCentsPerUnit": 0
                         },
@@ -2136,36 +2136,36 @@
                             "value": "glossy",
                             "title": "Glossy",
                             "subtitle": "Brilhante",
-                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-glossy-normal.webp",
-                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-glossy-normal.webp",
+                            "image": "content/designs/loja/pasta-de-folhetos/acabamentos/glossy.webp",
+                            "exampleImage": "content/designs/loja/pasta-de-folhetos/acabamentos/glossy.webp",
                             "drawerText": "Exemplo visual de acabamento glossy.",
                             "extraPriceCentsPerUnit": 0
                         },
                         {
                             "value": "holografico-1",
-                            "title": "Holográfico 1",
-                            "subtitle": "Efeito holográfico",
-                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
-                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
-                            "drawerText": "Exemplo visual do Holográfico 1.",
+                            "title": "Holográfico Estrelinhas",
+                            "subtitle": "Nota: O efeito holográfico escurece um pouco a imagem",
+                            "image": "content/designs/loja/pasta-de-folhetos/acabamentos/holografico-estrelinhas.webp",
+                            "exampleImage": "content/designs/loja/pasta-de-folhetos/acabamentos/holografico-estrelinhas.webp",
+                            "drawerText": "Exemplo visual do Holográfico Estrelinhas.",
                             "extraPriceCentsPerUnit": 0
                         },
                         {
                             "value": "holografico-2",
-                            "title": "Holográfico 2",
-                            "subtitle": "Efeito holográfico",
-                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
-                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
-                            "drawerText": "Imagem provisória até ser carregada a fotografia específica do Holográfico 2.",
+                            "title": "Holográfico Pontinhos",
+                            "subtitle": "Nota: O efeito holográfico escurece um pouco a imagem",
+                            "image": "content/designs/loja/pasta-de-folhetos/acabamentos/holografico-pontinhos.webp",
+                            "exampleImage": "content/designs/loja/pasta-de-folhetos/acabamentos/holografico-pontinhos.webp",
+                            "drawerText": "Exemplo visual do Holográfico Pontinhos.",
                             "extraPriceCentsPerUnit": 0
                         },
                         {
                             "value": "holografico-3",
-                            "title": "Holográfico 3",
-                            "subtitle": "Efeito holográfico",
-                            "image": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
-                            "exampleImage": "content/designs/loja/cadernos-anuais/catalog/cadernos/laminacao/laminacao-holografica.webp",
-                            "drawerText": "Imagem provisória até ser carregada a fotografia específica do Holográfico 3.",
+                            "title": "Holográfico Triângulos",
+                            "subtitle": "Nota: O efeito holográfico escurece um pouco a imagem",
+                            "image": "content/designs/loja/pasta-de-folhetos/acabamentos/holografico-triangulos.webp",
+                            "exampleImage": "content/designs/loja/pasta-de-folhetos/acabamentos/holografico-triangulos.webp",
+                            "drawerText": "Exemplo visual do Holográfico Triângulos.",
                             "extraPriceCentsPerUnit": 0
                         }
                     ],
@@ -2199,7 +2199,7 @@
                             "value": "pasta-de-folhetos-cantos-metalicos",
                             "title": "Quero cantos metálicos!",
                             "subtitle": "Acrescenta cantos metálicos decorativos e protetores.",
-                            "image": "content/designs/loja/pasta-de-folhetos/pack-a4-a6.webp",
+                            "image": "content/designs/loja/pasta-de-folhetos/cantos-metalicos.webp",
                             "imageFit": "contain",
                             "extraPriceCentsPerUnit": 200,
                             "drawerText": "Clica novamente para retirar os cantos metálicos."
@@ -2260,13 +2260,13 @@
     ],
     "prices": {
         "A4": {
-            "1": 3290
+            "1": 3490
         },
         "A6": {
             "1": 1990
         },
         "A4 + A6": {
-            "1": 4490
+            "1": 4990
         }
     },
     "minimumQuantity": 1,

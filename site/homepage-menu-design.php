@@ -340,7 +340,7 @@
             + ' data-op="categoria" data-indice="' + c.indice + '" data-campo="subtitle"'
             + ' data-original="' + esc(c.subtitle) + '">'
             + '<input type="text" class="secundario" value="' + esc(c.actionText) + '"'
-            + ' placeholder="Ver opções →" title="Texto do botão do cartão"'
+            + ' placeholder="Escolher os designs →" title="Texto do botão do cartão"'
             + ' data-op="categoria" data-indice="' + c.indice + '" data-campo="actionText"'
             + ' data-original="' + esc(c.actionText) + '">'
             + '<input type="text" class="secundario" value="' + esc(c.featureLabel) + '"'

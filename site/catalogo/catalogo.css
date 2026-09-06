@@ -511,6 +511,13 @@ a.catalog-brand:focus-visible,
   gap: 5px;
 }
 
+.size-card .catalog-design-frame {
+  flex: 0 0 auto;
+  width: 92px;
+  border: 0;
+  background: transparent;
+}
+
 .catalog-option-card {
   display: grid;
   gap: 10px;
@@ -759,6 +766,18 @@ a.catalog-brand:focus-visible,
   transform-origin: center;
 }
 
+/* Pasta de folhetos: a pagina original usa inset:0 + contain nestas fotos
+   (ver 09-seccoes-produtos.css), nunca o inset de -30% generico — sem isto
+   o zoom copiado somava ~1.6x e nao se via a volta da pasta. */
+.catalog-design-frame.is-contain-full > img.catalog-design-img,
+.design-card .catalog-design-frame.is-contain-full > img.catalog-design-img {
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+  max-width: 100% !important;
+}
+
 .catalog-option-price {
   color: var(--ink);
   font-size: 1.25rem;
@@ -828,6 +847,27 @@ a.catalog-brand:focus-visible,
   color: var(--ink);
   font-size: 0.98rem;
   line-height: 1.2;
+}
+
+.catalog-palette-grid.has-numbers .catalog-palette-swatch {
+  container-type: inline-size;
+  counter-reset: palette-tone;
+}
+
+.catalog-palette-grid.has-numbers .catalog-palette-swatch > span {
+  position: relative;
+  counter-increment: palette-tone;
+}
+
+.catalog-palette-grid.has-numbers .catalog-palette-swatch > span::after {
+  content: counter(palette-tone);
+  position: absolute;
+  left: 5px;
+  bottom: 0;
+  color: var(--card);
+  font-size: 32cqw;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .design-card figcaption {
@@ -1079,6 +1119,10 @@ a.catalog-brand:focus-visible,
   .size-card img {
     width: 78px;
     height: 78px;
+  }
+
+  .size-card .catalog-design-frame {
+    width: 78px;
   }
 }
 

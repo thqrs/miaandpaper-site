@@ -1471,7 +1471,9 @@
     var href = isClickable ? ' href="' + escapeHtml(category.href) + '"' : "";
     var image = category.featureImage || category.image || "";
     var title = category.featureTitle || category.title || "";
-    var text = category.featureText || category.subtitle || "";
+    var text = Object.prototype.hasOwnProperty.call(category, "featureText")
+      ? String(category.featureText || "")
+      : String(category.subtitle || "");
     var cta = category.featureCta || "Ver produto";
 
     return [
@@ -1676,7 +1678,7 @@
         '<span class="category-art" aria-hidden="true"></span>',
         '<strong>' + escapeHtml(category.title || "") + '</strong>',
         '<span>' + escapeHtml(category.subtitle || "") + '</span>',
-        // ACTION_TEXT_V1: o "Ver opcoes ->" era um ::after do CSS, igual em
+        // ACTION_TEXT_V1: o "Escolher os designs ->" era um ::after do CSS, igual em
         // todos os cartoes. Passou a ser texto a serio, editavel por cartao em
         // homepage-menu-design.php. Sem `actionText` o CSS continua a por o
         // texto por omissao, por isso nada muda em quem nao o definiu.

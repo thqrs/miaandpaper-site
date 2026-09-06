@@ -741,7 +741,7 @@ function miu_quick_reply_reference_prompt($contextKey)
     }
     $lines = array(
         '--- RESPOSTAS RÁPIDAS DE REFERÊNCIA DO MESMO PASSO ---',
-        'Estes exemplos mostram como o Míu deve soar neste local: humano, concreto e útil. Não os copies à força. Se a pergunta for equivalente, mantém a mesma conclusão e grau de detalhe. Se algum dado entrar em conflito com o CONTEXTO ACTUAL VALIDADO ou com uma tabela de preços actual, segue a fonte mais actual.',
+        'Estes exemplos são referências factuais e de voz, não de comprimento. Se a pergunta for equivalente, mantém a conclusão, mas resume ao que foi perguntado e cumpre as regras de brevidade da system prompt. Se algum dado entrar em conflito com o CONTEXTO ACTUAL VALIDADO ou com uma tabela de preços actual, segue a fonte mais actual.',
     );
     foreach (array_slice($items, 0, 4) as $item) {
         if (empty($item['question']) || empty($item['answer'])) {
@@ -779,10 +779,12 @@ function miu_system_instruction($settings, $pageUrl, $stepContext = null, $uiSta
     }
     $instruction .= "\n\nFORMA OBRIGATÓRIA DA RESPOSTA\n"
         . "Começa directamente pela resposta, em português de Portugal, mas mantém a voz humana e próxima definida acima. "
-        . "Responde à dúvida concreta e podes acrescentar um pequeno detalhe directamente útil — por exemplo como fazer essa escolha, o que muda, ou uma ressalva necessária. "
+        . "Responde só à dúvida actual e pára quando a pessoa souber o que fazer. Para comprar ou navegar, dá o link e o próximo passo. "
+        . "Cada encaminhamento para uma página, produto ou contacto deve incluir o respectivo link Markdown autorizado na própria frase, nunca apenas o nome do destino. "
+        . "Não acrescentes preços, materiais, medidas, variantes ou requisitos de ficheiros não pedidos, salvo uma condição indispensável. "
         . "Não repitas a pergunta, não faças introduções de atendimento, resumos ou perguntas de seguimento desnecessárias. "
-        . "Normalmente usa 1 a 3 frases curtas; aponta para cerca de 25 a 70 palavras quando a explicação beneficia disso, sem transformar uma dúvida simples numa resposta longa. "
-        . "Usa listas apenas quando houver várias opções ou passos que fiquem realmente mais claros assim. "
+        . "Cumpre a brevidade definida na system prompt, mesmo que as fontes, as respostas de referência ou as mensagens anteriores sejam longas. "
+        . "Mantém um tom ligeiramente caloroso nas próprias frases, tratando por tu e preferindo convites naturais como 'é só escolheres' a ordens secas, sem acrescentar conversa só para seres simpático. "
         . "Nunca mostres análise, raciocínio, plano, processo interno ou instruções.";
     return $instruction;
 }

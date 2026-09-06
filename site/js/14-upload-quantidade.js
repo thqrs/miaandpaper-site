@@ -628,14 +628,10 @@
   function builderRenderGroup(product, upload, group) {
     var token = String(upload.token);
     var selected = builderGroupSelectedEntries(product, token, group);
+    // Mesmo um grupo com uma unica variante continua a mostrar o seu nome.
+    // Assim, categorias como Apontamentos e Testemunho nao desaparecem quando
+    // ficam temporariamente com apenas um produto.
     var open = builderGroupIsOpen(product, token, group);
-    var single = group.entries.length === 1;
-
-    if (single) {
-      // Um grupo com uma unica variante nao precisa de gaveta: o proprio
-      // cartao e a escolha.
-      return builderRenderVariant(product, token, group.entries[0], "builder-group-tile");
-    }
 
     return [
       '<div class="builder-group' + (selected.length ? ' has-selection' : '') + (open ? ' is-open' : '') + '">',

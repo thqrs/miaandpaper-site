@@ -131,6 +131,15 @@ preços, prazos ou disponibilidade, a não pedir dados pessoais e a usar apenas
 links internos em Markdown. O browser só torna clicáveis URLs do próprio site;
 HTML devolvido pelo modelo é sempre tratado como texto.
 
+A resposta habitual deve ter 1–2 frases, idealmente 20–45 palavras e nunca mais
+de 60 numa dúvida simples. Pedidos de compra recebem o link e o próximo passo,
+sem preços ou características não pedidos.
+Cada encaminhamento inclui o link Markdown autorizado na própria frase, incluindo
+contactos. O tom é ligeiramente caloroso, com convites naturais em vez de ordens secas.
+As respostas rápidas são referências factuais e de voz, não de comprimento; o reforço final em `miu-bot.php` remete
+para estas regras da system prompt. Só pedidos de detalhe, várias perguntas ou
+condições indispensáveis justificam desenvolver mais.
+
 O browser identifica `state.product` e o resultado de `currentStep(product)`,
 mas envia apenas os identificadores. O servidor volta a validar o slug e o
 passo nos JSON do catálogo ou do Congresso. Os objectivos vivem em

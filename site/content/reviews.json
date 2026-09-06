@@ -10,7 +10,7 @@
         "showImage": true,
         "showName": true,
         "showText": true,
-        "defaultRatingMode": "stars",
+        "defaultRatingMode": "none",
         "defaultStars": 5,
         "defaultIcon": "heart",
         "defaultCustomIcon": "?",

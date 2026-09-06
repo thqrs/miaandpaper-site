@@ -50,6 +50,8 @@ var miuDebugObjectUrls = {};
 var miuDebugActiveTest = null;
 var miuV2Controller = null;
 var miuV2RuntimePromise = null;
+var miuFooterClearance = 0;
+var miuFooterSyncFrame = 0;
 
 function miuIsAdminChatPage()
 {
@@ -435,6 +437,55 @@ function miuAnimationResetRoam()
   if (miuRootMotion && typeof miuRootMotion.cancel === "function") { miuRootMotion.cancel(); }
   miuRootMotion = null;
   miuAnimationSetRootX(0);
+}
+
+function miuSyncFooterClearance()
+{
+  miuFooterSyncFrame = 0;
+  if (!miuRoot || !miuRoot.isConnected) { return; }
+  if (miuRoot.classList.contains("is-miu-v2-ready")) { miuFooterClearance = 0; return; }
+  var vh = window.innerHeight || document.documentElement.clientHeight || 0;
+  var styleB = 0;
+  try { styleB = parseFloat(window.getComputedStyle(miuRoot).bottom) || 0; }
+  catch (e1) { styleB = 0; }
+  var baseB = Math.max(0, styleB - miuFooterClearance);
+  var need = 0;
+  var blockers = document.querySelectorAll(".cookie-banner.is-visible, .site-footer");
+  Array.prototype.forEach.call(blockers, function (el) {
+    if (!el) { return; }
+    var r = el.getBoundingClientRect();
+    if (r.height > 0 && r.top < vh && r.bottom > 0) {
+      need = Math.max(need, vh - r.top + 14 - baseB);
+    }
+  });
+  need = Math.max(0, need);
+  var rootH = 0;
+  try { rootH = miuRoot.getBoundingClientRect().height || 0; }
+  catch (e2) { rootH = 0; }
+  if (rootH > 0) {
+    need = Math.min(need, Math.max(0, vh - rootH - baseB - 8));
+  }
+  if (Math.abs(need - miuFooterClearance) < 0.5) { return; }
+  miuFooterClearance = need;
+  miuRoot.style.setProperty("--miu-navigation-clearance", need.toFixed(2) + "px");
+}
+
+function miuScheduleFooterSync()
+{
+  if (miuFooterSyncFrame) { return; }
+  miuFooterSyncFrame = window.requestAnimationFrame(miuSyncFooterClearance);
+}
+
+function miuWatchFooterClearance()
+{
+  window.addEventListener("resize", miuScheduleFooterSync, { passive: true });
+  window.addEventListener("scroll", miuScheduleFooterSync, { passive: true });
+  document.addEventListener("scroll", miuScheduleFooterSync, { passive: true, capture: true });
+  if (window.MutationObserver && document.body) {
+    var obs = new MutationObserver(miuScheduleFooterSync);
+    obs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+  }
+  miuScheduleFooterSync();
 }
 
 function miuAnimationMotion(animation)
@@ -2037,6 +2088,7 @@ function miuBuildInterface()
   miuRenderMessages();
   miuUpdateCount();
   miuWatchContext();
+  miuWatchFooterClearance();
   miuScheduleSleep();
   miuAnimationScheduleRandom();
   if (launcherPrompt && Number(display.promptSeconds || 0) > 0 && miuClaimDailyLauncherPrompt()) {

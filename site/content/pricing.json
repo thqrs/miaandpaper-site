@@ -1066,13 +1066,13 @@
       "customArtworkFeePerFileCents": 300,
       "prices": {
         "A4": {
-          "1": 3290
+          "1": 3490
         },
         "A6": {
           "1": 1990
         },
         "A4 + A6": {
-          "1": 4490
+          "1": 4990
         }
       },
       "discountsByPriceKey": {
