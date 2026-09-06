@@ -490,6 +490,24 @@
         });
       });
 
+      // DRAWER_HINT_V1: a gaveta pode trazer data-preview-drawer-hint (texto
+      // vindo do JSON do passo). Clicar na foto diz a dica pelo Míu, com o
+      // estilo de mensagem de erro (siteSpeakError); não muda a seleção.
+      var drawerHint = String(frame.dataset.previewDrawerHint || "");
+      if (drawerHint && typeof siteSpeakError === "function") {
+        frame.querySelectorAll(".cadernos-cover-preview-slide").forEach(function (slide) {
+          slide.addEventListener("click", function () {
+            siteSpeakError(drawerHint);
+          });
+          slide.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              siteSpeakError(drawerHint);
+            }
+          });
+        });
+      }
+
       frame.addEventListener("pointerdown", function (event) {
         if (event.pointerType === "mouse" && event.button !== 0) {
           return;

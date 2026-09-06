@@ -1347,19 +1347,21 @@
     return list.length ? list : [openItem];
   }
 
-  function renderPreviewDrawer(product, coverValue, coverItemId, frames) {
+  function renderPreviewDrawer(product, coverValue, coverItemId, frames, hint) {
     var speed = typeof cadernoPreviewSpeedSeconds === "function" ? cadernoPreviewSpeedSeconds(product) : 4;
+    var hintAttr = hint ? ' data-preview-drawer-hint="' + escapeHtml(hint) + '"' : '';
     if (!frames.length) {
       return "";
     }
     return [
       '<div class="cadernos-cover-drawer quadros-design-drawer">',
-      '<div class="cadernos-cover-preview-frame quadros-design-preview-frame" data-cadernos-preview data-cadernos-preview-cover-value="' + escapeHtml(coverValue || "") + '" data-cadernos-preview-item-id="' + escapeHtml(coverItemId || "") + '" data-cadernos-preview-interval="' + (speed * 1000) + '">',
+      '<div class="cadernos-cover-preview-frame quadros-design-preview-frame" data-cadernos-preview data-cadernos-preview-cover-value="' + escapeHtml(coverValue || "") + '" data-cadernos-preview-item-id="' + escapeHtml(coverItemId || "") + '" data-cadernos-preview-interval="' + (speed * 1000) + '"' + hintAttr + '>',
       frames.map(function (frame, index) {
-        return '<span class="cadernos-cover-preview-slide quadros-design-preview-slide' + (index === 0 ? ' is-active' : '')
+        return '<span class="cadernos-cover-preview-slide quadros-design-preview-slide' + (index === 0 ? ' is-active' : '') + (hint ? ' has-hint' : '')
           + '" data-mia-image="' + escapeHtml(frame.image) + '" data-mia-item-id="' + escapeHtml(frame.itemId || "")
           + '" data-mia-slot-name="drawer" data-mia-slide-index="' + index
-          + '" style="background-image:url(&quot;' + escapeHtml(frame.image) + '&quot;)"></span>';
+          + '" style="background-image:url(&quot;' + escapeHtml(frame.image) + '&quot;)"'
+          + (hint ? ' tabindex="0" role="button" aria-label="' + escapeHtml(frame.label) + '"' : '') + '></span>';
       }).join(""),
       frames.length > 1 ? '<button type="button" class="cadernos-preview-arrow cadernos-preview-arrow--prev" data-cadernos-preview-step="-1" aria-label="Imagem anterior">‹</button>' : "",
       frames.length > 1 ? '<button type="button" class="cadernos-preview-arrow cadernos-preview-arrow--next" data-cadernos-preview-step="1" aria-label="Imagem seguinte">›</button>' : "",
@@ -1427,7 +1429,7 @@
 
     return [
       '<div class="pf-assignment-preview" data-assignment-preview role="status" aria-live="polite">',
-      renderPreviewDrawer(product, item && item.value, item && item.id, previewDrawerFrames(assignmentPreviewDrawerItems(product, step, item), true)),
+      renderPreviewDrawer(product, item && item.value, item && item.id, previewDrawerFrames(assignmentPreviewDrawerItems(product, step, item), true), config.drawerHint),
       '</div>'
     ].join("");
   }
@@ -1886,7 +1888,7 @@
       if (selectedItem && step.selectedImagePreview) {
         if (step.selectedImagePreview.variationStepId) {
           selectedPreview = '<div class="grouped-design-selected-preview" data-selected-image-preview role="status" aria-live="polite" style="--selected-preview-row-three:' + (Math.floor(selectedIndex / 3) + 2) + ';--selected-preview-row-two:' + (Math.floor(selectedIndex / 2) + 2) + '">'
-            + renderPreviewDrawer(product, selectedItem.value, selectedItem.id, previewDrawerFrames(singlePreviewDrawerItems(product, step, selectedItem, group), false))
+            + renderPreviewDrawer(product, selectedItem.value, selectedItem.id, previewDrawerFrames(singlePreviewDrawerItems(product, step, selectedItem, group), false), step.selectedImagePreview.drawerHint)
             + '</div>';
         } else {
           selectedPreview = '<div class="grouped-design-selected-preview" data-selected-image-preview role="status" aria-live="polite" style="--selected-preview-row-three:' + (Math.floor(selectedIndex / 3) + 2) + ';--selected-preview-row-two:' + (Math.floor(selectedIndex / 2) + 2) + '">' + renderCadernosProofPhoto(selectedItem, step.selectedImagePreview.label || "Imagem ilustrativa") + '</div>';

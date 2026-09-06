@@ -383,6 +383,12 @@ html[data-theme="dark"] .crachas-size-card-proof-note {
   opacity: 1;
 }
 
+/* DRAWER_HINT_V1: só as fotos com dica (data-preview-drawer-hint) são
+   clicáveis — as outras gavetas ficam como estão. */
+.cadernos-cover-preview-slide.has-hint {
+  cursor: pointer;
+}
+
 .quadros-design-choice {
   display: grid;
   min-width: 0;
