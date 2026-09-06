@@ -45,8 +45,8 @@ $levels = array(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tracking · Mia &amp; Paper</title>
   <link rel="icon" href="content/brand/logo.webp" type="image/webp">
-  <link rel="stylesheet" href="admin-nav.css?v=20260906225352">
-  <script src="admin-nav.js?v=20260906225352" defer></script>
+  <link rel="stylesheet" href="admin-nav.css?v=20260906225853">
+  <script src="admin-nav.js?v=20260906225853" defer></script>
   <style>
     :root { --paper:#f7f1e3; --card:#fffdf8; --ink:#30291e; --muted:#746a59; --line:#d9ccb2; --moss:#4f7a3a; --red:#9d2f28; }
     * { box-sizing:border-box; }

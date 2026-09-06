@@ -702,33 +702,34 @@
       content ? '<button type="button" data-admin-undo' + (state.undoStack.length ? "" : " disabled") + '>UNDO</button>' : "",
       content ? '<button type="button" data-admin-save>SAVE</button>' : "",
       content ? '<button type="button" data-admin-reset>JSON</button>' : "",
-      // FUNNEL_DASHBOARD_V1: link rápido para a dashboard do funil. Abre em
-      // nova tab para não perder o estado da edição.
+      '<button type="button" data-admin-exit>Sair</button>',
+      '</div>',
+      '<div class="admin-toolbar-shortcuts" aria-label="Atalhos de administração">',
+      '<a class="admin-funnel-link is-live" href="funilv2.php" target="_blank" rel="noopener">Funil live</a>',
       '<a class="admin-funnel-link" href="admin-funnel.php" target="_blank" rel="noopener">Funil</a>',
       '<a class="admin-funnel-link" href="tracking.php" target="_blank" rel="noopener">Tracking</a>',
-      // ADMIN_ORDERS_V1: link para o painel de encomendas.
-      '<a class="admin-funnel-link" href="admin-orders.php" target="_blank" rel="noopener">Encomendas</a>',
-      '<a class="admin-funnel-link" href="admin-colors.html" target="_blank" rel="noopener">Cores</a>',
+      '<a class="admin-funnel-link is-live" href="admin-orders.php" target="_blank" rel="noopener">Encomendas</a>',
+      '<a class="admin-funnel-link is-live" href="view-uploads.php" target="_blank" rel="noopener">Ficheiros clientes</a>',
       '<a class="admin-funnel-link" href="admin-uploads.php" target="_blank" rel="noopener">Uploads assistidos</a>',
-      '<a class="admin-funnel-link" href="galeria.html" target="_blank" rel="noopener">Galeria</a>',
-      '<a class="admin-funnel-link" href="multimedia.html" target="_blank" rel="noopener">Multimédia</a>',
-      '<a class="admin-funnel-link" href="reviews.html" target="_blank" rel="noopener">Reviews</a>',
-      '<a class="admin-funnel-link" href="produtos.html" target="_blank" rel="noopener">Produtos</a>',
-      // PRECOS_UI_V1: editor central de precos. Todos os valores monetarios do
-      // site num sitio so — packs, descontos, extras, portes e custos.
       '<a class="admin-funnel-link" href="precos.php" target="_blank" rel="noopener">Preços</a>',
-      // MATERIAIS_UI_V1: o custo real de uma unidade, que alimenta o lucro
-      // que o precos.php mostra.
       '<a class="admin-funnel-link" href="materiais.php" target="_blank" rel="noopener">Materiais</a>',
       '<a class="admin-funnel-link" href="homepage-menu-design.php" target="_blank" rel="noopener">Homepage & Menu</a>',
-      // CARROUSEL_UI_V1: os carrosseis dos cartoes saem daqui e passam a ter
-      // pagina propria, com os parametros de cada imagem.
       '<a class="admin-funnel-link" href="carrousel.php" target="_blank" rel="noopener">Carrosséis</a>',
-      // TOOLS_INDEX_V1: link para as ferramentas internas (só admin; a página
-      // valida a sessão no servidor, como admin-funnel.php).
+      '<a class="admin-funnel-link" href="produtos.html" target="_blank" rel="noopener">Produtos</a>',
+      '<a class="admin-funnel-link" href="produtos.php" target="_blank" rel="noopener">Designs Passo 1</a>',
+      '<a class="admin-funnel-link" href="galeria.html" target="_blank" rel="noopener">Galeria</a>',
+      '<a class="admin-funnel-link" href="multimedia.html" target="_blank" rel="noopener">Multimédia</a>',
+      '<a class="admin-funnel-link" href="photo-wizard.php" target="_blank" rel="noopener">Photo Wizard</a>',
+      '<a class="admin-funnel-link" href="mockup-studio.php" target="_blank" rel="noopener">Mockups</a>',
+      '<a class="admin-funnel-link" href="reviews.html" target="_blank" rel="noopener">Reviews</a>',
+      '<a class="admin-funnel-link" href="admin-colors.html" target="_blank" rel="noopener">Cores</a>',
+      '<a class="admin-funnel-link" href="bot.php" target="_blank" rel="noopener">Míu</a>',
+      '<a class="admin-funnel-link" href="sprites.php" target="_blank" rel="noopener">Sprites</a>',
+      '<a class="admin-funnel-link" href="faqs.php" target="_blank" rel="noopener">FAQs</a>',
+      '<a class="admin-funnel-link" href="erros.php" target="_blank" rel="noopener">Erros</a>',
+      '<a class="admin-funnel-link" href="admin-snapshots.php" target="_blank" rel="noopener">Snapshots</a>',
       '<a class="admin-funnel-link" href="tools/index.php" target="_blank" rel="noopener">Ferramentas</a>',
       '<a class="admin-funnel-link" href="cadernos-anuais.html">Cadernos</a>',
-      '<button type="button" data-admin-exit>Sair</button>',
       '</div>',
       message,
       renderBasicAdminTrackingPanel(),

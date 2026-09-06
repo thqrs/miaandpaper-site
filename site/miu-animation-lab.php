@@ -25,10 +25,10 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Míu 8×8 · Laboratório Experimental</title>
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260906225352">
-  <link rel="stylesheet" href="admin-nav.css?v=20260906225352">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260906225853">
+  <link rel="stylesheet" href="admin-nav.css?v=20260906225853">
   <link rel="stylesheet" href="miu-animation-lab.css?v=2026082502">
-  <script src="admin-nav.js?v=20260906225352" defer></script>
+  <script src="admin-nav.js?v=20260906225853" defer></script>
   <script src="miu-sprite-grid.js?v=2026082703" defer></script>
   <script src="miu-animation-lab.js?v=2026082702" defer></script>
 </head>
