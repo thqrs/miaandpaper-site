@@ -441,6 +441,22 @@ function product_step($product, $id)
     return array();
 }
 
+function product_has_card_details_step($product)
+{
+    $step = product_step($product, 'details');
+    if (empty($step) || empty($step['template']) || $step['template'] !== 'details-form') {
+        return false;
+    }
+    if (!empty($step['fields']) && is_array($step['fields'])) {
+        foreach ($step['fields'] as $f) {
+            if (isset($f['name']) && in_array($f['name'], array('recipient_name', 'congregation'), true)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 function product_cover_personalization_questions($personalizationStep, $selectedSize = '')
 {
     if (empty($personalizationStep) || !is_array($personalizationStep)) {
@@ -1714,6 +1730,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     $contact = cart_string_selection($selections, 'contact');
     $congregation = cart_string_selection($selections, 'congregation');
     $congregationGift = cart_bool(cart_selection($selections, 'congregation_gift', false));
+    $hasCardDetailsStep = product_has_card_details_step($productConfig);
     $sizeStep = product_step($productConfig, 'size');
     $customUsesSize = $isCustomArtwork && !empty($sizeStep);
     $selectedSizeItem = $customUsesSize ? product_selected_size_item($productConfig, $size) : array();
@@ -2003,7 +2020,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         && !empty($allowedDesigns)
         && count($uniqueDesigns) === count($allowedDesigns)
         && count(array_diff($allowedDesigns, $uniqueDesigns)) === 0;
-    $showCongregationGiftLine = !$isCadernos && !$isQuadros && !$isCustomArtwork && !$assortedDesigns && !$allDesignsSelected;
+    $showCongregationGiftLine = $hasCardDetailsStep && !$isCadernos && !$isQuadros && !$isCustomArtwork && !$assortedDesigns && !$allDesignsSelected;
     if (!$showCongregationGiftLine) {
         $congregationGift = false;
     }
@@ -2581,10 +2598,14 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
     // preço: o trabalho de ajustar o ficheiro é o mesmo.
     $priceCents = $productSubtotalCents + ($isMainV2 ? $customizationFeeCents : 0);
     $finishExtraLine = $finishExtraPerUnitCents && $productQuantity
-        ? format_euros($finishExtraPerUnitCents) . ' x ' . $productQuantity . ' = ' . format_euros($finishExtraPerUnitCents * $productQuantity)
+        ? ($productQuantity > 1
+            ? format_euros($finishExtraPerUnitCents) . ' x ' . $productQuantity . ' = ' . format_euros($finishExtraPerUnitCents * $productQuantity)
+            : format_euros($finishExtraPerUnitCents))
         : '';
     $optionDrawerExtraLine = $optionDrawerExtraPerUnitCents && $productQuantity
-        ? format_euros($optionDrawerExtraPerUnitCents) . ' x ' . $productQuantity . ' = ' . format_euros($optionDrawerExtraPerUnitCents * $productQuantity)
+        ? ($productQuantity > 1
+            ? format_euros($optionDrawerExtraPerUnitCents) . ' x ' . $productQuantity . ' = ' . format_euros($optionDrawerExtraPerUnitCents * $productQuantity)
+            : format_euros($optionDrawerExtraPerUnitCents))
         : '';
     $priceRangeLine = '';
     if ($sizeQuoteOnly && !$quadroQuoteOnly) {
@@ -2787,6 +2808,7 @@ function cart_prepare_item($item, $defaultPackPrices, $defaultAllowedDesigns)
         'card_contact' => $contact,
         'congregation' => $congregation,
         'congregation_gift' => $congregationGift,
+        'has_card_details_step' => $hasCardDetailsStep,
         'show_congregation_gift_line' => $showCongregationGiftLine,
         'lamination' => $lamination,
         'lamination_label' => $laminationLabel,
@@ -3005,10 +3027,8 @@ function cart_item_owner_lines($line)
 
     if (!empty($line['is_cadernos'])) {
         $rows[] = 'Produto: ' . $line['product_name'];
-        if (!empty($line['is_main_v2'])) {
-            $rows[] = 'Contexto: catálogo principal (main-v2) — design do catálogo';
-        } elseif (!empty($line['is_congress_2026'])) {
-            $rows[] = 'Contexto: Congresso 2026';
+        if (!empty($line['is_congress_2026'])) {
+            $rows[] = 'Coleção: Congresso 2026';
         }
         $rows[] = 'Capa escolhida: ' . $line['cover_line_owner'];
         $rows[] = 'Acabamento da Capa: ' . $line['lamination_label'];
@@ -3060,13 +3080,16 @@ function cart_item_owner_lines($line)
     $rows[] = '';
     $rows[] = 'Designs e quantidades:';
     $rows[] = '- ' . implode("\n- ", $line['design_lines_owner']);
-    $rows[] = '';
-    $rows[] = 'Dados para cartão de apresentação:';
-    $rows[] = 'Nome: ' . ($line['recipient_name'] !== '' ? $line['recipient_name'] : 'Não indicado');
-    $rows[] = 'Telemóvel ou Email: ' . ($line['card_contact'] !== '' ? $line['card_contact'] : 'Não indicado');
-    $rows[] = 'Congregação: ' . ($line['congregation'] !== '' ? $line['congregation'] : 'Não indicado');
-    if (!empty($line['show_congregation_gift_line'])) {
-        $rows[] = 'Oferta à congregação: ' . ($line['congregation_gift'] ? 'Sim - pediu ajuda para escolher designs únicos para a congregação.' : 'Não');
+    $hasAnyCardData = ($line['recipient_name'] !== '' || $line['card_contact'] !== '' || $line['congregation'] !== '' || !empty($line['congregation_gift']));
+    if (!empty($line['has_card_details_step']) || $hasAnyCardData) {
+        $rows[] = '';
+        $rows[] = 'Dados para cartão de apresentação:';
+        $rows[] = 'Nome: ' . ($line['recipient_name'] !== '' ? $line['recipient_name'] : 'Não indicado');
+        $rows[] = 'Telemóvel ou Email: ' . ($line['card_contact'] !== '' ? $line['card_contact'] : 'Não indicado');
+        $rows[] = 'Congregação: ' . ($line['congregation'] !== '' ? $line['congregation'] : 'Não indicado');
+        if (!empty($line['show_congregation_gift_line'])) {
+            $rows[] = 'Oferta à congregação: ' . ($line['congregation_gift'] ? 'Sim - pediu ajuda para escolher designs únicos para a congregação.' : 'Não');
+        }
     }
 
     return $rows;
@@ -3251,10 +3274,8 @@ function cart_item_customer_lines($line)
     }
 
     $rows[] = 'Produto: ' . $line['product_name'];
-    if (!empty($line['is_main_v2'])) {
-        $rows[] = 'Contexto: catálogo principal (main-v2) — design do catálogo';
-    } elseif (!empty($line['is_congress_2026'])) {
-        $rows[] = 'Contexto: Congresso 2026';
+    if (!empty($line['is_congress_2026'])) {
+        $rows[] = 'Coleção: Congresso 2026';
     }
     $rows[] = (!empty($line['is_main_v2']) ? 'Quantidade: ' : 'Pack: ') . $line['pack_quantity'] . ' ' . $line['unit_label'];
     $rows[] = 'Tamanho: ' . $line['size'];
@@ -3272,17 +3293,21 @@ function cart_item_customer_lines($line)
             $rows[] = 'Acréscimo da personalização: ' . $line['personalization_extra_line'];
         }
     }
-    $rows[] = 'Preço do produto: ' . $line['price_line'] . ($line['unit_price_line'] !== '' ? ', ou seja: ' . $line['unit_price_line'] : '');
+    $rows[] = 'Preço do produto: ' . $line['price_line'] . (($line['pack_quantity'] > 1 && $line['unit_price_line'] !== '') ? ', ou seja: ' . $line['unit_price_line'] : '');
     $rows[] = '';
     $rows[] = 'Designs escolhidos:';
     $rows[] = '- ' . implode("\n- ", $line['design_lines_customer']);
-    $rows[] = '';
-    $rows[] = 'Dados para o teu Cartão de Apresentação:';
-    $rows[] = 'Nome: ' . ($line['recipient_name'] !== '' ? $line['recipient_name'] : 'Não indicado');
-    $rows[] = 'Telemóvel ou Email: ' . ($line['card_contact'] !== '' ? $line['card_contact'] : 'Não indicado');
-    $rows[] = 'Congregação: ' . ($line['congregation'] !== '' ? $line['congregation'] : 'Não indicado');
-    if (!empty($line['show_congregation_gift_line'])) {
-        $rows[] = 'Pedi ajuda para não escolher designs repetidos: ' . ($line['congregation_gift'] ? 'Sim' : 'Não');
+
+    $hasAnyCardData = ($line['recipient_name'] !== '' || $line['card_contact'] !== '' || $line['congregation'] !== '' || !empty($line['congregation_gift']));
+    if (!empty($line['has_card_details_step']) && ($hasAnyCardData || !empty($line['is_congress_2026']))) {
+        $rows[] = '';
+        $rows[] = 'Dados para o teu Cartão de Apresentação:';
+        $rows[] = 'Nome: ' . ($line['recipient_name'] !== '' ? $line['recipient_name'] : 'Não indicado');
+        $rows[] = 'Telemóvel ou Email: ' . ($line['card_contact'] !== '' ? $line['card_contact'] : 'Não indicado');
+        $rows[] = 'Congregação: ' . ($line['congregation'] !== '' ? $line['congregation'] : 'Não indicado');
+        if (!empty($line['show_congregation_gift_line'])) {
+            $rows[] = 'Pedi ajuda para não escolher designs repetidos: ' . ($line['congregation_gift'] ? 'Sim' : 'Não');
+        }
     }
 
     return $rows;
@@ -3295,7 +3320,7 @@ function customer_email_footer_lines()
         'Precisas de fazer alguma alteração à tua encomenda ou tens alguma dúvida?',
         'Este email é enviado automaticamente e as respostas não são recebidas.',
         'Se precisares de alterar alguma coisa ou esclarecer uma dúvida, fala com a Mia:',
-        'contacto.html',
+        'https://miaandpaper.com/contacto.html',
         '',
         'Mia & Paper',
     );
@@ -3652,19 +3677,19 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260906193556">
-  <link rel="stylesheet" href="css/02-base-chrome.css?v=20260906193556">
-  <link rel="stylesheet" href="css/03-grelha-designs-tons.css?v=20260906193556">
-  <link rel="stylesheet" href="css/04-reviews-passos-acoes.css?v=20260906193556">
-  <link rel="stylesheet" href="css/05-cookies-packs-entrega.css?v=20260906193556">
-  <link rel="stylesheet" href="css/06-admin.css?v=20260906193556">
-  <link rel="stylesheet" href="css/07-cards-crachas-molduras.css?v=20260906193556">
-  <link rel="stylesheet" href="css/08-dark-mode.css?v=20260906193556">
-  <link rel="stylesheet" href="css/09-seccoes-produtos.css?v=20260906193556">
-  <link rel="stylesheet" href="css/10-entrega-uniformizacao.css?v=20260906193556">
-  <link rel="stylesheet" href="css/11-home-marca.css?v=20260906193556">
-  <link rel="stylesheet" href="css/12-composer-glitter-chart.css?v=20260906193556">
-  <link rel="stylesheet" href="css/13-miu.css?v=20260906193556">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260906_200201">
+  <link rel="stylesheet" href="css/02-base-chrome.css?v=20260906_200201">
+  <link rel="stylesheet" href="css/03-grelha-designs-tons.css?v=20260906_200201">
+  <link rel="stylesheet" href="css/04-reviews-passos-acoes.css?v=20260906_200201">
+  <link rel="stylesheet" href="css/05-cookies-packs-entrega.css?v=20260906_200201">
+  <link rel="stylesheet" href="css/06-admin.css?v=20260906_200201">
+  <link rel="stylesheet" href="css/07-cards-crachas-molduras.css?v=20260906_200201">
+  <link rel="stylesheet" href="css/08-dark-mode.css?v=20260906_200201">
+  <link rel="stylesheet" href="css/09-seccoes-produtos.css?v=20260906_200201">
+  <link rel="stylesheet" href="css/10-entrega-uniformizacao.css?v=20260906_200201">
+  <link rel="stylesheet" href="css/11-home-marca.css?v=20260906_200201">
+  <link rel="stylesheet" href="css/12-composer-glitter-chart.css?v=20260906_200201">
+  <link rel="stylesheet" href="css/13-miu.css?v=20260906_200201">
 </head>
 <body class="result-body">
   <main class="result-card <?php echo h($kind); ?>">
@@ -3857,7 +3882,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
       } catch (error) {}
     </script>
   <?php endif; ?>
-  <script src="js/24-miu.js?v=20260906193556"></script>
+  <script src="js/24-miu.js?v=20260906_200201"></script>
 </body>
 </html>
     <?php
@@ -4000,6 +4025,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     $deliveryLine = $delivery ? $delivery['label'] : 'Não indicado';
     $deliveryFeeCents = $delivery ? (int)$delivery['fee_cents'] : 0;
     $deliveryFeeLine = ($delivery && !empty($delivery['price_text'])) ? $delivery['price_text'] : format_euros($deliveryFeeCents);
+    $deliveryFeeLine = trim(preg_replace('/\s+/', ' ', $deliveryFeeLine));
     $subtotalCents = 0;
     foreach ($preparedItems as $line) {
         $subtotalCents += (int)$line['price_cents'];
@@ -4052,7 +4078,6 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         '',
         'Resumo do pedido',
         'Produtos: ' . count($preparedItems),
-        'Contexto do carrinho: ' . $authoritativeCartContext,
         'Total dos produtos: ' . $productsTotalLine,
         'Entrega: ' . $deliveryLine,
         'Portes: ' . $deliveryFeeLine,
@@ -4488,6 +4513,7 @@ $packPrices = !empty($centralPackPrices) ? $centralPackPrices : product_prices($
 $allowedDesigns = product_design_values($productConfig, $defaultAllowedDesigns);
 $allowedDeliveryOptions = product_delivery_options($productConfig, $defaultDeliveryOptions);
 $hasPackStep = !empty(product_step($productConfig, 'pack'));
+$hasCardDetailsStep = product_has_card_details_step($productConfig);
 $hasPrices = !empty($packPrices);
 
 $size = field('size');
@@ -4540,7 +4566,7 @@ $allDesignsSelected = !$assortedDesigns
     && !empty($allowedDesigns)
     && count($uniqueDesigns) === count($allowedDesigns)
     && count(array_diff($allowedDesigns, $uniqueDesigns)) === 0;
-$showCongregationGiftLine = !$isCadernos && !$assortedDesigns && !$allDesignsSelected;
+$showCongregationGiftLine = $hasCardDetailsStep && !$isCadernos && !$assortedDesigns && !$allDesignsSelected;
 if (!$showCongregationGiftLine) {
     $congregationGift = false;
 }
@@ -4721,6 +4747,7 @@ $delivery = isset($allowedDeliveryOptions[$deliveryOption]) ? $allowedDeliveryOp
 $deliveryLine = $delivery ? $delivery['label'] : 'Não indicado';
 $deliveryFeeCents = $delivery ? (int)$delivery['fee_cents'] : 0;
 $deliveryFeeLine = ($delivery && !empty($delivery['price_text'])) ? $delivery['price_text'] : format_euros($deliveryFeeCents);
+$deliveryFeeLine = trim(preg_replace('/\s+/', ' ', $deliveryFeeLine));
 $totalEstimateLine = $priceCents ? format_euros($priceCents + $deliveryFeeCents) : 'Não calculado';
 $totalEstimateLabel = $deliveryFeeCents > 0 ? 'Total estimado' : 'Total';
 // SECTION_DISPLAY_LABELS_V1:
@@ -4780,13 +4807,20 @@ $ownerBodyLines = array(
     'Designs e quantidades:',
     '- ' . implode("\n- ", $designLinesOwner),
     '',
-    'Dados para cartão de apresentação:',
-    'Nome: ' . $recipientNameLine,
-    'Telemóvel ou Email: ' . $contactLine,
-    'Congregação: ' . $congregationLine,
 );
-if ($showCongregationGiftLine) {
-    $ownerBodyLines[] = 'Oferta à congregação: ' . $congregationGiftLine;
+$hasAnyCardData = ($recipientNameLine !== 'Não indicado' && $recipientNameLine !== ''
+    || ($contactLine !== 'Não indicado' && $contactLine !== '')
+    || ($congregationLine !== 'Não indicado' && $congregationLine !== '')
+    || $congregationGift);
+if ($hasCardDetailsStep || $hasAnyCardData) {
+    $ownerBodyLines[] = '';
+    $ownerBodyLines[] = 'Dados para cartão de apresentação:';
+    $ownerBodyLines[] = 'Nome: ' . $recipientNameLine;
+    $ownerBodyLines[] = 'Telemóvel ou Email: ' . $contactLine;
+    $ownerBodyLines[] = 'Congregação: ' . $congregationLine;
+    if ($showCongregationGiftLine) {
+        $ownerBodyLines[] = 'Oferta à congregação: ' . $congregationGiftLine;
+    }
 }
 $ownerBodyLines = array_merge($ownerBodyLines, array(
     '',
@@ -4851,20 +4885,22 @@ $customerBodyLines = array(
     'Produto: ' . $productName,
     'Pack: ' . ($hasPackStep ? $packQuantity . ' ' . $unitLabel : 'Não aplicável'),
     'Tamanho: ' . $size,
-    'Preço do pedido: ' . $priceLine . ($unitPriceLine !== '' ? ', ou seja: ' . $unitPriceLine : ''),
+    'Preço do pedido: ' . $priceLine . (($hasPackStep && $packQuantity > 1 && $unitPriceLine !== '') ? ', ou seja: ' . $unitPriceLine : ''),
     'Entrega: ' . $deliveryLine,
     'Portes: ' . $deliveryFeeLine,
     '',
     'Designs escolhidos:',
     '- ' . implode("\n- ", $designLinesCustomer),
-    '',
-    'Dados para o teu Cartão de Apresentação:',
-    'Nome: ' . $recipientNameLine,
-    'Telemóvel ou Email: ' . $contactLine,
-    'Congregação: ' . $congregationLine,
 );
-if ($showCongregationGiftLine) {
-    $customerBodyLines[] = 'Pedi ajuda para não escolher designs repetidos: ' . ($congregationGift ? 'Sim' : 'Não');
+if ($hasCardDetailsStep && ($hasAnyCardData || !empty($productConfig['collection']) && $productConfig['collection'] === 'congresso-2026' || !empty($isCongress))) {
+    $customerBodyLines[] = '';
+    $customerBodyLines[] = 'Dados para o teu Cartão de Apresentação:';
+    $customerBodyLines[] = 'Nome: ' . $recipientNameLine;
+    $customerBodyLines[] = 'Telemóvel ou Email: ' . $contactLine;
+    $customerBodyLines[] = 'Congregação: ' . $congregationLine;
+    if ($showCongregationGiftLine) {
+        $customerBodyLines[] = 'Pedi ajuda para não escolher designs repetidos: ' . ($congregationGift ? 'Sim' : 'Não');
+    }
 }
 $customerBodyLines = array_merge($customerBodyLines, array(
     '',
