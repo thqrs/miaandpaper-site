@@ -387,6 +387,18 @@
   }
 
   function cadernoCoverPreviewFrames(product, item) {
+    if (item && Array.isArray(item.drawerFrames) && item.drawerFrames.length) {
+      return item.drawerFrames.filter(function (f) {
+        return f && f.image;
+      }).map(function (f) {
+        return {
+          image: String(f.image),
+          label: String(f.label || (f.isCover ? (item.previewLabel || "Capa") : (item.interiorLabel || "Interior"))),
+          itemId: String(item.id || "")
+        };
+      });
+    }
+
     var frames = [];
     var cover = cadernoCoverImage(item);
     var interior = cadernoItemInteriorImages(product, item);
@@ -395,13 +407,17 @@
       frames.push({ image: cover, label: cadernoPreviewLabel(cover, true, item) });
     }
 
-    interior.forEach(function (image) {
+    interior.forEach(function (entry) {
+      var image = entry && typeof entry === "object" ? entry.image : entry;
+      var customLabel = entry && typeof entry === "object" && entry.label
+        ? entry.label
+        : (item && item.interiorLabel);
       var exists = frames.filter(function (frame) {
         return frame.image === image;
       }).length > 0;
 
       if (image && !exists) {
-        frames.push({ image: image, label: cadernoPreviewLabel(image, false) });
+        frames.push({ image: image, label: customLabel || cadernoPreviewLabel(image, false, item) });
       }
     });
 
@@ -537,7 +553,7 @@
   function captureCadernoRenderState(product) {
     var frame;
 
-    if (!isCadernosProduct(product)) {
+    if (!isCadernosProduct(product) && productFamily(product) !== "pasta-de-folhetos") {
       return null;
     }
 
@@ -552,7 +568,7 @@
   function restoreCadernoRenderState(product, renderState) {
     var frame;
 
-    if (!renderState || !isCadernosProduct(product)) {
+    if (!renderState || (!isCadernosProduct(product) && productFamily(product) !== "pasta-de-folhetos")) {
       return;
     }
 

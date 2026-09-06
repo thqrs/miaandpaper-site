@@ -2679,10 +2679,10 @@
     playStepNumbersFlip();
     bindProduct(product);
     initQuadrosPhotoColorAnalysis(product, step);
-    if (isCadernosProduct(product) || isQuadrosProduct(product) || productUsesPreviewDrawers(product)) {
+    if (document.querySelector("[data-cadernos-preview]") || isCadernosProduct(product) || isQuadrosProduct(product) || productUsesPreviewDrawers(product)) {
       initCadernoPreviewSlides();
     }
-    if (isCadernosProduct(product)) {
+    if (isCadernosProduct(product) || productFamily(product) === "pasta-de-folhetos") {
       restoreCadernoRenderState(product, cadernoRenderState);
     }
 

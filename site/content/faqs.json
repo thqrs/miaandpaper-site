@@ -55,7 +55,7 @@
             "id": "opcoes-de-entrega",
             "enabled": true,
             "question": "Que opções de entrega existem?",
-            "answerHtml": "<p>Consoante a encomenda, podes encontrar estas opções:</p><ul><li>recolha combinada;</li><li>envio por CTT;</li><li>juntar a outra encomenda ainda aberta.</li></ul><p>No envio por CTT, o valor apresentado pode ser uma estimativa mínima. Se escolheres envio por CTT, confirmo contigo a morada e o valor final dos portes.</p>"
+            "answerHtml": "<p>Consoante a encomenda, podes encontrar estas opções:</p><ul><li>entrega pessoal combinada (Quinta do Conde, Azeitão e Fernão Ferro);</li><li>envio por CTT;</li><li>juntar a outra encomenda ainda aberta.</li></ul><p>No envio por CTT, o valor apresentado pode ser uma estimativa mínima. Se escolheres envio por CTT, confirmo contigo a morada e o valor final dos portes.</p>"
         },
         {
             "id": "alterar-pedido-enviado",

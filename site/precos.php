@@ -25,8 +25,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Preços · Mia &amp; Paper</title>
-<link rel="stylesheet" href="admin-nav.css?v=20260907003042">
-<script src="admin-nav.js?v=20260907003042" defer></script>
+<link rel="stylesheet" href="admin-nav.css?v=20260907005732">
+<script src="admin-nav.js?v=20260907005732" defer></script>
 <style>
   /* Painel escuro azul-marinho, ao estilo dos dashboards de parede: fundo
      profundo, cartoes com um pouco mais de luz, numeros grandes e um acento
@@ -1382,7 +1382,7 @@
   // Portes: um valor para o site todo. Antes viviam duplicados nos 13 JSON de
   // produto e já tinham divergido uma vez.
   var ROTULOS_ENTREGA = {
-    pickup: "Recolha na casa da Mia",
+    pickup: "Entrega pessoal (Quinta do Conde, Azeitão, Fernão Ferro)",
     shipping: "Envio CTT — até 2 kg",
     join_orders: "Juntar às encomendas"
   };

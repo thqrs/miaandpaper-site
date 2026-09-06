@@ -501,8 +501,8 @@ header('Content-Type: text/html; charset=utf-8');
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Encomendas · Mia &amp; Paper admin</title>
-<link rel="stylesheet" href="admin-nav.css?v=20260907003042">
-<script src="admin-nav.js?v=20260907003042" defer></script>
+<link rel="stylesheet" href="admin-nav.css?v=20260907005732">
+<script src="admin-nav.js?v=20260907005732" defer></script>
 <style>
 :root {
   --ink: #3b2f1f;
@@ -1313,7 +1313,7 @@ if ($view === 'list') :
       <label class="field"><span>Congregação</span><input type="text" name="congregation"></label>
       <label class="field"><span>Tipo de entrega (id)</span>
         <select name="delivery_option">
-          <option value="pickup">Vou recolher na casa da Mia</option>
+          <option value="pickup">Entregamos-te pessoalmente</option>
           <option value="shipping">Envio CTT - até 2 Kg</option>
           <option value="join_orders">Junta as minhas encomendas</option>
         </select>

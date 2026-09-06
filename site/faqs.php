@@ -322,7 +322,7 @@ if (!$editorItems) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>FAQs · Mia &amp; Paper</title>
-  <link rel="stylesheet" href="admin-nav.css?v=20260907003042">
+  <link rel="stylesheet" href="admin-nav.css?v=20260907005732">
   <style>
     :root {
       --fundo: #14153a; --fundo-2: #101132; --cartao: #1e2050;
@@ -516,7 +516,7 @@ if (!$editorItems) {
     </article>
   </template>
 
-  <script src="admin-nav.js?v=20260907003042"></script>
+  <script src="admin-nav.js?v=20260907005732"></script>
   <script>
   (function () {
     "use strict";

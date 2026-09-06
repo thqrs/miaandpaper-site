@@ -2513,7 +2513,28 @@ html[data-theme="dark"] .pf-fluid-variation {
 }
 
 .pf-size-choice > .cadernos-cover-drawer {
-  margin-top: 8px;
+  margin-top: 10px;
+}
+
+.pf-size-choice > .cadernos-cover-drawer .cadernos-cover-preview-frame {
+  width: min(320px, 100%);
+  aspect-ratio: 9 / 16;
+  max-height: 520px;
+  background: #fbf7ee;
+  border: 1px solid rgba(126, 93, 22, 0.22);
+  border-radius: 18px;
+}
+
+.pf-size-choice > .cadernos-cover-drawer .cadernos-cover-preview-slide {
+  background-size: cover;
+  background-position: center;
+}
+
+.pf-size-choice > .cadernos-cover-drawer .cadernos-cover-preview-slide[data-mia-slide-index="0"] {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: #fbf7ee;
 }
 
 .pf-finish-step .cadernos-add-on-list {

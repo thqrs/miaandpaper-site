@@ -58,8 +58,8 @@
     "deliveryOptions": [
         {
             "id": "pickup",
-            "label": "Vou recolher na casa da Mia",
-            "text": "",
+            "label": "Entregamos-te pessoalmente",
+            "text": "Apenas Quinta do Conde, Azeitão e Fernão Ferro",
             "feeCents": 0
         },
         {
@@ -156,7 +156,25 @@
                     "frameWidth": 100,
                     "frameHeight": 120,
                     "visual": "neutral",
-                    "interiorImages": [],
+                    "interiorImages": [
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-01.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-02.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-03.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-04.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-05.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-06.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-07.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-08.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-09.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-10.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-11.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-12.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-13.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-14.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-15.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-16.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-17.webp"
+                    ],
                     "imageEdits": {
                         "pasta-de-folhetos:size:a4:main": {
                             "zoom": 118,
@@ -164,7 +182,82 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "previewLabel": "Capa",
+                    "drawerFrames": [
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a4/quao-lindos-sao-os-pes-original.webp",
+                            "label": "Capa"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-01.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-02.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-03.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-04.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-05.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-06.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-07.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-08.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-09.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-10.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-11.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-12.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-13.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-14.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-15.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-16.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-17.webp",
+                            "label": "Interior A4"
+                        }
+                    ]
                 },
                 {
                     "id": "a6",
@@ -178,7 +271,18 @@
                     "frameWidth": 100,
                     "frameHeight": 120,
                     "visual": "neutral",
-                    "interiorImages": [],
+                    "interiorImages": [
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-01.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-02.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-03.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-04.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-05.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-06.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-07.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-08.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-09.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-10.webp"
+                    ],
                     "imageEdits": {
                         "pasta-de-folhetos:size:a6:main": {
                             "zoom": 132,
@@ -186,14 +290,61 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "previewLabel": "Capa",
+                    "drawerFrames": [
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/oficiais/finais/a6/quao-lindos-sao-os-pes-original.webp",
+                            "label": "Capa"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-01.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-02.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-03.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-04.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-05.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-06.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-07.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-08.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-09.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-10.webp",
+                            "label": "Interior A6"
+                        }
+                    ]
                 },
                 {
                     "id": "a4-a6",
                     "value": "A4 + A6",
                     "priceKey": "A4 + A6",
                     "title": "Conjunto A4+A6",
-                    "previewLabel": "Capa estilo holográfico estrelinhas",
+                    "previewLabel": "Capa",
                     "subtitle": "Ambas as pastas com 4.90€ de desconto",
                     "priceCents": 4990,
                     "image": "content/designs/loja/pasta-de-folhetos/pack-a4-a6.webp",
@@ -201,7 +352,149 @@
                     "frameWidth": 120,
                     "frameHeight": 88,
                     "visual": "neutral",
-                    "interiorImages": []
+                    "interiorImages": [
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-01.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-01.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-02.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-02.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-03.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-03.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-04.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-04.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-05.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-05.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-06.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-06.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-07.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-07.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-08.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-08.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-09.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-09.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-10.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-10.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-11.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-12.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-13.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-14.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-15.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-16.webp",
+                        "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-17.webp"
+                    ],
+                    "drawerFrames": [
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/pack-a4-a6.webp",
+                            "label": "Capa"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-01.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-01.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-02.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-02.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-03.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-03.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-04.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-04.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-05.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-05.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-06.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-06.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-07.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-07.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-08.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-08.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-09.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-09.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-10.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a6/interior-a6-10.webp",
+                            "label": "Interior A6"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-11.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-12.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-13.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-14.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-15.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-16.webp",
+                            "label": "Interior A4"
+                        },
+                        {
+                            "image": "content/designs/loja/pasta-de-folhetos/interior/a4/interior-a4-17.webp",
+                            "label": "Interior A4"
+                        }
+                    ]
                 }
             ]
         },

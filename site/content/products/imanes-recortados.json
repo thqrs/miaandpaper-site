@@ -16,8 +16,8 @@
     "deliveryOptions": [
         {
             "id": "pickup",
-            "label": "Vou recolher na casa da Mia",
-            "text": "",
+            "label": "Entregamos-te pessoalmente",
+            "text": "Apenas Quinta do Conde, Azeitão e Fernão Ferro",
             "feeCents": 0
         },
         {

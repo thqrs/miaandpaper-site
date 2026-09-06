@@ -1931,7 +1931,7 @@
   // renderizado com white-space: pre-line (CSS).
   function defaultDeliveryOptions() {
     return [
-      { id: "pickup", label: "Vou recolher na casa da Mia", text: "", feeCents: 0 },
+      { id: "pickup", label: "Entregamos-te pessoalmente", text: "Apenas Quinta do Conde, Azeitão e Fernão Ferro", feeCents: 0 },
       { id: "shipping", label: "Envio CTT - até 2 Kg", text: "", feeCents: 540, priceText: "Valor mínimo:\n5,40 €" },
       { id: "join_orders", label: "Junta as minhas encomendas", text: "", feeCents: 0 }
     ];

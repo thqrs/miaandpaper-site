@@ -17,7 +17,7 @@
       {
         "id": "global-entrega",
         "question": "Como funcionam as entregas?",
-        "answer": "Consoante a encomenda, podes recolher na casa da Mia, receber por CTT ou juntar a outra encomenda que ainda não tenha sido enviada. No envio por CTT, o valor mostrado pode ser um mínimo; a Mia confirma contigo a morada e o valor final dos portes."
+        "answer": "Consoante a encomenda, podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), receber por CTT ou juntar a outra encomenda que ainda não tenha sido enviada. No envio por CTT, o valor mostrado pode ser um mínimo; a Mia confirma contigo a morada e o valor final dos portes."
       },
       {
         "id": "global-precos",
@@ -193,7 +193,7 @@
         {
           "id": "main-agendas-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-agendas-delivery_contact-contact-info",
@@ -318,7 +318,7 @@
         {
           "id": "main-blocos-a6-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-blocos-a6-delivery_contact-contact-info",
@@ -443,7 +443,7 @@
         {
           "id": "main-bloquinhos-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-bloquinhos-delivery_contact-contact-info",
@@ -618,7 +618,7 @@
         {
           "id": "main-cadernos-anuais-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-cadernos-anuais-delivery_contact-contact-info",
@@ -768,7 +768,7 @@
         {
           "id": "main-crachas-loja-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-crachas-loja-delivery_contact-contact-info",
@@ -918,7 +918,7 @@
         {
           "id": "main-imanes-loja-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-imanes-loja-delivery_contact-contact-info",
@@ -1043,7 +1043,7 @@
         {
           "id": "main-imanes-recortados-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-imanes-recortados-delivery_contact-contact-info",
@@ -1193,7 +1193,7 @@
         {
           "id": "main-marcadores-magneticos-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-marcadores-magneticos-delivery_contact-contact-info",
@@ -1343,7 +1343,7 @@
         {
           "id": "main-marcadores-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-marcadores-delivery_contact-contact-info",
@@ -1468,7 +1468,7 @@
         {
           "id": "main-mini-cadernos-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-mini-cadernos-delivery_contact-contact-info",
@@ -1593,7 +1593,7 @@
         {
           "id": "main-personalizacao-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-personalizacao-delivery_contact-contact-info",
@@ -2118,7 +2118,7 @@
         {
           "id": "main-quadros-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-quadros-delivery_contact-contact-info",
@@ -2243,7 +2243,7 @@
         {
           "id": "main-stickers-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-stickers-delivery_contact-contact-info",
@@ -2368,7 +2368,7 @@
         {
           "id": "c26-caderninhos-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "c26-caderninhos-delivery_contact-contact-info",
@@ -2518,7 +2518,7 @@
         {
           "id": "c26-cadernos-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "c26-cadernos-delivery_contact-contact-info",
@@ -2668,7 +2668,7 @@
         {
           "id": "c26-crachas-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "c26-crachas-delivery_contact-contact-info",
@@ -2818,7 +2818,7 @@
         {
           "id": "c26-imanes-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "c26-imanes-delivery_contact-contact-info",
@@ -2968,7 +2968,7 @@
         {
           "id": "main-porta-chaves-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-porta-chaves-delivery_contact-contact-info",
@@ -3088,7 +3088,7 @@
         {
           "id": "main-pasta-de-folhetos-delivery_contact-delivery-methods",
           "question": "Que opções de entrega existem?",
-          "answer": "Neste passo podes escolher recolher na casa da Mia (grátis), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
+          "answer": "Neste passo podes escolher entrega pessoal gratuita (apenas Quinta do Conde, Azeitão e Fernão Ferro), envio CTT até 2 kg (valor mínimo de 5,40 €) ou, se já tiveres outra encomenda ainda não enviada, juntar as encomendas. Os portes CTT podem precisar de confirmação final."
         },
         {
           "id": "main-pasta-de-folhetos-delivery_contact-contact-info",
