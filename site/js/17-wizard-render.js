@@ -1061,6 +1061,7 @@
 
   function syncPastaDeFolhetosDetailSelections(product, step) {
     var variationStep = pastaDeFolhetosDetailsVariationStep(product, step);
+    var config = step && step.pastaDeFolhetosDetails;
 
     if (!variationStep) {
       return;
@@ -1077,8 +1078,20 @@
       if (!field) {
         return;
       }
-      if (!valid && items.length === 1) {
-        state.selections[field] = items[0].value;
+      if (!valid && items.length) {
+        var defaultItem = items.filter(function (it) {
+          return it && (it.default === true || it.isDefault === true);
+        })[0] || null;
+        var shouldPreselect = !!defaultItem
+          || items.length === 1
+          || Boolean(config && (config.defaultToFirst || config.defaultToFirstVariation || config.preselectDefault))
+          || Boolean(variationStep && (variationStep.defaultToFirst || variationStep.defaultToFirstVariation || variationStep.preselectDefault));
+
+        if (shouldPreselect) {
+          state.selections[field] = (defaultItem || items[0]).value;
+        } else {
+          delete state.selections[field];
+        }
       } else if (!valid) {
         delete state.selections[field];
       }
@@ -1729,8 +1742,16 @@
         return;
       }
       if (!currentValid) {
-        if (variations.length === 1) {
-          state.selections[variationField] = variations[0].value;
+        var defaultItem = variations.filter(function (it) {
+          return it && (it.default === true || it.isDefault === true);
+        })[0] || null;
+        var shouldPreselect = !!defaultItem
+          || variations.length === 1
+          || Boolean(config && (config.defaultToFirst || config.defaultToFirstVariation || config.preselectDefault))
+          || Boolean(variationStep && (variationStep.defaultToFirst || variationStep.defaultToFirstVariation || variationStep.preselectDefault));
+
+        if (shouldPreselect && variations.length) {
+          state.selections[variationField] = (defaultItem || variations[0]).value;
         } else {
           delete state.selections[variationField];
         }

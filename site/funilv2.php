@@ -79,8 +79,8 @@ foreach (fv_catalogue() as $key=>$entry) {
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>Funil ao vivo · Mia &amp; Paper</title>
-<link rel="stylesheet" href="css/01-tokens-agua.css?v=20260906225853">
-<link rel="stylesheet" href="admin-nav.css?v=20260906225853">
+<link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907003042">
+<link rel="stylesheet" href="admin-nav.css?v=20260907003042">
 <link rel="stylesheet" href="funilv2.css?v=<?= filemtime(__DIR__.'/funilv2.css') ?>">
 </head>
 <body>
@@ -112,6 +112,6 @@ foreach (fv_catalogue() as $key=>$entry) {
   <p class="page-note">Cada quadrado corresponde a uma sessão de navegação. Só aparecem acções que o tracking guardou.</p>
 </main>
 <script id="productNames" type="application/json"><?= json_encode($names,JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?></script>
-<script src="admin-nav.js?v=20260906225853"></script>
+<script src="admin-nav.js?v=20260907003042"></script>
 <script src="funilv2.js?v=<?= filemtime(__DIR__.'/funilv2.js') ?>"></script>
 </body></html>

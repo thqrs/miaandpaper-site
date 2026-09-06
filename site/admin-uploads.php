@@ -35,8 +35,8 @@ function au_h($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Uploads assistidos · Mia &amp; Paper</title>
   <link rel="icon" href="content/brand/logo.webp" type="image/jpeg">
-  <link rel="stylesheet" href="admin-nav.css?v=20260906225853">
-  <script src="admin-nav.js?v=20260906225853" defer></script>
+  <link rel="stylesheet" href="admin-nav.css?v=20260907003042">
+  <script src="admin-nav.js?v=20260907003042" defer></script>
   <style>
     :root{--paper:#f7f1e3;--card:#fffdf8;--ink:#30291e;--muted:#746a59;--line:#d9ccb2;--moss:#4f7a3a;--gold:#b88616}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 Georgia,serif}main{width:min(960px,calc(100% - 28px));margin:28px auto 60px}header{display:flex;justify-content:space-between;gap:18px;align-items:start;margin-bottom:18px}h1{margin:0 0 6px}header p{margin:0;color:var(--muted)}a{color:var(--moss);font-weight:700}.list{display:grid;gap:14px}.upload{padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 10px 30px rgba(75,54,18,.08)}.upload.is-reviewed{opacity:.68}.head{display:flex;align-items:center;justify-content:space-between;gap:12px}.code{color:var(--gold);font:900 1.12rem ui-monospace,monospace}.meta{margin:5px 0 12px;color:var(--muted);font-size:.9rem}.note{padding:10px 12px;border-radius:9px;background:#f7f1e6}.files{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.files a{padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;text-decoration:none}form{margin-top:13px}button{min-height:38px;padding:7px 11px;border:1px solid var(--moss);border-radius:9px;background:#fff;color:var(--moss);font:700 .9rem Georgia,serif;cursor:pointer}.empty{padding:30px;text-align:center;border:1px dashed var(--line);border-radius:14px;color:var(--muted)}@media(max-width:560px){header,.head{display:block}.head .code{display:block;margin-top:7px}}
   </style>

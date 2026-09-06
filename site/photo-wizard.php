@@ -612,10 +612,10 @@ $csrf = htmlspecialchars(mp_admin_csrf_token(), ENT_QUOTES, 'UTF-8');
   <meta name="photo-wizard-csrf" content="<?= $csrf ?>">
   <title>Imagens por concluir · Mia &amp; Paper</title>
   <link rel="icon" href="content/brand/logo.webp" type="image/webp">
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260906225853">
-  <link rel="stylesheet" href="admin-nav.css?v=20260906225853">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907003042">
+  <link rel="stylesheet" href="admin-nav.css?v=20260907003042">
   <link rel="stylesheet" href="photo-wizard.css?v=2026081502">
-  <script src="admin-nav.js?v=20260906225853" defer></script>
+  <script src="admin-nav.js?v=20260907003042" defer></script>
   <script src="galeria-slots.js?v=2026081701" defer></script>
   <script src="photo-wizard.js?v=2026081502" defer></script>
 </head>

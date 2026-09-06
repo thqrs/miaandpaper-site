@@ -1028,7 +1028,8 @@
                 "variationTitle": "Escolhe as argolas e fita",
                 "fixedGroups": [
                     "A4"
-                ]
+                ],
+                "defaultToFirst": true
             },
             "drawersSourceStepId": "details",
             "drawerOverrides": {
@@ -1145,7 +1146,8 @@
                 "variationTitle": "Escolhe as argolas e fita",
                 "fixedGroups": [
                     "A6"
-                ]
+                ],
+                "defaultToFirst": true
             },
             "drawersSourceStepId": "details",
             "drawerOverrides": {
@@ -1214,7 +1216,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a4-agenda-rosa-original",
@@ -1233,7 +1236,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a4-agenda-rosa-variante",
@@ -1271,7 +1275,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a4-bicicleta-rosa-variante",
@@ -1309,7 +1314,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a4-prega-caminho-flores-original",
@@ -1328,7 +1334,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a4-prega-caminho-flores-variante",
@@ -1366,7 +1373,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a4-castanho-variante",
@@ -1404,7 +1412,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a4-bicicleta-azul-original",
@@ -1423,7 +1432,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a4-bicicleta-azul-variante",
@@ -1461,7 +1471,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a4-flores-vermelhas-variante",
@@ -1499,7 +1510,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a4-flores-salmao-variante",
@@ -1537,7 +1549,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a4-lavanda-variante",
@@ -1575,7 +1588,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a4-sapatos-variante",
@@ -1613,7 +1627,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a4-folhagem-azul-variante",
@@ -1651,7 +1666,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a6-agenda-rosa-original",
@@ -1670,7 +1686,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a6-agenda-rosa-variante",
@@ -1708,7 +1725,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a6-bicicleta-rosa-variante",
@@ -1746,7 +1764,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a6-prega-caminho-flores-original",
@@ -1765,7 +1784,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a6-prega-caminho-flores-variante",
@@ -1803,7 +1823,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a6-castanho-variante",
@@ -1841,7 +1862,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a6-bicicleta-azul-original",
@@ -1860,7 +1882,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a6-bicicleta-azul-variante",
@@ -1898,7 +1921,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a6-flores-vermelhas-variante",
@@ -1936,7 +1960,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a6-flores-salmao-variante",
@@ -1974,7 +1999,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a6-lavanda-variante",
@@ -2012,7 +2038,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a6-sapatos-variante",
@@ -2050,7 +2077,8 @@
                             "positionY": 0,
                             "rotation": 0
                         }
-                    }
+                    },
+                    "default": true
                 },
                 {
                     "id": "pasta-de-folhetos-a6-folhagem-azul-variante",
@@ -2071,7 +2099,8 @@
                         }
                     }
                 }
-            ]
+            ],
+            "defaultToFirst": true
         },
         {
             "id": "extras",
@@ -2227,7 +2256,8 @@
                         "label": "A6",
                         "field": "metal_corners_a6"
                     }
-                ]
+                ],
+                "defaultToFirst": true
             }
         },
         {
@@ -2242,7 +2272,8 @@
             },
             "pastaDeFolhetosDetails": {
                 "variationStepId": "designs",
-                "variationTitle": "Escolhe as argolas e fita"
+                "variationTitle": "Escolhe as argolas e fita",
+                "defaultToFirst": true
             },
             "drawers": [
                 {
