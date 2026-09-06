@@ -1595,6 +1595,18 @@
     ensureHomeSettings(home);
     applySiteSettings(home);
     state.home = home;
+    // MENU_FLAGS_V1: o initHome ja pos `state.menuHome` no home.json para o
+    // congressos.html nao perder a seleccao do admin. Aqui só se sincroniza
+    // quando a pagina traz flags proprias (index.html) ou ainda nao ha fonte.
+    if (!state.menuHome || (home && (home.menuShowIcons !== undefined || home.menuAccordion !== undefined || home.menuOpenAll !== undefined))) {
+      // No congressos.html o `home` e o congressos.json (sem flags): manter o
+      // home.json que o initHome guardou.
+      if (home && (home.menuShowIcons !== undefined || home.menuAccordion !== undefined || home.menuOpenAll !== undefined)) {
+        state.menuHome = home;
+      } else if (!state.menuHome) {
+        state.menuHome = home;
+      }
+    }
 
     var adminEditing = state.admin && home.adminEditable !== false;
     var allCategories = (home.categories || []).map(function (category, originalIndex) {

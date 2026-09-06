@@ -10,21 +10,29 @@
   // MENU_ICONES_V1: `menuShowIcons` no content/home.json liga e desliga os
   // icones do hamburguer. Por omissao ficam ligados, para nao mudar o menu de
   // quem nunca tocou na definicao. Edita-se em homepage-menu-design.php.
+  // MENU_FLAGS_V1: a fonte e `state.menuHome` (sempre o home.json) com
+  // fallback para `state.home`, porque produto, estaticas e checkout nao
+  // editam o home da pagina mas tem de respeitar a mesma seleccao do admin.
+  function siteMenuFlagSource() {
+    return state.menuHome || state.home || null;
+  }
   function siteMenuIconsEnabled() {
-    return !(state.home && state.home.menuShowIcons === false);
+    var fonte = siteMenuFlagSource();
+    return !(fonte && fonte.menuShowIcons === false);
   }
 
   // MENU_ACORDEAO_V1: por omissao fica desligado (as seccoes acumulam-se
   // abertas), que e o comportamento menos surpreendente.
   function siteMenuAccordionEnabled() {
-    return !!(state.home && state.home.menuAccordion);
+    return !!(siteMenuFlagSource() && siteMenuFlagSource().menuAccordion);
   }
 
   // MENU_ABRIR_TODOS_V1: por omissao, abrir o hamburguer mostra todas as
   // seccoes. Quando esta opcao esta ligada, tem precedencia sobre o acordeao
   // para que a abertura inicial nao volte a fechar as restantes seccoes.
   function siteMenuOpenAllEnabled() {
-    return !(state.home && state.home.menuOpenAll === false);
+    var fonte = siteMenuFlagSource();
+    return !(fonte && fonte.menuOpenAll === false);
   }
 
   function siteMenuCategoryIsVisible(category) {
@@ -436,6 +444,8 @@
       return;
     }
 
+    // MENU_FLAGS_V1: as paginas estaticas tambem respeitam a seleccao do admin.
+    state.menuHome = home || null;
     state.siteMenuCategories = categories;
     template = document.createElement("template");
     template.innerHTML = renderBrand(home.brand || "Mia & Paper", "index.html", home.instagramUrl, categories);

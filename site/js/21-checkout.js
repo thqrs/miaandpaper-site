@@ -814,7 +814,14 @@
   }
 
   function initAddProduct() {
-    loadJson(ORDER_HOME_CONTENT).then(function (home) {
+    Promise.all([
+      loadJson(ORDER_HOME_CONTENT),
+      loadJson("content/home.json").catch(function () { return null; })
+    ]).then(function (results) {
+      var home = results[0];
+      // MENU_FLAGS_V1: o order-products.json nao tem flags; o hamburguer
+      // respeita sempre a seleccao do admin no home.json.
+      state.menuHome = results[1] || null;
       applySiteSettings(home);
       if (window.MiaButterflies && window.MiaButterflies.refresh) {
         window.MiaButterflies.refresh();
@@ -827,7 +834,13 @@
 
   function initCheckout() {
     restoreCheckoutSession();
-    loadJson(ORDER_HOME_CONTENT).then(function (home) {
+    Promise.all([
+      loadJson(ORDER_HOME_CONTENT),
+      loadJson("content/home.json").catch(function () { return null; })
+    ]).then(function (results) {
+      var home = results[0];
+      // MENU_FLAGS_V1: ver comentario no initAddProduct.
+      state.menuHome = results[1] || null;
       applySiteSettings(home);
       if (window.MiaButterflies && window.MiaButterflies.refresh) {
         window.MiaButterflies.refresh();

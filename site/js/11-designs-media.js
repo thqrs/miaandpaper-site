@@ -3,6 +3,16 @@
 // sem IIFE por ficheiro) e carregam pela ordem dos <script> nos HTML: 01 → 23.
 // Conteudo: media dos cartoes de design: isUploadedImage, uploadedStackStyle, visualizador de imagem (closeImageViewer), renderDesignCardMedia.
   var designLazyObserver = null;
+  // DESIGN_LAZY_CACHE_V1: cada clique no passo 1 faz re-render completo
+  // (app.innerHTML novo) e todos os cartões voltavam a nascer com
+  // --uploaded-image:none, à espera do callback assíncrono do
+  // IntersectionObserver — era o "piscar" de todos os designs a cada
+  // selecção. Guardamos os URLs já pintados: no re-render seguinte a
+  // imagem entra logo no HTML, sem passar pelo placeholder.
+  var designLoadedImageUrls = {};
+  function designImageWasLoaded(url) {
+    return !!designLoadedImageUrls[String(url || "")];
+  }
   function isUploadedImage(item) {
     return !!(item && item.image && (/^data:image\//.test(item.image) || /^content\/(?:uploads|designs)\/[^"'<>]+$/.test(item.image)));
   }
@@ -41,10 +51,15 @@
     var imagePositionY = imageEditNumber(item, step, false, "imagePositionY", 0, -100, 100);
     var imageRotation = imageEditNumber(item, step, false, "imageRotation", 0, -180, 180);
     var imageFit = item && item.imageFit === "contain" ? "contain" : "cover";
+    var imageUrl = siteAssetUrl(item.image);
+    // DESIGN_LAZY_CACHE_V1: imagem ja pintada antes do re-render entra logo
+    // com URL, sem voltar ao placeholder a espera do observer.
+    var effectiveDefer = deferImage && !designImageWasLoaded(imageUrl);
 
     return {
+      deferred: effectiveDefer,
       style: [
-        deferImage ? '--uploaded-image:none' : '--uploaded-image:url(&quot;' + escapeHtml(siteAssetUrl(item.image)) + '&quot;)',
+        effectiveDefer ? '--uploaded-image:none' : '--uploaded-image:url(&quot;' + escapeHtml(imageUrl) + '&quot;)',
         "--image-zoom-scale:" + imageZoom,
         "--image-position-x:" + imagePositionX + "%",
         "--image-position-y:" + imagePositionY + "%",
@@ -225,7 +240,7 @@
       frameInfo = uploadedFrameInfo(item, template, step, deferImage);
 
       return '<span class="' + className + itemRectOrientationClass(item) + itemFrameShapeClass(item) + ' uploaded-image' + (isActive ? ' is-admin-image-active' : '') + '" style="' + frameInfo.style + '"'
-        + (deferImage ? ' data-lazy-uploaded-image="' + escapeHtml(frameInfo.imageUrl) + '"' : '')
+        + (frameInfo.deferred ? ' data-lazy-uploaded-image="' + escapeHtml(frameInfo.imageUrl) + '"' : '')
         + (adminAttrs ? "" : ' aria-hidden="true"') + adminAttrs + miaSlotDebugFrameAttrs(frameInfo.debug) + '><span class="uploaded-image-inner"></span></span>';
     }
 
@@ -427,6 +442,16 @@
     });
   }
 
+  function designImageInView(element) {
+    var rect;
+    try {
+      rect = element.getBoundingClientRect();
+    } catch (viewError) {
+      return false;
+    }
+    return rect.bottom >= -320 && rect.top <= ((window.innerHeight || 0) + 320);
+  }
+
   function bindLazyDesignImages() {
     var pending = Array.prototype.slice.call(document.querySelectorAll("[data-lazy-uploaded-image]"));
     var observer;
@@ -437,12 +462,24 @@
       element.style.setProperty("--uploaded-image", 'url("' + source.replace(/"/g, "%22") + '")');
       element.removeAttribute("data-lazy-uploaded-image");
       if (observer) observer.unobserve(element);
+      designLoadedImageUrls[String(source)] = true;
     }
 
     if (designLazyObserver) {
       designLazyObserver.disconnect();
       designLazyObserver = null;
     }
+    if (!pending.length) return;
+    // DESIGN_LAZY_CACHE_V1: o que ja foi pintado entra logo, sem observer.
+    pending.forEach(function (element) {
+      var src = element.getAttribute("data-lazy-uploaded-image");
+      if (designImageWasLoaded(src) || designImageInView(element)) {
+        load(element);
+      }
+    });
+    pending = pending.filter(function (element) {
+      return !!(element && element.hasAttribute("data-lazy-uploaded-image"));
+    });
     if (!pending.length) return;
     if (!window.IntersectionObserver) {
       pending.forEach(load);

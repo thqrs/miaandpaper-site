@@ -1284,6 +1284,120 @@
     })[0] || null : null;
   }
 
+  // PREVIEW_DRAWER_V1: a imagem ilustrativa usa a gaveta já existente de
+  // passagem de várias imagens (o mesmo esquema do drawer dos quadros:
+  // data-cadernos-preview, setas data-cadernos-preview-step, pill, auto e
+  // swipe tratados por initCadernoPreviewSlides). Só a origem das fotos
+  // vem do JSON, sem listas de slugs no código:
+  // - designs-by-size: step.selectedImagePreview.variationStepId aponta para
+  //   o passo de variações (ex. "designs").
+  // - assignment-picker: step.assignmentPicker.variationStepId faz o mesmo,
+  //   combinando A4 + A6 através dos groups/valueMap.
+  // Sem a flag, mantém-se a foto fixa anterior. A gaveta nunca altera a
+  // seleção nem o checkout.
+  function variationItemsForCover(product, variationStepId, coverValue, sizeGroup) {
+    var variationStep = variationStepId ? findStep(product, String(variationStepId)) : null;
+    var items = variationStep && Array.isArray(variationStep.items) ? variationStep.items : [];
+    var parentProperty = String((variationStep && variationStep.parentItemProperty) || "coverValue");
+    var wantedCover = String(coverValue || "");
+    var wantedGroup = String(sizeGroup || "");
+    if (!variationStep || !wantedCover) {
+      return [];
+    }
+    return items.filter(function (item) {
+      if (!item) {
+        return false;
+      }
+      if (wantedGroup && String(item.sizeGroup || "") !== wantedGroup) {
+        return false;
+      }
+      return String(item[parentProperty] || "") === wantedCover;
+    });
+  }
+
+  function singlePreviewDrawerItems(product, step, selectedItem, group) {
+    var config = step && step.selectedImagePreview;
+    var variationStepId = config && String(config.variationStepId || "");
+    if (!variationStepId || !selectedItem) {
+      return selectedItem ? [selectedItem] : [];
+    }
+    var list = variationItemsForCover(product, variationStepId, selectedItem.value, group || selectedItem.sizeGroup);
+    return list.length ? list : [selectedItem];
+  }
+
+  function assignmentPreviewDrawerItems(product, step, openItem) {
+    var config = assignmentPickerConfig(step) || {};
+    var variationStepId = String(config.variationStepId || "");
+    if (!variationStepId || !openItem) {
+      return openItem ? [openItem] : [];
+    }
+    var list = [];
+    var seen = {};
+    config.groups.forEach(function (group) {
+      var coverValue = assignmentPickerValue(group, openItem);
+      var sizeGroup = String((group && (group.id || group.label)) || "");
+      variationItemsForCover(product, variationStepId, coverValue, sizeGroup).forEach(function (item) {
+        var key = String(item && item.value || "");
+        if (key && !seen[key]) {
+          seen[key] = true;
+          list.push(item);
+        }
+      });
+    });
+    return list.length ? list : [openItem];
+  }
+
+  function renderPreviewDrawer(product, coverValue, coverItemId, frames) {
+    var speed = typeof cadernoPreviewSpeedSeconds === "function" ? cadernoPreviewSpeedSeconds(product) : 4;
+    if (!frames.length) {
+      return "";
+    }
+    return [
+      '<div class="cadernos-cover-drawer quadros-design-drawer">',
+      '<div class="cadernos-cover-preview-frame quadros-design-preview-frame" data-cadernos-preview data-cadernos-preview-cover-value="' + escapeHtml(coverValue || "") + '" data-cadernos-preview-item-id="' + escapeHtml(coverItemId || "") + '" data-cadernos-preview-interval="' + (speed * 1000) + '">',
+      frames.map(function (frame, index) {
+        return '<span class="cadernos-cover-preview-slide quadros-design-preview-slide' + (index === 0 ? ' is-active' : '')
+          + '" data-mia-image="' + escapeHtml(frame.image) + '" data-mia-item-id="' + escapeHtml(frame.itemId || "")
+          + '" data-mia-slot-name="drawer" data-mia-slide-index="' + index
+          + '" style="background-image:url(&quot;' + escapeHtml(frame.image) + '&quot;)"></span>';
+      }).join(""),
+      frames.length > 1 ? '<button type="button" class="cadernos-preview-arrow cadernos-preview-arrow--prev" data-cadernos-preview-step="-1" aria-label="Imagem anterior">‹</button>' : "",
+      frames.length > 1 ? '<button type="button" class="cadernos-preview-arrow cadernos-preview-arrow--next" data-cadernos-preview-step="1" aria-label="Imagem seguinte">›</button>' : "",
+      '<span class="crachas-size-card-proof-note cadernos-preview-pill" aria-hidden="true">',
+      frames.map(function (frame, index) {
+        return '<span class="cadernos-preview-pill-label' + (index === 0 ? ' is-active' : '') + '">' + escapeHtml(frame.label) + '</span>';
+      }).join(""),
+      '</span>',
+      '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function previewDrawerFrames(items, withGroup) {
+    return (items || []).filter(function (item) {
+      return item && item.image;
+    }).map(function (item) {
+      var title = String(item.title || item.value || "Opção");
+      return {
+        image: String(item.image),
+        label: withGroup && item.sizeGroup ? String(item.sizeGroup) + " · " + title : title,
+        itemId: String(item.id || "")
+      };
+    });
+  }
+
+  function productUsesPreviewDrawers(product) {
+    if (!product || !Array.isArray(product.steps)) {
+      return false;
+    }
+    return product.steps.some(function (step) {
+      if (step && step.assignmentPicker && step.assignmentPicker.variationStepId) {
+        return true;
+      }
+      return !!(step && step.selectedImagePreview && step.selectedImagePreview.variationStepId);
+    });
+  }
+
   function renderAssignmentPickerSlots(product, step) {
     var config = assignmentPickerConfig(step) || {};
     var sourceStep = assignmentPickerSourceStep(product, step);
@@ -1303,9 +1417,17 @@
   function renderAssignmentPickerPreview(product, step, item) {
     var config = assignmentPickerConfig(step) || {};
 
+    if (!config.variationStepId) {
+      return [
+        '<div class="pf-assignment-preview" data-assignment-preview role="status" aria-live="polite">',
+        renderCadernosProofPhoto(item, config.previewLabel || "Imagem ilustrativa"),
+        '</div>'
+      ].join("");
+    }
+
     return [
       '<div class="pf-assignment-preview" data-assignment-preview role="status" aria-live="polite">',
-      renderCadernosProofPhoto(item, config.previewLabel || "Imagem ilustrativa"),
+      renderPreviewDrawer(product, item && item.value, item && item.id, previewDrawerFrames(assignmentPreviewDrawerItems(product, step, item), true)),
       '</div>'
     ].join("");
   }
@@ -1331,7 +1453,90 @@
     }).join("") + '</div>';
   }
 
+  // Inclinação da faixa do cartão dividido (graus): editar SÓ este número.
+  var PF_SPLIT_ANGLE = 12;
+
+  function assignmentSplitClip(top) {
+    var rise = Math.tan(PF_SPLIT_ANGLE * Math.PI / 180) * 80;
+    var gap = 0.75;
+    var left = 50 + rise / 2;
+    var right = 50 - rise / 2;
+    if (top) {
+      return "polygon(0 0, 100% 0, 100% " + (right - gap) + "%, 0 " + (left - gap) + "%)";
+    }
+    return "polygon(0 " + (left + gap) + "%, 100% " + (right + gap) + "%, 100% 100%, 0 100%)";
+  }
+
+  function renderAssignmentPickerCardMedia(product, step, sourceStep, item, displayItems) {
+    var mediaStep = Object.assign({}, sourceStep || step, { showDesignZoom: false });
+    var shown = displayItems && displayItems.length ? displayItems : [item];
+    if (shown.length < 2 || !shown[0] || !shown[1]) {
+      if (state.assignmentSplitSeen) {
+        delete state.assignmentSplitSeen[String(step.id || "") + "::" + String(item.value || "")];
+      }
+      return renderCadernoCoverCardMedia(product, mediaStep, shown[0] || item);
+    }
+    var clipTop = assignmentSplitClip(true);
+    var clipBottom = assignmentSplitClip(false);
+    var splitKey = String(step.id || "") + "::" + String(item.value || "");
+    var splitEntering = !(state.assignmentSplitSeen && state.assignmentSplitSeen[splitKey]);
+    if (!state.assignmentSplitSeen) {
+      state.assignmentSplitSeen = {};
+    }
+    state.assignmentSplitSeen[splitKey] = true;
+    return [
+      '<span class="crachas-size-card-visual cadernos-cover-media pf-assignment-split' + (splitEntering ? ' is-entering' : '') + '">',
+      '<span class="pf-assignment-split-half pf-assignment-split-top" style="-webkit-clip-path:' + clipTop + ';clip-path:' + clipTop + '">'
+        + renderVisual(shown[0], "media-list", mediaStep) + '</span>',
+      '<span class="pf-assignment-split-half pf-assignment-split-bottom" style="-webkit-clip-path:' + clipBottom + ';clip-path:' + clipBottom + '">'
+        + renderVisual(shown[1], "media-list", mediaStep) + '</span>',
+      '<span class="pf-assignment-split-band" aria-hidden="true" style="transform:rotate(-' + PF_SPLIT_ANGLE + 'deg)"></span>',
+      '</span>'
+    ].join("");
+  }
+
+  // Pedir todas as variantes ao abrir o passo, antes da primeira atribuição.
+  // Reutilizar o cache do renderer evita voltar ao placeholder no clique.
+  var assignmentPreloadedImages = {};
+  function preloadAssignmentPickerImages(product, step) {
+    var config = assignmentPickerConfig(step);
+    var source = assignmentPickerSourceStep(product, step);
+    if (!config || !source) return;
+    var sourceItems = source.items || [];
+    function preloadUrl(image) {
+      if (!image) return;
+      var url = siteAssetUrl(image);
+      if (assignmentPreloadedImages[url]) return;
+      var preloaded = new Image();
+      assignmentPreloadedImages[url] = preloaded;
+      preloaded.onerror = function () {
+        delete assignmentPreloadedImages[url];
+        delete designLoadedImageUrls[url];
+      };
+      preloaded.src = url;
+      designLoadedImageUrls[url] = true;
+      if (preloaded.decode) preloaded.decode().catch(function () {});
+    }
+    assignmentPickerItems(product, step).forEach(function (item) {
+      config.groups.forEach(function (group) {
+        var value = assignmentPickerValue(group, item);
+        var variant = sourceItems.filter(function (candidate) {
+          return String(candidate.value || "") === value;
+        })[0] || item;
+        if (variant && variant.image) preloadUrl(variant.image);
+      });
+      // PREVIEW_DRAWER_V1: pedir também as fotos de fita/argolas para a
+      // gaveta A4 + A6 não piscar ao abrir.
+      if (config.variationStepId) {
+        assignmentPreviewDrawerItems(product, step, item).forEach(function (cycleItem) {
+          if (cycleItem && cycleItem.image) preloadUrl(cycleItem.image);
+        });
+      }
+    });
+  }
+
   function renderAssignmentPicker(product, step) {
+    preloadAssignmentPickerImages(product, step);
     var config = assignmentPickerConfig(step) || {};
     var sourceStep = assignmentPickerSourceStep(product, step);
     var items = assignmentPickerItems(product, step);
@@ -1344,6 +1549,28 @@
       var itemGroups = config.groups.filter(function (group) {
         var field = String(group && group.field || "");
         return field && String(state.selections[field] || "") === assignmentPickerValue(group, item);
+      });
+      // ASSIGNMENT_MUTE_V1: o desvanecido segue o clique (cartão aberto em
+      // preview), não a atribuição: com um cartão aberto, todos os outros
+      // desvanecem, independentemente do que está atribuído a A4/A6.
+      // Data-driven: vale para qualquer assignment-picker.
+      var muted = openItem && item !== openItem ? " is-muted" : "";
+      // ASSIGNMENT_COVER_IMAGE_V1: o cartão mostra a imagem do grupo que
+      // lhe foi atribuído; com os dois grupos no mesmo cartão mostra as
+      // duas artes (A4 em cima, A6 em baixo) separadas por faixa clara.
+      // Sem atribuição ou sem mapa, fica a imagem do próprio cartão.
+      var displayItems = [];
+      itemGroups.forEach(function (group) {
+        var shown = assignmentPickerAssignedItem(product, step, group);
+        var alreadyShown = false;
+        displayItems.forEach(function (seen) {
+          if (String(seen.value || "") === String((shown || {}).value || "")) {
+            alreadyShown = true;
+          }
+        });
+        if (shown && !alreadyShown) {
+          displayItems[displayItems.length] = shown;
+        }
       });
       var open = openItem === item;
       var opening = state.assignmentPickerOpening
@@ -1363,10 +1590,10 @@
 
       return [
         '<div class="cadernos-cover-choice pf-assignment-choice">',
-        '<div class="choice-card crachas-size-card cadernos-cover-card pf-assignment-card' + (itemGroups.length ? ' is-assigned' : '') + (open ? ' is-open' : '') + (opening ? ' is-opening' : '') + '" data-assignment-preview-open data-assignment-step="' + escapeHtml(step.id || "") + '" data-assignment-value="' + escapeHtml(item.value || "") + '" role="button" tabindex="0" aria-label="Mostrar opções para ' + escapeHtml(item.title || item.value || "este design") + '" aria-expanded="' + (open ? 'true' : 'false') + '">',
+        '<div class="choice-card crachas-size-card cadernos-cover-card pf-assignment-card' + (itemGroups.length ? ' is-assigned' : '') + muted + (open ? ' is-open' : '') + (opening ? ' is-opening' : '') + '" data-assignment-preview-open data-assignment-step="' + escapeHtml(step.id || "") + '" data-assignment-value="' + escapeHtml(item.value || "") + '" role="button" tabindex="0" aria-label="Mostrar opções para ' + escapeHtml(item.title || item.value || "este design") + '" aria-expanded="' + (open ? 'true' : 'false') + '">',
         '<div class="pf-assignment-card-media">',
         '<div class="pf-assignment-card-trigger">',
-        renderCadernoCoverCardMedia(product, Object.assign({}, sourceStep || step, { showDesignZoom: false }), item),
+        renderAssignmentPickerCardMedia(product, step, sourceStep, item, displayItems),
         '</div>',
         controls,
         '</div>',
@@ -1379,7 +1606,7 @@
       ].join("");
     }).join("");
     var preview = openItem
-      ? '<div class="pf-assignment-preview-row" style="--assignment-preview-row-three:' + (Math.floor(openIndex / 3) + 2) + ';--assignment-preview-row-two:' + (Math.floor(openIndex / 2) + 2) + '">' + renderAssignmentPickerPreview(product, step, openItem) + '</div>'
+      ? '<div class="pf-assignment-preview-row" style="--assignment-preview-row-one:' + (openIndex + 2) + ';--assignment-preview-row-three:' + (Math.floor(openIndex / 3) + 2) + ';--assignment-preview-row-two:' + (Math.floor(openIndex / 2) + 2) + '">' + renderAssignmentPickerPreview(product, step, openItem) + '</div>'
       : "";
 
     return [
@@ -1655,9 +1882,16 @@
           '</div>'
         ].join("");
       }).join("");
-      var selectedPreview = selectedItem && step.selectedImagePreview
-        ? '<div class="grouped-design-selected-preview" data-selected-image-preview role="status" aria-live="polite" style="--selected-preview-row-three:' + (Math.floor(selectedIndex / 3) + 2) + ';--selected-preview-row-two:' + (Math.floor(selectedIndex / 2) + 2) + '">' + renderCadernosProofPhoto(selectedItem, step.selectedImagePreview.label || "Imagem ilustrativa") + '</div>'
-        : '';
+      var selectedPreview = "";
+      if (selectedItem && step.selectedImagePreview) {
+        if (step.selectedImagePreview.variationStepId) {
+          selectedPreview = '<div class="grouped-design-selected-preview" data-selected-image-preview role="status" aria-live="polite" style="--selected-preview-row-three:' + (Math.floor(selectedIndex / 3) + 2) + ';--selected-preview-row-two:' + (Math.floor(selectedIndex / 2) + 2) + '">'
+            + renderPreviewDrawer(product, selectedItem.value, selectedItem.id, previewDrawerFrames(singlePreviewDrawerItems(product, step, selectedItem, group), false))
+            + '</div>';
+        } else {
+          selectedPreview = '<div class="grouped-design-selected-preview" data-selected-image-preview role="status" aria-live="polite" style="--selected-preview-row-three:' + (Math.floor(selectedIndex / 3) + 2) + ';--selected-preview-row-two:' + (Math.floor(selectedIndex / 2) + 2) + '">' + renderCadernosProofPhoto(selectedItem, step.selectedImagePreview.label || "Imagem ilustrativa") + '</div>';
+        }
+      }
 
       html += [
         '<section class="design-grid-section grouped-design-section" data-design-size-group="' + escapeHtml(group) + '">',
@@ -2367,7 +2601,7 @@
     playStepNumbersFlip();
     bindProduct(product);
     initQuadrosPhotoColorAnalysis(product, step);
-    if (isCadernosProduct(product) || isQuadrosProduct(product)) {
+    if (isCadernosProduct(product) || isQuadrosProduct(product) || productUsesPreviewDrawers(product)) {
       initCadernoPreviewSlides();
     }
     if (isCadernosProduct(product)) {

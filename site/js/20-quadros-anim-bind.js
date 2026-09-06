@@ -1123,7 +1123,74 @@
         state.errors = "";
         state.packDisabledMessage = "";
         try { trackOptionSelected(product, field, state.selections[field] || "off", button.textContent || ""); } catch (e) {}
+        // Guardar a imagem visível antes do render: a escolha e os controlos
+        // actualizam logo, enquanto a arte anterior acompanha a transição.
+        var toggleCard = button.closest(".pf-assignment-card");
+        var oldMedia = toggleCard && toggleCard.querySelector(".pf-assignment-card-trigger");
+        var previousMedia = oldMedia ? oldMedia.cloneNode(true) : null;
+        var hadSplit = !!(oldMedia && oldMedia.querySelector(".pf-assignment-split"));
         rerenderProduct(product);
+        var updatedCard = Array.prototype.find.call(document.querySelectorAll("[data-assignment-preview-open]"), function (card) {
+          return card.dataset.assignmentStep === String(step.id) && card.dataset.assignmentValue === itemValue;
+        });
+        var updatedMedia = updatedCard && updatedCard.querySelector(".pf-assignment-card-trigger");
+        if (updatedMedia && previousMedia && typeof updatedMedia.animate === "function") {
+          var split = updatedMedia.querySelector(".pf-assignment-split");
+          var timing = { duration: 460, easing: "cubic-bezier(0.22, 1, 0.36, 1)" };
+          if (split && !hadSplit) {
+            split.classList.remove("is-entering");
+            var enteringHalf = split.querySelector(config.groups.indexOf(group) === 0
+              ? ".pf-assignment-split-top" : ".pf-assignment-split-bottom");
+            if (enteringHalf) {
+              enteringHalf.animate([
+                { clipPath: config.groups.indexOf(group) === 0
+                  ? "polygon(0 0, 100% 0, 100% 0, 0 0)"
+                  : "polygon(0 100%, 100% 100%, 100% 100%, 0 100%)" },
+                { clipPath: enteringHalf.style.clipPath }
+              ], timing);
+            }
+          }
+          previousMedia.setAttribute("aria-hidden", "true");
+          previousMedia.style.cssText = "position:absolute;inset:0;pointer-events:none;z-index:3;";
+          updatedMedia.style.position = "relative";
+          updatedMedia.appendChild(previousMedia);
+          var exitSplit = previousMedia.querySelector(".pf-assignment-split");
+          var fade;
+          if (hadSplit && !split && previousValue === value && exitSplit) {
+            // A arte mantida abre até aos limites; a retirada recolhe para
+            // a sua margem. A faixa acompanha a divisão, sem trocar imagens.
+            exitSplit.classList.remove("is-entering");
+            var removingTop = config.groups.indexOf(group) === 0;
+            var retainedHalf = exitSplit.querySelector(removingTop
+              ? ".pf-assignment-split-bottom" : ".pf-assignment-split-top");
+            var removedHalf = exitSplit.querySelector(removingTop
+              ? ".pf-assignment-split-top" : ".pf-assignment-split-bottom");
+            var exitTiming = { duration: 520, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" };
+            fade = retainedHalf.animate([
+              { clipPath: retainedHalf.style.clipPath },
+              { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)" }
+            ], exitTiming);
+            removedHalf.animate([
+              { clipPath: removedHalf.style.clipPath, opacity: 1 },
+              { clipPath: removingTop
+                ? "polygon(0 0, 100% 0, 100% 0, 0 0)"
+                : "polygon(0 100%, 100% 100%, 100% 100%, 0 100%)", opacity: 0 }
+            ], exitTiming);
+            var exitBand = exitSplit.querySelector(".pf-assignment-split-band");
+            if (exitBand) exitBand.animate([
+              { top: "calc(50% - 3px)", opacity: 1 },
+              { top: removingTop ? "-18%" : "118%", opacity: 0 }
+            ], exitTiming);
+          } else {
+            fade = previousMedia.animate([{ opacity: 1 }, { opacity: 0 }], timing);
+          }
+          fade.onfinish = function () { previousMedia.remove(); };
+          fade.oncancel = function () { previousMedia.remove(); };
+          var updatedButton = Array.prototype.find.call(updatedCard.querySelectorAll("[data-assignment-toggle]"), function (candidate) {
+            return candidate.dataset.assignmentGroup === groupId;
+          });
+          if (updatedButton) updatedButton.focus({ preventScroll: true });
+        }
       });
     });
 

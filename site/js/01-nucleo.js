@@ -250,6 +250,10 @@
     quantityPackBaseline: 0,
     undoStack: [],
     home: null,
+    // MENU_FLAGS_V1: o JSON que manda no hamburguer (icones, acordeao,
+    // abrir-todos). E quase sempre o home.json, mesmo quando o conteudo da
+    // pagina vem de outro ficheiro (congressos.json, order-products.json).
+    menuHome: null,
     homeRevision: "",
     pricing: null,
     homeCarouselTimers: [],

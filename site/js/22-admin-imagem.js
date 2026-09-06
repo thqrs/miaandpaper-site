@@ -862,6 +862,9 @@
       var home = results[0];
       var menuHome = results[1] || home;
 
+      // MENU_FLAGS_V1: no congressos.html o `home` e o congressos.json (sem
+      // flags); as flags do hamburguer vêm sempre do home.json (`menuHome`).
+      state.menuHome = menuHome || null;
       state.siteMenuCategories = Array.isArray(menuHome.categories) ? menuHome.categories : [];
       applySiteSettings(home);
       if (window.MiaButterflies && window.MiaButterflies.refresh) {

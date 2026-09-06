@@ -1685,6 +1685,7 @@ html[data-theme="dark"] .quadros-summary-colors > span {
 }
 
 .pf-assignment-card-controls {
+  flex-wrap: nowrap;
   position: absolute;
   right: 8px;
   bottom: 8px;
@@ -1742,7 +1743,7 @@ html[data-theme="dark"] .quadros-summary-colors > span {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-width: 0;
+  min-width: max-content;
   height: 44px;
   min-height: 44px;
   padding: 8px;
@@ -1757,10 +1758,9 @@ html[data-theme="dark"] .quadros-summary-colors > span {
   cursor: pointer;
 }
 
+/* Manter o texto completo; em ecrãs estreitos é a grelha de designs que muda. */
 .pf-assignment-card-toggle > span:first-child {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 .pf-assignment-card-check {
@@ -1792,6 +1792,55 @@ html[data-theme="dark"] .quadros-summary-colors > span {
 .pf-assignment-card-toggle:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--gold) 34%, transparent);
   outline-offset: 2px;
+}
+
+/* ASSIGNMENT_COVER_IMAGE_V1: cartão com os dois grupos atribuídos — metade
+   A4 em cima, metade A6 em baixo. Cada metade é o render completo da sua
+   arte (mesmo zoom, só recortado por clip-path). A INCLINAÇÃO vive num
+   número em js/17-wizard-render.js (PF_SPLIT_ANGLE): recortes e rotação da
+   faixa vêm inline daí. Aqui só o aspecto da faixa, branca como no mockup. */
+.pf-assignment-split-half {
+  position: absolute;
+  inset: 0;
+  transition: clip-path 0.24s ease-in, -webkit-clip-path 0.24s ease-in;
+}
+
+.pf-assignment-split-band {
+  position: absolute;
+  top: calc(50% - 3px);
+  left: -10%;
+  z-index: 2;
+  width: 120%;
+  height: 6px;
+  background: #fffdf6;
+  box-shadow: 0 2px 6px rgba(46, 36, 19, 0.28);
+}
+
+/* ASSIGNMENT_SPLIT_ANIM_V1: a faixa entra a crescer e sai a encolher; as
+   metades desvanecem na entrada. O ângulo continua a vir inline do JS
+   (PF_SPLIT_ANGLE) — aqui só duração e aspecto da faixa. */
+@keyframes pf-split-halves-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pf-split-band-in {
+  from { scale: 0 1; opacity: 0; }
+  to { scale: 1 1; opacity: 1; }
+}
+
+.pf-assignment-split.is-entering .pf-assignment-split-half {
+  animation: pf-split-halves-in 0.26s ease-out both;
+}
+
+.pf-assignment-split.is-entering .pf-assignment-split-band {
+  animation: pf-split-band-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.pf-assignment-card.is-leaving .pf-assignment-split-band {
+  transition: scale 0.24s ease-in, opacity 0.24s ease-in;
+  scale: 0 1;
+  opacity: 0;
 }
 
 .pf-assignment-preview-row {
@@ -2735,5 +2784,23 @@ html[data-theme="dark"] .pf-fluid-variation {
 
   .pf-details-variation-list {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* O cartão é um controlo: cliques repetidos não seleccionam o seu texto. */
+.pf-assignment-card,
+.pf-assignment-card * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Reservar espaço para A4 e A6 lado a lado, mostrando um design por linha. */
+@media (max-width: 384px) {
+  .pasta-de-folhetos-fluid .pf-fluid-cover-list.pf-assignment-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pf-assignment-preview-row {
+    grid-row: var(--assignment-preview-row-one);
   }
 }

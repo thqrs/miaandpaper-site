@@ -34,6 +34,10 @@
         productSiteSettings.ordersSuspended = true;
       }
       applySiteSettings(productSiteSettings);
+      // MENU_FLAGS_V1: as paginas de produto tambem respeitam a seleccao do
+      // admin no home.json, mesmo que o resto das definicoes venha do
+      // order-products.json.
+      state.menuHome = menuHome || null;
       state.siteMenuCategories = Array.isArray(menuHome.categories) ? menuHome.categories : [];
       if (window.MiaButterflies && window.MiaButterflies.refresh) {
         window.MiaButterflies.refresh();
