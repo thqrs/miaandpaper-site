@@ -26,10 +26,10 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Míu Animation Director · V5</title>
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907013932">
-  <link rel="stylesheet" href="admin-nav.css?v=20260907013932">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907014824">
+  <link rel="stylesheet" href="admin-nav.css?v=20260907014824">
   <link rel="stylesheet" href="miu-rig.css?v=2026082701">
-  <script src="admin-nav.js?v=20260907013932" defer></script>
+  <script src="admin-nav.js?v=20260907014824" defer></script>
   <script src="miu-sprite-grid.js?v=2026082703" defer></script>
   <script src="miu-rig.js?v=2026082710" defer></script>
 </head>
