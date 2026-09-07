@@ -158,10 +158,10 @@
                     "visual": "neutral",
                     "imageEdits": {
                         "pasta-de-folhetos:size:a4:main": {
-                            "zoom": 118,
-                            "positionX": 0,
-                            "positionY": 0,
-                            "rotation": 0
+                            "zoom": 177,
+                            "positionX": 2,
+                            "positionY": 24,
+                            "rotation": 2
                         }
                     },
                     "previewLabel": "Capa",
@@ -236,7 +236,7 @@
                     "visual": "neutral",
                     "imageEdits": {
                         "pasta-de-folhetos:size:a6:main": {
-                            "zoom": 132,
+                            "zoom": 133,
                             "positionX": 0,
                             "positionY": 0,
                             "rotation": 0
@@ -322,7 +322,14 @@
                     "drawerFramesInterleaveFrom": [
                         "a4",
                         "a6"
-                    ]
+                    ],
+                    "imageEdits": {
+                        "pasta-de-folhetos:size:a4-a6:main": {
+                            "zoom": 164,
+                            "positionX": 1,
+                            "positionY": 1
+                        }
+                    }
                 }
             ]
         },
