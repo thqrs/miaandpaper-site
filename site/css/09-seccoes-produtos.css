@@ -2485,16 +2485,16 @@ html[data-theme="dark"] .pf-fluid-variation {
   width: 100% !important;
   height: 100% !important;
   min-width: 0 !important;
-  aspect-ratio: 4 / 3 !important;
+  aspect-ratio: auto !important;
   margin: 0 !important;
   border-radius: calc(var(--radius) + 1px) !important;
 }
 
 .pf-size-card .crachas-size-card-visual .uploaded-image-inner {
-  inset: 0;
-  background-size: contain !important;
-  background-position: center;
-  background-repeat: no-repeat;
+  inset: 0 !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }
 
 .pf-size-card .crachas-size-card-text {
@@ -2507,34 +2507,21 @@ html[data-theme="dark"] .pf-fluid-variation {
   font: 700 1.2rem/1.15 Georgia, "Times New Roman", serif;
 }
 
-.pf-size-card .cadernos-purchase-price {
+.pf-size-card.choice-card.cadernos-purchase-card .cadernos-purchase-price {
+  grid-column: 3 / 4 !important;
+  grid-row: 1 / 2 !important;
+  justify-self: end !important;
   color: var(--moss);
   font: 800 1.12rem/1 Georgia, "Times New Roman", serif;
 }
 
+.pf-size-card.choice-card.cadernos-purchase-card .crachas-size-card-selected {
+  grid-column: 4 / 5 !important;
+  grid-row: 1 / 2 !important;
+}
+
 .pf-size-choice > .cadernos-cover-drawer {
-  margin-top: 10px;
-}
-
-.pf-size-choice > .cadernos-cover-drawer .cadernos-cover-preview-frame {
-  width: min(320px, 100%);
-  aspect-ratio: 9 / 16;
-  max-height: 520px;
-  background: #fbf7ee;
-  border: 1px solid rgba(126, 93, 22, 0.22);
-  border-radius: 18px;
-}
-
-.pf-size-choice > .cadernos-cover-drawer .cadernos-cover-preview-slide {
-  background-size: cover;
-  background-position: center;
-}
-
-.pf-size-choice > .cadernos-cover-drawer .cadernos-cover-preview-slide[data-mia-slide-index="0"] {
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-color: #fbf7ee;
+  margin: -6px 8px 12px;
 }
 
 .pf-finish-step .cadernos-add-on-list {
@@ -2819,8 +2806,16 @@ html[data-theme="dark"] .pf-fluid-variation {
     font-size: 1rem;
   }
 
-  .pf-size-card .cadernos-purchase-price {
+  .pf-size-card.choice-card.cadernos-purchase-card .cadernos-purchase-price {
+    grid-column: 3 / 4 !important;
+    grid-row: 1 / 2 !important;
+    justify-self: end !important;
     font-size: 0.9rem;
+  }
+
+  .pf-size-card.choice-card.cadernos-purchase-card .crachas-size-card-selected {
+    grid-column: 4 / 5 !important;
+    grid-row: 1 / 2 !important;
   }
 
   .pf-metal-corners-toggle {

@@ -386,9 +386,119 @@
     }
   }
 
+  var cadernoSessionSeed = (Date.now() ^ (Math.floor(Math.random() * 0x7fffffff))) >>> 0;
+  var cadernoSessionShuffledFrames = {};
+
+  function cadernoSeededShuffle(array, seed) {
+    var copy = array.slice();
+    var currentSeed = seed >>> 0;
+    for (var i = copy.length - 1; i > 0; i--) {
+      currentSeed = (Math.imul(currentSeed, 1664525) + 1013904223) >>> 0;
+      var r = (currentSeed >>> 0) / 4294967296;
+      var j = Math.floor(r * (i + 1));
+      var temp = copy[i];
+      copy[i] = copy[j];
+      copy[j] = temp;
+    }
+    return copy;
+  }
+
+  function findCadernoProductItem(product, itemId) {
+    if (!product || !itemId) {
+      return null;
+    }
+    if (Array.isArray(product.steps)) {
+      for (var s = 0; s < product.steps.length; s++) {
+        var step = product.steps[s];
+        if (step && Array.isArray(step.items)) {
+          for (var i = 0; i < step.items.length; i++) {
+            if (step.items[i] && String(step.items[i].id) === String(itemId)) {
+              return step.items[i];
+            }
+          }
+        }
+      }
+    }
+    if (Array.isArray(product.items)) {
+      for (var j = 0; j < product.items.length; j++) {
+        if (product.items[j] && String(product.items[j].id) === String(itemId)) {
+          return product.items[j];
+        }
+      }
+    }
+    return null;
+  }
+
   function cadernoCoverPreviewFrames(product, item) {
+    if (!item) {
+      return [];
+    }
+
+    var cacheKey = String((product && product.slug) || "") + ":" + String(item.id || "");
+    if (cadernoSessionShuffledFrames[cacheKey]) {
+      return cadernoSessionShuffledFrames[cacheKey];
+    }
+
+    if (Array.isArray(item.drawerFramesInterleaveFrom) && item.drawerFramesInterleaveFrom.length) {
+      var baseFrames = [];
+      if (Array.isArray(item.drawerFrames) && item.drawerFrames.length) {
+        var first = item.drawerFrames[0];
+        if (first && first.image) {
+          baseFrames.push({
+            image: String(first.image),
+            label: String(first.label || (first.isCover ? (item.previewLabel || "Capa") : (item.interiorLabel || "Interior"))),
+            itemId: String(item.id || "")
+          });
+        }
+      } else {
+        var buttonCover = cadernoCoverImage(item);
+        if (buttonCover) {
+          baseFrames.push({
+            image: buttonCover,
+            label: cadernoPreviewLabel(buttonCover, true, item),
+            itemId: String(item.id || "")
+          });
+        }
+      }
+
+      var sourceSequences = item.drawerFramesInterleaveFrom.map(function (sourceId) {
+        var sourceItem = findCadernoProductItem(product, sourceId);
+        if (!sourceItem) {
+          return [];
+        }
+        var sourceFrames = cadernoCoverPreviewFrames(product, sourceItem);
+        return sourceFrames.slice(1);
+      });
+
+      var maxLen = 0;
+      sourceSequences.forEach(function (seq) {
+        if (seq.length > maxLen) {
+          maxLen = seq.length;
+        }
+      });
+
+      var interleaved = [];
+      for (var stepIdx = 0; stepIdx < maxLen; stepIdx++) {
+        for (var srcIdx = 0; srcIdx < sourceSequences.length; srcIdx++) {
+          var seq = sourceSequences[srcIdx];
+          if (stepIdx < seq.length) {
+            var frame = seq[stepIdx];
+            interleaved.push({
+              image: frame.image,
+              label: frame.label,
+              itemId: String(item.id || "")
+            });
+          }
+        }
+      }
+
+      var interleavedResult = baseFrames.concat(interleaved);
+      cadernoSessionShuffledFrames[cacheKey] = interleavedResult;
+      return interleavedResult;
+    }
+
     if (item && Array.isArray(item.drawerFrames) && item.drawerFrames.length) {
-      return item.drawerFrames.filter(function (f) {
+      var frames = item.drawerFrames.filter(function (f) {
         return f && f.image;
       }).map(function (f) {
         return {
@@ -397,6 +507,25 @@
           itemId: String(item.id || "")
         };
       });
+
+      if (item.drawerFramesShuffle && frames.length > 1) {
+        var itemHash = 0;
+        for (var k = 0; k < cacheKey.length; k++) {
+          itemHash = ((itemHash << 5) - itemHash + cacheKey.charCodeAt(k)) >>> 0;
+        }
+        var seed = (cadernoSessionSeed + itemHash) >>> 0;
+        if (item.keepFirstDrawerFrame) {
+          var firstFrame = frames[0];
+          var rest = cadernoSeededShuffle(frames.slice(1), seed);
+          cadernoSessionShuffledFrames[cacheKey] = [firstFrame].concat(rest);
+        } else {
+          cadernoSessionShuffledFrames[cacheKey] = cadernoSeededShuffle(frames, seed);
+        }
+        return cadernoSessionShuffledFrames[cacheKey];
+      }
+
+      cadernoSessionShuffledFrames[cacheKey] = frames;
+      return frames;
     }
 
     var frames = [];

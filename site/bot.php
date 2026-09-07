@@ -279,13 +279,13 @@ foreach ($contextRows as $contextRow) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Míu · Conversas e configuração | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907005732">
-  <link rel="stylesheet" href="admin-nav.css?v=20260907005732">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907013932">
+  <link rel="stylesheet" href="admin-nav.css?v=20260907013932">
   <link rel="stylesheet" href="bot-admin.css?v=2026081501">
-  <link rel="stylesheet" href="css/13-miu.css?v=20260907005732">
-  <script src="admin-nav.js?v=20260907005732" defer></script>
+  <link rel="stylesheet" href="css/13-miu.css?v=20260907013932">
+  <script src="admin-nav.js?v=20260907013932" defer></script>
   <script src="bot-admin.js?v=2026081501" defer></script>
-  <script src="js/24-miu.js?v=20260907005732" defer></script>
+  <script src="js/24-miu.js?v=20260907013932" defer></script>
 </head>
 <body class="miu-admin-body" data-miu-admin-chat="1">
 <?= mp_parametros_barra('bot.php') ?>

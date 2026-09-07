@@ -37,8 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Comparador Oficial de Argolas (15 Designs) · Mia &amp; Paper</title>
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="../admin-nav.css?v=20260907005732">
-  <script src="../admin-nav.js?v=20260907005732" data-prefix="../" defer></script>
+  <link rel="stylesheet" href="../admin-nav.css?v=20260907013932">
+  <script src="../admin-nav.js?v=20260907013932" data-prefix="../" defer></script>
   <style>
     :root {
       --bg-main: #f8f6f0;

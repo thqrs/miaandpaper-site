@@ -14,8 +14,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Homepage &amp; Menu · Mia &amp; Paper</title>
-<link rel="stylesheet" href="admin-nav.css?v=20260907005732">
-<script src="admin-nav.js?v=20260907005732" defer></script>
+<link rel="stylesheet" href="admin-nav.css?v=20260907013932">
+<script src="admin-nav.js?v=20260907013932" defer></script>
 <style>
   :root {
     --fundo: #14153a;        --fundo-2: #101132;
