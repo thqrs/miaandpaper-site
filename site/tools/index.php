@@ -23,8 +23,8 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="../catalogo/catalogo.css?v=2026072601">
   <link rel="stylesheet" href="../ofertas/ofertas.css?v=2026062809">
-  <link rel="stylesheet" href="../admin-nav.css?v=20260907014824">
-  <script src="../admin-nav.js?v=20260907014824" data-prefix="../" defer></script>
+  <link rel="stylesheet" href="../admin-nav.css?v=20260907015754">
+  <script src="../admin-nav.js?v=20260907015754" data-prefix="../" defer></script>
   <style>
     /* O card tem dois destinos, por isso deixa de ser um <a>: o título estica-se
        sobre o card inteiro e o segundo link fica por cima, na sua área. */
