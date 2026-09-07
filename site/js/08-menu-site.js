@@ -411,16 +411,13 @@
     var brandLabel = brand || "Mia & Paper";
     var categories = Array.isArray(menuCategories) ? menuCategories.filter(siteMenuCategoryIsVisible) : [];
     var hasSiteMenu = categories.length > 0;
-    var actions = hasSiteMenu ? [
+    var safeInstagramUrl = escapeHtml(instagramUrl || (state.home && state.home.instagramUrl) || (state.menuHome && state.menuHome.instagramUrl) || "https://www.instagram.com/miaandpaper/");
+    var actions = [
+      '<a class="header-link header-link-icon" href="' + safeInstagramUrl + '" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">' + ICON_INSTAGRAM + '</a>',
       renderCartHeaderButton(),
-      '<button type="button" class="header-link header-link-icon site-menu-trigger" data-site-menu-open aria-expanded="' + (state.siteMenuOpen ? 'true' : 'false') + '" aria-controls="site-menu" aria-label="Abrir menu" title="Menu">' + ICON_MENU + '</button>',
+      hasSiteMenu ? '<button type="button" class="header-link header-link-icon site-menu-trigger" data-site-menu-open aria-expanded="' + (state.siteMenuOpen ? 'true' : 'false') + '" aria-controls="site-menu" aria-label="Abrir menu" title="Menu">' + ICON_MENU + '</button>' : '',
       '<button type="button" class="header-link header-link-icon header-theme-toggle" data-theme-toggle aria-pressed="false" aria-hidden="true" hidden aria-label="Modo escuro" title="Modo escuro">' + ICON_SUN + '</button>'
-    ].join("") : [
-      '<a class="header-link header-link-icon" href="' + escapeHtml(instagramUrl) + '" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">' + ICON_INSTAGRAM + '</a>',
-      '<a class="header-link header-link-icon" href="contacto.html" aria-label="Enviar mensagem" title="Enviar mensagem">' + ICON_MAIL + '</a>',
-      renderCartHeaderButton(),
-      '<button type="button" class="header-link header-link-icon header-theme-toggle" data-theme-toggle aria-pressed="false" aria-hidden="true" hidden aria-label="Modo escuro" title="Modo escuro">' + ICON_SUN + '</button>'
-    ].join("");
+    ].filter(Boolean).join("");
 
     return [
       '<header class="site-header' + (hasSiteMenu ? ' has-site-menu' : '') + '">',

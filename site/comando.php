@@ -179,8 +179,8 @@ foreach ($analise['comandos'] as $c) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Comando | Mia &amp; Paper</title>
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="admin-nav.css?v=20260907015754">
-  <script src="admin-nav.js?v=20260907015754" defer></script>
+  <link rel="stylesheet" href="admin-nav.css?v=20260907212423">
+  <script src="admin-nav.js?v=20260907212423" defer></script>
   <style>
     :root {
       --ink: #3b2f1f; --muted: #7a6a52; --line: rgba(0,0,0,0.14);

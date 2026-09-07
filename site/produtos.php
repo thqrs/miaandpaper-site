@@ -167,9 +167,9 @@ foreach (array_keys($receitasPasso1) as $slugReceita) {
   <meta name="robots" content="noindex, nofollow">
   <title>Designs dos produtos · Mia &amp; Paper</title>
   <link rel="icon" href="content/brand/logo.webp" type="image/webp">
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907015754">
-  <link rel="stylesheet" href="admin-nav.css?v=20260907015754">
-  <script src="admin-nav.js?v=20260907015754" defer></script>
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907212423">
+  <link rel="stylesheet" href="admin-nav.css?v=20260907212423">
+  <script src="admin-nav.js?v=20260907212423" defer></script>
   <style>
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }

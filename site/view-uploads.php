@@ -429,9 +429,9 @@ $highlightToken = isset($_GET['token']) ? strtolower(trim((string)$_GET['token']
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Ficheiros enviados por clientes · Mia &amp; Paper</title>
   <link rel="icon" href="content/brand/logo.webp" type="image/webp">
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907015754">
-  <link rel="stylesheet" href="admin-nav.css?v=20260907015754">
-  <script src="admin-nav.js?v=20260907015754" defer></script>
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907212423">
+  <link rel="stylesheet" href="admin-nav.css?v=20260907212423">
+  <script src="admin-nav.js?v=20260907212423" defer></script>
   <style>
     :root {
       --paper: #f7f1e3;

@@ -78,8 +78,8 @@ foreach ($guardados as $s) {
 <meta name="robots" content="noindex, nofollow">
 <title>Snapshots · Mia &amp; Paper admin</title>
 <link rel="icon" href="content/brand/logo.webp" type="image/webp">
-<link rel="stylesheet" href="admin-nav.css?v=20260907015754">
-<script src="admin-nav.js?v=20260907015754" defer></script>
+<link rel="stylesheet" href="admin-nav.css?v=20260907212423">
+<script src="admin-nav.js?v=20260907212423" defer></script>
 <style>
   body { font: 15px/1.55 system-ui, -apple-system, Segoe UI, sans-serif; background: #fff8df; color: #2e2413; margin: 0; }
   .sp-page { max-width: 940px; margin: 0 auto; padding: 22px 18px 70px; }
