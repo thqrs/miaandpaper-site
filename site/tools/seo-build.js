@@ -138,6 +138,10 @@ function buildHead(page, jsonLd) {
     `  <meta name="twitter:description" content="${escapeHtml(social)}">`
   ];
 
+  if (CONFIG.googleSiteVerification && (page.file === "index.html" || page.url === "/")) {
+    lines.push(`  <meta name="google-site-verification" content="${escapeHtml(CONFIG.googleSiteVerification)}">`);
+  }
+
   // O bloco estatico esta escondido por CSS (ver .seo-prerender em styles.css),
   // senao piscava no ecra ate os JSON chegarem. Sem JavaScript nao ha app.js
   // para o substituir, por isso aqui repomo-lo — senao a pagina ficava vazia.

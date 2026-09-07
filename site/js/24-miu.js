@@ -16,6 +16,11 @@ var miuConfig = null;
 var miuBusy = false;
 var miuConversationId = "";
 var miuMessages = [];
+var miuEmailedUserCount = 0;
+var miuFinishTimer = 0;
+var miuInactivityFinishTimer = 0;
+var MIU_INACTIVITY_FINISH_MS = 30 * 60 * 1000; // 30 minutos
+var MIU_PANEL_CLOSED_FINISH_MS = 2 * 60 * 1000; // 2 minutos após fechar o painel
 var miuPageContext = null;
 var miuContextSignature = "";
 var miuContextTimer = 0;
@@ -641,6 +646,7 @@ function miuLoadLocalState()
   miuMessages = Array.isArray(parsed.messages) ? parsed.messages.slice(-30).filter(function (message) {
     return message && (message.role === "user" || message.role === "assistant") && typeof message.text === "string";
   }) : [];
+  miuEmailedUserCount = Math.max(0, Number(parsed.emailedUserCount || 0));
 }
 
 function miuSaveLocalState()
@@ -648,9 +654,81 @@ function miuSaveLocalState()
   try {
     window.sessionStorage.setItem(miuStorageKey, JSON.stringify({
       conversationId: miuConversationId,
-      messages: miuMessages.slice(-30)
+      messages: miuMessages.slice(-30),
+      emailedUserCount: miuEmailedUserCount
     }));
   } catch (error) {}
+}
+
+function miuNotifyFinished(useKeepalive)
+{
+  if (!miuConversationId || miuBusy) { return; }
+  var userMessageCount = miuMessages.filter(function (m) {
+    return m && m.role === "user";
+  }).length;
+  if (userMessageCount === 0 || userMessageCount <= miuEmailedUserCount) {
+    return;
+  }
+  miuEmailedUserCount = userMessageCount;
+  miuSaveLocalState();
+
+  var payload = JSON.stringify({
+    action: "finish",
+    csrf: miuConfig ? miuConfig.csrf : "",
+    conversationId: miuConversationId,
+    page: window.location.pathname
+  });
+
+  if (useKeepalive && window.fetch) {
+    try {
+      window.fetch(miuApiUrl, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+        keepalive: true
+      });
+      return;
+    } catch (e) {}
+  }
+  if (window.fetch) {
+    window.fetch(miuApiUrl, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: payload
+    }).catch(function () {});
+  }
+}
+
+function miuRestartInactivityFinishTimer()
+{
+  if (miuInactivityFinishTimer) {
+    window.clearTimeout(miuInactivityFinishTimer);
+    miuInactivityFinishTimer = 0;
+  }
+  miuInactivityFinishTimer = window.setTimeout(function () {
+    miuNotifyFinished(false);
+  }, MIU_INACTIVITY_FINISH_MS);
+}
+
+function miuSchedulePanelClosedFinish()
+{
+  if (miuFinishTimer) {
+    window.clearTimeout(miuFinishTimer);
+    miuFinishTimer = 0;
+  }
+  miuFinishTimer = window.setTimeout(function () {
+    miuNotifyFinished(false);
+  }, MIU_PANEL_CLOSED_FINISH_MS);
+}
+
+function miuCancelPanelClosedFinish()
+{
+  if (miuFinishTimer) {
+    window.clearTimeout(miuFinishTimer);
+    miuFinishTimer = 0;
+  }
 }
 
 function miuSafeSiteHref(value)
@@ -962,6 +1040,7 @@ function miuSendLocalReply(question, answer, replyId)
     miuRenderMessages();
     miuSetBusy(false);
     miuAnimationTrigger("reply_end");
+    miuRestartInactivityFinishTimer();
     if (miuInput) { miuInput.focus(); }
   }, 180);
 }
@@ -1332,13 +1411,23 @@ function miuSendMessage(forcedMessage)
     miuSetStatus("Não foi possível ligar ao Míu. Confirma a ligação e tenta novamente.");
   }).then(function () {
     miuSetBusy(false);
-    if (replyCompleted) { miuAnimationTrigger("reply_end"); }
+    if (replyCompleted) {
+      miuAnimationTrigger("reply_end");
+      miuRestartInactivityFinishTimer();
+    }
     if (miuInput) { miuInput.focus(); }
   });
 }
 
 function miuResetConversation()
 {
+  miuNotifyFinished(false);
+  miuEmailedUserCount = 0;
+  miuCancelPanelClosedFinish();
+  if (miuInactivityFinishTimer) {
+    window.clearTimeout(miuInactivityFinishTimer);
+    miuInactivityFinishTimer = 0;
+  }
   miuConversationId = "";
   miuMessages = [];
   miuSaveLocalState();
@@ -1353,7 +1442,12 @@ function miuSetOpen(open)
   if (!miuRoot || !miuPanel) { return; }
   var wasOpen = miuRoot.classList.contains("is-open");
   if (!!open === wasOpen) { return; }
-  if (open) { miuAnimationResetRoam(); }
+  if (open) {
+    miuAnimationResetRoam();
+    miuCancelPanelClosedFinish();
+  } else {
+    miuSchedulePanelClosedFinish();
+  }
   miuRoot.classList.toggle("is-open", !!open);
   document.body.classList.toggle("is-miu-open", !!open);
   miuPanel.setAttribute("aria-hidden", open ? "false" : "true");
@@ -2085,6 +2179,15 @@ function miuBuildInterface()
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && miuRoot.classList.contains("is-open")) { miuSetOpen(false); launcher.focus(); }
   });
+  window.addEventListener("pagehide", function () { miuNotifyFinished(true); });
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") {
+      miuNotifyFinished(true);
+    }
+  });
+  if (miuMessages.some(function (m) { return m && m.role === "user"; })) {
+    miuRestartInactivityFinishTimer();
+  }
   miuRenderMessages();
   miuUpdateCount();
   miuWatchContext();

@@ -181,6 +181,16 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string)$_SERVER['REQUEST_ME
         header('Location: bot.php?tab=conversations&notice=deleted');
         exit;
     }
+    if ($action === 'send_conversation_email') {
+        $sendId = bot_int(isset($_POST['conversation_id']) ? $_POST['conversation_id'] : 0, 1, PHP_INT_MAX, 0);
+        if ($sendId > 0) {
+            $sent = miu_send_conversation_email($sendId, true);
+            header('Location: bot.php?tab=conversations&id=' . $sendId . '&notice=' . ($sent ? 'email-sent' : 'email-failed'));
+            exit;
+        }
+        header('Location: bot.php?tab=conversations');
+        exit;
+    }
     if ($action === 'save_appearance') {
         try {
             miu_animation_save_appearance_from_request($_POST);
@@ -220,6 +230,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string)$_SERVER['REQUEST_ME
 }
 
 miu_context_sync_all();
+miu_process_pending_conversation_emails(30);
 $settings = miu_settings();
 $secrets = miu_secret_config();
 $stats = miu_admin_stats();
@@ -279,13 +290,13 @@ foreach ($contextRows as $contextRow) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Míu · Conversas e configuração | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907212423">
-  <link rel="stylesheet" href="admin-nav.css?v=20260907212423">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907233709">
+  <link rel="stylesheet" href="admin-nav.css?v=20260907233709">
   <link rel="stylesheet" href="bot-admin.css?v=2026081501">
-  <link rel="stylesheet" href="css/13-miu.css?v=20260907212423">
-  <script src="admin-nav.js?v=20260907212423" defer></script>
+  <link rel="stylesheet" href="css/13-miu.css?v=20260907233709">
+  <script src="admin-nav.js?v=20260907233709" defer></script>
   <script src="bot-admin.js?v=2026081501" defer></script>
-  <script src="js/24-miu.js?v=20260907212423" defer></script>
+  <script src="js/24-miu.js?v=20260907233709" defer></script>
 </head>
 <body class="miu-admin-body" data-miu-admin-chat="1">
 <?= mp_parametros_barra('bot.php') ?>
@@ -364,6 +375,8 @@ foreach ($contextRows as $contextRow) {
   <?php if ($notice === 'save-failed'): ?><p class="miu-admin-flash miu-admin-flash--error"><?= bot_h($settingsError !== '' ? $settingsError : 'Não foi possível guardar as definições do Míu. O ficheiro anterior foi mantido.') ?></p><?php endif; ?>
   <?php if ($notice === 'context-saved'): ?><p class="miu-admin-flash">Contexto do passo guardado.</p><?php endif; ?>
   <?php if ($notice === 'deleted'): ?><p class="miu-admin-flash">Conversa apagada.</p><?php endif; ?>
+  <?php if ($notice === 'email-sent'): ?><p class="miu-admin-flash">Cópia da conversa enviada por email com sucesso.</p><?php endif; ?>
+  <?php if ($notice === 'email-failed'): ?><p class="miu-admin-flash miu-admin-flash--error">Não foi possível enviar a cópia por email. Verifica se existem endereços em private/mail.php e se a conversa contém mensagens de utilizador.</p><?php endif; ?>
   <?php if ($notice === 'appearance-saved'): ?><p class="miu-admin-flash">Aparência do Míu guardada.</p><?php endif; ?>
   <?php if ($notice === 'animations-saved'): ?><p class="miu-admin-flash">Comportamento visual do Míu guardado.</p><?php endif; ?>
   <?php if ($notice === 'animation-created'): ?><p class="miu-admin-flash">Animação adicionada.</p><?php endif; ?>
@@ -700,6 +713,7 @@ foreach ($contextRows as $contextRow) {
         <div><span>Primeira mensagem</span><strong><?= bot_h(bot_local_date($detail['started_at'])) ?></strong></div>
         <div><span>Última actividade</span><strong><?= bot_h(bot_local_date($detail['updated_at'])) ?></strong></div>
         <div><span>Página</span><code><?= bot_h($detail['page_url']) ?></code></div>
+        <div><span>Cópia por email</span><strong><?= bot_h(!empty($detail['email_sent_at']) ? bot_local_date($detail['email_sent_at']) : 'Ainda não enviada') ?></strong></div>
         <div class="miu-settings-span"><span>User-agent</span><code><?= bot_h($detail['user_agent']) ?></code></div>
       </div>
       <div class="miu-admin-messages">
@@ -711,7 +725,11 @@ foreach ($contextRows as $contextRow) {
           </article>
         <?php endforeach; ?>
       </div>
-      <div class="miu-admin-actions">
+      <div class="miu-admin-actions" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <form method="post" action="bot.php">
+          <input type="hidden" name="csrf" value="<?= bot_h($csrf) ?>"><input type="hidden" name="action" value="send_conversation_email"><input type="hidden" name="conversation_id" value="<?= (int)$detail['id'] ?>">
+          <button class="miu-button miu-button--secondary" type="submit"><?= !empty($detail['email_sent_at']) ? 'Reenviar cópia por email' : 'Enviar cópia por email' ?></button>
+        </form>
         <form method="post" action="bot.php" data-confirm="Apagar esta conversa e todas as mensagens? Esta acção não pode ser desfeita.">
           <input type="hidden" name="csrf" value="<?= bot_h($csrf) ?>"><input type="hidden" name="action" value="delete_conversation"><input type="hidden" name="conversation_id" value="<?= (int)$detail['id'] ?>">
           <button class="miu-button miu-button--danger" type="submit">Apagar conversa</button>

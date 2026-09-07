@@ -199,6 +199,7 @@ try {
 $method = isset($_SERVER['REQUEST_METHOD']) ? strtoupper((string)$_SERVER['REQUEST_METHOD']) : 'GET';
 
 if ($method === 'GET') {
+    miu_process_pending_conversation_emails(30);
     miu_api_respond(200, array(
         'ok' => true,
         'enabled' => $settings['enabled'] === '1',
@@ -255,6 +256,21 @@ if ($action === 'context') {
         ) : null,
     ));
 }
+
+if ($action === 'finish') {
+    $publicId = isset($body['conversationId']) ? trim((string)$body['conversationId']) : '';
+    $ip = mp_client_ip();
+    $ip = $ip !== '' ? $ip : '0.0.0.0';
+    if ($publicId !== '') {
+        $conversation = miu_find_conversation($publicId, $ip);
+        if (is_array($conversation)) {
+            miu_send_conversation_email((int)$conversation['id']);
+        }
+    }
+    miu_process_pending_conversation_emails(30);
+    miu_api_respond(200, array('ok' => true));
+}
+
 if ($action !== 'message' && $action !== 'local') {
     miu_api_respond(400, array('ok' => false, 'message' => 'Acção desconhecida.'));
 }

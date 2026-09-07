@@ -399,9 +399,27 @@ function miu_db_migrate($pdo)
     if (!$hasContextKey) {
         $pdo->exec("ALTER TABLE bot_messages ADD COLUMN context_key TEXT NOT NULL DEFAULT ''");
     }
+    $convColumns = $pdo->query('PRAGMA table_info(bot_conversations)')->fetchAll();
+    $hasEmailSentAt = false;
+    $hasLastEmailedId = false;
+    foreach ($convColumns as $column) {
+        if (isset($column['name']) && $column['name'] === 'email_sent_at') {
+            $hasEmailSentAt = true;
+        }
+        if (isset($column['name']) && $column['name'] === 'last_emailed_message_id') {
+            $hasLastEmailedId = true;
+        }
+    }
+    if (!$hasEmailSentAt) {
+        $pdo->exec("ALTER TABLE bot_conversations ADD COLUMN email_sent_at TEXT DEFAULT NULL");
+    }
+    if (!$hasLastEmailedId) {
+        $pdo->exec("ALTER TABLE bot_conversations ADD COLUMN last_emailed_message_id INTEGER NOT NULL DEFAULT 0");
+    }
     $pdo->exec('CREATE INDEX IF NOT EXISTS bot_messages_conversation_idx ON bot_messages(conversation_id, id)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS bot_messages_created_idx ON bot_messages(created_at)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS bot_conversations_ip_idx ON bot_conversations(ip_address, updated_at)');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS bot_conversations_email_pending_idx ON bot_conversations(updated_at, last_emailed_message_id)');
     miu_context_db_migrate($pdo);
 }
 
@@ -1085,4 +1103,234 @@ function miu_admin_delete_conversation($id)
     $stmt = miu_db()->prepare('DELETE FROM bot_conversations WHERE id = ?');
     $stmt->execute(array((int)$id));
     return $stmt->rowCount() > 0;
+}
+
+function miu_mail_config()
+{
+    static $config = null;
+    if ($config !== null) {
+        return $config;
+    }
+    $path = mp_private_mail_config_path();
+    if (!$path || !is_file($path)) {
+        $config = array('to' => '', 'from' => 'no-reply@miaandpaper.com');
+        return $config;
+    }
+    $loaded = @require $path;
+    if (!is_array($loaded)) {
+        $config = array('to' => '', 'from' => 'no-reply@miaandpaper.com');
+        return $config;
+    }
+    $config = array(
+        'to' => isset($loaded['to']) ? trim((string)$loaded['to']) : '',
+        'from' => isset($loaded['from']) ? trim((string)$loaded['from']) : 'no-reply@miaandpaper.com',
+    );
+    return $config;
+}
+
+function miu_mail_recipients()
+{
+    $config = miu_mail_config();
+    if (empty($config['to'])) {
+        return array();
+    }
+    $destinos = array();
+    foreach (preg_split('/[,;]+/', (string)$config['to']) as $email) {
+        $email = trim(str_replace(array("\r", "\n"), '', $email));
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $destinos[] = $email;
+        }
+    }
+    return $destinos;
+}
+
+function miu_mail_from()
+{
+    $config = miu_mail_config();
+    $from = !empty($config['from']) ? trim(str_replace(array("\r", "\n"), '', (string)$config['from'])) : 'no-reply@miaandpaper.com';
+    return filter_var($from, FILTER_VALIDATE_EMAIL) ? $from : 'no-reply@miaandpaper.com';
+}
+
+function miu_format_conversation_email($conversation, array $messages)
+{
+    $formatDate = function ($utcString) {
+        try {
+            $date = new DateTime((string)$utcString, new DateTimeZone('UTC'));
+            $date->setTimezone(new DateTimeZone('Europe/Lisbon'));
+            return $date->format('d/m/Y H:i:s');
+        } catch (Exception $e) {
+            return (string)$utcString;
+        }
+    };
+    $formatTime = function ($utcString) {
+        try {
+            $date = new DateTime((string)$utcString, new DateTimeZone('UTC'));
+            $date->setTimezone(new DateTimeZone('Europe/Lisbon'));
+            return $date->format('H:i');
+        } catch (Exception $e) {
+            return (string)$utcString;
+        }
+    };
+
+    $page = isset($conversation['page_url']) && trim((string)$conversation['page_url']) !== ''
+        ? trim((string)$conversation['page_url'])
+        : '/';
+    $pageDisplay = ($page === '/' || $page === '/index.html') ? '/ (Homepage)' : $page;
+
+    $contextKey = '';
+    foreach ($messages as $m) {
+        if (!empty($m['context_key'])) {
+            $contextKey = (string)$m['context_key'];
+            break;
+        }
+    }
+
+    $subject = '[Míu] Conversa na página ' . $pageDisplay;
+    if ($contextKey !== '') {
+        $subject .= ' (' . $contextKey . ')';
+    }
+
+    $linhas = array();
+    $linhas[] = 'Olá,';
+    $linhas[] = '';
+    $linhas[] = 'Houve uma conversa com o Míu no site da Mia & Paper.';
+    $linhas[] = '';
+    $linhas[] = '============================================================';
+    $linhas[] = 'RESUMO DA SESSÃO';
+    $linhas[] = '============================================================';
+    $linhas[] = 'Página: ' . $pageDisplay;
+    if ($contextKey !== '') {
+        $linhas[] = 'Contexto: ' . $contextKey;
+    }
+    $linhas[] = 'Início: ' . $formatDate($conversation['started_at']) . ' (hora de Lisboa)';
+    $linhas[] = 'Última actividade: ' . $formatDate($conversation['updated_at']) . ' (hora de Lisboa)';
+    $linhas[] = 'IP: ' . (isset($conversation['ip_address']) ? $conversation['ip_address'] : 'desconhecido');
+    $linhas[] = 'Total de mensagens: ' . count($messages);
+    $linhas[] = 'Painel de administração: https://www.miaandpaper.com/bot.php?tab=conversations&id=' . (int)$conversation['id'];
+    $linhas[] = '';
+    $linhas[] = '============================================================';
+    $linhas[] = 'TRANSCRIÇÃO DA CONVERSA';
+    $linhas[] = '============================================================';
+    $linhas[] = '';
+
+    foreach ($messages as $msg) {
+        $role = $msg['role'] === 'user' ? 'Visitante' : 'Míu';
+        $time = $formatTime($msg['created_at']);
+        $tag = '[' . $time . '] ' . $role;
+        if ($msg['status'] === 'blocked') {
+            $tag .= ' [MENSAGEM BLOQUEADA: ' . ($msg['error_detail'] ?: 'filtro') . ']';
+        } elseif ($msg['status'] === 'error') {
+            $tag .= ' [ERRO]';
+        }
+        $linhas[] = $tag . ':';
+        $linhas[] = trim((string)$msg['content']);
+        $linhas[] = '';
+    }
+
+    $linhas[] = '============================================================';
+    $linhas[] = 'Email automático enviado pelo Míu · Mia & Paper';
+
+    return array(
+        'subject' => $subject,
+        'body' => implode("\n", $linhas),
+    );
+}
+
+function miu_send_conversation_email($conversationId, $force = false)
+{
+    $conversation = miu_admin_conversation((int)$conversationId);
+    if (!is_array($conversation)) {
+        return false;
+    }
+
+    $messages = isset($conversation['messages']) && is_array($conversation['messages'])
+        ? $conversation['messages']
+        : array();
+
+    if (empty($messages)) {
+        return false;
+    }
+
+    $hasUserMessage = false;
+    $maxMessageId = 0;
+    foreach ($messages as $msg) {
+        $msgId = (int)$msg['id'];
+        if ($msgId > $maxMessageId) {
+            $maxMessageId = $msgId;
+        }
+        if ($msg['role'] === 'user' && in_array($msg['status'], array('accepted', 'local'), true)) {
+            $hasUserMessage = true;
+        }
+    }
+
+    if (!$hasUserMessage) {
+        return false;
+    }
+
+    $lastEmailedId = isset($conversation['last_emailed_message_id'])
+        ? (int)$conversation['last_emailed_message_id']
+        : 0;
+
+    if (!$force && $maxMessageId <= $lastEmailedId) {
+        return false;
+    }
+
+    $recipients = miu_mail_recipients();
+    if (empty($recipients)) {
+        @error_log('[miu] envio de email cancelado: sem destinatários configurados.');
+        return false;
+    }
+
+    $formatted = miu_format_conversation_email($conversation, $messages);
+    $from = miu_mail_from();
+    $headers = implode("\r\n", array(
+        'MIME-Version: 1.0',
+        'Content-Type: text/plain; charset=UTF-8',
+        'From: "Míu · Mia & Paper" <' . $from . '>',
+        'Reply-To: "Mia & Paper" <' . $from . '>',
+        'X-Mailer: PHP/' . phpversion(),
+        'Auto-Submitted: auto-generated',
+    ));
+
+    $subjectClean = trim(str_replace(array("\r", "\n"), '', (string)$formatted['subject']));
+    $ok = @mail(implode(', ', $recipients), $subjectClean, $formatted['body'], $headers, '-f' . $from);
+
+    $now = gmdate('Y-m-d H:i:s');
+    $stmt = miu_db()->prepare(
+        'UPDATE bot_conversations SET email_sent_at = ?, last_emailed_message_id = ? WHERE id = ?'
+    );
+    $stmt->execute(array($now, $maxMessageId, (int)$conversation['id']));
+
+    if (!$ok) {
+        @error_log('[miu] mail() devolveu false ao tentar enviar cópia da conversa #' . (int)$conversationId);
+    }
+    return (bool)$ok;
+}
+
+function miu_process_pending_conversation_emails($idleMinutes = 30)
+{
+    $idleMinutes = max(1, min(1440, (int)$idleMinutes));
+    try {
+        $db = miu_db();
+        $cutoff = gmdate('Y-m-d H:i:s', time() - ($idleMinutes * 60));
+        $stmt = $db->prepare(
+            "SELECT c.id FROM bot_conversations c "
+            . "WHERE c.updated_at <= ? "
+            . "AND c.last_emailed_message_id < COALESCE((SELECT MAX(m.id) FROM bot_messages m WHERE m.conversation_id = c.id), 0) "
+            . "AND EXISTS (SELECT 1 FROM bot_messages m2 WHERE m2.conversation_id = c.id AND m2.role = 'user' AND m2.status IN ('accepted', 'local')) "
+            . "ORDER BY c.id ASC LIMIT 5"
+        );
+        $stmt->execute(array($cutoff));
+        $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $sentCount = 0;
+        foreach ($ids as $id) {
+            if (miu_send_conversation_email((int)$id)) {
+                $sentCount++;
+            }
+        }
+        return $sentCount;
+    } catch (Exception $e) {
+        @error_log('[miu] erro na varredura de emails pendentes: ' . $e->getMessage());
+        return 0;
+    }
 }
