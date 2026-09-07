@@ -218,7 +218,8 @@
   transform-origin: center;
 }
 
-.miu-face--small {
+.miu-root.is-open .miu-face--small,
+.miu-messages .miu-face--small {
   background-image: url("../content/brand/miu/miu-sprite-small.webp");
 }
 

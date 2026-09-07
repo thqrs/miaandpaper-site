@@ -16,6 +16,12 @@ if ([string]::IsNullOrWhiteSpace($site) -or -not (Test-Path -LiteralPath $site))
     throw 'SITE environment variable is invalid or the path does not exist.'
 }
 
+# Garante que o bundle unificado css/app.css é recompilado a partir dos módulos
+$buildCssScript = Join-Path $PSScriptRoot "build-css.js"
+if (Test-Path -LiteralPath $buildCssScript) {
+    & node $buildCssScript
+}
+
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $files = @(Get-ChildItem -LiteralPath $site -Filter '*.html' -File -Recurse) + @(Get-ChildItem -LiteralPath $site -Filter '*.php' -File -Recurse)
 

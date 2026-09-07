@@ -65,7 +65,7 @@
     });
   }
 
-  var card = createElement("a", "review-bubble-card");
+  var card = createElement("div", "review-bubble-card");
   card.setAttribute("aria-label", "Avaliação de cliente");
   card.setAttribute("tabindex", "0");
   card.setAttribute("draggable", "false");
@@ -265,11 +265,13 @@
     rating.hidden = !ratingData.text;
 
     if (link) {
-      card.setAttribute("href", link);
+      card.setAttribute("data-href", link);
       card.classList.add("has-link");
+      card.setAttribute("role", "link");
       card.setAttribute("aria-label", "Avaliação de " + reviewName.textContent + "; abrir ligação");
     } else {
-      card.removeAttribute("href");
+      card.removeAttribute("data-href");
+      card.removeAttribute("role");
       card.classList.remove("has-link");
       card.setAttribute("aria-label", "Avaliação de " + reviewName.textContent);
     }
@@ -283,9 +285,15 @@
   card.addEventListener("keydown", function (event) {
     if (event.key === "ArrowLeft") { event.preventDefault(); showReview(currentIndex - 1, "previous"); }
     else if (event.key === "ArrowRight") { event.preventDefault(); showReview(currentIndex + 1, "next"); }
+    else if (event.key === "Enter" || event.key === " ") {
+      var enterLink = card.getAttribute("data-href");
+      if (enterLink) { event.preventDefault(); window.location.href = enterLink; }
+    }
   });
   card.addEventListener("click", function (event) {
-    if (!card.hasAttribute("href") || suppressClick) event.preventDefault();
+    if (suppressClick) { event.preventDefault(); return; }
+    var targetLink = card.getAttribute("data-href");
+    if (targetLink) { window.location.href = targetLink; }
   });
   card.addEventListener("pointerdown", function (event) {
     suppressClick = false;

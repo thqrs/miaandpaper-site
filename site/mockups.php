@@ -17,10 +17,10 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <meta name="robots" content="noindex, nofollow">
   <title>Criador de mockups · Mia &amp; Paper</title>
   <link rel="icon" href="content/brand/logo.webp" type="image/webp">
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907233709">
-  <link rel="stylesheet" href="admin-nav.css?v=20260907233709">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260908005511">
+  <link rel="stylesheet" href="admin-nav.css?v=20260908005511">
   <link rel="stylesheet" href="mockups/mockups.css?v=2026083001">
-  <script src="admin-nav.js?v=20260907233709" defer></script>
+  <script src="admin-nav.js?v=20260908005511" defer></script>
   <script type="module" src="mockups/app.js?v=2026083001"></script>
 </head>
 <body>

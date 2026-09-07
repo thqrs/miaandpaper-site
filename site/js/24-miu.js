@@ -172,7 +172,7 @@ function miuAnimationSetup(config)
       {
         id: "miu-cara-calma",
         name: "Míu — cara calma",
-        sheetUrl: "content/brand/miu/miu-sprite.webp?v=chat-face-1",
+        sheetUrl: "content/brand/miu/miu-sprite.webp",
         columns: 4,
         rows: 2,
         sequence: [0, 0, 0, 1, 2, 3, 0, 0, 0, 7, 0, 0, 0],
@@ -190,7 +190,7 @@ function miuAnimationSetup(config)
       {
         id: "miu-cara-sorriso",
         name: "Míu — cara sorriso",
-        sheetUrl: "content/brand/miu/miu-sprite.webp?v=chat-face-1",
+        sheetUrl: "content/brand/miu/miu-sprite.webp",
         columns: 4,
         rows: 2,
         sequence: [0, 6, 6, 0],
@@ -208,7 +208,7 @@ function miuAnimationSetup(config)
       {
         id: "miu-cara-inclina",
         name: "Míu — cara inclina",
-        sheetUrl: "content/brand/miu/miu-sprite.webp?v=chat-face-1",
+        sheetUrl: "content/brand/miu/miu-sprite.webp",
         columns: 4,
         rows: 2,
         sequence: [0, 4, 4, 0, 5, 5, 0],
@@ -226,7 +226,7 @@ function miuAnimationSetup(config)
       {
         id: "miu-cara-orelha",
         name: "Míu — cara orelha",
-        sheetUrl: "content/brand/miu/miu-sprite.webp?v=chat-face-1",
+        sheetUrl: "content/brand/miu/miu-sprite.webp",
         columns: 4,
         rows: 2,
         sequence: [0, 7, 7, 0],
@@ -244,7 +244,7 @@ function miuAnimationSetup(config)
       {
         id: "miu-cara-dormir",
         name: "Míu — cara a dormir",
-        sheetUrl: "content/brand/miu/miu-sprite-sleep.webp?v=chat-face-1",
+        sheetUrl: "content/brand/miu/miu-sprite-sleep.webp",
         columns: 4,
         rows: 1,
         sequence: [0, 1, 2, 3, 2, 3],
@@ -407,8 +407,8 @@ function miuAnimationApplyStatic(element, variantIndex)
   var index = stableFrames[Math.abs(Number(variantIndex || 0)) % stableFrames.length];
   var small = element.classList && element.classList.contains("miu-face--small");
   var base = miuAnimationBase() || {};
-  var normalSheet = String(base.sheetUrl || "content/brand/miu/miu-sprite.webp?v=chat-face-1");
-  var smallSheet = String(base.smallSheetUrl || "content/brand/miu/miu-sprite-small.webp?v=chat-face-1");
+  var normalSheet = String(base.sheetUrl || "content/brand/miu/miu-sprite.webp");
+  var smallSheet = String(base.smallSheetUrl || "content/brand/miu/miu-sprite-small.webp");
   miuAnimationApplyFrame(element, {
     sheetUrl: small ? smallSheet : normalSheet,
     columns: Math.max(1, Number(base.columns || 4)),
@@ -1445,6 +1445,11 @@ function miuSetOpen(open)
   if (open) {
     miuAnimationResetRoam();
     miuCancelPanelClosedFinish();
+    var miniCatFace = miuRoot.querySelector(".miu-panel__mini-cat .miu-face");
+    if (miniCatFace && !miniCatFace.getAttribute("data-miu-ready")) {
+      miniCatFace.setAttribute("data-miu-ready", "1");
+      miuAnimationApplyStatic(miniCatFace, 0);
+    }
   } else {
     miuSchedulePanelClosedFinish();
   }
@@ -2157,7 +2162,6 @@ function miuBuildInterface()
   miuApplyHeaderAppearance(display);
   miuRoot.classList.toggle("miu-no-circle-message", display.messageCircle === false);
   miuAnimationPlayBase();
-  miuAnimationApplyStatic(miuRoot.querySelector(".miu-panel__mini-cat .miu-face"), 0);
   miuV2Boot();
 
   launcher.addEventListener("click", function () { miuSetOpen(!miuRoot.classList.contains("is-open")); });

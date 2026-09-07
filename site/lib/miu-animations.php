@@ -552,9 +552,8 @@ function miu_animation_config_from_array($raw)
 function miu_animation_public_config()
 {
     $config = miu_animation_config();
-    $version = is_file(MIU_ANIMATIONS_CONFIG_PATH) ? (string)@filemtime(MIU_ANIMATIONS_CONFIG_PATH) : '1';
     foreach ($config['animations'] as &$animation) {
-        $animation['sheetUrl'] = 'content/brand/miu/' . $animation['file'] . '?v=' . rawurlencode($version);
+        $animation['sheetUrl'] = 'content/brand/miu/' . $animation['file'];
     }
     unset($animation);
     // A configuração pública transporta também a biblioteca da cara. Mantemos

@@ -111,10 +111,10 @@ if (isset($_GET['saved'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Erros e mensagens · Mia &amp; Paper</title>
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260907233709">
-  <link rel="stylesheet" href="admin-nav.css?v=20260907233709">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260908005511">
+  <link rel="stylesheet" href="admin-nav.css?v=20260908005511">
   <link rel="stylesheet" href="bot-admin.css?v=2026081701">
-  <script src="admin-nav.js?v=20260907233709" defer></script>
+  <script src="admin-nav.js?v=20260908005511" defer></script>
   <style>
     .errors-shell{width:min(1120px,calc(100% - 32px));margin:24px auto 64px}.errors-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:18px}.errors-head h1{margin:0}.errors-tabs{display:flex;gap:8px;margin:0 0 18px}.errors-tabs a{padding:8px 14px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--ink);font-weight:800}.errors-tabs a.is-active{background:var(--ink);color:var(--card)}.errors-note,.errors-flash{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);margin:0 0 16px}.errors-flash.is-error{border-color:var(--rose);color:var(--rose)}.errors-list{display:grid;gap:10px}.error-row{display:grid;grid-template-columns:minmax(210px,.7fr) minmax(0,1.6fr);gap:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--card)}.error-row strong{display:block}.error-row small{display:block;color:var(--muted);margin-top:5px;overflow-wrap:anywhere}.error-row textarea{width:100%;min-height:76px;resize:vertical;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);font:inherit}.errors-actions{position:sticky;bottom:12px;display:flex;justify-content:flex-end;margin-top:16px}.errors-actions button{padding:11px 18px;border:0;border-radius:999px;background:var(--gold);color:var(--hero-foreground);font-weight:900;cursor:pointer}@media(max-width:700px){.error-row{grid-template-columns:1fr}.errors-shell{width:min(100% - 20px,1120px)}}
   </style>

@@ -305,11 +305,10 @@ function miu_face_animation_write_config($config)
 function miu_face_animation_public_config()
 {
     $config = miu_face_animation_config();
-    $version = is_file(MIU_FACE_ANIMATIONS_CONFIG_PATH) ? (string)@filemtime(MIU_FACE_ANIMATIONS_CONFIG_PATH) : '1';
     foreach ($config['animations'] as &$animation) {
-        $animation['sheetUrl'] = 'content/brand/miu/' . $animation['file'] . '?v=' . rawurlencode($version);
+        $animation['sheetUrl'] = 'content/brand/miu/' . $animation['file'];
         $animation['smallSheetUrl'] = $animation['smallFile'] !== ''
-            ? 'content/brand/miu/' . $animation['smallFile'] . '?v=' . rawurlencode($version)
+            ? 'content/brand/miu/' . $animation['smallFile']
             : '';
     }
     unset($animation);
