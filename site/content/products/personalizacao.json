@@ -148,6 +148,19 @@
           ]
         },
         {
+          "id": "crachas-grandes",
+          "group": "Crachás",
+          "title": "Crachás grandes",
+          "subtitle": "5,8 cm x 5,8 cm (58 mm)",
+          "slug": "crachas-loja",
+          "size": "58 mm",
+          "image": "content/designs/loja/crachas-loja/uploads/crachas-58-c0b7d3419e1a.webp",
+          "imageShape": "round",
+          "finishes": [
+            "holografica"
+          ]
+        },
+        {
           "id": "imanes-finos",
           "group": "Ímanes",
           "title": "Ímanes finos",
