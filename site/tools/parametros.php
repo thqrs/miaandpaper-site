@@ -109,8 +109,8 @@ $recursos = mp_parametros_registo();
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Parâmetros | Mia &amp; Paper</title>
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="../admin-nav.css?v=20260908005511">
-  <script src="../admin-nav.js?v=20260908005511" data-prefix="../" defer></script>
+  <link rel="stylesheet" href="../admin-nav.css?v=20260908010816">
+  <script src="../admin-nav.js?v=20260908010816" data-prefix="../" defer></script>
   <style>
     :root {
       --ink: #3b2f1f;

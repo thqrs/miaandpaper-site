@@ -240,6 +240,10 @@
   }
 
   function ensureHomeSettings(home) {
+    if (!home.layout && (!document.body || !document.body.dataset.homeContent || document.body.dataset.homeContent === "content/home.json")) {
+      home.layout = "brand-home";
+    }
+
     if (!home.theme || typeof home.theme !== "object") {
       home.theme = {};
     }

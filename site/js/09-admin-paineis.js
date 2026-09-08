@@ -1696,7 +1696,9 @@
     }).join("");
     var adminIntroTools = renderHomeIntroAdminTools(home, adminEditing);
 
-    if (home.layout !== "brand-home") {
+    var isBrandHome = home.layout === "brand-home" || (!home.layout && (!document.body || !document.body.dataset.homeContent || document.body.dataset.homeContent === "content/home.json"));
+
+    if (!isBrandHome) {
       renderChrome([
         '<main class="home-shell home-shell--hub">',
         renderBrand(home.brand, "index.html", home.instagramUrl, state.siteMenuCategories.length ? state.siteMenuCategories : visibleCategories.map(function (record) { return record.category; })),
