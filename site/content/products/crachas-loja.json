@@ -765,7 +765,13 @@
           "image": "content/designs/loja/crachas-loja/uploads/crachas-58-c0b7d3419e1a.webp",
           "frameWidth": 104,
           "frameHeight": 104,
-          "imageZoom": 64
+          "imageZoom": 64,
+          "imageEdits": {
+            "crachas-loja:size:58:main": {
+              "frameWidth": 134,
+              "frameHeight": 133
+            }
+          }
         }
       ],
       "sideImageWraps": true
