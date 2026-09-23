@@ -321,6 +321,35 @@ function mp_parametros_registo()
             ),
         ),
 
+        'encomendas-excel.php' => array(
+            'titulo' => 'Encomendas Excel',
+            'tipo' => 'pagina',
+            'guarda' => 'admin',
+            'metodos' => array('GET', 'POST'),
+            'descricao' => 'Balcão interno que reimplementa o livro Excel de encomendas. Independente do resto do site; o arquivo vive em private/encomendas-excel-registos.json.',
+            'parametros' => array(
+                'action' => array(
+                    'tipo' => 'enum',
+                    'omissao' => '',
+                    'descricao' => 'Função da API JSON servida pelo próprio ficheiro.',
+                    'valores' => array(
+                        'listar' => 'lista as guardadas',
+                        'carregar' => 'carrega uma encomenda',
+                        'exportar' => 'descarrega cópia JSON',
+                    ),
+                    'invalido' => 'omissao',
+                    'lido' => 'encomendas-excel.php:45',
+                ),
+                'encomenda' => array(
+                    'tipo' => 'texto',
+                    'omissao' => '',
+                    'maximo' => 16,
+                    'descricao' => 'Encomenda a carregar (ENC-0001). Vazia é uma encomenda nova.',
+                    'lido' => 'encomendas-excel.php:46',
+                ),
+            ),
+        ),
+
         'modulos.php' => array(
             'titulo' => 'Módulos',
             'tipo' => 'pagina',

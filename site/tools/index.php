@@ -23,8 +23,8 @@ if (empty($_SESSION['miaandpaper_admin'])) {
   <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="../catalogo/catalogo.css?v=2026072601">
   <link rel="stylesheet" href="../ofertas/ofertas.css?v=2026062809">
-  <link rel="stylesheet" href="../admin-nav.css?v=20260908013100">
-  <script src="../admin-nav.js?v=20260908013100" data-prefix="../" defer></script>
+  <link rel="stylesheet" href="../admin-nav.css?v=20260924003922">
+  <script src="../admin-nav.js?v=20260924003922" data-prefix="../" defer></script>
   <style>
     /* O card tem dois destinos, por isso deixa de ser um <a>: o título estica-se
        sobre o card inteiro e o segundo link fica por cima, na sua área. */
@@ -146,6 +146,10 @@ if (empty($_SESSION['miaandpaper_admin'])) {
         <a class="catalog-product-card" href="../admin-orders.php">
           <span class="catalog-product-thumb" aria-hidden="true">E</span>
           <span class="catalog-product-copy"><strong>Encomendas</strong><span>Consultar os pedidos recebidos e o respetivo estado.</span><span class="catalog-product-action">Abrir painel</span></span>
+        </a>
+        <a class="catalog-product-card" href="../encomendas-excel.php">
+          <span class="catalog-product-thumb" aria-hidden="true">X</span>
+          <span class="catalog-product-copy"><strong>Encomendas Excel</strong><span>Balcão interno como no livro Excel: nova encomenda, preços automáticos e arquivo próprio.</span><span class="catalog-product-action">Abrir balcão</span></span>
         </a>
         <a class="catalog-product-card" href="../admin-colors.html">
           <span class="catalog-product-thumb" aria-hidden="true">C</span>

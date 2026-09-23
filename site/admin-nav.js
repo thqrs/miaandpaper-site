@@ -30,6 +30,7 @@
     { id: "funnel-v2", label: "Funil live · Percurso", href: "funilv2.php", files: ["funilv2.php"] },
     { id: "tracking", label: "Tracking", href: "tracking.php", files: ["tracking.php"] },
     { id: "orders", label: "Encomendas", href: "admin-orders.php", files: ["admin-orders.php"] },
+    { id: "encomendas-excel", label: "Encomendas Excel", href: "encomendas-excel.php", files: ["encomendas-excel.php"] },
     { id: "colors", label: "Cores", href: "admin-colors.html", files: ["admin-colors.html"] },
     { id: "view-uploads", label: "Ficheiros clientes", href: "view-uploads.php", files: ["view-uploads.php"] },
     { id: "uploads", label: "Uploads assistidos", href: "admin-uploads.php", files: ["admin-uploads.php"] },
