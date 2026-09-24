@@ -29,7 +29,7 @@ if (empty($_SESSION['miaandpaper_admin'])) {
     http_response_code(403);
     header('Content-Type: text/html; charset=utf-8');
     echo '<!doctype html><html lang="pt-PT"><meta charset="utf-8">'
-        . '<title>Acesso negado · Encomendas Excel</title>'
+        . '<title>Acesso negado · Encomendas</title>'
         . '<style>body{font-family:Georgia,serif;max-width:560px;margin:60px auto;padding:0 20px;color:#3b2f1f;}h1{font-size:1.4rem;}a{color:#4f7a3a;font-weight:700;}</style>'
         . '<h1>Acesso restrito.</h1>'
         . '<p>Inicia sessão como administradora a partir de <a href="index.html">index.html</a> e regressa a esta página.</p>';
