@@ -614,26 +614,40 @@ function ex_entrega_portes($metodo) {
     return null;
 }
 
+function ex_design_base($design) {
+    $design = (string)$design;
+    $sem = preg_replace("/[\s\xC2\xB7-]+Fita\s+\S+\s*$/i", '', $design);
+    $sem = $sem === null ? '' : rtrim($sem);
+    return $sem === '' ? $design : $sem;
+}
+
 function ex_design_url($name, $design, $a6 = false) {
     $cat = ex_cat();
     $design = (string)$design;
     if ($design === '') return '';
+    $candidatos = array($design);
+    $base = ex_design_base($design);
+    if ($base !== $design) $candidatos[] = $base;
     $listas = array();
     if ($a6 && isset($cat['designsA6'][(string)$name])) $listas[] = $cat['designsA6'][(string)$name];
     if (isset($cat['designs'][(string)$name])) $listas[] = $cat['designs'][(string)$name];
-    foreach ($listas as $lista) {
-        foreach ((array)$lista as $row) {
-            if (isset($row[0]) && (string)$row[0] === $design) {
-                return isset($row[1]) ? (string)$row[1] : '';
+    foreach ($candidatos as $cand) {
+        foreach ($listas as $lista) {
+            foreach ((array)$lista as $row) {
+                if (isset($row[0]) && (string)$row[0] === $cand) {
+                    return isset($row[1]) ? (string)$row[1] : '';
+                }
             }
         }
     }
     $cfg = ex_cfg($name);
     $grupo = ($cfg !== null && isset($cfg['grupo'])) ? (string)$cfg['grupo'] : '';
     if (isset($cat['lookup']) && is_array($cat['lookup'])) {
-        foreach (array($grupo . '|' . $design, 'Pasta A4|' . $design, 'Pasta A6|' . $design) as $chave) {
-            foreach ($cat['lookup'] as $row) {
-                if (isset($row[0], $row[3]) && (string)$row[0] === $chave) return (string)$row[3];
+        foreach ($candidatos as $cand) {
+            foreach (array($grupo . '|' . $cand, 'Pasta A4|' . $cand, 'Pasta A6|' . $cand) as $chave) {
+                foreach ($cat['lookup'] as $row) {
+                    if (isset($row[0], $row[3]) && (string)$row[0] === $chave) return (string)$row[3];
+                }
             }
         }
     }
@@ -653,7 +667,7 @@ function ex_validate($d, &$computed) {
     $cliente = trim((string)(isset($d['cliente']) ? $d['cliente'] : ''));
     if ($cliente === '') $errors[] = 'Escolhe um cliente.';
 
-    $prods = isset($d['produtos']) && is_array($d['produtos']) ? array_slice($d['produtos'], 0, 3) : array();
+    $prods = isset($d['produtos']) && is_array($d['produtos']) ? array_values($d['produtos']) : array();
     $usados = array();
     foreach ($prods as $p) {
         if (is_array($p) && trim((string)(isset($p['produto']) ? $p['produto'] : '')) !== '') $usados[] = $p;
@@ -833,8 +847,8 @@ function ex_pendentes($rows) {
     foreach ($rows as $r) {
         if (!is_array($r)) continue;
         if ((isset($r['entregue']) ? (string)$r['entregue'] : 'Não') === 'Sim') continue;
-        $arts = isset($r['artigos']) && is_array($r['artigos']) ? $r['artigos'] : array();
-        foreach ($arts as $a) {
+        $arts = isset($r['artigos']) && is_array($r['artigos']) ? array_values($r['artigos']) : array();
+        foreach ($arts as $idx => $a) {
             if (!is_array($a)) continue;
             $prod = trim((string)(isset($a['produto']) ? $a['produto'] : ''));
             if ($prod === '') continue;
@@ -858,13 +872,17 @@ function ex_pendentes($rows) {
                 $det = trim((string)(isset($a['detalhes']) ? $a['detalhes'] : ''));
                 if ($det !== '') $cfg .= ($cfg !== '' ? ' · ' : '') . $det;
             }
+            $img = trim((string)(isset($a['imagem']) ? $a['imagem'] : ''));
+            if ($img === '') $img = ex_design_url($prod, trim((string)(isset($a['design']) ? $a['design'] : '')), false);
             $detalhe[] = array(
                 'id' => isset($r['id']) ? (string)$r['id'] : '',
+                'idx' => $idx,
                 'cliente' => isset($r['cliente']) ? (string)$r['cliente'] : '',
                 'data' => isset($r['data']) ? (string)$r['data'] : '',
                 'produto' => $prod,
                 'quantidade' => $q,
                 'config' => $cfg,
+                'imagem' => $img,
                 'estado' => $estado,
                 'grupo' => $grupo,
             );
@@ -1168,7 +1186,6 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
     $usados = array();
     foreach ((isset($payload['produtos']) && is_array($payload['produtos']) ? $payload['produtos'] : array()) as $p) {
         if (is_array($p) && trim((string)(isset($p['produto']) ? $p['produto'] : '')) !== '') $usados[] = $p;
-        if (count($usados) >= 3) break;
     }
     foreach ($usados as $k => $p) {
         $slot++;
@@ -1310,6 +1327,56 @@ table.ex-lista td.num { text-align: right; font-weight: 800; }
 .ex-chip strong { font-weight: 800; }
 .ex-chip small { color: var(--ex-suave); }
 .ex-filtro.is-on { background: var(--ex-ouro); color: #fff; border-color: var(--ex-ouro); }
+.ex-tabs { display: flex; gap: 6px; margin: 0 0 14px; }
+.ex-tabs button { flex: 1 1 auto; padding: 10px 8px; border-radius: 10px; border: 1px solid var(--ex-linha);
+  background: rgba(255,255,255,.5); color: var(--ex-suave); font-weight: 800; font-family: inherit;
+  cursor: pointer; font-size: .92rem; }
+.ex-tabs button.is-on { background: var(--ex-ouro); border-color: var(--ex-ouro); color: #fff; }
+#fabAdd { position: fixed; right: 18px; bottom: 18px; z-index: 1200; width: 60px; height: 60px;
+  border-radius: 50%; border: none; background: var(--ex-ouro); color: #fff; font-size: 2rem;
+  line-height: 1; cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,.25); font-family: inherit; }
+#fabAdd:hover { filter: brightness(1.06); }
+#modal[hidden] { display: none; }
+#modal { position: fixed; inset: 0; z-index: 1100; background: rgba(59,47,31,.45);
+  overflow-y: auto; padding: 18px 12px 60px; }
+.ex-modal-box { max-width: 860px; margin: 0 auto; background: var(--ex-fundo);
+  border-radius: 14px; padding: 16px 18px 26px; box-shadow: 0 14px 44px rgba(0,0,0,.3); }
+.ex-modal-topo { display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--ex-linha); padding-bottom: 8px; margin-bottom: 12px; }
+.ex-modal-topo strong { font-size: 1.15rem; }
+#btnFecharModal { border: 1px solid var(--ex-linha); background: transparent; color: var(--ex-tinta);
+  border-radius: 50%; width: 34px; height: 34px; font-size: 1.2rem; cursor: pointer; font-family: inherit; }
+.ex-steps { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.ex-steps button { flex: 1 1 auto; padding: 7px 6px; border-radius: 999px; border: 1px solid var(--ex-linha);
+  background: rgba(255,255,255,.5); color: var(--ex-suave); font-weight: 700; font-family: inherit;
+  cursor: pointer; font-size: .82rem; }
+.ex-steps button.is-on { background: var(--ex-musgo); border-color: var(--ex-musgo); color: #fff; }
+.ex-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.ex-job { background: var(--ex-branco); border: 1px solid var(--ex-linha); border-radius: 12px;
+  overflow: hidden; cursor: pointer; text-align: left; font-family: inherit; color: var(--ex-tinta);
+  padding: 0; display: block; width: 100%; }
+.ex-job:hover { border-color: var(--ex-ouro); }
+.ex-job img { width: 100%; height: 150px; object-fit: cover; display: block; background: #f0ede6; }
+.ex-job-semimg { height: 44px; display: flex; align-items: center; justify-content: center;
+  color: var(--ex-suave); font-size: .8rem; background: #f0ede6; }
+.ex-job-corpo { padding: 10px 12px; display: grid; gap: 2px; }
+.ex-job-corpo strong { font-size: .95rem; }
+.ex-job-corpo small { color: var(--ex-suave); font-size: .8rem; }
+.ex-job-linha { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.ex-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .76rem; font-weight: 800; }
+.ex-badge.fazer { background: rgba(184,134,22,.16); color: var(--ex-ouro); }
+.ex-badge.pronto { background: rgba(79,122,58,.16); color: var(--ex-musgo); }
+.ex-job-avancar { border: 1px solid var(--ex-musgo); background: transparent; color: var(--ex-musgo);
+  border-radius: 8px; font-weight: 800; font-family: inherit; cursor: pointer;
+  font-size: .78rem; padding: 4px 10px; }
+.ex-staging { display: grid; gap: 8px; margin: 0 0 12px; }
+.ex-staging-item { display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  border: 1px solid var(--ex-linha); border-radius: 10px; padding: 8px 12px;
+  background: rgba(255,255,255,.5); font-size: .9rem; }
+.ex-staging-item small { color: var(--ex-suave); display: block; }
+.ex-staging-item .ex-preco { font-weight: 800; white-space: nowrap; }
+.ex-linklike { border: none; background: none; color: var(--ex-musgo); font-weight: 800;
+  cursor: pointer; font-family: inherit; font-size: .86rem; padding: 2px 4px; }
 a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
 @media (max-width: 640px) { .ex-concha { padding: 14px 12px 70px; } .ex-passo { padding: 12px; } }
 </style>
@@ -1328,99 +1395,15 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     </div>
   </div>
 
-  <div class="ex-msg" id="exMsg" role="status"></div>
+  <div class="ex-tabs" role="tablist" aria-label="Vistas">
+    <button type="button" data-tab="pendentes" class="is-on">Pendentes</button>
+    <button type="button" data-tab="encomendas">Encomendas</button>
+    <button type="button" data-tab="clientes">Clientes</button>
+  </div>
 
-  <section class="ex-passo" aria-labelledby="t-p0">
-    <h2 id="t-p0">Passo 0 · Carregar encomenda antiga</h2>
-    <p class="ex-ajuda">Escolhe uma encomenda guardada para continuar, ou começa uma nova.</p>
-    <div class="ex-grelha">
-      <label class="ex-campo"><span>Encomenda</span>
-        <select id="selEncomenda"><option value="Nova">Nova</option></select>
-      </label>
-    </div>
-    <div class="ex-linha-btns">
-      <button class="ex-btn" id="btnCarregar" type="button">Carregar</button>
-      <button class="ex-btn secundario" id="btnNova" type="button">Nova</button>
-    </div>
-  </section>
-
-  <section class="ex-passo" aria-labelledby="t-p1">
-    <h2 id="t-p1">Passo 1 · Cliente</h2>
-    <p class="ex-ajuda">Escolhe da ficha. Os dados pessoais vivem na ficha — na encomenda fica só o nome.</p>
-    <div class="ex-grelha">
-      <label class="ex-campo"><span>Cliente *</span><select id="fClienteSel"></select></label>
-      <label class="ex-campo" id="wrapClienteAvulso" style="display:none"><span>Nome (avulso) *</span>
-        <input id="fClienteAvulso" autocomplete="off" placeholder="Nome para esta encomenda"></label>
-      <label class="ex-campo"><span>Data</span><input id="fData" type="date"></label>
-    </div>
-    <div class="ex-grelha" id="fichaCliente" style="margin-top:10px">
-      <label class="ex-campo"><span>Nome *</span><input id="cNome" autocomplete="off"></label>
-      <label class="ex-campo"><span>NIF</span><input id="cNif" inputmode="numeric" autocomplete="off" placeholder="9 dígitos"></label>
-      <label class="ex-campo"><span>Morada</span><input id="cMorada" autocomplete="off"></label>
-      <label class="ex-campo"><span>Código postal</span><input id="cCP" autocomplete="off"></label>
-      <label class="ex-campo"><span>Localidade</span><input id="cLoc" autocomplete="off"></label>
-      <label class="ex-campo"><span>Congregação</span><input id="cCong" autocomplete="off"></label>
-      <label class="ex-campo"><span>TJ?</span>
-        <select id="cTJ"><option value="">—</option><option>Sim</option><option>Não</option></select></label>
-      <label class="ex-campo"><span>Telemóvel</span><input id="cTel" autocomplete="off"></label>
-      <label class="ex-campo"><span>Email</span><input id="cMail" autocomplete="off"></label>
-      <label class="ex-campo"><span>N.º cartão Mia &amp; Paper</span><input id="cCartao" autocomplete="off"></label>
-      <label class="ex-campo"><span>Observações</span><textarea id="cObs"></textarea></label>
-      <label class="ex-campo"><span>Total já gasto / encomendas</span><div class="ex-leitura" id="cTotais">—</div></label>
-    </div>
-    <div class="ex-linha-btns">
-      <button class="ex-btn secundario" id="btnNovoCliente" type="button">Novo cliente</button>
-      <button class="ex-btn secundario" id="btnGuardarCliente" type="button">Guardar cliente</button>
-    </div>
-  </section>
-
-  <section class="ex-passo" aria-labelledby="t-p2">
-    <h2 id="t-p2">Passo 2 · Escolher os produtos</h2>
-    <p class="ex-ajuda" id="fonteCatalogo"></p>
-    <div class="ex-grelha">
-      <label class="ex-campo"><span>Produto 1</span><select id="prod1"></select></label>
-      <label class="ex-campo"><span>Produto 2</span><select id="prod2"></select></label>
-      <label class="ex-campo"><span>Produto 3</span><select id="prod3"></select></label>
-    </div>
-  </section>
-
-  <div id="cardsProdutos"></div>
-
-  <section class="ex-passo" aria-labelledby="t-p6">
-    <h2 id="t-p6">Passo 6 · Pagamento, entrega e total</h2>
-    <div class="ex-grelha">
-      <label class="ex-campo"><span>1. Pago?</span>
-        <select id="fPago"><option>Não</option><option>Sim</option></select></label>
-      <label class="ex-campo"><span>Data pagamento (opcional)</span><input id="fDataPago" type="date"></label>
-      <label class="ex-campo"><span>2. Entregue?</span>
-        <select id="fEntregue"><option>Não</option><option>Sim</option></select></label>
-      <label class="ex-campo"><span>Data entrega (opcional)</span><input id="fDataEntrega" type="date"></label>
-      <label class="ex-campo"><span>3. Fatura?</span>
-        <select id="fFatura"><option>Não</option><option>Sim</option></select></label>
-      <label class="ex-campo"><span>Referência (opcional)</span><input id="fReferencia" autocomplete="off"></label>
-      <label class="ex-campo"><span>4. Método de entrega *</span><select id="fEntrega"></select></label>
-      <label class="ex-campo"><span>Portes manuais (opcional)</span>
-        <input id="fPortes" inputmode="decimal" placeholder="só para método Outro"></label>
-      <label class="ex-campo"><span>5. Ajuste € (+/-)</span><input id="fAjuste" inputmode="decimal" value="0"></label>
-      <label class="ex-campo"><span>Motivo do ajuste</span><input id="fMotivo" autocomplete="off"></label>
-      <label class="ex-campo"><span>6. Observações</span><textarea id="fObs"></textarea></label>
-      <label class="ex-campo"><span>Total calculado</span><div class="ex-leitura" id="vTotalCalc">—</div></label>
-      <label class="ex-campo"><span>Total acordado (opcional)</span><input id="fTotalAcordado" inputmode="decimal"></label>
-      <label class="ex-campo"><span>Total a guardar</span><div class="ex-leitura" id="vTotalGuardar">—</div></label>
-    </div>
-    <div class="ex-linha-btns">
-      <button class="ex-btn" id="btnGuardar" type="button">Guardar</button>
-    </div>
-    <p class="ex-miudo">Guardar valida tudo como o Excel: cliente, quantidades mínimas, designs,
-    acabamentos das pastas, nomes, configuração A6 dos packs, entrega e totais.</p>
-  </section>
-
-  <section class="ex-passo" aria-labelledby="t-pend">
-    <h2 id="t-pend">Passo 7 · Pendentes — o que falta fazer e entregar</h2>
-    <p class="ex-ajuda">Automático: tudo o que ainda não foi entregue. Marcar um produto como
-    Terminado passa-o para “pronto a entregar”; marcar a encomenda como Entregue tira-a daqui sem apagar o histórico.</p>
+  <section id="tab-pendentes" class="ex-passo" aria-label="Trabalhos pendentes">
     <div class="ex-linha-btns" role="group" aria-label="Filtrar pendentes">
-      <button class="ex-btn secundario ex-filtro" data-f="todos" type="button">Todos</button>
+      <button class="ex-btn secundario ex-filtro is-on" data-f="todos" type="button">Todos</button>
       <button class="ex-btn secundario ex-filtro" data-f="fazer" type="button">Por fazer / em produção</button>
       <button class="ex-btn secundario ex-filtro" data-f="pronto" type="button">Prontos a entregar</button>
     </div>
@@ -1428,15 +1411,119 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     <div id="pendResumoFazer"><p class="ex-miudo">A carregar…</p></div>
     <h3 class="ex-sub">Prontos a entregar</h3>
     <div id="pendResumoProntos"><p class="ex-miudo">A carregar…</p></div>
-    <h3 class="ex-sub">Detalhe</h3>
-    <div id="pendDetalhe"><p class="ex-miudo">A carregar…</p></div>
+    <h3 class="ex-sub">Trabalhos</h3>
+    <div id="pendCards"><p class="ex-miudo">A carregar…</p></div>
   </section>
 
-  <section class="ex-passo" aria-labelledby="t-lista">
-    <h2 id="t-lista">Encomendas guardadas</h2>
-    <p class="ex-ajuda">Arquivo desta ferramenta (ficheiro privado, fora do resto do site).</p>
+  <section id="tab-encomendas" class="ex-passo" aria-label="Encomendas" hidden>
+    <h2>Encomendas</h2>
+    <p class="ex-ajuda">Arquivo desta ferramenta. Clica para abrir no compositor.</p>
     <div id="wrapLista"><p class="ex-miudo">A carregar…</p></div>
   </section>
+
+  <section id="tab-clientes" class="ex-passo" aria-label="Clientes" hidden>
+    <h2>Clientes</h2>
+    <div class="ex-linha-btns">
+      <button class="ex-btn secundario" id="btnNovaFichaTab" type="button">Nova ficha</button>
+    </div>
+    <div id="wrapClientes"><p class="ex-miudo">A carregar…</p></div>
+  </section>
+</div>
+
+<button id="fabAdd" type="button" aria-label="Adicionar encomenda">+</button>
+
+<div id="modal" hidden>
+  <div class="ex-modal-box" role="dialog" aria-modal="true" aria-label="Compor encomenda">
+    <div class="ex-modal-topo">
+      <strong id="modalTitulo">Nova encomenda</strong>
+      <button id="btnFecharModal" type="button" aria-label="Fechar">×</button>
+    </div>
+    <div class="ex-steps" role="group" aria-label="Passos">
+      <button type="button" data-ms="cliente" class="is-on">1 · Cliente</button>
+      <button type="button" data-ms="produto">2 · Produto</button>
+      <button type="button" data-ms="config">3 · Configurar</button>
+      <button type="button" data-ms="rever">4 · Rever</button>
+    </div>
+    <div class="ex-msg" id="exMsg" role="status"></div>
+
+    <div id="msCliente">
+      <div class="ex-grelha">
+        <label class="ex-campo"><span>Cliente *</span><select id="fClienteSel"></select></label>
+        <label class="ex-campo" id="wrapClienteAvulso" style="display:none"><span>Nome (avulso) *</span>
+          <input id="fClienteAvulso" autocomplete="off" placeholder="Nome para esta encomenda"></label>
+        <label class="ex-campo"><span>Data</span><input id="fData" type="date"></label>
+      </div>
+      <div class="ex-grelha" id="fichaCliente" style="margin-top:10px">
+        <label class="ex-campo"><span>Nome *</span><input id="cNome" autocomplete="off"></label>
+        <label class="ex-campo"><span>NIF</span><input id="cNif" inputmode="numeric" autocomplete="off" placeholder="9 dígitos"></label>
+        <label class="ex-campo"><span>Morada</span><input id="cMorada" autocomplete="off"></label>
+        <label class="ex-campo"><span>Código postal</span><input id="cCP" autocomplete="off"></label>
+        <label class="ex-campo"><span>Localidade</span><input id="cLoc" autocomplete="off"></label>
+        <label class="ex-campo"><span>Congregação</span><input id="cCong" autocomplete="off"></label>
+        <label class="ex-campo"><span>TJ?</span>
+          <select id="cTJ"><option value="">—</option><option>Sim</option><option>Não</option></select></label>
+        <label class="ex-campo"><span>Telemóvel</span><input id="cTel" autocomplete="off"></label>
+        <label class="ex-campo"><span>Email</span><input id="cMail" autocomplete="off"></label>
+        <label class="ex-campo"><span>N.º cartão Mia &amp; Paper</span><input id="cCartao" autocomplete="off"></label>
+        <label class="ex-campo"><span>Observações</span><textarea id="cObs"></textarea></label>
+        <label class="ex-campo"><span>Total já gasto / encomendas</span><div class="ex-leitura" id="cTotais">—</div></label>
+      </div>
+      <div class="ex-linha-btns">
+        <button class="ex-btn secundario" id="btnNovoCliente" type="button">Novo cliente</button>
+        <button class="ex-btn secundario" id="btnGuardarCliente" type="button">Guardar cliente</button>
+        <button class="ex-btn" id="btnCliSeguinte" type="button">Seguinte →</button>
+      </div>
+    </div>
+
+    <div id="msProduto" hidden>
+      <p class="ex-ajuda" id="fonteCatalogo"></p>
+      <div class="ex-grelha">
+        <label class="ex-campo"><span>Produto *</span><select id="mProduto"></select></label>
+      </div>
+      <div class="ex-linha-btns">
+        <button class="ex-btn secundario" id="btnVoltarCliente" type="button">← Cliente</button>
+        <button class="ex-btn" id="btnIrConfigurar" type="button">Configurar →</button>
+      </div>
+      <h3 class="ex-sub">Produtos na encomenda</h3>
+      <div id="stagingList"><p class="ex-miudo">Ainda sem produtos.</p></div>
+    </div>
+
+    <div id="msConfig" hidden>
+      <div id="configCardWrap"></div>
+      <div class="ex-linha-btns">
+        <button class="ex-btn secundario" id="btnVoltarProduto" type="button">← Produtos</button>
+        <button class="ex-btn" id="btnAddProduto" type="button">Adicionar produto</button>
+      </div>
+    </div>
+
+    <div id="msRever" hidden>
+      <div id="revResumo"></div>
+      <div class="ex-grelha">
+        <label class="ex-campo"><span>1. Pago?</span>
+          <select id="fPago"><option>Não</option><option>Sim</option></select></label>
+        <label class="ex-campo"><span>Data pagamento (opcional)</span><input id="fDataPago" type="date"></label>
+        <label class="ex-campo"><span>2. Entregue?</span>
+          <select id="fEntregue"><option>Não</option><option>Sim</option></select></label>
+        <label class="ex-campo"><span>Data entrega (opcional)</span><input id="fDataEntrega" type="date"></label>
+        <label class="ex-campo"><span>3. Fatura?</span>
+          <select id="fFatura"><option>Não</option><option>Sim</option></select></label>
+        <label class="ex-campo"><span>Referência (opcional)</span><input id="fReferencia" autocomplete="off"></label>
+        <label class="ex-campo"><span>4. Método de entrega *</span><select id="fEntrega"></select></label>
+        <label class="ex-campo"><span>Portes manuais (opcional)</span>
+          <input id="fPortes" inputmode="decimal" placeholder="só para método Outro"></label>
+        <label class="ex-campo"><span>5. Ajuste € (+/-)</span><input id="fAjuste" inputmode="decimal" value="0"></label>
+        <label class="ex-campo"><span>Motivo do ajuste</span><input id="fMotivo" autocomplete="off"></label>
+        <label class="ex-campo"><span>6. Observações</span><textarea id="fObs"></textarea></label>
+        <label class="ex-campo"><span>Total calculado</span><div class="ex-leitura" id="vTotalCalc">—</div></label>
+        <label class="ex-campo"><span>Total acordado (opcional)</span><input id="fTotalAcordado" inputmode="decimal"></label>
+        <label class="ex-campo"><span>Total a guardar</span><div class="ex-leitura" id="vTotalGuardar">—</div></label>
+      </div>
+      <div class="ex-linha-btns">
+        <button class="ex-btn secundario" id="btnVoltarConfig" type="button">← Adicionar mais</button>
+        <button class="ex-btn" id="btnGuardar" type="button">Guardar encomenda</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script id="excel-data" type="application/json"><?= json_encode(ex_cat(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
@@ -1554,25 +1641,36 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     }
     return null;
   }
+  function designBase(design) {
+    var sem = String(design || "").replace(/[\s\u00b7-]+Fita\s+\S+\s*$/i, "").replace(/[\s\u00b7-]+$/, "");
+    return sem === "" ? String(design || "") : sem;
+  }
   function designUrl(prod, design, isA6) {
     design = String(design || "");
     if (design === "") return "";
+    var cands = [design];
+    var base = designBase(design);
+    if (base !== design) cands.push(base);
     var listas = [];
     if (isA6 && DATA.designsA6 && DATA.designsA6[String(prod)]) listas.push(DATA.designsA6[String(prod)]);
     if (DATA.designs && DATA.designs[String(prod)]) listas.push(DATA.designs[String(prod)]);
-    var i, j;
-    for (i = 0; i < listas.length; i++) {
-      for (j = 0; j < listas[i].length; j++) {
-        if (String(listas[i][j][0]) === design) return String(listas[i][j][1] || "");
+    var i, j, k;
+    for (k = 0; k < cands.length; k++) {
+      for (i = 0; i < listas.length; i++) {
+        for (j = 0; j < listas[i].length; j++) {
+          if (String(listas[i][j][0]) === cands[k]) return String(listas[i][j][1] || "");
+        }
       }
     }
     var cfg = cfgOf(prod);
     var grupo = cfg ? String(cfg.grupo || "") : "";
     var tbl = DATA.lookup || [];
-    var chaves = [grupo + "|" + design, "Pasta A4|" + design, "Pasta A6|" + design];
-    for (i = 0; i < chaves.length; i++) {
-      for (j = 0; j < tbl.length; j++) {
-        if (String(tbl[j][0]) === chaves[i]) return String(tbl[j][3] || "");
+    for (k = 0; k < cands.length; k++) {
+      var chaves = [grupo + "|" + cands[k], "Pasta A4|" + cands[k], "Pasta A6|" + cands[k]];
+      for (i = 0; i < chaves.length; i++) {
+        for (j = 0; j < tbl.length; j++) {
+          if (String(tbl[j][0]) === chaves[i]) return String(tbl[j][3] || "");
+        }
       }
     }
     return "";
@@ -1632,88 +1730,94 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     return [];
   }
 
-  function buildCards() {
-    var wrap = $("cardsProdutos");
+  function buildConfigCard() {
+    var wrap = $("configCardWrap");
     wrap.innerHTML = "";
-    for (var n = 1; n <= 3; n++) {
-      (function (n) {
-        var sec = document.createElement("section");
-        sec.className = "ex-passo";
-        sec.id = "card" + n;
-        var h = document.createElement("h2");
-        h.textContent = n === 1 ? "Passo 3 · Configurar o Produto 1"
-          : n === 2 ? "Passo 4 · Configurar o Produto 2" : "Passo 5 · Configurar o Produto 3";
-        sec.appendChild(h);
-        var help = document.createElement("p");
-        help.className = "ex-ajuda";
-        help.textContent = "Preencher da esquerda para baixo.";
-        sec.appendChild(help);
-        var grid = document.createElement("div");
-        grid.className = "ex-grelha";
-        FIELDS.forEach(function (fd) {
-          var key = fd[0], rot = fd[1], kind = fd[2], def = fd[3];
-          var lab = document.createElement("label");
-          lab.className = "ex-campo";
-          lab.dataset.wrap = key;
-          var sp = document.createElement("span");
-          sp.textContent = rot;
-          lab.appendChild(sp);
-          var el;
-          if (kind === "number" || kind === "text") {
-            el = document.createElement("input");
-            if (kind === "number") el.setAttribute("inputmode", "numeric");
-            el.value = def;
-          } else {
-            el = document.createElement("select");
-            var opts = kind === "design" || kind === "designA6" ? [""] .concat(optionList(kind, null))
-              : (kind === "laminacao" || kind === "fita" || kind === "capa") ? [""] .concat(optionList(kind))
-              : optionList(kind);
-            opts.forEach(function (o) {
-              var op = document.createElement("option");
-              op.value = o; op.textContent = o === "" ? "—" : o;
-              if (o === def) op.selected = true;
-              el.appendChild(op);
-            });
-          }
-          el.id = "p" + n + "_" + key;
-          lab.appendChild(el);
-          if (key === "design" || key === "designA6") {
-            var div = document.createElement("div");
-            div.className = "ex-img";
-            div.id = "p" + n + "_" + key + "_img";
-            lab.appendChild(div);
-          }
-          grid.appendChild(lab);
+    var n = 0;
+    var sec = document.createElement("div");
+    sec.id = "card0";
+    var h = document.createElement("h3");
+    h.className = "ex-sub";
+    h.id = "configCardTitle";
+    h.textContent = "Configurar produto";
+    sec.appendChild(h);
+    var hprod = document.createElement("select");
+    hprod.id = "prod0";
+    hprod.style.display = "none";
+    sec.appendChild(hprod);
+    var grid = document.createElement("div");
+    grid.className = "ex-grelha";
+    FIELDS.forEach(function (fd) {
+      var key = fd[0], rot = fd[1], kind = fd[2], def = fd[3];
+      var lab = document.createElement("label");
+      lab.className = "ex-campo";
+      lab.dataset.wrap = key;
+      var sp = document.createElement("span");
+      sp.textContent = rot;
+      lab.appendChild(sp);
+      var el;
+      if (kind === "number" || kind === "text") {
+        el = document.createElement("input");
+        if (kind === "number") el.setAttribute("inputmode", "numeric");
+        el.value = def;
+      } else {
+        el = document.createElement("select");
+        var opts = (kind === "design" || kind === "designA6" || kind === "acab" || kind === "acabA6") ? [""] : optionList(kind);
+        if (kind !== "design" && kind !== "designA6" && kind !== "acab" && kind !== "acabA6") {
+          opts = [""].concat(optionList(kind));
+        }
+        opts.forEach(function (o) {
+          var op = document.createElement("option");
+          op.value = o; op.textContent = o === "" ? "\u2014" : o;
+          if (o === def) op.selected = true;
+          el.appendChild(op);
         });
-        sec.appendChild(grid);
-        var comp = document.createElement("div");
-        comp.className = "ex-grelha";
-        comp.style.marginTop = "10px";
-        [["base", "Preço base"], ["calc", "Preço calculado"], ["manual", "Preço manual (opcional)", true], ["final", "Preço do produto"]].forEach(function (c) {
-          var lab = document.createElement("label");
-          lab.className = "ex-campo";
-          var sp = document.createElement("span");
-          sp.textContent = c[1];
-          lab.appendChild(sp);
-          if (c[2]) {
-            var inp = document.createElement("input");
-            inp.id = "p" + n + "_" + c[0];
-            inp.setAttribute("inputmode", "decimal");
-            lab.appendChild(inp);
-          } else {
-            var dv = document.createElement("div");
-            dv.className = "ex-leitura";
-            dv.id = "p" + n + "_" + c[0];
-            dv.textContent = "—";
-            lab.appendChild(dv);
-          }
-          comp.appendChild(lab);
-        });
-        sec.appendChild(comp);
-        wrap.appendChild(sec);
-      })(n);
-    }
+      }
+      el.id = "p0_" + key;
+      lab.appendChild(el);
+      if (key === "design" || key === "designA6") {
+        var div = document.createElement("div");
+        div.className = "ex-img";
+        div.id = "p0_" + key + "_img";
+        lab.appendChild(div);
+      }
+      grid.appendChild(lab);
+    });
+    sec.appendChild(grid);
+    var comp = document.createElement("div");
+    comp.className = "ex-grelha";
+    comp.style.marginTop = "10px";
+    [["base", "Pre\u00e7o base"], ["calc", "Pre\u00e7o calculado"], ["manual", "Pre\u00e7o manual (opcional)", true], ["final", "Pre\u00e7o do produto"]].forEach(function (c) {
+      var lab = document.createElement("label");
+      lab.className = "ex-campo";
+      var sp = document.createElement("span");
+      sp.textContent = c[1];
+      lab.appendChild(sp);
+      if (c[2]) {
+        var inp = document.createElement("input");
+        inp.id = "p0_" + c[0];
+        inp.setAttribute("inputmode", "decimal");
+        lab.appendChild(inp);
+      } else {
+        var dv = document.createElement("div");
+        dv.className = "ex-leitura";
+        dv.id = "p0_" + c[0];
+        dv.textContent = "\u2014";
+        lab.appendChild(dv);
+      }
+      comp.appendChild(lab);
+    });
+    sec.appendChild(comp);
+    wrap.appendChild(sec);
+    var hp = $("prod0");
+    ["", "—"].concat(DATA.ordem || []).forEach(function (p) {
+      if (p === "—") return;
+      var o = document.createElement("option");
+      o.value = p; o.textContent = p === "" ? "—" : p;
+      hp.appendChild(o);
+    });
   }
+
 
   function readCard(n) {
     function v(k) { var el = $("p" + n + "_" + k); return el ? el.value : ""; }
@@ -1781,111 +1885,146 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     sel.value = cur;
   }
 
-  function refreshDesignOptions(n) {
-    var prod = $("prod" + n).value;
-    refreshOptions(n, "design", "design");
-    refreshOptions(n, "designA6", "designA6");
-    refreshOptions(n, "acabamento", "acab");
-    refreshOptions(n, "acabamentoA6", "acabA6");
+  function itemPrice(it) {
+    var base = basePrice(it.produto, it.quantidade, it.design);
+    var calc = productCalc(it.produto, it);
+    var man = num(it.precoManual);
+    var fin = isFinite(man) ? Math.round(man * 100) : calc;
+    return { base: base, calc: calc, fin: fin };
   }
 
-  function recalc() {
-    var finais = [], usados = 0;
-    for (var n = 1; n <= 3; n++) {
-      (function (n) {
-        var prod = $("prod" + n).value;
-        var card = $("card" + n);
-        var f = readCard(n);
-        var vazio = prod === "";
-        card.querySelectorAll("input, select, textarea").forEach(function (el) {
-          if (el.id === "prod" + n) return;
-          if (vazio && el.tagName === "SELECT" && el.id.indexOf("_design") === -1) { el.disabled = true; }
-          else if (vazio && el.tagName === "INPUT" && (el.id.endsWith("_quantidade") || el.id.endsWith("_manual"))) { el.disabled = false; }
-          else { el.disabled = vazio && el.id !== "p" + n + "_manual"; }
-        });
-        if (vazio) {
-          ["base", "calc", "final"].forEach(function (k) { $("p" + n + "_" + k).textContent = "—"; });
-          $("p" + n + "_design_img").innerHTML = "";
-          $("p" + n + "_designA6_img").innerHTML = "";
-          card.querySelectorAll("[data-wrap]").forEach(function (w) { w.style.display = ""; });
-          return;
-        }
-        usados++;
-        var cfg = cfgOf(prod);
-        var tipo = cfg ? String(cfg.tipo || "") : "";
-        // Só aparecem os campos relevantes para o produto (visão da Mia).
-        var showA6 = tipo === "pack_pastas";
-        var showMarc = isMarcadores(prod);
-        var comExtrasNome = (tipo === "pasta" || tipo === "pack_pastas" || tipo === "agenda");
-        var comCantos = (tipo === "pasta" || tipo === "pack_pastas");
-        card.querySelectorAll("[data-wrap]").forEach(function (w) {
-          var k = w.dataset.wrap;
-          if (["designA6", "acabamentoA6", "comNomeA6", "nomeA6", "cantosA6", "fitaA6"].indexOf(k) !== -1) {
-            w.style.display = showA6 ? "" : "none";
-          } else if (["holo", "frenteVerso", "furo", "margem"].indexOf(k) !== -1) {
-            w.style.display = showMarc ? "" : "none";
-          } else if (k === "holoUn") {
-            w.style.display = (!showMarc && temHoloUn(prod)) ? "" : "none";
-          } else if (k === "acabamento" || k === "acabamentoA6") {
-            w.style.display = temAcab(prod) ? "" : "none";
-          } else if (k === "fita" || k === "fitaA6") {
-            w.style.display = (tipo === "pasta" || tipo === "pack_pastas") ? "" : "none";
-          } else if (k === "comNome" || k === "nome" || k === "cantos") {
-            w.style.display = comExtrasNome || comCantos ? "" : "none";
-          } else if (k === "tipoCapa") {
-            w.style.display = temAcab(prod) && (tipo === "agenda") ? "" : "none";
-          } else {
-            w.style.display = "";
-          }
-        });
-        var base = basePrice(prod, f.quantidade, f.design);
-        var calc = productCalc(prod, f);
-        var man = num(f.precoManual);
-        var fin = isFinite(man) ? Math.round(man * 100) : calc;
-        $("p" + n + "_base").textContent = eurC(base);
-        $("p" + n + "_calc").textContent = eurC(calc);
-        $("p" + n + "_final").textContent = eurC(fin);
-        if (typeof fin === "number") finais.push(fin);
-        var u = f.design ? designUrl(prod, f.design, false) : "";
-        $("p" + n + "_design_img").innerHTML = u
-          ? '<a href="' + u.replace(/"/g, "") + '" target="_blank" rel="noopener"><img src="' + u.replace(/"/g, "")
-            + '" alt="" loading="lazy" style="max-width:100%;max-height:120px;display:block;border-radius:6px;margin-bottom:4px;">Ver imagem</a>'
-          : "Sem imagem";
-        var u6 = f.designA6 ? designUrl(prod, f.designA6, true) : "";
-        $("p" + n + "_designA6_img").innerHTML = showA6
-          ? (u6 ? '<a href="' + u6.replace(/"/g, "") + '" target="_blank" rel="noopener"><img src="' + u6.replace(/"/g, "")
-            + '" alt="" loading="lazy" style="max-width:100%;max-height:120px;display:block;border-radius:6px;margin-bottom:4px;">Ver imagem A6</a>'
-            : "Sem imagem") : "";
-      })(n);
+  function refreshCard0() {
+    var card = $("card0");
+    if (!card) return;
+    var prod = $("prod0").value;
+    var f = readCard(0);
+    if (prod === "") {
+      ["base", "calc", "final"].forEach(function (k) { $("p0_" + k).textContent = "\u2014"; });
+      $("p0_design_img").innerHTML = "";
+      $("p0_designA6_img").innerHTML = "";
+      return;
     }
+    var cfg = cfgOf(prod);
+    var tipo = cfg ? String(cfg.tipo || "") : "";
+    var showA6 = tipo === "pack_pastas";
+    var showMarc = isMarcadores(prod);
+    var comExtrasNome = (tipo === "pasta" || tipo === "pack_pastas" || tipo === "agenda");
+    var comCantos = (tipo === "pasta" || tipo === "pack_pastas");
+    card.querySelectorAll("[data-wrap]").forEach(function (w) {
+      var k = w.dataset.wrap;
+      if (["designA6", "acabamentoA6", "comNomeA6", "nomeA6", "cantosA6", "fitaA6"].indexOf(k) !== -1) {
+        w.style.display = showA6 ? "" : "none";
+      } else if (["holo", "frenteVerso", "furo", "margem"].indexOf(k) !== -1) {
+        w.style.display = showMarc ? "" : "none";
+      } else if (k === "holoUn") {
+        w.style.display = (!showMarc && temHoloUn(prod)) ? "" : "none";
+      } else if (k === "acabamento" || k === "acabamentoA6") {
+        w.style.display = temAcab(prod) ? "" : "none";
+      } else if (k === "fita" || k === "fitaA6") {
+        w.style.display = (tipo === "pasta" || tipo === "pack_pastas") ? "" : "none";
+      } else if (k === "comNome" || k === "nome" || k === "cantos") {
+        w.style.display = comExtrasNome || comCantos ? "" : "none";
+      } else if (k === "tipoCapa") {
+        w.style.display = temAcab(prod) && (tipo === "agenda") ? "" : "none";
+      } else {
+        w.style.display = "";
+      }
+    });
+    var p = itemPrice(f);
+    $("p0_base").textContent = eurC(p.base);
+    $("p0_calc").textContent = eurC(p.calc);
+    $("p0_final").textContent = eurC(p.fin);
+    var u = f.design ? designUrl(prod, f.design, false) : "";
+    $("p0_design_img").innerHTML = u
+      ? '<a href="' + u.replace(/"/g, "") + '" target="_blank" rel="noopener"><img src="' + u.replace(/"/g, "")
+        + '" alt="" loading="lazy" style="max-width:100%;max-height:160px;display:block;border-radius:6px;margin-bottom:4px;">Ver imagem</a>'
+      : "Sem imagem";
+    var u6 = f.designA6 ? designUrl(prod, f.designA6, true) : "";
+    $("p0_designA6_img").innerHTML = showA6
+      ? (u6 ? '<a href="' + u6.replace(/"/g, "") + '" target="_blank" rel="noopener"><img src="' + u6.replace(/"/g, "")
+        + '" alt="" loading="lazy" style="max-width:100%;max-height:160px;display:block;border-radius:6px;margin-bottom:4px;">Ver imagem A6</a>'
+        : "Sem imagem") : "";
+  }
+
+  function totaisStaging() {
+    var finais = [], ok = true;
+    STAGE.forEach(function (it) {
+      var p = itemPrice(it);
+      if (typeof p.fin !== "number") ok = false;
+      else finais.push(p.fin);
+    });
     var metodo = $("fEntrega").value;
     var portesRaw = $("fPortes").value.trim();
     var ajusteRaw = ($("fAjuste").value || "0").trim();
-    var total = null, aviso = "";
-    if (usados === 0) {
-      total = null;
-    } else if (finais.length !== usados) {
-      aviso = "Rever quantidades/preços";
-    } else if ((metodo === "" || metodo === "Outro") && portesRaw === "") {
-      aviso = "Indicar entrega/portes";
-    } else {
-      var portes = portesRaw !== "" ? Math.round(num(portesRaw) * 100) : (function () {
-        var p = entregaPortes(metodo);
-        return p === null ? NaN : Math.round(p * 100);
-      })();
-      var aj = ajusteRaw === "" ? 0 : Math.round(num(ajusteRaw) * 100);
-      if (!isFinite(portes) || !isFinite(aj)) {
-        aviso = "Rever quantidades/preços";
-      } else {
-        var soma = 0;
-        finais.forEach(function (x) { soma += x; });
-        total = soma + portes + aj;
-      }
-    }
-    $("vTotalCalc").textContent = aviso !== "" ? aviso : eurC(total);
-    var acord = num($("fTotalAcordado").value.trim());
-    $("vTotalGuardar").textContent = isFinite(acord) ? eur(Math.round(acord * 100) / 100) : (aviso !== "" ? aviso : eurC(total));
+    if (!STAGE.length) return { total: null, aviso: "" };
+    if (!ok) return { total: null, aviso: "Rever quantidades/pre\u00e7os" };
+    if ((metodo === "" || metodo === "Outro") && portesRaw === "") return { total: null, aviso: "Indicar entrega/portes" };
+    var portes = portesRaw !== "" ? Math.round(num(portesRaw) * 100) : (function () {
+      var p = entregaPortes(metodo);
+      return p === null ? NaN : Math.round(p * 100);
+    })();
+    var aj = ajusteRaw === "" ? 0 : Math.round(num(ajusteRaw) * 100);
+    if (!isFinite(portes) || !isFinite(aj)) return { total: null, aviso: "Rever quantidades/pre\u00e7os" };
+    var soma = 0;
+    finais.forEach(function (x) { soma += x; });
+    return { total: soma + portes + aj, aviso: "" };
   }
+
+  function renderStaging() {
+    var w = $("stagingList");
+    if (!STAGE.length) {
+      w.innerHTML = '<p class="ex-miudo">Ainda sem produtos. Escolhe um produto e prime Configurar.</p>';
+      return;
+    }
+    var h = '<div class="ex-staging">';
+    STAGE.forEach(function (it, i) {
+      var p = itemPrice(it);
+      h += '<div class="ex-staging-item"><div><strong>' + esc(it.produto) + " \u00d7 " + it.quantidade + "</strong>"
+        + "<small>" + esc(it.design || "") + "</small></div>"
+        + '<span class="ex-preco">' + eurC(p.fin) + "</span>"
+        + '<span><button class="ex-linklike" data-edit="' + i + '" type="button">Editar</button>'
+        + ' <button class="ex-linklike" data-del="' + i + '" type="button">Tirar</button></span></div>';
+    });
+    w.innerHTML = h + "</div>";
+    w.querySelectorAll("[data-edit]").forEach(function (b) {
+      b.addEventListener("click", function () { editStaging(Number(b.getAttribute("data-edit"))); });
+    });
+    w.querySelectorAll("[data-del]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        STAGE.splice(Number(b.getAttribute("data-del")), 1);
+        renderStaging();
+        refreshReview();
+      });
+    });
+  }
+
+  function renderRevResumo() {
+    var cli = clienteSelecionado();
+    var h = "<p><strong>" + esc(orderCtx.id) + "</strong> \u00b7 " + esc(cli.nome || "sem cliente")
+      + " \u00b7 " + esc($("fData").value || "") + "</p>";
+    if (!STAGE.length) {
+      h += '<p class="ex-miudo">Sem produtos. Volta atrás para adicionar.</p>';
+    } else {
+      h += '<div class="ex-staging">';
+      STAGE.forEach(function (it) {
+        var p = itemPrice(it);
+        h += '<div class="ex-staging-item"><div><strong>' + esc(it.produto) + " \u00d7 " + it.quantidade + "</strong>"
+          + "<small>" + esc(it.design || "") + (it.estado ? " \u00b7 " + esc(it.estado) : "") + "</small></div>"
+          + '<span class="ex-preco">' + eurC(p.fin) + "</span></div>";
+      });
+      h += "</div>";
+    }
+    $("revResumo").innerHTML = h;
+  }
+
+  function refreshReview() {
+    renderRevResumo();
+    var t = totaisStaging();
+    $("vTotalCalc").textContent = t.aviso !== "" ? t.aviso : eurC(t.total);
+    var acord = num($("fTotalAcordado").value.trim());
+    $("vTotalGuardar").textContent = isFinite(acord) ? eur(Math.round(acord * 100) / 100) : (t.aviso !== "" ? t.aviso : eurC(t.total));
+  }
+
 
   function msg(ok, html) {
     var m = $("exMsg");
@@ -1895,7 +2034,6 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
   }
   function msgClear() { var m = $("exMsg"); m.className = "ex-msg"; m.innerHTML = ""; }
 
-  var currentOrigem = "";
   var CLIENTES = {};
 
   function etiquetaCliente(c) {
@@ -2024,14 +2162,12 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
   }
 
   function payload() {
-    var prods = [];
-    for (var n = 1; n <= 3; n++) prods.push(readCard(n));
     var cli = clienteSelecionado();
     return {
       csrf: CSRF, op: "guardar",
-      encomenda: $("selEncomenda").value, origem: currentOrigem,
+      encomenda: orderCtx.id, origem: orderCtx.origem,
       clienteId: cli.id, cliente: cli.nome, data: $("fData").value,
-      produtos: prods,
+      produtos: STAGE,
       pago: $("fPago").value, dataPago: $("fDataPago").value,
       entregue: $("fEntregue").value, dataEntrega: $("fDataEntrega").value,
       fatura: $("fFatura").value, referencia: $("fReferencia").value,
@@ -2041,39 +2177,91 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     };
   }
 
-  function nova() {
-    currentOrigem = "";
-    $("selEncomenda").value = "Nova";
+  function recordToPayload(r) {
+    var ps = (r.artigos || []).filter(function (a) {
+      return a && String(a.produto || "") !== "";
+    }).map(function (a) {
+      var o = {};
+      ["produto", "quantidade", "design", "acabamento", "comNome", "nome", "cantos", "fita",
+        "designA6", "acabamentoA6", "comNomeA6", "nomeA6", "cantosA6", "fitaA6", "tipoCapa",
+        "holo", "frenteVerso", "furo", "margem", "holoUn", "nArtes", "detalhes", "estado", "precoManual"
+      ].forEach(function (k) { o[k] = a[k] === undefined || a[k] === null ? "" : a[k]; });
+      return o;
+    });
+    return {
+      csrf: CSRF, op: "guardar",
+      encomenda: r.id, origem: r.origem || "",
+      clienteId: r.clienteId || "", cliente: r.cliente || "", data: r.data || "",
+      produtos: ps,
+      pago: r.pago || "N\u00e3o", dataPago: r.dataPago || "",
+      entregue: r.entregue || "N\u00e3o", dataEntrega: r.dataEntrega || "",
+      fatura: r.fatura || "N\u00e3o", referencia: r.referencia || "",
+      entrega: r.entrega || "", portesManuais: r.portesManuais || "",
+      ajuste: (r.ajuste === undefined || r.ajuste === "") ? "0" : r.ajuste,
+      motivoAjuste: r.motivoAjuste || "", observacoes: r.observacoes || "",
+      totalAcordado: r.totalAcordado || ""
+    };
+  }
+
+
+  function resetReview() {
+    $("fData").value = new Date().toISOString().slice(0, 10);
+    ["fPago", "fEntregue", "fFatura"].forEach(function (id) { $(id).value = "N\u00e3o"; });
+    ["fDataPago", "fDataEntrega", "fReferencia", "fPortes", "fMotivo", "fObs", "fTotalAcordado"].forEach(function (id) { $(id).value = ""; });
+    $("fAjuste").value = "0";
+    $("fEntrega").value = "";
+  }
+
+  function abrirModal() {
+    $("modal").hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function fecharModal() {
+    $("modal").hidden = true;
+    document.body.style.overflow = "";
+    msgClear();
+  }
+
+  function irPasso(qual) {
+    var mapa = { cliente: "msCliente", produto: "msProduto", config: "msConfig", rever: "msRever" };
+    Object.keys(mapa).forEach(function (k) { $(mapa[k]).hidden = (k !== qual); });
+    document.querySelectorAll(".ex-steps button").forEach(function (b) {
+      b.classList.toggle("is-on", b.getAttribute("data-ms") === qual);
+    });
+    if (qual === "rever") refreshReview();
+    if (qual === "config") refreshCard0();
+    $("modal").scrollTop = 0;
+  }
+
+  function novaEncomenda() {
+    orderCtx = { id: "Nova", origem: "" };
+    STAGE = [];
+    editingIndex = -1;
     $("fClienteSel").value = "";
     $("fClienteAvulso").value = "";
     preencherFicha(null);
     mostrarFicha();
-    $("fData").value = new Date().toISOString().slice(0, 10);
-    ["prod1", "prod2", "prod3"].forEach(function (id) { $(id).value = ""; });
-    for (var n = 1; n <= 3; n++) {
-      refreshDesignOptions(n);
-      fillCard(n, { quantidade: 1, comNome: "Não", cantos: "Não", comNomeA6: "Não", cantosA6: "Não",
-        holo: "Não", frenteVerso: "Não", furo: "Não", margem: "Não", holoUn: "Não", nArtes: 0, estado: "Por fazer" });
-    }
-    ["fPago", "fEntregue", "fFatura"].forEach(function (id) { $(id).value = "Não"; });
-    ["fDataPago", "fDataEntrega", "fReferencia", "fPortes", "fMotivo", "fObs", "fTotalAcordado"].forEach(function (id) { $(id).value = ""; });
-    $("fAjuste").value = "0";
-    $("fEntrega").value = "";
+    $("mProduto").value = "";
+    resetReview();
+    renderStaging();
+    $("modalTitulo").textContent = "Nova encomenda";
     msgClear();
-    recalc();
+    abrirModal();
+    irPasso("cliente");
   }
 
-  function aplicarRegisto(r) {
-    currentOrigem = r.origem || "";
+  function aplicarRegistroToComposer(r) {
+    orderCtx = { id: r.id, origem: r.origem || "" };
     escolherClienteNoDropdown(r.clienteId || "", r.cliente || "");
     if (CLIENTES[$("fClienteSel").value]) preencherFicha(CLIENTES[$("fClienteSel").value]);
-    else if ($("fClienteSel").value === "AVULSO") preencherFicha(null);
+    else preencherFicha(null);
     $("fData").value = r.data || "";
-    $("fPago").value = r.pago || "Não";
+    $("fPago").value = r.pago || "N\u00e3o";
     $("fDataPago").value = r.dataPago || "";
-    $("fEntregue").value = r.entregue || "Não";
+    $("fEntregue").value = r.entregue || "N\u00e3o";
     $("fDataEntrega").value = r.dataEntrega || "";
-    $("fFatura").value = r.fatura || "Não";
+    $("fFatura").value = r.fatura || "N\u00e3o";
     $("fReferencia").value = r.referencia || "";
     $("fEntrega").value = r.entrega || "";
     $("fPortes").value = r.portesManuais || "";
@@ -2081,76 +2269,111 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     $("fMotivo").value = r.motivoAjuste || "";
     $("fObs").value = r.observacoes || "";
     $("fTotalAcordado").value = r.totalAcordado || "";
-    var arts = r.artigos || [];
-    for (var n = 1; n <= 3; n++) {
-      var a = arts[n - 1];
-      if (a) {
-        ensureOption($("prod" + n), a.produto || "");
-        $("prod" + n).value = a.produto || "";
-        refreshDesignOptions(n);
-        fillCard(n, a);
-      } else {
-        $("prod" + n).value = "";
-        refreshDesignOptions(n);
-        fillCard(n, { quantidade: 1, comNome: "Não", cantos: "Não", comNomeA6: "Não", cantosA6: "Não",
-          holo: "Não", frenteVerso: "Não", furo: "Não", margem: "Não", holoUn: "Não", nArtes: 0, estado: "Por fazer" });
-      }
-    }
+    STAGE = (r.artigos || []).filter(function (a) { return a && String(a.produto || "") !== ""; });
+    editingIndex = -1;
+    renderStaging();
+    refreshReview();
+    $("modalTitulo").textContent = "Encomenda " + r.id;
     msgClear();
-    recalc();
+    abrirModal();
+    irPasso("rever");
   }
 
-  function carregarLista(selecionar) {
+  function abrirEncomenda(id) {
+    fetch("encomendas-excel.php?action=carregar&encomenda=" + encodeURIComponent(id), { credentials: "same-origin" })
+      .then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); })
+      .then(function (x) {
+        if (!x.j.ok) { msg(false, "A encomenda n\u00e3o foi encontrada."); return; }
+        aplicarRegistroToComposer(x.j.encomenda);
+      });
+  }
+
+  function resetCardFor(prod) {
+    var hp = $("prod0");
+    ensureOption(hp, prod);
+    hp.value = prod;
+    refreshOptions(0);
+    fillCard(0, { quantidade: 1, comNome: "N\u00e3o", cantos: "N\u00e3o", comNomeA6: "N\u00e3o", cantosA6: "N\u00e3o",
+      holo: "N\u00e3o", frenteVerso: "N\u00e3o", furo: "N\u00e3o", margem: "N\u00e3o", holoUn: "N\u00e3o",
+      nArtes: 0, estado: "Por fazer" });
+    $("configCardTitle").textContent = "Configurar: " + prod;
+    refreshCard0();
+  }
+
+  function irConfigurar() {
+    var prod = $("mProduto").value;
+    if (!prod) {
+      msg(false, "Escolhe primeiro o produto.");
+      return;
+    }
+    msgClear();
+    resetCardFor(prod);
+    editingIndex = -1;
+    irPasso("config");
+  }
+
+  function addProduto() {
+    var f = readCard(0);
+    if (!$("prod0").value) {
+      msg(false, "Escolhe primeiro o produto.");
+      return;
+    }
+    if (!f.design) {
+      msg(false, "Escolhe o design antes de adicionar.");
+      return;
+    }
+    msgClear();
+    if (editingIndex >= 0 && STAGE[editingIndex]) STAGE[editingIndex] = f;
+    else STAGE.push(f);
+    editingIndex = -1;
+    renderStaging();
+    refreshReview();
+    irPasso("produto");
+  }
+
+  function editStaging(i) {
+    var it = STAGE[i];
+    if (!it) return;
+    ensureOption($("mProduto"), it.produto);
+    $("mProduto").value = it.produto;
+    resetCardFor(it.produto);
+    fillCard(0, it);
+    refreshCard0();
+    editingIndex = i;
+    msgClear();
+    irPasso("config");
+  }
+
+
+
+  function carregarLista() {
     return fetch("encomendas-excel.php?action=listar", { credentials: "same-origin" })
       .then(function (r) { return r.json(); })
       .then(function (j) {
-        var sel = $("selEncomenda");
-        var cur = selecionar || sel.value || "Nova";
-        sel.innerHTML = "";
-        var o0 = document.createElement("option");
-        o0.value = "Nova"; o0.textContent = "Nova";
-        sel.appendChild(o0);
-        (j.encomendas || []).forEach(function (e) {
-          var o = document.createElement("option");
-          o.value = e.id;
-          o.textContent = e.id + " · " + (e.cliente || "—") + " · " + (e.data || "");
-          sel.appendChild(o);
-        });
-        sel.value = cur;
-        if (sel.value !== cur) sel.value = "Nova";
         var w = $("wrapLista");
         if (!j.encomendas || !j.encomendas.length) {
           w.innerHTML = '<p class="ex-miudo">Ainda sem encomendas guardadas nesta ferramenta.</p>';
         } else {
-          var t = '<table class="ex-lista"><thead><tr><th>Código</th><th>Data</th><th>Cliente</th><th style="text-align:right">Total</th></tr></thead><tbody>';
+          var t = '<table class="ex-lista"><thead><tr><th>C\u00f3digo</th><th>Data</th><th>Cliente</th><th style="text-align:right">Total</th></tr></thead><tbody>';
           j.encomendas.slice().reverse().forEach(function (e) {
-            t += "<tr><td><a href=\"#\" data-load=\"" + String(e.id).replace(/\"/g, "") + "\">" + String(e.id).replace(/</g, "&lt;") + "</a></td>"
-              + "<td>" + String(e.data || "").replace(/</g, "&lt;") + "</td>"
-              + "<td>" + String(e.cliente || "").replace(/</g, "&lt;") + "</td>"
-              + "<td class=\"num\">" + (e.total === null || e.total === undefined ? "—" : Number(e.total).toFixed(2).replace(".", ",")) + "</td></tr>";
+            t += "<tr><td><a href=\"#\" data-open=\"" + esc(e.id) + "\">" + esc(e.id) + "</a></td>"
+              + "<td>" + esc(e.data || "") + "</td>"
+              + "<td>" + esc(e.cliente || "") + "</td>"
+              + "<td class=\"num\">" + (e.total === null || e.total === undefined ? "\u2014" : Number(e.total).toFixed(2).replace(".", ",")) + "</td></tr>";
           });
           w.innerHTML = t + "</tbody></table>";
-          w.querySelectorAll("[data-load]").forEach(function (a) {
+          w.querySelectorAll("[data-open]").forEach(function (a) {
             a.addEventListener("click", function (ev) {
               ev.preventDefault();
-              $("selEncomenda").value = a.getAttribute("data-load");
-              carregar();
+              abrirEncomenda(a.getAttribute("data-open"));
             });
           });
         }
       });
   }
 
-  function carregar() {
-    var id = $("selEncomenda").value;
-    if (!id || id === "Nova") { nova(); return; }
-    fetch("encomendas-excel.php?action=carregar&encomenda=" + encodeURIComponent(id), { credentials: "same-origin" })
-      .then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); })
-      .then(function (x) {
-        if (!x.j.ok) { msg(false, "A encomenda não foi encontrada."); return; }
-        aplicarRegisto(x.j.encomenda);
-        msg(true, "Encomenda <strong>" + String(id).replace(/</g, "&lt;") + "</strong> carregada.");
-      });
+  function carregar(id) {
+    if (id) abrirEncomenda(id);
   }
 
   var pendFiltro = "todos";
@@ -2168,7 +2391,7 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
       .catch(function () {
         $("pendResumoFazer").innerHTML = '<p class="ex-miudo">Falha a carregar os pendentes.</p>';
         $("pendResumoProntos").innerHTML = "";
-        $("pendDetalhe").innerHTML = "";
+        $("pendCards").innerHTML = "";
       });
   }
 
@@ -2194,30 +2417,64 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     var det = (pendData.detalhe || []).filter(function (d) {
       return pendFiltro === "todos" || d.grupo === pendFiltro;
     });
+    var w = $("pendCards");
     if (!det.length) {
-      $("pendDetalhe").innerHTML = '<p class="ex-miudo">Nada pendente.</p>';
+      w.innerHTML = '<p class="ex-miudo">Nada pendente.</p>';
       return;
     }
-    var t = '<table class="ex-lista"><thead><tr><th>Encomenda</th><th>Cliente</th><th>Produto</th>'
-      + '<th style="text-align:right">Qtd</th><th>Configuração</th><th>Estado</th></tr></thead><tbody>';
-    det.forEach(function (d) {
-      t += "<tr><td><a href=\"#\" data-pend=\"" + esc(d.id) + "\">" + esc(d.id) + "</a></td>"
-        + "<td>" + esc(d.cliente) + "</td>"
-        + "<td>" + esc(d.produto) + "</td>"
-        + "<td class=\"num\">" + d.quantidade + "</td>"
-        + "<td>" + esc(d.config) + "</td>"
-        + "<td>" + esc(d.estado) + "</td></tr>";
+    var h = '<div class="ex-cards">';
+    det.forEach(function (d, i) {
+      h += '<div class="ex-job" data-job="' + i + '" role="button" tabindex="0">'
+        + (d.imagem ? '<img src="' + d.imagem.replace(/"/g, "") + '" alt="" loading="lazy">'
+          : '<div class="ex-job-semimg">Sem imagem</div>')
+        + '<div class="ex-job-corpo">'
+        + '<div class="ex-job-linha"><strong>' + esc(d.produto) + " \u00d7 " + d.quantidade + "</strong>"
+        + '<span class="ex-badge ' + (d.grupo === "pronto" ? "pronto" : "fazer") + '">' + esc(d.estado) + "</span></div>"
+        + "<small>" + esc(d.cliente) + " \u00b7 " + esc(d.id) + "</small>"
+        + "<small>" + esc(d.config) + "</small>"
+        + '<div class="ex-job-linha"><small>' + esc(d.data || "") + "</small>"
+        + (d.grupo === "fazer"
+          ? '<button class="ex-job-avancar" data-av="' + i + '" type="button">Avan\u00e7ar \u203a</button>'
+          : "<span></span>")
+        + "</div></div></div>";
     });
-    $("pendDetalhe").innerHTML = t + "</tbody></table>";
-    $("pendDetalhe").querySelectorAll("[data-pend]").forEach(function (a) {
-      a.addEventListener("click", function (ev) {
-        ev.preventDefault();
-        $("selEncomenda").value = a.getAttribute("data-pend");
-        carregar();
-        window.scrollTo(0, 0);
+    w.innerHTML = h + "</div>";
+    w.querySelectorAll(".ex-job").forEach(function (card) {
+      card.addEventListener("click", function () {
+        var d = det[Number(card.getAttribute("data-job"))];
+        if (d) abrirEncomenda(d.id);
+      });
+    });
+    w.querySelectorAll("[data-av]").forEach(function (b) {
+      b.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        var d = det[Number(b.getAttribute("data-av"))];
+        if (d) avancarEstado(d.id, d.idx);
       });
     });
   }
+
+  function avancarEstado(id, idx) {
+    fetch("encomendas-excel.php?action=carregar&encomenda=" + encodeURIComponent(id), { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j.ok || !j.encomenda) return;
+        var r = j.encomenda;
+        var a = (r.artigos || [])[idx];
+        if (!a) return;
+        a.estado = a.estado === "Por fazer" ? "Em produ\u00e7\u00e3o" : "Terminado";
+        fetch("encomendas-excel.php", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(recordToPayload(r))
+        }).then(function () {
+          carregarPendentes();
+          carregarLista();
+        });
+      });
+  }
+
 
   function guardar() {
     var btn = $("btnGuardar");
@@ -2232,17 +2489,18 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     }).then(function (x) {
       btn.disabled = false;
       if (x.j.ok) {
-        carregarLista(x.j.id).then(function () {
-          $("selEncomenda").value = x.j.id;
-          msg(true, "Encomenda <strong>" + String(x.j.id).replace(/</g, "&lt;") + "</strong> guardada.");
-          carregarPendentes();
-        });
+        orderCtx.id = x.j.id;
+        $("modalTitulo").textContent = "Encomenda " + x.j.id;
+        carregarLista();
+        carregarPendentes();
+        msg(true, "Encomenda <strong>" + esc(x.j.id) + "</strong> guardada.");
+        fecharModal();
       } else if (x.j.errors) {
-        msg(false, "Não foi possível guardar:<ul><li>" + x.j.errors.map(function (e) {
-          return String(e).replace(/</g, "&lt;");
+        msg(false, "N\u00e3o foi poss\u00edvel guardar:<ul><li>" + x.j.errors.map(function (e) {
+          return esc(e);
         }).join("</li><li>") + "</li></ul>");
       } else {
-        msg(false, String(x.j.error || "Falha ao guardar."));
+        msg(false, esc(x.j.error || "Falha ao guardar."));
       }
     }).catch(function () {
       btn.disabled = false;
@@ -2250,38 +2508,85 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     });
   }
 
+
+  function carregarClientesTabela() {
+    return fetch("encomendas-excel.php?action=clientes", { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        var w = $("wrapClientes");
+        var lista = (j.clientes || []);
+        if (!lista.length) {
+          w.innerHTML = '<p class="ex-miudo">Sem fichas. Cria a primeira no bot\u00e3o acima.</p>';
+          return;
+        }
+        var t = '<table class="ex-lista"><thead><tr><th>Nome</th><th>Contacto</th><th>Localidade</th>'
+          + '<th style="text-align:right">Gasto</th><th style="text-align:right">N.\u00ba</th><th></th></tr></thead><tbody>';
+        lista.forEach(function (c) {
+          var contacto = c.telemovel || c.email || "";
+          t += "<tr><td><strong>" + esc(c.nome) + "</strong>"
+            + (c.congregacao ? "<br><small>" + esc(c.congregacao) + "</small>" : "") + "</td>"
+            + "<td>" + esc(contacto) + "</td>"
+            + "<td>" + esc(c.localidade || "") + "</td>"
+            + '<td class="num">' + Number(c.totalGasto || 0).toFixed(2).replace(".", ",") + "</td>"
+            + '<td class="num">' + (c.numEncomendas || 0) + "</td>"
+            + '<td><button class="ex-linklike" data-ficha="' + esc(c.id) + '" type="button">Editar</button></td></tr>';
+        });
+        w.innerHTML = t + "</tbody></table>";
+        w.querySelectorAll("[data-ficha]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            novaEncomenda();
+            $("fClienteSel").value = b.getAttribute("data-ficha");
+            mostrarFicha();
+            if (CLIENTES[$("fClienteSel").value]) preencherFicha(CLIENTES[$("fClienteSel").value]);
+          });
+        });
+      });
+  }
+
   function init() {
-    // Listas fixas.
     var fonte = $("fonteCatalogo");
     if (fonte) {
       fonte.textContent = DATA.fonte === "site"
-        ? "Preços, designs e extras lidos do site (tabela de " + (DATA.pricingData || "") + ")."
-        : "Site indisponível: a usar a foto do Excel de 2026-09.";
+        ? "Pre\u00e7os, designs e extras lidos do site (tabela de " + (DATA.pricingData || "") + ")."
+        : "Site indispon\u00edvel: a usar a foto do Excel de 2026-09.";
     }
-    var prods = [""].concat(DATA.ordem || []);
-    ["prod1", "prod2", "prod3"].forEach(function (id) {
-      var sel = $(id);
-      prods.forEach(function (p) {
-        var o = document.createElement("option");
-        o.value = p; o.textContent = p === "" ? "—" : p;
-        sel.appendChild(o);
-      });
-      sel.addEventListener("change", function () {
-        refreshDesignOptions(Number(id.slice(-1)));
-        recalc();
-      });
-    });
     var ent = $("fEntrega");
-    [["", "—"]].concat((DATA.entrega || []).map(function (e) { return [String(e[0]), String(e[0])]; })).forEach(function (pair) {
+    [["", "\u2014"]].concat((DATA.entrega || []).map(function (e) { return [String(e[0]), String(e[0])]; })).forEach(function (pair) {
       var o = document.createElement("option");
       o.value = pair[0]; o.textContent = pair[1];
       ent.appendChild(o);
     });
-    buildCards();
-    document.querySelector(".ex-concha").addEventListener("input", recalc);
-    document.querySelector(".ex-concha").addEventListener("change", recalc);
-    $("btnCarregar").addEventListener("click", carregar);
-    $("btnNova").addEventListener("click", nova);
+    var mp = $("mProduto");
+    [""].concat(DATA.ordem || []).forEach(function (p) {
+      var o = document.createElement("option");
+      o.value = p; o.textContent = p === "" ? "\u2014 Escolher produto \u2014" : p;
+      mp.appendChild(o);
+    });
+    buildConfigCard();
+    document.querySelectorAll(".ex-tabs button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        document.querySelectorAll(".ex-tabs button").forEach(function (x) {
+          x.classList.toggle("is-on", x === b);
+        });
+        ["pendentes", "encomendas", "clientes"].forEach(function (t) {
+          $("tab-" + t).hidden = (t !== b.getAttribute("data-tab"));
+        });
+      });
+    });
+    $("fabAdd").addEventListener("click", function () { novaEncomenda(); });
+    $("btnFecharModal").addEventListener("click", fecharModal);
+    document.querySelectorAll(".ex-steps button").forEach(function (b) {
+      b.addEventListener("click", function () { irPasso(b.getAttribute("data-ms")); });
+    });
+    $("btnCliSeguinte").addEventListener("click", function () { irPasso("produto"); });
+    $("btnVoltarCliente").addEventListener("click", function () { irPasso("cliente"); });
+    $("btnIrConfigurar").addEventListener("click", irConfigurar);
+    $("btnVoltarProduto").addEventListener("click", function () { editingIndex = -1; irPasso("produto"); });
+    $("btnAddProduto").addEventListener("click", addProduto);
+    $("btnVoltarConfig").addEventListener("click", function () { editingIndex = -1; irPasso("produto"); });
+    $("mProduto").addEventListener("change", function () { editingIndex = -1; });
+    $("modal").addEventListener("input", function () { refreshCard0(); refreshReview(); });
+    $("modal").addEventListener("change", function () { refreshCard0(); refreshReview(); });
     $("btnGuardar").addEventListener("click", guardar);
     $("btnNovoCliente").addEventListener("click", function () {
       $("fClienteSel").value = "";
@@ -2305,19 +2610,21 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
         renderPendentes();
       });
     });
-    nova();
-    carregarPendentes();
-    carregarClientes().then(function () {
+    $("btnNovaFichaTab").addEventListener("click", function () {
+      novaEncomenda();
+      $("fClienteSel").value = "";
       preencherFicha(null);
       mostrarFicha();
     });
-    carregarLista(PRELOAD && PRELOAD !== "" ? PRELOAD : undefined).then(function () {
-      if (PRELOAD && PRELOAD !== "" && PRELOAD !== "Nova") {
-        $("selEncomenda").value = PRELOAD;
-        carregar();
-      }
-    });
+    carregarPendentes();
+    carregarLista();
+    carregarClientes();
+    carregarClientesTabela();
+    if (PRELOAD && PRELOAD !== "" && PRELOAD !== "Nova") {
+      abrirEncomenda(PRELOAD);
+    }
   }
+
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
