@@ -3490,7 +3490,7 @@ function process_post_success_copy($from)
 
 function load_home_config()
 {
-    $path = __DIR__ . '/content/order-products.json';
+    $path = __DIR__ . '/content/home.json';
 
     if (!is_file($path)) {
         return array();
@@ -3501,11 +3501,9 @@ function load_home_config()
     return is_array($data) ? $data : array();
 }
 
-// RESULT_CATEGORIES_CAROUSEL_V1: a página após envio usa os mesmos
-// carrosséis dos cartões de produtos. O order-products.json não guarda
-// carouselImages; o frontend carrega-as a partir do primeiro passo de cada
-// produto. Aqui fazemos o mesmo em PHP para que a página de sucesso não
-// volte aos cartões antigos.
+// RESULT_CATEGORIES_HOMEPAGE_V1: a página após envio usa a mesma lista de
+// categorias da homepage. Para os carrosséis, segue a mesma precedência do
+// frontend: slides configurados, imagens manuais e, por fim, imagens do produto.
 function result_slug_from_href($href)
 {
     $clean = preg_split('/[?#]/', (string)$href);
@@ -3546,6 +3544,36 @@ function result_home_carousel_images_from_product($product)
     }
 
     return array_slice($images, 0, 12);
+}
+
+function result_home_carousel_images($category)
+{
+    if (!is_array($category)) {
+        return array();
+    }
+
+    if (isset($category['carouselSlides']) && is_array($category['carouselSlides'])) {
+        $images = array();
+        foreach ($category['carouselSlides'] as $slide) {
+            if (!is_array($slide) || (isset($slide['visible']) && $slide['visible'] === false)) {
+                continue;
+            }
+            if (!empty($slide['image'])) {
+                $images[] = (string)$slide['image'];
+            }
+        }
+        return array_slice($images, 0, 12);
+    }
+
+    $manualImages = (!empty($category['carouselSourceImages']) && is_array($category['carouselSourceImages']))
+        ? array_values(array_filter($category['carouselSourceImages']))
+        : array();
+    if (!empty($manualImages)) {
+        return array_slice($manualImages, 0, 12);
+    }
+
+    $slug = result_slug_from_href(isset($category['href']) ? $category['href'] : '');
+    return $slug !== '' ? result_home_carousel_images_from_product(load_product_config($slug)) : array();
 }
 
 function result_clamp_number($value, $fallback, $min, $max)
@@ -3593,7 +3621,10 @@ function render_result_categories()
 {
     $home = load_home_config();
     $categories = !empty($home['categories']) && is_array($home['categories']) ? $home['categories'] : array();
-    $categories = array_values(array_filter($categories, 'home_category_is_visible'));
+    $categories = array_values(array_filter($categories, function ($category) {
+        return home_category_is_visible($category)
+            && (!is_array($category) || !array_key_exists('showOnHome', $category) || $category['showOnHome'] !== false);
+    }));
     $gridCount = max(1, min(5, count($categories)));
     $index = 0;
     $carousel = (!empty($home['carousel']) && is_array($home['carousel'])) ? $home['carousel'] : array();
@@ -3622,9 +3653,8 @@ function render_result_categories()
                 : ' aria-disabled="true"' . ($unavailableMessage !== '' ? ' role="button" tabindex="0" data-home-unavailable-message="' . h($unavailableMessage) . '"' : '');
             $image = isset($category['image']) ? (string)$category['image'] : '';
             $categoryCarouselEnabled = !array_key_exists('carouselEnabled', $category) || $category['carouselEnabled'] !== false;
-            $slug = result_slug_from_href($href);
-            $carouselImages = ($carouselEnabled && $categoryCarouselEnabled && $slug !== '')
-                ? result_home_carousel_images_from_product(load_product_config($slug))
+            $carouselImages = ($carouselEnabled && $categoryCarouselEnabled)
+                ? result_home_carousel_images($category)
                 : array();
             if (!empty($carouselImages) && (!array_key_exists('carouselRandomizeOnLoad', $category) || $category['carouselRandomizeOnLoad'] !== false)) {
                 shuffle($carouselImages);
@@ -3677,19 +3707,19 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($title); ?> | Mia &amp; Paper</title>
-  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260924003922">
-  <link rel="stylesheet" href="css/02-base-chrome.css?v=20260924003922">
-  <link rel="stylesheet" href="css/03-grelha-designs-tons.css?v=20260924003922">
-  <link rel="stylesheet" href="css/04-reviews-passos-acoes.css?v=20260924003922">
-  <link rel="stylesheet" href="css/05-cookies-packs-entrega.css?v=20260924003922">
-  <link rel="stylesheet" href="css/06-admin.css?v=20260924003922">
-  <link rel="stylesheet" href="css/07-cards-crachas-molduras.css?v=20260924003922">
-  <link rel="stylesheet" href="css/08-dark-mode.css?v=20260924003922">
-  <link rel="stylesheet" href="css/09-seccoes-produtos.css?v=20260924003922">
-  <link rel="stylesheet" href="css/10-entrega-uniformizacao.css?v=20260924003922">
-  <link rel="stylesheet" href="css/11-home-marca.css?v=20260924003922">
-  <link rel="stylesheet" href="css/12-composer-glitter-chart.css?v=20260924003922">
-  <link rel="stylesheet" href="css/13-miu.css?v=20260924003922">
+  <link rel="stylesheet" href="css/01-tokens-agua.css?v=20260924173203">
+  <link rel="stylesheet" href="css/02-base-chrome.css?v=20260924173203">
+  <link rel="stylesheet" href="css/03-grelha-designs-tons.css?v=20260924173203">
+  <link rel="stylesheet" href="css/04-reviews-passos-acoes.css?v=20260924173203">
+  <link rel="stylesheet" href="css/05-cookies-packs-entrega.css?v=20260924173203">
+  <link rel="stylesheet" href="css/06-admin.css?v=20260924173203">
+  <link rel="stylesheet" href="css/07-cards-crachas-molduras.css?v=20260924173203">
+  <link rel="stylesheet" href="css/08-dark-mode.css?v=20260924173203">
+  <link rel="stylesheet" href="css/09-seccoes-produtos.css?v=20260924173203">
+  <link rel="stylesheet" href="css/10-entrega-uniformizacao.css?v=20260924173203">
+  <link rel="stylesheet" href="css/11-home-marca.css?v=20260924173203">
+  <link rel="stylesheet" href="css/12-composer-glitter-chart.css?v=20260924173203">
+  <link rel="stylesheet" href="css/13-miu.css?v=20260924173203">
 </head>
 <body class="result-body">
   <main class="result-card <?php echo h($kind); ?>">
@@ -3809,10 +3839,8 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
     <?php endif; ?>
 
     <?php if ($kind === 'success') : ?>
-      <?php if (!$isPaymentSuccess) : ?>
-        <?php render_result_categories(); ?>
-        <p class="open-order-hint home-unavailable-message" role="status" aria-live="polite" data-home-unavailable-inline hidden></p>
-      <?php endif; ?>
+      <?php render_result_categories(); ?>
+      <p class="open-order-hint home-unavailable-message" role="status" aria-live="polite" data-home-unavailable-inline hidden></p>
     <?php else : ?>
       <?php render_retry_email_form(); ?>
       <div class="actions">
@@ -3882,7 +3910,7 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
       } catch (error) {}
     </script>
   <?php endif; ?>
-  <script src="js/24-miu.js?v=20260924003922"></script>
+  <script src="js/24-miu.js?v=20260924173203"></script>
 </body>
 </html>
     <?php

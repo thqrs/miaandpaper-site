@@ -1282,8 +1282,8 @@ header('Content-Type: text/html; charset=utf-8');
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Encomendas · Mia &amp; Paper</title>
-<link rel="stylesheet" href="admin-nav.css?v=20260924003922">
-<script src="admin-nav.js?v=20260924003922" defer></script>
+<link rel="stylesheet" href="admin-nav.css?v=20260924173203">
+<script src="admin-nav.js?v=20260924173203" defer></script>
 <style>
 :root {
   --ex-fundo: #fffbe9; --ex-cartao: #fff8df; --ex-linha: rgba(118,85,28,.22);
