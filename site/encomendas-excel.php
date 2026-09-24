@@ -1373,9 +1373,9 @@ table.ex-lista td.num { text-align: right; font-weight: 800; }
 .ex-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .76rem; font-weight: 800; }
 .ex-badge.fazer { background: rgba(184,134,22,.16); color: var(--ex-ouro); }
 .ex-badge.pronto { background: rgba(79,122,58,.16); color: var(--ex-musgo); }
-.ex-job-avancar { border: 1px solid var(--ex-musgo); background: transparent; color: var(--ex-musgo);
+.ex-job-estado { border: 1px solid var(--ex-musgo); background: rgba(255,255,255,.7); color: var(--ex-musgo);
   border-radius: 8px; font-weight: 800; font-family: inherit; cursor: pointer;
-  font-size: .78rem; padding: 4px 10px; }
+  font-size: .78rem; padding: 4px 6px; }
 .ex-staging { display: grid; gap: 8px; margin: 0 0 12px; }
 .ex-staging-item { display: flex; justify-content: space-between; align-items: center; gap: 10px;
   border: 1px solid var(--ex-linha); border-radius: 10px; padding: 8px 12px;
@@ -2708,9 +2708,11 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
         + "<small>" + esc(d.cliente) + " \u00b7 " + esc(d.id) + "</small>"
         + "<small>" + esc(d.config) + "</small>"
         + '<div class="ex-job-linha"><small>' + esc(d.data || "") + "</small>"
-        + (d.grupo === "fazer"
-          ? '<button class="ex-job-avancar" data-av="' + i + '" type="button">Avan\u00e7ar \u203a</button>'
-          : "<span></span>")
+        + '<select class="ex-job-estado" data-est="' + i + '" aria-label="Estado do trabalho">'
+        + ["Pendente", "Terminado", "Entregue"].map(function (o) {
+          var atual = d.grupo === "pronto" ? "Terminado" : "Pendente";
+          return '<option value="' + o + '"' + (atual === o ? " selected" : "") + ">" + o + "</option>";
+        }).join("") + "</select>"
         + "</div></div></div>";
     });
     w.innerHTML = h + "</div>";
@@ -2720,16 +2722,16 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
         if (d) abrirEncomenda(d.id);
       });
     });
-    w.querySelectorAll("[data-av]").forEach(function (b) {
-      b.addEventListener("click", function (ev) {
-        ev.stopPropagation();
-        var d = det[Number(b.getAttribute("data-av"))];
-        if (d) avancarEstado(d.id, d.idx);
+    w.querySelectorAll("[data-est]").forEach(function (sel) {
+      sel.addEventListener("click", function (ev) { ev.stopPropagation(); });
+      sel.addEventListener("change", function () {
+        var d = det[Number(sel.getAttribute("data-est"))];
+        if (d) setEstadoLinha(d.id, d.idx, sel.value);
       });
     });
   }
 
-  function avancarEstado(id, idx) {
+  function setEstadoLinha(id, idx, alvo) {
     if (idx === undefined || idx === null) {
       abrirEncomenda(id);
       return;
@@ -2738,16 +2740,21 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
       .then(function (r) { return r.json(); })
       .then(function (j) {
         if (!j.ok || !j.encomenda) {
-          dmsg(false, "A encomenda não foi encontrada.");
+          dmsg(false, "A encomenda n\u00e3o foi encontrada.");
           return;
         }
         var r = j.encomenda;
-        var a = (r.artigos || [])[idx];
-        if (!a) {
-          abrirEncomenda(id);
-          return;
+        if (alvo === "Entregue") {
+          r.entregue = "Sim";
+          if (!r.dataEntrega) r.dataEntrega = new Date().toISOString().slice(0, 10);
+        } else {
+          var a = (r.artigos || [])[idx];
+          if (!a) {
+            abrirEncomenda(id);
+            return;
+          }
+          a.estado = alvo === "Terminado" ? "Terminado" : "Por fazer";
         }
-        a.estado = a.estado === "Por fazer" ? "Em produção" : "Terminado";
         fetch("encomendas-excel.php", {
           method: "POST",
           credentials: "same-origin",
@@ -2760,20 +2767,21 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
               carregarPendentes();
               carregarLista();
             } else if (j2.errors) {
-              dmsg(false, "Não foi possível avançar:<ul><li>" + j2.errors.map(function (e) {
+              dmsg(false, "N\u00e3o foi poss\u00edvel guardar:<ul><li>" + j2.errors.map(function (e) {
                 return esc(e);
               }).join("</li><li>") + "</li></ul>");
             } else {
-              dmsg(false, esc(j2.error || "Falha ao avançar."));
+              dmsg(false, esc(j2.error || "Falha ao guardar."));
             }
           });
         }).catch(function () {
-          dmsg(false, "Falha de rede ao avançar.");
+          dmsg(false, "Falha de rede ao guardar.");
         });
       }).catch(function () {
-        dmsg(false, "Falha de rede ao avançar.");
+        dmsg(false, "Falha de rede ao guardar.");
       });
   }
+
 
 
   function guardar() {
