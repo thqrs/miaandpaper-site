@@ -317,7 +317,10 @@ function ex_catalogo($snap) {
                     foreach ((array)(isset($d['items']) ? $d['items'] : array()) as $it) {
                         if (!is_array($it)) continue;
                         $t = trim((string)(isset($it['title']) ? $it['title'] : ''));
-                        if ($t !== '' && !in_array($t, $acab, true)) $acab[] = $t;
+                        if ($t === '') continue;
+                        $dup = false;
+                        foreach ($acab as $ex) { if ($ex[0] === $t) { $dup = true; break; } }
+                        if (!$dup) $acab[] = array($t, isset($it['image']) ? (string)$it['image'] : '');
                     }
                 }
             }
@@ -326,7 +329,10 @@ function ex_catalogo($snap) {
                 foreach ((array)$steps['lamination']['items'] as $it) {
                     if (!is_array($it)) continue;
                     $t = trim((string)(isset($it['title']) ? $it['title'] : ''));
-                    if ($t !== '' && !in_array($t, $acab, true)) $acab[] = $t;
+                    if ($t === '') continue;
+                    $dup = false;
+                    foreach ($acab as $ex) { if ($ex[0] === $t) { $dup = true; break; } }
+                    if (!$dup) $acab[] = array($t, isset($it['image']) ? (string)$it['image'] : '');
                 }
             }
         }
@@ -450,7 +456,8 @@ function ex_catalogo_foto($snap) {
             );
             $tipo = $cat['cfg'][$excel]['tipo'];
             if (in_array($tipo, array('pasta', 'pack_pastas', 'agenda'), true)) {
-                $cat['acab'][$excel] = $lamin;
+                $cat['acab'][$excel] = array();
+                foreach ($lamin as $a) $cat['acab'][$excel][] = array($a, '');
             }
             $lista = $cat['cfg'][$excel]['lista'];
             $ds = array();
@@ -1377,6 +1384,32 @@ table.ex-lista td.num { text-align: right; font-weight: 800; }
 .ex-staging-item .ex-preco { font-weight: 800; white-space: nowrap; }
 .ex-linklike { border: none; background: none; color: var(--ex-musgo); font-weight: 800;
   cursor: pointer; font-family: inherit; font-size: .86rem; padding: 2px 4px; }
+.ex-cfg-group { border-top: 1px dashed var(--ex-linha); padding: 10px 0 4px; margin-top: 6px; }
+.ex-cfg-group:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+.ex-field-t { color: var(--ex-suave); font-weight: 700; font-size: .86rem; margin: 8px 0 6px; }
+.ex-group-t { font-size: .95rem; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+.ex-field { margin-bottom: 4px; }
+.ex-chipgrid { display: flex; flex-wrap: wrap; gap: 8px; }
+.ex-chipgrid button { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--ex-linha);
+  background: rgba(255,255,255,.6); color: var(--ex-tinta); font-weight: 700; font-family: inherit;
+  cursor: pointer; font-size: .88rem; }
+.ex-chipgrid button.is-on { background: var(--ex-musgo); border-color: var(--ex-musgo); color: #fff; }
+.ex-seg { display: inline-flex; border: 1px solid var(--ex-linha); border-radius: 999px; overflow: hidden; }
+.ex-seg button { padding: 8px 18px; border: none; background: rgba(255,255,255,.6); color: var(--ex-suave);
+  font-weight: 800; font-family: inherit; cursor: pointer; font-size: .88rem; }
+.ex-seg button.is-on { background: var(--ex-musgo); color: #fff; }
+.ex-desgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.ex-destile { border: 2px solid var(--ex-linha); border-radius: 10px; overflow: hidden; cursor: pointer;
+  background: #fff; padding: 0; font-family: inherit; color: var(--ex-tinta); }
+.ex-destile img { width: 100%; height: 92px; object-fit: cover; display: block; background: #f0ede6; }
+.ex-destile-nome { display: block; padding: 4px 6px; font-size: .76rem; font-weight: 700; }
+.ex-destile.is-on { border-color: var(--ex-ouro); box-shadow: 0 0 0 2px var(--ex-ouro); }
+.ex-stepper { display: flex; align-items: center; gap: 10px; }
+.ex-stepper button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--ex-ouro);
+  background: transparent; color: var(--ex-ouro); font-size: 1.3rem; cursor: pointer;
+  font-family: inherit; line-height: 1; }
+.ex-stepper input { width: 70px; text-align: center; padding: 8px 6px; border: 1px solid var(--ex-linha);
+  border-radius: 8px; background: rgba(255,255,255,.65); font: inherit; color: var(--ex-tinta); }
 a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
 @media (max-width: 640px) { .ex-concha { padding: 14px 12px 70px; } .ex-passo { padding: 12px; } }
 </style>
@@ -1687,31 +1720,384 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     return !!(DATA.holoUn && DATA.holoUn[String(prod)] !== undefined);
   }
 
-  var FIELDS = [
-    ["quantidade", "1. Quantidade *", "number", "1"],
-    ["design", "2. Design principal", "design", ""],
-    ["acabamento", "3. Acabamento", "acab", ""],
-    ["comNome", "4. Com nome?", "simnao", "Não"],
-    ["nome", "Nome escolhido", "text", ""],
-    ["cantos", "5. Cantos metálicos?", "simnao", "Não"],
-    ["fita", "6. Fita", "fita", ""],
-    ["designA6", "7. Design A6 (pack)", "designA6", ""],
-    ["acabamentoA6", "8. Acabamento A6", "acabA6", ""],
-    ["comNomeA6", "9. Com nome A6?", "simnao", "Não"],
-    ["nomeA6", "Nome A6", "text", ""],
-    ["cantosA6", "10. Cantos A6?", "simnao", "Não"],
-    ["fitaA6", "11. Fita A6", "fita", ""],
-    ["tipoCapa", "12. Tipo de capa", "capa", ""],
-    ["holo", "13. Holográfico?", "simnao", "Não"],
-    ["frenteVerso", "14. Frente e verso?", "simnao", "Não"],
-    ["furo", "15. Buraquinho?", "simnao", "Não"],
-    ["margem", "16. Margem plástica?", "simnao", "Não"],
-    ["holoUn", "Holográfico unitário?", "simnao", "Não"],
-    ["nArtes", "17. N.º artes próprias", "number", "0"],
-    ["detalhes", "18. Detalhes / texto livre", "text", ""],
-    ["estado", "Estado de produção", "estado", "Por fazer"]
-  ];
+  var ROTULOS = {
+    quantidade: "Quantidade", design: "Design", acabamento: "Acabamento",
+    comNome: "Com nome?", nome: "Nome a gravar", cantos: "Cantos met\u00e1licos?", fita: "Fita",
+    designA6: "Design A6", acabamentoA6: "Acabamento A6", comNomeA6: "Com nome A6?",
+    nomeA6: "Nome A6 a gravar", cantosA6: "Cantos A6?", fitaA6: "Fita A6",
+    tipoCapa: "Tipo de capa", holo: "Papel hologr\u00e1fico?", frenteVerso: "Impress\u00e3o frente e verso?",
+    furo: "Buraquinho para pendente?", margem: "Margem pl\u00e1stica?", holoUn: "Acabamento hologr\u00e1fico?",
+    nArtes: "Artes pr\u00f3prias (quantas)", detalhes: "Notas de produ\u00e7\u00e3o",
+    estado: "Estado de produ\u00e7\u00e3o", manual: "Pre\u00e7o manual (opcional)"
+  };
 
+  function gruposPara(tipo, prod) {
+    var g = [];
+    if (tipo === "pasta") {
+      g.push({ t: "Design", keys: ["design"] });
+      g.push({ t: "Acabamento", keys: ["acabamento"] });
+      g.push({ t: "Personaliza\u00e7\u00e3o", keys: ["comNome", "nome", "cantos", "fita"] });
+    } else if (tipo === "pack_pastas") {
+      g.push({ t: "Capa A4", keys: ["design", "acabamento", "comNome", "nome", "cantos", "fita"] });
+      g.push({ t: "Capa A6", keys: ["designA6", "acabamentoA6", "comNomeA6", "nomeA6", "cantosA6", "fitaA6"] });
+    } else if (tipo === "agenda") {
+      g.push({ t: "Design", keys: ["design"] });
+      g.push({ t: "Acabamento e capa", keys: ["acabamento", "tipoCapa"] });
+      g.push({ t: "Nome", keys: ["comNome", "nome"] });
+    } else if (tipo === "moldura") {
+      g.push({ t: "Modelo", keys: ["design"] });
+    } else {
+      g.push({ t: "Design", keys: ["design"] });
+      if (isMarcadores(prod)) g.push({ t: "Acabamentos", keys: ["holo", "frenteVerso", "furo", "margem"] });
+      else if (temHoloUn(prod)) g.push({ t: "Acabamento", keys: ["holoUn"] });
+    }
+    g.push({ t: "Quantidade e produ\u00e7\u00e3o", keys: ["quantidade", "estado"] });
+    g.push({ t: "Notas", keys: ["nArtes", "detalhes", "manual"] });
+    return g;
+  }
+
+  function designPares(prod, isA6) {
+    if (isA6 && DATA.designsA6 && DATA.designsA6[String(prod)]) return DATA.designsA6[String(prod)];
+    if (!isA6 && DATA.designs && DATA.designs[String(prod)]) return DATA.designs[String(prod)];
+    return [];
+  }
+
+  function acabPares(prod) {
+    return (DATA.acab && DATA.acab[String(prod)]) ? DATA.acab[String(prod)] : [];
+  }
+
+  function mkCanonSelect(key, opcoes) {
+    var el = document.createElement("select");
+    el.id = "p0_" + key;
+    el.style.display = "none";
+    el.dataset.canon = key;
+    ["", "—"].concat(opcoes || []).forEach(function (o) {
+      if (o === "—") return;
+      var op = document.createElement("option");
+      op.value = o; op.textContent = o === "" ? "—" : o;
+      el.appendChild(op);
+    });
+    return el;
+  }
+
+  function widgetChips(key, opcoes) {
+    var box = document.createElement("div");
+    box.className = "ex-chipgrid";
+    box.dataset.chips = key;
+    opcoes.forEach(function (o) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = o;
+      b.dataset.val = o;
+      b.addEventListener("click", function () {
+        var c = $("p0_" + key);
+        c.value = o;
+        c.dispatchEvent(new Event("change"));
+        syncVisuals();
+      });
+      box.appendChild(b);
+    });
+    return box;
+  }
+
+  function widgetSeg(key, opcoes) {
+    var box = document.createElement("div");
+    box.className = "ex-seg";
+    box.dataset.chips = key;
+    (opcoes || ["Sim", "N\u00e3o"]).forEach(function (o) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = o;
+      b.dataset.val = o;
+      b.addEventListener("click", function () {
+        var c = $("p0_" + key);
+        c.value = o;
+        c.dispatchEvent(new Event("change"));
+        syncVisuals();
+      });
+      box.appendChild(b);
+    });
+    return box;
+  }
+
+  function widgetDesignGrid(prod, key, isA6) {
+    var box = document.createElement("div");
+    box.className = "ex-desgrid";
+    box.dataset.grid = key;
+    var pares = designPares(prod, isA6);
+    pares.forEach(function (row) {
+      var nome = String(row[0]), img = String(row[1] || "");
+      var t = document.createElement("button");
+      t.type = "button";
+      t.className = "ex-destile";
+      t.dataset.val = nome;
+      if (img) {
+        var im = document.createElement("img");
+        im.src = img;
+        im.alt = "";
+        im.loading = "lazy";
+        t.appendChild(im);
+      } else {
+        var sm = document.createElement("span");
+        sm.className = "ex-job-semimg";
+        sm.textContent = "Sem imagem";
+        t.appendChild(sm);
+      }
+      var lb = document.createElement("span");
+      lb.className = "ex-destile-nome";
+      lb.textContent = nome;
+      t.appendChild(lb);
+      t.addEventListener("click", function () {
+        var c = $("p0_" + key);
+        ensureOption(c, nome);
+        c.value = nome;
+        c.dispatchEvent(new Event("change"));
+        syncVisuals();
+      });
+      box.appendChild(t);
+    });
+    return box;
+  }
+
+  function widgetAcab(prod, targetKey) {
+    var pares = acabPares(prod);
+    var comImg = pares.some(function (r) { return String(r[1] || "") !== ""; });
+    var box = document.createElement("div");
+    box.className = comImg ? "ex-desgrid" : "ex-chipgrid";
+    box.dataset.acab = targetKey;
+    pares.forEach(function (row) {
+      var nome = String(row[0]), img = String(row[1] || "");
+      var t = document.createElement("button");
+      t.type = "button";
+      t.className = comImg ? "ex-destile" : "";
+      t.dataset.val = nome;
+      if (comImg) {
+        if (img) {
+          var im = document.createElement("img");
+          im.src = img;
+          im.alt = "";
+          im.loading = "lazy";
+          t.appendChild(im);
+        }
+        var lb = document.createElement("span");
+        lb.className = "ex-destile-nome";
+        lb.textContent = nome;
+        t.appendChild(lb);
+      } else {
+        t.textContent = nome;
+      }
+      t.addEventListener("click", function () {
+        var c = $("p0_" + targetKey);
+        ensureOption(c, nome);
+        c.value = nome;
+        c.dispatchEvent(new Event("change"));
+        syncVisuals();
+      });
+      box.appendChild(t);
+    });
+    return box;
+  }
+
+  function syncVisuals() {
+    document.querySelectorAll("#configCardWrap [data-chips]").forEach(function (box) {
+      var cur = $("p0_" + box.dataset.chips);
+      var v = cur ? cur.value : "";
+      Array.prototype.forEach.call(box.children, function (b) {
+        b.classList.toggle("is-on", b.dataset.val === v);
+      });
+    });
+    document.querySelectorAll("#configCardWrap [data-grid]").forEach(function (box) {
+      var cur = $("p0_" + box.dataset.grid);
+      var v = cur ? cur.value : "";
+      if (v !== "") {
+        var achou = false;
+        Array.prototype.forEach.call(box.children, function (t) {
+          if (t.dataset.val === v) achou = true;
+        });
+        if (!achou) {
+          var t = document.createElement("button");
+          t.type = "button";
+          t.className = "ex-destile";
+          t.dataset.val = v;
+          var lb = document.createElement("span");
+          lb.className = "ex-destile-nome";
+          lb.textContent = v + " (arquivo)";
+          t.appendChild(lb);
+          (function (key, val, tile) {
+            tile.addEventListener("click", function () {
+              var c = $("p0_" + key);
+              c.value = val;
+              c.dispatchEvent(new Event("change"));
+              syncVisuals();
+            });
+          })(box.dataset.grid, v, t);
+          box.appendChild(t);
+        }
+      }
+      Array.prototype.forEach.call(box.children, function (t) {
+        t.classList.toggle("is-on", t.dataset.val === v);
+      });
+    });
+    document.querySelectorAll("#configCardWrap [data-acab]").forEach(function (box) {
+      var cur = $("p0_acabamento");
+      var v = cur ? cur.value : "";
+      Array.prototype.forEach.call(box.children, function (t) {
+        t.classList.toggle("is-on", t.dataset.val === v);
+      });
+    });
+  }
+
+  function renderField(prod, key) {
+    var wrap = document.createElement("div");
+    wrap.className = "ex-field";
+    function canonSelect(opcoes) {
+      var el = mkCanonSelect(key, opcoes);
+      wrap.appendChild(el);
+      return el;
+    }
+    if (key === "design" || key === "designA6") {
+      var isA6 = key === "designA6";
+      var pares = designPares(prod, isA6).map(function (r) { return String(r[0]); });
+      canonSelect(pares);
+      var h = document.createElement("div");
+      h.className = "ex-field-t";
+      h.textContent = ROTULOS[key];
+      wrap.appendChild(h);
+      wrap.appendChild(widgetDesignGrid(prod, key, isA6));
+    } else if (key === "acabamento" || key === "acabamentoA6") {
+      var pares2 = acabPares(prod).map(function (r) { return String(r[0]); });
+      mkCanonSelect(key, pares2);
+      var h2 = document.createElement("div");
+      h2.className = "ex-field-t";
+      h2.textContent = ROTULOS[key];
+      wrap.appendChild(h2);
+      wrap.appendChild(widgetAcab(prod, key));
+    } else if (key === "fita" || key === "fitaA6" || key === "tipoCapa") {
+      mkCanonSelect(key, optionList(key === "tipoCapa" ? "capa" : "fita"));
+      var h3 = document.createElement("div");
+      h3.className = "ex-field-t";
+      h3.textContent = ROTULOS[key];
+      wrap.appendChild(h3);
+      wrap.appendChild(widgetChips(key, optionList(key === "tipoCapa" ? "capa" : "fita")));
+    } else if (key === "quantidade") {
+      var h4 = document.createElement("div");
+      h4.className = "ex-field-t";
+      h4.textContent = ROTULOS[key];
+      wrap.appendChild(h4);
+      var row = document.createElement("div");
+      row.className = "ex-stepper";
+      var menos = document.createElement("button");
+      menos.type = "button";
+      menos.textContent = "\u2212";
+      menos.addEventListener("click", function () {
+        var c = $("p0_quantidade");
+        c.value = Math.max(1, (Number(c.value) || 1) - 1);
+        c.dispatchEvent(new Event("change"));
+        refreshCard0();
+      });
+      var inp = document.createElement("input");
+      inp.id = "p0_quantidade";
+      inp.setAttribute("inputmode", "numeric");
+      inp.value = "1";
+      var mais = document.createElement("button");
+      mais.type = "button";
+      mais.textContent = "+";
+      mais.addEventListener("click", function () {
+        var c = $("p0_quantidade");
+        c.value = (Number(c.value) || 0) + 1;
+        c.dispatchEvent(new Event("change"));
+        refreshCard0();
+      });
+      var hint = document.createElement("div");
+      hint.className = "ex-miudo";
+      hint.id = "p0_quantidade_hint";
+      row.appendChild(menos);
+      row.appendChild(inp);
+      row.appendChild(mais);
+      wrap.appendChild(row);
+      wrap.appendChild(hint);
+    } else if (key === "nArtes" || key === "detalhes" || key === "nome" || key === "nomeA6" || key === "manual") {
+      var lab = document.createElement("label");
+      lab.className = "ex-campo";
+      var sp = document.createElement("span");
+      sp.textContent = ROTULOS[key] || key;
+      lab.appendChild(sp);
+      var fld = key === "detalhes" ? document.createElement("textarea") : document.createElement("input");
+      if (key === "nArtes") fld.setAttribute("inputmode", "numeric");
+      if (key === "manual") fld.setAttribute("inputmode", "decimal");
+      fld.id = "p0_" + key;
+      if (key === "nArtes") fld.value = "0";
+      lab.appendChild(fld);
+      wrap.appendChild(lab);
+    } else {
+      mkCanonSelect(key, key === "estado" ? optionList("estado") : optionList("simnao"));
+      var h5 = document.createElement("div");
+      h5.className = "ex-field-t";
+      h5.textContent = ROTULOS[key] || key;
+      wrap.appendChild(h5);
+      wrap.appendChild(widgetSeg(key, key === "estado" ? optionList("estado") : null));
+    }
+    return wrap;
+  }
+
+  function renderConfigFor(prod) {
+    var wrap = $("configCardWrap");
+    wrap.innerHTML = "";
+    var hp = document.createElement("select");
+    hp.id = "prod0";
+    hp.style.display = "none";
+    ensureOption(hp, prod);
+    hp.value = prod;
+    wrap.appendChild(hp);
+    if (!prod) {
+      wrap.innerHTML += '<p class="ex-miudo">Escolhe um produto no passo anterior.</p>';
+      return;
+    }
+    var cfg = cfgOf(prod);
+    var tipo = cfg ? String(cfg.tipo || "") : "tier";
+    var h = document.createElement("h3");
+    h.className = "ex-sub";
+    h.id = "configCardTitle";
+    h.textContent = "A configurar: " + prod;
+    wrap.appendChild(h);
+    gruposPara(tipo, prod).forEach(function (g) {
+      var sec = document.createElement("div");
+      sec.className = "ex-cfg-group";
+      var t = document.createElement("div");
+      t.className = "ex-field-t ex-group-t";
+      t.textContent = g.t;
+      sec.appendChild(t);
+      g.keys.forEach(function (k) { sec.appendChild(renderField(prod, k)); });
+      wrap.appendChild(sec);
+    });
+    var foot = document.createElement("div");
+    foot.className = "ex-grelha";
+    foot.style.marginTop = "10px";
+    [["base", "Pre\u00e7o base"], ["calc", "Pre\u00e7o calculado"], ["final", "Pre\u00e7o do produto"]].forEach(function (c) {
+      var lab = document.createElement("label");
+      lab.className = "ex-campo";
+      var sp = document.createElement("span");
+      sp.textContent = c[1];
+      lab.appendChild(sp);
+      var dv = document.createElement("div");
+      dv.className = "ex-leitura";
+      dv.id = "p0_" + c[0];
+      dv.textContent = "\u2014";
+      lab.appendChild(dv);
+      foot.appendChild(lab);
+    });
+    var labm = document.createElement("label");
+    labm.className = "ex-campo";
+    var spm = document.createElement("span");
+    spm.textContent = ROTULOS.manual;
+    labm.appendChild(spm);
+    var inpm = document.createElement("input");
+    inpm.id = "p0_manual";
+    inpm.setAttribute("inputmode", "decimal");
+    labm.appendChild(inpm);
+    foot.appendChild(labm);
+    wrap.appendChild(foot);
+  }
   function optionList(kind, prod) {
     if (kind === "simnao") return ["Sim", "Não"];
     if (kind === "estado") return ["Por fazer", "Em produção", "Terminado"];
@@ -1732,92 +2118,9 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
   }
 
   function buildConfigCard() {
-    var wrap = $("configCardWrap");
-    wrap.innerHTML = "";
-    var n = 0;
-    var sec = document.createElement("div");
-    sec.id = "card0";
-    var h = document.createElement("h3");
-    h.className = "ex-sub";
-    h.id = "configCardTitle";
-    h.textContent = "Configurar produto";
-    sec.appendChild(h);
-    var hprod = document.createElement("select");
-    hprod.id = "prod0";
-    hprod.style.display = "none";
-    sec.appendChild(hprod);
-    var grid = document.createElement("div");
-    grid.className = "ex-grelha";
-    FIELDS.forEach(function (fd) {
-      var key = fd[0], rot = fd[1], kind = fd[2], def = fd[3];
-      var lab = document.createElement("label");
-      lab.className = "ex-campo";
-      lab.dataset.wrap = key;
-      var sp = document.createElement("span");
-      sp.textContent = rot;
-      lab.appendChild(sp);
-      var el;
-      if (kind === "number" || kind === "text") {
-        el = document.createElement("input");
-        if (kind === "number") el.setAttribute("inputmode", "numeric");
-        el.value = def;
-      } else {
-        el = document.createElement("select");
-        var opts = (kind === "design" || kind === "designA6" || kind === "acab" || kind === "acabA6") ? [""] : optionList(kind);
-        if (kind !== "design" && kind !== "designA6" && kind !== "acab" && kind !== "acabA6") {
-          opts = [""].concat(optionList(kind));
-        }
-        opts.forEach(function (o) {
-          var op = document.createElement("option");
-          op.value = o; op.textContent = o === "" ? "\u2014" : o;
-          if (o === def) op.selected = true;
-          el.appendChild(op);
-        });
-      }
-      el.id = "p0_" + key;
-      lab.appendChild(el);
-      if (key === "design" || key === "designA6") {
-        var div = document.createElement("div");
-        div.className = "ex-img";
-        div.id = "p0_" + key + "_img";
-        lab.appendChild(div);
-      }
-      grid.appendChild(lab);
-    });
-    sec.appendChild(grid);
-    var comp = document.createElement("div");
-    comp.className = "ex-grelha";
-    comp.style.marginTop = "10px";
-    [["base", "Pre\u00e7o base"], ["calc", "Pre\u00e7o calculado"], ["manual", "Pre\u00e7o manual (opcional)", true], ["final", "Pre\u00e7o do produto"]].forEach(function (c) {
-      var lab = document.createElement("label");
-      lab.className = "ex-campo";
-      var sp = document.createElement("span");
-      sp.textContent = c[1];
-      lab.appendChild(sp);
-      if (c[2]) {
-        var inp = document.createElement("input");
-        inp.id = "p0_" + c[0];
-        inp.setAttribute("inputmode", "decimal");
-        lab.appendChild(inp);
-      } else {
-        var dv = document.createElement("div");
-        dv.className = "ex-leitura";
-        dv.id = "p0_" + c[0];
-        dv.textContent = "\u2014";
-        lab.appendChild(dv);
-      }
-      comp.appendChild(lab);
-    });
-    sec.appendChild(comp);
-    wrap.appendChild(sec);
-    var hp = $("prod0");
-    ["", "—"].concat(DATA.ordem || []).forEach(function (p) {
-      if (p === "—") return;
-      var o = document.createElement("option");
-      o.value = p; o.textContent = p === "" ? "—" : p;
-      hp.appendChild(o);
-    });
+    renderConfigFor("");
   }
+
 
 
   function readCard(n) {
@@ -1872,19 +2175,7 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     s("manual", a.precoManual || "");
   }
 
-  function refreshOptions(n, key, kind) {
-    var prod = $("prod" + n).value;
-    var sel = $("p" + n + "_" + key);
-    if (!sel) return;
-    var cur = sel.value;
-    sel.innerHTML = "";
-    [["", "—"]].concat(optionList(kind, prod).map(function (o) { return [o, o]; })).forEach(function (pair) {
-      var op = document.createElement("option");
-      op.value = pair[0]; op.textContent = pair[1];
-      sel.appendChild(op);
-    });
-    sel.value = cur;
-  }
+  
 
   function itemPrice(it) {
     var base = basePrice(it.produto, it.quantidade, it.design);
@@ -1895,57 +2186,32 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
   }
 
   function refreshCard0() {
-    var card = $("card0");
-    if (!card) return;
+    var card = $("configCardWrap");
+    if (!card || !$("prod0")) return;
     var prod = $("prod0").value;
     var f = readCard(0);
     if (prod === "") {
-      ["base", "calc", "final"].forEach(function (k) { $("p0_" + k).textContent = "\u2014"; });
-      $("p0_design_img").innerHTML = "";
-      $("p0_designA6_img").innerHTML = "";
+      ["base", "calc", "final"].forEach(function (k) {
+        var el = $("p0_" + k);
+        if (el) el.textContent = "\u2014";
+      });
       return;
     }
-    var cfg = cfgOf(prod);
-    var tipo = cfg ? String(cfg.tipo || "") : "";
-    var showA6 = tipo === "pack_pastas";
-    var showMarc = isMarcadores(prod);
-    var comExtrasNome = (tipo === "pasta" || tipo === "pack_pastas" || tipo === "agenda");
-    var comCantos = (tipo === "pasta" || tipo === "pack_pastas");
-    card.querySelectorAll("[data-wrap]").forEach(function (w) {
-      var k = w.dataset.wrap;
-      if (["designA6", "acabamentoA6", "comNomeA6", "nomeA6", "cantosA6", "fitaA6"].indexOf(k) !== -1) {
-        w.style.display = showA6 ? "" : "none";
-      } else if (["holo", "frenteVerso", "furo", "margem"].indexOf(k) !== -1) {
-        w.style.display = showMarc ? "" : "none";
-      } else if (k === "holoUn") {
-        w.style.display = (!showMarc && temHoloUn(prod)) ? "" : "none";
-      } else if (k === "acabamento" || k === "acabamentoA6") {
-        w.style.display = temAcab(prod) ? "" : "none";
-      } else if (k === "fita" || k === "fitaA6") {
-        w.style.display = (tipo === "pasta" || tipo === "pack_pastas") ? "" : "none";
-      } else if (k === "comNome" || k === "nome" || k === "cantos") {
-        w.style.display = comExtrasNome || comCantos ? "" : "none";
-      } else if (k === "tipoCapa") {
-        w.style.display = temAcab(prod) && (tipo === "agenda") ? "" : "none";
-      } else {
-        w.style.display = "";
-      }
-    });
     var p = itemPrice(f);
     $("p0_base").textContent = eurC(p.base);
     $("p0_calc").textContent = eurC(p.calc);
     $("p0_final").textContent = eurC(p.fin);
-    var u = f.design ? designUrl(prod, f.design, false) : "";
-    $("p0_design_img").innerHTML = u
-      ? '<a href="' + u.replace(/"/g, "") + '" target="_blank" rel="noopener"><img src="' + u.replace(/"/g, "")
-        + '" alt="" loading="lazy" style="max-width:100%;max-height:160px;display:block;border-radius:6px;margin-bottom:4px;">Ver imagem</a>'
-      : "Sem imagem";
-    var u6 = f.designA6 ? designUrl(prod, f.designA6, true) : "";
-    $("p0_designA6_img").innerHTML = showA6
-      ? (u6 ? '<a href="' + u6.replace(/"/g, "") + '" target="_blank" rel="noopener"><img src="' + u6.replace(/"/g, "")
-        + '" alt="" loading="lazy" style="max-width:100%;max-height:160px;display:block;border-radius:6px;margin-bottom:4px;">Ver imagem A6</a>'
-        : "Sem imagem") : "";
+    var hint = $("p0_quantidade_hint");
+    if (hint) {
+      var q = Number(f.quantidade) || 0;
+      if (typeof p.base === "number" && q > 0) {
+        hint.textContent = "Cada unidade sai a " + eurC(Math.round(p.base / q)) + ".";
+      } else {
+        hint.textContent = "";
+      }
+    }
   }
+
 
   function totaisStaging() {
     var finais = [], ok = true;
@@ -2300,14 +2566,11 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
   }
 
   function resetCardFor(prod) {
-    var hp = $("prod0");
-    ensureOption(hp, prod);
-    hp.value = prod;
-    refreshOptions(0);
-    fillCard(0, { quantidade: 1, comNome: "N\u00e3o", cantos: "N\u00e3o", comNomeA6: "N\u00e3o", cantosA6: "N\u00e3o",
-      holo: "N\u00e3o", frenteVerso: "N\u00e3o", furo: "N\u00e3o", margem: "N\u00e3o", holoUn: "N\u00e3o",
+    renderConfigFor(prod);
+    fillCard(0, { quantidade: 1, comNome: "Não", cantos: "Não", comNomeA6: "Não", cantosA6: "Não",
+      holo: "Não", frenteVerso: "Não", furo: "Não", margem: "Não", holoUn: "Não",
       nArtes: 0, estado: "Por fazer" });
-    $("configCardTitle").textContent = "Configurar: " + prod;
+    syncVisuals();
     refreshCard0();
   }
 
@@ -2349,6 +2612,7 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     $("mProduto").value = it.produto;
     resetCardFor(it.produto);
     fillCard(0, it);
+    syncVisuals();
     refreshCard0();
     editingIndex = i;
     msgClear();
