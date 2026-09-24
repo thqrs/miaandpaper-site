@@ -38,6 +38,7 @@ if (empty($_SESSION['miaandpaper_admin'])) {
 
 require_once __DIR__ . '/lib/private-paths.php';
 require_once __DIR__ . '/lib/parametros.php';   // PARAMETROS_V1: ?action= e ?encomenda= declarados uma vez
+require_once __DIR__ . '/lib/precos-core.php';   // motor de preços partilhado (só leitura: tabelas flat/tier)
 
 $csrf = mp_admin_csrf_token();
 
@@ -57,105 +58,555 @@ if (!is_array($EXCEL_DATA)) { $EXCEL_DATA = array(); }
 
 function ex_h($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 
+// slug ASCII para casar nomes sem escrever acentos no código.
+function ex_slug($s) {
+    $s = (string)$s;
+    $s = str_replace(
+        array("\xC3\xA1","\xC3\xA0","\xC3\xA2","\xC3\xA3","\xC3\xA9","\xC3\xAA","\xC3\xAD","\xC3\xB3","\xC3\xB4","\xC3\xB5","\xC3\xBA","\xC3\xA7","\xC3\x81","\xC3\x80","\xC3\x82","\xC3\x83","\xC3\x89","\xC3\x8A","\xC3\x8D","\xC3\x93","\xC3\x94","\xC3\x95","\xC3\x9A","\xC3\x87"),
+        array('a','a','a','a','e','e','i','o','o','o','u','c','a','a','a','a','e','e','i','o','o','o','u','c'),
+        $s);
+    $s = strtolower($s);
+    return trim(preg_replace('/[^a-z0-9]+/', '_', $s), '_');
+}
+
+function ex_site_base() {
+    global $EX_SITE_ROOT;
+    return (isset($EX_SITE_ROOT) && is_string($EX_SITE_ROOT) && $EX_SITE_ROOT !== '') ? $EX_SITE_ROOT : __DIR__;
+}
+
+function ex_site_mtime($rel) {
+    $t = @filemtime(ex_site_base() . '/' . $rel);
+    return $t === false ? '' : date('Y-m-d', (int)$t);
+}
+
+function ex_site_json($rel) {
+    $p = ex_site_base() . '/' . $rel;
+    if (!is_file($p)) return null;
+    $raw = @file_get_contents($p);
+    if ($raw === false) return null;
+    $d = json_decode($raw, true);
+    return is_array($d) ? $d : null;
+}
+
+function ex_design_nome($it) {
+    if (!is_array($it)) return '';
+    $t = trim((string)(isset($it['title']) ? $it['title'] : ''));
+    if ($t !== '') return $t;
+    return trim((string)(isset($it['value']) ? $it['value'] : ''));
+}
+
+// Resolve uma variante Excel (nome exacto da era Excel) para o site actual.
+// Sem literais acentuados: tudo por slugs e leitura dos JSON.
+function ex_variante_site($excel, $pricing, $produtos) {
+    $s = ex_slug($excel);
+    $v = array('site' => null, 'key' => null, 'flatOption' => null, 'designPrefix' => null,
+        'tipo' => 'tier', 'fam' => '', 'covers' => null, 'acabDe' => null);
+    if ($s === 'pasta_a4' || $s === 'pasta_a6' || $s === 'pack_pastas_a4_a6') {
+        $v['site'] = 'pasta-de-folhetos';
+        $v['key'] = $s === 'pasta_a4' ? 'A4' : ($s === 'pasta_a6' ? 'A6' : 'A4 + A6');
+        $v['tipo'] = $s === 'pack_pastas_a4_a6' ? 'pack_pastas' : 'pasta';
+        $v['fam'] = 'pastas';
+        $v['covers'] = $s === 'pasta_a6' ? 'A6' : 'A4';
+        $v['acabDe'] = 'finish';
+        return $v;
+    }
+    if (preg_match('/^(crachas|porta_chaves)_(\d+)_mm$/', $s, $m)) {
+        $v['site'] = $m[1] === 'crachas' ? 'crachas-loja' : 'porta-chaves';
+        $v['key'] = $m[2] . ' mm';
+        $v['fam'] = $m[1] === 'crachas' ? 'crachas' : 'porta_chaves';
+        return $v;
+    }
+    if ($s === 'imanes_achatados') { $v['site'] = 'imanes-loja'; $v['key'] = 'Achatados'; $v['fam'] = 'imanes'; return $v; }
+    if ($s === 'imanes_3_mm') { $v['site'] = 'imanes-loja'; $v['key'] = '3 mm'; $v['fam'] = 'imanes'; return $v; }
+    if ($s === 'imanes_recortados') { $v['site'] = 'imanes-recortados'; $v['key'] = 'Recortados'; $v['fam'] = 'imanes_rec'; return $v; }
+    foreach (array('mini_cadernos' => 'mini-cadernos', 'bloco_argolas_a6' => 'blocos-a6',
+        'bloquinhos' => 'bloquinhos', 'stickers' => 'stickers', 'marcadores' => 'marcadores',
+        'marcadores_magneticos' => 'marcadores-magneticos') as $slug => $site) {
+        if ($s === $slug) {
+            $v['site'] = $site;
+            $v['fam'] = $site === 'blocos-a6' ? 'blocos_a6' : ($site === 'marcadores-magneticos' ? 'marcadores_mag' : str_replace('-', '_', $site));
+            if ($site === 'marcadores-magneticos') $v['fam'] = 'marcadores_mag';
+            return $v;
+        }
+    }
+    if (preg_match('/^agendas_(agenda_normal|agenda_pioneiro|pack_normal|pack_pioneiro)$/', $s, $m)) {
+        $v['site'] = 'agendas'; $v['flatOption'] = $m[1]; $v['tipo'] = 'agenda'; $v['fam'] = 'agendas'; $v['acabDe'] = 'lamination';
+        return $v;
+    }
+    if (preg_match('/^cadernos_anuais_(caderno_normal|caderno_pioneiro|pack_normal|pack_pioneiro)$/', $s, $m)) {
+        $v['site'] = 'cadernos-anuais'; $v['flatOption'] = $m[1]; $v['tipo'] = 'agenda'; $v['fam'] = 'cadernos'; $v['acabDe'] = 'lamination';
+        return $v;
+    }
+    if (strpos($s, 'molduras_personalizadas_') === 0) {
+        $v['site'] = 'quadros';
+        $v['designPrefix'] = substr($s, strlen('molduras_personalizadas_'));
+        $v['tipo'] = 'moldura'; $v['fam'] = 'molduras';
+        return $v;
+    }
+    return $v;
+}
+
+// Catálogo canónico em cêntimos, lido dos ficheiros vivos do site.
+// Fallback: fotografia Excel embutida convertida para o mesmo formato.
+function ex_catalogo($snap) {
+    static $cat = null;
+    if ($cat !== null) return $cat;
+
+    $pricing = ex_site_json('content/pricing.json');
+    if (!is_array($pricing) || !isset($pricing['products']) || !is_array($pricing['products'])) {
+        $cat = ex_catalogo_foto($snap);
+        return $cat;
+    }
+    $prods = array();
+    foreach (array('pasta-de-folhetos','crachas-loja','porta-chaves','imanes-loja','imanes-recortados',
+        'mini-cadernos','blocos-a6','bloquinhos','stickers','marcadores','marcadores-magneticos',
+        'agendas','cadernos-anuais','quadros') as $slug) {
+        $pj = ex_site_json('content/products/' . $slug . '.json');
+        if (is_array($pj)) $prods[$slug] = $pj;
+    }
+
+    $legacyCfg = array();
+    if (isset($snap['produtos_cfg']) && is_array($snap['produtos_cfg'])) {
+        foreach ($snap['produtos_cfg'] as $c) {
+            if (isset($c[0])) $legacyCfg[(string)$c[0]] = $c;
+        }
+    }
+    $legacyFam = array();
+    if (isset($snap['produtos']) && is_array($snap['produtos'])) {
+        foreach ($snap['produtos'] as $p) {
+            if (isset($p[0])) $legacyFam[(string)$p[0]] = isset($p[3]) ? (string)$p[3] : '';
+        }
+    }
+
+    $cat = array(
+        'fonte' => 'site',
+        'pricingData' => ex_site_mtime('content/pricing.json'),
+        'ordem' => array(), 'cfg' => array(), 'flat' => array(), 'tiers' => array(),
+        'designPrice' => array(), 'designs' => array(), 'designsA6' => array(), 'acab' => array(),
+        'fitas' => array(), 'tiposCapa' => array(),
+        'extras' => array('nome' => 200, 'cantos' => 200, 'capaDura' => 400, 'artes' => 300,
+            'm1' => 15, 'm2' => 15, 'm3' => 25, 'm4' => 20),
+        'artesFee' => array(), 'holoUn' => array(),
+        'entrega' => array(), 'lookup' => array(),
+    );
+
+    $oe = isset($pricing['optionExtras']) && is_array($pricing['optionExtras']) ? $pricing['optionExtras'] : array();
+    $int = function ($v, $def = 0) { return is_numeric($v) ? (int)$v : (int)$def; };
+    $cat['extras']['nome'] = $int(isset($oe['cover_personalization']) ? $oe['cover_personalization'] : 200, 200);
+    $cat['extras']['capaDura'] = $int(isset($oe['capa-dura']) ? $oe['capa-dura'] : 400, 400);
+    $cat['extras']['m1'] = $int(isset($oe['holografica-marcador']) ? $oe['holografica-marcador'] : 15, 15);
+    $cat['extras']['m2'] = $int(isset($oe['dois-lados-marcador']) ? $oe['dois-lados-marcador'] : 15, 15);
+    $cat['extras']['m3'] = $int(isset($oe['buraquinho-marcador']) ? $oe['buraquinho-marcador'] : 25, 25);
+    $cat['extras']['m4'] = $int(isset($oe['margem-plastico-marcador']) ? $oe['margem-plastico-marcador'] : 20, 20);
+    $ship = isset($pricing['delivery']['shipping']) ? (float)$pricing['delivery']['shipping'] / 100 : 5.4;
+    $cat['entrega'] = array(
+        array("Envio CTT - at\u{00e9} 2 Kg", $ship),
+        array("Entrega em m\u{00e3}o", 0), array('Vou recolher na casa da Mia', 0),
+        array("Entregamos-te pessoalmente - Apenas Quinta do Conde, Azeit\u{00e3}o e Fern\u{00e3}o Ferro", 0),
+        array('Junta as minhas encomendas', 0), array('Outro', 0),
+    );
+
+    $names = array();
+    if (isset($snap['produtos']) && is_array($snap['produtos'])) {
+        foreach ($snap['produtos'] as $p) {
+            if (isset($p[0]) && trim((string)$p[0]) !== '') $names[] = (string)$p[0];
+        }
+    }
+    foreach ($names as $excel) {
+        $v = ex_variante_site($excel, $pricing['products'], $prods);
+        if (empty($v['site']) || !isset($pricing['products'][$v['site']])) continue;
+        $pp = $pricing['products'][$v['site']];
+        $pj = isset($prods[$v['site']]) ? $prods[$v['site']] : null;
+        $steps = array();
+        if (is_array($pj) && isset($pj['steps']) && is_array($pj['steps'])) {
+            foreach ($pj['steps'] as $st) {
+                if (is_array($st) && isset($st['id'])) $steps[(string)$st['id']] = $st;
+            }
+        }
+        // modo + mínimo (mínimo por chave quando o passo size o declara)
+        $mode = isset($pp['pricingMode']) ? (string)$pp['pricingMode'] : '';
+        $modo = $mode === 'tier-unit' ? 'tier' : 'flat';
+        $min = isset($pp['minimumQuantity']) ? max(1, (int)$pp['minimumQuantity']) : 1;
+        $key = $v['key'];
+        if ($key === null) {
+            $keys = isset($pp['prices']) && is_array($pp['prices']) ? array_keys($pp['prices']) : array();
+            $key = count($keys) === 1 ? (string)$keys[0] : (isset($pp['defaultPriceKey']) ? (string)$pp['defaultPriceKey'] : '');
+        }
+        if (isset($steps['size']['items']) && is_array($steps['size']['items'])) {
+            foreach ($steps['size']['items'] as $it) {
+                if (!is_array($it)) continue;
+                $pk = isset($it['priceKey']) ? (string)$it['priceKey'] : '';
+                if ($pk !== '' && $pk === $key && isset($it['minQuantity'])) {
+                    $min = max(1, (int)$it['minQuantity']);
+                }
+            }
+        }
+        // preço base
+        $table = isset($pp['prices'][$key]) && is_array($pp['prices'][$key]) ? $pp['prices'][$key] : array();
+        $flat = null; $tiers = null; $designPrice = null;
+        if ($v['site'] === 'quadros') {
+            $designPrice = array();
+            if (isset($steps['designs']['items']) && is_array($steps['designs']['items'])) {
+                foreach ($steps['designs']['items'] as $it) {
+                    if (!is_array($it)) continue;
+                    $nm = ex_design_nome($it);
+                    if ($nm !== '' && isset($it['priceCents'])) $designPrice[$nm] = max(0, (int)$it['priceCents']);
+                }
+            }
+        } elseif ($v['flatOption'] !== null) {
+            $cand = null;
+            if (isset($pp['flatUnitPricesCents'][$v['flatOption']])) $cand = $pp['flatUnitPricesCents'][$v['flatOption']];
+            elseif (is_array($pj) && isset($pj['flatUnitPricesCents'][$v['flatOption']])) $cand = $pj['flatUnitPricesCents'][$v['flatOption']];
+            if ($cand !== null) $flat = max(0, (int)$cand);
+        } elseif ($modo === 'tier') {
+            $tiers = array();
+            foreach ($table as $q => $c) {
+                if ((int)$q > 0 && is_numeric($c)) $tiers[(int)$q] = max(0, (int)$c);
+            }
+            if (empty($tiers)) continue;
+            ksort($tiers, SORT_NUMERIC);
+        } else {
+            $t = array();
+            foreach ($table as $q => $c) {
+                if ((int)$q > 0 && is_numeric($c)) $t[(int)$q] = max(0, (int)$c);
+            }
+            if (empty($t)) continue;
+            ksort($t, SORT_NUMERIC);
+            $prim = array_keys($t);
+            $flat = (int)round(((float)$t[$prim[0]] / $prim[0]));
+            $flat = max(0, $flat);
+        }
+        // designs
+        $designs = array(); $designsA6 = array();
+        $pushDesigns = function ($items) {
+            $out = array();
+            foreach ((array)$items as $it) {
+                if (!is_array($it)) continue;
+                $nm = ex_design_nome($it);
+                if ($nm === '') continue;
+                $out[] = array($nm, isset($it['image']) ? (string)$it['image'] : '');
+            }
+            return $out;
+        };
+        if ($v['covers'] !== null && isset($steps['covers']['items'])) {
+            foreach ((array)$steps['covers']['items'] as $it) {
+                if (!is_array($it) || !isset($it['sizeGroup'])) continue;
+                $nm = ex_design_nome($it);
+                if ($nm === '') continue;
+                $row = array($nm, isset($it['image']) ? (string)$it['image'] : '');
+                if ((string)$it['sizeGroup'] === 'A4') $designs[] = $row;
+                if ((string)$it['sizeGroup'] === 'A6') $designsA6[] = $row;
+            }
+            if ($v['covers'] === 'A6') { $tmp = $designs; $designs = $designsA6; $designsA6 = $tmp; }
+        } elseif (isset($steps['designs']['items'])) {
+            $designs = $pushDesigns($steps['designs']['items']);
+        }
+        // acabamentos
+        $acab = array();
+        if ($v['acabDe'] === 'finish') {
+            if (isset($steps['extras']['drawers']) && is_array($steps['extras']['drawers'])) {
+                foreach ($steps['extras']['drawers'] as $d) {
+                    if (!is_array($d) || (isset($d['field']) && $d['field'] === 'metal_corners')) {
+                        if (isset($d['field']) && $d['field'] === 'metal_corners') {
+                            if (isset($d['items'][0]['extraPriceCentsPerUnit'])) {
+                                $cat['extras']['cantos'] = max(0, (int)$d['items'][0]['extraPriceCentsPerUnit']);
+                            }
+                            continue;
+                        }
+                    }
+                    foreach ((array)(isset($d['items']) ? $d['items'] : array()) as $it) {
+                        if (!is_array($it)) continue;
+                        $t = trim((string)(isset($it['title']) ? $it['title'] : ''));
+                        if ($t !== '' && !in_array($t, $acab, true)) $acab[] = $t;
+                    }
+                }
+            }
+        } elseif ($v['acabDe'] === 'lamination') {
+            if (isset($steps['lamination']['items'])) {
+                foreach ((array)$steps['lamination']['items'] as $it) {
+                    if (!is_array($it)) continue;
+                    $t = trim((string)(isset($it['title']) ? $it['title'] : ''));
+                    if ($t !== '' && !in_array($t, $acab, true)) $acab[] = $t;
+                }
+            }
+        }
+        // fitas (distintas, ordem do site)
+        if ($v['site'] === 'pasta-de-folhetos' && empty($cat['fitas']) && isset($steps['designs']['items'])) {
+            foreach ((array)$steps['designs']['items'] as $it) {
+                if (!is_array($it)) continue;
+                $t = trim((string)(isset($it['title']) ? $it['title'] : ''));
+                if ($t !== '' && !in_array($t, $cat['fitas'], true)) $cat['fitas'][] = $t;
+            }
+        }
+        // tipos de capa (união agendas + cadernos)
+        if (in_array($v['site'], array('agendas', 'cadernos-anuais'), true) && is_array($pj) && isset($pj['finishOptions'])) {
+            foreach ((array)$pj['finishOptions'] as $fo) {
+                if (!is_array($fo) || !isset($fo['value'])) continue;
+                if (strpos((string)$fo['value'], 'capa-') === 0) {
+                    $t = trim((string)(isset($fo['title']) ? $fo['title'] : ''));
+                    if ($t !== '' && !in_array($t, $cat['tiposCapa'], true)) $cat['tiposCapa'][] = $t;
+                }
+            }
+        }
+        // holo unitário genérico (onde o site o vende por unidade)
+        if (is_array($pj) && isset($pj['finishOptions']) && $v['tipo'] === 'tier' && ex_slug($excel) !== 'marcadores') {
+            foreach ((array)$pj['finishOptions'] as $fo) {
+                if (!is_array($fo) || !isset($fo['value'])) continue;
+                if (strpos((string)$fo['value'], 'holografica') === 0 && isset($fo['extraPriceCentsPerUnit']) && (int)$fo['extraPriceCentsPerUnit'] > 0) {
+                    $cat['holoUn'][$excel] = (int)$fo['extraPriceCentsPerUnit'];
+                }
+            }
+        }
+        // taxa de artes por produto
+        $fee = 300;
+        if (isset($pp['customArtworkFeePerFileCents']) && is_numeric($pp['customArtworkFeePerFileCents'])) {
+            $fee = max(0, (int)$pp['customArtworkFeePerFileCents']);
+        }
+        $cat['artesFee'][$excel] = $fee;
+
+        $leg = isset($legacyCfg[$excel]) ? $legacyCfg[$excel] : array();
+        $cat['ordem'][] = $excel;
+        $cat['cfg'][$excel] = array(
+            'modo' => $modo, 'min' => $min, 'grupo' => $v['site'], 'tipo' => $v['tipo'],
+            'fam' => isset($legacyFam[$excel]) ? $legacyFam[$excel] : '',
+            'validacao' => isset($leg[5]) ? (string)$leg[5] : '', 'lista' => isset($leg[6]) ? (string)$leg[6] : '',
+        );
+        if ($flat !== null) $cat['flat'][$excel] = $flat;
+        if ($tiers !== null) $cat['tiers'][$excel] = $tiers;
+        if ($designPrice !== null) $cat['designPrice'][$excel] = $designPrice;
+        $cat['designs'][$excel] = $designs;
+        if ($v['tipo'] === 'pack_pastas') $cat['designsA6'][$excel] = $designsA6;
+        $cat['acab'][$excel] = $acab;
+    }
+    if (empty($cat['fitas']) && isset($snap['fita_base']) && is_array($snap['fita_base'])) {
+        $cat['fitas'] = array_values(array_filter(array_map('strval', $snap['fita_base'])));
+    }
+    if (empty($cat['tiposCapa']) && isset($snap['tipos_capa']) && is_array($snap['tipos_capa'])) {
+        $cat['tiposCapa'] = array_values(array_filter(array_map('strval', $snap['tipos_capa'])));
+    }
+    if (isset($snap['design_lookup'])) $cat['lookup'] = $snap['design_lookup'];
+    return $cat;
+}
+
+// Fotografia Excel embutida convertida para o formato canónico (cêntimos).
+// Só serve se os ficheiros vivos do site estiverem ilegíveis.
+function ex_catalogo_foto($snap) {
+    $e2c = function ($v) { return (int)round((float)$v * 100); };
+    $cat = array(
+        'fonte' => 'excel', 'pricingData' => '2026-09',
+        'ordem' => array(), 'cfg' => array(), 'flat' => array(), 'tiers' => array(),
+        'designPrice' => array(), 'designs' => array(), 'designsA6' => array(), 'acab' => array(),
+        'fitas' => array(), 'tiposCapa' => array(),
+        'extras' => array('nome' => 200, 'cantos' => 200, 'capaDura' => 400, 'artes' => 300,
+            'm1' => 15, 'm2' => 15, 'm3' => 25, 'm4' => 20),
+        'artesFee' => array(), 'holoUn' => array(),
+        'entrega' => array(), 'lookup' => array(),
+    );
+    if (isset($snap['extras_labels']) && is_array($snap['extras_labels'])) {
+        $ag = $snap['extras_labels'];
+        if (isset($ag['AG3'])) $cat['extras']['nome'] = $e2c($ag['AG3']);
+        if (isset($ag['AG4'])) $cat['extras']['cantos'] = $e2c($ag['AG4']);
+        if (isset($ag['AG6'])) $cat['extras']['capaDura'] = $e2c($ag['AG6']);
+        if (isset($ag['AG5'])) $cat['extras']['artes'] = $e2c($ag['AG5']);
+        if (isset($ag['AG7'])) $cat['extras']['m1'] = $e2c($ag['AG7']);
+        if (isset($ag['AG8'])) $cat['extras']['m2'] = $e2c($ag['AG8']);
+        if (isset($ag['AG9'])) $cat['extras']['m3'] = $e2c($ag['AG9']);
+        if (isset($ag['AG10'])) $cat['extras']['m4'] = $e2c($ag['AG10']);
+    }
+    $dg = isset($snap['dg']) && is_array($snap['dg']) ? $snap['dg'] : array();
+    $lookup = isset($snap['design_lookup']) && is_array($snap['design_lookup']) ? $snap['design_lookup'] : array();
+    $cat['lookup'] = $lookup;
+    $urlPorChave = array();
+    foreach ($lookup as $row) {
+        if (isset($row[0], $row[3])) $urlPorChave[(string)$row[0]] = (string)$row[3];
+    }
+    $lamin = array();
+    if (isset($snap['acabamentos']) && is_array($snap['acabamentos'])) {
+        foreach ($snap['acabamentos'] as $a) {
+            $a = trim((string)$a);
+            if ($a !== '') $lamin[] = $a;
+        }
+    }
+    if (isset($snap['produtos']) && is_array($snap['produtos'])) {
+        foreach ($snap['produtos'] as $p) {
+            if (!isset($p[0]) || trim((string)$p[0]) === '') continue;
+            $excel = (string)$p[0];
+            $cat['ordem'][] = $excel;
+            $cat['artesFee'][$excel] = $cat['extras']['artes'];
+        }
+    }
+    if (isset($snap['produtos_cfg']) && is_array($snap['produtos_cfg'])) {
+        foreach ($snap['produtos_cfg'] as $c) {
+            if (!isset($c[0])) continue;
+            $excel = (string)$c[0];
+            $cat['cfg'][$excel] = array(
+                'modo' => isset($c[1]) ? (string)$c[1] : 'flat',
+                'min' => isset($c[2]) ? max(1, (int)$c[2]) : 1,
+                'grupo' => isset($c[3]) ? (string)$c[3] : '',
+                'tipo' => isset($c[4]) ? (string)$c[4] : 'tier',
+                'fam' => '',
+                'validacao' => isset($c[5]) ? (string)$c[5] : '',
+                'lista' => isset($c[6]) ? (string)$c[6] : '',
+            );
+            $tipo = $cat['cfg'][$excel]['tipo'];
+            if (in_array($tipo, array('pasta', 'pack_pastas', 'agenda'), true)) {
+                $cat['acab'][$excel] = $lamin;
+            }
+            $lista = $cat['cfg'][$excel]['lista'];
+            $ds = array();
+            if ($lista !== '' && isset($dg[$lista]) && is_array($dg[$lista])) {
+                foreach ($dg[$lista] as $dn) {
+                    $dn = (string)$dn;
+                    $img = '';
+                    foreach (array($cat['cfg'][$excel]['grupo'] . '|' . $dn, 'Pasta A4|' . $dn, 'Pasta A6|' . $dn) as $chave) {
+                        if (isset($urlPorChave[$chave])) { $img = $urlPorChave[$chave]; break; }
+                    }
+                    $ds[] = array($dn, $img);
+                }
+            }
+            $cat['designs'][$excel] = $ds;
+            if ($tipo === 'pack_pastas' && isset($dg['DG_A6'])) {
+                $a6 = array();
+                foreach ($dg['DG_A6'] as $dn) {
+                    $dn = (string)$dn;
+                    $a6[] = array($dn, isset($urlPorChave['Pasta A6|' . $dn]) ? $urlPorChave['Pasta A6|' . $dn] : '');
+                }
+                $cat['designsA6'][$excel] = $a6;
+            }
+        }
+    }
+    if (isset($snap['produtos']) && is_array($snap['produtos'])) {
+        foreach ($snap['produtos'] as $p) {
+            if (!isset($p[0])) continue;
+            $excel = (string)$p[0];
+            if (!isset($cat['cfg'][$excel])) continue;
+            if ($cat['cfg'][$excel]['modo'] === 'tier') continue;
+            if (isset($p[1]) && is_numeric($p[1])) $cat['flat'][$excel] = $e2c($p[1]);
+        }
+    }
+    if (isset($snap['tiers']) && is_array($snap['tiers'])) {
+        foreach ($snap['tiers'] as $t) {
+            if (!isset($t[0], $t[1], $t[2])) continue;
+            $excel = (string)$t[0];
+            if (!isset($cat['tiers'][$excel])) $cat['tiers'][$excel] = array();
+            $cat['tiers'][$excel][(int)$t[1]] = $e2c($t[2]);
+        }
+        foreach ($cat['tiers'] as $k => $v) ksort($cat['tiers'][$k], SORT_NUMERIC);
+    }
+    if (isset($snap['fita_base']) && is_array($snap['fita_base'])) {
+        $cat['fitas'] = array_values(array_filter(array_map('strval', $snap['fita_base'])));
+    }
+    if (isset($snap['tipos_capa']) && is_array($snap['tipos_capa'])) {
+        $cat['tiposCapa'] = array_values(array_filter(array_map('strval', $snap['tipos_capa'])));
+    }
+    if (isset($snap['entrega']) && is_array($snap['entrega'])) {
+        foreach ($snap['entrega'] as $e) {
+            if (isset($e[0])) $cat['entrega'][] = array((string)$e[0], isset($e[1]) && is_numeric($e[1]) ? (float)$e[1] : 0);
+        }
+    }
+    // família da era Excel (para a regra do tipo de capa)
+    if (isset($snap['produtos']) && is_array($snap['produtos'])) {
+        foreach ($snap['produtos'] as $p) {
+            if (isset($p[0], $p[3]) && isset($cat['cfg'][(string)$p[0]])) {
+                $cat['cfg'][(string)$p[0]]['fam'] = (string)$p[3];
+            }
+        }
+    }
+    return $cat;
+}
+
+// Catálogo canónico (lido uma vez por pedido).
+function ex_cat() {
+    global $EXCEL_DATA, $EX_CATALOGO;
+    if (!isset($EX_CATALOGO)) $EX_CATALOGO = ex_catalogo(is_array($EXCEL_DATA) ? $EXCEL_DATA : array());
+    return $EX_CATALOGO;
+}
+
 function ex_cfg($name) {
-    global $EXCEL_DATA;
-    if (!isset($EXCEL_DATA['produtos_cfg']) || !is_array($EXCEL_DATA['produtos_cfg'])) return null;
-    foreach ($EXCEL_DATA['produtos_cfg'] as $c) {
-        if (isset($c[0]) && (string)$c[0] === (string)$name) return $c;
-    }
-    return null;
+    $cat = ex_cat();
+    return isset($cat['cfg'][(string)$name]) ? $cat['cfg'][(string)$name] : null;
 }
 
-function ex_base_of($name) {
-    global $EXCEL_DATA;
-    if (!isset($EXCEL_DATA['produtos']) || !is_array($EXCEL_DATA['produtos'])) return null;
-    foreach ($EXCEL_DATA['produtos'] as $p) {
-        if (isset($p[0]) && (string)$p[0] === (string)$name) {
-            return is_numeric($p[1]) ? (float)$p[1] : null;
-        }
-    }
-    return null;
+function ex_extra($key) {
+    $cat = ex_cat();
+    return isset($cat['extras'][$key]) ? (int)$cat['extras'][$key] : 0;
 }
 
-function ex_tier_unit($name, $qty) {
-    global $EXCEL_DATA;
-    $best = null;
-    if (!isset($EXCEL_DATA['tiers']) || !is_array($EXCEL_DATA['tiers'])) return null;
-    foreach ($EXCEL_DATA['tiers'] as $t) {
-        if (!isset($t[0], $t[1], $t[2])) continue;
-        if ((string)$t[0] !== (string)$name) continue;
-        $q = (float)$t[1]; $total = (float)$t[2];
-        if ($q > 0 && $q <= $qty + 1e-9) {
-            if ($best === null || $q > $best[0]) $best = array($q, $total);
-        }
-    }
-    if ($best === null) return null;
-    return $best[1] / $best[0];
+function ex_artes_fee($name) {
+    $cat = ex_cat();
+    return isset($cat['artesFee'][(string)$name]) ? (int)$cat['artesFee'][(string)$name] : 300;
 }
 
-function ex_extra($key, $default = 0.0) {
-    global $EXCEL_DATA;
-    if (isset($EXCEL_DATA['extras_labels'][$key]) && is_numeric($EXCEL_DATA['extras_labels'][$key])) {
-        return (float)$EXCEL_DATA['extras_labels'][$key];
-    }
-    return (float)$default;
-}
-
-// Preço base J16: número ou a string 'Rever quantidade'.
-function ex_base_price($name, $qty) {
+// Preço base em CÊNTIMOS (inteiro) ou a string 'Rever quantidade'.
+// Regra tier idêntica à do motor partilhado (escalão exacto ou interpolação).
+function ex_base_price($name, $qty, $design = '') {
     $cfg = ex_cfg($name);
     if ($cfg === null) return 'Rever quantidade';
-    $modo = isset($cfg[1]) ? (string)$cfg[1] : '';
-    $min = isset($cfg[2]) ? (float)$cfg[2] : 1;
-    if (!is_numeric($qty) || floor((float)$qty) != (float)$qty || (float)$qty < $min) {
+    $modo = isset($cfg['modo']) ? (string)$cfg['modo'] : '';
+    $min = isset($cfg['min']) ? (int)$cfg['min'] : 1;
+    if (!is_numeric($qty) || floor((float)$qty) != (float)$qty || (int)$qty < $min) {
         return 'Rever quantidade';
     }
-    $qty = (float)$qty;
-    if ($modo === 'tier') {
-        $unit = ex_tier_unit($name, $qty);
-        if ($unit === null) return 'Rever quantidade';
-        return round($qty * $unit + 1e-9, 2);
+    $qty = (int)$qty;
+    $cat = ex_cat();
+    if (!empty($cat['designPrice'][(string)$name])) {
+        $mapa = $cat['designPrice'][(string)$name];
+        if (isset($mapa[(string)$design])) return (int)$mapa[(string)$design] * $qty;
+        return (int)min($mapa) * $qty;
     }
-    $base = ex_base_of($name);
-    if ($base === null) return 'Rever quantidade';
-    return round($base * $qty + 1e-9, 2);
+    if (isset($cat['flat'][(string)$name])) {
+        return (int)$cat['flat'][(string)$name] * $qty;
+    }
+    if ($modo === 'tier' && isset($cat['tiers'][(string)$name])) {
+        $tab = array();
+        foreach ($cat['tiers'][(string)$name] as $q => $c) $tab[(int)$q] = (int)$c;
+        if (empty($tab)) return 'Rever quantidade';
+        $cents = product_tier_price_cents($tab, $qty);
+        if ($cents <= 0) return 'Rever quantidade';
+        return $cents;
+    }
+    return 'Rever quantidade';
 }
 
-// Preço calculado B34 a partir dos campos de um produto.
+// Preço calculado em CÊNTIMOS a partir dos campos de um produto.
 function ex_product_calc($name, $f) {
     $cfg = ex_cfg($name);
-    $tipo = $cfg !== null && isset($cfg[4]) ? (string)$cfg[4] : '';
-    $qty = isset($f['quantidade']) ? (float)$f['quantidade'] : 0;
-    $base = ex_base_price($name, isset($f['quantidade']) ? $f['quantidade'] : 0);
-    if (!is_numeric($base)) return $base;
+    $tipo = $cfg !== null && isset($cfg['tipo']) ? (string)$cfg['tipo'] : '';
+    $qty = isset($f['quantidade']) ? (int)$f['quantidade'] : 0;
+    $base = ex_base_price($name, isset($f['quantidade']) ? $f['quantidade'] : 0, isset($f['design']) ? $f['design'] : '');
+    if (!is_int($base)) return $base;
+    $cat = ex_cat();
     $sim = function ($v) { return $v === 'Sim'; };
-    $porUn = 0.0;
+    $porUn = 0;
     if (in_array($tipo, array('pasta', 'pack_pastas', 'agenda'), true) && $sim(isset($f['comNome']) ? $f['comNome'] : '')) {
-        $porUn += ex_extra('AG3', 2);
+        $porUn += ex_extra('nome');
     }
     if (in_array($tipo, array('pasta', 'pack_pastas'), true) && $sim(isset($f['cantos']) ? $f['cantos'] : '')) {
-        $porUn += ex_extra('AG4', 2);
+        $porUn += ex_extra('cantos');
     }
     if ($tipo === 'pack_pastas') {
-        if ($sim(isset($f['comNomeA6']) ? $f['comNomeA6'] : '')) $porUn += ex_extra('AG3', 2);
-        if ($sim(isset($f['cantosA6']) ? $f['cantosA6'] : '')) $porUn += ex_extra('AG4', 2);
+        if ($sim(isset($f['comNomeA6']) ? $f['comNomeA6'] : '')) $porUn += ex_extra('nome');
+        if ($sim(isset($f['cantosA6']) ? $f['cantosA6'] : '')) $porUn += ex_extra('cantos');
     }
-    if ($name === 'Marcadores' && (int)(isset($f['nArtes']) ? $f['nArtes'] : 0) === 0) {
-        if ($sim(isset($f['holo']) ? $f['holo'] : '')) $porUn += ex_extra('AG7', 0.15);
-        if ($sim(isset($f['frenteVerso']) ? $f['frenteVerso'] : '')) $porUn += ex_extra('AG8', 0.15);
-        if ($sim(isset($f['furo']) ? $f['furo'] : '')) $porUn += ex_extra('AG9', 0.25);
-        if ($sim(isset($f['margem']) ? $f['margem'] : '')) $porUn += ex_extra('AG10', 0.2);
+    if (ex_slug($name) === 'marcadores' && (int)(isset($f['nArtes']) ? $f['nArtes'] : 0) === 0) {
+        if ($sim(isset($f['holo']) ? $f['holo'] : '')) $porUn += ex_extra('m1');
+        if ($sim(isset($f['frenteVerso']) ? $f['frenteVerso'] : '')) $porUn += ex_extra('m2');
+        if ($sim(isset($f['furo']) ? $f['furo'] : '')) $porUn += ex_extra('m3');
+        if ($sim(isset($f['margem']) ? $f['margem'] : '')) $porUn += ex_extra('m4');
     }
-    $fixo = 0.0;
-    if ((isset($f['tipoCapa']) ? $f['tipoCapa'] : '') === 'Capa dura') $fixo += ex_extra('AG6', 4);
-    $fixo += (int)(isset($f['nArtes']) ? $f['nArtes'] : 0) * ex_extra('AG5', 3);
-    return round((float)$base + $qty * $porUn + $fixo + 1e-9, 2);
+    if ($sim(isset($f['holoUn']) ? $f['holoUn'] : '') && isset($cat['holoUn'][(string)$name])) {
+        $porUn += (int)$cat['holoUn'][(string)$name];
+    }
+    $fixo = 0;
+    if ((isset($f['tipoCapa']) ? $f['tipoCapa'] : '') === 'Capa dura') $fixo += ex_extra('capaDura');
+    $fixo += (int)(isset($f['nArtes']) ? $f['nArtes'] : 0) * ex_artes_fee($name);
+    return $base + $qty * $porUn + $fixo;
 }
 
 function ex_entrega_portes($metodo) {
-    global $EXCEL_DATA;
-    if (!isset($EXCEL_DATA['entrega']) || !is_array($EXCEL_DATA['entrega'])) return null;
-    foreach ($EXCEL_DATA['entrega'] as $e) {
+    $cat = ex_cat();
+    if (!isset($cat['entrega']) || !is_array($cat['entrega'])) return null;
+    foreach ($cat['entrega'] as $e) {
         if (isset($e[0]) && (string)$e[0] === (string)$metodo) {
             return is_numeric($e[1]) ? (float)$e[1] : null;
         }
@@ -163,25 +614,35 @@ function ex_entrega_portes($metodo) {
     return null;
 }
 
-function ex_design_url($grupo, $design) {
-    global $EXCEL_DATA;
-    if (!isset($EXCEL_DATA['design_lookup']) || !is_array($EXCEL_DATA['design_lookup'])) return '';
-    $key = (string)$grupo . '|' . (string)$design;
-    foreach ($EXCEL_DATA['design_lookup'] as $row) {
-        if (isset($row[0]) && (string)$row[0] === $key) {
-            return isset($row[3]) ? (string)$row[3] : '';
+function ex_design_url($name, $design, $a6 = false) {
+    $cat = ex_cat();
+    $design = (string)$design;
+    if ($design === '') return '';
+    $listas = array();
+    if ($a6 && isset($cat['designsA6'][(string)$name])) $listas[] = $cat['designsA6'][(string)$name];
+    if (isset($cat['designs'][(string)$name])) $listas[] = $cat['designs'][(string)$name];
+    foreach ($listas as $lista) {
+        foreach ((array)$lista as $row) {
+            if (isset($row[0]) && (string)$row[0] === $design) {
+                return isset($row[1]) ? (string)$row[1] : '';
+            }
+        }
+    }
+    $cfg = ex_cfg($name);
+    $grupo = ($cfg !== null && isset($cfg['grupo'])) ? (string)$cfg['grupo'] : '';
+    if (isset($cat['lookup']) && is_array($cat['lookup'])) {
+        foreach (array($grupo . '|' . $design, 'Pasta A4|' . $design, 'Pasta A6|' . $design) as $chave) {
+            foreach ($cat['lookup'] as $row) {
+                if (isset($row[0], $row[3]) && (string)$row[0] === $chave) return (string)$row[3];
+            }
         }
     }
     return '';
 }
 
 function ex_familia_of($name) {
-    global $EXCEL_DATA;
-    if (!isset($EXCEL_DATA['produtos']) || !is_array($EXCEL_DATA['produtos'])) return '';
-    foreach ($EXCEL_DATA['produtos'] as $p) {
-        if (isset($p[0]) && (string)$p[0] === (string)$name) return isset($p[3]) ? (string)$p[3] : '';
-    }
-    return '';
+    $cfg = ex_cfg($name);
+    return ($cfg !== null && isset($cfg['fam'])) ? (string)$cfg['fam'] : '';
 }
 
 // ── Validação (espelho das mensagens do VBA). Devolve array de erros. ──
@@ -206,8 +667,8 @@ function ex_validate($d, &$computed) {
         $rot = 'Produto ' . $i;
         $cfg = ex_cfg($nome);
         if ($cfg === null) { $errors[] = $rot . ': produto desconhecido.'; continue; }
-        $tipo = isset($cfg[4]) ? (string)$cfg[4] : '';
-        $min = isset($cfg[2]) ? (float)$cfg[2] : 1;
+        $tipo = isset($cfg['tipo']) ? (string)$cfg['tipo'] : '';
+        $min = isset($cfg['min']) ? (int)$cfg['min'] : 1;
         $q = isset($p['quantidade']) ? $p['quantidade'] : '';
         if (!is_numeric($q) || floor((float)$q) != (float)$q) {
             $errors[] = 'A quantidade do ' . $rot . ' não é válida.';
@@ -247,7 +708,8 @@ function ex_validate($d, &$computed) {
             $errors[] = 'O número de artes próprias do ' . $rot . ' não é válido.';
         }
         $calc = ex_product_calc($nome, array(
-            'quantidade' => $q, 'comNome' => isset($p['comNome']) ? $p['comNome'] : 'Não',
+            'quantidade' => $q, 'design' => trim((string)(isset($p['design']) ? $p['design'] : '')),
+            'comNome' => isset($p['comNome']) ? $p['comNome'] : 'Não',
             'cantos' => isset($p['cantos']) ? $p['cantos'] : 'Não',
             'comNomeA6' => isset($p['comNomeA6']) ? $p['comNomeA6'] : 'Não',
             'cantosA6' => isset($p['cantosA6']) ? $p['cantosA6'] : 'Não',
@@ -255,21 +717,25 @@ function ex_validate($d, &$computed) {
             'frenteVerso' => isset($p['frenteVerso']) ? $p['frenteVerso'] : 'Não',
             'furo' => isset($p['furo']) ? $p['furo'] : 'Não',
             'margem' => isset($p['margem']) ? $p['margem'] : 'Não',
+            'holoUn' => isset($p['holoUn']) ? $p['holoUn'] : 'Não',
             'tipoCapa' => isset($p['tipoCapa']) ? $p['tipoCapa'] : '',
             'nArtes' => $na,
         ));
         $manual = trim((string)(isset($p['precoManual']) ? $p['precoManual'] : ''));
-        if ($manual !== '' && (!is_numeric(str_replace(',', '.', $manual)) || (float)str_replace(',', '.', $manual) < 0)) {
-            $errors[] = 'O preço manual do ' . $rot . ' não é válido.';
+        $manualCents = null;
+        if ($manual !== '') {
+            if (!is_numeric(str_replace(',', '.', $manual)) || (float)str_replace(',', '.', $manual) < 0) {
+                $errors[] = 'O preço manual do ' . $rot . ' não é válido.';
+            } else {
+                $manualCents = (int)round((float)str_replace(',', '.', $manual) * 100);
+            }
         }
-        $final = $manual !== '' ? (float)str_replace(',', '.', $manual) : $calc;
-        if (!is_numeric($final)) {
+        $final = $manualCents !== null ? $manualCents : $calc;
+        if (!is_int($final)) {
             $errors[] = 'O preço do ' . $rot . ' precisa de revisão.';
             $final = null;
-        } else {
-            $final = round((float)$final + 1e-9, 2);
         }
-        $computed['produtos'][] = array('nome' => $nome, 'base' => ex_base_price($nome, $q), 'calc' => $calc, 'final' => $final);
+        $computed['produtos'][] = array('nome' => $nome, 'base' => ex_base_price($nome, $q, trim((string)(isset($p['design']) ? $p['design'] : ''))), 'calc' => $calc, 'final' => $final);
     }
 
     $metodo = trim((string)(isset($d['entrega']) ? $d['entrega'] : ''));
@@ -290,24 +756,24 @@ function ex_validate($d, &$computed) {
         $errors[] = 'O total acordado não é válido.';
     }
 
-    // Total calculado B89.
+    // Total calculado B89 (em cêntimos; guardado em euros).
     $finais = array();
     foreach ($computed['produtos'] as $cp) { if ($cp['final'] !== null) $finais[] = $cp['final']; }
     if (count($usados) > 0 && count($finais) !== count($usados)) {
         $computed['totalCalc'] = 'Rever quantidades/preços';
         $errors[] = 'Rever quantidades/preços.';
     } else {
-        $portes = 0.0;
+        $portes = 0;
         $pm = trim((string)(isset($d['portesManuais']) ? $d['portesManuais'] : ''));
         if ($pm !== '') {
-            $portes = (float)str_replace(',', '.', $pm);
+            $portes = (int)round((float)str_replace(',', '.', $pm) * 100);
         } elseif ($metodo !== '') {
             $tab = ex_entrega_portes($metodo);
             if ($tab === null) {
                 $computed['totalCalc'] = 'Indicar entrega/portes';
                 $errors[] = 'Indicar entrega/portes.';
             } else {
-                $portes = $tab;
+                $portes = (int)round((float)$tab * 100);
             }
         } else {
             $computed['totalCalc'] = 'Indicar entrega/portes';
@@ -317,7 +783,8 @@ function ex_validate($d, &$computed) {
         } elseif (count($usados) === 0) {
             $computed['totalCalc'] = null;
         } else {
-            $computed['totalCalc'] = round(array_sum($finais) + $portes + (float)($aj !== '' ? str_replace(',', '.', $aj) : 0) + 1e-9, 2);
+            $ajCents = $aj !== '' ? (int)round((float)str_replace(',', '.', $aj) * 100) : 0;
+            $computed['totalCalc'] = (array_sum($finais) + $portes + $ajCents) / 100;
         }
     }
     if ($computed['totalCalc'] !== null && !is_numeric($computed['totalCalc'])) {
@@ -326,7 +793,7 @@ function ex_validate($d, &$computed) {
         $errors[] = 'O total ainda não está calculado.';
     }
     $computed['totalGuardar'] = ($ta !== '' && is_numeric(str_replace(',', '.', $ta)))
-        ? round((float)str_replace(',', '.', $ta) + 1e-9, 2)
+        ? round((float)str_replace(',', '.', $ta), 2)
         : $computed['totalCalc'];
 
     return $errors;
@@ -345,7 +812,7 @@ function ex_config_resumo($p) {
     if (trim((string)(isset($p['fita']) ? $p['fita'] : '')) !== '') $t .= ' | Fita: ' . trim((string)$p['fita']);
     if (trim((string)(isset($p['fitaA6']) ? $p['fitaA6'] : '')) !== '') $t .= ' | Fita A6: ' . trim((string)$p['fitaA6']);
     if (trim((string)(isset($p['tipoCapa']) ? $p['tipoCapa'] : '')) !== '') $t .= ' | Capa: ' . trim((string)$p['tipoCapa']);
-    foreach (array('holo' => 'Holográfico', 'frenteVerso' => 'Frente e verso', 'furo' => 'Furo', 'margem' => 'Margem plástica') as $k => $rot) {
+    foreach (array('holo' => 'Holográfico', 'frenteVerso' => 'Frente e verso', 'furo' => 'Furo', 'margem' => 'Margem plástica', 'holoUn' => 'Holográfico') as $k => $rot) {
         if ((isset($p[$k]) ? $p[$k] : '') === 'Sim') $t .= ' | ' . $rot;
     }
     if ((int)(isset($p['nArtes']) ? $p['nArtes'] : 0) > 0) $t .= ' | Artes próprias: ' . (int)$p['nArtes'];
@@ -705,22 +1172,21 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
     }
     foreach ($usados as $k => $p) {
         $slot++;
-        $cfg = ex_cfg(trim((string)$p['produto']));
-        $grupo = ($cfg !== null && isset($cfg[3])) ? (string)$cfg[3] : '';
+        $nomeProd = trim((string)$p['produto']);
         $fin = isset($computed['produtos'][$k]['final']) ? $computed['produtos'][$k]['final'] : null;
         $artigos[] = array(
             'slot' => $slot,
-            'produto' => trim((string)$p['produto']),
+            'produto' => $nomeProd,
             'quantidade' => (int)$p['quantidade'],
             'design' => trim((string)(isset($p['design']) ? $p['design'] : '')),
-            'imagem' => ex_design_url($grupo, trim((string)(isset($p['design']) ? $p['design'] : ''))),
+            'imagem' => ex_design_url($nomeProd, trim((string)(isset($p['design']) ? $p['design'] : ''))),
             'acabamento' => trim((string)(isset($p['acabamento']) ? $p['acabamento'] : '')),
             'comNome' => isset($p['comNome']) ? $p['comNome'] : 'Não',
             'nome' => trim((string)(isset($p['nome']) ? $p['nome'] : '')),
             'cantos' => isset($p['cantos']) ? $p['cantos'] : 'Não',
             'fita' => trim((string)(isset($p['fita']) ? $p['fita'] : '')),
             'designA6' => trim((string)(isset($p['designA6']) ? $p['designA6'] : '')),
-            'imagemA6' => ex_design_url('Pasta A6', trim((string)(isset($p['designA6']) ? $p['designA6'] : ''))),
+            'imagemA6' => ex_design_url($nomeProd, trim((string)(isset($p['designA6']) ? $p['designA6'] : '')), true),
             'acabamentoA6' => trim((string)(isset($p['acabamentoA6']) ? $p['acabamentoA6'] : '')),
             'comNomeA6' => isset($p['comNomeA6']) ? $p['comNomeA6'] : 'Não',
             'nomeA6' => trim((string)(isset($p['nomeA6']) ? $p['nomeA6'] : '')),
@@ -731,12 +1197,13 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
             'frenteVerso' => isset($p['frenteVerso']) ? $p['frenteVerso'] : 'Não',
             'furo' => isset($p['furo']) ? $p['furo'] : 'Não',
             'margem' => isset($p['margem']) ? $p['margem'] : 'Não',
+            'holoUn' => isset($p['holoUn']) ? $p['holoUn'] : 'Não',
             'nArtes' => (int)(isset($p['nArtes']) ? $p['nArtes'] : 0),
             'detalhes' => trim((string)(isset($p['detalhes']) ? $p['detalhes'] : '')),
             'estado' => isset($p['estado']) ? $p['estado'] : 'Por fazer',
             'precoManual' => trim((string)(isset($p['precoManual']) ? $p['precoManual'] : '')),
             'configResumo' => ex_config_resumo($p),
-            'preco' => $fin,
+            'preco' => is_int($fin) ? round($fin / 100, 2) : null,
         );
     }
     $rec = array(
@@ -909,6 +1376,7 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
 
   <section class="ex-passo" aria-labelledby="t-p2">
     <h2 id="t-p2">Passo 2 · Escolher os produtos</h2>
+    <p class="ex-ajuda" id="fonteCatalogo"></p>
     <div class="ex-grelha">
       <label class="ex-campo"><span>Produto 1</span><select id="prod1"></select></label>
       <label class="ex-campo"><span>Produto 2</span><select id="prod2"></select></label>
@@ -971,7 +1439,7 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
   </section>
 </div>
 
-<script id="excel-data" type="application/json"><?= json_encode($EXCEL_DATA, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+<script id="excel-data" type="application/json"><?= json_encode(ex_cat(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
 <script>
 (function () {
   "use strict";
@@ -991,77 +1459,90 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     if (s === "") return NaN;
     return Number(s);
   }
+  function eurC(cents) {
+    if (cents === null || cents === undefined || cents === "") return "—";
+    if (typeof cents === "string") return cents;
+    return eur(cents / 100);
+  }
   function cfgOf(name) {
-    var list = DATA.produtos_cfg || [];
-    for (var i = 0; i < list.length; i++) if (String(list[i][0]) === String(name)) return list[i];
-    return null;
+    var cfg = DATA.cfg || {};
+    return cfg[String(name)] || null;
   }
-  function baseOf(name) {
-    var list = DATA.produtos || [];
-    for (var i = 0; i < list.length; i++) {
-      if (String(list[i][0]) === String(name)) {
-        var b = Number(list[i][1]);
-        return isFinite(b) ? b : null;
-      }
-    }
-    return null;
-  }
-  function extra(key, def) {
-    var v = DATA.extras_labels ? DATA.extras_labels[key] : undefined;
+  function extra(key) {
+    var v = DATA.extras ? DATA.extras[key] : undefined;
     v = Number(v);
-    return isFinite(v) ? v : def;
+    return isFinite(v) ? Math.round(v) : 0;
   }
-  function tierUnit(name, qty) {
-    var best = null, i, t, q, total;
-    var tiers = DATA.tiers || [];
-    for (i = 0; i < tiers.length; i++) {
-      t = tiers[i];
-      if (String(t[0]) !== String(name)) continue;
-      q = Number(t[1]); total = Number(t[2]);
-      if (q > 0 && q <= qty + 1e-9 && (best === null || q > best[0])) best = [q, total];
-    }
-    return best ? best[1] / best[0] : null;
+  function artesFee(name) {
+    var v = DATA.artesFee ? DATA.artesFee[String(name)] : undefined;
+    v = Number(v);
+    return isFinite(v) ? Math.round(v) : 300;
   }
-  // Espelho JS de J16.
-  function basePrice(name, qtyRaw) {
+  // Preço base em CÊNTIMOS. Regra tier igual à do servidor.
+  function basePrice(name, qtyRaw, design) {
     var cfg = cfgOf(name);
     if (!cfg) return "Rever quantidade";
-    var modo = String(cfg[1] || ""), min = Number(cfg[2] || 1);
+    var modo = String(cfg.modo || ""), min = Number(cfg.min || 1);
     var qty = Number(qtyRaw);
     if (!isFinite(qty) || Math.floor(qty) !== qty || qty < min) return "Rever quantidade";
-    if (modo === "tier") {
-      var u = tierUnit(name, qty);
-      if (u === null) return "Rever quantidade";
-      return Math.round(qty * u * 100 + 1e-6) / 100;
+    if (DATA.designPrice && DATA.designPrice[String(name)] && Object.keys(DATA.designPrice[String(name)]).length) {
+      var mapa = DATA.designPrice[String(name)];
+      if (mapa[String(design)] !== undefined) return Math.round(mapa[String(design)]) * qty;
+      var vals = Object.keys(mapa).map(function (k) { return Number(mapa[k]); }).filter(isFinite);
+      if (!vals.length) return "Rever quantidade";
+      return Math.round(Math.min.apply(null, vals)) * qty;
     }
-    var b = baseOf(name);
-    if (b === null) return "Rever quantidade";
-    return Math.round(b * qty * 100 + 1e-6) / 100;
+    if (DATA.flat && DATA.flat[String(name)] !== undefined) {
+      return Math.round(Number(DATA.flat[String(name)])) * qty;
+    }
+    if (modo === "tier" && DATA.tiers && DATA.tiers[String(name)]) {
+      var tab = DATA.tiers[String(name)];
+      var tiers = Object.keys(tab).map(function (k) { return [Number(k), Number(tab[k])]; })
+        .filter(function (t) { return t[0] > 0 && isFinite(t[1]); })
+        .sort(function (a, b) { return a[0] - b[0]; });
+      if (!tiers.length) return "Rever quantidade";
+      for (var i = 0; i < tiers.length; i++) {
+        if (tiers[i][0] === qty) return Math.round(tiers[i][1]);
+      }
+      var sq = 0, st = 0, j;
+      for (j = 0; j < tiers.length; j++) {
+        if (tiers[j][0] <= qty || sq === 0) { sq = tiers[j][0]; st = tiers[j][1]; }
+        if (tiers[j][0] > qty) break;
+      }
+      if (sq <= 0) return "Rever quantidade";
+      return Math.round(qty * st / sq);
+    }
+    return "Rever quantidade";
   }
-  // Espelho JS de B34.
   function productCalc(name, f) {
     var cfg = cfgOf(name);
-    var tipo = cfg ? String(cfg[4] || "") : "";
+    var tipo = cfg ? String(cfg.tipo || "") : "";
     var qty = Number(f.quantidade) || 0;
-    var base = basePrice(name, f.quantidade);
+    var base = basePrice(name, f.quantidade, f.design);
     if (typeof base !== "number") return base;
     var porUn = 0;
-    if ((tipo === "pasta" || tipo === "pack_pastas" || tipo === "agenda") && f.comNome === "Sim") porUn += extra("AG3", 2);
-    if ((tipo === "pasta" || tipo === "pack_pastas") && f.cantos === "Sim") porUn += extra("AG4", 2);
+    if ((tipo === "pasta" || tipo === "pack_pastas" || tipo === "agenda") && f.comNome === "Sim") porUn += extra("nome");
+    if ((tipo === "pasta" || tipo === "pack_pastas") && f.cantos === "Sim") porUn += extra("cantos");
     if (tipo === "pack_pastas") {
-      if (f.comNomeA6 === "Sim") porUn += extra("AG3", 2);
-      if (f.cantosA6 === "Sim") porUn += extra("AG4", 2);
+      if (f.comNomeA6 === "Sim") porUn += extra("nome");
+      if (f.cantosA6 === "Sim") porUn += extra("cantos");
     }
-    if (name === "Marcadores" && Number(f.nArtes || 0) === 0) {
-      if (f.holo === "Sim") porUn += extra("AG7", 0.15);
-      if (f.frenteVerso === "Sim") porUn += extra("AG8", 0.15);
-      if (f.furo === "Sim") porUn += extra("AG9", 0.25);
-      if (f.margem === "Sim") porUn += extra("AG10", 0.2);
+    if (isMarcadores(name) && Number(f.nArtes || 0) === 0) {
+      if (f.holo === "Sim") porUn += extra("m1");
+      if (f.frenteVerso === "Sim") porUn += extra("m2");
+      if (f.furo === "Sim") porUn += extra("m3");
+      if (f.margem === "Sim") porUn += extra("m4");
+    }
+    if (f.holoUn === "Sim" && DATA.holoUn && DATA.holoUn[String(name)] !== undefined) {
+      porUn += Math.round(Number(DATA.holoUn[String(name)]));
     }
     var fixo = 0;
-    if (f.tipoCapa === "Capa dura") fixo += extra("AG6", 4);
-    fixo += (Number(f.nArtes) || 0) * extra("AG5", 3);
-    return Math.round((base + qty * porUn + fixo) * 100 + 1e-6) / 100;
+    if (f.tipoCapa === "Capa dura") fixo += extra("capaDura");
+    fixo += (Number(f.nArtes) || 0) * artesFee(name);
+    return base + qty * porUn + fixo;
+  }
+  function isMarcadores(name) {
+    return String(name) === "Marcadores";
   }
   function entregaPortes(metodo) {
     var list = DATA.entrega || [];
@@ -1073,28 +1554,50 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     }
     return null;
   }
-  function designUrl(grupo, design) {
-    var key = String(grupo) + "|" + String(design);
-    var tbl = DATA.design_lookup || [];
-    for (var i = 0; i < tbl.length; i++) if (String(tbl[i][0]) === key) return String(tbl[i][3] || "");
+  function designUrl(prod, design, isA6) {
+    design = String(design || "");
+    if (design === "") return "";
+    var listas = [];
+    if (isA6 && DATA.designsA6 && DATA.designsA6[String(prod)]) listas.push(DATA.designsA6[String(prod)]);
+    if (DATA.designs && DATA.designs[String(prod)]) listas.push(DATA.designs[String(prod)]);
+    var i, j;
+    for (i = 0; i < listas.length; i++) {
+      for (j = 0; j < listas[i].length; j++) {
+        if (String(listas[i][j][0]) === design) return String(listas[i][j][1] || "");
+      }
+    }
+    var cfg = cfgOf(prod);
+    var grupo = cfg ? String(cfg.grupo || "") : "";
+    var tbl = DATA.lookup || [];
+    var chaves = [grupo + "|" + design, "Pasta A4|" + design, "Pasta A6|" + design];
+    for (i = 0; i < chaves.length; i++) {
+      for (j = 0; j < tbl.length; j++) {
+        if (String(tbl[j][0]) === chaves[i]) return String(tbl[j][3] || "");
+      }
+    }
     return "";
   }
   function familiaOf(name) {
-    var list = DATA.produtos || [];
-    for (var i = 0; i < list.length; i++) if (String(list[i][0]) === String(name)) return String(list[i][3] || "");
-    return "";
+    var cfg = cfgOf(name);
+    return cfg ? String(cfg.fam || "") : "";
+  }
+  function temAcab(prod) {
+    return !!(DATA.acab && DATA.acab[String(prod)] && DATA.acab[String(prod)].length);
+  }
+  function temHoloUn(prod) {
+    return !!(DATA.holoUn && DATA.holoUn[String(prod)] !== undefined);
   }
 
   var FIELDS = [
     ["quantidade", "1. Quantidade *", "number", "1"],
     ["design", "2. Design principal", "design", ""],
-    ["acabamento", "3. Acabamento", "laminacao", ""],
+    ["acabamento", "3. Acabamento", "acab", ""],
     ["comNome", "4. Com nome?", "simnao", "Não"],
     ["nome", "Nome escolhido", "text", ""],
     ["cantos", "5. Cantos metálicos?", "simnao", "Não"],
     ["fita", "6. Fita", "fita", ""],
     ["designA6", "7. Design A6 (pack)", "designA6", ""],
-    ["acabamentoA6", "8. Acabamento A6", "laminacao", ""],
+    ["acabamentoA6", "8. Acabamento A6", "acabA6", ""],
     ["comNomeA6", "9. Com nome A6?", "simnao", "Não"],
     ["nomeA6", "Nome A6", "text", ""],
     ["cantosA6", "10. Cantos A6?", "simnao", "Não"],
@@ -1104,22 +1607,28 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     ["frenteVerso", "14. Frente e verso?", "simnao", "Não"],
     ["furo", "15. Buraquinho?", "simnao", "Não"],
     ["margem", "16. Margem plástica?", "simnao", "Não"],
+    ["holoUn", "Holográfico unitário?", "simnao", "Não"],
     ["nArtes", "17. N.º artes próprias", "number", "0"],
     ["detalhes", "18. Detalhes / texto livre", "text", ""],
     ["estado", "Estado de produção", "estado", "Por fazer"]
   ];
 
-  function optionList(kind, cfg) {
-    if (kind === "simnao") return DATA.simnao || ["Sim", "Não"];
-    if (kind === "laminacao") return (DATA.acabamentos || []).filter(Boolean);
-    if (kind === "estado") return DATA.estados || ["Por fazer"];
-    if (kind === "fita") return (DATA.fita_base || []).filter(Boolean);
-    if (kind === "capa") return (DATA.tipos_capa || []).filter(Boolean);
-    if (kind === "design") {
-      var lista = cfg ? String(cfg[6] || "") : "";
-      return (DATA.dg && DATA.dg[lista]) ? DATA.dg[lista] : [];
+  function optionList(kind, prod) {
+    if (kind === "simnao") return ["Sim", "Não"];
+    if (kind === "estado") return ["Por fazer", "Em produção", "Terminado"];
+    if (kind === "fita") return (DATA.fitas || []).filter(Boolean);
+    if (kind === "capa") return (DATA.tiposCapa || []).filter(Boolean);
+    if (kind === "acab" || kind === "acabA6") {
+      return (DATA.acab && DATA.acab[String(prod)] ? DATA.acab[String(prod)] : []).filter(Boolean);
     }
-    if (kind === "designA6") return (DATA.dg && DATA.dg.DG_A6) ? DATA.dg.DG_A6 : [];
+    if (kind === "design") {
+      var live = DATA.designs && DATA.designs[String(prod)] ? DATA.designs[String(prod)] : [];
+      return live.map(function (r) { return String(r[0]); });
+    }
+    if (kind === "designA6") {
+      var liveA6 = DATA.designsA6 && DATA.designsA6[String(prod)] ? DATA.designsA6[String(prod)] : [];
+      return liveA6.map(function (r) { return String(r[0]); });
+    }
     return [];
   }
 
@@ -1215,7 +1724,7 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
       acabamentoA6: v("acabamentoA6"), comNomeA6: v("comNomeA6"), nomeA6: v("nomeA6"),
       cantosA6: v("cantosA6"), fitaA6: v("fitaA6"), tipoCapa: v("tipoCapa"),
       holo: v("holo"), frenteVerso: v("frenteVerso"), furo: v("furo"),
-      margem: v("margem"), nArtes: v("nArtes"), detalhes: v("detalhes"),
+      margem: v("margem"), holoUn: v("holoUn"), nArtes: v("nArtes"), detalhes: v("detalhes"),
       estado: v("estado"), precoManual: v("manual")
     };
   }
@@ -1252,23 +1761,32 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     s("cantosA6", a.cantosA6 || "Não"); s("fitaA6", a.fitaA6 || "");
     s("tipoCapa", a.tipoCapa || ""); s("holo", a.holo || "Não");
     s("frenteVerso", a.frenteVerso || "Não"); s("furo", a.furo || "Não");
-    s("margem", a.margem || "Não"); s("nArtes", (a.nArtes === undefined ? 0 : a.nArtes));
+    s("margem", a.margem || "Não"); s("holoUn", a.holoUn || "Não");
+    s("nArtes", (a.nArtes === undefined ? 0 : a.nArtes));
     s("detalhes", a.detalhes || ""); s("estado", a.estado || "Por fazer");
     s("manual", a.precoManual || "");
   }
 
-  function refreshDesignOptions(n) {
+  function refreshOptions(n, key, kind) {
     var prod = $("prod" + n).value;
-    var cfg = cfgOf(prod);
-    var sel = $("p" + n + "_design");
+    var sel = $("p" + n + "_" + key);
+    if (!sel) return;
     var cur = sel.value;
     sel.innerHTML = "";
-    [["", "—"]].concat(optionList("design", cfg).map(function (o) { return [o, o]; })).forEach(function (pair) {
+    [["", "—"]].concat(optionList(kind, prod).map(function (o) { return [o, o]; })).forEach(function (pair) {
       var op = document.createElement("option");
       op.value = pair[0]; op.textContent = pair[1];
       sel.appendChild(op);
     });
     sel.value = cur;
+  }
+
+  function refreshDesignOptions(n) {
+    var prod = $("prod" + n).value;
+    refreshOptions(n, "design", "design");
+    refreshOptions(n, "designA6", "designA6");
+    refreshOptions(n, "acabamento", "acab");
+    refreshOptions(n, "acabamentoA6", "acabA6");
   }
 
   function recalc() {
@@ -1294,35 +1812,50 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
         }
         usados++;
         var cfg = cfgOf(prod);
-        var tipo = cfg ? String(cfg[4] || "") : "";
-        var grupo = cfg ? String(cfg[3] || "") : "";
-        // Mostrar/ocultar blocos condicionais (equivale às linhas ocultas do VBA).
+        var tipo = cfg ? String(cfg.tipo || "") : "";
+        // Só aparecem os campos relevantes para o produto (visão da Mia).
         var showA6 = tipo === "pack_pastas";
-        var showMarc = prod === "Marcadores";
+        var showMarc = isMarcadores(prod);
+        var comExtrasNome = (tipo === "pasta" || tipo === "pack_pastas" || tipo === "agenda");
+        var comCantos = (tipo === "pasta" || tipo === "pack_pastas");
         card.querySelectorAll("[data-wrap]").forEach(function (w) {
           var k = w.dataset.wrap;
           if (["designA6", "acabamentoA6", "comNomeA6", "nomeA6", "cantosA6", "fitaA6"].indexOf(k) !== -1) {
             w.style.display = showA6 ? "" : "none";
           } else if (["holo", "frenteVerso", "furo", "margem"].indexOf(k) !== -1) {
             w.style.display = showMarc ? "" : "none";
+          } else if (k === "holoUn") {
+            w.style.display = (!showMarc && temHoloUn(prod)) ? "" : "none";
+          } else if (k === "acabamento" || k === "acabamentoA6") {
+            w.style.display = temAcab(prod) ? "" : "none";
+          } else if (k === "fita" || k === "fitaA6") {
+            w.style.display = (tipo === "pasta" || tipo === "pack_pastas") ? "" : "none";
+          } else if (k === "comNome" || k === "nome" || k === "cantos") {
+            w.style.display = comExtrasNome || comCantos ? "" : "none";
+          } else if (k === "tipoCapa") {
+            w.style.display = temAcab(prod) && (tipo === "agenda") ? "" : "none";
           } else {
             w.style.display = "";
           }
         });
-        var base = basePrice(prod, f.quantidade);
+        var base = basePrice(prod, f.quantidade, f.design);
         var calc = productCalc(prod, f);
         var man = num(f.precoManual);
-        var fin = isFinite(man) ? Math.round(man * 100) / 100 : calc;
-        $("p" + n + "_base").textContent = eur(base);
-        $("p" + n + "_calc").textContent = eur(calc);
-        $("p" + n + "_final").textContent = eur(fin);
+        var fin = isFinite(man) ? Math.round(man * 100) : calc;
+        $("p" + n + "_base").textContent = eurC(base);
+        $("p" + n + "_calc").textContent = eurC(calc);
+        $("p" + n + "_final").textContent = eurC(fin);
         if (typeof fin === "number") finais.push(fin);
-        var u = f.design ? designUrl(grupo, f.design) : "";
+        var u = f.design ? designUrl(prod, f.design, false) : "";
         $("p" + n + "_design_img").innerHTML = u
-          ? '<a href="' + u.replace(/"/g, "") + '" target="_blank" rel="noopener">Ver imagem</a>' : "Sem imagem";
-        var u6 = f.designA6 ? designUrl("Pasta A6", f.designA6) : "";
+          ? '<a href="' + u.replace(/"/g, "") + '" target="_blank" rel="noopener"><img src="' + u.replace(/"/g, "")
+            + '" alt="" loading="lazy" style="max-width:100%;max-height:120px;display:block;border-radius:6px;margin-bottom:4px;">Ver imagem</a>'
+          : "Sem imagem";
+        var u6 = f.designA6 ? designUrl(prod, f.designA6, true) : "";
         $("p" + n + "_designA6_img").innerHTML = showA6
-          ? (u6 ? '<a href="' + u6.replace(/"/g, "") + '" target="_blank" rel="noopener">Ver imagem A6</a>' : "Sem imagem") : "";
+          ? (u6 ? '<a href="' + u6.replace(/"/g, "") + '" target="_blank" rel="noopener"><img src="' + u6.replace(/"/g, "")
+            + '" alt="" loading="lazy" style="max-width:100%;max-height:120px;display:block;border-radius:6px;margin-bottom:4px;">Ver imagem A6</a>'
+            : "Sem imagem") : "";
       })(n);
     }
     var metodo = $("fEntrega").value;
@@ -1336,19 +1869,22 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     } else if ((metodo === "" || metodo === "Outro") && portesRaw === "") {
       aviso = "Indicar entrega/portes";
     } else {
-      var portes = portesRaw !== "" ? num(portesRaw) : entregaPortes(metodo);
-      var aj = ajusteRaw === "" ? 0 : num(ajusteRaw);
+      var portes = portesRaw !== "" ? Math.round(num(portesRaw) * 100) : (function () {
+        var p = entregaPortes(metodo);
+        return p === null ? NaN : Math.round(p * 100);
+      })();
+      var aj = ajusteRaw === "" ? 0 : Math.round(num(ajusteRaw) * 100);
       if (!isFinite(portes) || !isFinite(aj)) {
         aviso = "Rever quantidades/preços";
       } else {
         var soma = 0;
         finais.forEach(function (x) { soma += x; });
-        total = Math.round((soma + portes + aj) * 100 + 1e-6) / 100;
+        total = soma + portes + aj;
       }
     }
-    $("vTotalCalc").textContent = aviso !== "" ? aviso : eur(total);
+    $("vTotalCalc").textContent = aviso !== "" ? aviso : eurC(total);
     var acord = num($("fTotalAcordado").value.trim());
-    $("vTotalGuardar").textContent = isFinite(acord) ? eur(Math.round(acord * 100) / 100) : (aviso !== "" ? aviso : eur(total));
+    $("vTotalGuardar").textContent = isFinite(acord) ? eur(Math.round(acord * 100) / 100) : (aviso !== "" ? aviso : eurC(total));
   }
 
   function msg(ok, html) {
@@ -1517,7 +2053,7 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     for (var n = 1; n <= 3; n++) {
       refreshDesignOptions(n);
       fillCard(n, { quantidade: 1, comNome: "Não", cantos: "Não", comNomeA6: "Não", cantosA6: "Não",
-        holo: "Não", frenteVerso: "Não", furo: "Não", margem: "Não", nArtes: 0, estado: "Por fazer" });
+        holo: "Não", frenteVerso: "Não", furo: "Não", margem: "Não", holoUn: "Não", nArtes: 0, estado: "Por fazer" });
     }
     ["fPago", "fEntregue", "fFatura"].forEach(function (id) { $(id).value = "Não"; });
     ["fDataPago", "fDataEntrega", "fReferencia", "fPortes", "fMotivo", "fObs", "fTotalAcordado"].forEach(function (id) { $(id).value = ""; });
@@ -1557,7 +2093,7 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
         $("prod" + n).value = "";
         refreshDesignOptions(n);
         fillCard(n, { quantidade: 1, comNome: "Não", cantos: "Não", comNomeA6: "Não", cantosA6: "Não",
-          holo: "Não", frenteVerso: "Não", furo: "Não", margem: "Não", nArtes: 0, estado: "Por fazer" });
+          holo: "Não", frenteVerso: "Não", furo: "Não", margem: "Não", holoUn: "Não", nArtes: 0, estado: "Por fazer" });
       }
     }
     msgClear();
@@ -1716,7 +2252,13 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
 
   function init() {
     // Listas fixas.
-    var prods = [""].concat((DATA.produtos || []).map(function (p) { return String(p[0]); }));
+    var fonte = $("fonteCatalogo");
+    if (fonte) {
+      fonte.textContent = DATA.fonte === "site"
+        ? "Preços, designs e extras lidos do site (tabela de " + (DATA.pricingData || "") + ")."
+        : "Site indisponível: a usar a foto do Excel de 2026-09.";
+    }
+    var prods = [""].concat(DATA.ordem || []);
     ["prod1", "prod2", "prod3"].forEach(function (id) {
       var sel = $(id);
       prods.forEach(function (p) {
