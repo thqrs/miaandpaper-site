@@ -864,14 +864,22 @@ function ex_pendentes($rows) {
             $q = isset($a['quantidade']) ? (int)$a['quantidade'] : 0;
             if ($q < 0) $q = 0;
             $grupo = ($estado === 'Terminado') ? 'pronto' : 'fazer';
-            if ($grupo === 'pronto') {
-                if (!isset($prontos[$prod])) $prontos[$prod] = array('unidades' => 0, 'linhas' => 0);
-                $prontos[$prod]['unidades'] += $q;
-                $prontos[$prod]['linhas']++;
-            } else {
-                if (!isset($fazer[$prod])) $fazer[$prod] = array('unidades' => 0, 'linhas' => 0);
-                $fazer[$prod]['unidades'] += $q;
-                $fazer[$prod]['linhas']++;
+            // Um pack conta como mais um de cada capa (A4 + A6) no resumo.
+            $cfgP = ex_cfg($prod);
+            $destinos = array($prod);
+            if ($cfgP !== null && isset($cfgP['tipo']) && (string)$cfgP['tipo'] === 'pack_pastas') {
+                $destinos = array('Pasta A4', 'Pasta A6');
+            }
+            foreach ($destinos as $dp) {
+                if ($grupo === 'pronto') {
+                    if (!isset($prontos[$dp])) $prontos[$dp] = array('unidades' => 0, 'linhas' => 0);
+                    $prontos[$dp]['unidades'] += $q;
+                    $prontos[$dp]['linhas']++;
+                } else {
+                    if (!isset($fazer[$dp])) $fazer[$dp] = array('unidades' => 0, 'linhas' => 0);
+                    $fazer[$dp]['unidades'] += $q;
+                    $fazer[$dp]['linhas']++;
+                }
             }
             $cfg = trim((string)(isset($a['configResumo']) ? $a['configResumo'] : ''));
             if ($cfg === '') {
