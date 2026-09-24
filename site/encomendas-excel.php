@@ -422,6 +422,99 @@ function ex_pendentes($rows) {
     return array('porFazer' => $ordena($fazer), 'prontos' => $ordena($prontos), 'detalhe' => $detalhe);
 }
 
+// ── Clientes: fichas separadas, totais calculados do arquivo. ──
+//
+// A ficha guarda dados pessoais e o histórico anterior ao arquivo
+// (histórico nunca inventado: NIF só com 9 dígitos, TJ só explícito).
+// totalGasto / numEncomendas saem sempre do arquivo + histórico.
+function ex_clientes_path() { return mp_private_path('encomendas-excel-clientes.json'); }
+
+function ex_read_clientes() {
+    $path = ex_clientes_path();
+    if ($path === null || !is_file($path)) return array();
+    $raw = @file_get_contents($path);
+    if ($raw === false || trim($raw) === '') return array();
+    $d = json_decode($raw, true);
+    return is_array($d) ? array_values($d) : array();
+}
+
+function ex_write_clientes($rows) {
+    $path = ex_clientes_path();
+    if ($path === null) return false;
+    $tmp = $path . '.tmp';
+    $ok = @file_put_contents($tmp, json_encode(array_values($rows), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX);
+    if ($ok === false) return false;
+    @chmod($tmp, 0600);
+    return @rename($tmp, $path);
+}
+
+function ex_next_client_id($rows) {
+    $max = 0;
+    foreach ($rows as $r) {
+        if (isset($r['id']) && preg_match('/^CLI-(\d+)$/', (string)$r['id'], $m)) {
+            $max = max($max, (int)$m[1]);
+        }
+    }
+    return sprintf('CLI-%04d', $max + 1);
+}
+
+function ex_norm_nome($s) {
+    $s = preg_replace('/\s+/u', ' ', trim((string)$s));
+    if (function_exists('mb_strtolower')) $s = mb_strtolower($s, 'UTF-8');
+    else $s = strtolower($s);
+    return $s;
+}
+
+function ex_clientes_totais($clientes, $orders) {
+    $tot = array();
+    foreach ($clientes as $c) {
+        if (!is_array($c) || empty($c['id'])) continue;
+        $tot[(string)$c['id']] = array(
+            'totalGasto' => isset($c['historicoGasto']) ? round((float)$c['historicoGasto'], 2) : 0.0,
+            'numEncomendas' => isset($c['historicoEncomendas']) ? max(0, (int)$c['historicoEncomendas']) : 0,
+            '_nome' => ex_norm_nome(isset($c['nome']) ? $c['nome'] : ''),
+        );
+    }
+    foreach ($orders as $o) {
+        if (!is_array($o)) continue;
+        $t = isset($o['totalGuardar']) && is_numeric($o['totalGuardar']) ? (float)$o['totalGuardar'] : null;
+        $cid = isset($o['clienteId']) ? (string)$o['clienteId'] : '';
+        $key = null;
+        if ($cid !== '' && isset($tot[$cid])) {
+            $key = $cid;
+        } else {
+            $nm = ex_norm_nome(isset($o['cliente']) ? $o['cliente'] : '');
+            if ($nm !== '') {
+                foreach ($tot as $id => $v) {
+                    if ($v['_nome'] !== '' && $v['_nome'] === $nm) { $key = $id; break; }
+                }
+            }
+        }
+        if ($key === null) continue;
+        if ($t !== null) $tot[$key]['totalGasto'] = round($tot[$key]['totalGasto'] + $t, 2);
+        $tot[$key]['numEncomendas']++;
+    }
+    $out = array();
+    foreach ($tot as $id => $v) { unset($v['_nome']); $out[$id] = $v; }
+    return $out;
+}
+
+function ex_validate_cliente($d) {
+    $errors = array();
+    $nome = trim((string)(isset($d['nome']) ? $d['nome'] : ''));
+    if ($nome === '') $errors[] = 'O nome do cliente é obrigatório.';
+    elseif (strlen($nome) > 120) $errors[] = 'O nome do cliente é demasiado longo.';
+    $nif = trim((string)(isset($d['nif']) ? $d['nif'] : ''));
+    if ($nif !== '' && !preg_match('/^\d{9}$/', $nif)) $errors[] = 'O NIF tem de ter 9 dígitos (ou ficar vazio).';
+    $tj = isset($d['tj']) ? (string)$d['tj'] : '';
+    if (!in_array($tj, array('', 'Sim', 'Não'), true)) $errors[] = 'TJ inválido.';
+    foreach (array('morada' => 500, 'codPostal' => 32, 'localidade' => 120, 'congregacao' => 120, 'telemovel' => 32, 'email' => 254, 'cartao' => 32) as $k => $max) {
+        if (strlen(trim((string)(isset($d[$k]) ? $d[$k] : ''))) > $max) $errors[] = 'Campo "' . $k . '" demasiado longo.';
+    }
+    if (strlen(trim((string)(isset($d['observacoes']) ? $d['observacoes'] : ''))) > 2000) $errors[] = 'Observações demasiado longas.';
+    return $errors;
+}
+
 // ── Arquivo independente (JSON privado). ──
 function ex_store_path() { return mp_private_path('encomendas-excel-registos.json'); }
 
@@ -465,6 +558,23 @@ function ex_find($rows, $id) {
 if ($ex_action === 'pendentes') {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(array('ok' => true, 'pendentes' => ex_pendentes(ex_read_store())), JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if ($ex_action === 'clientes') {
+    $fichas = ex_read_clientes();
+    $totais = ex_clientes_totais($fichas, ex_read_store());
+    $out = array();
+    foreach ($fichas as $c) {
+        if (!is_array($c) || empty($c['id'])) continue;
+        $id = (string)$c['id'];
+        $c['totalGasto'] = isset($totais[$id]) ? $totais[$id]['totalGasto'] : 0.0;
+        $c['numEncomendas'] = isset($totais[$id]) ? $totais[$id]['numEncomendas'] : 0;
+        $out[] = $c;
+    }
+    usort($out, function ($a, $b) { return strcasecmp((string)$a['nome'], (string)$b['nome']); });
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(array('ok' => true, 'clientes' => $out), JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -519,6 +629,49 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
         exit;
     }
     $op = isset($payload['op']) ? (string)$payload['op'] : 'guardar';
+    if ($op === 'guardar_cliente') {
+        $errors = ex_validate_cliente($payload);
+        if (!empty($errors)) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(array('ok' => false, 'errors' => $errors), JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        $fichas = ex_read_clientes();
+        $cid = trim((string)(isset($payload['id']) ? $payload['id'] : ''));
+        $cidx = null;
+        foreach ($fichas as $i => $c) {
+            if (is_array($c) && isset($c['id']) && (string)$c['id'] === $cid && $cid !== '') { $cidx = $i; break; }
+        }
+        $base = ($cidx !== null && is_array($fichas[$cidx])) ? $fichas[$cidx] : array();
+        $ficha = array(
+            'id' => ($cidx !== null) ? (string)$base['id'] : ex_next_client_id($fichas),
+            'nome' => trim((string)$payload['nome']),
+            'nif' => trim((string)(isset($payload['nif']) ? $payload['nif'] : '')),
+            'morada' => trim((string)(isset($payload['morada']) ? $payload['morada'] : '')),
+            'codPostal' => trim((string)(isset($payload['codPostal']) ? $payload['codPostal'] : '')),
+            'localidade' => trim((string)(isset($payload['localidade']) ? $payload['localidade'] : '')),
+            'congregacao' => trim((string)(isset($payload['congregacao']) ? $payload['congregacao'] : '')),
+            'tj' => isset($payload['tj']) ? (string)$payload['tj'] : '',
+            'telemovel' => trim((string)(isset($payload['telemovel']) ? $payload['telemovel'] : '')),
+            'email' => trim((string)(isset($payload['email']) ? $payload['email'] : '')),
+            'cartao' => trim((string)(isset($payload['cartao']) ? $payload['cartao'] : '')),
+            'observacoes' => trim((string)(isset($payload['observacoes']) ? $payload['observacoes'] : '')),
+            'historicoGasto' => isset($base['historicoGasto']) ? (float)$base['historicoGasto'] : 0.0,
+            'historicoEncomendas' => isset($base['historicoEncomendas']) ? (int)$base['historicoEncomendas'] : 0,
+            'origem' => isset($base['origem']) ? (string)$base['origem'] : '',
+        );
+        if ($cidx !== null) { $fichas[$cidx] = $ficha; } else { $fichas[] = $ficha; }
+        if (!ex_write_clientes($fichas)) {
+            http_response_code(500);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(array('ok' => false, 'error' => 'Não foi possível escrever a ficha.'), JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(array('ok' => true, 'id' => $ficha['id']), JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     if ($op !== 'guardar') {
         http_response_code(400);
         header('Content-Type: application/json; charset=utf-8');
@@ -588,6 +741,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
     }
     $rec = array(
         'id' => $id,
+        'clienteId' => substr(trim((string)(isset($payload['clienteId']) ? $payload['clienteId'] : '')), 0, 16),
         'data' => trim((string)(isset($payload['data']) ? $payload['data'] : '')),
         'cliente' => trim((string)(isset($payload['cliente']) ? $payload['cliente'] : '')),
         'pago' => isset($payload['pago']) ? $payload['pago'] : 'Não',
@@ -724,13 +878,32 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
   </section>
 
   <section class="ex-passo" aria-labelledby="t-p1">
-    <h2 id="t-p1">Passo 1 · Identificação</h2>
+    <h2 id="t-p1">Passo 1 · Cliente</h2>
+    <p class="ex-ajuda">Escolhe da ficha. Os dados pessoais vivem na ficha — na encomenda fica só o nome.</p>
     <div class="ex-grelha">
-      <label class="ex-campo"><span>Cliente *</span>
-        <input id="fCliente" list="dlClientes" autocomplete="off" placeholder="Nome do cliente">
-        <datalist id="dlClientes"></datalist>
-      </label>
+      <label class="ex-campo"><span>Cliente *</span><select id="fClienteSel"></select></label>
+      <label class="ex-campo" id="wrapClienteAvulso" style="display:none"><span>Nome (avulso) *</span>
+        <input id="fClienteAvulso" autocomplete="off" placeholder="Nome para esta encomenda"></label>
       <label class="ex-campo"><span>Data</span><input id="fData" type="date"></label>
+    </div>
+    <div class="ex-grelha" id="fichaCliente" style="margin-top:10px">
+      <label class="ex-campo"><span>Nome *</span><input id="cNome" autocomplete="off"></label>
+      <label class="ex-campo"><span>NIF</span><input id="cNif" inputmode="numeric" autocomplete="off" placeholder="9 dígitos"></label>
+      <label class="ex-campo"><span>Morada</span><input id="cMorada" autocomplete="off"></label>
+      <label class="ex-campo"><span>Código postal</span><input id="cCP" autocomplete="off"></label>
+      <label class="ex-campo"><span>Localidade</span><input id="cLoc" autocomplete="off"></label>
+      <label class="ex-campo"><span>Congregação</span><input id="cCong" autocomplete="off"></label>
+      <label class="ex-campo"><span>TJ?</span>
+        <select id="cTJ"><option value="">—</option><option>Sim</option><option>Não</option></select></label>
+      <label class="ex-campo"><span>Telemóvel</span><input id="cTel" autocomplete="off"></label>
+      <label class="ex-campo"><span>Email</span><input id="cMail" autocomplete="off"></label>
+      <label class="ex-campo"><span>N.º cartão Mia &amp; Paper</span><input id="cCartao" autocomplete="off"></label>
+      <label class="ex-campo"><span>Observações</span><textarea id="cObs"></textarea></label>
+      <label class="ex-campo"><span>Total já gasto / encomendas</span><div class="ex-leitura" id="cTotais">—</div></label>
+    </div>
+    <div class="ex-linha-btns">
+      <button class="ex-btn secundario" id="btnNovoCliente" type="button">Novo cliente</button>
+      <button class="ex-btn secundario" id="btnGuardarCliente" type="button">Guardar cliente</button>
     </div>
   </section>
 
@@ -1187,14 +1360,141 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
   function msgClear() { var m = $("exMsg"); m.className = "ex-msg"; m.innerHTML = ""; }
 
   var currentOrigem = "";
+  var CLIENTES = {};
+
+  function etiquetaCliente(c) {
+    var extra = c.localidade || c.cartao || c.email || "";
+    return c.nome + (extra ? " — " + extra : "");
+  }
+
+  function clienteSelecionado() {
+    var v = $("fClienteSel").value;
+    if (v === "AVULSO") return { id: "", nome: $("fClienteAvulso").value.trim() };
+    if (v && CLIENTES[v]) return { id: v, nome: CLIENTES[v].nome };
+    return { id: "", nome: $("cNome").value.trim() };
+  }
+
+  function mostrarFicha() {
+    var avulso = $("fClienteSel").value === "AVULSO";
+    $("wrapClienteAvulso").style.display = avulso ? "" : "none";
+    $("fichaCliente").style.display = avulso ? "none" : "";
+  }
+
+  function preencherFicha(c) {
+    c = c || {};
+    $("cNome").value = c.nome || "";
+    $("cNif").value = c.nif || "";
+    $("cMorada").value = c.morada || "";
+    $("cCP").value = c.codPostal || "";
+    $("cLoc").value = c.localidade || "";
+    $("cCong").value = c.congregacao || "";
+    $("cTJ").value = c.tj || "";
+    $("cTel").value = c.telemovel || "";
+    $("cMail").value = c.email || "";
+    $("cCartao").value = c.cartao || "";
+    $("cObs").value = c.observacoes || "";
+    if (c.id) {
+      var t = "Total gasto: " + eur(c.totalGasto) + " · " + c.numEncomendas + " encomenda(s)";
+      if (c.historicoGasto || c.historicoEncomendas) t += " (inclui histórico)";
+      $("cTotais").textContent = t;
+    } else {
+      $("cTotais").textContent = "Nova ficha — prime Guardar cliente.";
+    }
+  }
+
+  function escolherClienteNoDropdown(id, nome) {
+    var sel = $("fClienteSel");
+    if (id && CLIENTES[id]) {
+      sel.value = id;
+    } else if (nome) {
+      var achou = "";
+      Object.keys(CLIENTES).forEach(function (k) {
+        if (!achou && CLIENTES[k].nome === nome) achou = k;
+      });
+      sel.value = achou || "AVULSO";
+      if (!achou) $("fClienteAvulso").value = nome;
+    } else {
+      sel.value = "";
+    }
+    sel.dispatchEvent(new Event("change"));
+  }
+
+  function carregarClientes(selecionar) {
+    return fetch("encomendas-excel.php?action=clientes", { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        CLIENTES = {};
+        (j.clientes || []).forEach(function (c) { CLIENTES[c.id] = c; });
+        var sel = $("fClienteSel");
+        var cur = selecionar || sel.value || "";
+        sel.innerHTML = "";
+        [["", "— Escolher cliente —"], ["AVULSO", "Cliente avulso (só nome)"]].concat(
+          (j.clientes || []).map(function (c) { return [c.id, etiquetaCliente(c)]; })
+        ).forEach(function (pair) {
+          var o = document.createElement("option");
+          o.value = pair[0]; o.textContent = pair[1];
+          sel.appendChild(o);
+        });
+        sel.value = cur;
+        if (sel.value !== cur) sel.value = "";
+        mostrarFicha();
+        if (CLIENTES[sel.value]) preencherFicha(CLIENTES[sel.value]);
+      });
+  }
+
+  function guardarCliente() {
+    var sel = $("fClienteSel").value;
+    if (sel === "AVULSO") {
+      msg(false, "Cliente avulso não tem ficha. Escolhe uma ficha ou preenche o nome para criar.");
+      return;
+    }
+    var btn = $("btnGuardarCliente");
+    btn.disabled = true;
+    fetch("encomendas-excel.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        csrf: CSRF, op: "guardar_cliente",
+        id: sel.startsWith("CLI-") ? sel : "",
+        nome: $("cNome").value, nif: $("cNif").value,
+        morada: $("cMorada").value, codPostal: $("cCP").value,
+        localidade: $("cLoc").value, congregacao: $("cCong").value, tj: $("cTJ").value,
+        telemovel: $("cTel").value, email: $("cMail").value, cartao: $("cCartao").value,
+        observacoes: $("cObs").value
+      })
+    }).then(function (r) {
+      return r.json().then(function (j) { return { s: r.status, j: j }; });
+    }).then(function (x) {
+      btn.disabled = false;
+      if (x.j.ok) {
+        carregarClientes(x.j.id).then(function () {
+          $("fClienteSel").value = x.j.id;
+          mostrarFicha();
+          preencherFicha(CLIENTES[x.j.id]);
+          msg(true, "Ficha de cliente guardada.");
+        });
+      } else if (x.j.errors) {
+        msg(false, "Não foi possível guardar a ficha:<ul><li>" + x.j.errors.map(function (e) {
+          return esc(e);
+        }).join("</li><li>") + "</li></ul>");
+      } else {
+        msg(false, esc(x.j.error || "Falha ao guardar a ficha."));
+      }
+    }).catch(function () {
+      btn.disabled = false;
+      msg(false, "Falha de rede ao guardar a ficha.");
+    });
+  }
 
   function payload() {
     var prods = [];
     for (var n = 1; n <= 3; n++) prods.push(readCard(n));
+    var cli = clienteSelecionado();
     return {
       csrf: CSRF, op: "guardar",
       encomenda: $("selEncomenda").value, origem: currentOrigem,
-      cliente: $("fCliente").value, data: $("fData").value,
+      clienteId: cli.id, cliente: cli.nome, data: $("fData").value,
       produtos: prods,
       pago: $("fPago").value, dataPago: $("fDataPago").value,
       entregue: $("fEntregue").value, dataEntrega: $("fDataEntrega").value,
@@ -1208,7 +1508,10 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
   function nova() {
     currentOrigem = "";
     $("selEncomenda").value = "Nova";
-    $("fCliente").value = "";
+    $("fClienteSel").value = "";
+    $("fClienteAvulso").value = "";
+    preencherFicha(null);
+    mostrarFicha();
     $("fData").value = new Date().toISOString().slice(0, 10);
     ["prod1", "prod2", "prod3"].forEach(function (id) { $(id).value = ""; });
     for (var n = 1; n <= 3; n++) {
@@ -1226,7 +1529,9 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
 
   function aplicarRegisto(r) {
     currentOrigem = r.origem || "";
-    $("fCliente").value = r.cliente || "";
+    escolherClienteNoDropdown(r.clienteId || "", r.cliente || "");
+    if (CLIENTES[$("fClienteSel").value]) preencherFicha(CLIENTES[$("fClienteSel").value]);
+    else if ($("fClienteSel").value === "AVULSO") preencherFicha(null);
     $("fData").value = r.data || "";
     $("fPago").value = r.pago || "Não";
     $("fDataPago").value = r.dataPago || "";
@@ -1430,18 +1735,25 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
       o.value = pair[0]; o.textContent = pair[1];
       ent.appendChild(o);
     });
-    var dl = $("dlClientes");
-    (DATA.clientes || []).forEach(function (c) {
-      var o = document.createElement("option");
-      o.value = String(c);
-      dl.appendChild(o);
-    });
     buildCards();
     document.querySelector(".ex-concha").addEventListener("input", recalc);
     document.querySelector(".ex-concha").addEventListener("change", recalc);
     $("btnCarregar").addEventListener("click", carregar);
     $("btnNova").addEventListener("click", nova);
     $("btnGuardar").addEventListener("click", guardar);
+    $("btnNovoCliente").addEventListener("click", function () {
+      $("fClienteSel").value = "";
+      $("fClienteAvulso").value = "";
+      preencherFicha(null);
+      mostrarFicha();
+      $("cNome").focus();
+    });
+    $("btnGuardarCliente").addEventListener("click", guardarCliente);
+    $("fClienteSel").addEventListener("change", function () {
+      mostrarFicha();
+      if (CLIENTES[$("fClienteSel").value]) preencherFicha(CLIENTES[$("fClienteSel").value]);
+      else preencherFicha(null);
+    });
     document.querySelectorAll(".ex-filtro").forEach(function (b) {
       b.addEventListener("click", function () {
         pendFiltro = b.getAttribute("data-f");
@@ -1453,6 +1765,10 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     });
     nova();
     carregarPendentes();
+    carregarClientes().then(function () {
+      preencherFicha(null);
+      mostrarFicha();
+    });
     carregarLista(PRELOAD && PRELOAD !== "" ? PRELOAD : undefined).then(function () {
       if (PRELOAD && PRELOAD !== "" && PRELOAD !== "Nova") {
         $("selEncomenda").value = PRELOAD;
