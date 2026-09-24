@@ -336,6 +336,7 @@ function mp_parametros_registo()
                         'listar' => 'lista as guardadas',
                         'carregar' => 'carrega uma encomenda',
                         'exportar' => 'descarrega cópia JSON',
+                        'pendentes' => 'lista de produção',
                     ),
                     'invalido' => 'omissao',
                     'lido' => 'encomendas-excel.php:45',

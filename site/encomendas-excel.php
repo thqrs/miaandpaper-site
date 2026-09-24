@@ -353,6 +353,75 @@ function ex_config_resumo($p) {
     return $t;
 }
 
+// ── Pendentes: lista diária de produção, calculada do arquivo. ──
+//
+// Tudo o que ainda não foi entregue (Entregue diferente de Sim):
+//   - artigos Por fazer / Em produção → "por fazer";
+//   - artigos Terminado → "prontos a entregar".
+// Marcar Entregue=Sim remove daqui sem apagar o histórico.
+function ex_pendentes($rows) {
+    $fazer = array();
+    $prontos = array();
+    $detalhe = array();
+    foreach ($rows as $r) {
+        if (!is_array($r)) continue;
+        if ((isset($r['entregue']) ? (string)$r['entregue'] : 'Não') === 'Sim') continue;
+        $arts = isset($r['artigos']) && is_array($r['artigos']) ? $r['artigos'] : array();
+        foreach ($arts as $a) {
+            if (!is_array($a)) continue;
+            $prod = trim((string)(isset($a['produto']) ? $a['produto'] : ''));
+            if ($prod === '') continue;
+            $estado = trim((string)(isset($a['estado']) ? $a['estado'] : 'Por fazer'));
+            if ($estado === '') $estado = 'Por fazer';
+            $q = isset($a['quantidade']) ? (int)$a['quantidade'] : 0;
+            if ($q < 0) $q = 0;
+            $grupo = ($estado === 'Terminado') ? 'pronto' : 'fazer';
+            if ($grupo === 'pronto') {
+                if (!isset($prontos[$prod])) $prontos[$prod] = array('unidades' => 0, 'linhas' => 0);
+                $prontos[$prod]['unidades'] += $q;
+                $prontos[$prod]['linhas']++;
+            } else {
+                if (!isset($fazer[$prod])) $fazer[$prod] = array('unidades' => 0, 'linhas' => 0);
+                $fazer[$prod]['unidades'] += $q;
+                $fazer[$prod]['linhas']++;
+            }
+            $cfg = trim((string)(isset($a['configResumo']) ? $a['configResumo'] : ''));
+            if ($cfg === '') {
+                $cfg = trim((string)(isset($a['design']) ? $a['design'] : ''));
+                $det = trim((string)(isset($a['detalhes']) ? $a['detalhes'] : ''));
+                if ($det !== '') $cfg .= ($cfg !== '' ? ' · ' : '') . $det;
+            }
+            $detalhe[] = array(
+                'id' => isset($r['id']) ? (string)$r['id'] : '',
+                'cliente' => isset($r['cliente']) ? (string)$r['cliente'] : '',
+                'data' => isset($r['data']) ? (string)$r['data'] : '',
+                'produto' => $prod,
+                'quantidade' => $q,
+                'config' => $cfg,
+                'estado' => $estado,
+                'grupo' => $grupo,
+            );
+        }
+    }
+    $ordena = function ($map) {
+        $lista = array();
+        foreach ($map as $prod => $v) {
+            $lista[] = array('produto' => $prod, 'unidades' => $v['unidades'], 'linhas' => $v['linhas']);
+        }
+        usort($lista, function ($a, $b) {
+            if ($a['unidades'] !== $b['unidades']) return $b['unidades'] - $a['unidades'];
+            return strcmp($a['produto'], $b['produto']);
+        });
+        return $lista;
+    };
+    usort($detalhe, function ($a, $b) {
+        if ($a['grupo'] !== $b['grupo']) return $a['grupo'] === 'fazer' ? -1 : 1;
+        if ($a['data'] !== $b['data']) return strcmp($a['data'], $b['data']);
+        return strcmp($a['id'], $b['id']);
+    });
+    return array('porFazer' => $ordena($fazer), 'prontos' => $ordena($prontos), 'detalhe' => $detalhe);
+}
+
 // ── Arquivo independente (JSON privado). ──
 function ex_store_path() { return mp_private_path('encomendas-excel-registos.json'); }
 
@@ -393,6 +462,12 @@ function ex_find($rows, $id) {
 }
 
 // ── API JSON (mesmo ficheiro). ──
+if ($ex_action === 'pendentes') {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(array('ok' => true, 'pendentes' => ex_pendentes(ex_read_store())), JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if ($ex_action === 'listar' || $ex_action === 'carregar' || $ex_action === 'exportar') {
     $rows = ex_read_store();
     if ($ex_action === 'listar') {
@@ -605,6 +680,15 @@ table.ex-lista th { background: rgba(184,134,22,.08); color: var(--ex-suave); fo
   text-transform: uppercase; letter-spacing: .04em; }
 table.ex-lista td.num { text-align: right; font-weight: 800; }
 .ex-miudo { color: var(--ex-suave); font-size: .84rem; }
+.ex-sub { margin: 14px 0 6px; font-size: .95rem; color: var(--ex-suave);
+  text-transform: uppercase; letter-spacing: .04em; }
+.ex-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ex-chip { display: inline-block; padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--ex-linha); background: rgba(255,255,255,.55);
+  font-size: .86rem; }
+.ex-chip strong { font-weight: 800; }
+.ex-chip small { color: var(--ex-suave); }
+.ex-filtro.is-on { background: var(--ex-ouro); color: #fff; border-color: var(--ex-ouro); }
 a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
 @media (max-width: 640px) { .ex-concha { padding: 14px 12px 70px; } .ex-passo { padding: 12px; } }
 </style>
@@ -688,6 +772,23 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     </div>
     <p class="ex-miudo">Guardar valida tudo como o Excel: cliente, quantidades mínimas, designs,
     acabamentos das pastas, nomes, configuração A6 dos packs, entrega e totais.</p>
+  </section>
+
+  <section class="ex-passo" aria-labelledby="t-pend">
+    <h2 id="t-pend">Passo 7 · Pendentes — o que falta fazer e entregar</h2>
+    <p class="ex-ajuda">Automático: tudo o que ainda não foi entregue. Marcar um produto como
+    Terminado passa-o para “pronto a entregar”; marcar a encomenda como Entregue tira-a daqui sem apagar o histórico.</p>
+    <div class="ex-linha-btns" role="group" aria-label="Filtrar pendentes">
+      <button class="ex-btn secundario ex-filtro" data-f="todos" type="button">Todos</button>
+      <button class="ex-btn secundario ex-filtro" data-f="fazer" type="button">Por fazer / em produção</button>
+      <button class="ex-btn secundario ex-filtro" data-f="pronto" type="button">Prontos a entregar</button>
+    </div>
+    <h3 class="ex-sub">Por fazer / em produção</h3>
+    <div id="pendResumoFazer"><p class="ex-miudo">A carregar…</p></div>
+    <h3 class="ex-sub">Prontos a entregar</h3>
+    <div id="pendResumoProntos"><p class="ex-miudo">A carregar…</p></div>
+    <h3 class="ex-sub">Detalhe</h3>
+    <div id="pendDetalhe"><p class="ex-miudo">A carregar…</p></div>
   </section>
 
   <section class="ex-passo" aria-labelledby="t-lista">
@@ -1211,6 +1312,72 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
       });
   }
 
+  var pendFiltro = "todos";
+  var pendData = null;
+
+  function esc(s) { return String((s === null || s === undefined) ? "" : s).replace(/</g, "&lt;"); }
+
+  function carregarPendentes() {
+    return fetch("encomendas-excel.php?action=pendentes", { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        pendData = (j && j.ok && j.pendentes) ? j.pendentes : { porFazer: [], prontos: [], detalhe: [] };
+        renderPendentes();
+      })
+      .catch(function () {
+        $("pendResumoFazer").innerHTML = '<p class="ex-miudo">Falha a carregar os pendentes.</p>';
+        $("pendResumoProntos").innerHTML = "";
+        $("pendDetalhe").innerHTML = "";
+      });
+  }
+
+  function renderChips(el, lista, vazio) {
+    if (!lista || !lista.length) {
+      el.innerHTML = '<p class="ex-miudo">' + esc(vazio) + "</p>";
+      return;
+    }
+    el.innerHTML = '<div class="ex-chips">' + lista.map(function (it) {
+      return '<span class="ex-chip"><strong>' + esc(it.produto) + "</strong> — "
+        + it.unidades + " un <small>(" + it.linhas + (it.linhas === 1 ? " linha)" : " linhas)") + "</small></span>";
+    }).join("") + "</div>";
+  }
+
+  function renderPendentes() {
+    if (!pendData) return;
+    var fazer = pendData.porFazer || [];
+    var prontos = pendData.prontos || [];
+    if (pendFiltro === "fazer") prontos = [];
+    if (pendFiltro === "pronto") fazer = [];
+    renderChips($("pendResumoFazer"), fazer, "Nada por fazer.");
+    renderChips($("pendResumoProntos"), prontos, "Nada pronto a entregar.");
+    var det = (pendData.detalhe || []).filter(function (d) {
+      return pendFiltro === "todos" || d.grupo === pendFiltro;
+    });
+    if (!det.length) {
+      $("pendDetalhe").innerHTML = '<p class="ex-miudo">Nada pendente.</p>';
+      return;
+    }
+    var t = '<table class="ex-lista"><thead><tr><th>Encomenda</th><th>Cliente</th><th>Produto</th>'
+      + '<th style="text-align:right">Qtd</th><th>Configuração</th><th>Estado</th></tr></thead><tbody>';
+    det.forEach(function (d) {
+      t += "<tr><td><a href=\"#\" data-pend=\"" + esc(d.id) + "\">" + esc(d.id) + "</a></td>"
+        + "<td>" + esc(d.cliente) + "</td>"
+        + "<td>" + esc(d.produto) + "</td>"
+        + "<td class=\"num\">" + d.quantidade + "</td>"
+        + "<td>" + esc(d.config) + "</td>"
+        + "<td>" + esc(d.estado) + "</td></tr>";
+    });
+    $("pendDetalhe").innerHTML = t + "</tbody></table>";
+    $("pendDetalhe").querySelectorAll("[data-pend]").forEach(function (a) {
+      a.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        $("selEncomenda").value = a.getAttribute("data-pend");
+        carregar();
+        window.scrollTo(0, 0);
+      });
+    });
+  }
+
   function guardar() {
     var btn = $("btnGuardar");
     btn.disabled = true;
@@ -1227,6 +1394,7 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
         carregarLista(x.j.id).then(function () {
           $("selEncomenda").value = x.j.id;
           msg(true, "Encomenda <strong>" + String(x.j.id).replace(/</g, "&lt;") + "</strong> guardada.");
+          carregarPendentes();
         });
       } else if (x.j.errors) {
         msg(false, "Não foi possível guardar:<ul><li>" + x.j.errors.map(function (e) {
@@ -1274,7 +1442,17 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     $("btnCarregar").addEventListener("click", carregar);
     $("btnNova").addEventListener("click", nova);
     $("btnGuardar").addEventListener("click", guardar);
+    document.querySelectorAll(".ex-filtro").forEach(function (b) {
+      b.addEventListener("click", function () {
+        pendFiltro = b.getAttribute("data-f");
+        document.querySelectorAll(".ex-filtro").forEach(function (x) {
+          x.classList.toggle("is-on", x === b);
+        });
+        renderPendentes();
+      });
+    });
     nova();
+    carregarPendentes();
     carregarLista(PRELOAD && PRELOAD !== "" ? PRELOAD : undefined).then(function () {
       if (PRELOAD && PRELOAD !== "" && PRELOAD !== "Nova") {
         $("selEncomenda").value = PRELOAD;
