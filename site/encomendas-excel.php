@@ -1266,7 +1266,7 @@ header('Content-Type: text/html; charset=utf-8');
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Encomendas Excel · Mia &amp; Paper</title>
+<title>Encomendas · Mia &amp; Paper</title>
 <link rel="stylesheet" href="admin-nav.css?v=20260924003922">
 <script src="admin-nav.js?v=20260924003922" defer></script>
 <style>
@@ -1382,18 +1382,19 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
 </style>
 </head>
 <body>
-<?= mp_parametros_barra('encomendas-excel.php') ?>
 <div class="ex-concha">
   <div class="ex-cabeca">
     <div>
-      <h1>Encomendas Excel</h1>
-      <p>Balção interno — reimplementação do livro Excel, sem dependências do site.</p>
+      <h1>Encomendas</h1>
+      <p>Balcão de encomendas e produção.</p>
     </div>
     <div class="ex-linha-btns">
       <a class="ex-voltar" href="index.html">← Voltar ao site</a>
       <a class="ex-voltar" href="encomendas-excel.php?action=exportar">⤓ Cópia JSON</a>
     </div>
   </div>
+
+  <div class="ex-msg" id="dashMsg" role="status"></div>
 
   <div class="ex-tabs" role="tablist" aria-label="Vistas">
     <button type="button" data-tab="pendentes" class="is-on">Pendentes</button>
@@ -2033,8 +2034,18 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     m.scrollIntoView({ block: "nearest" });
   }
   function msgClear() { var m = $("exMsg"); m.className = "ex-msg"; m.innerHTML = ""; }
+  function dmsg(ok, html) {
+    var m = $("dashMsg");
+    m.className = "ex-msg " + (ok ? "ok" : "erro");
+    m.innerHTML = html;
+    m.scrollIntoView({ block: "nearest" });
+  }
+  function dmsgClear() { var m = $("dashMsg"); m.className = "ex-msg"; m.innerHTML = ""; }
 
   var CLIENTES = {};
+  var STAGE = [];
+  var orderCtx = { id: "Nova", origem: "" };
+  var editingIndex = -1;
 
   function etiquetaCliente(c) {
     var extra = c.localidade || c.cartao || c.email || "";
@@ -2455,23 +2466,48 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
   }
 
   function avancarEstado(id, idx) {
+    if (idx === undefined || idx === null) {
+      abrirEncomenda(id);
+      return;
+    }
     fetch("encomendas-excel.php?action=carregar&encomenda=" + encodeURIComponent(id), { credentials: "same-origin" })
       .then(function (r) { return r.json(); })
       .then(function (j) {
-        if (!j.ok || !j.encomenda) return;
+        if (!j.ok || !j.encomenda) {
+          dmsg(false, "A encomenda não foi encontrada.");
+          return;
+        }
         var r = j.encomenda;
         var a = (r.artigos || [])[idx];
-        if (!a) return;
-        a.estado = a.estado === "Por fazer" ? "Em produ\u00e7\u00e3o" : "Terminado";
+        if (!a) {
+          abrirEncomenda(id);
+          return;
+        }
+        a.estado = a.estado === "Por fazer" ? "Em produção" : "Terminado";
         fetch("encomendas-excel.php", {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(recordToPayload(r))
-        }).then(function () {
-          carregarPendentes();
-          carregarLista();
+        }).then(function (r2) {
+          return r2.json().then(function (j2) {
+            if (j2.ok) {
+              dmsgClear();
+              carregarPendentes();
+              carregarLista();
+            } else if (j2.errors) {
+              dmsg(false, "Não foi possível avançar:<ul><li>" + j2.errors.map(function (e) {
+                return esc(e);
+              }).join("</li><li>") + "</li></ul>");
+            } else {
+              dmsg(false, esc(j2.error || "Falha ao avançar."));
+            }
+          });
+        }).catch(function () {
+          dmsg(false, "Falha de rede ao avançar.");
         });
+      }).catch(function () {
+        dmsg(false, "Falha de rede ao avançar.");
       });
   }
 

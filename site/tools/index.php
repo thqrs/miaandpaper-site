@@ -148,8 +148,8 @@ if (empty($_SESSION['miaandpaper_admin'])) {
           <span class="catalog-product-copy"><strong>Encomendas</strong><span>Consultar os pedidos recebidos e o respetivo estado.</span><span class="catalog-product-action">Abrir painel</span></span>
         </a>
         <a class="catalog-product-card" href="../encomendas-excel.php">
-          <span class="catalog-product-thumb" aria-hidden="true">X</span>
-          <span class="catalog-product-copy"><strong>Encomendas Excel</strong><span>Balcão interno como no livro Excel: nova encomenda, preços automáticos e arquivo próprio.</span><span class="catalog-product-action">Abrir balcão</span></span>
+          <span class="catalog-product-thumb" aria-hidden="true">+</span>
+          <span class="catalog-product-copy"><strong>Encomendas</strong><span>Balcão de encomendas e produção: pendentes, compositor e arquivo.</span><span class="catalog-product-action">Abrir balcão</span></span>
         </a>
         <a class="catalog-product-card" href="../admin-colors.html">
           <span class="catalog-product-thumb" aria-hidden="true">C</span>
