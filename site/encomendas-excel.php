@@ -530,6 +530,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
         'totalAcordado' => trim((string)(isset($payload['totalAcordado']) ? $payload['totalAcordado'] : '')),
         'totalGuardar' => $computed['totalGuardar'],
         'artigos' => $artigos,
+        'origem' => substr(trim((string)(isset($payload['origem']) ? $payload['origem'] : '')), 0, 32),
         'actualizadoEm' => gmdate('Y-m-d\TH:i:s\Z'),
     );
     if ($idx === null) { $rows[] = $rec; } else { $rows[$idx] = $rec; }
@@ -945,8 +946,30 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     };
   }
 
+  // Valores vindos do arquivo Excel (ex.: designs antigos) podem não existir
+  // nas listas actuais; nesse caso acrescenta-se a opção para não se perder
+  // o valor guardado.
+  function ensureOption(sel, val) {
+    if (!sel || sel.tagName !== "SELECT") return;
+    val = String(val);
+    if (val === "") return;
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === val) return;
+    }
+    var op = document.createElement("option");
+    op.value = val;
+    op.textContent = val + " (arquivo)";
+    sel.appendChild(op);
+  }
+
   function fillCard(n, a) {
-    function s(k, val) { var el = $("p" + n + "_" + k); if (el) el.value = (val === null || val === undefined) ? "" : String(val); }
+    function s(k, val) {
+      var el = $("p" + n + "_" + k);
+      if (!el) return;
+      var v = (val === null || val === undefined) ? "" : String(val);
+      if (el.tagName === "SELECT" && v !== "") ensureOption(el, v);
+      el.value = v;
+    }
     s("quantidade", a.quantidade || 1); s("design", a.design || "");
     s("acabamento", a.acabamento || ""); s("comNome", a.comNome || "Não");
     s("nome", a.nome || ""); s("cantos", a.cantos || "Não"); s("fita", a.fita || "");
@@ -1062,12 +1085,14 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
   }
   function msgClear() { var m = $("exMsg"); m.className = "ex-msg"; m.innerHTML = ""; }
 
+  var currentOrigem = "";
+
   function payload() {
     var prods = [];
     for (var n = 1; n <= 3; n++) prods.push(readCard(n));
     return {
       csrf: CSRF, op: "guardar",
-      encomenda: $("selEncomenda").value,
+      encomenda: $("selEncomenda").value, origem: currentOrigem,
       cliente: $("fCliente").value, data: $("fData").value,
       produtos: prods,
       pago: $("fPago").value, dataPago: $("fDataPago").value,
@@ -1080,6 +1105,7 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
   }
 
   function nova() {
+    currentOrigem = "";
     $("selEncomenda").value = "Nova";
     $("fCliente").value = "";
     $("fData").value = new Date().toISOString().slice(0, 10);
@@ -1098,6 +1124,7 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
   }
 
   function aplicarRegisto(r) {
+    currentOrigem = r.origem || "";
     $("fCliente").value = r.cliente || "";
     $("fData").value = r.data || "";
     $("fPago").value = r.pago || "Não";
@@ -1116,6 +1143,7 @@ a.ex-voltar { color: var(--ex-musgo); font-weight: 800; text-decoration: none; }
     for (var n = 1; n <= 3; n++) {
       var a = arts[n - 1];
       if (a) {
+        ensureOption($("prod" + n), a.produto || "");
         $("prod" + n).value = a.produto || "";
         refreshDesignOptions(n);
         fillCard(n, a);
