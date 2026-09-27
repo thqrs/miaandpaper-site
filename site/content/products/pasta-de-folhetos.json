@@ -8,6 +8,35 @@
     "catalogContext": "main-v2",
     "orderFlow": "catalog-or-custom",
     "fixedQuantity": 1,
+    "unitConfiguration": {
+        "maxQuantity": 30,
+        "sizeField": "size",
+        "packSize": "A4 + A6",
+        "label": "Pasta",
+        "packLabel": "Conjunto",
+        "quantityLabel": "Quantas pastas?",
+        "packQuantityLabel": "Quantos conjuntos?",
+        "nextLabel": "Próxima pasta",
+        "packNextLabel": "Próximo conjunto",
+        "trayLabel": "As tuas pastas",
+        "packTrayLabel": "Os teus conjuntos",
+        "quantityStepIds": ["covers", "pack-covers"],
+        "pickStepIds": ["covers", "pack-covers", "extras", "pack-finishes"],
+        "rowStepIds": ["cover_personalization", "details", "pack-details"],
+        "stepIds": ["covers", "pack-covers", "extras", "pack-finishes", "cover_personalization", "details", "pack-details"],
+        "unitActions": {
+            "extras": [{"type": "same", "label": "Mesmo acabamento em todas", "fields": ["finish"]}],
+            "pack-finishes": [{"type": "same", "label": "Mesmos acabamentos em todos", "fields": ["finish_a4", "finish_a6"]}],
+            "cover_personalization": [
+                {"type": "same-name", "label": "Quero o mesmo nome em todos"},
+                {"type": "none", "label": "Não quero personalizar nenhum"}
+            ],
+            "details": [{"type": "toggle-all", "label": "Quero cantos metálicos em todas", "values": {"metal_corners": "pasta-de-folhetos-cantos-metalicos"}}],
+            "pack-details": [{"type": "toggle-all", "label": "Quero cantos metálicos em todos", "values": {"metal_corners_a4": "pasta-de-folhetos-cantos-metalicos", "metal_corners_a6": "pasta-de-folhetos-cantos-metalicos"}}]
+        },
+        "carryOverFields": ["finish", "finish_a4", "finish_a6", "metal_corners", "metal_corners_a4", "metal_corners_a6"],
+        "fields": ["covers", "cover_a4", "cover_a6", "designs", "design_a4", "design_a6", "design_quantities", "finish", "finish_a4", "finish_a6", "metal_corners", "metal_corners_a4", "metal_corners_a6", "cover_personalization", "cover_personalization_text", "cover_personalization_a4", "cover_personalization_a4_text", "cover_personalization_a6", "cover_personalization_a6_text"]
+    },
     "unitLabel": "pasta de folhetos",
     "unitSingular": "pasta de folhetos",
     "unitShort": "pasta de folhetos",
@@ -91,11 +120,11 @@
         },
         {
             "id": "price-pack-grid",
-            "label": "Packs/preços"
+            "label": "Conjuntos/preços"
         },
         {
             "id": "quantity-builder",
-            "label": "Pack + quantidades"
+            "label": "Conjunto + quantidades"
         },
         {
             "id": "design-grid",
@@ -128,8 +157,9 @@
             "display": "pasta-de-folhetos-size",
             "field": "size",
             "selection": "single",
-            "selectionError": "Escolhe A4, A6 ou PACK.",
+            "selectionError": "Escolhe A4, A6 ou o conjunto A4 + A6.",
             "resetSelectionKeys": [
+                "configured_units",
                 "covers",
                 "cover_a4",
                 "cover_a6",
@@ -2357,6 +2387,7 @@
         },
         {
             "id": "pack-details",
+            "variationNotice": "Algumas capas permitem escolher fitas de várias cores, confirma a cor que queres",
             "label": "Detalhes",
             "title": "Afina os detalhes",
             "text": "",
@@ -2390,6 +2421,7 @@
         },
         {
             "id": "details",
+            "variationNotice": "Algumas capas permitem escolher fitas de várias cores, confirma a cor que queres",
             "label": "Detalhes",
             "title": "Afina os detalhes",
             "text": "",

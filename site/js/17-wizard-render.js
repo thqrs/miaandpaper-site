@@ -1,7 +1,7 @@
 // js/17-wizard-render.js — parte 17/23 do antigo app.js (codigo intacto, so dividido).
 // Os modulos js/*.js partilham TODOS o mesmo escopo global (scripts classicos,
 // sem IIFE por ficheiro) e carregam pela ordem dos <script> nos HTML: 01 → 23.
-// Conteudo: render dos passos do wizard, incluindo escolhas agrupadas de capa/variação e o fluxo das pastas de folhetos (atribuição A4/A6 dentro da preview): media composer dos detalhes, open order hint, aviso de pagamento e antecedencia, pedido de oferta, slideshow do interior, numeracao e labels dos passos, historico do browser (handleWizardPopState).
+// Conteudo: render dos passos do wizard, escolhas agrupadas de capa/variação, configuração de várias unidades e fluxo das pastas (atribuição A4/A6 dentro da preview): media composer, avisos, pedido de oferta, slideshow, numeração e histórico do browser.
   function isDetailsMediaComposer(step) {
     var fields = step && Array.isArray(step.fields) ? step.fields : [];
     return !!(
@@ -916,10 +916,16 @@
   function renderOptionDrawerCoverCard(product, step, drawer, item) {
     var selected = String(state.selections[drawer.field] || "") === String(item.value || "");
     var mediaStep = Object.assign({}, step, { showDesignZoom: false });
+    // UNIT_CONFIGURATION_V1: com várias unidades marca tudo o que já foi
+    // escolhido, com ×2 quando se repete.
+    var counts = configuredUnitsActive(product, step) && isConfiguredPickStep(product, step)
+      ? configuredDesignValueCounts(product, drawer.field) : null;
+    var count = counts ? counts[String(item.value || "")] || 0 : 0;
+    var chosen = counts ? count > 0 : selected;
 
     return [
       '<div class="cadernos-cover-choice pf-finish-choice">',
-      '<label class="choice-card crachas-size-card cadernos-cover-card pf-finish-card' + (selected ? ' is-selected' : '') + '">',
+      '<label class="choice-card crachas-size-card cadernos-cover-card pf-finish-card' + (chosen ? ' is-selected' : '') + (counts ? ' configured-units-card' : '') + (counts && selected ? ' is-current-unit' : '') + '">',
       '<input type="radio" name="' + escapeHtml(drawer.field) + '" value="' + escapeHtml(item.value || "") + '" data-option-drawer-choice data-option-drawer-field="' + escapeHtml(drawer.field) + '"' + (selected ? ' checked' : '') + '>',
       renderCadernoCoverCardMedia(product, mediaStep, item),
       '<span class="pf-assignment-card-footer">',
@@ -928,7 +934,7 @@
       item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '',
       '</span>',
       '</span>',
-      '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+      '<span class="crachas-size-card-selected' + (count > 1 ? ' has-count' : '') + '" aria-hidden="true">' + (count > 1 ? '×' + count : '✓') + '</span>',
       adminItemControls(step, item),
       '</label>',
       '</div>'
@@ -1681,7 +1687,8 @@
 
     return [
       '<div class="pasta-de-folhetos-fluid pf-assignment-picker">',
-      renderAssignmentPickerSlots(product, step),
+      // Com várias unidades, a fila de miniaturas já mostra estas escolhas.
+      configuredUnitsActive(product, step) ? "" : renderAssignmentPickerSlots(product, step),
       '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list pf-fluid-cover-list pf-assignment-list">',
       cards,
       preview,
@@ -1862,7 +1869,7 @@
     html = '<div class="pasta-de-folhetos-fluid">' + renderGroupedFormatChoices(product, step) + renderDesignActionControls(product, step);
 
     if (!groups.length) {
-      return html + '<p class="open-order-hint" role="status">Escolhe primeiro A4, A6 ou PACK.</p></div>';
+      return html + '<p class="open-order-hint" role="status">Escolhe primeiro um tamanho.</p></div>';
     }
 
     groups.forEach(function (group) {
@@ -1930,31 +1937,43 @@
     syncGroupedDesignSelections(product, step);
 
     if (!groups.length) {
-      return html + '<p class="open-order-hint" role="status">Escolhe primeiro A4, A6 ou PACK.</p>'
+      return html + '<p class="open-order-hint" role="status">Escolhe primeiro um tamanho.</p>'
         + (verticalColumns ? '</div>' : '');
     }
+
+    // UNIT_CONFIGURATION_V1: com várias unidades, a grelha continua a escolher
+    // para a unidade activa, mas marca tudo o que já foi escolhido (×2 quando
+    // o design se repete) e a pré-visualização segue a última escolha.
+    var unitCounts = configuredUnitsActive(product, step) && isConfiguredQuantityStep(product, step);
+    var unitsComplete = unitCounts && configuredUnitList().every(function (unit) {
+      return configuredUnitIsComplete(product, unit);
+    });
 
     groups.forEach(function (group) {
       var field = groupedDesignField(step, group);
       var selected = field ? String(state.selections[field] || "") : "";
       var items = groupedDesignItems(step, group);
-      var selectedItem = selected ? items.filter(function (item) {
-        return String(item.value || "") === selected;
+      var counts = unitCounts ? configuredDesignValueCounts(product, field) : null;
+      var previewValue = selected || (unitCounts && state.configuredUnitPreview && state.configuredUnitPreview[step.id + ":" + group]) || "";
+      var selectedItem = previewValue ? items.filter(function (item) {
+        return String(item.value || "") === previewValue;
       })[0] || null : null;
       var selectedIndex = selectedItem ? items.indexOf(selectedItem) : -1;
       var cards = items.map(function (item) {
         var checked = selected === String(item.value || "");
-        var muted = selected && !checked ? " is-muted" : "";
+        var count = counts ? counts[String(item.value || "")] || 0 : 0;
+        var chosen = counts ? count > 0 : checked;
+        var muted = (counts ? unitsComplete && !count : selected && !checked) ? " is-muted" : "";
         return [
           '<div class="cadernos-cover-choice grouped-design-choice">',
-          '<label class="choice-card crachas-size-card cadernos-cover-card' + (checked ? ' is-selected' : '') + muted + '">',
+          '<label class="choice-card crachas-size-card cadernos-cover-card' + (chosen ? ' is-selected' : '') + (counts ? ' configured-units-card' : '') + (counts && checked ? ' is-current-unit' : '') + muted + '">',
           '<input type="radio" name="' + escapeHtml(field) + '" value="' + escapeHtml(item.value || "") + '" data-grouped-design-choice data-grouped-design-group="' + escapeHtml(group) + '" data-grouped-design-field="' + escapeHtml(field) + '"' + (checked ? ' checked' : '') + '>',
           renderCadernoCoverCardMedia(product, step, item),
           '<span class="choice-copy crachas-size-card-text">',
           '<strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>',
           item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '',
           '</span>',
-          '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+          '<span class="crachas-size-card-selected' + (count > 1 ? ' has-count' : '') + '" aria-hidden="true">' + (count > 1 ? '×' + count : '✓') + '</span>',
           adminItemControls(step, item),
           '</label>',
           '</div>'
@@ -1972,7 +1991,7 @@
       }
 
       html += [
-        '<section class="design-grid-section grouped-design-section" data-design-size-group="' + escapeHtml(group) + '">',
+        '<section class="design-grid-section grouped-design-section' + (counts ? ' configured-units-grid' : '') + '" data-design-size-group="' + escapeHtml(group) + '">',
         '<h3 class="design-grid-section-title">' + escapeHtml(titles[group] || ("Escolhe o design " + group)) + '</h3>',
         '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list' + (verticalColumns ? ' pf-fluid-cover-list' : '') + '">' + cards + selectedPreview + '</div>',
         '</section>'
@@ -2602,6 +2621,756 @@
     ].join("");
   }
 
+  // UNIT_CONFIGURATION_V1: com "unitConfiguration" no JSON do produto, o passo
+  // das capas ganha um seletor de quantidade. Cada unidade guarda as suas
+  // escolhas em selections.configured_units e o configurador de sempre edita a
+  // unidade activa: state.selections tem sempre os campos dessa unidade. A fila
+  // de miniaturas mostra as unidades; no carrinho, cada uma é uma linha normal,
+  // validada e calculada pelo servidor. Com quantidade 1 nada disto aparece.
+  function unitConfiguration(product) {
+    var config = product && product.unitConfiguration;
+    return config && Array.isArray(config.fields) ? config : null;
+  }
+
+  function configuredUnitList() {
+    return Array.isArray(state.selections.configured_units) ? state.selections.configured_units : [];
+  }
+
+  function configuredUnitIndex(product) {
+    var units = configuredUnitList();
+    return Math.max(0, Math.min(units.length ? units.length - 1 : 0, state.configuredUnitIndex || 0));
+  }
+
+  function configuredUnitFields(product) {
+    var result = {};
+    (unitConfiguration(product).fields || []).forEach(function (key) {
+      if (state.selections[key] !== undefined) result[key] = cloneJson(state.selections[key]);
+    });
+    return result;
+  }
+
+  function saveConfiguredUnit(product) {
+    var units = configuredUnitList();
+    if (unitConfiguration(product) && units.length) units[configuredUnitIndex(product)] = configuredUnitFields(product);
+  }
+
+  function loadConfiguredUnit(product, index) {
+    var units = configuredUnitList();
+    if (!units[index]) return;
+    (unitConfiguration(product).fields || []).forEach(function (key) {
+      delete state.selections[key];
+      if (units[index][key] !== undefined) state.selections[key] = cloneJson(units[index][key]);
+    });
+    state.configuredUnitIndex = index;
+    // O "reverter" aponta para um campo da unidade que o criou.
+    state.assignmentPickerUndos = [];
+    if (state.assignmentPickerUndoInterval) {
+      window.clearInterval(state.assignmentPickerUndoInterval);
+      state.assignmentPickerUndoInterval = null;
+    }
+  }
+
+  function configuredUnitCount(product) {
+    return unitConfiguration(product) ? Math.max(1, configuredUnitList().length) : 1;
+  }
+
+  // Os textos têm uma variante "pack…" para quando o tamanho escolhido é o
+  // conjunto (ex.: label/packLabel, nextLabel/packNextLabel).
+  function configuredUnitText(product, key) {
+    var config = unitConfiguration(product) || {};
+    var packKey = "pack" + key.charAt(0).toUpperCase() + key.slice(1);
+    var isPack = config.packSize && String(state.selections[config.sizeField || "size"] || "") === String(config.packSize);
+    return String((isPack && config[packKey]) || config[key] || "");
+  }
+
+  function configuredUnitLabel(product) {
+    return configuredUnitText(product, "label") || "Unidade";
+  }
+
+  function isConfiguredUnitStep(product, step) {
+    var config = unitConfiguration(product);
+    return !!(config && step && (config.stepIds || []).indexOf(step.id) !== -1);
+  }
+
+  function isConfiguredQuantityStep(product, step) {
+    var config = unitConfiguration(product);
+    return !!(config && step && (config.quantityStepIds || []).indexOf(step.id) !== -1);
+  }
+
+  function configuredUnitsActive(product, step) {
+    return !state.admin && isConfiguredUnitStep(product, step) && configuredUnitCount(product) > 1;
+  }
+
+  // Passos de escolha (capas, acabamento): a grelha escolhe para a unidade
+  // destacada e o destaque salta para a próxima por escolher.
+  function isConfiguredPickStep(product, step) {
+    var config = unitConfiguration(product);
+    var ids = config && (config.pickStepIds || config.quantityStepIds) || [];
+    return !!(step && ids.indexOf(step.id) !== -1);
+  }
+
+  // Passos em linhas (nomes, detalhes): uma linha por unidade, tudo à vista.
+  function isConfiguredRowStep(product, step) {
+    var config = unitConfiguration(product);
+    return !!(config && step && (config.rowStepIds || []).indexOf(step.id) !== -1);
+  }
+
+  // Nos restantes passos o "Continuar" passa pelas unidades uma a uma.
+  function configuredUnitsPending(product, step) {
+    return configuredUnitsActive(product, step) && !isConfiguredPickStep(product, step)
+      && !isConfiguredRowStep(product, step)
+      && configuredUnitIndex(product) < configuredUnitCount(product) - 1;
+  }
+
+  function configuredUnitFirstPending(ready) {
+    return ready.indexOf(false);
+  }
+
+  // Grupos de capa de cada unidade (A4, ou A4 + A6), lidos do passo das capas
+  // que está visível para o tamanho escolhido.
+  function configuredUnitCoverGroups(product) {
+    var config = unitConfiguration(product);
+    var step = config ? visibleSteps(product).filter(function (candidate) {
+      return (config.quantityStepIds || []).indexOf(candidate.id) !== -1;
+    })[0] : null;
+    var assignment = assignmentPickerConfig(step);
+    var source;
+    if (!step) return [];
+    if (assignment) {
+      source = assignmentPickerSourceStep(product, step);
+      return assignment.groups.map(function (group) {
+        return { id: String(group.id || group.label || ""), field: String(group.field || ""), step: source };
+      });
+    }
+    return designGroupsForStep(step).map(function (group) {
+      return { id: group, field: groupedDesignField(step, group), step: step };
+    });
+  }
+
+  function configuredUnitCoverItem(group, unit) {
+    var value = String(unit && unit[group.field] || "");
+    return value ? ((group.step && group.step.items) || []).filter(function (item) {
+      return String(item.value || "") === value;
+    })[0] || null : null;
+  }
+
+  function configuredUnitIsComplete(product, unit) {
+    var groups = configuredUnitCoverGroups(product);
+    return groups.length > 0 && groups.every(function (group) {
+      return !!configuredUnitCoverItem(group, unit);
+    });
+  }
+
+  // Depois de uma escolha que completa a unidade activa, o destaque segue para
+  // a próxima unidade sem capa. Trocar a capa de uma unidade já completa não
+  // mexe no destaque (e mantém o "reverter" do conjunto válido).
+  function advanceConfiguredUnitAfterChoice(product, step, wasReady) {
+    var ready;
+    var index;
+    var i;
+    if (!configuredUnitsActive(product, step) || !isConfiguredPickStep(product, step)) return;
+    ready = configuredUnitsStepReady(product, step);
+    index = configuredUnitIndex(product);
+    if (!ready[index]) return;
+    // Trocar a escolha de uma unidade pronta também anima a miniatura.
+    state.configuredUnitFilled = index;
+    if (wasReady) return;
+    for (i = 1; i < ready.length; i += 1) {
+      if (!ready[(index + i) % ready.length]) {
+        loadConfiguredUnit(product, (index + i) % ready.length);
+        return;
+      }
+    }
+  }
+
+  function configuredUnitActiveReady(product, step) {
+    return !!(configuredUnitsActive(product, step) && configuredUnitsStepReady(product, step)[configuredUnitIndex(product)]);
+  }
+
+  function setConfiguredUnitCount(product, quantity) {
+    var config = unitConfiguration(product);
+    var index;
+    var units;
+    var i;
+    if (!config) return;
+    saveConfiguredUnit(product);
+    index = configuredUnitIndex(product);
+    units = configuredUnitList().length ? configuredUnitList() : [configuredUnitFields(product)];
+    quantity = Math.max(1, Math.min(config.maxQuantity || 30, parseInt(quantity, 10) || 1));
+    // Reduzir e voltar a aumentar devolve as escolhas das unidades retiradas.
+    if (!configuredUnitList().length) state.configuredUnitStash = [];
+    if (!state.configuredUnitStash) state.configuredUnitStash = [];
+    units.slice(quantity).forEach(function (unit, offset) { state.configuredUnitStash[quantity + offset] = unit; });
+    while (units.length < quantity) units.push(state.configuredUnitStash[units.length] || {});
+    units = units.slice(0, quantity);
+    state.selections.configured_units = units;
+    state.configuredUnitSameName = false;
+    Object.keys(state.configuredUnitSeen || {}).forEach(function (stepId) {
+      Object.keys(state.configuredUnitSeen[stepId]).forEach(function (seen) {
+        if (Number(seen) >= quantity) delete state.configuredUnitSeen[stepId][seen];
+      });
+    });
+    index = Math.min(index, quantity - 1);
+    // Ao acrescentar, o destaque vai logo para a primeira unidade por escolher.
+    if (configuredUnitIsComplete(product, units[index])) {
+      for (i = 0; i < units.length; i += 1) {
+        if (!configuredUnitIsComplete(product, units[i])) { index = i; break; }
+      }
+    }
+    loadConfiguredUnit(product, index);
+  }
+
+  // Ao passar para a unidade seguinte com "Continuar", os campos de
+  // carryOverFields (acabamento, cantos…) vêm da anterior se esta ainda não
+  // passou por este passo — é só um ponto de partida, mudam-se à vontade.
+  function showNextConfiguredUnit(product, step) {
+    var config = unitConfiguration(product);
+    var from = configuredUnitIndex(product);
+    var to = from + 1;
+    var units = configuredUnitList();
+    var seen = state.configuredUnitSeen && state.configuredUnitSeen[step.id] || {};
+    saveConfiguredUnit(product);
+    if (!units[to]) return;
+    if (!seen[to]) {
+      (config.carryOverFields || []).forEach(function (key) {
+        if (units[to][key] === undefined && units[from][key] !== undefined) units[to][key] = cloneJson(units[from][key]);
+      });
+    }
+    loadConfiguredUnit(product, to);
+  }
+
+  function markConfiguredUnitSeen(product, step) {
+    if (!state.configuredUnitSeen) state.configuredUnitSeen = {};
+    if (!state.configuredUnitSeen[step.id]) state.configuredUnitSeen[step.id] = {};
+    state.configuredUnitSeen[step.id][configuredUnitIndex(product)] = true;
+  }
+
+  function configuredUnitSelections(product) {
+    var base;
+    var units;
+    saveConfiguredUnit(product);
+    base = cloneJson(state.selections);
+    units = base.configured_units && base.configured_units.length ? base.configured_units : [configuredUnitFields(product)];
+    delete base.configured_units;
+    return units.map(function (unit) {
+      var selections = cloneJson(base);
+      (unitConfiguration(product).fields || []).forEach(function (key) { delete selections[key]; });
+      return Object.assign(selections, cloneJson(unit));
+    });
+  }
+
+  // Um passo pronto para cada unidade, sem tocar na unidade activa.
+  function configuredUnitsStepReady(product, step) {
+    var original = state.selections;
+    var invalid = state.invalidFields;
+    var list = configuredUnitSelections(product);
+    try {
+      return list.map(function (selections) {
+        state.selections = selections;
+        return !validateSingleUnitStep(product, step);
+      });
+    } finally {
+      state.selections = original;
+      state.invalidFields = invalid;
+    }
+  }
+
+  function configuredDesignValueCounts(product, field) {
+    var counts = {};
+    saveConfiguredUnit(product);
+    configuredUnitList().forEach(function (unit) {
+      var value = String(unit[field] || "");
+      if (value) counts[value] = (counts[value] || 0) + 1;
+    });
+    return counts;
+  }
+
+  function configuredUnitCoversHtml(product, unit) {
+    return configuredUnitCoverGroups(product).map(function (group) {
+      var item = configuredUnitCoverItem(group, unit);
+      return '<span class="unit-slot-cover' + (item ? '' : ' is-empty') + '">'
+        + (item ? renderVisual(item, "media-list", group.step) : '')
+        + '</span>';
+    }).join("");
+  }
+
+  // Três por linha no telemóvel; em ecrãs largos (tablet) até cinco.
+  function configuredUnitTrayColumns() {
+    return window.matchMedia && window.matchMedia("(min-width: 600px)").matches ? 5 : 3;
+  }
+
+  function renderConfiguredUnitTray(product, step) {
+    var units = configuredUnitList();
+    var index = configuredUnitIndex(product);
+    var groups = configuredUnitCoverGroups(product);
+    var label = configuredUnitLabel(product);
+    var quantityStep = isConfiguredQuantityStep(product, step);
+    var pick = isConfiguredPickStep(product, step);
+    var ready = configuredUnitsStepReady(product, step);
+    var firstPending = configuredUnitFirstPending(ready);
+    var previousCount = state.configuredUnitTrayCount || 0;
+    var filled = state.configuredUnitFilled;
+    var columns = configuredUnitTrayColumns();
+    var marker = '<span class="unit-active-marker" data-unit-marker aria-hidden="true"></span>';
+    var slots;
+    var html;
+
+    state.configuredUnitTrayCount = units.length;
+    state.configuredUnitFilled = null;
+    function slotHtml(unit, unitIndex, mini) {
+      var complete = configuredUnitIsComplete(product, unit);
+      // Entre as unidades por escolher, só a próxima se pode abrir.
+      var locked = pick && !ready[unitIndex] && unitIndex !== firstPending && unitIndex !== index;
+      var covers = configuredUnitCoversHtml(product, unit);
+      var badge = quantityStep ? '' : ready[unitIndex]
+        ? '<span class="unit-slot-ready" aria-hidden="true">' + ICON_CHECK + '</span>'
+        : (pick ? '<span class="unit-slot-ready is-pending" aria-hidden="true">?</span>' : '');
+      return [
+        '<button type="button" class="unit-slot' + (groups.length > 1 ? ' is-pair' : '')
+          + (unitIndex === index ? ' is-active' : '')
+          + (complete ? '' : ' is-empty')
+          + (!quantityStep && ready[unitIndex] ? ' is-ready' : '')
+          + (!quantityStep && pick && !ready[unitIndex] ? ' is-pending' : '')
+          + (locked ? ' is-locked' : '')
+          + (!mini && unitIndex >= previousCount && previousCount ? ' is-new' : '')
+          + (filled === unitIndex ? ' is-filling' : '')
+          + '" data-unit-slot="' + unitIndex + '"'
+          + (mini ? ' tabindex="-1"' : ' aria-pressed="' + (unitIndex === index) + '" aria-label="' + escapeHtml(label + ' ' + (unitIndex + 1)) + '"')
+          + (locked ? ' disabled' : '') + '>',
+        '<span class="unit-slot-covers">' + covers + '</span>',
+        '<span class="unit-slot-number" aria-hidden="true">' + (unitIndex + 1) + '</span>',
+        badge,
+        '</button>'
+      ].join("");
+    }
+
+    slots = units.map(function (unit, unitIndex) { return slotHtml(unit, unitIndex, false); }).join("");
+    html = '<div class="unit-tray' + (units.length > columns ? ' is-multirow' : '') + '" style="--unit-columns:' + Math.min(columns, units.length) + '" role="group" aria-label="' + escapeHtml(configuredUnitText(product, "trayLabel") || label) + '"><div class="unit-tray-track" data-unit-tray>' + slots + marker + '</div></div>';
+
+    // Com mais unidades do que colunas, a fila completa não fica colada ao
+    // topo; ao descer aparece esta versão de uma linha: uma janela com tantas
+    // unidades como colunas, a da direita é a que se está a escolher, e as
+    // setas deixam ver as outras.
+    if (units.length > columns) {
+      html += [
+        '<div class="unit-tray-mini-anchor">',
+        // Nasce já no estado em que estava, para não piscar a cada escolha.
+        '<div class="unit-tray-mini' + (state.configuredUnitMiniVisible ? ' is-visible' : '') + '" style="--unit-columns:' + columns + '" data-unit-mini aria-hidden="true">',
+        '<button type="button" class="unit-mini-arrow" data-unit-mini-step="-1" tabindex="-1">&lsaquo;</button>',
+        '<div class="unit-mini-window"><div class="unit-mini-track" data-unit-mini-track>',
+        units.map(function (unit, unitIndex) { return slotHtml(unit, unitIndex, true); }).join("") + marker,
+        '</div></div>',
+        '<button type="button" class="unit-mini-arrow" data-unit-mini-step="1" tabindex="-1">&rsaquo;</button>',
+        '</div>',
+        '</div>'
+      ].join("");
+    }
+    return html;
+  }
+
+  function renderConfiguredUnitControls(product, step) {
+    var config = unitConfiguration(product);
+    var quantity;
+    var max;
+    var html = "";
+    if (state.admin || !isConfiguredUnitStep(product, step)) return "";
+    saveConfiguredUnit(product);
+    quantity = configuredUnitCount(product);
+    if (quantity > 1) markConfiguredUnitSeen(product, step);
+    if (isConfiguredQuantityStep(product, step)) {
+      max = config.maxQuantity || 30;
+      html += [
+        '<div class="unit-quantity">',
+        '<label class="unit-quantity-label" for="unit-quantity-input">' + escapeHtml(configuredUnitText(product, "quantityLabel") || "Quantidade") + '</label>',
+        '<div class="unit-quantity-stepper">',
+        '<button type="button" data-unit-delta="-1" aria-label="Menos uma"' + (quantity <= 1 ? ' disabled' : '') + '>&minus;</button>',
+        '<input id="unit-quantity-input" type="number" inputmode="numeric" min="1" max="' + max + '" step="1" value="' + quantity + '" data-unit-quantity>',
+        '<button type="button" data-unit-delta="1" aria-label="Mais uma"' + (quantity >= max ? ' disabled' : '') + '>+</button>',
+        '</div>',
+        '</div>'
+      ].join("");
+    }
+    if (quantity > 1 && !isConfiguredRowStep(product, step)) html += renderConfiguredUnitTray(product, step);
+    if (quantity > 1) html += renderConfiguredUnitActions(product, step);
+    return html;
+  }
+
+  // Botões "em todas" de cada passo (unitConfiguration.unitActions no JSON):
+  // same       copia os campos da unidade activa (ou da primeira que os tem);
+  // same-name  põe todas com o nome da primeira que o tem e, enquanto
+  //            estiver ligado, o que se escreve numa linha vai para todas;
+  // none       todas sem personalização;
+  // toggle-all liga ou desliga os valores em todas.
+  function configuredUnitActions(product, step) {
+    var config = unitConfiguration(product);
+    var actions = config && config.unitActions && step ? config.unitActions[step.id] : null;
+    return Array.isArray(actions) ? actions : [];
+  }
+
+  function configuredPersonalizationQuestions(product, step) {
+    var size = String(state.selections[(unitConfiguration(product) || {}).sizeField || "size"] || "");
+    return (step && Array.isArray(step.questions) ? step.questions : []).filter(function (question) {
+      return !Array.isArray(question.sizes) || question.sizes.indexOf(size) !== -1;
+    });
+  }
+
+  function configuredUnitHasFields(unit, fields) {
+    return fields.every(function (field) { return unit[field] !== undefined && unit[field] !== ""; });
+  }
+
+  function configuredUnitActionSource(product, fields) {
+    var units = configuredUnitList();
+    var active = units[configuredUnitIndex(product)];
+    if (active && configuredUnitHasFields(active, fields)) return active;
+    return units.filter(function (unit) { return configuredUnitHasFields(unit, fields); })[0] || null;
+  }
+
+  function configuredUnitActionPressed(product, step, action) {
+    var units = configuredUnitList();
+    var questions;
+    var first;
+    if (action.type === "same-name") return !!state.configuredUnitSameName;
+    if (action.type === "none") {
+      questions = configuredPersonalizationQuestions(product, step);
+      return units.every(function (unit) {
+        return questions.every(function (question) { return unit[question.field] === "no"; });
+      });
+    }
+    if (action.type === "toggle-all") {
+      return units.every(function (unit) {
+        return Object.keys(action.values || {}).every(function (field) { return unit[field] === action.values[field]; });
+      });
+    }
+    first = units[0] || {};
+    return configuredUnitHasFields(first, action.fields || []) && units.every(function (unit) {
+      return (action.fields || []).every(function (field) { return unit[field] === first[field]; });
+    });
+  }
+
+  function applyConfiguredUnitAction(product, step, action) {
+    var units;
+    var index = configuredUnitIndex(product);
+    var questions = configuredPersonalizationQuestions(product, step);
+    var textFields = questions.map(function (question) { return question.textField; });
+    var source;
+    var turnOff;
+    saveConfiguredUnit(product);
+    units = configuredUnitList();
+    if (action.type === "same") {
+      source = configuredUnitActionSource(product, action.fields || []);
+      if (!source) return false;
+      source = cloneJson(source);
+      units.forEach(function (unit) {
+        action.fields.forEach(function (field) { unit[field] = cloneJson(source[field]); });
+      });
+    } else if (action.type === "same-name") {
+      if (state.configuredUnitSameName) {
+        state.configuredUnitSameName = false;
+      } else {
+        source = configuredUnitActionSource(product, textFields);
+        source = source ? cloneJson(source) : null;
+        units.forEach(function (unit) {
+          questions.forEach(function (question) {
+            unit[question.field] = "yes";
+            unit[question.textField] = source ? source[question.textField] : (unit[question.textField] || "");
+          });
+        });
+        state.configuredUnitSameName = true;
+      }
+    } else if (action.type === "none") {
+      units.forEach(function (unit) {
+        questions.forEach(function (question) {
+          unit[question.field] = "no";
+          unit[question.textField] = "";
+        });
+      });
+      state.configuredUnitSameName = false;
+    } else if (action.type === "toggle-all") {
+      turnOff = configuredUnitActionPressed(product, step, action);
+      units.forEach(function (unit) {
+        Object.keys(action.values || {}).forEach(function (field) {
+          if (turnOff) delete unit[field];
+          else unit[field] = action.values[field];
+        });
+      });
+    }
+    loadConfiguredUnit(product, index);
+    return true;
+  }
+
+  function renderConfiguredUnitActions(product, step) {
+    var actions = configuredUnitActions(product, step);
+    if (!actions.length) return "";
+    return '<div class="unit-actions">' + actions.map(function (action, actionIndex) {
+      var pressed = configuredUnitActionPressed(product, step, action);
+      var disabled = action.type === "same" && !configuredUnitActionSource(product, action.fields || []);
+      return '<button type="button" class="unit-action' + (pressed ? ' is-pressed' : '') + '" data-unit-action="' + actionIndex + '" aria-pressed="' + pressed + '"' + (disabled ? ' disabled' : '') + '>'
+        + '<span class="unit-action-check" aria-hidden="true">' + ICON_CHECK + '</span>'
+        + '<span>' + escapeHtml(action.label || "") + '</span></button>';
+    }).join("") + '</div>';
+  }
+
+  // Aviso das fitas: só quando alguma capa escolhida tem mais de uma cor.
+  function renderVariationNotice(product, step) {
+    var variationStep;
+    var list;
+    var original = state.selections;
+    var many = false;
+    if (!step || !step.variationNotice || !step.pastaDeFolhetosDetails) return "";
+    variationStep = pastaDeFolhetosDetailsVariationStep(product, step);
+    if (!variationStep) return "";
+    list = configuredUnitCount(product) > 1 ? configuredUnitSelections(product) : [state.selections];
+    try {
+      list.forEach(function (selections) {
+        state.selections = selections;
+        pastaDeFolhetosDetailsGroups(step, variationStep).forEach(function (group) {
+          if (groupedDesignItems(variationStep, group).length > 1) many = true;
+        });
+      });
+    } finally {
+      state.selections = original;
+    }
+    return many ? '<p class="unit-notice" role="note">' + escapeHtml(step.variationNotice) + '</p>' : "";
+  }
+
+  // Passos em linhas: o corpo do passo é desenhado uma vez por unidade, com
+  // a miniatura da capa à esquerda. Os ids ganham um sufixo por linha.
+  function renderConfiguredUnitRows(product, step) {
+    var active = configuredUnitIndex(product);
+    var invalid = state.invalidFields;
+    var html;
+    saveConfiguredUnit(product);
+    try {
+      html = configuredUnitList().map(function (unit, unitIndex) {
+        var body;
+        loadConfiguredUnit(product, unitIndex);
+        state.invalidFields = unitIndex === active ? invalid : [];
+        body = stepBody(product, step);
+        saveConfiguredUnit(product);
+        // Cada linha é o seu grupo de rádios; os handlers lêem o campo dos
+        // data-atributos, não do name.
+        body = body.replace(/(<input type="radio" name=")([^"]+)"/g, '$1$2__u' + unitIndex + '"');
+        if (unitIndex) {
+          (body.match(/ id="[^"]+"/g) || []).forEach(function (match) {
+            var id = match.slice(5, -1);
+            body = body.split('"' + id + '"').join('"' + id + '-u' + unitIndex + '"');
+          });
+        }
+        return [
+          '<section class="unit-row" data-unit-row="' + unitIndex + '">',
+          '<div class="unit-row-cover" aria-hidden="true"><span class="unit-slot-covers' + (configuredUnitCoverGroups(product).length > 1 ? ' is-pair' : '') + '">' + configuredUnitCoversHtml(product, configuredUnitList()[unitIndex]) + '</span><span class="unit-slot-number">' + (unitIndex + 1) + '</span></div>',
+          '<div class="unit-row-body" role="group" aria-label="' + escapeHtml(configuredUnitLabel(product) + ' ' + (unitIndex + 1)) + '">' + body + '</div>',
+          '</section>'
+        ].join("");
+      }).join("");
+    } finally {
+      loadConfiguredUnit(product, active);
+      state.invalidFields = invalid;
+    }
+    return '<div class="unit-rows">' + html + '</div>';
+  }
+
+  // Mexer numa linha torna essa unidade a activa antes de os handlers de
+  // sempre correrem, que escrevem em state.selections.
+  function bindConfiguredUnitRows(product) {
+    document.querySelectorAll("[data-unit-row]").forEach(function (row) {
+      var index = Number(row.dataset.unitRow);
+      function activate() {
+        if (configuredUnitIndex(product) === index) return;
+        saveConfiguredUnit(product);
+        loadConfiguredUnit(product, index);
+      }
+      ["pointerdown", "mousedown", "touchstart", "focusin", "click", "change", "input", "keydown"].forEach(function (type) {
+        row.addEventListener(type, activate, true);
+      });
+    });
+  }
+
+  function bindConfiguredUnitMini(product) {
+    var mini = document.querySelector("[data-unit-mini]");
+    var full = document.querySelector("[data-unit-tray]");
+    var track = mini && mini.querySelector("[data-unit-mini-track]");
+    var active = configuredUnitIndex(product);
+    var columns = configuredUnitTrayColumns();
+    var last = Math.max(0, configuredUnitCount(product) - columns);
+    var shown = state.configuredUnitMiniShown;
+    var headerTop;
+    var target;
+
+    if (state.configuredUnitMiniScroll) {
+      window.removeEventListener("scroll", state.configuredUnitMiniScroll);
+      state.configuredUnitMiniScroll = null;
+    }
+    if (!mini || !track || !full) {
+      state.configuredUnitMiniShown = null;
+      state.configuredUnitMiniVisible = false;
+      return;
+    }
+
+    function place(value, animate) {
+      value = Math.max(0, Math.min(last, value));
+      if (!animate) track.style.transition = "none";
+      track.style.transform = "translateX(" + (-value * 100 / columns) + "%)";
+      if (!animate) {
+        void track.offsetWidth;
+        track.style.transition = "";
+      }
+      mini.querySelector('[data-unit-mini-step="-1"]').disabled = value === 0;
+      mini.querySelector('[data-unit-mini-step="1"]').disabled = value === last;
+      state.configuredUnitMiniShown = value;
+    }
+
+    // A janela segue a unidade activa (fica à direita); as setas só a mexem
+    // até a unidade activa mudar.
+    if (state.configuredUnitMiniFor !== active + ":" + columns || state.configuredUnitMiniStart == null) {
+      state.configuredUnitMiniFor = active + ":" + columns;
+      state.configuredUnitMiniStart = active - (columns - 1);
+    }
+    target = Math.max(0, Math.min(last, state.configuredUnitMiniStart));
+    // Desliza da posição anterior para a nova.
+    place(shown == null ? target : shown, false);
+    if (shown != null && shown !== target) {
+      window.setTimeout(function () { place(target, true); }, 30);
+    } else {
+      place(target, false);
+    }
+
+    mini.querySelectorAll("[data-unit-mini-step]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.configuredUnitMiniStart = Math.max(0, Math.min(last, state.configuredUnitMiniShown + Number(button.dataset.unitMiniStep)));
+        place(state.configuredUnitMiniStart, true);
+      });
+    });
+
+    headerTop = parseFloat(getComputedStyle(mini.parentNode).top) || 0;
+    state.configuredUnitMiniScroll = function () {
+      state.configuredUnitMiniVisible = full.getBoundingClientRect().bottom < headerTop;
+      mini.classList.toggle("is-visible", state.configuredUnitMiniVisible);
+    };
+    state.configuredUnitMiniScroll();
+    window.addEventListener("scroll", state.configuredUnitMiniScroll, { passive: true });
+  }
+
+  // A setinha por baixo da unidade activa desliza do sítio onde estava, como
+  // a do seletor de cores das molduras.
+  function placeConfiguredUnitMarkers() {
+    var previous = state.configuredUnitMarkers || {};
+    state.configuredUnitMarkers = {};
+    document.querySelectorAll("[data-unit-marker]").forEach(function (marker) {
+      var track = marker.parentNode;
+      var key = track.hasAttribute("data-unit-mini-track") ? "mini" : "full";
+      var slot = track.querySelector(".unit-slot.is-active");
+      var from = previous[key];
+      var to;
+      if (!slot) {
+        marker.hidden = true;
+        return;
+      }
+      to = { x: slot.offsetLeft + slot.offsetWidth / 2, y: slot.offsetTop + slot.offsetHeight };
+      marker.style.left = to.x + "px";
+      marker.style.top = to.y + "px";
+      state.configuredUnitMarkers[key] = to;
+      if (from && (from.x !== to.x || from.y !== to.y) && marker.animate) {
+        marker.animate([
+          { transform: "translate(calc(-50% + " + (from.x - to.x) + "px), " + (from.y - to.y) + "px)" },
+          { transform: "translate(-50%, 0)" }
+        ], { duration: 180, delay: 50, easing: "cubic-bezier(.3,0,.2,1)", fill: "backwards" });
+      }
+    });
+  }
+
+  // Cada vez que um design é escolhido (também a segunda vez, ×2), o seu
+  // visto ou contador salta, como o das cores.
+  function animateConfiguredDesignBadges() {
+    var previous = state.configuredDesignBadges;
+    var current = {};
+    document.querySelectorAll(".configured-units-card").forEach(function (card) {
+      var input = card.querySelector("input");
+      var badge = card.querySelector(".crachas-size-card-selected");
+      var key = input ? input.name + "=" + input.value : "";
+      var text = card.classList.contains("is-selected") && badge ? badge.textContent : "";
+      current[key] = text;
+      if (previous && text && previous[key] !== text && badge.animate) {
+        badge.animate([
+          { transform: "scale(.2)", opacity: 0 },
+          { transform: "scale(1.3)", opacity: 1, offset: 0.6 },
+          { transform: "scale(1)", opacity: 1 }
+        ], { duration: 220, easing: "cubic-bezier(.3,0,.2,1)" });
+      }
+    });
+    state.configuredDesignBadges = document.querySelector(".configured-units-card") ? current : null;
+  }
+
+  function bindConfiguredUnitActions(product) {
+    document.querySelectorAll("[data-unit-action]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var step = currentStep(product);
+        var action = configuredUnitActions(product, step)[Number(button.dataset.unitAction)];
+        if (!action || !applyConfiguredUnitAction(product, step, action)) return;
+        state.errors = "";
+        state.invalidFields = [];
+        rerenderProduct(product);
+      });
+    });
+    // "Mesmo nome em todos": o que se escreve numa linha vai para todas; mexer
+    // no Sim/Não de uma linha desliga-o.
+    document.querySelectorAll("[data-unit-row]").forEach(function (row) {
+      row.addEventListener("input", function (event) {
+        var input = event.target;
+        var field = input && input.dataset ? input.dataset.coverPersonalizationTextField : "";
+        if (!state.configuredUnitSameName || !field) return;
+        configuredUnitList().forEach(function (unit) { unit[field] = input.value; });
+        document.querySelectorAll('[data-cover-personalization-text-field="' + field + '"][data-cover-personalization-text]').forEach(function (other) {
+          if (other !== input) other.value = input.value;
+        });
+      });
+      row.addEventListener("change", function (event) {
+        if (event.target && event.target.type === "radio") state.configuredUnitSameName = false;
+      }, true);
+    });
+  }
+
+  function bindConfiguredUnitControls(product) {
+    bindConfiguredUnitRows(product);
+    bindConfiguredUnitActions(product);
+    bindConfiguredUnitMini(product);
+    placeConfiguredUnitMarkers();
+    animateConfiguredDesignBadges();
+
+    function refresh(focusSelector) {
+      var target;
+      state.errors = "";
+      state.invalidFields = [];
+      rerenderProduct(product);
+      target = focusSelector ? document.querySelector(focusSelector) : null;
+      if (target) target.focus({ preventScroll: true });
+    }
+
+    document.querySelectorAll("[data-unit-quantity]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        setConfiguredUnitCount(product, input.value);
+        refresh("[data-unit-quantity]");
+      });
+      input.addEventListener("focus", function () { input.select(); });
+    });
+    document.querySelectorAll("[data-unit-delta]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var delta = Number(button.dataset.unitDelta);
+        setConfiguredUnitCount(product, configuredUnitCount(product) + delta);
+        refresh('[data-unit-delta="' + delta + '"]:not(:disabled)');
+      });
+    });
+    document.querySelectorAll("[data-unit-slot]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var index = Number(button.dataset.unitSlot);
+        if (index === configuredUnitIndex(product)) return;
+        saveConfiguredUnit(product);
+        loadConfiguredUnit(product, index);
+        refresh('[data-unit-slot="' + index + '"]');
+      });
+    });
+  }
+
   function renderProduct(product, cadernoRenderState) {
     clearCadernoPreviewTimers();
     syncGiftRequestSelection(product);
@@ -2634,6 +3403,12 @@
     cartEntry = isCartEntryStep(product);
     stepNumber = displayStepNumber(product, step);
     nextLabel = isLast ? "Enviar pedido" : state.currentStep === steps.length - 2 ? "Confirmar" : "Continuar";
+    // Com várias unidades, o passo só acaba na última; até lá o botão segue
+    // para a próxima (também no passo que normalmente mostra o carrinho).
+    if (configuredUnitsPending(product, step)) {
+      nextLabel = configuredUnitText(product, "nextLabel") || nextLabel;
+      cartEntry = false;
+    }
     suspended = isLast && ordersAreSuspended();
 
     // Última leitura da lista de passos antiga antes de o innerHTML a apagar.
@@ -2655,8 +3430,10 @@
       renderStepLeadTimeNotice(product, step),
       displayStepText(product, step) ? '<p class="step-help">' + escapeHtml(displayStepText(product, step)) + '</p>' : '',
       state.currentStep === 0 ? renderProductPreview(product) + renderProductGallery(product) : "",
-      stepBody(product, step),
-      renderQuadrosBuildSummary(product, step),
+      renderConfiguredUnitControls(product, step),
+      renderVariationNotice(product, step),
+      configuredUnitsActive(product, step) && isConfiguredRowStep(product, step) ? renderConfiguredUnitRows(product, step) : stepBody(product, step),
+      configuredUnitsActive(product, step) && isConfiguredRowStep(product, step) ? "" : renderQuadrosBuildSummary(product, step),
       '</div>',
       cartEntry ? renderCartEntryActions(product, step) : [
       '<div class="step-actions">',
@@ -2920,6 +3697,15 @@
       cancelOrderMediaActivityForStep(prevStepObj);
       state.builderRemovePendingId = "";
       state.progressAnimationFromPercent = progressVisualPercent(product, previous);
+      // Cada passo começa na primeira unidade, venha-se de onde se vier.
+      if (configuredUnitCount(product) > 1) {
+        saveConfiguredUnit(product);
+        loadConfiguredUnit(product, 0);
+        // Nos passos de escolha, começa na primeira unidade por escolher.
+        if (isConfiguredPickStep(product, steps[next])) {
+          loadConfiguredUnit(product, Math.max(0, configuredUnitFirstPending(configuredUnitsStepReady(product, steps[next]))));
+        }
+      }
     }
     state.currentStep = next;
     state.maxVisitedStep = Math.max(state.maxVisitedStep, state.currentStep);

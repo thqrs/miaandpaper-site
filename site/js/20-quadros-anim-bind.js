@@ -441,6 +441,7 @@
   }
 
   function bindProduct(product) {
+    bindConfiguredUnitControls(product);
     var form = document.querySelector("#order-form");
     var back = document.querySelector("[data-back]");
     var next = document.querySelector("[data-next]");
@@ -923,12 +924,16 @@
     document.querySelectorAll("[data-option-drawer-choice]").forEach(function (input) {
       input.addEventListener("change", function () {
         var field = String(input.dataset.optionDrawerField || "");
+        var active = currentStep(product);
+        var unitWasReady;
         if (!field || !input.checked) {
           return;
         }
+        unitWasReady = configuredUnitActiveReady(product, active);
         state.selections[field] = input.value;
         state.errors = "";
         try { trackOptionSelected(product, field, input.value, input.closest("label").textContent || ""); } catch (e) {}
+        advanceConfiguredUnitAfterChoice(product, active, unitWasReady);
         rerenderProduct(product);
       });
     });
@@ -1081,6 +1086,7 @@
         if (!step || !group || !field || !value) {
           return;
         }
+        var unitWasComplete = configuredUnitActiveReady(product, step);
         resetKeys = step.resetFieldsByGroup && Array.isArray(step.resetFieldsByGroup[groupId])
           ? step.resetFieldsByGroup[groupId].map(String)
           : [];
@@ -1129,6 +1135,7 @@
         var oldMedia = toggleCard && toggleCard.querySelector(".pf-assignment-card-trigger");
         var previousMedia = oldMedia ? oldMedia.cloneNode(true) : null;
         var hadSplit = !!(oldMedia && oldMedia.querySelector(".pf-assignment-split"));
+        advanceConfiguredUnitAfterChoice(product, step, unitWasComplete);
         rerenderProduct(product);
         var updatedCard = Array.prototype.find.call(document.querySelectorAll("[data-assignment-preview-open]"), function (card) {
           return card.dataset.assignmentStep === String(step.id) && card.dataset.assignmentValue === itemValue;
@@ -1311,6 +1318,11 @@
         if (!input.checked || !active || active.template !== "designs-by-size" || !field) {
           return;
         }
+        var unitWasComplete = configuredUnitActiveReady(product, active);
+        if (configuredUnitsActive(product, active)) {
+          if (!state.configuredUnitPreview) state.configuredUnitPreview = {};
+          state.configuredUnitPreview[active.id + ":" + input.dataset.groupedDesignGroup] = input.value;
+        }
         state.selections[field] = input.value;
         var resetFields = active.resetFieldsByGroup && Array.isArray(active.resetFieldsByGroup[input.dataset.groupedDesignGroup])
           ? active.resetFieldsByGroup[input.dataset.groupedDesignGroup]
@@ -1327,6 +1339,7 @@
         state.errors = "";
         state.packDisabledMessage = "";
         try { trackDesignToggle(product, input.value, true); } catch (e) {}
+        advanceConfiguredUnitAfterChoice(product, active, unitWasComplete);
         rerenderProduct(product);
       });
     });

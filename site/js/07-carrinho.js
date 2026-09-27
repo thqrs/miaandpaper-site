@@ -776,6 +776,7 @@
       syncGroupedDesignSelections(product, groupedDesignStep);
     }
     var selections = cloneJson(state.selections);
+    delete selections.configured_units;
     var cadernoLamination = isCadernosProduct(product) ? selectedCadernoLamination(product) : null;
     var cadernoOption = isCadernosProduct(product) ? selectedCadernoPurchaseOption(product) : null;
 
@@ -1057,6 +1058,10 @@
     }
 
     persistCurrentCardDetails(product);
+    if (configuredUnitCount(product) > 1) {
+      if (saveConfiguredUnitsToCart(product)) window.location.href = destination;
+      return;
+    }
     item = buildCartItemFromCurrentProduct(product);
     cart = addOrUpdateCartItem(item);
     trackProductEvent(product, "cart_item_added", {
@@ -1081,6 +1086,10 @@
     }
 
     persistCurrentCardDetails(product);
+    if (configuredUnitCount(product) > 1) {
+      if (saveConfiguredUnitsToCart(product)) window.location.href = state.editingCartReturnTo || "checkout.html";
+      return;
+    }
     item = buildCartItemFromCurrentProduct(product);
     item.id = state.editingCartItemId;
     cart = addOrUpdateCartItem(item);
@@ -1094,6 +1103,46 @@
 
   function cancelCartItemEdit() {
     window.location.href = state.editingCartReturnTo || "checkout.html";
+  }
+
+  function buildConfiguredUnitCartItems(product) {
+    var selections = configuredUnitSelections(product);
+    var original = state.selections;
+    try {
+      return selections.map(function (selection) {
+        state.selections = selection;
+        return buildCartItemFromCurrentProduct(product);
+      });
+    } finally {
+      state.selections = original;
+    }
+  }
+
+  function saveConfiguredUnitsToCart(product) {
+    var items = buildConfiguredUnitCartItems(product);
+    var cart = loadCart();
+    var editedIndex = cart.items.findIndex(function (item) { return item.id === state.editingCartItemId; });
+    if (cart.items.length + items.length - (editedIndex >= 0 ? 1 : 0) > 30) {
+      state.errors = "O cesto permite até 30 artigos. Reduz a quantidade ou retira um artigo do cesto.";
+      rerenderProduct(product);
+      focusProductFirstError();
+      return false;
+    }
+    items = items.map(normalizeCartItem);
+    if (editedIndex >= 0) {
+      // A linha editada dá lugar às unidades, no mesmo sítio do cesto.
+      items[0].id = state.editingCartItemId;
+      Array.prototype.splice.apply(cart.items, [editedIndex, 1].concat(items));
+    } else {
+      cart.items = cart.items.concat(items);
+    }
+    cart = saveCart(cart);
+    trackProductEvent(product, editedIndex >= 0 ? "cart_item_updated" : "cart_item_added", {
+      cart_id: cart.cartId,
+      item_count: cart.items.length,
+      item_price_cents: items.reduce(function (total, item) { return total + item.summary.priceCents; }, 0)
+    });
+    return true;
   }
 
   function renderCartEditBar() {

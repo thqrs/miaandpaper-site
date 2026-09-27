@@ -152,7 +152,28 @@
     ));
   }
 
+  // UNIT_CONFIGURATION_V1: com várias unidades, o passo valida todas; a
+  // primeira que falhar fica activa, para a fila e o erro apontarem para ela.
   function validateStep(product, step) {
+    var previous;
+    var unitIndex;
+    var error;
+    if (!isConfiguredUnitStep(product, step) || configuredUnitCount(product) === 1) {
+      return validateSingleUnitStep(product, step);
+    }
+    saveConfiguredUnit(product);
+    previous = configuredUnitIndex(product);
+    for (unitIndex = 0; unitIndex < configuredUnitCount(product); unitIndex += 1) {
+      loadConfiguredUnit(product, unitIndex);
+      error = validateSingleUnitStep(product, step);
+      saveConfiguredUnit(product);
+      if (error) return configuredUnitLabel(product) + ' ' + (unitIndex + 1) + ': ' + error;
+    }
+    loadConfiguredUnit(product, previous);
+    return "";
+  }
+
+  function validateSingleUnitStep(product, step) {
     var field;
     var i;
     var missing = [];
@@ -189,7 +210,7 @@
     if (step.template === "designs-by-size") {
       var requiredGroups = designGroupsForStep(step);
       if (!requiredGroups.length) {
-        return "Escolhe primeiro A4, A6 ou PACK.";
+        return "Escolhe primeiro um tamanho.";
       }
       for (i = 0; i < requiredGroups.length; i += 1) {
         var requiredGroup = requiredGroups[i];
@@ -535,6 +556,15 @@
 
   function goNext(product) {
     var step = currentStep(product);
+    // Avançar entre unidades é parte do passo: a unidade activa pronta segue
+    // para a próxima; um erro cai na validação normal, que aponta a unidade.
+    if (configuredUnitsPending(product, step) && !validateSingleUnitStep(product, step)) {
+      showNextConfiguredUnit(product, step);
+      state.errors = "";
+      state.scrollStepOnRender = true;
+      rerenderProduct(product);
+      return;
+    }
     var error = state.admin ? "" : validateStep(product, step);
 
     if (error) {

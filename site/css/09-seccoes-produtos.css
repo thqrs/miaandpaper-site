@@ -2868,3 +2868,636 @@ html[data-theme="dark"] .pf-fluid-variation {
     grid-row: var(--assignment-preview-row-one);
   }
 }
+
+/* UNIT_CONFIGURATION_V1
+   Quantidade de unidades (ex.: pastas de folhetos) e a fila de miniaturas.
+   A fila fica colada por baixo do cabeçalho enquanto se percorre a grelha:
+   cada miniatura é uma unidade, a destacada é a que a grelha está a editar.
+   Tudo activado pelo "unitConfiguration" do JSON do produto. */
+.unit-quantity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 2px 0 12px;
+  padding: 10px 10px 10px 16px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-card);
+}
+
+.unit-quantity-label {
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.14rem;
+  line-height: 1.2;
+}
+
+.unit-quantity-stepper {
+  display: inline-grid;
+  flex: 0 0 auto;
+  grid-template-columns: 44px 50px 44px;
+  height: 44px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border-warm);
+  border-radius: 999px;
+  background: var(--paper);
+}
+
+.unit-quantity-stepper button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--moss);
+  font: inherit;
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+.unit-quantity-stepper button:hover:not(:disabled) {
+  background: var(--surface-gold-soft);
+}
+
+.unit-quantity-stepper button:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+
+.unit-quantity-stepper input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.06rem;
+  font-weight: 800;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.unit-quantity-stepper input::-webkit-outer-spin-button,
+.unit-quantity-stepper input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.unit-tray {
+  position: sticky;
+  top: 70px;
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  margin: 0 0 16px;
+  pointer-events: none;
+}
+
+/* Três por linha; a partir da quarta unidade passa para a linha de baixo. */
+.unit-tray-track {
+  display: grid;
+  grid-template-columns: repeat(var(--unit-columns, 3), minmax(0, 1fr));
+  gap: 6px;
+  position: relative;
+  width: min(100%, calc(var(--unit-columns, 3) * 140px));
+  padding: 6px;
+  border: 1px solid var(--ui-border);
+  border-radius: 16px;
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-card);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+
+/* Com mais de uma linha a fila deixaria pouco ecrã para a grelha: deixa de
+   ficar colada ao topo. */
+.unit-tray.is-multirow {
+  position: static;
+}
+
+/* Versão de uma linha (mais de 3 unidades): âncora de altura zero, colada
+   por baixo do cabeçalho; só aparece quando a fila completa sai do ecrã. */
+.unit-tray-mini-anchor {
+  position: sticky;
+  top: 70px;
+  z-index: 7;
+  height: 0;
+}
+
+.unit-tray-mini {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 2px;
+  width: min(100%, calc(var(--unit-columns, 3) * 84px + 70px));
+  margin: 0 auto;
+  padding: 5px 3px;
+  border: 1px solid var(--ui-border);
+  border-radius: 16px;
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-card);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: opacity 200ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.unit-tray-mini.is-visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.unit-mini-window {
+  overflow: hidden;
+}
+
+.unit-mini-track {
+  position: relative;
+  display: flex;
+  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.unit-mini-track .unit-slot {
+  flex: 0 0 calc(100% / var(--unit-columns, 3));
+  padding: 4px 4px 11px;
+}
+
+.unit-mini-track .unit-slot-cover {
+  width: min(100%, 50px);
+}
+
+.unit-mini-track .unit-slot.is-pair .unit-slot-cover {
+  width: 52%;
+}
+
+.unit-mini-track .unit-slot.is-pair .unit-slot-cover + .unit-slot-cover {
+  width: 36%;
+}
+
+.unit-mini-arrow {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--moss);
+  font: inherit;
+  font-size: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.unit-mini-arrow:disabled {
+  opacity: 0.2;
+  cursor: default;
+}
+
+.unit-slot {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  justify-items: center;
+  gap: 5px;
+  padding: 7px 7px 13px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.unit-slot:hover {
+  background: var(--ui-card-soft);
+}
+
+/* A unidade activa leva o fundo dourado e a setinha por baixo. */
+.unit-slot.is-active {
+  border-color: color-mix(in srgb, var(--gold) 70%, var(--line));
+  background: var(--surface-gold-soft);
+  color: var(--moss);
+}
+
+.unit-active-marker {
+  position: absolute;
+  z-index: 2;
+  width: 0;
+  height: 0;
+  margin-top: -9px;
+  border-right: 6px solid transparent;
+  border-bottom: 7px solid color-mix(in srgb, var(--moss) 78%, transparent);
+  border-left: 6px solid transparent;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.unit-slot-covers {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.unit-slot-cover {
+  position: relative;
+  display: block;
+  width: min(100%, 92px);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--surface-image);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--ink) 16%, transparent);
+}
+
+/* No conjunto, o A6 é a capa mais pequena ao lado do A4. */
+.unit-slot.is-pair .unit-slot-cover {
+  width: 58%;
+}
+
+.unit-slot.is-pair .unit-slot-cover + .unit-slot-cover {
+  width: 40%;
+}
+
+.unit-slot-cover.is-empty {
+  display: grid;
+  place-items: center;
+  border: 1.5px dashed color-mix(in srgb, var(--moss) 34%, var(--line));
+  background: transparent;
+  box-shadow: none;
+}
+
+/* O mesmo "?" das cores por escolher das molduras. */
+.unit-slot-cover.is-empty::after {
+  content: "?";
+  color: color-mix(in srgb, var(--ink) 30%, transparent);
+  font-size: 1.65rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.unit-mini-track .unit-slot-cover.is-empty::after {
+  font-size: 1.2rem;
+}
+
+.unit-slot.is-active .unit-slot-cover.is-empty {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--paper) 70%, transparent);
+  animation: unit-slot-waiting 1.8s ease-in-out infinite;
+}
+
+.unit-slot-cover .option-image,
+.unit-slot-cover .uploaded-image {
+  position: absolute;
+  inset: 0;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  aspect-ratio: auto !important;
+}
+
+.unit-slot-cover .uploaded-image-inner {
+  inset: 0;
+  background-size: contain !important;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.unit-slot-number {
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.unit-slot-ready {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--moss);
+  color: var(--paper);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--ink) 22%, transparent);
+}
+
+.unit-slot-ready svg {
+  width: 10px;
+  height: 10px;
+}
+
+.unit-slot.is-ready .unit-slot-ready {
+  display: grid;
+}
+
+.unit-slot.is-new {
+  animation: unit-slot-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.unit-slot.is-filling .unit-slot-cover {
+  animation: unit-slot-fill 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes unit-slot-enter {
+  from { opacity: 0; transform: translateY(6px) scale(0.88); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes unit-slot-fill {
+  0% { opacity: 0.2; transform: scale(0.72); }
+  62% { opacity: 1; transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes unit-slot-waiting {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--gold) 50%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--gold) 0%, transparent); }
+}
+
+/* Entre as unidades por escolher só a próxima abre; as outras esperam. */
+/* A opacidade vai para os filhos: a animação de entrada da unidade nova
+   fixa a opacidade do próprio botão e apagava o esbatido. */
+.unit-slot.is-locked {
+  cursor: default;
+}
+
+.unit-slot.is-locked > * {
+  opacity: 0.5;
+}
+
+.unit-slot.is-locked:hover {
+  background: transparent;
+}
+
+.unit-slot-ready.is-pending {
+  display: grid;
+  background: var(--paper);
+  color: color-mix(in srgb, var(--ink) 45%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--moss) 40%, var(--line));
+  font-size: 0.7rem;
+  font-weight: 900;
+  box-shadow: none;
+}
+
+/* Passos em linhas (nomes, detalhes): miniatura da capa à esquerda e as
+   escolhas dessa unidade à direita. */
+.unit-rows {
+  display: grid;
+  gap: 12px;
+}
+
+.unit-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-card);
+}
+
+.unit-row-cover {
+  position: sticky;
+  top: 76px;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  color: var(--moss);
+}
+
+.unit-row-cover .unit-slot-cover {
+  width: 64px;
+}
+
+.unit-row-cover .unit-slot-covers.is-pair .unit-slot-cover {
+  width: 36px;
+}
+
+.unit-row-cover .unit-slot-covers.is-pair .unit-slot-cover + .unit-slot-cover {
+  width: 25px;
+}
+
+.unit-row-body {
+  min-width: 0;
+}
+
+.unit-row-body > :first-child,
+.unit-row-body > :first-child > :first-child {
+  margin-top: 0;
+}
+
+/* Nas linhas o título do passo já faz a pergunta: fica só Sim / Não,
+   compactos. No conjunto (duas perguntas por linha, A4 e A6) o título mantém-se
+   para se saber qual é qual. */
+.unit-row .cadernos-personalization-question-text,
+.unit-row-body .cadernos-personalization-question:only-of-type .cadernos-personalization-question-title {
+  display: none;
+}
+
+.unit-row .cadernos-personalization-question {
+  margin: 0;
+}
+
+.unit-row .cadernos-personalization-question + .cadernos-personalization-question {
+  margin-top: 12px;
+}
+
+.unit-row .cadernos-personalization-question-title {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.unit-row .cadernos-personalization-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+/* O campo do nome sai de dentro do "Sim" e ocupa a linha toda por baixo. */
+.unit-row .cadernos-personalization-choice {
+  display: contents;
+}
+
+.unit-row .cadernos-personalization-drawer {
+  grid-column: 1 / -1;
+  order: 1;
+  margin-top: 0;
+}
+
+.unit-row .cadernos-personalization-card.choice-card.crachas-size-card {
+  grid-template-columns: minmax(0, 1fr) 22px;
+  gap: 6px;
+  padding: 10px 12px;
+}
+
+.unit-row .cadernos-personalization-card .choice-copy strong {
+  font-size: 0.98rem;
+}
+
+.unit-row .cadernos-personalization-card .choice-copy span {
+  font-size: 0.78rem;
+}
+
+.unit-row .choice-card.crachas-size-card {
+  min-height: 0;
+  padding: 12px;
+}
+
+.unit-row .choice-card.crachas-size-card .choice-copy strong {
+  font-size: 1.08rem;
+}
+
+/* Dentro de uma linha, os cantos metálicos ficam compactos. */
+.unit-row .pf-metal-corners-toggle {
+  grid-template-columns: 64px minmax(0, 1fr) 24px;
+  gap: 10px;
+  padding: 8px;
+}
+
+.unit-row .pf-metal-corners-image {
+  height: 52px;
+}
+
+.unit-row .pf-metal-corners-copy strong {
+  font-size: 0.98rem;
+}
+
+.unit-row .pf-metal-corners-copy small {
+  display: none;
+}
+
+@media (max-width: 620px) {
+  .unit-row {
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .unit-row-cover .unit-slot-cover {
+    width: 52px;
+  }
+}
+
+/* Botões "em todas" por cima da grelha ou das linhas. Ficam marcados
+   (visto) quando já se aplicam a todas. */
+.unit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.unit-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 16px 8px 10px;
+  border: 1px solid var(--ui-border-warm);
+  border-radius: 999px;
+  background: var(--ui-card);
+  color: var(--moss);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.unit-action:hover:not(:disabled) {
+  background: var(--surface-gold-soft);
+}
+
+.unit-action:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.unit-action-check {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid color-mix(in srgb, var(--moss) 45%, var(--line));
+  border-radius: 999px;
+  color: transparent;
+}
+
+.unit-action-check svg {
+  width: 12px;
+  height: 12px;
+}
+
+.unit-action.is-pressed {
+  border-color: var(--moss);
+  background: var(--surface-gold-soft);
+}
+
+.unit-action.is-pressed .unit-action-check {
+  border-color: var(--moss);
+  background: var(--moss);
+  color: var(--paper);
+}
+
+.unit-notice {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line));
+  border-radius: var(--ui-radius-lg);
+  background: var(--surface-gold-soft);
+  color: var(--ink);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+/* Na grelha: o design repetido mostra quantas vezes foi escolhido, e o da
+   unidade destacada ganha um contorno dourado. */
+.crachas-size-card-selected.has-count {
+  width: auto;
+  min-width: 22px;
+  padding: 0 7px;
+  font-size: 0.74rem;
+  letter-spacing: 0.01em;
+}
+
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .choice-card.cadernos-cover-card.is-selected.is-current-unit {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 55%, transparent);
+}
+
+@media (max-width: 620px) {
+  .unit-quantity {
+    padding-left: 14px;
+  }
+
+  .unit-quantity-label {
+    font-size: 1.06rem;
+  }
+
+  .unit-tray,
+  .unit-tray-mini-anchor {
+    top: 62px;
+  }
+
+}
