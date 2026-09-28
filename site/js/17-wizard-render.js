@@ -1706,8 +1706,11 @@
 
   function renderAssignmentSplitToggle(product, step) {
     var together = assignmentTogetherConfig(step);
+    var mia = configuredUnitMiaChoice(product, step);
     var split;
     if (!together) return "";
+    // Com a Mia a escolher não há acabamentos para separar.
+    if (mia && configuredUnitMiaChoicePressed(product, step, mia)) return "";
     split = !assignmentTogetherActive(product, step);
     return '<button type="button" class="pf-assignment-split-toggle' + (split ? ' is-on' : '') + '" data-assignment-split="' + escapeHtml(step.id || "") + '" aria-pressed="' + split + '">'
       + '<span class="pf-assignment-split-switch" aria-hidden="true"></span>'
@@ -1774,6 +1777,7 @@
     });
     document.querySelectorAll("[data-assignment-split]").forEach(function (button) {
       button.addEventListener("click", function () {
+        captureConfiguredUnitSlots(product, currentStep(product), button);
         toggleAssignmentSplit(product, findStep(product, String(button.dataset.assignmentSplit || "")));
         state.errors = "";
         rerenderProduct(product);
@@ -3669,14 +3673,30 @@
   }
 
   // De onde copiam os "em todas": a unidade destacada; senão, a última onde
-  // se escolheu; senão, a primeira que tenha a escolha.
-  function configuredUnitActionSource(product, fields) {
+  // se escolheu; senão, a primeira que tenha a escolha. Com partial
+  // (partialSource no JSON: acabamentos do conjunto), basta um dos campos e
+  // os que faltam recebem esse valor — um acabamento chega para o A4 e o A6.
+  function configuredUnitActionSource(product, fields, partial) {
     var units = configuredUnitList();
     var active = units[configuredUnitIndex(product)];
     var last = state.configuredUnitLastChoice == null ? null : units[state.configuredUnitLastChoice];
-    if (active && configuredUnitHasFields(active, fields)) return active;
-    if (last && configuredUnitHasFields(last, fields)) return last;
-    return units.filter(function (unit) { return configuredUnitHasFields(unit, fields); })[0] || null;
+    var has = partial ? function (unit) {
+      return fields.some(function (field) { return unit[field] !== undefined && unit[field] !== ""; });
+    } : function (unit) { return configuredUnitHasFields(unit, fields); };
+    var source = active && has(active) ? active : last && has(last) ? last : units.filter(has)[0] || null;
+    var filled;
+    var fallback;
+    if (!source || !partial) return source;
+    filled = cloneJson(source);
+    fallback = fields.map(function (field) { return filled[field]; }).filter(function (value) { return value !== undefined && value !== ""; })[0];
+    fields.forEach(function (field) {
+      if (filled[field] === undefined || filled[field] === "") filled[field] = fallback;
+    });
+    return filled;
+  }
+
+  function configuredUnitSourceFor(product, action) {
+    return configuredUnitActionSource(product, configuredUnitActionFields(product, action), action.partialSource === true);
   }
 
   function configuredUnitActionPressed(product, step, action) {
@@ -3713,14 +3733,14 @@
     var turnOff;
     saveConfiguredUnit(product);
     units = configuredUnitList();
-    if (action.type === "same" && !configuredUnitActionSource(product, fields)) return false;
+    if (action.type === "same" && !configuredUnitSourceFor(product, action)) return false;
     var affected = action.type === "same" ? configuredUnitActionCopyFields(product, action) : action.type === "toggle-all" ? Object.keys(action.values || {})
       : questions.reduce(function (keys, question) { return keys.concat([question.field, question.textField]); }, []);
     var resetGroups = action.coverFields ? configuredUnitCoverGroups(product) : [];
     resetGroups.forEach(function (group) { affected = affected.concat((step.resetFieldsByGroup || {})[group.id] || []); });
     state.configuredUnitActionUndo = { stepId: step.id, units: units, before: cloneJson(units), fields: affected, sameName: !!state.configuredUnitSameName };
     if (action.type === "same") {
-      source = configuredUnitActionSource(product, fields);
+      source = configuredUnitSourceFor(product, action);
       source = cloneJson(source);
       units.forEach(function (unit) {
         resetGroups.forEach(function (group) {
@@ -3827,7 +3847,7 @@
     var seen = {};
     var source;
     if (action.type === "same") {
-      source = configuredUnitActionSource(product, configuredUnitActionFields(product, action));
+      source = configuredUnitSourceFor(product, action);
       if (!source) return "";
       configuredUnitActionFields(product, action).forEach(function (field) {
         entries.push(source[field] === OWN_DESIGN_VALUE
@@ -3866,7 +3886,7 @@
     var source;
     var names = [];
     if (text.indexOf("{item}") === -1) return escapeHtml(text);
-    source = ready ? configuredUnitActionSource(product, configuredUnitActionFields(product, action)) : null;
+    source = ready ? configuredUnitSourceFor(product, action) : null;
     if (source) {
       configuredUnitActionFields(product, action).forEach(function (field) {
         var found = configuredUnitFieldItem(product, field, source[field]);
@@ -3888,7 +3908,7 @@
       var pressed;
       var label;
       if (!configuredUnitActionInTray(product, step, action)) return "";
-      ready = action.type !== "same" || !!configuredUnitActionSource(product, configuredUnitActionFields(product, action));
+      ready = action.type !== "same" || !!configuredUnitSourceFor(product, action);
       pressed = ready && configuredUnitActionPressed(product, step, action);
       label = configuredUnitTrayActionLabel(product, action, ready);
       return '<button type="button" class="unit-tray-action' + (pressed ? ' is-pressed' : '') + '" data-unit-action="' + actionIndex + '" aria-pressed="' + pressed + '"'
@@ -3910,7 +3930,7 @@
       var price;
       var preview;
       if (configuredUnitActionInTray(product, step, action)) return "";
-      if (action.type === "same" && !configuredUnitActionSource(product, configuredUnitActionFields(product, action))) {
+      if (action.type === "same" && !configuredUnitSourceFor(product, action)) {
         return '<p class="unit-action is-hint has-preview" role="note">'
           + '<span class="unit-action-preview" aria-hidden="true"><span class="unit-action-thumb is-empty"></span></span>'
           + '<span class="unit-action-copy"><span>' + escapeHtml(action.emptyLabel || action.label || "") + '</span></span></p>';
@@ -4099,6 +4119,7 @@
     var selected;
     var extra;
     var ribbon;
+    var ribbons = 0;
     if (cornerGroups.length) {
       field = String((cornerGroups.filter(function (candidate) {
         return String(candidate && (candidate.id || candidate.label) || "") === group.id;
@@ -4108,7 +4129,7 @@
       selected = String(state.selections[field] || "") === String(item.value || "");
       extra = Math.max(0, parseInt(item.extraPriceCentsPerUnit, 10) || 0);
       fields.push(field);
-      html += '<div class="unit-choice' + (item.image ? ' has-media' : '') + (selected ? ' is-selected' : '') + '" role="button" tabindex="0" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(field) + '" data-pf-metal-corners-value="' + escapeHtml(item.value || "") + '" aria-pressed="' + selected + '">'
+      html += '<div class="unit-choice unit-choice--corners' + (item.image ? ' has-media' : '') + (selected ? ' is-selected' : '') + '" role="button" tabindex="0" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(field) + '" data-pf-metal-corners-value="' + escapeHtml(item.value || "") + '" aria-pressed="' + selected + '">'
         + (item.image ? '<span class="unit-choice-media">' + renderVisual(item, "media-list", source) + renderDesignZoomButton(product, Object.assign({}, source, { showDesignZoom: true }), item) + '</span>' : '')
         + '<span class="unit-choice-copy"><strong>' + escapeHtml(item.title || "Quero cantos metálicos") + '</strong>' + (extra ? '<small>+ ' + escapeHtml(formatCents(extra)) + '</small>' : '') + '</span>'
         + '<span class="unit-choice-check" aria-hidden="true">' + ICON_CHECK + '</span>'
@@ -4117,6 +4138,7 @@
     ribbon = isCustomArtworkSelected(product) ? ownDesignRibbonDrawer(product, step, group.id) : null;
     if (ribbon) {
       fields.push(ribbon.field);
+      ribbons = ribbon.items.length;
       html += ribbon.items.map(function (entry) {
         var value = String(entry.value || "");
         return renderConfiguredUnitRowChoice(ribbon.field + suffix, value, String(state.selections[ribbon.field] || "") === value,
@@ -4125,6 +4147,7 @@
       }).join("");
     } else if (variationField && variations.length > 1) {
       fields.push(variationField);
+      ribbons = variations.length;
       html += variations.map(function (variation) {
         var value = String(variation.value || "");
         return renderConfiguredUnitRowChoice(variationField + suffix, value, String(state.selections[variationField] || "") === value,
@@ -4133,7 +4156,7 @@
           variation.title || value, "");
       }).join("");
     }
-    return { fields: fields, count: (html.match(/class="unit-choice[ "]/g) || []).length, html: '<div class="unit-row-options unit-row-options--details">' + html + '</div>' };
+    return { fields: fields, ribbons: ribbons, html: '<div class="unit-row-options unit-row-options--details">' + html + '</div>' };
   }
 
   // A capa da linha: no passo dos detalhes, a fotografia da fita escolhida.
@@ -4176,9 +4199,10 @@
           var rowLabel = (unitLine ? unitLine + " " : "") + coverLine;
           var invalidRow = body.fields.some(function (field) { return state.invalidFields.indexOf(field) !== -1; });
           return [
-            // Detalhes: só os cantos ocupam a linha toda; com fitas, se não
-            // couberem ao lado da capa, passam todos para baixo dela.
-            '<section class="unit-row' + (invalidRow ? ' is-invalid' : '') + (kind === "details" ? (body.count > 1 ? ' is-details-multi' : ' is-details-single') : '') + '" data-unit-row="' + unitIndex + '">',
+            // Detalhes: três colunas iguais em todas as linhas — a capa, e os
+            // cantos a ocupar as outras duas; as fitas por baixo dos cantos
+            // (com três ou mais, a partir da primeira coluna).
+            '<section class="unit-row' + (invalidRow ? ' is-invalid' : '') + (kind === "details" ? ' is-details' + (body.ribbons >= 3 ? ' has-many-ribbons' : '') : '') + '" data-unit-row="' + unitIndex + '">',
             '<div class="unit-row-cover" aria-hidden="true">',
             '<span class="unit-slot-cover' + (cover.item ? '' : ' is-empty' + (isAssortedSelected(product) ? ' is-mia' : '')) + '">' + (cover.item ? renderUnitVisual(cover.item, cover.step) : '') + '</span>',
             '<span class="unit-slot-number unit-row-label">' + (unitLine ? '<span>' + escapeHtml(unitLine) + '</span>' : '') + '<span>' + escapeHtml(coverLine) + '</span></span>',
@@ -4610,8 +4634,9 @@
     fly.style.width = to.width + "px";
     fly.style.height = to.height + "px";
     document.body.appendChild(fly);
-    // A segunda carta (A6 do conjunto) sai logo atrás da primeira.
-    delay = (old ? 150 : 0) + order * 90;
+    // A segunda carta (A6 do conjunto) sai logo atrás da primeira; nas
+    // mudanças em grupo o intervalo encurta com o número de cartas.
+    delay = (old ? 150 : 0) + order * (deal.stagger == null ? 90 : deal.stagger);
     if (old) discardConfiguredUnitCover(old, to);
     scale = Math.max(0.2, Math.min(from.width / to.width, from.height / to.height));
     dx = from.left + from.width / 2 - (to.left + to.width / 2);
@@ -4637,6 +4662,101 @@
     flight.oncancel = land;
     // Os eventos da animação só chegam com frames; o lugar não pode ficar à espera.
     window.setTimeout(land, 460 + delay);
+  }
+
+  // MUDANÇAS EM GRUPO ("Aplicar a todos", "Quero que a Mia escolha",
+  // reverter): antes da mudança guarda-se o que cada lugar da fila mostra;
+  // depois do render, cada lugar que mudou anima — a capa antiga cai e a
+  // nova voa do seu cartão na grelha (ou do botão, se o cartão não estiver
+  // à vista).
+  function configuredUnitSlotKey(group, unit) {
+    var item = configuredUnitCoverItem(group, unit);
+    return item && !item.miaChoice ? String(item.id || item.value || "") : "";
+  }
+
+  function configuredUnitSlotCovers(unit, group) {
+    return Array.prototype.map.call(document.querySelectorAll('[data-unit-slot="' + unit + '"]'), function (slot) {
+      return slot.querySelectorAll(".unit-slot-cover")[group];
+    }).filter(Boolean);
+  }
+
+  function captureConfiguredUnitSlots(product, step, source) {
+    var groups;
+    if (!step || !configuredUnitLayoutActive(product, step) || !isConfiguredPickStep(product, step)) return;
+    groups = configuredUnitSlotGroups(product, step);
+    saveConfiguredUnit(product);
+    state.configuredUnitBulk = {
+      stepId: step.id,
+      rect: source ? source.getBoundingClientRect() : null,
+      before: configuredUnitViewList(product).map(function (unit, unitIndex) {
+        return groups.map(function (group, groupIndex) {
+          var target = configuredUnitDealTarget(unitIndex, groupIndex);
+          var cover = target ? target.cover : null;
+          return {
+            key: configuredUnitSlotKey(group, unit),
+            clone: cover && !cover.classList.contains("is-empty") ? cover.cloneNode(true) : null
+          };
+        });
+      })
+    };
+  }
+
+  function configuredUnitGridSource(group, unit) {
+    var item = configuredUnitCoverItem(group, unit);
+    var value = String(unit[group.field] || "");
+    var esc = window.CSS && CSS.escape ? CSS.escape : function (text) { return String(text).replace(/["\\]/g, "\\$&"); };
+    var upload;
+    var input;
+    var toggle;
+    var card;
+    if (!item) return null;
+    if (item.ownDesign) {
+      upload = ownDesignUpload(unit);
+      return upload ? document.querySelector('[data-own-design-pick="' + esc(upload.token) + '"] .pf-own-design-media') : null;
+    }
+    input = document.querySelector('input[data-grouped-design-choice][data-grouped-design-field="' + esc(group.field) + '"][value="' + esc(value) + '"]')
+      || document.querySelector('input[data-option-drawer-choice][data-option-drawer-field="' + esc(group.field) + '"][value="' + esc(value) + '"]');
+    if (input && input.closest("label")) return input.closest("label").querySelector(".cadernos-cover-media");
+    toggle = document.querySelector('[data-assignment-toggle][data-assignment-field="' + esc(group.field) + '"][data-assignment-value="' + esc(value) + '"]');
+    card = toggle ? toggle.closest(".pf-assignment-card") : document.querySelector('[data-assignment-together][data-assignment-value="' + esc(String(item.value || "")) + '"]');
+    return card ? card.querySelector(".pf-assignment-card-trigger") || card.querySelector(".cadernos-cover-media") : null;
+  }
+
+  function playConfiguredUnitBulk(product) {
+    var bulk = state.configuredUnitBulk;
+    var step = currentStep(product);
+    var groups;
+    var cells = [];
+    var stagger;
+    state.configuredUnitBulk = null;
+    if (!bulk || !step || step.id !== bulk.stepId || !document.body.animate) return;
+    groups = configuredUnitSlotGroups(product, step);
+    saveConfiguredUnit(product);
+    configuredUnitViewList(product).forEach(function (unit, unitIndex) {
+      groups.forEach(function (group, groupIndex) {
+        var before = bulk.before[unitIndex] && bulk.before[unitIndex][groupIndex] || { key: "", clone: null };
+        var key = configuredUnitSlotKey(group, unit);
+        var from;
+        if (key === before.key) return;
+        from = key ? configuredUnitGridSource(group, unit) : null;
+        cells.push({
+          unit: unitIndex,
+          group: groupIndex,
+          old: before.clone,
+          rect: key ? (from ? from.getBoundingClientRect() : bulk.rect) : null
+        });
+      });
+    });
+    stagger = cells.length > 1 ? Math.min(70, 700 / cells.length) : 0;
+    cells.forEach(function (cell, order) {
+      var covers = cell.rect ? configuredUnitSlotCovers(cell.unit, cell.group).filter(function (cover) {
+        return !cover.classList.contains("is-empty");
+      }) : [];
+      covers.forEach(function (cover) { cover.classList.add("is-empty", "is-awaiting-deal"); });
+      flyConfiguredUnitDeal({ unit: cell.unit, rect: cell.rect, stagger: stagger }, cell.group, cell.old, order, function () {
+        covers.forEach(function (cover) { cover.classList.remove("is-empty", "is-awaiting-deal"); });
+      });
+    });
   }
 
   // A setinha por baixo da unidade activa desliza do sítio onde estava, como
@@ -4697,6 +4817,7 @@
         var action = configuredUnitActions(product, step)[actionIndex];
         var undo = state.configuredUnitActionUndo;
         if (!action) return;
+        captureConfiguredUnitSlots(product, step, button);
         // Voltar a carregar num botão já aplicado desfaz o que ele fez, sem
         // novo "Reverter"; o pop que estiver aberto sai.
         if (configuredUnitActionPressed(product, step, action)) {
@@ -4707,6 +4828,7 @@
             applyConfiguredUnitAction(product, step, action);
             state.configuredUnitActionUndo = null;
           } else {
+            state.configuredUnitBulk = null;
             return;
           }
           state.errors = "";
@@ -4714,7 +4836,10 @@
           rerenderProduct(product);
           return;
         }
-        if (!applyConfiguredUnitAction(product, step, action)) return;
+        if (!applyConfiguredUnitAction(product, step, action)) {
+          state.configuredUnitBulk = null;
+          return;
+        }
         if (state.configuredUnitActionUndo) state.configuredUnitActionUndo.actionIndex = actionIndex;
         pushConfiguredUnitActionUndo(step, action);
         state.errors = "";
@@ -4724,7 +4849,11 @@
     });
     document.querySelectorAll("[data-unit-mia-choice]").forEach(function (button) {
       button.addEventListener("click", function () {
-        if (!toggleConfiguredUnitMiaChoice(product, currentStep(product))) return;
+        captureConfiguredUnitSlots(product, currentStep(product), button);
+        if (!toggleConfiguredUnitMiaChoice(product, currentStep(product))) {
+          state.configuredUnitBulk = null;
+          return;
+        }
         try { trackOptionSelected(product, "mia_choice", state.selections.assorted_designs === "1" ? "on" : "toggle", ""); } catch (e) {}
         state.errors = "";
         state.invalidFields = [];
@@ -4750,6 +4879,7 @@
     bindOwnDesignCards(product);
     bindAssignmentTogether(product);
     playConfiguredUnitDeal();
+    playConfiguredUnitBulk(product);
     placeConfiguredUnitMarkers();
     animateConfiguredDesignBadges();
 

@@ -3332,8 +3332,6 @@ html[data-theme="dark"] .pf-fluid-variation {
 .unit-rows {
   --unit-row-cover: clamp(92px, 30%, 170px);
   display: grid;
-  container-name: unit-rows;
-  container-type: inline-size;
 }
 
 .unit-row-set {
@@ -4230,39 +4228,47 @@ html[data-theme="dark"] .pf-fluid-variation {
   background-position: center;
 }
 
-/* Detalhes só com os cantos: o cartão ocupa a linha toda, imagem ao lado
-   do texto. */
-.unit-row.is-details-single .unit-row-options--details {
+/* Detalhes: a mesma grelha em todas as linhas do ecrã — três colunas
+   iguais; a capa na primeira, os cantos nas outras duas (da altura da capa,
+   com a fotografia a encher o espaço) e as fitas por baixo dos cantos. Com
+   três ou mais fitas (design próprio), começam na primeira coluna. */
+.unit-row.is-details {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 10px;
+}
+
+.unit-row.is-details .unit-row-cover {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+}
+
+.unit-row.is-details .unit-row-body,
+.unit-row.is-details .unit-row-options--details {
+  display: contents;
+}
+
+.unit-row.is-details .unit-choice--corners {
+  grid-column: 2 / 4;
+  grid-row: 1;
+}
+
+/* Cantos: a fotografia em cima a encher o que sobra da altura da capa, o
+   texto por baixo, como nos outros cartões. */
+.unit-row.is-details .unit-choice--corners.has-media {
   grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-content: stretch;
 }
 
-.unit-row.is-details-single .unit-choice.has-media {
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-  padding: 8px 32px 8px 8px;
+.unit-row.is-details .unit-choice--corners .unit-choice-media {
+  aspect-ratio: auto;
+  min-height: 80px;
 }
 
-.unit-row.is-details-single .unit-choice-media {
-  aspect-ratio: 4 / 3;
-}
-
-/* Com fitas, se os três cartões não cabem ao lado da capa: a capa sozinha
-   na primeira linha e os cartões por baixo, em colunas iguais à dela. */
-@container unit-rows (max-width: 519px) {
-  .unit-row.is-details-multi {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-  }
-
-  .unit-row.is-details-multi .unit-row-body {
-    grid-column: 1 / -1;
-  }
-
-  .unit-row.is-details-multi .unit-row-options--details {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-  }
+.unit-row.is-details:not(.has-many-ribbons) .unit-choice--corners + .unit-choice {
+  grid-column-start: 2;
 }
 
 /* "Mia" no lugar por escolher do acabamento: ao centro, longe do visto. */
@@ -4278,4 +4284,14 @@ html[data-theme="dark"] .pf-fluid-variation {
 .unit-mini-track .unit-slot-cover.is-mia::after,
 .pf-units-summary-row .unit-slot-cover.is-mia::after {
   font-size: 0.8rem;
+}
+
+/* Detalhes: mais ar entre cada capa (com as suas opções) e a seguinte. */
+.unit-rows--details .unit-row-set {
+  gap: 34px;
+  padding: 30px 0;
+}
+
+.unit-rows--details .unit-row-set:first-child {
+  padding-top: 0;
 }

@@ -1222,6 +1222,7 @@
         if (!undo) {
           return;
         }
+        captureConfiguredUnitSlots(product, currentStep(product), button);
         // Acções "em todas": repõe as unidades como estavam antes.
         if (undo.kind === "unit-action") {
           undos.splice(undoIndex, 1);
