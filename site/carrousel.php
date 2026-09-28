@@ -15,8 +15,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Carrosséis · Mia &amp; Paper</title>
-<link rel="stylesheet" href="admin-nav.css?v=20260928190007">
-<script src="admin-nav.js?v=20260928190007" defer></script>
+<link rel="stylesheet" href="admin-nav.css?v=20260928225957">
+<script src="admin-nav.js?v=20260928225957" defer></script>
 <style>
   :root {
     --fundo: #14153a;        --fundo-2: #101132;
