@@ -3419,17 +3419,34 @@ html[data-theme="dark"] .pf-fluid-variation {
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
 }
 
+/* Detalhes: cartões com a imagem em cima (cantos, fitas), lupa no canto
+   da imagem e o nome por baixo. */
 .unit-row-options--details {
-  display: flex;
-  flex-wrap: wrap;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 112px), 1fr));
 }
 
-.unit-row-options--details > .unit-choice {
-  flex: 1 1 76px;
+.unit-row-options--details .unit-choice-media {
+  aspect-ratio: 4 / 5;
 }
 
-.unit-row-options--details > .unit-choice--wide {
-  flex: 2 1 150px;
+/* A fotografia dos cantos enche o cartão; as das fitas mostram a capa toda. */
+.unit-row-options--details [data-pf-metal-corners-toggle] .unit-choice-media .uploaded-image-inner {
+  background-size: cover !important;
+}
+
+.unit-row-options--details .unit-choice.has-media .unit-choice-copy strong {
+  font-size: 0.9rem;
+}
+
+.unit-choice-media .design-zoom-button {
+  right: 6px;
+  bottom: 6px;
+}
+
+@media (max-width: 620px) {
+  .unit-row-options--details {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 96px), 1fr));
+  }
 }
 
 /* Cantos metálicos: imagem pequena antes do texto. */
@@ -4141,23 +4158,6 @@ html[data-theme="dark"] .pf-fluid-variation {
   position: relative;
 }
 
-.unit-choice-thumb-wrap {
-  position: relative;
-  flex: 0 0 auto;
-}
-
-.unit-choice-thumb-wrap .design-zoom-button {
-  right: -8px;
-  bottom: -8px;
-  width: 24px;
-  height: 24px;
-}
-
-.unit-choice-thumb-wrap .design-zoom-button svg {
-  width: 13px;
-  height: 13px;
-}
-
 /* Um acabamento por conjunto: o cartão escolhe para o A4 e o A6. */
 .pasta-de-folhetos-fluid .pf-fluid-cover-list .pf-assignment-card.is-together {
   cursor: pointer;
@@ -4218,4 +4218,10 @@ html[data-theme="dark"] .pf-fluid-variation {
 
 .pf-assignment-split-toggle.is-on .pf-assignment-split-switch::after {
   transform: translateX(14px);
+}
+
+/* "Aplicar Matte a todos": o nome do acabamento em itálico. */
+.unit-tray-action-label em {
+  font-style: italic;
+  font-weight: 800;
 }

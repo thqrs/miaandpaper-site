@@ -2882,6 +2882,7 @@
     var config = unitConfiguration(product);
     if (configuredUnitsActive(product, step)) return true;
     if (!config || state.admin || !isConfiguredUnitStep(product, step)) return false;
+    if ((config.rowLayoutAlwaysStepIds || []).indexOf(step.id) !== -1) return true;
     return (config.singleUnitLayoutSizes || []).indexOf(String(state.selections[config.sizeField || "size"] || "")) !== -1;
   }
 
@@ -3858,6 +3859,24 @@
     return !!(action && action.shortLabel && configuredUnitLayoutActive(product, step) && !isConfiguredRowStep(product, step));
   }
 
+  // "{item}" no shortLabel: o nome do que vai ser aplicado, em itálico
+  // (no conjunto, "Matte + Glossy" se forem diferentes).
+  function configuredUnitTrayActionLabel(product, action, ready) {
+    var text = String(action.shortLabel || "");
+    var source;
+    var names = [];
+    if (text.indexOf("{item}") === -1) return escapeHtml(text);
+    source = ready ? configuredUnitActionSource(product, configuredUnitActionFields(product, action)) : null;
+    if (source) {
+      configuredUnitActionFields(product, action).forEach(function (field) {
+        var found = configuredUnitFieldItem(product, field, source[field]);
+        var name = found && found.item ? String(found.item.title || found.item.value || "") : "";
+        if (name && names.indexOf(name) === -1) names.push(name);
+      });
+    }
+    return text.split("{item}").map(escapeHtml).join(names.length ? "<em>" + escapeHtml(names.join(" + ")) + "</em>" : "").replace(/\s{2,}/g, " ");
+  }
+
   function renderConfiguredUnitTrayActions(product, step, inert) {
     var html;
     var mia = configuredUnitMiaChoice(product, step);
@@ -3867,14 +3886,16 @@
     html = configuredUnitActions(product, step).map(function (action, actionIndex) {
       var ready;
       var pressed;
+      var label;
       if (!configuredUnitActionInTray(product, step, action)) return "";
       ready = action.type !== "same" || !!configuredUnitActionSource(product, configuredUnitActionFields(product, action));
       pressed = ready && configuredUnitActionPressed(product, step, action);
+      label = configuredUnitTrayActionLabel(product, action, ready);
       return '<button type="button" class="unit-tray-action' + (pressed ? ' is-pressed' : '') + '" data-unit-action="' + actionIndex + '" aria-pressed="' + pressed + '"'
         + ' title="' + escapeHtml(ready ? action.label || "" : action.emptyLabel || action.label || "") + '"'
         + (ready ? '' : ' disabled') + (inert ? ' tabindex="-1"' : '') + '>'
         + (ready ? configuredUnitActionPreview(product, step, action) : '')
-        + '<span class="unit-tray-action-label">' + escapeHtml(action.shortLabel) + '</span>'
+        + '<span class="unit-tray-action-label">' + label + '</span>'
         + '<span class="unit-action-check" aria-hidden="true">' + ICON_CHECK + '</span></button>';
     }).join("");
     return html ? '<div class="unit-tray-actions">' + html + '</div>' : "";
@@ -4087,8 +4108,8 @@
       selected = String(state.selections[field] || "") === String(item.value || "");
       extra = Math.max(0, parseInt(item.extraPriceCentsPerUnit, 10) || 0);
       fields.push(field);
-      html += '<div class="unit-choice unit-choice--wide' + (selected ? ' is-selected' : '') + '" role="button" tabindex="0" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(field) + '" data-pf-metal-corners-value="' + escapeHtml(item.value || "") + '" aria-pressed="' + selected + '">'
-        + (item.image ? '<span class="unit-choice-thumb-wrap"><span class="unit-choice-thumb" aria-hidden="true">' + renderVisual(item, "media-list", source) + '</span>' + renderDesignZoomButton(product, Object.assign({}, source, { showDesignZoom: true }), item) + '</span>' : '')
+      html += '<div class="unit-choice' + (item.image ? ' has-media' : '') + (selected ? ' is-selected' : '') + '" role="button" tabindex="0" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(field) + '" data-pf-metal-corners-value="' + escapeHtml(item.value || "") + '" aria-pressed="' + selected + '">'
+        + (item.image ? '<span class="unit-choice-media">' + renderVisual(item, "media-list", source) + renderDesignZoomButton(product, Object.assign({}, source, { showDesignZoom: true }), item) + '</span>' : '')
         + '<span class="unit-choice-copy"><strong>' + escapeHtml(item.title || "Quero cantos metálicos") + '</strong>' + (extra ? '<small>+ ' + escapeHtml(formatCents(extra)) + '</small>' : '') + '</span>'
         + '<span class="unit-choice-check" aria-hidden="true">' + ICON_CHECK + '</span>'
         + '</div>';
@@ -4108,7 +4129,8 @@
         var value = String(variation.value || "");
         return renderConfiguredUnitRowChoice(variationField + suffix, value, String(state.selections[variationField] || "") === value,
           'data-continuous-variation-choice data-continuous-variation-step="' + escapeHtml(variationStep.id || "") + '" data-continuous-variation-field="' + escapeHtml(variationField) + '" data-continuous-variation-group="' + escapeHtml(group.id) + '"',
-          "", variation.title || value, "");
+          variation.image ? renderVisual(variation, "media-list", variationStep) + renderDesignZoomButton(product, Object.assign({}, variationStep, { showDesignZoom: true }), variation) : "",
+          variation.title || value, "");
       }).join("");
     }
     return { fields: fields, html: '<div class="unit-row-options unit-row-options--details">' + html + '</div>' };
@@ -4506,7 +4528,9 @@
   // No acabamento, a capa da pasta (no canto do lugar) desce a meio da
   // viagem da carta até deixar o lugar livre, e volta a subir quando ela
   // assenta. Anda numa cópia por cima de tudo, para se ver inteira.
-  function duckConfiguredUnitRef(cover, delay) {
+  // Ao tirar um acabamento (sem carta nova a caminho) só se desvia até meio,
+  // enquanto o antigo cai.
+  function duckConfiguredUnitRef(cover, delay, half) {
     var ref = cover.querySelector(".unit-slot-ref");
     var coverRect;
     var refRect;
@@ -4531,8 +4555,13 @@
     ghost.appendChild(inner);
     document.body.appendChild(ghost);
     ref.style.visibility = "hidden";
-    total = delay + 400 + 280;
-    animation = inner.animate([
+    total = half ? 460 : delay + 400 + 280;
+    animation = inner.animate(half ? [
+      { transform: "translateY(0)", easing: "cubic-bezier(.3,0,.3,1)" },
+      { transform: "translateY(" + Math.round(drop / 2) + "px)", offset: 0.28 },
+      { transform: "translateY(" + Math.round(drop / 2) + "px)", offset: 0.45, easing: "cubic-bezier(.25,1.3,.4,1)" },
+      { transform: "translateY(0)" }
+    ] : [
       { transform: "translateY(0)" },
       { transform: "translateY(0)", offset: (delay + 170) / total, easing: "cubic-bezier(.4,0,.3,1)" },
       { transform: "translateY(" + drop + "px)", offset: (delay + 310) / total },
@@ -4560,7 +4589,10 @@
     var flight;
     var delay;
     if (!target || !deal.rect) {
-      if (target && old) discardConfiguredUnitCover(old, target.rect);
+      if (target && old) {
+        discardConfiguredUnitCover(old, target.rect);
+        duckConfiguredUnitRef(target.cover, 0, true);
+      }
       settle();
       return;
     }
