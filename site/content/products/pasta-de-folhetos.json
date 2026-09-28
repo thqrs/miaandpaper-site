@@ -1100,9 +1100,13 @@
                 "field": "size",
                 "equals": "A4 + A6"
             },
+            "showDesignZoom": true,
             "assignmentPicker": {
                 "sourceStepId": "extras",
                 "sourceDrawerId": "finish-choice",
+                "together": {
+                    "splitLabel": "Acabamentos diferentes no A4 e no A6"
+                },
                 "previewLabel": "Imagem ilustrativa",
                 "slotsTitle": "Acabamentos escolhidos:",
                 "undoMessage": "Acabamento {group} atualizado.",
@@ -2368,6 +2372,7 @@
             "template": "option-drawers",
             "display": "pasta-de-folhetos-finish-cards",
             "cardStyle": "cover",
+            "showDesignZoom": true,
             "hideIncludedLabel": true,
             "when": {
                 "field": "size",

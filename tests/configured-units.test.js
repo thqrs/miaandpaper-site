@@ -155,6 +155,7 @@ run(`
   if (typeof escapeHtml !== 'function') var escapeHtml = function (v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
   if (typeof ICON_CHECK === 'undefined') var ICON_CHECK = '<svg></svg>';
   if (typeof renderVisual !== 'function') var renderVisual = function (item) { return '<span data-visual="' + escapeHtml(item.value) + '"></span>'; };
+  if (typeof renderDesignZoomButton !== 'function') var renderDesignZoomButton = function () { return ''; };
   if (typeof siteErrorMarkup !== 'function') var siteErrorMarkup = function (text) { return '<p>' + escapeHtml(text) + '</p>'; };
 `);
 run(`

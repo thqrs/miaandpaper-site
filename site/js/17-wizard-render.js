@@ -915,7 +915,7 @@
 
   function renderOptionDrawerCoverCard(product, step, drawer, item) {
     var selected = String(state.selections[drawer.field] || "") === String(item.value || "");
-    var mediaStep = Object.assign({}, step, { showDesignZoom: false });
+    var mediaStep = Object.assign({}, step, { showDesignZoom: step.showDesignZoom === true });
     var multiple = configuredUnitsActive(product, step);
     var muted = multiple && state.selections[drawer.field] && !selected ? ' is-muted' : '';
 
@@ -1152,23 +1152,23 @@
         var groupSelected = groupField && String(state.selections[groupField] || "") === value;
 
         return [
-          '<button type="button" class="pf-metal-corners-toggle' + (groupSelected ? ' is-selected' : '') + '" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(groupField) + '" data-pf-metal-corners-value="' + escapeHtml(value) + '" aria-pressed="' + (groupSelected ? 'true' : 'false') + '">',
-          '<span class="pf-metal-corners-image">' + renderVisual(item, "media-list", sourceStep) + '</span>',
+          '<div class="pf-metal-corners-toggle' + (groupSelected ? ' is-selected' : '') + '" role="button" tabindex="0" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(groupField) + '" data-pf-metal-corners-value="' + escapeHtml(value) + '" aria-pressed="' + (groupSelected ? 'true' : 'false') + '">',
+          '<span class="pf-metal-corners-image">' + renderVisual(item, "media-list", sourceStep) + renderDesignZoomButton(product, Object.assign({}, sourceStep, { showDesignZoom: true }), item) + '</span>',
           '<span class="pf-metal-corners-copy"><strong>' + escapeHtml((item.title || "Quero cantos metálicos") + (groupLabel ? " · " + groupLabel : "")) + '</strong><small>' + escapeHtml(item.subtitle || "") + '</small></span>',
           '<span class="pf-metal-corners-price">+' + escapeHtml(formatCents(extra)) + '</span>',
           '<span class="pf-metal-corners-check" aria-hidden="true">✓</span>',
-          '</button>'
+          '</div>'
         ].join("");
       }).join("") + '</div>';
     }
 
     return [
-      '<button type="button" class="pf-metal-corners-toggle' + (selected ? ' is-selected' : '') + '" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(field) + '" data-pf-metal-corners-value="' + escapeHtml(value) + '" aria-pressed="' + (selected ? 'true' : 'false') + '">',
-      '<span class="pf-metal-corners-image">' + renderVisual(item, "media-list", step) + '</span>',
+      '<div class="pf-metal-corners-toggle' + (selected ? ' is-selected' : '') + '" role="button" tabindex="0" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(field) + '" data-pf-metal-corners-value="' + escapeHtml(value) + '" aria-pressed="' + (selected ? 'true' : 'false') + '">',
+      '<span class="pf-metal-corners-image">' + renderVisual(item, "media-list", step) + renderDesignZoomButton(product, Object.assign({}, step, { showDesignZoom: true }), item) + '</span>',
       '<span class="pf-metal-corners-copy"><strong>' + escapeHtml(item.title || "Quero cantos metálicos") + '</strong><small>' + escapeHtml(item.subtitle || "") + '</small></span>',
       '<span class="pf-metal-corners-price">+' + escapeHtml(formatCents(extra)) + '</span>',
       '<span class="pf-metal-corners-check" aria-hidden="true">✓</span>',
-      '</button>'
+      '</div>'
     ].join("");
   }
 
@@ -1656,6 +1656,131 @@
     });
   }
 
+  // UM ACABAMENTO POR CONJUNTO ("together" no assignmentPicker): um clique
+  // no cartão escolhe para todos os grupos (A4 e A6) da unidade destacada.
+  // O interruptor "Acabamentos diferentes…" devolve os botões por grupo; fica
+  // ligado sozinho se algum conjunto já tiver escolhas diferentes.
+  function assignmentTogetherConfig(step) {
+    var config = assignmentPickerConfig(step);
+    return config && config.together && config.groups.length > 1 ? config.together : null;
+  }
+
+  function assignmentGroupsDiffer(product, step) {
+    var config = assignmentPickerConfig(step);
+    return configuredUnitSelections(product).some(function (selections) {
+      var values = config.groups.map(function (group) { return String(selections[group.field] || ""); });
+      return values.every(Boolean) && values.some(function (value) { return value !== values[0]; });
+    });
+  }
+
+  function assignmentTogetherActive(product, step) {
+    if (!assignmentTogetherConfig(step)) return false;
+    if (state.assignmentSplit && state.assignmentSplit[step.id]) return false;
+    return !assignmentGroupsDiffer(product, step);
+  }
+
+  function assignmentTogetherSelected(step, item) {
+    var config = assignmentPickerConfig(step);
+    return config.groups.every(function (group) {
+      return String(state.selections[group.field] || "") === assignmentPickerValue(group, item);
+    });
+  }
+
+  function renderAssignmentTogetherCard(product, step, sourceStep, item) {
+    var selected = assignmentTogetherSelected(step, item);
+    var config = assignmentPickerConfig(step);
+    var hasChoice = config.groups.some(function (group) { return !!state.selections[group.field]; });
+    var muted = hasChoice && !selected ? " is-muted" : "";
+    return [
+      '<div class="cadernos-cover-choice pf-assignment-choice">',
+      '<div class="choice-card crachas-size-card cadernos-cover-card pf-assignment-card is-together' + (selected ? ' is-selected' : '') + muted + '" data-assignment-together data-assignment-step="' + escapeHtml(step.id || "") + '" data-assignment-value="' + escapeHtml(item.value || "") + '" role="button" tabindex="0" aria-pressed="' + selected + '">',
+      '<div class="pf-assignment-card-media"><div class="pf-assignment-card-trigger">',
+      renderAssignmentPickerCardMedia(product, step, sourceStep, item, [item]),
+      '</div></div>',
+      '<span class="pf-assignment-card-footer"><span class="choice-copy crachas-size-card-text"><strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>' + (item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '') + '</span></span>',
+      '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+      '</div>',
+      '</div>'
+    ].join("");
+  }
+
+  function renderAssignmentSplitToggle(product, step) {
+    var together = assignmentTogetherConfig(step);
+    var split;
+    if (!together) return "";
+    split = !assignmentTogetherActive(product, step);
+    return '<button type="button" class="pf-assignment-split-toggle' + (split ? ' is-on' : '') + '" data-assignment-split="' + escapeHtml(step.id || "") + '" aria-pressed="' + split + '">'
+      + '<span class="pf-assignment-split-switch" aria-hidden="true"></span>'
+      + '<span>' + escapeHtml(together.splitLabel || "Escolhas diferentes em cada grupo") + '</span></button>';
+  }
+
+  function chooseAssignmentTogether(product, step, itemValue, card) {
+    var config = assignmentPickerConfig(step);
+    var item = assignmentPickerItems(product, step).filter(function (candidate) {
+      return String(candidate.value || "") === itemValue;
+    })[0];
+    var fields;
+    var wasReady;
+    if (!config || !item) return;
+    fields = config.groups.map(function (group) { return String(group.field || ""); });
+    if (assignmentTogetherSelected(step, item)) {
+      // Voltar a carregar tira a escolha.
+      queueConfiguredUnitDeal(product, step, null, fields);
+      fields.forEach(function (field) { delete state.selections[field]; });
+    } else {
+      leaveConfiguredUnitMiaChoice(product, step);
+      wasReady = configuredUnitActiveReady(product, step);
+      queueConfiguredUnitDeal(product, step, card && card.querySelector(".cadernos-cover-media"), fields);
+      config.groups.forEach(function (group) { state.selections[group.field] = assignmentPickerValue(group, item); });
+      advanceConfiguredUnitAfterChoice(product, step, wasReady);
+    }
+    resetQuantityState();
+    state.errors = "";
+    state.packDisabledMessage = "";
+    try { trackOptionSelected(product, fields.join("+"), itemValue, item.title || ""); } catch (e) {}
+    rerenderProduct(product);
+  }
+
+  // Desligar o interruptor junta as escolhas: em cada unidade, os grupos
+  // ficam com a escolha do primeiro (ou do que a tiver).
+  function toggleAssignmentSplit(product, step) {
+    var config = assignmentPickerConfig(step);
+    if (!state.assignmentSplit) state.assignmentSplit = {};
+    if (assignmentTogetherActive(product, step)) {
+      state.assignmentSplit[step.id] = true;
+      return;
+    }
+    state.assignmentSplit[step.id] = false;
+    eachConfiguredUnitSelections(product, function (unit) {
+      var first = config.groups.map(function (group) { return unit[group.field]; }).filter(Boolean)[0];
+      if (!first) return;
+      config.groups.forEach(function (group) { unit[group.field] = first; });
+    });
+  }
+
+  function bindAssignmentTogether(product) {
+    document.querySelectorAll("[data-assignment-together]").forEach(function (card) {
+      function choose(event) {
+        if (event.target.closest && event.target.closest(".design-zoom-button")) return;
+        chooseAssignmentTogether(product, findStep(product, String(card.dataset.assignmentStep || "")), String(card.dataset.assignmentValue || ""), card);
+      }
+      card.addEventListener("click", choose);
+      card.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          choose(event);
+        }
+      });
+    });
+    document.querySelectorAll("[data-assignment-split]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        toggleAssignmentSplit(product, findStep(product, String(button.dataset.assignmentSplit || "")));
+        state.errors = "";
+        rerenderProduct(product);
+      });
+    });
+  }
+
   function renderAssignmentPicker(product, step) {
     preloadAssignmentPickerImages(product, step);
     var config = assignmentPickerConfig(step) || {};
@@ -1666,7 +1791,9 @@
       return String(item.value || "") === openValue;
     })[0] || null : null;
     var openIndex = openItem ? items.indexOf(openItem) : -1;
+    var together = assignmentTogetherActive(product, step);
     var cards = items.map(function (item) {
+      if (together) return renderAssignmentTogetherCard(product, step, sourceStep, item);
       var itemGroups = config.groups.filter(function (group) {
         var field = String(group && group.field || "");
         return field && String(state.selections[field] || "") === assignmentPickerValue(group, item);
@@ -1728,7 +1855,7 @@
     }).join("");
     // Com várias unidades a gaveta de pré-visualização baralha: a carta já
     // mostra para onde vai a escolha.
-    var preview = openItem && !configuredUnitsActive(product, step)
+    var preview = openItem && !together && !configuredUnitsActive(product, step)
       ? '<div class="pf-assignment-preview-row" style="--assignment-preview-row-one:' + (openIndex + 2) + ';--assignment-preview-row-three:' + (Math.floor(openIndex / 3) + 2) + ';--assignment-preview-row-two:' + (Math.floor(openIndex / 2) + 2) + '">' + renderAssignmentPickerPreview(product, step, openItem) + '</div>'
       : "";
 
@@ -1741,6 +1868,7 @@
       preview,
       renderOwnDesignCards(product, step),
       '</div>',
+      renderAssignmentSplitToggle(product, step),
       renderAssignmentPickerUndo(step),
       '</div>'
     ].join("");
@@ -3959,11 +4087,11 @@
       selected = String(state.selections[field] || "") === String(item.value || "");
       extra = Math.max(0, parseInt(item.extraPriceCentsPerUnit, 10) || 0);
       fields.push(field);
-      html += '<button type="button" class="unit-choice unit-choice--wide' + (selected ? ' is-selected' : '') + '" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(field) + '" data-pf-metal-corners-value="' + escapeHtml(item.value || "") + '" aria-pressed="' + selected + '">'
-        + (item.image ? '<span class="unit-choice-thumb" aria-hidden="true">' + renderVisual(item, "media-list", source) + '</span>' : '')
+      html += '<div class="unit-choice unit-choice--wide' + (selected ? ' is-selected' : '') + '" role="button" tabindex="0" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(field) + '" data-pf-metal-corners-value="' + escapeHtml(item.value || "") + '" aria-pressed="' + selected + '">'
+        + (item.image ? '<span class="unit-choice-thumb-wrap"><span class="unit-choice-thumb" aria-hidden="true">' + renderVisual(item, "media-list", source) + '</span>' + renderDesignZoomButton(product, Object.assign({}, source, { showDesignZoom: true }), item) + '</span>' : '')
         + '<span class="unit-choice-copy"><strong>' + escapeHtml(item.title || "Quero cantos metálicos") + '</strong>' + (extra ? '<small>+ ' + escapeHtml(formatCents(extra)) + '</small>' : '') + '</span>'
         + '<span class="unit-choice-check" aria-hidden="true">' + ICON_CHECK + '</span>'
-        + '</button>';
+        + '</div>';
     }
     ribbon = isCustomArtworkSelected(product) ? ownDesignRibbonDrawer(product, step, group.id) : null;
     if (ribbon) {
@@ -4229,25 +4357,31 @@
   // render; a animação corre depois, já com a fila nova. Se o lugar já tinha
   // uma capa, guarda-se uma cópia dela para ser descartada antes. Sem origem
   // (a capa foi retirada), só há o descarte.
+  // Aceita um campo ou vários (o conjunto num só clique: A4 e A6 de uma vez).
   function queueConfiguredUnitDeal(product, step, source, field) {
     var fields;
     var unit;
-    var group;
+    var groups = [];
+    var olds = [];
     var slot;
-    var old = null;
     if (!configuredUnitLayoutActive(product, step) || !isConfiguredPickStep(product, step)) return;
     fields = configuredUnitSlotGroups(product, step).map(function (group) { return group.field; });
-    if (fields.indexOf(field) === -1) return;
     unit = configuredUnitIndex(product);
-    group = fields.indexOf(field);
-    if (state.selections[field]) {
-      slot = document.querySelector('[data-unit-mini].is-visible [data-unit-slot="' + unit + '"]')
-        || document.querySelector('[data-unit-tray] [data-unit-slot="' + unit + '"]');
-      old = slot ? slot.querySelectorAll(".unit-slot-cover")[group] : null;
-      old = old && !old.classList.contains("is-empty") ? old.cloneNode(true) : null;
-    }
-    if (!source && !old) return;
-    state.configuredUnitDeal = { unit: unit, group: group, rect: source ? source.getBoundingClientRect() : null, old: old };
+    slot = document.querySelector('[data-unit-mini].is-visible [data-unit-slot="' + unit + '"]')
+      || document.querySelector('[data-unit-tray] [data-unit-slot="' + unit + '"]');
+    (Array.isArray(field) ? field : [field]).forEach(function (name) {
+      var group = fields.indexOf(name);
+      var old = null;
+      if (group === -1) return;
+      if (state.selections[name]) {
+        old = slot ? slot.querySelectorAll(".unit-slot-cover")[group] : null;
+        old = old && !old.classList.contains("is-empty") ? old.cloneNode(true) : null;
+      }
+      groups.push(group);
+      olds.push(old);
+    });
+    if (!groups.length || (!source && !olds.some(Boolean))) return;
+    state.configuredUnitDeal = { unit: unit, groups: groups, rect: source ? source.getBoundingClientRect() : null, olds: olds };
   }
 
   // A capa substituída salta do lugar e sai de cena, rodando, como uma
@@ -4305,8 +4439,10 @@
     // assentar ou, sem carta (capa fora do ecrã), já.
     var slide = state.configuredUnitMiniPending;
     var wait = state.configuredUnitDealWait || 0;
-    var waiting = [];
+    var waiting = {};
     var next = [];
+    var pending;
+    var settled = false;
     state.configuredUnitMiniPending = null;
     state.configuredUnitDeal = null;
     state.configuredUnitDealWait = 0;
@@ -4315,11 +4451,14 @@
       // numa troca, vê-se por trás da capa antiga a cair — e o destaque fica
       // nesta unidade; só depois passa para a seguinte.
       document.querySelectorAll('[data-unit-slot="' + deal.unit + '"]').forEach(function (slot) {
-        var cover = slot.querySelectorAll(".unit-slot-cover")[deal.group];
         slot.classList.remove("is-filling");
-        if (cover && !cover.classList.contains("is-empty")) waiting.push(cover);
+        deal.groups.forEach(function (group) {
+          var cover = slot.querySelectorAll(".unit-slot-cover")[group];
+          if (!cover || cover.classList.contains("is-empty")) return;
+          (waiting[group] = waiting[group] || []).push(cover);
+          cover.classList.add("is-empty", "is-awaiting-deal");
+        });
       });
-      waiting.forEach(function (cover) { cover.classList.add("is-empty", "is-awaiting-deal"); });
       next = Array.prototype.filter.call(document.querySelectorAll(".unit-slot.is-active"), function (slot) {
         return Number(slot.dataset.unitSlot) !== deal.unit;
       });
@@ -4328,8 +4467,13 @@
         document.querySelectorAll('[data-unit-slot="' + deal.unit + '"]').forEach(function (slot) { slot.classList.add("is-active"); });
       }
     }
+    function reveal(group) {
+      (waiting[group] || []).forEach(function (cover) { cover.classList.remove("is-empty", "is-awaiting-deal"); });
+    }
     function settle() {
-      waiting.forEach(function (cover) { cover.classList.remove("is-empty", "is-awaiting-deal"); });
+      if (settled) return;
+      settled = true;
+      Object.keys(waiting).forEach(reveal);
       if (next.length && document.body.contains(next[0])) {
         document.querySelectorAll('[data-unit-slot="' + deal.unit + '"]').forEach(function (slot) { slot.classList.remove("is-active"); });
         next.forEach(function (slot) { slot.classList.add("is-active"); });
@@ -4337,16 +4481,76 @@
       }
       if (slide) slide();
     }
+    function start() {
+      if (!deal) {
+        settle();
+        return;
+      }
+      pending = deal.groups.length;
+      deal.groups.forEach(function (group, order) {
+        flyConfiguredUnitDeal(deal, group, deal.olds[order], order, function () {
+          reveal(group);
+          pending -= 1;
+          if (pending <= 0) settle();
+        });
+      });
+    }
     // A faixa do telemóvel pode ter de deslizar até à unidade primeiro.
     if (wait && deal) {
-      window.setTimeout(function () { flyConfiguredUnitDeal(deal, settle); }, wait);
+      window.setTimeout(start, wait);
       return;
     }
-    flyConfiguredUnitDeal(deal, settle);
+    start();
   }
 
-  function flyConfiguredUnitDeal(deal, settle) {
-    var target = deal && document.body.animate ? configuredUnitDealTarget(deal.unit, deal.group) : null;
+  // No acabamento, a capa da pasta (no canto do lugar) desce a meio da
+  // viagem da carta até deixar o lugar livre, e volta a subir quando ela
+  // assenta. Anda numa cópia por cima de tudo, para se ver inteira.
+  function duckConfiguredUnitRef(cover, delay) {
+    var ref = cover.querySelector(".unit-slot-ref");
+    var coverRect;
+    var refRect;
+    var ghost;
+    var inner;
+    var drop;
+    var total;
+    var animation;
+    var done;
+    if (!ref || !document.body.animate) return;
+    coverRect = cover.getBoundingClientRect();
+    refRect = ref.getBoundingClientRect();
+    drop = Math.round(coverRect.bottom - refRect.top + 6);
+    ghost = document.createElement("span");
+    ghost.className = "unit-slot-cover unit-ref-ghost";
+    ghost.setAttribute("aria-hidden", "true");
+    ghost.style.left = coverRect.left + "px";
+    ghost.style.top = coverRect.top + "px";
+    ghost.style.width = coverRect.width + "px";
+    ghost.style.height = coverRect.height + "px";
+    inner = ref.cloneNode(true);
+    ghost.appendChild(inner);
+    document.body.appendChild(ghost);
+    ref.style.visibility = "hidden";
+    total = delay + 400 + 280;
+    animation = inner.animate([
+      { transform: "translateY(0)" },
+      { transform: "translateY(0)", offset: (delay + 170) / total, easing: "cubic-bezier(.4,0,.3,1)" },
+      { transform: "translateY(" + drop + "px)", offset: (delay + 310) / total },
+      { transform: "translateY(" + drop + "px)", offset: (delay + 410) / total, easing: "cubic-bezier(.25,1.3,.4,1)" },
+      { transform: "translateY(0)" }
+    ], { duration: total, fill: "both" });
+    done = function () {
+      if (!ghost.parentNode) return;
+      ghost.remove();
+      ref.style.visibility = "";
+    };
+    animation.onfinish = done;
+    animation.oncancel = done;
+    window.setTimeout(done, total + 80);
+  }
+
+  function flyConfiguredUnitDeal(deal, group, old, order, settle) {
+    var target = deal && document.body.animate ? configuredUnitDealTarget(deal.unit, group) : null;
     var to;
     var from;
     var fly;
@@ -4356,7 +4560,7 @@
     var flight;
     var delay;
     if (!target || !deal.rect) {
-      if (target && deal.old) discardConfiguredUnitCover(deal.old, target.rect);
+      if (target && old) discardConfiguredUnitCover(old, target.rect);
       settle();
       return;
     }
@@ -4372,8 +4576,9 @@
     fly.style.width = to.width + "px";
     fly.style.height = to.height + "px";
     document.body.appendChild(fly);
-    delay = deal.old ? 150 : 0;
-    if (deal.old) discardConfiguredUnitCover(deal.old, to);
+    // A segunda carta (A6 do conjunto) sai logo atrás da primeira.
+    delay = (old ? 150 : 0) + order * 90;
+    if (old) discardConfiguredUnitCover(old, to);
     scale = Math.max(0.2, Math.min(from.width / to.width, from.height / to.height));
     dx = from.left + from.width / 2 - (to.left + to.width / 2);
     dy = from.top + from.height / 2 - (to.top + to.height / 2);
@@ -4383,6 +4588,7 @@
       { transform: "translate(0,0) scale(1.1) rotate(8deg)", offset: 0.84, easing: "ease-out" },
       { transform: "translate(0,0) scale(1) rotate(0deg)" }
     ], { duration: 400, delay: delay, fill: "both" });
+    duckConfiguredUnitRef(target.cover, delay);
     function land() {
       if (!fly.parentNode) return;
       fly.remove();
@@ -4393,18 +4599,6 @@
         { transform: "scale(1) rotate(0deg)" }
       ], { duration: 240, easing: "ease-out" });
     }
-    // No acabamento, a capa da pasta (no canto) baixa para a carta entrar e
-    // volta a subir quando ela assenta.
-    Array.prototype.forEach.call(target.cover.querySelectorAll(".unit-slot-ref"), function (ref) {
-      var total = delay + 400 + 240;
-      if (!ref.animate) return;
-      ref.animate([
-        { transform: "translateY(0)", easing: "cubic-bezier(.4,0,.6,1)" },
-        { transform: "translateY(78%)", offset: (delay + 150) / total },
-        { transform: "translateY(78%)", offset: (delay + 380) / total, easing: "cubic-bezier(.2,.9,.3,1.25)" },
-        { transform: "translateY(0)" }
-      ], { duration: total });
-    });
     flight.onfinish = land;
     flight.oncancel = land;
     // Os eventos da animação só chegam com frames; o lugar não pode ficar à espera.
@@ -4520,6 +4714,7 @@
     bindConfiguredUnitActions(product);
     bindConfiguredUnitMini(product);
     bindOwnDesignCards(product);
+    bindAssignmentTogether(product);
     playConfiguredUnitDeal();
     placeConfiguredUnitMarkers();
     animateConfiguredDesignBadges();

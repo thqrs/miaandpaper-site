@@ -1315,7 +1315,16 @@
     }
 
     document.querySelectorAll("[data-pf-metal-corners-toggle]").forEach(function (button) {
-      button.addEventListener("click", function () {
+      button.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          button.click();
+        }
+      });
+      button.addEventListener("click", function (event) {
+        if (event.target.closest && event.target.closest(".design-zoom-button")) {
+          return;
+        }
         var field = String(button.dataset.pfMetalCornersField || "");
         var value = String(button.dataset.pfMetalCornersValue || "");
         if (!field || !value) {
