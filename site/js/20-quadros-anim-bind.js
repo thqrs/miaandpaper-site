@@ -1101,8 +1101,12 @@
         }
 
         if (previousValue === value) {
+          queueConfiguredUnitDeal(product, step, null, field);
           delete state.selections[field];
         } else {
+          leaveConfiguredUnitMiaAssorted(product, step);
+          var dealCard = button.closest(".pf-assignment-card");
+          queueConfiguredUnitDeal(product, step, dealCard && dealCard.querySelector(".pf-assignment-card-trigger"), field);
           state.selections[field] = value;
           if (previousValue) {
             if (!Array.isArray(state.assignmentPickerUndos)) {
@@ -1212,6 +1216,16 @@
         if (!undo) {
           return;
         }
+        // Acções "em todas": repõe as unidades como estavam antes.
+        if (undo.kind === "unit-action") {
+          undos.splice(undoIndex, 1);
+          state.assignmentPickerUndos = undos;
+          undoConfiguredUnitAction(product, currentStep(product));
+          state.errors = "";
+          state.invalidFields = [];
+          rerenderProduct(product);
+          return;
+        }
         if (Date.now() > Number(undo.expiresAt || 0)) {
           undos.splice(undoIndex, 1);
           state.assignmentPickerUndos = undos;
@@ -1319,10 +1333,9 @@
           return;
         }
         var unitWasComplete = configuredUnitActiveReady(product, active);
-        if (configuredUnitsActive(product, active)) {
-          if (!state.configuredUnitPreview) state.configuredUnitPreview = {};
-          state.configuredUnitPreview[active.id + ":" + input.dataset.groupedDesignGroup] = input.value;
-        }
+        leaveConfiguredUnitMiaAssorted(product, active);
+        var dealSource = input.closest("label");
+        queueConfiguredUnitDeal(product, active, dealSource && dealSource.querySelector(".cadernos-cover-media"), field);
         state.selections[field] = input.value;
         var resetFields = active.resetFieldsByGroup && Array.isArray(active.resetFieldsByGroup[input.dataset.groupedDesignGroup])
           ? active.resetFieldsByGroup[input.dataset.groupedDesignGroup]

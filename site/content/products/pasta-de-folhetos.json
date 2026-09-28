@@ -7,11 +7,13 @@
     "instagramUrl": "https://www.instagram.com/miaandpaper/",
     "catalogContext": "main-v2",
     "orderFlow": "catalog-or-custom",
+    "supportsAssortedDesigns": true,
     "fixedQuantity": 1,
     "unitConfiguration": {
         "maxQuantity": 30,
         "sizeField": "size",
         "packSize": "A4 + A6",
+        "singleUnitLayoutSizes": ["A4 + A6"],
         "label": "Pasta",
         "packLabel": "Conjunto",
         "quantityLabel": "Quantas pastas?",
@@ -21,18 +23,26 @@
         "trayLabel": "As tuas pastas",
         "packTrayLabel": "Os teus conjuntos",
         "quantityStepIds": ["covers", "pack-covers"],
-        "pickStepIds": ["covers", "pack-covers", "extras", "pack-finishes"],
-        "rowStepIds": ["cover_personalization", "details", "pack-details"],
+        "pickStepIds": ["covers", "pack-covers"],
+        "rowStepIds": ["extras", "pack-finishes", "cover_personalization", "details", "pack-details"],
         "stepIds": ["covers", "pack-covers", "extras", "pack-finishes", "cover_personalization", "details", "pack-details"],
         "unitActions": {
-            "extras": [{"type": "same", "label": "Mesmo acabamento em todas", "fields": ["finish"]}],
-            "pack-finishes": [{"type": "same", "label": "Mesmos acabamentos em todos", "fields": ["finish_a4", "finish_a6"]}],
+            "covers": [{"type": "same", "label": "Quero este design em todas as pastas", "emptyLabel": "Seleciona um design", "undoMessage": "Todas as pastas têm agora o mesmo design", "coverFields": true}],
+            "pack-covers": [{"type": "same", "label": "Quero estes designs em todos os conjuntos", "emptyLabel": "Seleciona os designs A4 e A6 de um conjunto", "undoMessage": "Todos os conjuntos têm agora a mesma combinação de capas", "coverFields": true}],
+            "extras": [{"type": "same", "label": "Quero este acabamento em todas as pastas", "emptyLabel": "Seleciona um acabamento", "undoMessage": "Todas as pastas têm agora o mesmo acabamento", "fields": ["finish"]}],
+            "pack-finishes": [{"type": "same", "label": "Quero esta combinação de acabamentos em todos os conjuntos", "emptyLabel": "Seleciona os acabamentos A4 e A6 de um conjunto", "undoMessage": "Todos os conjuntos têm agora a mesma combinação de acabamentos", "fields": ["finish_a4", "finish_a6"]}],
             "cover_personalization": [
-                {"type": "same-name", "label": "Quero o mesmo nome em todos"},
-                {"type": "none", "label": "Não quero personalizar nenhum"}
+                {"type": "same-name", "label": "Quero o mesmo nome em todas as pastas", "undoMessage": "Nome igual em todas as capas."},
+                {"type": "none", "label": "Não quero personalizar nenhuma", "undoMessage": "Nenhuma capa personalizada."}
             ],
-            "details": [{"type": "toggle-all", "label": "Quero cantos metálicos em todas", "values": {"metal_corners": "pasta-de-folhetos-cantos-metalicos"}}],
-            "pack-details": [{"type": "toggle-all", "label": "Quero cantos metálicos em todos", "values": {"metal_corners_a4": "pasta-de-folhetos-cantos-metalicos", "metal_corners_a6": "pasta-de-folhetos-cantos-metalicos"}}]
+            "details": [{"type": "toggle-all", "label": "Quero cantos metálicos em todas as pastas", "undoMessage": "Cantos metálicos atualizados em todas.", "values": {"metal_corners": "pasta-de-folhetos-cantos-metalicos"}}],
+            "pack-details": [{"type": "toggle-all", "label": "Quero cantos metálicos em todas as pastas", "undoMessage": "Cantos metálicos atualizados em todas.", "values": {"metal_corners_a4": "pasta-de-folhetos-cantos-metalicos", "metal_corners_a6": "pasta-de-folhetos-cantos-metalicos"}}]
+        },
+        "miaChoice": {
+            "covers": {"type": "assorted", "label": "Quero que a Mia escolha"},
+            "pack-covers": {"type": "assorted", "label": "Quero que a Mia escolha"},
+            "extras": {"type": "value", "label": "Quero que a Mia escolha", "value": "mia-escolhe", "fields": ["finish"]},
+            "pack-finishes": {"type": "value", "label": "Quero que a Mia escolha", "value": "mia-escolhe", "fields": ["finish_a4", "finish_a6"]}
         },
         "carryOverFields": ["finish", "finish_a4", "finish_a6", "metal_corners", "metal_corners_a4", "metal_corners_a6"],
         "fields": ["covers", "cover_a4", "cover_a6", "designs", "design_a4", "design_a6", "design_quantities", "finish", "finish_a4", "finish_a6", "metal_corners", "metal_corners_a4", "metal_corners_a6", "cover_personalization", "cover_personalization_text", "cover_personalization_a4", "cover_personalization_a4_text", "cover_personalization_a6", "cover_personalization_a6_text"]
@@ -1078,6 +1088,7 @@
         },
         {
             "id": "pack-finishes",
+            "notice": "O acabamento holográfico escurece ligeiramente a imagem da capa.",
             "label": "Acabamento",
             "title": "Escolhe o acabamento",
             "text": "",
@@ -2262,6 +2273,7 @@
         },
         {
             "id": "extras",
+            "notice": "O acabamento holográfico escurece ligeiramente a imagem da capa.",
             "label": "Acabamento",
             "title": "Escolhe o acabamento da capa",
             "text": "",
@@ -2303,7 +2315,7 @@
                         {
                             "value": "holografico-1",
                             "title": "Holográfico Estrelinhas",
-                            "subtitle": "Nota: O efeito holográfico escurece um pouco a imagem",
+                            "subtitle": "",
                             "image": "content/designs/loja/pasta-de-folhetos/acabamentos/holografico-estrelinhas.webp",
                             "exampleImage": "content/designs/loja/pasta-de-folhetos/acabamentos/holografico-estrelinhas.webp",
                             "drawerText": "Exemplo visual do Holográfico Estrelinhas.",
@@ -2312,7 +2324,7 @@
                         {
                             "value": "holografico-2",
                             "title": "Holográfico Pontinhos",
-                            "subtitle": "Nota: O efeito holográfico escurece um pouco a imagem",
+                            "subtitle": "",
                             "image": "content/designs/loja/pasta-de-folhetos/acabamentos/holografico-pontinhos.webp",
                             "exampleImage": "content/designs/loja/pasta-de-folhetos/acabamentos/holografico-pontinhos.webp",
                             "drawerText": "Exemplo visual do Holográfico Pontinhos.",
@@ -2321,11 +2333,17 @@
                         {
                             "value": "holografico-3",
                             "title": "Holográfico Triângulos",
-                            "subtitle": "Nota: O efeito holográfico escurece um pouco a imagem",
+                            "subtitle": "",
                             "image": "content/designs/loja/pasta-de-folhetos/acabamentos/holografico-triangulos.webp",
                             "exampleImage": "content/designs/loja/pasta-de-folhetos/acabamentos/holografico-triangulos.webp",
                             "drawerText": "Exemplo visual do Holográfico Triângulos.",
                             "extraPriceCentsPerUnit": 0
+                        },
+                        {
+                            "value": "mia-escolhe",
+                            "title": "A Mia escolhe",
+                            "subtitle": "",
+                            "miaChoice": true
                         }
                     ],
                     "customArtworkEnabled": true
@@ -2336,6 +2354,7 @@
             "id": "cover_personalization",
             "label": "Personalização",
             "title": "Personaliza os nomes das capas",
+            "multipleTitle": "Queres personalizar as Pastas de Folhetos com um nome?",
             "text": "",
             "template": "cover-personalization",
             "selection": "single",
@@ -2366,6 +2385,7 @@
                         "A4 + A6"
                     ],
                     "title": "Queres personalizar a capa da Pasta de Folhetos A4 com um nome?",
+                    "multipleTitle": "Queres personalizar esta capa da Pasta de Folhetos A4 com um nome?",
                     "text": "A personalização acrescenta 2 € ao preço",
                     "field": "cover_personalization_a4",
                     "textField": "cover_personalization_a4_text"
@@ -2379,6 +2399,7 @@
                         "A4 + A6"
                     ],
                     "title": "Queres personalizar a capa da Pasta de Folhetos A6 com um nome?",
+                    "multipleTitle": "Queres personalizar esta capa da Pasta de Folhetos A6 com um nome?",
                     "text": "A personalização acrescenta 2 € ao preço",
                     "field": "cover_personalization_a6",
                     "textField": "cover_personalization_a6_text"
@@ -2440,12 +2461,13 @@
                     "id": "metal-corners",
                     "field": "metal_corners",
                     "label": "cantos metálicos",
-                    "title": "Quero cantos metálicos!",
+                    "title": "Quero cantos metálicos",
                     "required": false,
                     "items": [
                         {
                             "value": "pasta-de-folhetos-cantos-metalicos",
-                            "title": "Quero cantos metálicos!",
+                            "summaryTitle": "Cantos metálicos",
+                            "title": "Quero cantos metálicos",
                             "subtitle": "Acrescenta cantos metálicos decorativos e protetores.",
                             "image": "content/designs/loja/pasta-de-folhetos/cantos-metalicos.webp",
                             "imageFit": "contain",

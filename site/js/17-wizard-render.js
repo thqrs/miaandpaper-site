@@ -916,16 +916,12 @@
   function renderOptionDrawerCoverCard(product, step, drawer, item) {
     var selected = String(state.selections[drawer.field] || "") === String(item.value || "");
     var mediaStep = Object.assign({}, step, { showDesignZoom: false });
-    // UNIT_CONFIGURATION_V1: com várias unidades marca tudo o que já foi
-    // escolhido, com ×2 quando se repete.
-    var counts = configuredUnitsActive(product, step) && isConfiguredPickStep(product, step)
-      ? configuredDesignValueCounts(product, drawer.field) : null;
-    var count = counts ? counts[String(item.value || "")] || 0 : 0;
-    var chosen = counts ? count > 0 : selected;
+    var multiple = configuredUnitsActive(product, step);
+    var muted = multiple && state.selections[drawer.field] && !selected ? ' is-muted' : '';
 
     return [
       '<div class="cadernos-cover-choice pf-finish-choice">',
-      '<label class="choice-card crachas-size-card cadernos-cover-card pf-finish-card' + (chosen ? ' is-selected' : '') + (counts ? ' configured-units-card' : '') + (counts && selected ? ' is-current-unit' : '') + '">',
+      '<label class="choice-card crachas-size-card cadernos-cover-card pf-finish-card' + (selected ? ' is-selected' : '') + muted + '">',
       '<input type="radio" name="' + escapeHtml(drawer.field) + '" value="' + escapeHtml(item.value || "") + '" data-option-drawer-choice data-option-drawer-field="' + escapeHtml(drawer.field) + '"' + (selected ? ' checked' : '') + '>',
       renderCadernoCoverCardMedia(product, mediaStep, item),
       '<span class="pf-assignment-card-footer">',
@@ -934,11 +930,17 @@
       item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '',
       '</span>',
       '</span>',
-      '<span class="crachas-size-card-selected' + (count > 1 ? ' has-count' : '') + '" aria-hidden="true">' + (count > 1 ? '×' + count : '✓') + '</span>',
+      '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
       adminItemControls(step, item),
       '</label>',
       '</div>'
     ].join("");
+  }
+
+  // Itens com "miaChoice" (ex.: "A Mia escolhe") são escolhidos pelo botão
+  // "Quero que a Mia escolha", não por um cartão próprio.
+  function notMiaChoiceItem(item) {
+    return !(item && item.miaChoice);
   }
 
   function renderOptionDrawerCards(product, step) {
@@ -957,14 +959,14 @@
 
       if (isCover) {
         return heading + '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list pf-fluid-cover-list pf-finish-list pf-fluid-drawer-list--' + escapeHtml(drawerClass) + '" data-pf-drawer-field="' + escapeHtml(drawer.field || "") + '">'
-          + optionDrawerAvailableItems(product, drawer).map(function (item) {
+          + optionDrawerAvailableItems(product, drawer).filter(notMiaChoiceItem).map(function (item) {
             return renderOptionDrawerCoverCard(product, step, drawer, item);
           }).join("")
           + '</div>';
       }
 
       return heading + '<div class="option-list size-choice-list crachas-size-card-list cadernos-add-on-list pf-fluid-drawer-list pf-fluid-drawer-list--' + escapeHtml(drawerClass) + '" data-pf-drawer-field="' + escapeHtml(drawer.field || "") + '">'
-        + optionDrawerAvailableItems(product, drawer).map(function (item) {
+        + optionDrawerAvailableItems(product, drawer).filter(notMiaChoiceItem).map(function (item) {
           return renderOptionDrawerCard(product, step, drawer, item);
         }).join("")
         + '</div>';
@@ -1132,7 +1134,7 @@
         return [
           '<button type="button" class="pf-metal-corners-toggle' + (groupSelected ? ' is-selected' : '') + '" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(groupField) + '" data-pf-metal-corners-value="' + escapeHtml(value) + '" aria-pressed="' + (groupSelected ? 'true' : 'false') + '">',
           '<span class="pf-metal-corners-image">' + renderVisual(item, "media-list", sourceStep) + '</span>',
-          '<span class="pf-metal-corners-copy"><strong>' + escapeHtml((item.title || "Quero cantos metálicos!") + (groupLabel ? " · " + groupLabel : "")) + '</strong><small>' + escapeHtml(item.subtitle || "") + '</small></span>',
+          '<span class="pf-metal-corners-copy"><strong>' + escapeHtml((item.title || "Quero cantos metálicos") + (groupLabel ? " · " + groupLabel : "")) + '</strong><small>' + escapeHtml(item.subtitle || "") + '</small></span>',
           '<span class="pf-metal-corners-price">+' + escapeHtml(formatCents(extra)) + '</span>',
           '<span class="pf-metal-corners-check" aria-hidden="true">✓</span>',
           '</button>'
@@ -1143,7 +1145,7 @@
     return [
       '<button type="button" class="pf-metal-corners-toggle' + (selected ? ' is-selected' : '') + '" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(field) + '" data-pf-metal-corners-value="' + escapeHtml(value) + '" aria-pressed="' + (selected ? 'true' : 'false') + '">',
       '<span class="pf-metal-corners-image">' + renderVisual(item, "media-list", step) + '</span>',
-      '<span class="pf-metal-corners-copy"><strong>' + escapeHtml(item.title || "Quero cantos metálicos!") + '</strong><small>' + escapeHtml(item.subtitle || "") + '</small></span>',
+      '<span class="pf-metal-corners-copy"><strong>' + escapeHtml(item.title || "Quero cantos metálicos") + '</strong><small>' + escapeHtml(item.subtitle || "") + '</small></span>',
       '<span class="pf-metal-corners-price">+' + escapeHtml(formatCents(extra)) + '</span>',
       '<span class="pf-metal-corners-check" aria-hidden="true">✓</span>',
       '</button>'
@@ -1508,10 +1510,11 @@
     ].join("");
   }
 
-  function renderAssignmentPickerUndo(step) {
+  function renderAssignmentPickerUndo(step, kind) {
     var now = Date.now();
     var undos = Array.isArray(state.assignmentPickerUndos) ? state.assignmentPickerUndos.filter(function (undo) {
-      return undo && String(undo.stepId || "") === String(step.id || "") && Number(undo.expiresAt || 0) > now;
+      return undo && String(undo.stepId || "") === String(step.id || "") && Number(undo.expiresAt || 0) > now
+        && String(undo.kind || "") === String(kind || "");
     }) : [];
 
     if (!undos.length) {
@@ -1615,7 +1618,7 @@
     preloadAssignmentPickerImages(product, step);
     var config = assignmentPickerConfig(step) || {};
     var sourceStep = assignmentPickerSourceStep(product, step);
-    var items = assignmentPickerItems(product, step);
+    var items = assignmentPickerItems(product, step).filter(notMiaChoiceItem);
     var openValue = state.assignmentPickerOpen && String(state.assignmentPickerOpen[step.id] || "");
     var openItem = openValue ? items.filter(function (item) {
       return String(item.value || "") === openValue;
@@ -1688,7 +1691,7 @@
     return [
       '<div class="pasta-de-folhetos-fluid pf-assignment-picker">',
       // Com várias unidades, a fila de miniaturas já mostra estas escolhas.
-      configuredUnitsActive(product, step) ? "" : renderAssignmentPickerSlots(product, step),
+      configuredUnitLayoutActive(product, step) ? "" : renderAssignmentPickerSlots(product, step),
       '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list pf-fluid-cover-list pf-assignment-list">',
       cards,
       preview,
@@ -1941,39 +1944,29 @@
         + (verticalColumns ? '</div>' : '');
     }
 
-    // UNIT_CONFIGURATION_V1: com várias unidades, a grelha continua a escolher
-    // para a unidade activa, mas marca tudo o que já foi escolhido (×2 quando
-    // o design se repete) e a pré-visualização segue a última escolha.
-    var unitCounts = configuredUnitsActive(product, step) && isConfiguredQuantityStep(product, step);
-    var unitsComplete = unitCounts && configuredUnitList().every(function (unit) {
-      return configuredUnitIsComplete(product, unit);
-    });
-
+    // A grelha representa apenas a unidade activa, tal como na compra de uma capa.
     groups.forEach(function (group) {
       var field = groupedDesignField(step, group);
       var selected = field ? String(state.selections[field] || "") : "";
       var items = groupedDesignItems(step, group);
-      var counts = unitCounts ? configuredDesignValueCounts(product, field) : null;
-      var previewValue = selected || (unitCounts && state.configuredUnitPreview && state.configuredUnitPreview[step.id + ":" + group]) || "";
+      var previewValue = selected;
       var selectedItem = previewValue ? items.filter(function (item) {
         return String(item.value || "") === previewValue;
       })[0] || null : null;
       var selectedIndex = selectedItem ? items.indexOf(selectedItem) : -1;
       var cards = items.map(function (item) {
         var checked = selected === String(item.value || "");
-        var count = counts ? counts[String(item.value || "")] || 0 : 0;
-        var chosen = counts ? count > 0 : checked;
-        var muted = (counts ? unitsComplete && !count : selected && !checked) ? " is-muted" : "";
+        var muted = selected && !checked ? " is-muted" : "";
         return [
           '<div class="cadernos-cover-choice grouped-design-choice">',
-          '<label class="choice-card crachas-size-card cadernos-cover-card' + (chosen ? ' is-selected' : '') + (counts ? ' configured-units-card' : '') + (counts && checked ? ' is-current-unit' : '') + muted + '">',
+          '<label class="choice-card crachas-size-card cadernos-cover-card' + (checked ? ' is-selected' : '') + muted + '">',
           '<input type="radio" name="' + escapeHtml(field) + '" value="' + escapeHtml(item.value || "") + '" data-grouped-design-choice data-grouped-design-group="' + escapeHtml(group) + '" data-grouped-design-field="' + escapeHtml(field) + '"' + (checked ? ' checked' : '') + '>',
           renderCadernoCoverCardMedia(product, step, item),
           '<span class="choice-copy crachas-size-card-text">',
           '<strong>' + escapeHtml(item.title || item.value || "Opção") + '</strong>',
           item.subtitle ? '<span>' + escapeHtml(item.subtitle) + '</span>' : '',
           '</span>',
-          '<span class="crachas-size-card-selected' + (count > 1 ? ' has-count' : '') + '" aria-hidden="true">' + (count > 1 ? '×' + count : '✓') + '</span>',
+          '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
           adminItemControls(step, item),
           '</label>',
           '</div>'
@@ -1991,7 +1984,7 @@
       }
 
       html += [
-        '<section class="design-grid-section grouped-design-section' + (counts ? ' configured-units-grid' : '') + '" data-design-size-group="' + escapeHtml(group) + '">',
+        '<section class="design-grid-section grouped-design-section" data-design-size-group="' + escapeHtml(group) + '">',
         '<h3 class="design-grid-section-title">' + escapeHtml(titles[group] || ("Escolhe o design " + group)) + '</h3>',
         '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list' + (verticalColumns ? ' pf-fluid-cover-list' : '') + '">' + cards + selectedPreview + '</div>',
         '</section>'
@@ -2555,6 +2548,9 @@
     if (mapped) {
       return mapped;
     }
+    if (step && step.multipleTitle && configuredUnitLayoutActive(product, step)) {
+      return String(step.multipleTitle);
+    }
     if (step && step.template === "custom-quantity-builder" && isArtworkBuilderProduct(product)) {
       return builderQuantityStepTitle(product);
     }
@@ -2662,8 +2658,13 @@
       if (units[index][key] !== undefined) state.selections[key] = cloneJson(units[index][key]);
     });
     state.configuredUnitIndex = index;
-    // O "reverter" aponta para um campo da unidade que o criou.
-    state.assignmentPickerUndos = [];
+    if (state.assignmentPickerUnit !== index) {
+      state.assignmentPickerOpen = {};
+      state.assignmentPickerUnit = index;
+    }
+    // O "reverter" aponta para um campo da unidade que o criou; o das acções
+    // "em todas" vale para todas as unidades e fica.
+    state.assignmentPickerUndos = configuredUnitActionUndos();
     if (state.assignmentPickerUndoInterval) {
       window.clearInterval(state.assignmentPickerUndoInterval);
       state.assignmentPickerUndoInterval = null;
@@ -2699,6 +2700,21 @@
 
   function configuredUnitsActive(product, step) {
     return !state.admin && isConfiguredUnitStep(product, step) && configuredUnitCount(product) > 1;
+  }
+
+  // Os tamanhos em unitConfiguration.singleUnitLayoutSizes usam a fila, as
+  // cartas e os passos em linhas já com uma só unidade. Só muda o desenho: a
+  // unidade continua a viver em state.selections, como sempre.
+  function configuredUnitLayoutActive(product, step) {
+    var config = unitConfiguration(product);
+    if (configuredUnitsActive(product, step)) return true;
+    if (!config || state.admin || !isConfiguredUnitStep(product, step)) return false;
+    return (config.singleUnitLayoutSizes || []).indexOf(String(state.selections[config.sizeField || "size"] || "")) !== -1;
+  }
+
+  // Unidades a desenhar: com uma só, a própria escolha actual.
+  function configuredUnitViewList(product) {
+    return configuredUnitList().length ? configuredUnitList() : [configuredUnitFields(product)];
   }
 
   // Passos de escolha (capas, acabamento): a grelha escolhe para a unidade
@@ -2805,6 +2821,8 @@
     units = units.slice(0, quantity);
     state.selections.configured_units = units;
     state.configuredUnitSameName = false;
+    state.configuredUnitActionUndo = null;
+    state.assignmentPickerUndos = (state.assignmentPickerUndos || []).filter(function (undo) { return undo.kind !== "unit-action"; });
     Object.keys(state.configuredUnitSeen || {}).forEach(function (stepId) {
       Object.keys(state.configuredUnitSeen[stepId]).forEach(function (seen) {
         if (Number(seen) >= quantity) delete state.configuredUnitSeen[stepId][seen];
@@ -2886,21 +2904,41 @@
   }
 
   function configuredUnitCoversHtml(product, unit) {
+    var mia = isAssortedSelected(product);
     return configuredUnitCoverGroups(product).map(function (group) {
       var item = configuredUnitCoverItem(group, unit);
-      return '<span class="unit-slot-cover' + (item ? '' : ' is-empty') + '">'
+      return '<span class="unit-slot-cover' + (item ? '' : ' is-empty' + (mia ? ' is-mia' : '')) + '">'
         + (item ? renderVisual(item, "media-list", group.step) : '')
         + '</span>';
     }).join("");
   }
 
-  // Três por linha no telemóvel; em ecrãs largos (tablet) até cinco.
+  // Três por linha no telemóvel. Nos ecrãs largos, entre três e cinco
+  // consoante a altura: só num ecrã alto a fila de uma linha, colada ao topo,
+  // não rouba espaço à grelha; num baixo passa mais cedo a duas linhas e a
+  // versão pequena da fila toma o lugar dela ao descer.
   function configuredUnitTrayColumns() {
-    return window.matchMedia && window.matchMedia("(min-width: 600px)").matches ? 5 : 3;
+    var height = window.innerHeight || 0;
+    if (!window.matchMedia || !window.matchMedia("(min-width: 600px)").matches) return 3;
+    return height >= 900 ? 5 : height >= 720 ? 4 : 3;
+  }
+
+  function watchConfiguredUnitTrayColumns(product) {
+    var timer;
+    state.configuredUnitColumns = configuredUnitTrayColumns();
+    if (state.configuredUnitResizeBound) return;
+    state.configuredUnitResizeBound = true;
+    window.addEventListener("resize", function () {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(function () {
+        if (!document.querySelector("[data-unit-tray]") || configuredUnitTrayColumns() === state.configuredUnitColumns) return;
+        rerenderProduct(state.product || product);
+      }, 150);
+    });
   }
 
   function renderConfiguredUnitTray(product, step) {
-    var units = configuredUnitList();
+    var units = configuredUnitViewList(product);
     var index = configuredUnitIndex(product);
     var groups = configuredUnitCoverGroups(product);
     var label = configuredUnitLabel(product);
@@ -2957,7 +2995,7 @@
         // Nasce já no estado em que estava, para não piscar a cada escolha.
         '<div class="unit-tray-mini' + (state.configuredUnitMiniVisible ? ' is-visible' : '') + '" style="--unit-columns:' + columns + '" data-unit-mini aria-hidden="true">',
         '<button type="button" class="unit-mini-arrow" data-unit-mini-step="-1" tabindex="-1">&lsaquo;</button>',
-        '<div class="unit-mini-window"><div class="unit-mini-track" data-unit-mini-track>',
+        '<div class="unit-mini-window" data-unit-mini-window><div class="unit-mini-track" data-unit-mini-track>',
         units.map(function (unit, unitIndex) { return slotHtml(unit, unitIndex, true); }).join("") + marker,
         '</div></div>',
         '<button type="button" class="unit-mini-arrow" data-unit-mini-step="1" tabindex="-1">&rsaquo;</button>',
@@ -2990,15 +3028,107 @@
         '</div>'
       ].join("");
     }
-    if (quantity > 1 && !isConfiguredRowStep(product, step)) html += renderConfiguredUnitTray(product, step);
+    if (configuredUnitLayoutActive(product, step) && !isConfiguredRowStep(product, step)) html += renderConfiguredUnitTray(product, step);
     if (quantity > 1) html += renderConfiguredUnitActions(product, step);
+    html += renderConfiguredUnitMiaChoice(product, step);
     return html;
+  }
+
+  // "Quero que a Mia escolha" (unitConfiguration.miaChoice no JSON):
+  // assorted  as capas ficam "Sortido", como nos crachás (assorted_designs);
+  // value     os campos recebem o valor do item "A Mia escolhe" da gaveta.
+  // Vale para todas as unidades; desligar repõe o que lá estava.
+  function configuredUnitMiaChoice(product, step) {
+    var config = unitConfiguration(product);
+    var choice = config && config.miaChoice && step ? config.miaChoice[step.id] : null;
+    return choice && (choice.type === "assorted" || (choice.type === "value" && Array.isArray(choice.fields))) ? choice : null;
+  }
+
+  function configuredUnitMiaChoicePressed(product, step, choice) {
+    if (choice.type === "assorted") return isAssortedSelected(product);
+    return configuredUnitSelections(product).every(function (selections) {
+      return choice.fields.every(function (field) { return String(selections[field] || "") === String(choice.value); });
+    });
+  }
+
+  // Corre fn sobre cada unidade (ou sobre a escolha actual, com uma só).
+  function eachConfiguredUnitSelections(product, fn) {
+    var units = configuredUnitList();
+    var index = configuredUnitIndex(product);
+    saveConfiguredUnit(product);
+    if (!units.length) {
+      fn(state.selections, 0);
+      return;
+    }
+    units.forEach(fn);
+    loadConfiguredUnit(product, index);
+  }
+
+  function configuredUnitMiaFields(product, step, choice) {
+    var fields = [];
+    if (choice.type === "value") return choice.fields.slice();
+    configuredUnitCoverGroups(product).forEach(function (group) {
+      fields.push(group.field);
+      fields = fields.concat((step.resetFieldsByGroup || {})[group.id] || []);
+    });
+    return fields;
+  }
+
+  function toggleConfiguredUnitMiaChoice(product, step) {
+    var choice = configuredUnitMiaChoice(product, step);
+    var fields;
+    var stash;
+    var turnOff;
+    if (!choice) return false;
+    fields = configuredUnitMiaFields(product, step, choice);
+    turnOff = configuredUnitMiaChoicePressed(product, step, choice);
+    stash = state.miaChoiceStash && state.miaChoiceStash[step.id];
+    if (turnOff) {
+      eachConfiguredUnitSelections(product, function (unit, i) {
+        fields.forEach(function (field) {
+          delete unit[field];
+          if (stash && stash[i] && stash[i][field] !== undefined) unit[field] = cloneJson(stash[i][field]);
+        });
+      });
+      if (choice.type === "assorted") state.selections.assorted_designs = "";
+      if (state.miaChoiceStash) delete state.miaChoiceStash[step.id];
+      return true;
+    }
+    if (!state.miaChoiceStash) state.miaChoiceStash = {};
+    state.miaChoiceStash[step.id] = [];
+    eachConfiguredUnitSelections(product, function (unit, i) {
+      state.miaChoiceStash[step.id][i] = {};
+      fields.forEach(function (field) {
+        if (unit[field] !== undefined) state.miaChoiceStash[step.id][i][field] = cloneJson(unit[field]);
+        delete unit[field];
+        if (choice.type === "value") unit[field] = String(choice.value);
+      });
+    });
+    if (choice.type === "assorted") state.selections.assorted_designs = "1";
+    return true;
+  }
+
+  // Escolher uma capa depois de pedir à Mia desliga o "Sortido".
+  function leaveConfiguredUnitMiaAssorted(product, step) {
+    var choice = configuredUnitMiaChoice(product, step);
+    if (!choice || choice.type !== "assorted" || !isAssortedSelected(product)) return;
+    state.selections.assorted_designs = "";
+    if (state.miaChoiceStash) delete state.miaChoiceStash[step.id];
+  }
+
+  function renderConfiguredUnitMiaChoice(product, step) {
+    var choice = configuredUnitMiaChoice(product, step);
+    var pressed;
+    if (!choice) return "";
+    pressed = configuredUnitMiaChoicePressed(product, step, choice);
+    return '<div class="unit-actions unit-actions--mia"><button type="button" class="unit-action unit-action--mia' + (pressed ? ' is-pressed' : '') + '" data-unit-mia-choice aria-pressed="' + pressed + '">'
+      + '<span class="unit-action-copy"><span>' + escapeHtml(choice.label || "Quero que a Mia escolha") + '</span></span>'
+      + '<span class="unit-action-check" aria-hidden="true">' + ICON_CHECK + '</span></button></div>';
   }
 
   // Botões "em todas" de cada passo (unitConfiguration.unitActions no JSON):
   // same       copia os campos da unidade activa (ou da primeira que os tem);
-  // same-name  põe todas com o nome da primeira que o tem e, enquanto
-  //            estiver ligado, o que se escreve numa linha vai para todas;
+  // same-name  abre um único campo cujo nome/frase se aplica a todas as capas;
   // none       todas sem personalização;
   // toggle-all liga ou desliga os valores em todas.
   function configuredUnitActions(product, step) {
@@ -3012,6 +3142,52 @@
     return (step && Array.isArray(step.questions) ? step.questions : []).filter(function (question) {
       return !Array.isArray(question.sizes) || question.sizes.indexOf(size) !== -1;
     });
+  }
+
+  function configuredUnitActionFields(product, action) {
+    return action.coverFields ? configuredUnitCoverGroups(product).map(function (group) { return group.field; }) : (action.fields || []);
+  }
+
+  function undoConfiguredUnitAction(product, step) {
+    var undo = state.configuredUnitActionUndo;
+    var units = configuredUnitList();
+    if (!undo || undo.stepId !== step.id || undo.units !== units) return false;
+    var index = configuredUnitIndex(product);
+    saveConfiguredUnit(product);
+    units.forEach(function (unit, i) {
+      undo.fields.forEach(function (field) {
+        delete unit[field];
+        if (undo.before[i][field] !== undefined) unit[field] = cloneJson(undo.before[i][field]);
+      });
+    });
+    state.configuredUnitSameName = undo.sameName;
+    state.configuredUnitActionUndo = null;
+    loadConfiguredUnit(product, index);
+    return true;
+  }
+
+  // Custo do extra em todas as capas, usando os mesmos dados do cálculo do pedido.
+  function configuredUnitActionPrice(product, step, action) {
+    if (action.type === "same-name") {
+      return configuredUnitCount(product) * coverPersonalizationQuestions(product).reduce(function (total, question) {
+        return total + question.extraPriceCents;
+      }, 0);
+    }
+    if (action.type !== "toggle-all") return null;
+    var original = state.selections;
+    var total = 0;
+    try {
+      configuredUnitSelections(product).forEach(function (selections) {
+        state.selections = selections;
+        Object.keys(action.values || {}).forEach(function (field) { delete selections[field]; });
+        var baseline = optionDrawerExtraPerUnitCents(product);
+        Object.keys(action.values || {}).forEach(function (field) { selections[field] = action.values[field]; });
+        total += optionDrawerExtraPerUnitCents(product) - baseline;
+      });
+    } finally {
+      state.selections = original;
+    }
+    return total;
   }
 
   function configuredUnitHasFields(unit, fields) {
@@ -3042,8 +3218,8 @@
       });
     }
     first = units[0] || {};
-    return configuredUnitHasFields(first, action.fields || []) && units.every(function (unit) {
-      return (action.fields || []).every(function (field) { return unit[field] === first[field]; });
+    return configuredUnitHasFields(first, configuredUnitActionFields(product, action)) && units.every(function (unit) {
+      return configuredUnitActionFields(product, action).every(function (field) { return unit[field] === first[field]; });
     });
   }
 
@@ -3053,15 +3229,25 @@
     var questions = configuredPersonalizationQuestions(product, step);
     var textFields = questions.map(function (question) { return question.textField; });
     var source;
+    var fields = configuredUnitActionFields(product, action);
     var turnOff;
     saveConfiguredUnit(product);
     units = configuredUnitList();
+    if (action.type === "same" && !configuredUnitActionSource(product, fields)) return false;
+    var affected = action.type === "same" ? fields : action.type === "toggle-all" ? Object.keys(action.values || {})
+      : questions.reduce(function (keys, question) { return keys.concat([question.field, question.textField]); }, []);
+    var resetGroups = action.coverFields ? configuredUnitCoverGroups(product) : [];
+    resetGroups.forEach(function (group) { affected = affected.concat((step.resetFieldsByGroup || {})[group.id] || []); });
+    state.configuredUnitActionUndo = { stepId: step.id, units: units, before: cloneJson(units), fields: affected, sameName: !!state.configuredUnitSameName };
     if (action.type === "same") {
-      source = configuredUnitActionSource(product, action.fields || []);
-      if (!source) return false;
+      source = configuredUnitActionSource(product, fields);
       source = cloneJson(source);
       units.forEach(function (unit) {
-        action.fields.forEach(function (field) { unit[field] = cloneJson(source[field]); });
+        resetGroups.forEach(function (group) {
+          if (unit[group.field] === source[group.field]) return;
+          ((step.resetFieldsByGroup || {})[group.id] || []).forEach(function (field) { delete unit[field]; });
+        });
+        fields.forEach(function (field) { unit[field] = cloneJson(source[field]); });
       });
     } else if (action.type === "same-name") {
       if (state.configuredUnitSameName) {
@@ -3069,10 +3255,11 @@
       } else {
         source = configuredUnitActionSource(product, textFields);
         source = source ? cloneJson(source) : null;
+        var commonText = source ? String(source[textFields[0]] || "") : "";
         units.forEach(function (unit) {
           questions.forEach(function (question) {
             unit[question.field] = "yes";
-            unit[question.textField] = source ? source[question.textField] : (unit[question.textField] || "");
+            unit[question.textField] = commonText;
           });
         });
         state.configuredUnitSameName = true;
@@ -3098,25 +3285,120 @@
     return true;
   }
 
+  // O reverter das acções "em todas" usa o mesmo pop com temporizador do
+  // seletor A4/A6 (state.assignmentPickerUndos), marcado com kind.
+  function configuredUnitActionUndos() {
+    return (state.assignmentPickerUndos || []).filter(function (undo) { return undo && undo.kind === "unit-action"; });
+  }
+
+  function pushConfiguredUnitActionUndo(step, action) {
+    state.assignmentPickerUndoSequence = Number(state.assignmentPickerUndoSequence || 0) + 1;
+    state.assignmentPickerUndos = (state.assignmentPickerUndos || []).filter(function (undo) { return undo.kind !== "unit-action"; });
+    state.assignmentPickerUndos.push({
+      id: String(Date.now()) + "-" + String(state.assignmentPickerUndoSequence),
+      kind: "unit-action",
+      stepId: String(step.id || ""),
+      expiresAt: Date.now() + 5000,
+      message: String(action.undoMessage || "Alteração aplicada a todas.")
+    });
+  }
+
+  // O item (capa, acabamento, cantos) que corresponde a um campo e valor,
+  // procurado nos dados dos passos, para o botão mostrar o que vai aplicar.
+  function configuredUnitFieldItem(product, field, value) {
+    var found = null;
+    value = String(value || "");
+    if (!value) return null;
+    configuredUnitCoverGroups(product).forEach(function (group) {
+      var unit = {};
+      if (found || group.field !== field) return;
+      unit[field] = value;
+      found = configuredUnitCoverItem(group, unit) ? { item: configuredUnitCoverItem(group, unit), step: group.step } : null;
+    });
+    (product.steps || []).forEach(function (step) {
+      var config = assignmentPickerConfig(step);
+      if (found || !config) return;
+      config.groups.forEach(function (group) {
+        if (found || String(group.field || "") !== field) return;
+        assignmentPickerItems(product, step).forEach(function (item) {
+          if (!found && assignmentPickerValue(group, item) === value) found = { item: item, step: assignmentPickerSourceStep(product, step) };
+        });
+      });
+    });
+    [true, false].forEach(function (sameField) {
+      (product.steps || []).forEach(function (step) {
+        if (found) return;
+        optionDrawersForStep(product, step).forEach(function (drawer) {
+          if (found || (sameField && String(drawer.field || "") !== field) || !Array.isArray(drawer.items)) return;
+          drawer.items.forEach(function (item) {
+            if (!found && String(item.value || "") === value) found = { item: item, step: step };
+          });
+        });
+      });
+    });
+    return found;
+  }
+
+  function configuredUnitActionPreview(product, step, action) {
+    var entries = [];
+    var seen = {};
+    var source;
+    if (action.type === "same") {
+      source = configuredUnitActionSource(product, configuredUnitActionFields(product, action));
+      if (!source) return "";
+      configuredUnitActionFields(product, action).forEach(function (field) {
+        entries.push(configuredUnitFieldItem(product, field, source[field]));
+      });
+    } else if (action.type === "toggle-all") {
+      Object.keys(action.values || {}).forEach(function (field) {
+        entries.push(configuredUnitFieldItem(product, field, action.values[field]));
+      });
+    }
+    entries = entries.filter(function (entry) {
+      var key = entry && entry.item && entry.item.image ? entry.item.image : "";
+      if (!key || seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
+    if (!entries.length) return "";
+    return '<span class="unit-action-preview' + (entries.length > 1 ? ' is-pair' : '') + '" aria-hidden="true">' + entries.map(function (entry) {
+      return '<span class="unit-action-thumb">' + renderVisual(entry.item, "media-list", entry.step) + '</span>';
+    }).join("") + '</span>';
+  }
+
+  // [imagem] + texto + [visto]. Um "same" sem nada escolhido para copiar é
+  // só um aviso (emptyLabel), com o lugar da imagem vazio.
   function renderConfiguredUnitActions(product, step) {
     var actions = configuredUnitActions(product, step);
     if (!actions.length) return "";
     return '<div class="unit-actions">' + actions.map(function (action, actionIndex) {
-      var pressed = configuredUnitActionPressed(product, step, action);
-      var disabled = action.type === "same" && !configuredUnitActionSource(product, action.fields || []);
-      return '<button type="button" class="unit-action' + (pressed ? ' is-pressed' : '') + '" data-unit-action="' + actionIndex + '" aria-pressed="' + pressed + '"' + (disabled ? ' disabled' : '') + '>'
-        + '<span class="unit-action-check" aria-hidden="true">' + ICON_CHECK + '</span>'
-        + '<span>' + escapeHtml(action.label || "") + '</span></button>';
-    }).join("") + '</div>';
+      var pressed;
+      var price;
+      var preview;
+      if (action.type === "same" && !configuredUnitActionSource(product, configuredUnitActionFields(product, action))) {
+        return '<p class="unit-action is-hint has-preview" role="note">'
+          + '<span class="unit-action-preview" aria-hidden="true"><span class="unit-action-thumb is-empty"></span></span>'
+          + '<span class="unit-action-copy"><span>' + escapeHtml(action.emptyLabel || action.label || "") + '</span></span></p>';
+      }
+      pressed = configuredUnitActionPressed(product, step, action);
+      price = configuredUnitActionPrice(product, step, action);
+      preview = configuredUnitActionPreview(product, step, action);
+      return '<button type="button" class="unit-action' + (preview ? ' has-preview' : '') + (pressed ? ' is-pressed' : '') + '" data-unit-action="' + actionIndex + '" aria-pressed="' + pressed + '">'
+        + preview
+        + '<span class="unit-action-copy"><span>' + escapeHtml(action.label || "") + '</span>' + (price !== null ? '<span class="unit-action-price">+ ' + escapeHtml(formatCents(price)) + '</span>' : '') + '</span>'
+        + '<span class="unit-action-check" aria-hidden="true">' + ICON_CHECK + '</span></button>';
+    }).join("") + '</div>' + renderAssignmentPickerUndo(step, "unit-action");
   }
 
-  // Aviso das fitas: só quando alguma capa escolhida tem mais de uma cor.
+  // Avisos do passo: step.notice sempre; o das fitas (variationNotice) só
+  // quando alguma capa escolhida tem mais de uma cor.
   function renderVariationNotice(product, step) {
     var variationStep;
     var list;
     var original = state.selections;
     var many = false;
-    if (!step || !step.variationNotice || !step.pastaDeFolhetosDetails) return "";
+    var notice = step && step.notice ? '<p class="unit-notice" role="note">' + escapeHtml(step.notice) + '</p>' : "";
+    if (!step || !step.variationNotice || !step.pastaDeFolhetosDetails) return notice;
     variationStep = pastaDeFolhetosDetailsVariationStep(product, step);
     if (!variationStep) return "";
     list = configuredUnitCount(product) > 1 ? configuredUnitSelections(product) : [state.selections];
@@ -3130,18 +3412,251 @@
     } finally {
       state.selections = original;
     }
-    return many ? '<p class="unit-notice" role="note">' + escapeHtml(step.variationNotice) + '</p>' : "";
+    return notice + (many ? '<p class="unit-notice" role="note">' + escapeHtml(step.variationNotice) + '</p>' : "");
   }
 
-  // Passos em linhas: o corpo do passo é desenhado uma vez por unidade, com
-  // a miniatura da capa à esquerda. Os ids ganham um sufixo por linha.
+  function setConfiguredUnitSharedName(product, value) {
+    coverPersonalizationQuestions(product).forEach(function (question) {
+      state.selections[question.textField] = value;
+      configuredUnitList().forEach(function (unit) { unit[question.textField] = value; });
+    });
+  }
+
+  function renderConfiguredUnitSharedName(product) {
+    var questions = coverPersonalizationQuestions(product);
+    var question = questions[0];
+    var limit = Math.min.apply(Math, questions.map(function (item) { return item.maxLength; }));
+    var text = String(state.selections[question.textField] || "");
+    var error = state.invalidFields.some(function (field) { return questions.some(function (item) { return item.textField === field; }); });
+    return '<div class="cadernos-personalization-drawer unit-shared-name" data-unit-shared-name>'
+      + '<label class="cadernos-personalization-field"><span>Nome/frase para todas <small data-cover-personalization-count>(' + text.length + ' / ' + limit + ')</small></span>'
+      + '<input type="text" value="' + escapeHtml(text) + '" data-cover-personalization-text data-cover-personalization-text-field="' + escapeHtml(question.textField) + '" data-cover-personalization-limit="' + limit + '" data-cover-personalization-help-id="unit-shared-name-help" aria-describedby="unit-shared-name-help"' + (error ? ' class="is-missing" aria-invalid="true"' : '') + '></label>'
+      + (error ? siteErrorMarkup(text.trim() ? 'O nome/frase tem de ter no máximo ' + limit + ' caracteres.' : 'Escreve o nome ou frase para personalizar a capa.', 'form-error', 'unit-shared-name-help')
+        : '<p class="details-section-note" id="unit-shared-name-help">Máximo de ' + limit + ' caracteres. Este nome/frase será aplicado a todas as capas.</p>') + '</div>';
+  }
+
+  // Passos em linhas: uma linha por capa — no conjunto, a A4 e a A6 de cada
+  // unidade, separadas da unidade seguinte — com a capa grande à esquerda e
+  // as escolhas dessa capa à direita. Os rádios ganham um sufixo por linha;
+  // os handlers de sempre lêem o campo dos data-atributos.
+  function configuredUnitRowKind(step) {
+    if (!step) return "";
+    if (step.template === "cover-personalization") return "name";
+    if (step.pastaDeFolhetosDetails) return "details";
+    if (step.template === "assignment-picker" && assignmentPickerConfig(step)) return "choice";
+    if (step.template === "option-drawers") return "choice";
+    return "";
+  }
+
+  function renderConfiguredUnitRowChoice(name, value, checked, attrs, media, title, note) {
+    return '<label class="unit-choice' + (media ? ' has-media' : '') + (checked ? ' is-selected' : '') + '">'
+      + '<input type="radio" name="' + escapeHtml(name) + '" value="' + escapeHtml(value) + '" ' + attrs + (checked ? ' checked' : '') + '>'
+      + (media ? '<span class="unit-choice-media">' + media + '</span>' : '')
+      + '<span class="unit-choice-copy"><strong>' + escapeHtml(title) + '</strong>' + (note ? '<small>' + escapeHtml(note) + '</small>' : '') + '</span>'
+      + '<span class="unit-choice-check" aria-hidden="true">' + ICON_CHECK + '</span>'
+      + '</label>';
+  }
+
+  // Acabamentos: as opções da gaveta (capa única) ou do seletor A4/A6 (conjunto).
+  function configuredUnitRowChoiceSets(product, step, group) {
+    var config = assignmentPickerConfig(step);
+    var target;
+    if (config) {
+      target = config.groups.filter(function (candidate) {
+        return String(candidate && (candidate.id || candidate.label) || "") === group.id;
+      })[0];
+      return target ? [{
+        field: String(target.field || ""),
+        step: assignmentPickerSourceStep(product, step),
+        items: assignmentPickerItems(product, step).filter(notMiaChoiceItem).map(function (item) {
+          return { item: item, value: assignmentPickerValue(target, item) };
+        })
+      }] : [];
+    }
+    ensureOptionDrawerSelections(product);
+    return optionDrawersForStep(product, step).map(function (drawer) {
+      return {
+        field: String(drawer.field || ""),
+        step: step,
+        items: optionDrawerAvailableItems(product, drawer).filter(notMiaChoiceItem).map(function (item) {
+          return { item: item, value: String(item.value || "") };
+        })
+      };
+    });
+  }
+
+  function renderConfiguredUnitRowChoices(product, step, group, suffix) {
+    var fields = [];
+    var html = configuredUnitRowChoiceSets(product, step, group).map(function (set) {
+      var current = String(state.selections[set.field] || "");
+      fields.push(set.field);
+      return set.items.map(function (entry) {
+        var extra = Math.max(0, parseInt(entry.item.extraPriceCentsPerUnit, 10) || 0);
+        return renderConfiguredUnitRowChoice(set.field + suffix, entry.value, current === entry.value,
+          'data-option-drawer-choice data-option-drawer-field="' + escapeHtml(set.field) + '"',
+          renderVisual(entry.item, "media-list", set.step),
+          entry.item.title || entry.value || "Opção",
+          extra ? "+ " + formatCents(extra) : "");
+      }).join("");
+    }).join("");
+    return { fields: fields, html: '<div class="unit-row-options unit-row-options--choice">' + html + '</div>' };
+  }
+
+  function configuredUnitRowQuestion(product, group) {
+    var questions = coverPersonalizationQuestions(product);
+    return questions.filter(function (question) { return question.size === group.id; })[0]
+      || (questions.length === 1 ? questions[0] : null);
+  }
+
+  // Nome: [Sim, quero personalizar · preço] [Não]; o campo abre por baixo do Sim.
+  function renderConfiguredUnitRowName(product, step, group, suffix) {
+    var question = configuredUnitRowQuestion(product, group);
+    var selected;
+    var text;
+    var helpId;
+    var error = "";
+    var choices;
+    if (!question) return { fields: [], html: "" };
+    selected = String(state.selections[question.field] || "");
+    text = coverPersonalizationQuestionText(question);
+    helpId = "unit-name-help" + suffix;
+    if (state.invalidFields.indexOf(question.textField) !== -1 && (!text || text.length > question.maxLength)) {
+      error = !text ? "Escreve o nome ou frase para personalizar a capa." : "O nome/frase tem de ter no máximo " + question.maxLength + " caracteres.";
+    }
+    choices = (question.items || []).map(function (item) {
+      var value = String(item.value || "");
+      return renderConfiguredUnitRowChoice(question.field + suffix, value, selected === value,
+        'data-choice-step="' + escapeHtml(step.id) + '" data-choice-field="' + escapeHtml(question.field) + '" data-cover-personalization-text-field="' + escapeHtml(question.textField) + '" data-unit-name-choice="' + escapeHtml(suffix) + '"',
+        "", item.title || value,
+        value === "yes" && question.extraPriceCents ? formatCents(question.extraPriceCents) : "");
+    }).join("");
+    return {
+      fields: [question.field, question.textField],
+      html: '<div class="unit-row-options unit-row-options--name">' + choices
+        + (selected === "yes" ? [
+          '<div class="cadernos-personalization-drawer unit-row-name">',
+          '<label class="cadernos-personalization-field">',
+          '<span>Nome/frase <small data-cover-personalization-count>(' + text.length + ' / ' + question.maxLength + ')</small></span>',
+          '<input' + (error ? ' class="is-missing" aria-invalid="true"' : '') + ' type="text" value="' + escapeHtml(state.selections[question.textField] || "") + '" data-cover-personalization-text data-cover-personalization-text-field="' + escapeHtml(question.textField) + '" data-cover-personalization-help-id="' + escapeHtml(helpId) + '" data-cover-personalization-limit="' + question.maxLength + '" data-unit-name-input="' + escapeHtml(suffix) + '" aria-describedby="' + escapeHtml(helpId) + '">',
+          '</label>',
+          error ? siteErrorMarkup(error, "form-error", helpId) : '<p class="details-section-note" id="' + escapeHtml(helpId) + '">Máximo de ' + question.maxLength + ' caracteres.</p>',
+          '</div>'
+        ].join("") : "")
+        + '</div>'
+    };
+  }
+
+  // Detalhes: [Quero cantos metálicos · preço] e, se a capa tiver várias,
+  // as fitas. A capa da linha mostra a fita escolhida.
+  function renderConfiguredUnitRowDetails(product, step, group, suffix) {
+    var config = step.pastaDeFolhetosDetails || {};
+    var source = config.metalCornersSourceStepId ? findStep(product, String(config.metalCornersSourceStepId)) : step;
+    var drawer = optionDrawersForStep(product, source)[0];
+    var item = drawer && Array.isArray(drawer.items) ? drawer.items[0] : null;
+    var field = drawer ? String(drawer.field || "") : "";
+    var cornerGroups = Array.isArray(config.metalCornersGroups) ? config.metalCornersGroups : [];
+    var variationStep = pastaDeFolhetosDetailsVariationStep(product, step);
+    var variationField = variationStep ? groupedDesignField(variationStep, group.id) : "";
+    var variations = variationStep ? groupedDesignItems(variationStep, group.id) : [];
+    var fields = [];
+    var html = "";
+    var selected;
+    var extra;
+    if (cornerGroups.length) {
+      field = String((cornerGroups.filter(function (candidate) {
+        return String(candidate && (candidate.id || candidate.label) || "") === group.id;
+      })[0] || {}).field || "");
+    }
+    if (item && field) {
+      selected = String(state.selections[field] || "") === String(item.value || "");
+      extra = Math.max(0, parseInt(item.extraPriceCentsPerUnit, 10) || 0);
+      fields.push(field);
+      html += '<button type="button" class="unit-choice unit-choice--wide' + (selected ? ' is-selected' : '') + '" data-pf-metal-corners-toggle data-pf-metal-corners-field="' + escapeHtml(field) + '" data-pf-metal-corners-value="' + escapeHtml(item.value || "") + '" aria-pressed="' + selected + '">'
+        + (item.image ? '<span class="unit-choice-thumb" aria-hidden="true">' + renderVisual(item, "media-list", source) + '</span>' : '')
+        + '<span class="unit-choice-copy"><strong>' + escapeHtml(item.title || "Quero cantos metálicos") + '</strong>' + (extra ? '<small>+ ' + escapeHtml(formatCents(extra)) + '</small>' : '') + '</span>'
+        + '<span class="unit-choice-check" aria-hidden="true">' + ICON_CHECK + '</span>'
+        + '</button>';
+    }
+    if (variationField && variations.length > 1) {
+      fields.push(variationField);
+      html += variations.map(function (variation) {
+        var value = String(variation.value || "");
+        return renderConfiguredUnitRowChoice(variationField + suffix, value, String(state.selections[variationField] || "") === value,
+          'data-continuous-variation-choice data-continuous-variation-step="' + escapeHtml(variationStep.id || "") + '" data-continuous-variation-field="' + escapeHtml(variationField) + '" data-continuous-variation-group="' + escapeHtml(group.id) + '"',
+          "", variation.title || value, "");
+      }).join("");
+    }
+    return { fields: fields, html: '<div class="unit-row-options unit-row-options--details">' + html + '</div>' };
+  }
+
+  // A capa da linha: no passo dos detalhes, a fotografia da fita escolhida.
+  function configuredUnitRowCoverItem(product, step, group, unit) {
+    var variationStep = step.pastaDeFolhetosDetails ? pastaDeFolhetosDetailsVariationStep(product, step) : null;
+    var field = variationStep ? groupedDesignField(variationStep, group.id) : "";
+    var value = field ? String(state.selections[field] || "") : "";
+    var variation = value ? groupedDesignItems(variationStep, group.id).filter(function (item) {
+      return String(item.value || "") === value;
+    })[0] : null;
+    return variation && variation.image ? { item: variation, step: variationStep } : { item: configuredUnitCoverItem(group, unit), step: group.step };
+  }
+
   function renderConfiguredUnitRows(product, step) {
+    if (state.configuredUnitSameName && step.template === "cover-personalization") return renderConfiguredUnitSharedName(product);
+    var kind = configuredUnitRowKind(step);
+    var groups = configuredUnitCoverGroups(product);
+    var active = configuredUnitIndex(product);
+    var invalid = state.invalidFields;
+    var label = configuredUnitLabel(product);
+    var html;
+    if (!kind || !groups.length) return renderConfiguredUnitBodyRows(product, step);
+    saveConfiguredUnit(product);
+    try {
+      html = configuredUnitViewList(product).map(function (unit, unitIndex) {
+        var rows;
+        loadConfiguredUnit(product, unitIndex);
+        state.invalidFields = unitIndex === active ? invalid : [];
+        if (kind === "details") syncPastaDeFolhetosDetailSelections(product, step);
+        rows = groups.map(function (group, groupIndex) {
+          var suffix = "__u" + unitIndex + "g" + groupIndex;
+          var body = kind === "name" ? renderConfiguredUnitRowName(product, step, group, suffix)
+            : kind === "details" ? renderConfiguredUnitRowDetails(product, step, group, suffix)
+            : renderConfiguredUnitRowChoices(product, step, group, suffix);
+          var cover = configuredUnitRowCoverItem(product, step, group, configuredUnitFields(product));
+          // Duas linhas: a unidade ("Pasta 1", "Conjunto 1") e a capa ("A4";
+          // no conjunto "Pasta A4"). Com uma só unidade, só a capa.
+          var unitLine = configuredUnitCount(product) > 1 ? label + " " + (unitIndex + 1) : "";
+          var coverLine = groups.length > 1 ? ((unitConfiguration(product).label || "") + " " + group.id).trim() : group.id;
+          var rowLabel = (unitLine ? unitLine + " " : "") + coverLine;
+          var invalidRow = body.fields.some(function (field) { return state.invalidFields.indexOf(field) !== -1; });
+          return [
+            '<section class="unit-row' + (invalidRow ? ' is-invalid' : '') + '" data-unit-row="' + unitIndex + '">',
+            '<div class="unit-row-cover" aria-hidden="true">',
+            '<span class="unit-slot-cover' + (cover.item ? '' : ' is-empty' + (isAssortedSelected(product) ? ' is-mia' : '')) + '">' + (cover.item ? renderVisual(cover.item, "media-list", cover.step) : '') + '</span>',
+            '<span class="unit-slot-number unit-row-label">' + (unitLine ? '<span>' + escapeHtml(unitLine) + '</span>' : '') + '<span>' + escapeHtml(coverLine) + '</span></span>',
+            '</div>',
+            '<div class="unit-row-body" role="group" aria-label="' + escapeHtml(rowLabel) + '">' + body.html + '</div>',
+            '</section>'
+          ].join("");
+        }).join("");
+        saveConfiguredUnit(product);
+        return '<div class="unit-row-set">' + rows + '</div>';
+      }).join("");
+    } finally {
+      loadConfiguredUnit(product, active);
+      state.invalidFields = invalid;
+    }
+    return '<div class="unit-rows unit-rows--' + kind + '">' + html + '</div>';
+  }
+
+  // Passos sem desenho próprio em linhas: o corpo do passo é desenhado uma
+  // vez por unidade, com a miniatura da capa à esquerda.
+  function renderConfiguredUnitBodyRows(product, step) {
     var active = configuredUnitIndex(product);
     var invalid = state.invalidFields;
     var html;
     saveConfiguredUnit(product);
     try {
-      html = configuredUnitList().map(function (unit, unitIndex) {
+      html = configuredUnitViewList(product).map(function (unit, unitIndex) {
         var body;
         loadConfiguredUnit(product, unitIndex);
         state.invalidFields = unitIndex === active ? invalid : [];
@@ -3158,7 +3673,7 @@
         }
         return [
           '<section class="unit-row" data-unit-row="' + unitIndex + '">',
-          '<div class="unit-row-cover" aria-hidden="true"><span class="unit-slot-covers' + (configuredUnitCoverGroups(product).length > 1 ? ' is-pair' : '') + '">' + configuredUnitCoversHtml(product, configuredUnitList()[unitIndex]) + '</span><span class="unit-slot-number">' + (unitIndex + 1) + '</span></div>',
+          '<div class="unit-row-cover" aria-hidden="true"><span class="unit-slot-covers' + (configuredUnitCoverGroups(product).length > 1 ? ' is-pair' : '') + '">' + configuredUnitCoversHtml(product, configuredUnitViewList(product)[unitIndex]) + '</span><span class="unit-slot-number">' + (unitIndex + 1) + '</span></div>',
           '<div class="unit-row-body" role="group" aria-label="' + escapeHtml(configuredUnitLabel(product) + ' ' + (unitIndex + 1)) + '">' + body + '</div>',
           '</section>'
         ].join("");
@@ -3183,45 +3698,67 @@
       ["pointerdown", "mousedown", "touchstart", "focusin", "click", "change", "input", "keydown"].forEach(function (type) {
         row.addEventListener(type, activate, true);
       });
+      // Escolher "Sim" leva o cursor para o campo do nome que abre.
+      row.addEventListener("change", function (event) {
+        var input = event.target;
+        if (input && input.dataset && input.dataset.unitNameChoice && input.value === "yes") {
+          state.configuredUnitFocusName = input.dataset.unitNameChoice;
+        }
+      }, true);
     });
+    if (state.configuredUnitFocusName) {
+      var nameInput = document.querySelector('[data-unit-name-input="' + state.configuredUnitFocusName + '"]');
+      state.configuredUnitFocusName = "";
+      if (nameInput) nameInput.focus({ preventScroll: true });
+    }
   }
 
   function bindConfiguredUnitMini(product) {
     var mini = document.querySelector("[data-unit-mini]");
     var full = document.querySelector("[data-unit-tray]");
-    var track = mini && mini.querySelector("[data-unit-mini-track]");
+    var win = mini && mini.querySelector("[data-unit-mini-window]");
     var active = configuredUnitIndex(product);
     var columns = configuredUnitTrayColumns();
     var last = Math.max(0, configuredUnitCount(product) - columns);
     var shown = state.configuredUnitMiniShown;
     var headerTop;
     var target;
+    var settle;
 
     if (state.configuredUnitMiniScroll) {
       window.removeEventListener("scroll", state.configuredUnitMiniScroll);
       state.configuredUnitMiniScroll = null;
     }
-    if (!mini || !track || !full) {
+    if (!mini || !win || !full) {
       state.configuredUnitMiniShown = null;
       state.configuredUnitMiniVisible = false;
       return;
     }
 
-    function place(value, animate) {
-      value = Math.max(0, Math.min(last, value));
-      if (!animate) track.style.transition = "none";
-      track.style.transform = "translateX(" + (-value * 100 / columns) + "%)";
-      if (!animate) {
-        void track.offsetWidth;
-        track.style.transition = "";
-      }
+    // A janela desliza por scroll nativo (dedo, trackpad ou setas), com
+    // encaixe em cada unidade.
+    function slotWidth() {
+      return win.clientWidth / columns || 1;
+    }
+
+    function current() {
+      return Math.max(0, Math.min(last, Math.round(win.scrollLeft / slotWidth())));
+    }
+
+    function arrows(value) {
       mini.querySelector('[data-unit-mini-step="-1"]').disabled = value === 0;
       mini.querySelector('[data-unit-mini-step="1"]').disabled = value === last;
+    }
+
+    function place(value, animate) {
+      value = Math.max(0, Math.min(last, value));
+      win.scrollTo({ left: value * slotWidth(), behavior: animate ? "smooth" : "auto" });
+      arrows(value);
       state.configuredUnitMiniShown = value;
     }
 
-    // A janela segue a unidade activa (fica à direita); as setas só a mexem
-    // até a unidade activa mudar.
+    // A janela segue a unidade activa (fica à direita); deslizar ou as setas
+    // só a mexem até a unidade activa mudar.
     if (state.configuredUnitMiniFor !== active + ":" + columns || state.configuredUnitMiniStart == null) {
       state.configuredUnitMiniFor = active + ":" + columns;
       state.configuredUnitMiniStart = active - (columns - 1);
@@ -3229,15 +3766,28 @@
     target = Math.max(0, Math.min(last, state.configuredUnitMiniStart));
     // Desliza da posição anterior para a nova.
     place(shown == null ? target : shown, false);
+    state.configuredUnitMiniPending = null;
     if (shown != null && shown !== target) {
-      window.setTimeout(function () { place(target, true); }, 30);
-    } else {
-      place(target, false);
+      if (state.configuredUnitDeal) {
+        state.configuredUnitMiniPending = function () { place(target, true); };
+      } else {
+        window.setTimeout(function () { place(target, true); }, 30);
+      }
     }
+
+    win.addEventListener("scroll", function () {
+      var value = current();
+      arrows(value);
+      window.clearTimeout(settle);
+      settle = window.setTimeout(function () {
+        state.configuredUnitMiniShown = current();
+        state.configuredUnitMiniStart = state.configuredUnitMiniShown;
+      }, 120);
+    }, { passive: true });
 
     mini.querySelectorAll("[data-unit-mini-step]").forEach(function (button) {
       button.addEventListener("click", function () {
-        state.configuredUnitMiniStart = Math.max(0, Math.min(last, state.configuredUnitMiniShown + Number(button.dataset.unitMiniStep)));
+        state.configuredUnitMiniStart = Math.max(0, Math.min(last, current() + Number(button.dataset.unitMiniStep)));
         place(state.configuredUnitMiniStart, true);
       });
     });
@@ -3249,6 +3799,155 @@
     };
     state.configuredUnitMiniScroll();
     window.addEventListener("scroll", state.configuredUnitMiniScroll, { passive: true });
+  }
+
+  // Escolher uma capa para a unidade destacada "dá a carta": uma cópia voa do
+  // cartão da grelha para o lugar dela na fila — levanta, roda no caminho e
+  // assenta com um pequeno ressalto. O handler regista a origem antes do
+  // render; a animação corre depois, já com a fila nova. Se o lugar já tinha
+  // uma capa, guarda-se uma cópia dela para ser descartada antes. Sem origem
+  // (a capa foi retirada), só há o descarte.
+  function queueConfiguredUnitDeal(product, step, source, field) {
+    var fields;
+    var unit;
+    var group;
+    var slot;
+    var old = null;
+    if (!configuredUnitLayoutActive(product, step) || !isConfiguredQuantityStep(product, step)) return;
+    fields = configuredUnitCoverGroups(product).map(function (group) { return group.field; });
+    if (fields.indexOf(field) === -1) return;
+    unit = configuredUnitIndex(product);
+    group = fields.indexOf(field);
+    if (state.selections[field]) {
+      slot = document.querySelector('[data-unit-mini].is-visible [data-unit-slot="' + unit + '"]')
+        || document.querySelector('[data-unit-tray] [data-unit-slot="' + unit + '"]');
+      old = slot ? slot.querySelectorAll(".unit-slot-cover")[group] : null;
+      old = old && !old.classList.contains("is-empty") ? old.cloneNode(true) : null;
+    }
+    if (!source && !old) return;
+    state.configuredUnitDeal = { unit: unit, group: group, rect: source ? source.getBoundingClientRect() : null, old: old };
+  }
+
+  // A capa substituída salta do lugar e sai de cena, rodando, como uma
+  // carta descartada.
+  function discardConfiguredUnitCover(old, to) {
+    var done = function () { old.remove(); };
+    var animation;
+    old.removeAttribute("style");
+    old.classList.remove("is-empty", "is-awaiting-deal");
+    old.classList.add("unit-deal-card");
+    old.setAttribute("aria-hidden", "true");
+    old.style.left = to.left + "px";
+    old.style.top = to.top + "px";
+    old.style.width = to.width + "px";
+    old.style.height = to.height + "px";
+    document.body.appendChild(old);
+    animation = old.animate([
+      { transform: "translate(0,0) scale(1) rotate(0deg)", opacity: 1, easing: "cubic-bezier(.2,.8,.3,1)" },
+      { transform: "translate(-4px,-24px) scale(1.1) rotate(-9deg)", opacity: 1, offset: 0.3, easing: "cubic-bezier(.6,0,.9,.4)" },
+      { transform: "translate(" + Math.round(to.width * 1.6) + "px," + Math.round(to.height * 0.9) + "px) scale(.6) rotate(38deg)", opacity: 0 }
+    ], { duration: 360, fill: "both" });
+    animation.onfinish = done;
+    animation.oncancel = done;
+    window.setTimeout(done, 420);
+  }
+
+  function configuredUnitDealTarget(unit, group) {
+    var mini = document.querySelector("[data-unit-mini].is-visible");
+    var slot = mini
+      ? mini.querySelector('[data-unit-slot="' + unit + '"]')
+      : document.querySelector('[data-unit-tray] [data-unit-slot="' + unit + '"]');
+    var cover = slot ? slot.querySelectorAll(".unit-slot-cover")[group] : null;
+    var rect;
+    if (!cover) return null;
+    // A carta substitui o "pop" da capa nova (e mede-se já sem ele).
+    document.querySelectorAll('[data-unit-slot="' + unit + '"].is-filling').forEach(function (filling) {
+      filling.classList.remove("is-filling");
+    });
+    rect = cover.getBoundingClientRect();
+    if (rect.top + rect.height < 0 || rect.top > window.innerHeight) return null;
+    return { slot: slot, cover: cover, rect: rect };
+  }
+
+  function playConfiguredUnitDeal() {
+    var deal = state.configuredUnitDeal;
+    var target;
+    var to;
+    var from;
+    var fly;
+    var scale;
+    var dx;
+    var dy;
+    var flight;
+    var waiting;
+    var next;
+    var delay;
+    // A janela pequena guardou o deslize para a unidade seguinte: corre ao
+    // assentar ou, sem carta (capa fora do ecrã), já.
+    var slide = state.configuredUnitMiniPending;
+    state.configuredUnitMiniPending = null;
+    state.configuredUnitDeal = null;
+    target = deal && document.body.animate ? configuredUnitDealTarget(deal.unit, deal.group) : null;
+    if (!target || !deal.rect) {
+      if (target && deal.old) discardConfiguredUnitCover(deal.old, target.rect);
+      if (slide) slide();
+      return;
+    }
+    to = target.rect;
+    from = deal.rect;
+    fly = target.cover.cloneNode(true);
+    fly.classList.add("unit-deal-card");
+    fly.setAttribute("aria-hidden", "true");
+    fly.style.left = to.left + "px";
+    fly.style.top = to.top + "px";
+    fly.style.width = to.width + "px";
+    fly.style.height = to.height + "px";
+    document.body.appendChild(fly);
+    // Até a carta assentar, o lugar mantém o "?" e o rebordo tracejado — numa
+    // troca, vê-se por trás da capa antiga a cair — e o destaque fica nesta
+    // unidade; só depois passa para a seguinte.
+    waiting = Array.prototype.map.call(document.querySelectorAll('[data-unit-slot="' + deal.unit + '"]'), function (slot) {
+      return slot.querySelectorAll(".unit-slot-cover")[deal.group];
+    }).filter(function (cover) { return cover && !cover.classList.contains("is-empty"); });
+    waiting.forEach(function (cover) { cover.classList.add("is-empty", "is-awaiting-deal"); });
+    delay = deal.old ? 150 : 0;
+    if (deal.old) discardConfiguredUnitCover(deal.old, to);
+    next = Array.prototype.filter.call(document.querySelectorAll(".unit-slot.is-active"), function (slot) {
+      return Number(slot.dataset.unitSlot) !== deal.unit;
+    });
+    next.forEach(function (slot) { slot.classList.remove("is-active"); });
+    if (next.length) {
+      document.querySelectorAll('[data-unit-slot="' + deal.unit + '"]').forEach(function (slot) { slot.classList.add("is-active"); });
+    }
+    scale = Math.max(0.2, Math.min(from.width / to.width, from.height / to.height));
+    dx = from.left + from.width / 2 - (to.left + to.width / 2);
+    dy = from.top + from.height / 2 - (to.top + to.height / 2);
+    flight = fly.animate([
+      { transform: "translate(" + dx + "px," + dy + "px) scale(" + scale + ") rotate(0deg)", easing: "cubic-bezier(.2,.7,.3,1)" },
+      { transform: "translate(" + dx + "px," + (dy - 16) + "px) scale(" + (scale * 1.06) + ") rotate(-6deg)", offset: 0.16, easing: "cubic-bezier(.55,0,.25,1)" },
+      { transform: "translate(0,0) scale(1.1) rotate(8deg)", offset: 0.84, easing: "ease-out" },
+      { transform: "translate(0,0) scale(1) rotate(0deg)" }
+    ], { duration: 400, delay: delay, fill: "both" });
+    function land() {
+      if (!fly.parentNode) return;
+      fly.remove();
+      waiting.forEach(function (cover) { cover.classList.remove("is-empty", "is-awaiting-deal"); });
+      if (next.length && document.body.contains(next[0])) {
+        document.querySelectorAll('[data-unit-slot="' + deal.unit + '"]').forEach(function (slot) { slot.classList.remove("is-active"); });
+        next.forEach(function (slot) { slot.classList.add("is-active"); });
+        placeConfiguredUnitMarkers();
+        if (slide) slide();
+      }
+      target.cover.animate([
+        { transform: "scale(1.12) rotate(-3deg)" },
+        { transform: "scale(.95) rotate(2deg)", offset: 0.55 },
+        { transform: "scale(1) rotate(0deg)" }
+      ], { duration: 240, easing: "ease-out" });
+    }
+    flight.onfinish = land;
+    flight.oncancel = land;
+    // Os eventos da animação só chegam com frames; o lugar não pode ficar à espera.
+    window.setTimeout(land, 460 + delay);
   }
 
   // A setinha por baixo da unidade activa desliza do sítio onde estava, como
@@ -3305,35 +4004,61 @@
     document.querySelectorAll("[data-unit-action]").forEach(function (button) {
       button.addEventListener("click", function () {
         var step = currentStep(product);
-        var action = configuredUnitActions(product, step)[Number(button.dataset.unitAction)];
-        if (!action || !applyConfiguredUnitAction(product, step, action)) return;
+        var actionIndex = Number(button.dataset.unitAction);
+        var action = configuredUnitActions(product, step)[actionIndex];
+        var undo = state.configuredUnitActionUndo;
+        if (!action) return;
+        // Voltar a carregar num botão já aplicado desfaz o que ele fez, sem
+        // novo "Reverter"; o pop que estiver aberto sai.
+        if (configuredUnitActionPressed(product, step, action)) {
+          if (undo && undo.actionIndex === actionIndex && undoConfiguredUnitAction(product, step)) {
+            state.assignmentPickerUndos = (state.assignmentPickerUndos || []).filter(function (entry) { return entry.kind !== "unit-action"; });
+          } else if (action.type === "toggle-all" || action.type === "same-name") {
+            // Sem estado anterior guardado, estes desligam-se em todas.
+            applyConfiguredUnitAction(product, step, action);
+            state.configuredUnitActionUndo = null;
+          } else {
+            return;
+          }
+          state.errors = "";
+          state.invalidFields = [];
+          rerenderProduct(product);
+          return;
+        }
+        if (!applyConfiguredUnitAction(product, step, action)) return;
+        if (state.configuredUnitActionUndo) state.configuredUnitActionUndo.actionIndex = actionIndex;
+        pushConfiguredUnitActionUndo(step, action);
         state.errors = "";
         state.invalidFields = [];
         rerenderProduct(product);
       });
     });
-    // "Mesmo nome em todos": o que se escreve numa linha vai para todas; mexer
-    // no Sim/Não de uma linha desliga-o.
-    document.querySelectorAll("[data-unit-row]").forEach(function (row) {
-      row.addEventListener("input", function (event) {
-        var input = event.target;
-        var field = input && input.dataset ? input.dataset.coverPersonalizationTextField : "";
-        if (!state.configuredUnitSameName || !field) return;
-        configuredUnitList().forEach(function (unit) { unit[field] = input.value; });
-        document.querySelectorAll('[data-cover-personalization-text-field="' + field + '"][data-cover-personalization-text]').forEach(function (other) {
-          if (other !== input) other.value = input.value;
-        });
+    document.querySelectorAll("[data-unit-mia-choice]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        if (!toggleConfiguredUnitMiaChoice(product, currentStep(product))) return;
+        try { trackOptionSelected(product, "mia_choice", state.selections.assorted_designs === "1" ? "on" : "toggle", ""); } catch (e) {}
+        state.errors = "";
+        state.invalidFields = [];
+        rerenderProduct(product);
       });
-      row.addEventListener("change", function (event) {
-        if (event.target && event.target.type === "radio") state.configuredUnitSameName = false;
-      }, true);
+    });
+    document.querySelectorAll("[data-unit-shared-name]").forEach(function (wrapper) {
+      function sync(event) {
+        var input = event.target;
+        if (!input || !input.hasAttribute("data-cover-personalization-text")) return;
+        setConfiguredUnitSharedName(product, input.value);
+      }
+      wrapper.addEventListener("input", sync);
+      wrapper.addEventListener("change", sync);
     });
   }
 
   function bindConfiguredUnitControls(product) {
+    watchConfiguredUnitTrayColumns(product);
     bindConfiguredUnitRows(product);
     bindConfiguredUnitActions(product);
     bindConfiguredUnitMini(product);
+    playConfiguredUnitDeal();
     placeConfiguredUnitMarkers();
     animateConfiguredDesignBadges();
 
@@ -3430,10 +4155,10 @@
       renderStepLeadTimeNotice(product, step),
       displayStepText(product, step) ? '<p class="step-help">' + escapeHtml(displayStepText(product, step)) + '</p>' : '',
       state.currentStep === 0 ? renderProductPreview(product) + renderProductGallery(product) : "",
-      renderConfiguredUnitControls(product, step),
       renderVariationNotice(product, step),
-      configuredUnitsActive(product, step) && isConfiguredRowStep(product, step) ? renderConfiguredUnitRows(product, step) : stepBody(product, step),
-      configuredUnitsActive(product, step) && isConfiguredRowStep(product, step) ? "" : renderQuadrosBuildSummary(product, step),
+      renderConfiguredUnitControls(product, step),
+      configuredUnitLayoutActive(product, step) && isConfiguredRowStep(product, step) ? renderConfiguredUnitRows(product, step) : stepBody(product, step),
+      renderQuadrosBuildSummary(product, step),
       '</div>',
       cartEntry ? renderCartEntryActions(product, step) : [
       '<div class="step-actions">',

@@ -1120,6 +1120,8 @@
           ? "Escreve o nome ou frase para personalizar a capa."
           : "O nome/frase tem de ter no máximo " + question.maxLength + " caracteres.")
         : "";
+      var rawQuestion = (step.questions || []).filter(function (item) { return item.field === question.field; })[0];
+      if (configuredUnitsActive(product, step) && rawQuestion && rawQuestion.multipleTitle) question.title = rawQuestion.multipleTitle;
       var questionTitle = question.title && question.title !== step.title
         ? '<h3 class="cadernos-personalization-question-title">' + escapeHtml(question.title) + '</h3>'
         : "";

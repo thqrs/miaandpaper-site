@@ -186,6 +186,12 @@
       return state.orderAudioRecording ? "Solta o botão do áudio para terminar a gravação." : "Espera até o anexo terminar de enviar.";
     }
 
+    // "Quero que a Mia escolha" as capas: o passo fica feito.
+    var miaChoice = configuredUnitMiaChoice(product, step);
+    if (miaChoice && miaChoice.type === "assorted" && isAssortedSelected(product)) {
+      return "";
+    }
+
     if (step.template === "assignment-picker" && assignmentPickerConfig(step)) {
       var assignmentConfig = assignmentPickerConfig(step);
       var assignmentItems = assignmentPickerItems(product, step);
@@ -427,7 +433,8 @@
         var detailsVariationStep = pastaDeFolhetosDetailsVariationStep(product, step);
         var detailsGroups;
         syncPastaDeFolhetosDetailSelections(product, step);
-        if (detailsVariationStep) {
+        // Com as capas a cargo da Mia não há fita para escolher.
+        if (detailsVariationStep && !isAssortedSelected(product)) {
           detailsGroups = pastaDeFolhetosDetailsGroups(step, detailsVariationStep);
           for (i = 0; i < detailsGroups.length; i += 1) {
             var detailsGroup = detailsGroups[i];

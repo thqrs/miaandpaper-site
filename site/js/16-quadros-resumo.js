@@ -340,6 +340,93 @@
       : null;
   }
 
+  // "1, 2, 3, 5 e 7" -> "1–3, 5 e 7" (só sequências de três ou mais).
+  function pastaSummaryNumbers(numbers) {
+    var parts = [];
+    var start = numbers[0];
+    var previous = numbers[0];
+    numbers.slice(1).concat([null]).forEach(function (number) {
+      if (number === previous + 1) {
+        previous = number;
+        return;
+      }
+      if (previous - start >= 2) parts.push(start + "–" + previous);
+      else for (var n = start; n <= previous; n += 1) parts.push(String(n));
+      start = number;
+      previous = number;
+    });
+    return parts.length > 1 ? parts.slice(0, -1).join(", ") + " e " + parts[parts.length - 1] : parts[0];
+  }
+
+  // Com várias unidades: uma linha por configuração diferente, com as capas
+  // pequenas e o resto em texto; as unidades iguais juntam-se na mesma linha.
+  function renderPastaDeFolhetosUnitsSummary(product, config, coverStep, variationStep, sizeItem, groups) {
+    var original = state.selections;
+    var lines = [];
+    var byKey = {};
+    var label = configuredUnitLabel(product);
+    var units;
+    try {
+      units = configuredUnitSelections(product);
+      units.forEach(function (selections, index) {
+        var thumbs = "";
+        var parts = [];
+        var key;
+        state.selections = selections;
+        groups.forEach(function (group) {
+          var groupConfig = config.groups && config.groups[group] || {};
+          var coverItem = buildSummaryItem(coverStep, selections[groupConfig.coverField]);
+          var variationItem = buildSummaryItem(variationStep, selections[groupConfig.variationField]);
+          var shown = variationItem && variationItem.image ? variationItem : coverItem;
+          thumbs += '<span class="unit-slot-cover' + (shown ? '' : ' is-empty' + (isAssortedSelected(product) ? ' is-mia' : '')) + '">' + (shown ? renderVisual(shown, "media-list", shown === variationItem ? variationStep : coverStep) : '') + '</span>';
+          if (coverItem) {
+            parts.push((groups.length > 1 ? group + ": " : "") + displayItemTitle(coverItem) + (variationItem ? " (" + (variationItem.title || variationItem.value || "") + ")" : ""));
+          }
+        });
+        if (isAssortedSelected(product)) parts.push("Design: a Mia escolhe");
+        selectedOptionDrawerRecords(product).forEach(function (record) {
+          var field = record.drawer && record.drawer.field || "";
+          var drawerLabel = config.drawerLabels && config.drawerLabels[field] || record.drawer.title || record.drawer.label || "";
+          parts.push(record.item.summaryTitle ? String(record.item.summaryTitle)
+            : (drawerLabel ? drawerLabel + ": " : "") + (record.item.title || record.item.value || ""));
+        });
+        coverPersonalizationQuestions(product).forEach(function (question) {
+          var text = String(selections[question.textField] || "").trim();
+          if (selections[question.field] === "yes" && text) {
+            parts.push("Nome" + (groups.length > 1 && question.size ? " " + question.size : "") + ": “" + text + "”");
+          }
+        });
+        key = thumbs + "|" + parts.join("|");
+        if (!byKey[key]) {
+          byKey[key] = { thumbs: thumbs, parts: parts, numbers: [] };
+          lines.push(byKey[key]);
+        }
+        byKey[key].numbers.push(index + 1);
+      });
+    } finally {
+      state.selections = original;
+    }
+    return [
+      '<section class="crachas-step2-summary quadros-summary pasta-de-folhetos-build-summary pf-units-summary" aria-label="O que vais encomendar">',
+      '<h3 class="crachas-step2-summary-title">' + escapeHtml(config.title || "O que vais encomendar:") + '</h3>',
+      // "4 pastas · A4", ou "2 × Conjunto A4+A6" quando o tamanho já o diz.
+      '<p class="pf-units-summary-size">' + escapeHtml(displayItemTitle(sizeItem).toLowerCase().indexOf(label.toLowerCase()) !== -1
+        ? units.length + " × " + displayItemTitle(sizeItem)
+        : units.length + " " + (label + "s").toLowerCase() + " · " + displayItemTitle(sizeItem)) + '</p>',
+      '<ul class="pf-units-summary-list">',
+      lines.map(function (line) {
+        return '<li class="pf-units-summary-row">'
+          + '<span class="unit-slot-covers' + (groups.length > 1 ? ' is-pair' : '') + '" aria-hidden="true">' + line.thumbs + '</span>'
+          + '<span class="pf-units-summary-copy"><strong>' + escapeHtml(label + (line.numbers.length > 1 ? "s " : " ") + pastaSummaryNumbers(line.numbers)) + '</strong>'
+          + '<span>' + escapeHtml(line.parts.length ? line.parts.join(" · ") : "Por escolher") + '</span></span>'
+          + (line.numbers.length > 1 ? '<span class="pf-units-summary-count">×' + line.numbers.length + '</span>' : '')
+          + '</li>';
+      }).join(""),
+      '</ul>',
+      '</section>'
+    ].join("");
+  }
+
   function renderPastaDeFolhetosBuildSummary(product, step) {
     var config = product && product.buildSummary;
     var sizeStep;
@@ -365,7 +452,12 @@
       return "";
     }
 
+    if (typeof configuredUnitCount === "function" && configuredUnitCount(product) > 1) {
+      return renderPastaDeFolhetosUnitsSummary(product, config, coverStep, variationStep, sizeItem, groups);
+    }
+
     tiles += quadrosSummaryImageTile(sizeItem, sizeStep, "Tamanho", displayItemTitle(sizeItem));
+    if (isAssortedSelected(product)) tiles += quadrosSummaryTextTile("Design", "A Mia escolhe");
 
     groups.forEach(function (group) {
       var groupConfig = config.groups && config.groups[group] || {};

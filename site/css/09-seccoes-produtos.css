@@ -3018,19 +3018,29 @@ html[data-theme="dark"] .pf-fluid-variation {
   pointer-events: auto;
 }
 
+/* Desliza com o dedo (scroll nativo com encaixe) além das setas. */
 .unit-mini-window {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.unit-mini-window::-webkit-scrollbar {
+  display: none;
 }
 
 .unit-mini-track {
   position: relative;
   display: flex;
-  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .unit-mini-track .unit-slot {
   flex: 0 0 calc(100% / var(--unit-columns, 3));
   padding: 4px 4px 11px;
+  scroll-snap-align: start;
 }
 
 .unit-mini-track .unit-slot-cover {
@@ -3218,6 +3228,21 @@ html[data-theme="dark"] .pf-fluid-variation {
   animation: unit-slot-fill 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Enquanto a carta voa, o lugar dela continua vazio ("?" e tracejado). */
+.unit-slot-cover.is-awaiting-deal > * {
+  visibility: hidden;
+}
+
+/* A capa escolhida a caminho da fila (ver playConfiguredUnitDeal). */
+.unit-slot-cover.unit-deal-card {
+  position: fixed;
+  z-index: 80;
+  margin: 0;
+  pointer-events: none;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--ink) 26%, transparent);
+  will-change: transform;
+}
+
 @keyframes unit-slot-enter {
   from { opacity: 0; transform: translateY(6px) scale(0.88); }
   to { opacity: 1; transform: none; }
@@ -3259,43 +3284,76 @@ html[data-theme="dark"] .pf-fluid-variation {
   box-shadow: none;
 }
 
-/* Passos em linhas (nomes, detalhes): miniatura da capa à esquerda e as
-   escolhas dessa unidade à direita. */
+/* Passos em linhas (acabamento, nomes, detalhes): uma linha por capa, com a
+   capa grande à esquerda e as escolhas dessa capa à direita. No conjunto, as
+   linhas A4 e A6 de cada unidade ficam juntas e um traço separa-as da
+   unidade seguinte. */
 .unit-rows {
+  --unit-row-cover: clamp(92px, 30%, 170px);
   display: grid;
-  gap: 12px;
+}
+
+.unit-row-set {
+  display: grid;
+  gap: 14px;
+  padding: 14px 0;
+}
+
+.unit-row-set:first-child {
+  padding-top: 0;
+}
+
+.unit-row-set + .unit-row-set {
+  border-top: 1px solid var(--ui-border);
 }
 
 .unit-row {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-columns: var(--unit-row-cover) minmax(0, 1fr);
   align-items: start;
   gap: 12px;
-  padding: 12px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--ui-radius-lg);
-  background: var(--ui-card);
 }
 
 .unit-row-cover {
-  position: sticky;
-  top: 76px;
   display: grid;
   justify-items: center;
-  gap: 5px;
+  gap: 6px;
   color: var(--moss);
 }
 
 .unit-row-cover .unit-slot-cover {
-  width: 64px;
+  width: 100%;
 }
 
 .unit-row-cover .unit-slot-covers.is-pair .unit-slot-cover {
-  width: 36px;
+  width: 56%;
 }
 
 .unit-row-cover .unit-slot-covers.is-pair .unit-slot-cover + .unit-slot-cover {
-  width: 25px;
+  width: 40%;
+}
+
+.unit-row-cover .unit-slot-number {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* "Pasta 1" / "A4" ou "Conjunto 1" / "Pasta A4", em duas linhas. */
+.unit-row-label {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  line-height: 1.2;
+}
+
+.unit-row-label > span + span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.unit-row.is-invalid .unit-row-cover .unit-slot-cover {
+  box-shadow: 0 0 0 2px var(--ui-danger-border);
 }
 
 .unit-row-body {
@@ -3307,94 +3365,222 @@ html[data-theme="dark"] .pf-fluid-variation {
   margin-top: 0;
 }
 
-/* Nas linhas o título do passo já faz a pergunta: fica só Sim / Não,
-   compactos. No conjunto (duas perguntas por linha, A4 e A6) o título mantém-se
-   para se saber qual é qual. */
-.unit-row .cadernos-personalization-question-text,
-.unit-row-body .cadernos-personalization-question:only-of-type .cadernos-personalization-question-title {
-  display: none;
+/* Opções de cada linha: três colunas enquanto cada uma tiver 84px; no
+   telemóvel estreito passa a duas, para os nomes não se partirem. */
+.unit-row-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(max(84px, calc((100% - 16px) / 3)), 1fr));
+  align-items: stretch;
+  gap: 8px;
 }
 
-.unit-row .cadernos-personalization-question {
-  margin: 0;
+.unit-row-options--name {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
 }
 
-.unit-row .cadernos-personalization-question + .cadernos-personalization-question {
-  margin-top: 12px;
+.unit-row-options--details {
+  display: flex;
+  flex-wrap: wrap;
 }
 
-.unit-row .cadernos-personalization-question-title {
-  margin: 0 0 8px;
-  font-size: 0.95rem;
+.unit-row-options--details > .unit-choice {
+  flex: 1 1 76px;
 }
 
-.unit-row .cadernos-personalization-list {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 6px;
+.unit-row-options--details > .unit-choice--wide {
+  flex: 2 1 150px;
 }
 
-/* O campo do nome sai de dentro do "Sim" e ocupa a linha toda por baixo. */
-.unit-row .cadernos-personalization-choice {
-  display: contents;
-}
-
-.unit-row .cadernos-personalization-drawer {
-  grid-column: 1 / -1;
-  order: 1;
-  margin-top: 0;
-}
-
-.unit-row .cadernos-personalization-card.choice-card.crachas-size-card {
-  grid-template-columns: minmax(0, 1fr) 22px;
-  gap: 6px;
-  padding: 10px 12px;
-}
-
-.unit-row .cadernos-personalization-card .choice-copy strong {
-  font-size: 0.98rem;
-}
-
-.unit-row .cadernos-personalization-card .choice-copy span {
-  font-size: 0.78rem;
-}
-
-.unit-row .choice-card.crachas-size-card {
-  min-height: 0;
-  padding: 12px;
-}
-
-.unit-row .choice-card.crachas-size-card .choice-copy strong {
-  font-size: 1.08rem;
-}
-
-/* Dentro de uma linha, os cantos metálicos ficam compactos. */
-.unit-row .pf-metal-corners-toggle {
-  grid-template-columns: 64px minmax(0, 1fr) 24px;
+/* Cantos metálicos: imagem pequena antes do texto. */
+.unit-choice.unit-choice--wide {
+  display: flex;
+  align-items: center;
   gap: 10px;
-  padding: 8px;
 }
 
-.unit-row .pf-metal-corners-image {
-  height: 52px;
+.unit-choice-thumb {
+  position: relative;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--surface-image);
+  isolation: isolate;
 }
 
-.unit-row .pf-metal-corners-copy strong {
-  font-size: 0.98rem;
+.unit-choice-thumb .option-image,
+.unit-choice-thumb .uploaded-image {
+  position: absolute;
+  inset: 0;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  aspect-ratio: auto !important;
 }
 
-.unit-row .pf-metal-corners-copy small {
-  display: none;
+.unit-choice {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+  min-height: 56px;
+  margin: 0;
+  padding: 10px 28px 10px 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-card);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.unit-choice:hover {
+  border-color: color-mix(in srgb, var(--moss) 40%, var(--ui-border));
+}
+
+.unit-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.unit-choice:focus-within,
+.unit-choice:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--moss) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.unit-choice.is-selected {
+  border-color: var(--moss);
+  background: var(--surface-gold-soft);
+  box-shadow: inset 0 0 0 1px var(--moss);
+}
+
+.unit-choice.has-media {
+  padding: 6px 6px 8px;
+}
+
+.unit-choice-media {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--surface-image);
+}
+
+.unit-choice-media .option-image,
+.unit-choice-media .uploaded-image {
+  position: absolute;
+  inset: 0;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  aspect-ratio: auto !important;
+}
+
+.unit-choice-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.unit-choice-copy strong {
+  font-size: 0.92rem;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.unit-choice-copy small {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.unit-choice.has-media .unit-choice-copy {
+  padding: 0 2px;
+}
+
+.unit-choice.has-media .unit-choice-copy strong {
+  font-size: 0.8rem;
+}
+
+.unit-choice-check {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid color-mix(in srgb, var(--moss) 40%, var(--line));
+  border-radius: 999px;
+  background: var(--paper);
+  color: transparent;
+}
+
+.unit-choice-check svg {
+  width: 10px;
+  height: 10px;
+}
+
+.unit-choice.has-media .unit-choice-check {
+  top: 10px;
+  right: 10px;
+}
+
+.unit-choice.is-selected .unit-choice-check {
+  border-color: var(--moss);
+  background: var(--moss);
+  color: var(--paper);
+}
+
+/* O campo do nome abre por baixo das duas opções. */
+.unit-row-name {
+  grid-column: 1 / -1;
+  margin: 0;
 }
 
 @media (max-width: 620px) {
   .unit-row {
-    grid-template-columns: 52px minmax(0, 1fr);
     gap: 10px;
-    padding: 10px;
   }
 
-  .unit-row-cover .unit-slot-cover {
-    width: 52px;
+  .unit-row-options {
+    gap: 6px;
+  }
+
+  .unit-choice {
+    padding: 8px 26px 8px 8px;
+  }
+
+  .unit-choice.has-media {
+    padding: 4px 4px 6px;
+  }
+
+  .unit-choice-media {
+    aspect-ratio: 4 / 3;
+  }
+
+  .unit-choice.has-media .unit-choice-copy strong {
+    font-size: 0.76rem;
+  }
+
+  .unit-choice.has-media .unit-choice-check {
+    top: 7px;
+    right: 7px;
   }
 }
 
@@ -3411,15 +3597,15 @@ html[data-theme="dark"] .pf-fluid-variation {
 .unit-action {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 8px 16px 8px 10px;
+  gap: 10px;
+  min-height: 54px;
+  padding: 10px 20px 10px 12px;
   border: 1px solid var(--ui-border-warm);
-  border-radius: 999px;
+  border-radius: var(--ui-radius);
   background: var(--ui-card);
   color: var(--moss);
   font: inherit;
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-weight: 700;
   line-height: 1.2;
   cursor: pointer;
@@ -3500,4 +3686,187 @@ html[data-theme="dark"] .pf-fluid-variation {
     top: 62px;
   }
 
+}
+
+/* Botões "em todas" com o que vão aplicar: miniatura grande da capa, do
+   acabamento ou dos cantos, antes do texto. */
+.unit-action.has-preview {
+  min-height: 76px;
+  padding: 8px 18px 8px 10px;
+  text-align: left;
+}
+
+.unit-action-preview {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.unit-action-thumb {
+  position: relative;
+  display: block;
+  width: 48px;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--surface-image);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--ink) 16%, transparent);
+}
+
+/* No conjunto, a A6 mais pequena ao lado da A4. */
+.unit-action-preview.is-pair .unit-action-thumb + .unit-action-thumb {
+  width: 34px;
+}
+
+.unit-action-thumb .option-image,
+.unit-action-thumb .uploaded-image {
+  position: absolute;
+  inset: 0;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  aspect-ratio: auto !important;
+}
+
+.unit-action-copy {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 2px;
+}
+
+/* O visto fica à direita, depois do texto. */
+.unit-action .unit-action-check {
+  flex: 0 0 auto;
+  margin-left: 4px;
+}
+
+/* Antes de haver o que copiar: só um aviso, com o lugar da imagem vazio. */
+.unit-action.is-hint {
+  margin: 0;
+  border-style: dashed;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+  cursor: default;
+}
+
+.unit-action.is-hint:hover {
+  background: transparent;
+}
+
+.unit-action-thumb.is-empty {
+  display: grid;
+  place-items: center;
+  border: 1.5px dashed color-mix(in srgb, var(--moss) 34%, var(--line));
+  background: transparent;
+  box-shadow: none;
+}
+
+.unit-action-thumb.is-empty::after {
+  content: "?";
+  color: color-mix(in srgb, var(--ink) 30%, transparent);
+  font-size: 1.2rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.unit-action-price {
+  white-space: nowrap;
+}
+
+.unit-action.has-preview .unit-action-price {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.unit-shared-name {
+  margin: 0;
+}
+
+/* Resumo com várias pastas: uma linha por configuração, capas pequenas. */
+.pf-units-summary-size {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.pf-units-summary-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pf-units-summary-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-card);
+}
+
+.pf-units-summary-row .unit-slot-cover {
+  width: 44px;
+}
+
+.pf-units-summary-row .unit-slot-covers.is-pair .unit-slot-cover {
+  width: 32px;
+}
+
+.pf-units-summary-row .unit-slot-covers.is-pair .unit-slot-cover + .unit-slot-cover {
+  width: 22px;
+}
+
+.pf-units-summary-row .unit-slot-cover.is-empty::after {
+  font-size: 1rem;
+}
+
+.pf-units-summary-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.pf-units-summary-copy strong {
+  color: var(--moss);
+  font-size: 0.92rem;
+}
+
+.pf-units-summary-count {
+  color: var(--moss);
+  font-weight: 800;
+}
+
+/* "Quero que a Mia escolha": por baixo do "em todas"; as capas por
+   escolher mostram "Mia" em vez de "?". */
+.unit-actions--mia {
+  margin-top: -6px;
+}
+
+.unit-slot-cover.is-mia {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--gold) 60%, var(--line));
+  background: var(--surface-gold-soft);
+}
+
+.unit-slot-cover.is-mia::after {
+  content: "Mia";
+  color: var(--moss);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.unit-mini-track .unit-slot-cover.is-mia::after,
+.pf-units-summary-row .unit-slot-cover.is-mia::after {
+  font-size: 0.7rem;
 }

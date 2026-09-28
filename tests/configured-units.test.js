@@ -35,7 +35,8 @@ run('setConfiguredUnitCount(state.product, 1)');
 assert.equal(run('state.selections.cover_a4'), 'A4 · Opção 01');
 assert.equal(run('state.selections.cover_personalization_a4_text'), undefined);
 run('setConfiguredUnitCount(state.product, 2)');
-assert.match(run('validateStep(state.product, findStep(state.product, "covers"))'), /^Falta escolher 1 pasta A4/);
+// Reduzir e voltar a aumentar recupera as escolhas guardadas.
+assert.equal(run('validateStep(state.product, findStep(state.product, "covers"))'), '');
 assert.equal(run('configuredUnitIndex(state.product)'), 0);
 run(`state.selections.configured_units[1] = cloneJson(state.selections.configured_units[0]); loadConfiguredUnit(state.product, 1);`);
 assert.equal(run('validateStep(state.product, findStep(state.product, "covers"))'), '');
@@ -47,40 +48,71 @@ assert.equal(run('configuredUnitCount(state.product)'), 1);
 assert.equal(run('state.selections.cover_a4'), undefined);
 // Um pack continua a exigir as duas capas em cada unidade.
 run(`state.selections = {size:'A4 + A6'}; setConfiguredUnitCount(state.product, 2);`);
-assert.match(run('validateStep(state.product, findStep(state.product, "pack-covers"))'), /^Falta escolher 2 pastas A4/);
+assert.match(run('validateStep(state.product, findStep(state.product, "pack-covers"))'), /^Conjunto 1: Atribui uma capa ao A4/);
 // Sem opt-in, os restantes produtos mantêm uma única configuração.
 assert.equal(run('configuredUnitCount({steps:[]})'), 1);
-run(`
-  state.selections = {size:'A4', cover_a4:'A4 · Opção 01', finish:'matte'};
-  setConfiguredUnitCount(state.product, 2);
-  state.currentStep = visibleSteps(state.product).findIndex(function (step) { return step.id === 'extras'; });
-  rerenderProduct = function () {};
-  goNext(state.product);
-`);
-assert.equal(run('currentStep(state.product).id'), 'extras');
-assert.equal(run('configuredUnitIndex(state.product)'), 1);
-assert.equal(run('state.errors'), '');
-// Distribuição pelos contadores: repetidos, limite do total e reatribuição.
+const groupCartItems = [];
+// Acções em grupo: preservam escolhas independentes e podem ser desfeitas.
 for (const size of ['A4', 'A6', 'A4 + A6']) {
-  run(`state.selections = {size:${JSON.stringify(size)}}; setConfiguredUnitCount(state.product, 3);`);
-  const stepId = size === 'A4 + A6' ? 'pack-covers' : 'covers';
-  run(`var counterStep = findStep(state.product, '${stepId}'); var counterGroups = configuredDesignGroups(state.product, counterStep); var counterItems = configuredDesignItems(state.product, counterStep);`);
-  for (let g = 0; g < (size === 'A4 + A6' ? 2 : 1); g++) {
-    const change = (item, delta) => run(`changeConfiguredDesignQuantity(state.product, counterStep, counterGroups[${g}], counterItems[${item}], ${delta})`);
-    assert.equal(change(0, -1), false);
-    assert.equal(change(0, 1), true);
-    assert.equal(change(0, 1), true);
-    assert.equal(change(1, 1), true);
-    assert.equal(change(2, 1), false);
-    assert.equal(run(`configuredDesignQuantity(state.product, counterGroups[${g}].field, configuredDesignValue(counterStep, counterGroups[${g}], counterItems[0]))`), 2);
-    assert.equal(change(0, -1), true);
-    assert.equal(change(2, 1), true);
-    assert.equal(run(`configuredDesignRemaining(state.product, counterStep, counterGroups[${g}])`), 0);
-  }
-  assert.equal(run('validateStep(state.product, counterStep)'), '');
-  assert.equal(run('isConfiguredQuantityStep(state.product, counterStep)'), true);
-  run('setConfiguredUnitCount(state.product, 1)');
-  assert.equal(run('usesConfiguredDesignCounters(state.product, counterStep)'), false);
+  run(`
+    state.selections = {size:${JSON.stringify(size)}, cover_a4:'A4 · Opção 01', cover_a6:'A6 · Opção 01', finish:'matte', finish_a4:'matte', finish_a6:'glossy'};
+    setConfiguredUnitCount(state.product, 3);
+    state.selections.configured_units[1] = {cover_a4:'A4 · Opção 02', cover_a6:'A6 · Opção 02', finish:'glossy', finish_a4:'glossy', finish_a6:'matte'};
+    loadConfiguredUnit(state.product, 1);
+    var coversStep = findStep(state.product, ${JSON.stringify(size === 'A4 + A6' ? 'pack-covers' : 'covers')});
+    var finishesStep = findStep(state.product, ${JSON.stringify(size === 'A4 + A6' ? 'pack-finishes' : 'extras')});
+    var namesStep = findStep(state.product, 'cover_personalization');
+    var detailsStep = findStep(state.product, ${JSON.stringify(size === 'A4 + A6' ? 'pack-details' : 'details')});
+    var before = JSON.stringify(configuredUnitList());
+    applyConfiguredUnitAction(state.product, coversStep, configuredUnitActions(state.product, coversStep)[0]);
+  `);
+  assert.equal(run('configuredUnitsStepReady(state.product, coversStep).every(Boolean)'), true);
+  assert.equal(run('undoConfiguredUnitAction(state.product, coversStep)'), true);
+  assert.deepEqual(JSON.parse(run('JSON.stringify(configuredUnitList())')), JSON.parse(run('before')));
+  run(`applyConfiguredUnitAction(state.product, finishesStep, configuredUnitActions(state.product, finishesStep)[0]);`);
+  assert.equal(run('configuredUnitsStepReady(state.product, finishesStep).every(Boolean)'), true);
+  assert.equal(run('undoConfiguredUnitAction(state.product, finishesStep)'), true);
+  assert.deepEqual(JSON.parse(run('JSON.stringify(configuredUnitList())')), JSON.parse(run('before')));
+  // O total considera cada capa: num conjunto são duas por unidade.
+  const expected = size === 'A4 + A6' ? 1200 : 600;
+  assert.equal(run('configuredUnitActionPrice(state.product, namesStep, configuredUnitActions(state.product, namesStep)[0])'), expected);
+  assert.equal(run('configuredUnitActionPrice(state.product, detailsStep, configuredUnitActions(state.product, detailsStep)[0])'), expected);
+  assert.deepEqual(JSON.parse(run('JSON.stringify(configuredUnitList())')), JSON.parse(run('before')));
+  run(`applyConfiguredUnitAction(state.product, namesStep, configuredUnitActions(state.product, namesStep)[0]);`);
+  assert.equal(run('state.configuredUnitSameName'), true);
+  assert.equal(run('configuredUnitList().every(unit => configuredPersonalizationQuestions(state.product, namesStep).every(q => unit[q.field] === "yes" && unit[q.textField] === ""))'), true);
+  run('setConfiguredUnitSharedName(state.product, "Nome comum")');
+  assert.equal(run('configuredUnitList().every(unit => configuredPersonalizationQuestions(state.product, namesStep).every(q => unit[q.textField] === "Nome comum"))'), true);
+  assert.equal(run('validateStep(state.product, namesStep)'), '');
+  run('setConfiguredUnitSharedName(state.product, "")');
+  assert.match(run('validateStep(state.product, namesStep)'), /Escreve o nome/);
+  run('setConfiguredUnitSharedName(state.product, "a".repeat(26))');
+  assert.match(run('validateStep(state.product, namesStep)'), /25 caracteres/);
+  assert.equal(run('undoConfiguredUnitAction(state.product, namesStep)'), true);
+  assert.equal(run('state.configuredUnitSameName'), false);
+  assert.deepEqual(JSON.parse(run('JSON.stringify(configuredUnitList())')), JSON.parse(run('before')));
+  run(`applyConfiguredUnitAction(state.product, detailsStep, configuredUnitActions(state.product, detailsStep)[0]);`);
+  assert.equal(run('configuredUnitActionPressed(state.product, detailsStep, configuredUnitActions(state.product, detailsStep)[0])'), true);
+  assert.equal(run('configuredUnitActionPrice(state.product, detailsStep, configuredUnitActions(state.product, detailsStep)[0])'), expected);
+  assert.equal(run('undoConfiguredUnitAction(state.product, detailsStep)'), true);
+  assert.deepEqual(JSON.parse(run('JSON.stringify(configuredUnitList())')), JSON.parse(run('before')));
+  run(`
+    applyConfiguredUnitAction(state.product, coversStep, configuredUnitActions(state.product, coversStep)[0]);
+    applyConfiguredUnitAction(state.product, finishesStep, configuredUnitActions(state.product, finishesStep)[0]);
+    applyConfiguredUnitAction(state.product, namesStep, configuredUnitActions(state.product, namesStep)[0]);
+    setConfiguredUnitSharedName(state.product, 'Nome comum');
+    applyConfiguredUnitAction(state.product, detailsStep, configuredUnitActions(state.product, detailsStep)[0]);
+    // Tal como o renderer das linhas do passo Detalhes, resolver a fita de cada capa.
+    for (var unitIndex = 0; unitIndex < configuredUnitCount(state.product); unitIndex++) {
+      loadConfiguredUnit(state.product, unitIndex);
+      syncPastaDeFolhetosDetailSelections(state.product, detailsStep);
+      saveConfiguredUnit(state.product);
+    }
+  `);
+  const grouped = JSON.parse(run('JSON.stringify(buildConfiguredUnitCartItems(state.product))'));
+  assert.equal(grouped.length, 3);
+  assert(grouped.every(item => item.summary.priceCents === (size === 'A4' ? 3890 : size === 'A6' ? 2390 : 5790)));
+  groupCartItems.push(...grouped);
 }
 run(`
   state.selections = {size:'A4', cover_a4:'A4 · Opção 01', finish:'matte', cover_personalization_a4:'no'};
@@ -105,15 +137,82 @@ assert.deepEqual(cartItems.map(x => x.summary.priceCents), [3490, 3490, 3690]);
 for (const size of ['A6', 'A4 + A6']) {
   run(`
     state.selections = {size:${JSON.stringify(size)}, cover_a4:'A4 · Opção 01', cover_a6:'A6 · Opção 02', finish:'matte', finish_a4:'matte', finish_a6:'glossy', cover_personalization_a4:'no', cover_personalization_a6:'no'};
+    if (state.selections.size === 'A6') delete state.selections.cover_a4;
     syncPastaDeFolhetosDetailSelections(state.product, findStep(state.product, ${JSON.stringify(size === 'A6' ? 'details' : 'pack-details')}));
     setConfiguredUnitCount(state.product, 2);
     state.selections.configured_units[1] = cloneJson(state.selections.configured_units[0]);
+    loadConfiguredUnit(state.product, 1);
   `);
   const additional = JSON.parse(run('JSON.stringify(buildConfiguredUnitCartItems(state.product))'));
   assert.deepEqual(additional.map(x => x.summary.priceCents), size === 'A6' ? [1990,1990] : [4990,4990]);
   assert(additional.every(x => x.selections.designs.length === (size === 'A6' ? 1 : 2)));
   cartItems.push(...additional);
 }
+// Passos em linhas: uma linha por capa (A4 e A6 no conjunto), cada uma com
+// os seus rádios e os campos da capa certa.
+// Os módulos do DOM (01, 11) não correm aqui: só o essencial para o HTML.
+run(`
+  if (typeof escapeHtml !== 'function') var escapeHtml = function (v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+  if (typeof ICON_CHECK === 'undefined') var ICON_CHECK = '<svg></svg>';
+  if (typeof renderVisual !== 'function') var renderVisual = function (item) { return '<span data-visual="' + escapeHtml(item.value) + '"></span>'; };
+  if (typeof siteErrorMarkup !== 'function') var siteErrorMarkup = function (text) { return '<p>' + escapeHtml(text) + '</p>'; };
+`);
+run(`
+  state.admin = false;
+  state.invalidFields = [];
+  state.selections = {size:'A4 + A6', cover_a4:'A4 · Opção 02', cover_a6:'A6 · Opção 01', finish_a4:'matte'};
+  setConfiguredUnitCount(state.product, 2);
+  state.selections.configured_units[1] = {cover_a4:'A4 · Opção 01', cover_a6:'A6 · Opção 02', finish_a6:'glossy'};
+  loadConfiguredUnit(state.product, 0);
+`);
+for (const [stepId, kind] of [['pack-finishes', 'choice'], ['cover_personalization', 'name'], ['pack-details', 'details']]) {
+  const html = run(`renderConfiguredUnitRows(state.product, findStep(state.product, ${JSON.stringify(stepId)}))`);
+  assert.match(html, new RegExp('unit-rows--' + kind));
+  assert.deepEqual([...html.matchAll(/aria-label="([^"]+)">/g)].map(m => m[1]).filter(x => /Pasta A/.test(x)), ['Conjunto 1 Pasta A4', 'Conjunto 1 Pasta A6', 'Conjunto 2 Pasta A4', 'Conjunto 2 Pasta A6']);
+  assert.equal((html.match(/class="unit-row-set"/g) || []).length, 2);
+}
+const finishRows = run('renderConfiguredUnitRows(state.product, findStep(state.product, "pack-finishes"))');
+assert.match(finishRows, /name="finish_a4__u0g0" value="matte" data-option-drawer-choice data-option-drawer-field="finish_a4" checked/);
+assert.match(finishRows, /name="finish_a6__u1g1" value="glossy" data-option-drawer-choice data-option-drawer-field="finish_a6" checked/);
+const detailRows = run('renderConfiguredUnitRows(state.product, findStep(state.product, "pack-details"))');
+assert.match(detailRows, /data-pf-metal-corners-field="metal_corners_a4"/);
+assert.match(detailRows, /data-continuous-variation-field="design_a4"/);
+assert.equal(run('displayStepTitle(state.product, findStep(state.product, "cover_personalization"))'), 'Queres personalizar as Pastas de Folhetos com um nome?');
+// Com "singleUnitLayoutSizes", o conjunto usa as linhas já com uma unidade;
+// A4 ou A6 sozinhos continuam com o desenho de sempre.
+run(`state.selections = {size:'A4 + A6', cover_a4:'A4 · Opção 02', cover_a6:'A6 · Opção 01', finish_a6:'glossy'};`);
+assert.equal(run('configuredUnitLayoutActive(state.product, findStep(state.product, "pack-finishes"))'), true);
+const singlePack = run('renderConfiguredUnitRows(state.product, findStep(state.product, "pack-finishes"))');
+assert.deepEqual([...singlePack.matchAll(/aria-label="([^"]+)">/g)].map(m => m[1]).filter(x => /Pasta A/.test(x)), ['Pasta A4', 'Pasta A6']);
+assert.match(singlePack, /name="finish_a6__u0g1" value="glossy" data-option-drawer-choice data-option-drawer-field="finish_a6" checked/);
+run(`state.selections = {size:'A4', cover_a4:'A4 · Opção 02'};`);
+assert.equal(run('configuredUnitLayoutActive(state.product, findStep(state.product, "extras"))'), false);
+// "Quero que a Mia escolha": capas em Sortido e acabamento "A Mia escolhe",
+// em todas as unidades; o passo fica válido e o checkout aceita.
+for (const size of ['A4', 'A4 + A6']) {
+  const coverStep = size === 'A4' ? 'covers' : 'pack-covers';
+  const finishStep = size === 'A4' ? 'extras' : 'pack-finishes';
+  const detailsStep = size === 'A4' ? 'details' : 'pack-details';
+  run(`
+    state.selections = {size:${JSON.stringify(size)}, cover_a4:'A4 · Opção 02', cover_a6:'A6 · Opção 01', cover_personalization_a4:'no', cover_personalization_a6:'no'};
+    setConfiguredUnitCount(state.product, 2);
+    configuredUnitList().concat([state.selections]).forEach(function (unit) { unit.cover_personalization_a4 = 'no'; unit.cover_personalization_a6 = 'no'; });
+    toggleConfiguredUnitMiaChoice(state.product, findStep(state.product, ${JSON.stringify(coverStep)}));
+    toggleConfiguredUnitMiaChoice(state.product, findStep(state.product, ${JSON.stringify(finishStep)}));
+  `);
+  assert.equal(run('state.selections.assorted_designs'), '1');
+  assert.equal(run('state.selections.cover_a4'), undefined);
+  for (const id of [coverStep, finishStep, detailsStep]) assert.equal(run(`validateStep(state.product, findStep(state.product, ${JSON.stringify(id)}))`), '', id);
+  const miaItems = JSON.parse(run('JSON.stringify(buildConfiguredUnitCartItems(state.product))'));
+  assert.equal(miaItems.length, 2);
+  assert(miaItems.every(x => x.selections.assorted_designs === '1' && x.selections.designs[0] === '__sortido__'));
+  cartItems.push(...miaItems);
+  // Desligar repõe as capas que lá estavam.
+  run(`toggleConfiguredUnitMiaChoice(state.product, findStep(state.product, ${JSON.stringify(coverStep)}))`);
+  assert.equal(run('state.selections.assorted_designs'), '');
+  assert.equal(run('JSON.stringify(configuredUnitSelections(state.product).map(x => x.cover_a4))'), JSON.stringify(['A4 · Opção 02', null]));
+}
+cartItems.push(...groupCartItems);
 if (process.env.PHP_BINARY) {
   const result = require('node:child_process').spawnSync(process.env.PHP_BINARY, [path.join(__dirname, 'prepare-cart-items.php')], {input:JSON.stringify(cartItems), encoding:'utf8'});
   assert.equal(result.status, 0, result.stderr);
