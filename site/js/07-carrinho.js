@@ -196,7 +196,7 @@
     if (!count || !cents) {
       return "";
     }
-    return "Preparação e testes: " + count + (count === 1 ? " imagem × 5,00 € = " : " imagens × 5,00 € = ") + formatCents(cents);
+    return "Preparação e testes: " + count + (count === 1 ? " imagem × " : " imagens × ") + formatCents(Math.round(cents / count)) + " = " + formatCents(cents);
   }
 
   function cartProductPage(productSlugValue, selections) {
@@ -865,7 +865,7 @@
       if (!uploads.length || String(uploads[0].mime || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(String(uploads[0].name || ""))) {
         return null;
       }
-      return orderUploadPreviewUrl(uploads[0]);
+      return orderUploadStoredPreviewUrl(uploads[0]);
     }
 
     if (item && laminationKey && item.laminationImages && item.laminationImages[laminationKey]) {

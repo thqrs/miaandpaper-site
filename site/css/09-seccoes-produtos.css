@@ -3255,7 +3255,7 @@ html[data-theme="dark"] .pf-fluid-variation {
   bottom: 3px;
   left: 3px;
   z-index: 1;
-  width: 44%;
+  width: 60%;
   aspect-ratio: 4 / 5;
   overflow: hidden;
   border: 1.5px solid var(--paper);
@@ -4029,4 +4029,90 @@ html[data-theme="dark"] .pf-fluid-variation {
   color: var(--moss);
   font-size: 0.72rem;
   font-weight: 800;
+}
+
+/* Conjuntos: a lupa passa para o canto superior esquerdo, para não ficar
+   por baixo dos botões A4/A6. */
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .pf-assignment-card .cadernos-cover-media .design-zoom-button,
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .pf-assignment-card .design-zoom-button {
+  top: 7px;
+  right: auto;
+  bottom: auto;
+  left: 7px;
+}
+
+/* "Aplicar a todos" dentro da fila (e da versão flutuante), por baixo das
+   unidades. */
+.unit-tray-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: center;
+  gap: 6px;
+  padding: 2px 0 1px;
+}
+
+.unit-tray-mini .unit-tray-actions {
+  padding: 1px 4px 2px;
+}
+
+.unit-tray-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 8px 4px 5px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-card);
+  color: var(--moss);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.1;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.unit-tray-action:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--moss) 42%, var(--line));
+}
+
+.unit-tray-action:disabled {
+  padding-left: 12px;
+  opacity: 0.5;
+  cursor: default;
+}
+
+.unit-tray-action.is-pressed {
+  border-color: var(--moss);
+  background: var(--surface-gold-soft);
+}
+
+.unit-tray-action.is-pressed .unit-action-check {
+  border-color: var(--moss);
+  background: var(--moss);
+  color: var(--paper);
+}
+
+.unit-tray-action .unit-action-preview {
+  gap: 2px;
+}
+
+.unit-tray-action .unit-action-thumb {
+  width: 22px;
+  border-radius: 4px;
+}
+
+.unit-tray-action .unit-action-preview.is-pair .unit-action-thumb + .unit-action-thumb {
+  width: 16px;
+}
+
+.unit-tray-action .unit-action-check {
+  width: 18px;
+  height: 18px;
+}
+
+.unit-tray-action .unit-action-check svg {
+  width: 10px;
+  height: 10px;
 }

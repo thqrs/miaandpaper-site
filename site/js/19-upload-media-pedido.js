@@ -503,6 +503,8 @@
     rerenderProduct(product);
 
     selected.forEach(function (file, fileIndex) {
+      // A miniatura faz-se logo, em paralelo com o envio.
+      var thumb = kind === "photo" || kind === "artwork" ? makeOrderUploadThumb(file) : Promise.resolve("");
       chain = chain.then(function () {
         var preparation;
         if (!orderUploadOperationIsActive(operation)) {
@@ -555,6 +557,9 @@
           }
           uploads.push(upload);
           orderUploadPreviews[upload.token] = URL.createObjectURL(prepared.file);
+          return thumb.then(function (dataUrl) {
+            rememberOrderUploadThumb(upload.token, dataUrl);
+          });
         });
       });
     });

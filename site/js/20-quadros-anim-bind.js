@@ -929,6 +929,7 @@
         if (!field || !input.checked) {
           return;
         }
+        if (String(state.selections[field] || "") !== input.value) leaveConfiguredUnitMiaChoice(product, active);
         unitWasReady = configuredUnitActiveReady(product, active);
         if (String(state.selections[field] || "") !== input.value) {
           queueConfiguredUnitDeal(product, active, input.closest("label") && input.closest("label").querySelector(".cadernos-cover-media"), field);
@@ -1079,6 +1080,7 @@
         var field = String(button.dataset.assignmentField || "");
         var value = String(button.dataset.assignmentValue || "");
         var itemValue = String(button.dataset.assignmentItem || "");
+        if (step && field && String(state.selections[field] || "") !== value) leaveConfiguredUnitMiaChoice(product, step);
         var previousValue = String(state.selections[field] || "");
         var resetKeys;
         var resetValues = {};
@@ -1359,8 +1361,8 @@
         if (!input.checked || !active || active.template !== "designs-by-size" || !field) {
           return;
         }
+        leaveConfiguredUnitMiaChoice(product, active);
         var unitWasComplete = configuredUnitActiveReady(product, active);
-        leaveConfiguredUnitMiaAssorted(product, active);
         leaveOwnDesign(product, active);
         var dealSource = input.closest("label");
         queueConfiguredUnitDeal(product, active, dealSource && dealSource.querySelector(".cadernos-cover-media"), field);
@@ -1381,6 +1383,28 @@
         state.packDisabledMessage = "";
         try { trackDesignToggle(product, input.value, true); } catch (e) {}
         advanceConfiguredUnitAfterChoice(product, active, unitWasComplete);
+        rerenderProduct(product);
+      });
+    });
+
+    // Com várias unidades, voltar a carregar na escolha da unidade destacada
+    // tira-a (como os botões A4/A6 do conjunto). O "click" corre antes do
+    // "change"; num rádio já marcado o "change" nem chega.
+    document.querySelectorAll("[data-grouped-design-choice], [data-option-drawer-choice]").forEach(function (input) {
+      input.addEventListener("click", function () {
+        var active = currentStep(product);
+        var field = String(input.dataset.groupedDesignField || input.dataset.optionDrawerField || "");
+        var group = String(input.dataset.groupedDesignGroup || "");
+        if (!field || !active || !configuredUnitsActive(product, active) || !isConfiguredPickStep(product, active)) return;
+        if (String(state.selections[field] || "") !== String(input.value || "")) return;
+        queueConfiguredUnitDeal(product, active, null, field);
+        delete state.selections[field];
+        if (group && active.resetFieldsByGroup && Array.isArray(active.resetFieldsByGroup[group])) {
+          active.resetFieldsByGroup[group].forEach(function (key) { delete state.selections[key]; });
+        }
+        if (input.hasAttribute("data-grouped-design-choice")) syncGroupedDesignSelections(product, active);
+        resetQuantityState();
+        state.errors = "";
         rerenderProduct(product);
       });
     });

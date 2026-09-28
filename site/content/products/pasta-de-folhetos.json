@@ -27,10 +27,10 @@
         "rowStepIds": ["cover_personalization", "details", "pack-details"],
         "stepIds": ["covers", "pack-covers", "extras", "pack-finishes", "cover_personalization", "details", "pack-details"],
         "unitActions": {
-            "covers": [{"type": "same", "label": "Quero este design em todas as pastas", "emptyLabel": "Seleciona um design", "undoMessage": "Todas as pastas têm agora o mesmo design", "coverFields": true}],
-            "pack-covers": [{"type": "same", "label": "Quero estes designs em todos os conjuntos", "emptyLabel": "Seleciona os designs A4 e A6 de um conjunto", "undoMessage": "Todos os conjuntos têm agora a mesma combinação de capas", "coverFields": true}],
-            "extras": [{"type": "same", "label": "Quero este acabamento em todas as pastas", "emptyLabel": "Seleciona um acabamento", "undoMessage": "Todas as pastas têm agora o mesmo acabamento", "fields": ["finish"]}],
-            "pack-finishes": [{"type": "same", "label": "Quero esta combinação de acabamentos em todos os conjuntos", "emptyLabel": "Seleciona os acabamentos A4 e A6 de um conjunto", "undoMessage": "Todos os conjuntos têm agora a mesma combinação de acabamentos", "fields": ["finish_a4", "finish_a6"]}],
+            "covers": [{"type": "same", "shortLabel": "Aplicar a todos", "label": "Quero este design em todas as pastas", "emptyLabel": "Seleciona um design", "undoMessage": "Todas as pastas têm agora o mesmo design", "coverFields": true}],
+            "pack-covers": [{"type": "same", "shortLabel": "Aplicar a todos", "label": "Quero estes designs em todos os conjuntos", "emptyLabel": "Seleciona os designs A4 e A6 de um conjunto", "undoMessage": "Todos os conjuntos têm agora a mesma combinação de capas", "coverFields": true}],
+            "extras": [{"type": "same", "shortLabel": "Aplicar a todos", "label": "Quero este acabamento em todas as pastas", "emptyLabel": "Seleciona um acabamento", "undoMessage": "Todas as pastas têm agora o mesmo acabamento", "fields": ["finish"]}],
+            "pack-finishes": [{"type": "same", "shortLabel": "Aplicar a todos", "label": "Quero esta combinação de acabamentos em todos os conjuntos", "emptyLabel": "Seleciona os acabamentos A4 e A6 de um conjunto", "undoMessage": "Todos os conjuntos têm agora a mesma combinação de acabamentos", "fields": ["finish_a4", "finish_a6"]}],
             "cover_personalization": [
                 {"type": "same-name", "label": "Quero o mesmo nome em todas as pastas", "undoMessage": "Nome igual em todas as capas."},
                 {"type": "none", "label": "Não quero personalizar nenhuma", "undoMessage": "Nenhuma capa personalizada."}

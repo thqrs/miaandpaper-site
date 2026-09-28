@@ -1586,12 +1586,15 @@
 
   function renderAssignmentPickerCardMedia(product, step, sourceStep, item, displayItems) {
     var mediaStep = Object.assign({}, sourceStep || step, { showDesignZoom: false });
+    // A lupa segue o showDesignZoom do próprio passo (no canto superior
+    // esquerdo, longe dos botões A4/A6).
+    var zoomStep = Object.assign({}, sourceStep || step, { showDesignZoom: step.showDesignZoom === true });
     var shown = displayItems && displayItems.length ? displayItems : [item];
     if (shown.length < 2 || !shown[0] || !shown[1]) {
       if (state.assignmentSplitSeen) {
         delete state.assignmentSplitSeen[String(step.id || "") + "::" + String(item.value || "")];
       }
-      return renderCadernoCoverCardMedia(product, mediaStep, shown[0] || item);
+      return renderCadernoCoverCardMedia(product, zoomStep, shown[0] || item);
     }
     var clipTop = assignmentSplitClip(true);
     var clipBottom = assignmentSplitClip(false);
@@ -1608,6 +1611,7 @@
       '<span class="pf-assignment-split-half pf-assignment-split-bottom" style="-webkit-clip-path:' + clipBottom + ';clip-path:' + clipBottom + '">'
         + renderVisual(shown[1], "media-list", mediaStep) + '</span>',
       '<span class="pf-assignment-split-band" aria-hidden="true" style="transform:rotate(-' + PF_SPLIT_ANGLE + 'deg)"></span>',
+      renderDesignZoomButton(product, zoomStep, shown[0]),
       '</span>'
     ].join("");
   }
@@ -2850,6 +2854,8 @@
     if (!configuredUnitsActive(product, step) || !isConfiguredPickStep(product, step)) return;
     ready = configuredUnitsStepReady(product, step);
     index = configuredUnitIndex(product);
+    // O "Aplicar a todos" copia a última escolha feita (o destaque já saltou).
+    state.configuredUnitLastChoice = index;
     if (!ready[index]) return;
     // Trocar a escolha de uma unidade pronta também anima a miniatura.
     state.configuredUnitFilled = index;
@@ -3073,13 +3079,14 @@
         units.map(function (unit, unitIndex) { return slotHtml(unit, unitIndex, false); }).join("") + marker,
         '</div></div>',
         '<button type="button" class="unit-mini-arrow" data-unit-mini-step="1" aria-label="Seguintes">&rsaquo;</button>',
+        renderConfiguredUnitTrayActions(product, step, false),
         '</div>',
         '</div>'
       ].join("");
     }
 
     slots = units.map(function (unit, unitIndex) { return slotHtml(unit, unitIndex, false); }).join("");
-    html = '<div class="unit-tray' + (units.length > columns ? ' is-multirow' : '') + '" style="--unit-columns:' + Math.min(columns, units.length) + '" role="group" aria-label="' + escapeHtml(configuredUnitText(product, "trayLabel") || label) + '"><div class="unit-tray-track" data-unit-tray>' + slots + marker + '</div></div>';
+    html = '<div class="unit-tray' + (units.length > columns ? ' is-multirow' : '') + '" style="--unit-columns:' + Math.min(columns, units.length) + '" role="group" aria-label="' + escapeHtml(configuredUnitText(product, "trayLabel") || label) + '"><div class="unit-tray-track" data-unit-tray>' + slots + marker + renderConfiguredUnitTrayActions(product, step, false) + '</div></div>';
 
     // Com mais unidades do que colunas, a fila completa não fica colada ao
     // topo; ao descer aparece esta versão de uma linha: uma janela com tantas
@@ -3095,6 +3102,7 @@
         units.map(function (unit, unitIndex) { return slotHtml(unit, unitIndex, true); }).join("") + marker,
         '</div></div>',
         '<button type="button" class="unit-mini-arrow" data-unit-mini-step="1" tabindex="-1">&rsaquo;</button>',
+        renderConfiguredUnitTrayActions(product, step, true),
         '</div>',
         '</div>'
       ].join("");
@@ -3295,6 +3303,7 @@
         // O envio acabou (o "ocupado" só se desliga a seguir).
         state.ownDesignUploadStep = "";
         if (!uploads[0] || currentStep(product) !== step) return;
+        leaveConfiguredUnitMiaChoice(product, step);
         wasReady = configuredUnitActiveReady(product, step);
         if (unit === null || unit === configuredUnitIndex(product)) {
           source = document.querySelector(".pf-own-design-upload .pf-own-design-media") || source;
@@ -3323,7 +3332,16 @@
         var active = ownDesignUpload(state.selections);
         var wasReady;
         if (!upload || !step) return;
-        if (active && active.token === token) return;
+        if (active && active.token === token) {
+          // Com várias unidades, voltar a carregar tira a escolha.
+          if (!configuredUnitsActive(product, step)) return;
+          queueConfiguredUnitDeal(product, step, null, configuredUnitCoverGroups(product)[0].field);
+          leaveOwnDesign(product, step);
+          state.errors = "";
+          rerenderProduct(product);
+          return;
+        }
+        leaveConfiguredUnitMiaChoice(product, step);
         wasReady = configuredUnitActiveReady(product, step);
         queueConfiguredUnitDeal(product, step, button.querySelector(".pf-own-design-media"), configuredUnitCoverGroups(product)[0].field);
         assignOwnDesign(product, step, upload, null);
@@ -3414,6 +3432,20 @@
     if (!choice || choice.type !== "assorted" || !isAssortedSelected(product)) return;
     state.selections.assorted_designs = "";
     if (state.miaChoiceStash) delete state.miaChoiceStash[step.id];
+  }
+
+  // Escolher à mão com "a Mia escolhe" ligado desliga-o primeiro: nas capas
+  // (sortido) as outras ficam por escolher; no acabamento voltam as escolhas
+  // de antes. Tem de acontecer antes de ver se a unidade já estava pronta,
+  // senão todas contam como feitas e o destaque não avança.
+  function leaveConfiguredUnitMiaChoice(product, step) {
+    var choice = configuredUnitMiaChoice(product, step);
+    if (!choice) return;
+    if (choice.type === "assorted") {
+      leaveConfiguredUnitMiaAssorted(product, step);
+    } else if (configuredUnitMiaChoicePressed(product, step, choice)) {
+      toggleConfiguredUnitMiaChoice(product, step);
+    }
   }
 
   function renderConfiguredUnitMiaChoice(product, step) {
@@ -3507,10 +3539,14 @@
     return fields.every(function (field) { return unit[field] !== undefined && unit[field] !== ""; });
   }
 
+  // De onde copiam os "em todas": a unidade destacada; senão, a última onde
+  // se escolheu; senão, a primeira que tenha a escolha.
   function configuredUnitActionSource(product, fields) {
     var units = configuredUnitList();
     var active = units[configuredUnitIndex(product)];
+    var last = state.configuredUnitLastChoice == null ? null : units[state.configuredUnitLastChoice];
     if (active && configuredUnitHasFields(active, fields)) return active;
+    if (last && configuredUnitHasFields(last, fields)) return last;
     return units.filter(function (unit) { return configuredUnitHasFields(unit, fields); })[0] || null;
   }
 
@@ -3688,13 +3724,43 @@
 
   // [imagem] + texto + [visto]. Um "same" sem nada escolhido para copiar é
   // só um aviso (emptyLabel), com o lugar da imagem vazio.
+  // Nos passos com fila, os "em todas" com shortLabel vão dentro dela (e da
+  // versão flutuante), por baixo das unidades: [miniatura] Aplicar a todos [visto].
+  function configuredUnitActionInTray(product, step, action) {
+    return !!(action && action.shortLabel && configuredUnitLayoutActive(product, step) && !isConfiguredRowStep(product, step));
+  }
+
+  function renderConfiguredUnitTrayActions(product, step, inert) {
+    var html;
+    var mia = configuredUnitMiaChoice(product, step);
+    if (configuredUnitCount(product) < 2) return "";
+    // Com a Mia a escolher não há nada para aplicar a todos.
+    if (mia && configuredUnitMiaChoicePressed(product, step, mia)) return "";
+    html = configuredUnitActions(product, step).map(function (action, actionIndex) {
+      var ready;
+      var pressed;
+      if (!configuredUnitActionInTray(product, step, action)) return "";
+      ready = action.type !== "same" || !!configuredUnitActionSource(product, configuredUnitActionFields(product, action));
+      pressed = ready && configuredUnitActionPressed(product, step, action);
+      return '<button type="button" class="unit-tray-action' + (pressed ? ' is-pressed' : '') + '" data-unit-action="' + actionIndex + '" aria-pressed="' + pressed + '"'
+        + ' title="' + escapeHtml(ready ? action.label || "" : action.emptyLabel || action.label || "") + '"'
+        + (ready ? '' : ' disabled') + (inert ? ' tabindex="-1"' : '') + '>'
+        + (ready ? configuredUnitActionPreview(product, step, action) : '')
+        + '<span class="unit-tray-action-label">' + escapeHtml(action.shortLabel) + '</span>'
+        + '<span class="unit-action-check" aria-hidden="true">' + ICON_CHECK + '</span></button>';
+    }).join("");
+    return html ? '<div class="unit-tray-actions">' + html + '</div>' : "";
+  }
+
   function renderConfiguredUnitActions(product, step) {
     var actions = configuredUnitActions(product, step);
+    var html;
     if (!actions.length) return "";
-    return '<div class="unit-actions">' + actions.map(function (action, actionIndex) {
+    html = actions.map(function (action, actionIndex) {
       var pressed;
       var price;
       var preview;
+      if (configuredUnitActionInTray(product, step, action)) return "";
       if (action.type === "same" && !configuredUnitActionSource(product, configuredUnitActionFields(product, action))) {
         return '<p class="unit-action is-hint has-preview" role="note">'
           + '<span class="unit-action-preview" aria-hidden="true"><span class="unit-action-thumb is-empty"></span></span>'
@@ -3707,7 +3773,8 @@
         + preview
         + '<span class="unit-action-copy"><span>' + escapeHtml(action.label || "") + '</span>' + (price !== null ? '<span class="unit-action-price">+ ' + escapeHtml(formatCents(price)) + '</span>' : '') + '</span>'
         + '<span class="unit-action-check" aria-hidden="true">' + ICON_CHECK + '</span></button>';
-    }).join("") + '</div>' + renderAssignmentPickerUndo(step, "unit-action");
+    }).join("");
+    return (html ? '<div class="unit-actions">' + html + '</div>' : '') + renderAssignmentPickerUndo(step, "unit-action");
   }
 
   // Avisos do passo: step.notice sempre; o das fitas (variationNotice) só
@@ -4326,6 +4393,18 @@
         { transform: "scale(1) rotate(0deg)" }
       ], { duration: 240, easing: "ease-out" });
     }
+    // No acabamento, a capa da pasta (no canto) baixa para a carta entrar e
+    // volta a subir quando ela assenta.
+    Array.prototype.forEach.call(target.cover.querySelectorAll(".unit-slot-ref"), function (ref) {
+      var total = delay + 400 + 240;
+      if (!ref.animate) return;
+      ref.animate([
+        { transform: "translateY(0)", easing: "cubic-bezier(.4,0,.6,1)" },
+        { transform: "translateY(78%)", offset: (delay + 150) / total },
+        { transform: "translateY(78%)", offset: (delay + 380) / total, easing: "cubic-bezier(.2,.9,.3,1.25)" },
+        { transform: "translateY(0)" }
+      ], { duration: total });
+    });
     flight.onfinish = land;
     flight.oncancel = land;
     // Os eventos da animação só chegam com frames; o lugar não pode ficar à espera.

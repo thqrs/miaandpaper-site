@@ -829,11 +829,75 @@
     });
   }
 
+  // Miniatura de cada imagem enviada, feita no browser enquanto o ficheiro
+  // sobe. O endereço blob: da pré-visualização morre ao mudar de página; a
+  // miniatura (data: URL) fica na sessão e serve ao cesto e aos cartões.
+  var ORDER_UPLOAD_THUMB_KEY = "miaandpaper_upload_thumb:";
+
+  function orderUploadThumb(token) {
+    try {
+      return token ? String(window.sessionStorage.getItem(ORDER_UPLOAD_THUMB_KEY + token) || "") : "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function rememberOrderUploadThumb(token, dataUrl) {
+    try {
+      if (token && dataUrl) window.sessionStorage.setItem(ORDER_UPLOAD_THUMB_KEY + token, dataUrl);
+    } catch (e) {}
+  }
+
+  function makeOrderUploadThumb(file) {
+    return new Promise(function (resolve) {
+      var url;
+      var image;
+      if (!file || !/^image\//i.test(String(file.type || "")) || !window.URL || !document.createElement("canvas").getContext) {
+        resolve("");
+        return;
+      }
+      url = URL.createObjectURL(file);
+      image = new Image();
+      image.onload = function () {
+        var max = 320;
+        var width = image.naturalWidth || 1;
+        var height = image.naturalHeight || 1;
+        var scale = Math.min(1, max / Math.max(width, height));
+        var canvas = document.createElement("canvas");
+        var data = "";
+        canvas.width = Math.max(1, Math.round(width * scale));
+        canvas.height = Math.max(1, Math.round(height * scale));
+        try {
+          canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+          data = canvas.toDataURL("image/webp", 0.8);
+          if (data.indexOf("data:image/webp") !== 0) data = canvas.toDataURL("image/jpeg", 0.8);
+        } catch (e) {
+          data = "";
+        }
+        URL.revokeObjectURL(url);
+        resolve(data);
+      };
+      image.onerror = function () {
+        URL.revokeObjectURL(url);
+        resolve("");
+      };
+      image.src = url;
+    });
+  }
+
   function orderUploadPreviewUrl(item) {
     if (!item || !item.token) {
       return "";
     }
-    return orderUploadPreviews[item.token] || ORDER_MEDIA_PREVIEW_API + "?token=" + encodeURIComponent(item.token);
+    return orderUploadPreviews[item.token] || orderUploadThumb(item.token) || ORDER_MEDIA_PREVIEW_API + "?token=" + encodeURIComponent(item.token);
+  }
+
+  // Para guardar (cesto): a miniatura, nunca o blob: desta página.
+  function orderUploadStoredPreviewUrl(item) {
+    if (!item || !item.token) {
+      return "";
+    }
+    return orderUploadThumb(item.token) || ORDER_MEDIA_PREVIEW_API + "?token=" + encodeURIComponent(item.token);
   }
 
   function resetQuadrosPhotoColorAnalysis() {
