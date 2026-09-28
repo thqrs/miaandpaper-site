@@ -3859,8 +3859,8 @@
     return !!(action && action.shortLabel && configuredUnitLayoutActive(product, step) && !isConfiguredRowStep(product, step));
   }
 
-  // "{item}" no shortLabel: o nome do que vai ser aplicado, em itálico
-  // (no conjunto, "Matte + Glossy" se forem diferentes).
+  // "{item}" no shortLabel: o nome do que vai ser aplicado (no conjunto,
+  // "Matte + Glossy" se forem diferentes).
   function configuredUnitTrayActionLabel(product, action, ready) {
     var text = String(action.shortLabel || "");
     var source;
@@ -3874,7 +3874,7 @@
         if (name && names.indexOf(name) === -1) names.push(name);
       });
     }
-    return text.split("{item}").map(escapeHtml).join(names.length ? "<em>" + escapeHtml(names.join(" + ")) + "</em>" : "").replace(/\s{2,}/g, " ");
+    return escapeHtml(text.split("{item}").join(names.join(" + ")).replace(/\s{2,}/g, " "));
   }
 
   function renderConfiguredUnitTrayActions(product, step, inert) {
@@ -4133,7 +4133,7 @@
           variation.title || value, "");
       }).join("");
     }
-    return { fields: fields, html: '<div class="unit-row-options unit-row-options--details">' + html + '</div>' };
+    return { fields: fields, count: (html.match(/class="unit-choice[ "]/g) || []).length, html: '<div class="unit-row-options unit-row-options--details">' + html + '</div>' };
   }
 
   // A capa da linha: no passo dos detalhes, a fotografia da fita escolhida.
@@ -4176,7 +4176,9 @@
           var rowLabel = (unitLine ? unitLine + " " : "") + coverLine;
           var invalidRow = body.fields.some(function (field) { return state.invalidFields.indexOf(field) !== -1; });
           return [
-            '<section class="unit-row' + (invalidRow ? ' is-invalid' : '') + '" data-unit-row="' + unitIndex + '">',
+            // Detalhes: só os cantos ocupam a linha toda; com fitas, se não
+            // couberem ao lado da capa, passam todos para baixo dela.
+            '<section class="unit-row' + (invalidRow ? ' is-invalid' : '') + (kind === "details" ? (body.count > 1 ? ' is-details-multi' : ' is-details-single') : '') + '" data-unit-row="' + unitIndex + '">',
             '<div class="unit-row-cover" aria-hidden="true">',
             '<span class="unit-slot-cover' + (cover.item ? '' : ' is-empty' + (isAssortedSelected(product) ? ' is-mia' : '')) + '">' + (cover.item ? renderUnitVisual(cover.item, cover.step) : '') + '</span>',
             '<span class="unit-slot-number unit-row-label">' + (unitLine ? '<span>' + escapeHtml(unitLine) + '</span>' : '') + '<span>' + escapeHtml(coverLine) + '</span></span>',

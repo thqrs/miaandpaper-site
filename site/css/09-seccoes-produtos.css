@@ -3332,6 +3332,8 @@ html[data-theme="dark"] .pf-fluid-variation {
 .unit-rows {
   --unit-row-cover: clamp(92px, 30%, 170px);
   display: grid;
+  container-name: unit-rows;
+  container-type: inline-size;
 }
 
 .unit-row-set {
@@ -4220,8 +4222,60 @@ html[data-theme="dark"] .pf-fluid-variation {
   transform: translateX(14px);
 }
 
-/* "Aplicar Matte a todos": o nome do acabamento em itálico. */
-.unit-tray-action-label em {
-  font-style: italic;
-  font-weight: 800;
+/* As fitas nos cartões com o mesmo enquadramento da capa da linha. */
+.unit-choice-media .uploaded-image-inner {
+  inset: 0;
+  background-size: contain !important;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Detalhes só com os cantos: o cartão ocupa a linha toda, imagem ao lado
+   do texto. */
+.unit-row.is-details-single .unit-row-options--details {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.unit-row.is-details-single .unit-choice.has-media {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 8px 32px 8px 8px;
+}
+
+.unit-row.is-details-single .unit-choice-media {
+  aspect-ratio: 4 / 3;
+}
+
+/* Com fitas, se os três cartões não cabem ao lado da capa: a capa sozinha
+   na primeira linha e os cartões por baixo, em colunas iguais à dela. */
+@container unit-rows (max-width: 519px) {
+  .unit-row.is-details-multi {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .unit-row.is-details-multi .unit-row-body {
+    grid-column: 1 / -1;
+  }
+
+  .unit-row.is-details-multi .unit-row-options--details {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+/* "Mia" no lugar por escolher do acabamento: ao centro, longe do visto. */
+.unit-slot-cover.is-empty.has-ref.is-mia {
+  place-items: start center;
+  padding: 4px 2px;
+}
+
+.unit-slot-cover.is-mia::after {
+  font-size: 1.02rem;
+}
+
+.unit-mini-track .unit-slot-cover.is-mia::after,
+.pf-units-summary-row .unit-slot-cover.is-mia::after {
+  font-size: 0.8rem;
 }
