@@ -930,6 +930,9 @@
           return;
         }
         unitWasReady = configuredUnitActiveReady(product, active);
+        if (String(state.selections[field] || "") !== input.value) {
+          queueConfiguredUnitDeal(product, active, input.closest("label") && input.closest("label").querySelector(".cadernos-cover-media"), field);
+        }
         state.selections[field] = input.value;
         state.errors = "";
         try { trackOptionSelected(product, field, input.value, input.closest("label").textContent || ""); } catch (e) {}
@@ -1105,6 +1108,7 @@
           delete state.selections[field];
         } else {
           leaveConfiguredUnitMiaAssorted(product, step);
+          leaveOwnDesign(product, step);
           var dealCard = button.closest(".pf-assignment-card");
           queueConfiguredUnitDeal(product, step, dealCard && dealCard.querySelector(".pf-assignment-card-trigger"), field);
           state.selections[field] = value;
@@ -1255,6 +1259,28 @@
       });
     });
 
+    // O pop do "Reverter" nunca fica por baixo do Míu: se se cruzam na
+    // horizontal, sobe até ficar por cima dele (o Míu também sobe e desce com
+    // a barra Voltar/Continuar e com o footer, por isso volta a medir-se).
+    function placeAssignmentUndoStacks() {
+      var miu = document.querySelector(".miu-root .miu-launcher") || document.querySelector(".miu-root");
+      var miuRect = miu ? miu.getBoundingClientRect() : null;
+      var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      document.querySelectorAll(".pf-assignment-undo-stack").forEach(function (stack) {
+        var rect = stack.getBoundingClientRect();
+        var bottom = rect.bottom + (Number(stack.dataset.undoLift) || 0);
+        var lift = 0;
+        if (miuRect && miuRect.width > 0 && miuRect.top < viewportHeight
+          && rect.right > miuRect.left && rect.left < miuRect.right) {
+          lift = Math.max(0, bottom - (miuRect.top - 8));
+        }
+        if (Math.abs(lift - (Number(stack.dataset.undoLift) || 0)) < 0.5) return;
+        stack.dataset.undoLift = lift.toFixed(1);
+        stack.style.setProperty("--undo-lift", lift.toFixed(1) + "px");
+      });
+    }
+
+    placeAssignmentUndoStacks();
     if (state.assignmentPickerUndoInterval) {
       window.clearInterval(state.assignmentPickerUndoInterval);
       state.assignmentPickerUndoInterval = null;
@@ -1262,6 +1288,7 @@
     if (Array.isArray(state.assignmentPickerUndos) && state.assignmentPickerUndos.length) {
       state.assignmentPickerUndoInterval = window.setInterval(function () {
         var now = Date.now();
+        placeAssignmentUndoStacks();
         var undos = Array.isArray(state.assignmentPickerUndos) ? state.assignmentPickerUndos : [];
         var activeUndos = undos.filter(function (undo) {
           return undo && Number(undo.expiresAt || 0) > now;
@@ -1334,6 +1361,7 @@
         }
         var unitWasComplete = configuredUnitActiveReady(product, active);
         leaveConfiguredUnitMiaAssorted(product, active);
+        leaveOwnDesign(product, active);
         var dealSource = input.closest("label");
         queueConfiguredUnitDeal(product, active, dealSource && dealSource.querySelector(".cadernos-cover-media"), field);
         state.selections[field] = input.value;

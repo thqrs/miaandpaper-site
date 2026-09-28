@@ -1871,7 +1871,7 @@ html[data-theme="dark"] .quadros-summary-colors > span {
 .pf-assignment-undo-stack {
   position: fixed;
   left: 50%;
-  bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(82px + env(safe-area-inset-bottom, 0px) + var(--undo-lift, 0px));
   z-index: 40;
   display: flex;
   flex-direction: column;
@@ -3018,6 +3018,21 @@ html[data-theme="dark"] .pf-fluid-variation {
   pointer-events: auto;
 }
 
+/* Telemóvel com mais unidades do que colunas: a fila é sempre esta faixa de
+   uma linha, colada ao topo, em vez de várias linhas. */
+.unit-tray.is-strip {
+  display: block;
+}
+
+.unit-tray-mini.is-strip {
+  width: 100%;
+  transition: none;
+}
+
+.unit-tray-mini.is-strip .unit-slot-cover {
+  width: min(100%, 60px);
+}
+
 /* Desliza com o dedo (scroll nativo com encaixe) além das setas. */
 .unit-mini-window {
   overflow-x: auto;
@@ -3231,6 +3246,32 @@ html[data-theme="dark"] .pf-fluid-variation {
 /* Enquanto a carta voa, o lugar dela continua vazio ("?" e tracejado). */
 .unit-slot-cover.is-awaiting-deal > * {
   visibility: hidden;
+}
+
+/* No acabamento, a capa da unidade fica num canto do lugar (também com
+   "?"), para se ver a que pasta vai cada acabamento. */
+.unit-slot-cover .unit-slot-ref {
+  position: absolute;
+  bottom: 3px;
+  left: 3px;
+  z-index: 1;
+  width: 44%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1.5px solid var(--paper);
+  border-radius: 4px;
+  background: var(--surface-image);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--ink) 28%, transparent);
+}
+
+.unit-slot-cover.is-awaiting-deal > .unit-slot-ref {
+  visibility: visible;
+}
+
+/* Sem acabamento, o "?" passa para o canto oposto ao da capa. */
+.unit-slot-cover.is-empty.has-ref {
+  place-items: start end;
+  padding: 3px 6px;
 }
 
 /* A capa escolhida a caminho da fila (ver playConfiguredUnitDeal). */
@@ -3869,4 +3910,123 @@ html[data-theme="dark"] .pf-fluid-variation {
 .unit-mini-track .unit-slot-cover.is-mia::after,
 .pf-units-summary-row .unit-slot-cover.is-mia::after {
   font-size: 0.7rem;
+}
+
+/* Design próprio: o cartão de envio (círculo com a seta, depois a barra do
+   envio) e as imagens já enviadas, do tamanho dos outros designs. */
+.pf-own-design-card {
+  width: 100%;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  appearance: none;
+}
+
+.pf-own-design-upload .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.pasta-de-folhetos-fluid .pf-fluid-cover-list .pf-own-design-upload .cadernos-cover-media {
+  border: 1.5px dashed color-mix(in srgb, var(--moss) 34%, var(--line));
+  background: var(--surface-cream);
+}
+
+.pf-own-design-upload:hover .pf-own-design-circle,
+.pf-own-design-upload:focus-within .pf-own-design-circle {
+  background: var(--surface-gold-soft);
+  transform: translateY(-2px);
+}
+
+.pf-own-design-circle {
+  display: grid;
+  width: 76px;
+  height: 76px;
+  place-items: center;
+  border: 1.5px solid color-mix(in srgb, var(--moss) 40%, var(--line));
+  border-radius: 50%;
+  background: var(--surface-panel);
+  color: var(--moss);
+  font-size: 0.82rem;
+  font-weight: 800;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.pf-own-design-circle svg {
+  width: 34px;
+  height: 34px;
+}
+
+@media (max-width: 620px) {
+  .pf-own-design-circle {
+    width: 56px;
+    height: 56px;
+  }
+
+  .pf-own-design-circle svg {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+.pf-own-design-media > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pf-own-design-upload.is-uploading {
+  cursor: progress;
+}
+
+.pf-own-design-upload .order-upload-progress {
+  width: calc(100% - 16px);
+  padding: 9px 10px;
+}
+
+.pf-own-design-upload .order-upload-progress__heading {
+  display: grid;
+  gap: 2px;
+}
+
+.pf-own-design-upload .order-upload-progress__heading strong {
+  font-size: 0.72rem;
+  text-align: left;
+}
+
+.pf-own-design-error {
+  margin: 6px 2px 0;
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+/* A imagem enviada na fila, nas linhas e nos botões "em todas". */
+.pf-own-design-img {
+  overflow: hidden;
+  background: var(--surface-image);
+}
+
+.pf-own-design-img > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pf-own-design-img.is-pdf {
+  display: grid;
+  place-items: center;
+  color: var(--moss);
+  font-size: 0.72rem;
+  font-weight: 800;
 }

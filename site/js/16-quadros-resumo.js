@@ -82,7 +82,20 @@
   function quadrosSummaryImageTile(item, step, label, name) {
     var template = step && step.template === "media-list" ? "media-list" : "design-grid";
 
+    if (item && item.ownDesign) {
+      return quadrosSummaryTile(item.image
+        ? '<span class="quadros-summary-photo"><img src="' + escapeHtml(item.image) + '" alt="' + escapeHtml(item.title || "") + '"></span>'
+        : '<span class="quadros-summary-note" aria-hidden="true">PDF</span>', label, name);
+    }
     return quadrosSummaryTile(renderVisual(item, template, step), label, name);
+  }
+
+  // A capa de uma unidade, também quando é o design enviado por quem encomenda.
+  function pastaSummaryCoverItem(coverStep, selections, field) {
+    if (typeof OWN_DESIGN_VALUE !== "undefined" && selections[field] === OWN_DESIGN_VALUE) {
+      return ownDesignItem(ownDesignUpload(selections));
+    }
+    return buildSummaryItem(coverStep, selections[field]);
   }
 
   function quadrosSummaryPhotoTiles(key, label, alt) {
@@ -375,10 +388,10 @@
         state.selections = selections;
         groups.forEach(function (group) {
           var groupConfig = config.groups && config.groups[group] || {};
-          var coverItem = buildSummaryItem(coverStep, selections[groupConfig.coverField]);
+          var coverItem = pastaSummaryCoverItem(coverStep, selections, groupConfig.coverField);
           var variationItem = buildSummaryItem(variationStep, selections[groupConfig.variationField]);
           var shown = variationItem && variationItem.image ? variationItem : coverItem;
-          thumbs += '<span class="unit-slot-cover' + (shown ? '' : ' is-empty' + (isAssortedSelected(product) ? ' is-mia' : '')) + '">' + (shown ? renderVisual(shown, "media-list", shown === variationItem ? variationStep : coverStep) : '') + '</span>';
+          thumbs += '<span class="unit-slot-cover' + (shown ? '' : ' is-empty' + (isAssortedSelected(product) ? ' is-mia' : '')) + '">' + (shown ? renderUnitVisual(shown, shown === variationItem ? variationStep : coverStep) : '') + '</span>';
           if (coverItem) {
             parts.push((groups.length > 1 ? group + ": " : "") + displayItemTitle(coverItem) + (variationItem ? " (" + (variationItem.title || variationItem.value || "") + ")" : ""));
           }
@@ -461,7 +474,7 @@
 
     groups.forEach(function (group) {
       var groupConfig = config.groups && config.groups[group] || {};
-      var coverItem = buildSummaryItem(coverStep, state.selections[groupConfig.coverField]);
+      var coverItem = pastaSummaryCoverItem(coverStep, state.selections, groupConfig.coverField);
       var variationItem = buildSummaryItem(variationStep, state.selections[groupConfig.variationField]);
       var previewItem;
 

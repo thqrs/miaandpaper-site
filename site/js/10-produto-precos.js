@@ -199,11 +199,13 @@
     }).filter(Boolean);
   }
 
+  // Como no send-order.php: num design próprio só contam as gavetas com
+  // customArtworkEnabled.
   function optionDrawerExtraPerUnitCents(product) {
-    if (isMainCatalogProduct(product) && isCustomArtworkSelected(product)) {
-      return 0;
-    }
-    return selectedOptionDrawerRecords(product).reduce(function (total, record) {
+    var custom = isMainCatalogProduct(product) && isCustomArtworkSelected(product);
+    return selectedOptionDrawerRecords(product).filter(function (record) {
+      return !custom || record.drawer.customArtworkEnabled === true;
+    }).reduce(function (total, record) {
       return total + Math.max(0, parseInt(record.item.extraPriceCentsPerUnit, 10) || 0);
     }, 0);
   }
@@ -756,8 +758,10 @@
     return count && table && table[String(count)] != null ? "pack" : "custom";
   }
 
+  // Produtos sem o passo de envio podem aceitar um design próprio pelo
+  // cartão "Enviar o meu próprio design" (customArtwork.designCard no JSON).
   function isCustomArtworkProduct(product) {
-    return !!(product && findStep(product, "artwork_upload"));
+    return !!(product && (findStep(product, "artwork_upload") || (product.customArtwork && product.customArtwork.designCard)));
   }
 
   function isCustomArtworkSelected(product) {
@@ -772,7 +776,7 @@
     var field = detailsStep && Array.isArray(detailsStep.fields) ? detailsStep.fields[0] : null;
 
     return {
-      uploadKey: String(upload.selectionKey || "artwork_uploads"),
+      uploadKey: String(upload.selectionKey || (product && product.customArtwork && product.customArtwork.selectionKey) || "artwork_uploads"),
       helpKey: String(upload.helpKey || "artwork_help"),
       cardField: String(field && field.name || "card_description"),
       cardPhotoKey: String(media.photos && media.photos.selectionKey || "card_reference_uploads"),

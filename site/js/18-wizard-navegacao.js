@@ -192,6 +192,16 @@
       return "";
     }
 
+    // Design próprio: espera pelo envio; depois a capa desta unidade está feita.
+    if (ownDesignCardConfig(product, step)) {
+      if (ownDesignUploading(step)) {
+        return "Espera até o design terminar de enviar.";
+      }
+      if (ownDesignUpload(state.selections)) {
+        return "";
+      }
+    }
+
     if (step.template === "assignment-picker" && assignmentPickerConfig(step)) {
       var assignmentConfig = assignmentPickerConfig(step);
       var assignmentItems = assignmentPickerItems(product, step);
@@ -434,7 +444,7 @@
         var detailsGroups;
         syncPastaDeFolhetosDetailSelections(product, step);
         // Com as capas a cargo da Mia não há fita para escolher.
-        if (detailsVariationStep && !isAssortedSelected(product)) {
+        if (detailsVariationStep && !isAssortedSelected(product) && !isCustomArtworkSelected(product)) {
           detailsGroups = pastaDeFolhetosDetailsGroups(step, detailsVariationStep);
           for (i = 0; i < detailsGroups.length; i += 1) {
             var detailsGroup = detailsGroups[i];
@@ -447,6 +457,18 @@
               state.invalidFields = detailsField ? [detailsField] : [];
               return String(detailsVariationStep.groupSelectionError || "Escolhe a variação {group} para continuar.")
                 .replace("{group}", detailsGroup);
+            }
+          }
+        }
+        // Design próprio: as argolas e a fita de cada capa.
+        if (detailsVariationStep && isCustomArtworkSelected(product)) {
+          detailsGroups = pastaDeFolhetosDetailsGroups(step, detailsVariationStep);
+          for (i = 0; i < detailsGroups.length; i += 1) {
+            var ribbonDrawer = ownDesignRibbonDrawer(product, step, detailsGroups[i]);
+            var ribbonValue = ribbonDrawer ? String(state.selections[ribbonDrawer.field] || "") : "";
+            if (ribbonDrawer && !ribbonDrawer.items.some(function (item) { return String(item.value || "") === ribbonValue; })) {
+              state.invalidFields = [ribbonDrawer.field];
+              return "Escolhe as argolas e a fita " + detailsGroups[i] + " para continuar.";
             }
           }
         }

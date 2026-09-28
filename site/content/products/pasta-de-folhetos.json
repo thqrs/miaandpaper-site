@@ -23,8 +23,8 @@
         "trayLabel": "As tuas pastas",
         "packTrayLabel": "Os teus conjuntos",
         "quantityStepIds": ["covers", "pack-covers"],
-        "pickStepIds": ["covers", "pack-covers"],
-        "rowStepIds": ["extras", "pack-finishes", "cover_personalization", "details", "pack-details"],
+        "pickStepIds": ["covers", "pack-covers", "extras", "pack-finishes"],
+        "rowStepIds": ["cover_personalization", "details", "pack-details"],
         "stepIds": ["covers", "pack-covers", "extras", "pack-finishes", "cover_personalization", "details", "pack-details"],
         "unitActions": {
             "covers": [{"type": "same", "label": "Quero este design em todas as pastas", "emptyLabel": "Seleciona um design", "undoMessage": "Todas as pastas têm agora o mesmo design", "coverFields": true}],
@@ -45,7 +45,7 @@
             "pack-finishes": {"type": "value", "label": "Quero que a Mia escolha", "value": "mia-escolhe", "fields": ["finish_a4", "finish_a6"]}
         },
         "carryOverFields": ["finish", "finish_a4", "finish_a6", "metal_corners", "metal_corners_a4", "metal_corners_a6"],
-        "fields": ["covers", "cover_a4", "cover_a6", "designs", "design_a4", "design_a6", "design_quantities", "finish", "finish_a4", "finish_a6", "metal_corners", "metal_corners_a4", "metal_corners_a6", "cover_personalization", "cover_personalization_text", "cover_personalization_a4", "cover_personalization_a4_text", "cover_personalization_a6", "cover_personalization_a6_text"]
+        "fields": ["covers", "cover_a4", "cover_a6", "designs", "design_a4", "design_a6", "design_quantities", "finish", "finish_a4", "finish_a6", "metal_corners", "metal_corners_a4", "metal_corners_a6", "cover_personalization", "cover_personalization_text", "cover_personalization_a4", "cover_personalization_a4_text", "cover_personalization_a6", "cover_personalization_a6_text", "order_flow", "design_source", "custom_artwork_uploads", "ribbon_a4", "ribbon_a6"]
     },
     "unitLabel": "pasta de folhetos",
     "unitSingular": "pasta de folhetos",
@@ -375,6 +375,7 @@
         },
         {
             "id": "covers",
+            "ownDesignCard": true,
             "label": "Design",
             "title": "Escolhe a tua capa",
             "text": "",
@@ -1029,6 +1030,7 @@
         },
         {
             "id": "pack-covers",
+            "ownDesignCard": true,
             "label": "Design",
             "title": "Escolhe as tuas capas",
             "text": "",
@@ -1323,6 +1325,92 @@
                 "metal_corners": {
                     "field": "metal_corners_a6",
                     "label": "cantos metálicos A6"
+                }
+            }
+        },
+        {
+            "id": "own-ribbon-a4",
+            "dataOnly": true,
+            "label": "Argolas e fita A4",
+            "title": "Argolas e fita do design próprio",
+            "text": "",
+            "template": "option-drawers",
+            "when": {
+                "field": "order_flow",
+                "equals": "custom"
+            },
+            "drawers": [
+                {
+                    "id": "own-ribbon",
+                    "field": "ribbon_a4",
+                    "label": "argolas e fita A4",
+                    "title": "Argolas e fita A4",
+                    "required": false,
+                    "customArtworkEnabled": true,
+                    "items": [
+                        {
+                            "value": "dourada",
+                            "title": "Argolas e fita douradas",
+                            "choiceTitle": "Fita dourada",
+                            "choiceNote": "Argolas douradas",
+                            "extraPriceCentsPerUnit": 0
+                        },
+                        {
+                            "value": "rosa-argolas-douradas",
+                            "title": "Argolas douradas e fita rosa",
+                            "choiceTitle": "Fita rosa",
+                            "choiceNote": "Argolas douradas",
+                            "extraPriceCentsPerUnit": 0
+                        },
+                        {
+                            "value": "rosa-argolas-rosa",
+                            "title": "Argolas rosa metálico e fita rosa",
+                            "choiceTitle": "Fita rosa",
+                            "choiceNote": "Argolas rosa metálico",
+                            "extraPriceCentsPerUnit": 0
+                        },
+                        {
+                            "value": "castanha",
+                            "title": "Argolas douradas e fita castanha",
+                            "choiceTitle": "Fita castanha",
+                            "choiceNote": "Argolas douradas",
+                            "extraPriceCentsPerUnit": 0
+                        },
+                        {
+                            "value": "azul-argolas-douradas",
+                            "title": "Argolas douradas e fita azul",
+                            "choiceTitle": "Fita azul",
+                            "choiceNote": "Argolas douradas",
+                            "extraPriceCentsPerUnit": 0
+                        },
+                        {
+                            "value": "azul-argolas-rosa",
+                            "title": "Argolas rosa metálico e fita azul",
+                            "choiceTitle": "Fita azul",
+                            "choiceNote": "Argolas rosa metálico",
+                            "extraPriceCentsPerUnit": 0
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "own-ribbon-a6",
+            "dataOnly": true,
+            "label": "Argolas e fita A6",
+            "title": "Argolas e fita do design próprio",
+            "text": "",
+            "template": "option-drawers",
+            "when": {
+                "field": "order_flow",
+                "equals": "custom"
+            },
+            "drawersSourceStepId": "own-ribbon-a4",
+            "drawerOverrides": {
+                "ribbon_a4": {
+                    "field": "ribbon_a6",
+                    "label": "argolas e fita A6",
+                    "title": "Argolas e fita A6"
                 }
             }
         },
@@ -2289,6 +2377,7 @@
                 {
                     "id": "finish-choice",
                     "field": "finish",
+                    "customArtworkEnabled": true,
                     "label": "acabamento",
                     "title": "Acabamento",
                     "required": true,
@@ -2437,7 +2526,11 @@
                         "field": "metal_corners_a6"
                     }
                 ],
-                "defaultToFirst": true
+                "defaultToFirst": true,
+                "ownDesignRibbonSteps": {
+                    "A4": "own-ribbon-a4",
+                    "A6": "own-ribbon-a6"
+                }
             }
         },
         {
@@ -2454,12 +2547,17 @@
             "pastaDeFolhetosDetails": {
                 "variationStepId": "designs",
                 "variationTitle": "Escolhe as argolas e fita",
-                "defaultToFirst": true
+                "defaultToFirst": true,
+                "ownDesignRibbonSteps": {
+                    "A4": "own-ribbon-a4",
+                    "A6": "own-ribbon-a6"
+                }
             },
             "drawers": [
                 {
                     "id": "metal-corners",
                     "field": "metal_corners",
+                    "customArtworkEnabled": true,
                     "label": "cantos metálicos",
                     "title": "Quero cantos metálicos",
                     "required": false,
@@ -2544,6 +2642,12 @@
     "allowUnitDiscounts": false,
     "defaultPriceKey": "A4",
     "customArtwork": {
+        "selectionKey": "custom_artwork_uploads",
+        "designCard": {
+            "title": "Enviar o meu próprio design",
+            "anotherTitle": "Enviar outro design",
+            "uploadedTitle": "O teu design"
+        },
         "selectionField": "order_flow",
         "catalogValue": "catalog",
         "customValue": "custom",

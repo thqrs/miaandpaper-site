@@ -593,6 +593,9 @@
       } else {
         state.orderUploadMessage = uploads.length === 1 ? "Foto enviada." : uploads.length + " fotos enviadas.";
       }
+      if (typeof config.onComplete === "function") {
+        config.onComplete(uploads);
+      }
     }).catch(function (error) {
       uploads.forEach(function (upload) {
         if (upload && orderUploadPreviews[upload.token]) {

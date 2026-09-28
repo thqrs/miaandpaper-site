@@ -1067,12 +1067,32 @@
       : designGroupsForStep(variationStep);
   }
 
+  // Design próprio: as argolas e a fita não vêm da capa do catálogo mas das
+  // gavetas em pastaDeFolhetosDetails.ownDesignRibbonSteps (uma por tamanho).
+  function ownDesignRibbonDrawer(product, step, group) {
+    var steps = step && step.pastaDeFolhetosDetails && step.pastaDeFolhetosDetails.ownDesignRibbonSteps;
+    var source = steps && steps[group] ? findStep(product, String(steps[group])) : null;
+    var drawer = source ? optionDrawersForStep(product, source)[0] : null;
+    return drawer && drawer.field && Array.isArray(drawer.items) && drawer.items.length ? drawer : null;
+  }
+
   function syncPastaDeFolhetosDetailSelections(product, step) {
     var variationStep = pastaDeFolhetosDetailsVariationStep(product, step);
     var config = step && step.pastaDeFolhetosDetails;
 
     if (!variationStep) {
       return;
+    }
+
+    // Como nas capas do catálogo, começa na primeira (dourada).
+    if (isCustomArtworkSelected(product)) {
+      pastaDeFolhetosDetailsGroups(step, variationStep).forEach(function (group) {
+        var drawer = ownDesignRibbonDrawer(product, step, group);
+        var current = drawer ? String(state.selections[drawer.field] || "") : "";
+        if (drawer && !drawer.items.some(function (item) { return String(item.value || "") === current; })) {
+          state.selections[drawer.field] = String(drawer.items[0].value || "");
+        }
+      });
     }
 
     pastaDeFolhetosDetailsGroups(step, variationStep).forEach(function (group) {
@@ -1166,6 +1186,24 @@
       var field = groupedDesignField(variationStep, group);
       var items = groupedDesignItems(variationStep, group);
       var selected = field ? String(state.selections[field] || "") : "";
+      var ribbon = isCustomArtworkSelected(product) ? ownDesignRibbonDrawer(product, step, group) : null;
+
+      if (ribbon) {
+        html += [
+          '<section class="pf-details-variation is-own-design" data-design-size-group="' + escapeHtml(group) + '">',
+          '<h3>' + escapeHtml(config.variationTitle || "Escolhe as argolas e fita") + ' · ' + escapeHtml(group) + '</h3>',
+          '<div class="unit-row-options unit-row-options--ribbon" role="radiogroup">',
+          ribbon.items.map(function (item) {
+            var value = String(item.value || "");
+            return renderConfiguredUnitRowChoice(ribbon.field, value, String(state.selections[ribbon.field] || "") === value,
+              'data-option-drawer-choice data-option-drawer-field="' + escapeHtml(ribbon.field) + '"',
+              "", item.choiceTitle || item.title || value, item.choiceNote || "");
+          }).join(""),
+          '</div>',
+          '</section>'
+        ].join("");
+        return;
+      }
 
       if (items.length < 2) {
         return;
@@ -1684,7 +1722,9 @@
         '</div>'
       ].join("");
     }).join("");
-    var preview = openItem
+    // Com várias unidades a gaveta de pré-visualização baralha: a carta já
+    // mostra para onde vai a escolha.
+    var preview = openItem && !configuredUnitsActive(product, step)
       ? '<div class="pf-assignment-preview-row" style="--assignment-preview-row-one:' + (openIndex + 2) + ';--assignment-preview-row-three:' + (Math.floor(openIndex / 3) + 2) + ';--assignment-preview-row-two:' + (Math.floor(openIndex / 2) + 2) + '">' + renderAssignmentPickerPreview(product, step, openItem) + '</div>'
       : "";
 
@@ -1695,6 +1735,7 @@
       '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list pf-fluid-cover-list pf-assignment-list">',
       cards,
       preview,
+      renderOwnDesignCards(product, step),
       '</div>',
       renderAssignmentPickerUndo(step),
       '</div>'
@@ -1945,7 +1986,7 @@
     }
 
     // A grelha representa apenas a unidade activa, tal como na compra de uma capa.
-    groups.forEach(function (group) {
+    groups.forEach(function (group, groupIndex) {
       var field = groupedDesignField(step, group);
       var selected = field ? String(state.selections[field] || "") : "";
       var items = groupedDesignItems(step, group);
@@ -1973,7 +2014,7 @@
         ].join("");
       }).join("");
       var selectedPreview = "";
-      if (selectedItem && step.selectedImagePreview) {
+      if (selectedItem && step.selectedImagePreview && !configuredUnitsActive(product, step)) {
         if (step.selectedImagePreview.variationStepId) {
           selectedPreview = '<div class="grouped-design-selected-preview" data-selected-image-preview role="status" aria-live="polite" style="--selected-preview-row-three:' + (Math.floor(selectedIndex / 3) + 2) + ';--selected-preview-row-two:' + (Math.floor(selectedIndex / 2) + 2) + '">'
             + renderPreviewDrawer(product, selectedItem.value, selectedItem.id, previewDrawerFrames(singlePreviewDrawerItems(product, step, selectedItem, group), false), step.selectedImagePreview.drawerHint)
@@ -1986,7 +2027,7 @@
       html += [
         '<section class="design-grid-section grouped-design-section" data-design-size-group="' + escapeHtml(group) + '">',
         '<h3 class="design-grid-section-title">' + escapeHtml(titles[group] || ("Escolhe o design " + group)) + '</h3>',
-        '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list' + (verticalColumns ? ' pf-fluid-cover-list' : '') + '">' + cards + selectedPreview + '</div>',
+        '<div class="option-list size-choice-list crachas-size-card-list cadernos-cover-list' + (verticalColumns ? ' pf-fluid-cover-list' : '') + '">' + cards + selectedPreview + (groupIndex === groups.length - 1 ? renderOwnDesignCards(product, step) : '') + '</div>',
         '</section>'
       ].join("");
     });
@@ -2755,23 +2796,45 @@
     if (assignment) {
       source = assignmentPickerSourceStep(product, step);
       return assignment.groups.map(function (group) {
-        return { id: String(group.id || group.label || ""), field: String(group.field || ""), step: source };
+        return { id: String(group.id || group.label || ""), field: String(group.field || ""), step: source, cover: true };
       });
     }
     return designGroupsForStep(step).map(function (group) {
-      return { id: group, field: groupedDesignField(step, group), step: step };
+      return { id: group, field: groupedDesignField(step, group), step: step, cover: true };
     });
   }
 
   function configuredUnitCoverItem(group, unit) {
     var value = String(unit && unit[group.field] || "");
-    return value ? ((group.step && group.step.items) || []).filter(function (item) {
+    if (group.cover && value === OWN_DESIGN_VALUE) return ownDesignItem(ownDesignUpload(unit));
+    return value ? (group.items || (group.step && group.step.items) || []).filter(function (item) {
       return String(item.value || "") === value;
     })[0] || null : null;
   }
 
-  function configuredUnitIsComplete(product, unit) {
-    var groups = configuredUnitCoverGroups(product);
+  // Lugares de cada unidade na fila do passo: as capas no passo das capas;
+  // nos outros passos de escolha (acabamento), os campos desse passo — um por
+  // tamanho no conjunto.
+  function configuredUnitSlotGroups(product, step) {
+    var assignment;
+    var items;
+    var source;
+    if (!step || !isConfiguredPickStep(product, step) || isConfiguredQuantityStep(product, step)) return configuredUnitCoverGroups(product);
+    assignment = assignmentPickerConfig(step);
+    if (assignment) {
+      items = assignmentPickerItems(product, step);
+      source = assignmentPickerSourceStep(product, step);
+      return assignment.groups.map(function (group) {
+        return { id: String(group.id || group.label || ""), field: String(group.field || ""), step: source, items: items };
+      });
+    }
+    return optionDrawersForStep(product, step).map(function (drawer) {
+      return { id: String(drawer.id || drawer.field || ""), field: String(drawer.field || ""), step: step, items: drawer.items || [] };
+    });
+  }
+
+  function configuredUnitIsComplete(product, unit, step) {
+    var groups = configuredUnitSlotGroups(product, step);
     return groups.length > 0 && groups.every(function (group) {
       return !!configuredUnitCoverItem(group, unit);
     });
@@ -2903,12 +2966,22 @@
     return counts;
   }
 
-  function configuredUnitCoversHtml(product, unit) {
-    var mia = isAssortedSelected(product);
-    return configuredUnitCoverGroups(product).map(function (group) {
+  // Fora do passo das capas, cada lugar leva a capa da unidade num canto,
+  // para se saber a que pasta vai o acabamento.
+  function configuredUnitCoversHtml(product, unit, step) {
+    var groups = configuredUnitSlotGroups(product, step);
+    var covers = configuredUnitCoverGroups(product);
+    var withRef = !!(step && isConfiguredPickStep(product, step) && !isConfiguredQuantityStep(product, step) && groups.length && covers.length);
+    var assorted = isAssortedSelected(product);
+    return groups.map(function (group, index) {
       var item = configuredUnitCoverItem(group, unit);
-      return '<span class="unit-slot-cover' + (item ? '' : ' is-empty' + (mia ? ' is-mia' : '')) + '">'
-        + (item ? renderVisual(item, "media-list", group.step) : '')
+      var mia = item ? !!item.miaChoice : assorted && !withRef;
+      var coverGroup = withRef ? covers.filter(function (candidate) { return candidate.id === group.id; })[0] || covers[index] || covers[0] : null;
+      var ref = coverGroup ? configuredUnitCoverItem(coverGroup, unit) : null;
+      if (item && item.miaChoice) item = null;
+      return '<span class="unit-slot-cover' + (item ? '' : ' is-empty' + (mia ? ' is-mia' : '')) + (withRef ? ' has-ref' : '') + '">'
+        + (item ? renderUnitVisual(item, group.step) : '')
+        + (ref ? '<span class="unit-slot-ref">' + renderUnitVisual(ref, coverGroup.step) + '</span>' : '')
         + '</span>';
     }).join("");
   }
@@ -2923,6 +2996,13 @@
     return height >= 900 ? 5 : height >= 720 ? 4 : 3;
   }
 
+  // No telemóvel, com mais unidades do que colunas, a fila é sempre uma faixa
+  // de uma linha que desliza (em vez de várias linhas): poupa altura.
+  function configuredUnitStripMode(count) {
+    var wide = window.matchMedia && window.matchMedia("(min-width: 600px)").matches;
+    return !wide && count > configuredUnitTrayColumns();
+  }
+
   function watchConfiguredUnitTrayColumns(product) {
     var timer;
     state.configuredUnitColumns = configuredUnitTrayColumns();
@@ -2931,7 +3011,9 @@
     window.addEventListener("resize", function () {
       window.clearTimeout(timer);
       timer = window.setTimeout(function () {
-        if (!document.querySelector("[data-unit-tray]") || configuredUnitTrayColumns() === state.configuredUnitColumns) return;
+        if (!document.querySelector("[data-unit-tray], [data-unit-mini]")) return;
+        if (configuredUnitTrayColumns() === state.configuredUnitColumns
+          && !!document.querySelector("[data-unit-mini].is-strip") === configuredUnitStripMode(configuredUnitCount(product))) return;
         rerenderProduct(state.product || product);
       }, 150);
     });
@@ -2940,7 +3022,7 @@
   function renderConfiguredUnitTray(product, step) {
     var units = configuredUnitViewList(product);
     var index = configuredUnitIndex(product);
-    var groups = configuredUnitCoverGroups(product);
+    var groups = configuredUnitSlotGroups(product, step);
     var label = configuredUnitLabel(product);
     var quantityStep = isConfiguredQuantityStep(product, step);
     var pick = isConfiguredPickStep(product, step);
@@ -2956,10 +3038,10 @@
     state.configuredUnitTrayCount = units.length;
     state.configuredUnitFilled = null;
     function slotHtml(unit, unitIndex, mini) {
-      var complete = configuredUnitIsComplete(product, unit);
+      var complete = configuredUnitIsComplete(product, unit, step);
       // Entre as unidades por escolher, só a próxima se pode abrir.
       var locked = pick && !ready[unitIndex] && unitIndex !== firstPending && unitIndex !== index;
-      var covers = configuredUnitCoversHtml(product, unit);
+      var covers = configuredUnitCoversHtml(product, unit, step);
       var badge = quantityStep ? '' : ready[unitIndex]
         ? '<span class="unit-slot-ready" aria-hidden="true">' + ICON_CHECK + '</span>'
         : (pick ? '<span class="unit-slot-ready is-pending" aria-hidden="true">?</span>' : '');
@@ -2979,6 +3061,20 @@
         '<span class="unit-slot-number" aria-hidden="true">' + (unitIndex + 1) + '</span>',
         badge,
         '</button>'
+      ].join("");
+    }
+
+    if (configuredUnitStripMode(units.length)) {
+      return [
+        '<div class="unit-tray is-strip" role="group" aria-label="' + escapeHtml(configuredUnitText(product, "trayLabel") || label) + '">',
+        '<div class="unit-tray-mini is-visible is-strip" style="--unit-columns:' + columns + '" data-unit-mini>',
+        '<button type="button" class="unit-mini-arrow" data-unit-mini-step="-1" aria-label="Anteriores">&lsaquo;</button>',
+        '<div class="unit-mini-window" data-unit-mini-window><div class="unit-mini-track" data-unit-mini-track>',
+        units.map(function (unit, unitIndex) { return slotHtml(unit, unitIndex, false); }).join("") + marker,
+        '</div></div>',
+        '<button type="button" class="unit-mini-arrow" data-unit-mini-step="1" aria-label="Seguintes">&rsaquo;</button>',
+        '</div>',
+        '</div>'
       ].join("");
     }
 
@@ -3034,6 +3130,210 @@
     return html;
   }
 
+  // DESIGN PRÓPRIO: com "ownDesignCard" no passo das capas e
+  // customArtwork.designCard no JSON, a grelha ganha um cartão para enviar a
+  // própria imagem (+ a taxa de customArtwork). Uma unidade com design
+  // próprio guarda nos campos das capas o valor OWN_DESIGN_VALUE e segue para
+  // o carrinho como os designs da personalização: order_flow "custom" e o
+  // ficheiro em customArtwork.selectionKey. Cada imagem enviada fica na
+  // grelha como mais um cartão, para se poder usar noutras pastas.
+  var OWN_DESIGN_VALUE = "__own_design__";
+  var OWN_DESIGN_INCOMING = "own_design_incoming";
+
+  function ownDesignCardConfig(product, step) {
+    var card = product && product.customArtwork && product.customArtwork.designCard;
+    return card && step && step.ownDesignCard === true && !state.admin ? card : null;
+  }
+
+  function ownDesignUpload(selections) {
+    var list;
+    if (!selections || String(selections.order_flow || "") !== "custom") return null;
+    list = selections[customArtworkConfig(state.product).uploadKey];
+    return Array.isArray(list) && list[0] && list[0].token ? list[0] : null;
+  }
+
+  function ownDesignIsPdf(upload) {
+    return !!(upload && (String(upload.mime || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(String(upload.name || ""))));
+  }
+
+  function ownDesignItem(upload) {
+    var card = state.product && state.product.customArtwork && state.product.customArtwork.designCard || {};
+    if (!upload) return null;
+    return {
+      id: "own-design-" + upload.token,
+      value: OWN_DESIGN_VALUE,
+      title: String(card.uploadedTitle || "O teu design"),
+      image: ownDesignIsPdf(upload) ? "" : orderUploadPreviewUrl(upload),
+      imageFit: "cover",
+      visual: "neutral",
+      ownDesign: true
+    };
+  }
+
+  // As imagens já enviadas, sem repetir, pela ordem das unidades.
+  function ownDesignLibrary(product) {
+    var seen = {};
+    var list = [];
+    configuredUnitSelections(product).forEach(function (selections) {
+      var upload = ownDesignUpload(selections);
+      if (upload && !seen[upload.token]) {
+        seen[upload.token] = true;
+        list.push(upload);
+      }
+    });
+    return list;
+  }
+
+  // A imagem enviada não é um ficheiro do site: vai numa <img> simples.
+  function renderUnitVisual(item, step) {
+    if (!item || !item.ownDesign) return renderVisual(item, "media-list", step);
+    return item.image
+      ? '<span class="option-image pf-own-design-img"><img src="' + escapeHtml(item.image) + '" alt="" decoding="async"></span>'
+      : '<span class="option-image pf-own-design-img is-pdf">PDF</span>';
+  }
+
+  function ownDesignFeeText(product) {
+    var fee = customArtworkConfig(product).feePerFileCents;
+    return fee ? "+" + formatCents(fee).replace(",00", "") : "";
+  }
+
+  // Põe o design próprio na unidade (a activa, ou outra pelo índice).
+  function assignOwnDesign(product, step, upload, unitIndex) {
+    var config = customArtworkConfig(product);
+    var units = configuredUnitList();
+    var target;
+    var groups = configuredUnitCoverGroups(product);
+    saveConfiguredUnit(product);
+    target = units.length && unitIndex != null && unitIndex !== configuredUnitIndex(product) ? units[unitIndex] : state.selections;
+    if (!target) return;
+    leaveConfiguredUnitMiaAssorted(product, step);
+    groups.forEach(function (group) {
+      target[group.field] = OWN_DESIGN_VALUE;
+      ((step.resetFieldsByGroup || {})[group.id] || []).forEach(function (field) { delete target[field]; });
+    });
+    target.covers = [];
+    target.order_flow = "custom";
+    target.design_source = "custom";
+    target[config.uploadKey] = [Object.assign({}, upload, { quantity: 1, feeCents: config.feePerFileCents })];
+  }
+
+  // Escolher uma capa do catálogo tira o design próprio da unidade activa.
+  function leaveOwnDesign(product, step) {
+    var config = customArtworkConfig(product);
+    if (!ownDesignCardConfig(product, step) || String(state.selections.order_flow || "") !== "custom") return;
+    configuredUnitCoverGroups(product).forEach(function (group) {
+      if (state.selections[group.field] === OWN_DESIGN_VALUE) delete state.selections[group.field];
+    });
+    delete state.selections[config.uploadKey];
+    state.selections.order_flow = "catalog";
+    state.selections.design_source = "catalog";
+  }
+
+  function ownDesignUploading(step) {
+    var progress = state.orderUploadProgress;
+    return !!(state.orderUploadBusy && progress && state.ownDesignUploadStep === step.id);
+  }
+
+  function renderOwnDesignCards(product, step) {
+    var card = ownDesignCardConfig(product, step);
+    var library;
+    var active;
+    var custom;
+    var accept;
+    var uploading;
+    var fee;
+    if (!card) return "";
+    library = ownDesignLibrary(product);
+    active = ownDesignUpload(state.selections);
+    custom = customArtworkConfig(product);
+    accept = (product.customArtwork.acceptedExtensions || []).concat(product.customArtwork.acceptedMimeTypes || []).join(",");
+    uploading = ownDesignUploading(step);
+    fee = ownDesignFeeText(product);
+    return library.map(function (upload, index) {
+      var item = ownDesignItem(upload);
+      var selected = !!(active && active.token === upload.token);
+      var muted = !selected && (state.selections[configuredUnitCoverGroups(product)[0] && configuredUnitCoverGroups(product)[0].field] || "") ? " is-muted" : "";
+      return [
+        '<div class="cadernos-cover-choice pf-own-design-choice">',
+        '<button type="button" class="choice-card crachas-size-card cadernos-cover-card pf-own-design-card' + (selected ? ' is-selected' : '') + muted + '" data-own-design-pick="' + escapeHtml(upload.token) + '" aria-pressed="' + selected + '">',
+        '<span class="crachas-size-card-visual cadernos-cover-media pf-own-design-media">',
+        item.image ? '<img src="' + escapeHtml(item.image) + '" alt="" loading="lazy" decoding="async">' : '<span class="pf-own-design-circle" aria-hidden="true">PDF</span>',
+        '</span>',
+        '<span class="choice-copy crachas-size-card-text"><strong>' + escapeHtml(item.title + (library.length > 1 ? " " + (index + 1) : "")) + '</strong>' + (fee ? '<span>' + escapeHtml(fee) + '</span>' : '') + '</span>',
+        '<span class="crachas-size-card-selected" aria-hidden="true">✓</span>',
+        '</button>',
+        '</div>'
+      ].join("");
+    }).join("") + [
+      '<div class="cadernos-cover-choice pf-own-design-choice">',
+      '<label class="choice-card crachas-size-card cadernos-cover-card pf-own-design-card pf-own-design-upload' + (uploading ? ' is-uploading' : '') + '">',
+      '<input type="file" class="visually-hidden" accept="' + escapeHtml(accept) + '" data-own-design-input' + (uploading ? ' disabled' : '') + '>',
+      '<span class="crachas-size-card-visual cadernos-cover-media pf-own-design-media">',
+      uploading ? renderOrderUploadProgress() : '<span class="pf-own-design-circle" aria-hidden="true">' + ICON_UPLOAD + '</span>',
+      '</span>',
+      '<span class="choice-copy crachas-size-card-text"><strong>' + escapeHtml(library.length ? (card.anotherTitle || card.title || "Enviar outro design") : (card.title || "Enviar o meu próprio design")) + '</strong>' + (fee ? '<span>' + escapeHtml(fee) + '</span>' : '') + '</span>',
+      '</label>',
+      !uploading && state.orderUploadError && state.ownDesignUploadStep === step.id ? '<p class="pf-own-design-error" role="alert">' + escapeHtml(state.orderUploadError) + '</p>' : '',
+      '</div>'
+    ].join("");
+  }
+
+  function startOwnDesignUpload(product, step, input) {
+    var custom = customArtworkConfig(product);
+    var unit = configuredUnitList().length ? configuredUnitIndex(product) : null;
+    var source = input.closest(".pf-own-design-card");
+    state.ownDesignUploadStep = step.id;
+    startOrderMediaUpload(product, {
+      selectionKey: OWN_DESIGN_INCOMING,
+      allowPdf: custom.allowPdf,
+      preserveOriginal: true,
+      feePerFileCents: custom.feePerFileCents,
+      purpose: custom.purpose,
+      onComplete: function (uploads) {
+        var wasReady;
+        delete state.selections[OWN_DESIGN_INCOMING];
+        // O envio acabou (o "ocupado" só se desliga a seguir).
+        state.ownDesignUploadStep = "";
+        if (!uploads[0] || currentStep(product) !== step) return;
+        wasReady = configuredUnitActiveReady(product, step);
+        if (unit === null || unit === configuredUnitIndex(product)) {
+          source = document.querySelector(".pf-own-design-upload .pf-own-design-media") || source;
+          queueConfiguredUnitDeal(product, step, source, configuredUnitCoverGroups(product)[0].field);
+        }
+        assignOwnDesign(product, step, uploads[0], unit);
+        state.errors = "";
+        advanceConfiguredUnitAfterChoice(product, step, wasReady);
+      }
+    }, input.files, "artwork", step.id);
+  }
+
+  function bindOwnDesignCards(product) {
+    document.querySelectorAll("[data-own-design-input]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        var step = currentStep(product);
+        if (!input.files || !input.files.length || !ownDesignCardConfig(product, step)) return;
+        startOwnDesignUpload(product, step, input);
+      });
+    });
+    document.querySelectorAll("[data-own-design-pick]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var step = currentStep(product);
+        var token = String(button.dataset.ownDesignPick || "");
+        var upload = ownDesignLibrary(product).filter(function (candidate) { return candidate.token === token; })[0];
+        var active = ownDesignUpload(state.selections);
+        var wasReady;
+        if (!upload || !step) return;
+        if (active && active.token === token) return;
+        wasReady = configuredUnitActiveReady(product, step);
+        queueConfiguredUnitDeal(product, step, button.querySelector(".pf-own-design-media"), configuredUnitCoverGroups(product)[0].field);
+        assignOwnDesign(product, step, upload, null);
+        state.errors = "";
+        advanceConfiguredUnitAfterChoice(product, step, wasReady);
+        rerenderProduct(product);
+      });
+    });
+  }
+
   // "Quero que a Mia escolha" (unitConfiguration.miaChoice no JSON):
   // assorted  as capas ficam "Sortido", como nos crachás (assorted_designs);
   // value     os campos recebem o valor do item "A Mia escolhe" da gaveta.
@@ -3071,7 +3371,7 @@
       fields.push(group.field);
       fields = fields.concat((step.resetFieldsByGroup || {})[group.id] || []);
     });
-    return fields;
+    return fields.concat(ownDesignFields(product));
   }
 
   function toggleConfiguredUnitMiaChoice(product, step) {
@@ -3142,6 +3442,19 @@
     return (step && Array.isArray(step.questions) ? step.questions : []).filter(function (question) {
       return !Array.isArray(question.sizes) || question.sizes.indexOf(size) !== -1;
     });
+  }
+
+  // Campos que acompanham as capas quando o design é próprio.
+  function ownDesignFields(product) {
+    return isCustomArtworkProduct(product) && product.customArtwork && product.customArtwork.designCard
+      ? ["order_flow", "design_source", customArtworkConfig(product).uploadKey]
+      : [];
+  }
+
+  // O que o "em todas" copia: os campos exigidos e, nas capas, também o
+  // design próprio (ou a sua ausência).
+  function configuredUnitActionCopyFields(product, action) {
+    return configuredUnitActionFields(product, action).concat(action.coverFields ? ownDesignFields(product) : []);
   }
 
   function configuredUnitActionFields(product, action) {
@@ -3219,7 +3532,9 @@
     }
     first = units[0] || {};
     return configuredUnitHasFields(first, configuredUnitActionFields(product, action)) && units.every(function (unit) {
-      return configuredUnitActionFields(product, action).every(function (field) { return unit[field] === first[field]; });
+      return configuredUnitActionCopyFields(product, action).every(function (field) {
+        return JSON.stringify(unit[field] === undefined ? null : unit[field]) === JSON.stringify(first[field] === undefined ? null : first[field]);
+      });
     });
   }
 
@@ -3234,7 +3549,7 @@
     saveConfiguredUnit(product);
     units = configuredUnitList();
     if (action.type === "same" && !configuredUnitActionSource(product, fields)) return false;
-    var affected = action.type === "same" ? fields : action.type === "toggle-all" ? Object.keys(action.values || {})
+    var affected = action.type === "same" ? configuredUnitActionCopyFields(product, action) : action.type === "toggle-all" ? Object.keys(action.values || {})
       : questions.reduce(function (keys, question) { return keys.concat([question.field, question.textField]); }, []);
     var resetGroups = action.coverFields ? configuredUnitCoverGroups(product) : [];
     resetGroups.forEach(function (group) { affected = affected.concat((step.resetFieldsByGroup || {})[group.id] || []); });
@@ -3247,7 +3562,10 @@
           if (unit[group.field] === source[group.field]) return;
           ((step.resetFieldsByGroup || {})[group.id] || []).forEach(function (field) { delete unit[field]; });
         });
-        fields.forEach(function (field) { unit[field] = cloneJson(source[field]); });
+        configuredUnitActionCopyFields(product, action).forEach(function (field) {
+          if (source[field] === undefined) delete unit[field];
+          else unit[field] = cloneJson(source[field]);
+        });
       });
     } else if (action.type === "same-name") {
       if (state.configuredUnitSameName) {
@@ -3347,7 +3665,9 @@
       source = configuredUnitActionSource(product, configuredUnitActionFields(product, action));
       if (!source) return "";
       configuredUnitActionFields(product, action).forEach(function (field) {
-        entries.push(configuredUnitFieldItem(product, field, source[field]));
+        entries.push(source[field] === OWN_DESIGN_VALUE
+          ? { item: ownDesignItem(ownDesignUpload(source)), step: step }
+          : configuredUnitFieldItem(product, field, source[field]));
       });
     } else if (action.type === "toggle-all") {
       Object.keys(action.values || {}).forEach(function (field) {
@@ -3362,7 +3682,7 @@
     });
     if (!entries.length) return "";
     return '<span class="unit-action-preview' + (entries.length > 1 ? ' is-pair' : '') + '" aria-hidden="true">' + entries.map(function (entry) {
-      return '<span class="unit-action-thumb">' + renderVisual(entry.item, "media-list", entry.step) + '</span>';
+      return '<span class="unit-action-thumb">' + renderUnitVisual(entry.item, entry.step) + '</span>';
     }).join("") + '</span>';
   }
 
@@ -3562,6 +3882,7 @@
     var html = "";
     var selected;
     var extra;
+    var ribbon;
     if (cornerGroups.length) {
       field = String((cornerGroups.filter(function (candidate) {
         return String(candidate && (candidate.id || candidate.label) || "") === group.id;
@@ -3577,7 +3898,16 @@
         + '<span class="unit-choice-check" aria-hidden="true">' + ICON_CHECK + '</span>'
         + '</button>';
     }
-    if (variationField && variations.length > 1) {
+    ribbon = isCustomArtworkSelected(product) ? ownDesignRibbonDrawer(product, step, group.id) : null;
+    if (ribbon) {
+      fields.push(ribbon.field);
+      html += ribbon.items.map(function (entry) {
+        var value = String(entry.value || "");
+        return renderConfiguredUnitRowChoice(ribbon.field + suffix, value, String(state.selections[ribbon.field] || "") === value,
+          'data-option-drawer-choice data-option-drawer-field="' + escapeHtml(ribbon.field) + '"',
+          "", entry.choiceTitle || entry.title || value, entry.choiceNote || "");
+      }).join("");
+    } else if (variationField && variations.length > 1) {
       fields.push(variationField);
       html += variations.map(function (variation) {
         var value = String(variation.value || "");
@@ -3631,7 +3961,7 @@
           return [
             '<section class="unit-row' + (invalidRow ? ' is-invalid' : '') + '" data-unit-row="' + unitIndex + '">',
             '<div class="unit-row-cover" aria-hidden="true">',
-            '<span class="unit-slot-cover' + (cover.item ? '' : ' is-empty' + (isAssortedSelected(product) ? ' is-mia' : '')) + '">' + (cover.item ? renderVisual(cover.item, "media-list", cover.step) : '') + '</span>',
+            '<span class="unit-slot-cover' + (cover.item ? '' : ' is-empty' + (isAssortedSelected(product) ? ' is-mia' : '')) + '">' + (cover.item ? renderUnitVisual(cover.item, cover.step) : '') + '</span>',
             '<span class="unit-slot-number unit-row-label">' + (unitLine ? '<span>' + escapeHtml(unitLine) + '</span>' : '') + '<span>' + escapeHtml(coverLine) + '</span></span>',
             '</div>',
             '<div class="unit-row-body" role="group" aria-label="' + escapeHtml(rowLabel) + '">' + body.html + '</div>',
@@ -3717,19 +4047,26 @@
     var mini = document.querySelector("[data-unit-mini]");
     var full = document.querySelector("[data-unit-tray]");
     var win = mini && mini.querySelector("[data-unit-mini-window]");
+    var strip = !!(mini && mini.classList.contains("is-strip"));
     var active = configuredUnitIndex(product);
     var columns = configuredUnitTrayColumns();
-    var last = Math.max(0, configuredUnitCount(product) - columns);
+    var count = configuredUnitCount(product);
+    var last = Math.max(0, count - columns);
     var shown = state.configuredUnitMiniShown;
+    var grew = state.configuredUnitMiniCount != null && count > state.configuredUnitMiniCount;
+    var changed = state.configuredUnitMiniCount != null && count !== state.configuredUnitMiniCount;
+    var deal = state.configuredUnitDeal;
     var headerTop;
     var target;
+    var reveal;
     var settle;
 
+    state.configuredUnitMiniCount = count;
     if (state.configuredUnitMiniScroll) {
       window.removeEventListener("scroll", state.configuredUnitMiniScroll);
       state.configuredUnitMiniScroll = null;
     }
-    if (!mini || !win || !full) {
+    if (!mini || !win || (!full && !strip)) {
       state.configuredUnitMiniShown = null;
       state.configuredUnitMiniVisible = false;
       return;
@@ -3757,16 +4094,30 @@
       state.configuredUnitMiniShown = value;
     }
 
-    // A janela segue a unidade activa (fica à direita); deslizar ou as setas
-    // só a mexem até a unidade activa mudar.
-    if (state.configuredUnitMiniFor !== active + ":" + columns || state.configuredUnitMiniStart == null) {
+    // A janela segue a unidade activa (fica à direita; na faixa do telemóvel,
+    // ao centro); deslizar ou as setas só a mexem até a unidade activa mudar.
+    // Na faixa, acrescentar ou tirar unidades mostra a última.
+    if (strip && changed) {
       state.configuredUnitMiniFor = active + ":" + columns;
-      state.configuredUnitMiniStart = active - (columns - 1);
+      state.configuredUnitMiniStart = last;
+      if (shown == null && grew) shown = 0;
+    } else if (state.configuredUnitMiniFor !== active + ":" + columns || state.configuredUnitMiniStart == null) {
+      state.configuredUnitMiniFor = active + ":" + columns;
+      state.configuredUnitMiniStart = active - (strip ? Math.floor(columns / 2) : columns - 1);
     }
     target = Math.max(0, Math.min(last, state.configuredUnitMiniStart));
     // Desliza da posição anterior para a nova.
     place(shown == null ? target : shown, false);
     state.configuredUnitMiniPending = null;
+    // Na faixa, a unidade que vai receber a carta tem de estar à vista:
+    // a janela desliza até ela e só depois a carta voa.
+    if (strip && deal && (deal.unit < state.configuredUnitMiniShown || deal.unit >= state.configuredUnitMiniShown + columns)) {
+      reveal = deal.unit >= target && deal.unit < target + columns ? target
+        : Math.max(0, Math.min(last, deal.unit - Math.floor(columns / 2)));
+      shown = reveal;
+      place(reveal, true);
+      state.configuredUnitDealWait = 340;
+    }
     if (shown != null && shown !== target) {
       if (state.configuredUnitDeal) {
         state.configuredUnitMiniPending = function () { place(target, true); };
@@ -3792,6 +4143,10 @@
       });
     });
 
+    if (strip) {
+      state.configuredUnitMiniVisible = false;
+      return;
+    }
     headerTop = parseFloat(getComputedStyle(mini.parentNode).top) || 0;
     state.configuredUnitMiniScroll = function () {
       state.configuredUnitMiniVisible = full.getBoundingClientRect().bottom < headerTop;
@@ -3813,8 +4168,8 @@
     var group;
     var slot;
     var old = null;
-    if (!configuredUnitLayoutActive(product, step) || !isConfiguredQuantityStep(product, step)) return;
-    fields = configuredUnitCoverGroups(product).map(function (group) { return group.field; });
+    if (!configuredUnitLayoutActive(product, step) || !isConfiguredPickStep(product, step)) return;
+    fields = configuredUnitSlotGroups(product, step).map(function (group) { return group.field; });
     if (fields.indexOf(field) === -1) return;
     unit = configuredUnitIndex(product);
     group = fields.indexOf(field);
@@ -3834,7 +4189,8 @@
     var done = function () { old.remove(); };
     var animation;
     old.removeAttribute("style");
-    old.classList.remove("is-empty", "is-awaiting-deal");
+    Array.prototype.forEach.call(old.querySelectorAll(".unit-slot-ref"), function (ref) { ref.remove(); });
+    old.classList.remove("is-empty", "is-awaiting-deal", "has-ref");
     old.classList.add("unit-deal-card");
     old.setAttribute("aria-hidden", "true");
     old.style.left = to.left + "px";
@@ -3859,6 +4215,8 @@
       : document.querySelector('[data-unit-tray] [data-unit-slot="' + unit + '"]');
     var cover = slot ? slot.querySelectorAll(".unit-slot-cover")[group] : null;
     var rect;
+    var win;
+    var bounds;
     if (!cover) return null;
     // A carta substitui o "pop" da capa nova (e mede-se já sem ele).
     document.querySelectorAll('[data-unit-slot="' + unit + '"].is-filling').forEach(function (filling) {
@@ -3866,12 +4224,62 @@
     });
     rect = cover.getBoundingClientRect();
     if (rect.top + rect.height < 0 || rect.top > window.innerHeight) return null;
+    win = slot.closest("[data-unit-mini-window]");
+    if (win) {
+      bounds = win.getBoundingClientRect();
+      if (rect.left + rect.width / 2 < bounds.left || rect.left + rect.width / 2 > bounds.right) return null;
+    }
     return { slot: slot, cover: cover, rect: rect };
   }
 
   function playConfiguredUnitDeal() {
     var deal = state.configuredUnitDeal;
-    var target;
+    // A janela pequena guardou o deslize para a unidade seguinte: corre ao
+    // assentar ou, sem carta (capa fora do ecrã), já.
+    var slide = state.configuredUnitMiniPending;
+    var wait = state.configuredUnitDealWait || 0;
+    var waiting = [];
+    var next = [];
+    state.configuredUnitMiniPending = null;
+    state.configuredUnitDeal = null;
+    state.configuredUnitDealWait = 0;
+    if (deal && deal.rect && document.body.animate) {
+      // Até a carta assentar, o lugar mantém o "?" e o rebordo tracejado —
+      // numa troca, vê-se por trás da capa antiga a cair — e o destaque fica
+      // nesta unidade; só depois passa para a seguinte.
+      document.querySelectorAll('[data-unit-slot="' + deal.unit + '"]').forEach(function (slot) {
+        var cover = slot.querySelectorAll(".unit-slot-cover")[deal.group];
+        slot.classList.remove("is-filling");
+        if (cover && !cover.classList.contains("is-empty")) waiting.push(cover);
+      });
+      waiting.forEach(function (cover) { cover.classList.add("is-empty", "is-awaiting-deal"); });
+      next = Array.prototype.filter.call(document.querySelectorAll(".unit-slot.is-active"), function (slot) {
+        return Number(slot.dataset.unitSlot) !== deal.unit;
+      });
+      next.forEach(function (slot) { slot.classList.remove("is-active"); });
+      if (next.length) {
+        document.querySelectorAll('[data-unit-slot="' + deal.unit + '"]').forEach(function (slot) { slot.classList.add("is-active"); });
+      }
+    }
+    function settle() {
+      waiting.forEach(function (cover) { cover.classList.remove("is-empty", "is-awaiting-deal"); });
+      if (next.length && document.body.contains(next[0])) {
+        document.querySelectorAll('[data-unit-slot="' + deal.unit + '"]').forEach(function (slot) { slot.classList.remove("is-active"); });
+        next.forEach(function (slot) { slot.classList.add("is-active"); });
+        placeConfiguredUnitMarkers();
+      }
+      if (slide) slide();
+    }
+    // A faixa do telemóvel pode ter de deslizar até à unidade primeiro.
+    if (wait && deal) {
+      window.setTimeout(function () { flyConfiguredUnitDeal(deal, settle); }, wait);
+      return;
+    }
+    flyConfiguredUnitDeal(deal, settle);
+  }
+
+  function flyConfiguredUnitDeal(deal, settle) {
+    var target = deal && document.body.animate ? configuredUnitDealTarget(deal.unit, deal.group) : null;
     var to;
     var from;
     var fly;
@@ -3879,23 +4287,17 @@
     var dx;
     var dy;
     var flight;
-    var waiting;
-    var next;
     var delay;
-    // A janela pequena guardou o deslize para a unidade seguinte: corre ao
-    // assentar ou, sem carta (capa fora do ecrã), já.
-    var slide = state.configuredUnitMiniPending;
-    state.configuredUnitMiniPending = null;
-    state.configuredUnitDeal = null;
-    target = deal && document.body.animate ? configuredUnitDealTarget(deal.unit, deal.group) : null;
     if (!target || !deal.rect) {
       if (target && deal.old) discardConfiguredUnitCover(deal.old, target.rect);
-      if (slide) slide();
+      settle();
       return;
     }
     to = target.rect;
     from = deal.rect;
     fly = target.cover.cloneNode(true);
+    Array.prototype.forEach.call(fly.querySelectorAll(".unit-slot-ref"), function (ref) { ref.remove(); });
+    fly.classList.remove("is-empty", "is-awaiting-deal", "has-ref");
     fly.classList.add("unit-deal-card");
     fly.setAttribute("aria-hidden", "true");
     fly.style.left = to.left + "px";
@@ -3903,22 +4305,8 @@
     fly.style.width = to.width + "px";
     fly.style.height = to.height + "px";
     document.body.appendChild(fly);
-    // Até a carta assentar, o lugar mantém o "?" e o rebordo tracejado — numa
-    // troca, vê-se por trás da capa antiga a cair — e o destaque fica nesta
-    // unidade; só depois passa para a seguinte.
-    waiting = Array.prototype.map.call(document.querySelectorAll('[data-unit-slot="' + deal.unit + '"]'), function (slot) {
-      return slot.querySelectorAll(".unit-slot-cover")[deal.group];
-    }).filter(function (cover) { return cover && !cover.classList.contains("is-empty"); });
-    waiting.forEach(function (cover) { cover.classList.add("is-empty", "is-awaiting-deal"); });
     delay = deal.old ? 150 : 0;
     if (deal.old) discardConfiguredUnitCover(deal.old, to);
-    next = Array.prototype.filter.call(document.querySelectorAll(".unit-slot.is-active"), function (slot) {
-      return Number(slot.dataset.unitSlot) !== deal.unit;
-    });
-    next.forEach(function (slot) { slot.classList.remove("is-active"); });
-    if (next.length) {
-      document.querySelectorAll('[data-unit-slot="' + deal.unit + '"]').forEach(function (slot) { slot.classList.add("is-active"); });
-    }
     scale = Math.max(0.2, Math.min(from.width / to.width, from.height / to.height));
     dx = from.left + from.width / 2 - (to.left + to.width / 2);
     dy = from.top + from.height / 2 - (to.top + to.height / 2);
@@ -3931,13 +4319,7 @@
     function land() {
       if (!fly.parentNode) return;
       fly.remove();
-      waiting.forEach(function (cover) { cover.classList.remove("is-empty", "is-awaiting-deal"); });
-      if (next.length && document.body.contains(next[0])) {
-        document.querySelectorAll('[data-unit-slot="' + deal.unit + '"]').forEach(function (slot) { slot.classList.remove("is-active"); });
-        next.forEach(function (slot) { slot.classList.add("is-active"); });
-        placeConfiguredUnitMarkers();
-        if (slide) slide();
-      }
+      settle();
       target.cover.animate([
         { transform: "scale(1.12) rotate(-3deg)" },
         { transform: "scale(.95) rotate(2deg)", offset: 0.55 },
@@ -4058,6 +4440,7 @@
     bindConfiguredUnitRows(product);
     bindConfiguredUnitActions(product);
     bindConfiguredUnitMini(product);
+    bindOwnDesignCards(product);
     playConfiguredUnitDeal();
     placeConfiguredUnitMarkers();
     animateConfiguredDesignBadges();
