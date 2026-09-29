@@ -4295,3 +4295,32 @@ html[data-theme="dark"] .pf-fluid-variation {
 .unit-rows--details .unit-row-set:first-child {
   padding-top: 0;
 }
+
+/* Detalhes com várias pastas ou conjuntos: a mesma separação da
+   personalização (.builder-quantities .builder-card). Cada pasta, ou cada
+   conjunto, num cartão com um banho creme no topo e uma sombra curta; no
+   conjunto, um traço fino entre o A4 e o A6. */
+.unit-rows--details:has(> .unit-row-set + .unit-row-set) {
+  gap: 16px;
+}
+
+.unit-rows--details:has(> .unit-row-set + .unit-row-set) > .unit-row-set {
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-cream-strong) 50%, var(--card)) 0, var(--card) 72px, var(--card) 100%);
+  box-shadow: var(--shadow-header);
+}
+
+.unit-rows--details:has(> .unit-row-set + .unit-row-set) > .unit-row-set > .unit-row + .unit-row {
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 520px) {
+  .unit-rows--details:has(> .unit-row-set + .unit-row-set) > .unit-row-set {
+    padding: 12px;
+  }
+}

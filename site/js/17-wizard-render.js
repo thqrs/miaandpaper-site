@@ -3890,7 +3890,8 @@
     if (source) {
       configuredUnitActionFields(product, action).forEach(function (field) {
         var found = configuredUnitFieldItem(product, field, source[field]);
-        var name = found && found.item ? String(found.item.title || found.item.value || "") : "";
+        // "A Mia escolhe" não é um nome de acabamento: fica "Aplicar a todos".
+        var name = found && found.item && !found.item.miaChoice ? String(found.item.title || found.item.value || "") : "";
         if (name && names.indexOf(name) === -1) names.push(name);
       });
     }
