@@ -1044,7 +1044,7 @@
 
   // O servidor recusa carrinhos com mais de 30 linhas; o aviso tem de
   // aparecer ao adicionar, não só depois de confirmar o pedido.
-  var CART_MAX_ITEMS = 30;
+  var CART_MAX_ITEMS = 250;
 
   function cartLimitBlocks(product, adding, replacing) {
     if (loadCart().items.length + adding - (replacing || 0) <= CART_MAX_ITEMS) return false;

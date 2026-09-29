@@ -4642,12 +4642,16 @@
     scale = Math.max(0.2, Math.min(from.width / to.width, from.height / to.height));
     dx = from.left + from.width / 2 - (to.left + to.width / 2);
     dy = from.top + from.height / 2 - (to.top + to.height / 2);
+    // Enquanto espera a sua vez (a antiga a cair, ou as cartas de "Aplicar a
+    // todos" em fila), a carta fica invisível: não pode aparecer parada por
+    // cima do cartão da grelha antes de voar.
+    fly.style.opacity = "0";
     flight = fly.animate([
-      { transform: "translate(" + dx + "px," + dy + "px) scale(" + scale + ") rotate(0deg)", easing: "cubic-bezier(.2,.7,.3,1)" },
-      { transform: "translate(" + dx + "px," + (dy - 16) + "px) scale(" + (scale * 1.06) + ") rotate(-6deg)", offset: 0.16, easing: "cubic-bezier(.55,0,.25,1)" },
-      { transform: "translate(0,0) scale(1.1) rotate(8deg)", offset: 0.84, easing: "ease-out" },
-      { transform: "translate(0,0) scale(1) rotate(0deg)" }
-    ], { duration: 400, delay: delay, fill: "both" });
+      { transform: "translate(" + dx + "px," + dy + "px) scale(" + scale + ") rotate(0deg)", opacity: 1, easing: "cubic-bezier(.2,.7,.3,1)" },
+      { transform: "translate(" + dx + "px," + (dy - 16) + "px) scale(" + (scale * 1.06) + ") rotate(-6deg)", opacity: 1, offset: 0.16, easing: "cubic-bezier(.55,0,.25,1)" },
+      { transform: "translate(0,0) scale(1.1) rotate(8deg)", opacity: 1, offset: 0.84, easing: "ease-out" },
+      { transform: "translate(0,0) scale(1) rotate(0deg)", opacity: 1 }
+    ], { duration: 400, delay: delay, fill: "forwards" });
     duckConfiguredUnitRef(target.cover, delay);
     function land() {
       if (!fly.parentNode) return;

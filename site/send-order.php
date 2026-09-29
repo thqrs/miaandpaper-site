@@ -4040,7 +4040,8 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     global $returnToPath;
 
     $rawJson = field('cart_json');
-    if (strlen($rawJson) > 524288) {
+    // Até 250 artigos: cerca de 1 a 3 KB cada.
+    if (strlen($rawJson) > 2097152) {
         render_page(
             'Confirma os dados.',
             'O carrinho ultrapassa o tamanho máximo aceite.',
@@ -4069,9 +4070,9 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     if (empty($items)) {
         $errors[] = 'O carrinho está vazio.';
     }
-    if (count($items) > 30) {
-        $errors[] = 'O carrinho tem mais de 30 produtos.';
-        $items = array_slice($items, 0, 30);
+    if (count($items) > 250) {
+        $errors[] = 'O carrinho tem mais de 250 produtos.';
+        $items = array_slice($items, 0, 250);
     }
 
     $customerName = cart_text(isset($checkout['customer_name']) ? $checkout['customer_name'] : '');
@@ -4082,7 +4083,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     $sendCopy = !empty($checkout['send_copy']);
     $copyEmail = $sendCopy ? clean_header(isset($checkout['copy_email']) ? $checkout['copy_email'] : '') : '';
 
-    if (strlen($customerName) < 2 || strlen($customerName) > 120) {
+    if ($customerName === '' || strlen($customerName) > 120) {
         $errors[] = 'Indica o teu nome nos dados de contacto.';
     }
 
@@ -4856,7 +4857,7 @@ if (!$isCadernos && $congregation !== '' && (strlen($congregation) < 2 || strlen
     $errors[] = 'Confirma a congregação opcional.';
 }
 
-if (strlen($customerName) < 2 || strlen($customerName) > 120) {
+if ($customerName === '' || strlen($customerName) > 120) {
     $errors[] = 'Indica o teu nome nos dados de contacto.';
 }
 

@@ -384,9 +384,7 @@
       return "";
     }
 
-    // O servidor pede pelo menos 2 caracteres; "A" passava aqui e só era
-    // recusado depois de confirmar.
-    if (String(state.checkout.customer_name || "").trim().length < 2) {
+    if (!String(state.checkout.customer_name || "").trim()) {
       state.invalidFields = ["customer_name"];
       return "Indica o teu nome.";
     }
@@ -521,7 +519,7 @@
       '<section class="dc-block dc-contact">',
       '<h3 class="dc-block-title">Dados de contacto</h3>',
       '<div class="dc-contact-grid">',
-      '<label class="dc-field"><span>Nome</span><input class="' + (state.invalidFields.indexOf("customer_name") !== -1 ? "is-missing" : "") + '" type="text" name="customer_name" value="' + escapeHtml(state.checkout.customer_name) + '" autocomplete="name" maxlength="100" data-checkout-field required></label>',
+      '<label class="dc-field"><span>Nome</span><input class="' + (state.invalidFields.indexOf("customer_name") !== -1 ? "is-missing" : "") + '" type="text" name="customer_name" value="' + escapeHtml(state.checkout.customer_name) + '" autocomplete="name" maxlength="60" data-checkout-field required></label>',
       '<label class="dc-field"><span>Email ou telemóvel</span><input class="' + (state.invalidFields.indexOf("customer_contact") !== -1 ? "is-missing" : "") + '" type="text" name="customer_contact" value="' + escapeHtml(state.checkout.customer_contact) + '" autocomplete="email" data-checkout-field required></label>',
       '<div class="dc-field"><label><span>Número de Contribuinte (NIF) <small>(opcional)</small></span><input class="' + (state.invalidFields.indexOf("customer_nif") !== -1 ? "is-missing" : "") + '" type="text" name="customer_nif" value="' + escapeHtml(state.checkout.customer_nif) + '" placeholder="" autocomplete="off" inputmode="numeric" data-checkout-field' + (state.invalidFields.indexOf("customer_nif") !== -1 ? ' aria-invalid="true"' : '') + '></label></div>',
       '</div>',
