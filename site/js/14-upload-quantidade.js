@@ -1389,6 +1389,7 @@
       rerenderProduct(product);
       return;
     }
+    if (cartLimitBlocks(product, items.length)) return;
 
     items.forEach(function (item) {
       total += item.summary.priceCents || 0;

@@ -1295,16 +1295,19 @@ function miu_send_conversation_email($conversationId, $force = false)
     $subjectClean = trim(str_replace(array("\r", "\n"), '', (string)$formatted['subject']));
     $ok = @mail(implode(', ', $recipients), $subjectClean, $formatted['body'], $headers, '-f' . $from);
 
+    // Só se marca como enviada quando o mail() aceitou: assim, uma falha
+    // deixa a conversa pendente e a próxima ronda tenta outra vez.
+    if (!$ok) {
+        @error_log('[miu] mail() devolveu false ao tentar enviar cópia da conversa #' . (int)$conversationId);
+        return false;
+    }
+
     $now = gmdate('Y-m-d H:i:s');
     $stmt = miu_db()->prepare(
         'UPDATE bot_conversations SET email_sent_at = ?, last_emailed_message_id = ? WHERE id = ?'
     );
     $stmt->execute(array($now, $maxMessageId, (int)$conversation['id']));
-
-    if (!$ok) {
-        @error_log('[miu] mail() devolveu false ao tentar enviar cópia da conversa #' . (int)$conversationId);
-    }
-    return (bool)$ok;
+    return true;
 }
 
 function miu_process_pending_conversation_emails($idleMinutes = 30)
@@ -1324,9 +1327,12 @@ function miu_process_pending_conversation_emails($idleMinutes = 30)
         $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
         $sentCount = 0;
         foreach ($ids as $id) {
-            if (miu_send_conversation_email((int)$id)) {
-                $sentCount++;
+            if (!miu_send_conversation_email((int)$id)) {
+                // Se o envio está em baixo, não insistir nas restantes neste
+                // pedido; ficam pendentes para a próxima ronda.
+                break;
             }
+            $sentCount++;
         }
         return $sentCount;
     } catch (Exception $e) {

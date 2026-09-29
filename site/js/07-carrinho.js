@@ -1042,6 +1042,18 @@
     };
   }
 
+  // O servidor recusa carrinhos com mais de 30 linhas; o aviso tem de
+  // aparecer ao adicionar, não só depois de confirmar o pedido.
+  var CART_MAX_ITEMS = 30;
+
+  function cartLimitBlocks(product, adding, replacing) {
+    if (loadCart().items.length + adding - (replacing || 0) <= CART_MAX_ITEMS) return false;
+    state.errors = "O cesto permite até " + CART_MAX_ITEMS + " artigos. Reduz a quantidade ou retira um artigo do cesto.";
+    rerenderProduct(product);
+    focusProductFirstError();
+    return true;
+  }
+
   function addCurrentProductToCart(product, destination) {
     var item;
     var cart;
@@ -1062,6 +1074,7 @@
       if (saveConfiguredUnitsToCart(product)) window.location.href = destination;
       return;
     }
+    if (cartLimitBlocks(product, 1)) return;
     item = buildCartItemFromCurrentProduct(product);
     cart = addOrUpdateCartItem(item);
     trackProductEvent(product, "cart_item_added", {
@@ -1122,12 +1135,7 @@
     var items = buildConfiguredUnitCartItems(product);
     var cart = loadCart();
     var editedIndex = cart.items.findIndex(function (item) { return item.id === state.editingCartItemId; });
-    if (cart.items.length + items.length - (editedIndex >= 0 ? 1 : 0) > 30) {
-      state.errors = "O cesto permite até 30 artigos. Reduz a quantidade ou retira um artigo do cesto.";
-      rerenderProduct(product);
-      focusProductFirstError();
-      return false;
-    }
+    if (cartLimitBlocks(product, items.length, editedIndex >= 0 ? 1 : 0)) return false;
     items = items.map(normalizeCartItem);
     if (editedIndex >= 0) {
       // A linha editada dá lugar às unidades, no mesmo sítio do cesto.
