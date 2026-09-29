@@ -333,6 +333,13 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
             )",
             '2026-07-31_idx_form_submissions' => "CREATE INDEX IF NOT EXISTS idx_form_submissions_ip_created
                 ON form_submissions (ip_number, kind, created_at DESC)",
+            // ORDER_SUBMISSION_ONCE_V1: ver mp_db_claim_order_submission().
+            '2026-09-29_init_order_submissions' => "CREATE TABLE IF NOT EXISTS order_submissions (
+                submission_key TEXT PRIMARY KEY,
+                created_at TEXT NOT NULL,
+                order_code TEXT,
+                response_json TEXT
+            )",
             '2026-08-09_scrub_admin_login_passwords' => "UPDATE admin_login_attempts SET input_text = NULL WHERE input_text IS NOT NULL",
             // FUNNEL_CREATED_INDEX_V1: os quatro índices de funnel_events têm
             // todos `created_at` como SEGUNDA coluna, o que não serve para a
@@ -684,6 +691,57 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
             // como reservado.
             return false;
         }
+    }
+
+    /**
+     * ORDER_SUBMISSION_ONCE_V1
+     *
+     * Um duplo clique, um "actualizar" na página de resultado ou uma nova
+     * tentativa depois de a rede falhar reenviam exactamente o mesmo pedido.
+     * A chave é o hash desse pedido; a PRIMARY KEY garante que só o primeiro
+     * cria encomenda. Os seguintes recebem a mesma página de resultado.
+     *
+     * Devolve true quando este pedido fica com a reserva, false quando já
+     * existia. Lança se a base de dados falhar (o chamador decide seguir).
+     */
+    function mp_db_claim_order_submission($key)
+    {
+        $pdo = mp_db();
+        // Um dia chega para apanhar repetições; uma reserva sem encomenda há
+        // mais de 10 minutos é de um pedido que morreu a meio.
+        $pdo->prepare("DELETE FROM order_submissions WHERE created_at < ? OR (order_code IS NULL AND created_at < ?)")
+            ->execute(array(gmdate('Y-m-d\TH:i:s\Z', time() - 86400), gmdate('Y-m-d\TH:i:s\Z', time() - 600)));
+        try {
+            $pdo->prepare("INSERT INTO order_submissions (submission_key, created_at) VALUES (?, ?)")
+                ->execute(array((string)$key, mp_db_now()));
+            return true;
+        } catch (PDOException $e) {
+            if (stripos($e->getMessage(), 'UNIQUE') === false && stripos($e->getMessage(), 'constraint') === false) {
+                throw $e;
+            }
+            return false;
+        }
+    }
+
+    function mp_db_order_submission($key)
+    {
+        $stmt = mp_db()->prepare("SELECT order_code, response_json FROM order_submissions WHERE submission_key = ? LIMIT 1");
+        $stmt->execute(array((string)$key));
+        $row = $stmt->fetch();
+        return $row ? $row : null;
+    }
+
+    function mp_db_update_order_submission($key, $orderCode, $responseJson = null)
+    {
+        mp_db()->prepare("UPDATE order_submissions SET order_code = ?, response_json = COALESCE(?, response_json) WHERE submission_key = ?")
+            ->execute(array((string)$orderCode, $responseJson, (string)$key));
+    }
+
+    /** Liberta a reserva de um pedido que não chegou a ser guardado. */
+    function mp_db_release_order_submission($key)
+    {
+        mp_db()->prepare("DELETE FROM order_submissions WHERE submission_key = ? AND order_code IS NULL")
+            ->execute(array((string)$key));
     }
 
     /**

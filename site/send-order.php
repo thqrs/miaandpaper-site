@@ -3917,6 +3917,124 @@ function render_page($title, $message, $kind, $details, $orderCode = '', $custom
     exit;
 }
 
+// ORDERS_SUSPENDED_SERVER_V1: o interruptor "encomendas suspensas" não pode
+// viver só no browser — uma página aberta antes de ele ser ligado, ou um
+// pedido feito à mão, continuavam a entrar. Cada contexto lê o mesmo ficheiro
+// que a sua loja lê; cada produto pode ainda ter o seu `ordersSuspended`.
+function cart_json_flag($path, $key)
+{
+    static $cache = array();
+    if (!array_key_exists($path, $cache)) {
+        $data = is_file($path) ? json_decode((string)file_get_contents($path), true) : null;
+        $cache[$path] = is_array($data) ? $data : array();
+    }
+    return isset($cache[$path][$key]) && $cache[$path][$key] === true;
+}
+
+function cart_orders_suspended_message($preparedItems)
+{
+    foreach ($preparedItems as $line) {
+        $context = isset($line['catalog_context']) ? (string)$line['catalog_context'] : 'main';
+        $isCongress = $context === 'congress-2026';
+        $settingsPath = $isCongress
+            ? __DIR__ . '/congressos/2026/content/home.json'
+            : __DIR__ . '/content/order-products.json';
+        $product = load_product_config(isset($line['product_slug']) ? (string)$line['product_slug'] : '');
+        if (cart_json_flag($settingsPath, 'ordersSuspended') || (isset($product['ordersSuspended']) && $product['ordersSuspended'] === true)) {
+            return $isCongress
+                ? 'Lamento, mas já não é possível fazer encomendas para o Congresso de 2026.'
+                : 'Lamento, mas neste momento não estamos a aceitar encomendas.';
+        }
+    }
+    return '';
+}
+
+// ORDER_SUBMISSION_ONCE_V1: o mesmo pedido enviado duas vezes (duplo clique,
+// "actualizar" na página de resultado, nova tentativa depois de a rede
+// falhar) cria uma só encomenda. O segundo espera pelo primeiro e recebe a
+// mesma página de resultado. Devolve a chave reservada, ou '' se a base de
+// dados falhar — nesse caso segue sem esta protecção, como antes.
+function cart_claim_order_submission($rawJson)
+{
+    $key = hash('sha256', 'cart|' . $rawJson);
+    $row = null;
+    try {
+        for ($attempt = 0; $attempt < 30; $attempt++) {
+            if (mp_db_claim_order_submission($key)) {
+                return $key;
+            }
+            $row = mp_db_order_submission($key);
+            $result = $row && !empty($row['response_json']) ? json_decode((string)$row['response_json'], true) : null;
+            if (is_array($result)) {
+                cart_render_order_result($result);
+            }
+            usleep(500000);
+        }
+    } catch (Exception $e) {
+        @error_log('[miaandpaper] reserva do pedido falhou: ' . $e->getMessage());
+        return '';
+    }
+
+    if ($row && !empty($row['order_code'])) {
+        render_page(
+            'Pedido feito com sucesso!',
+            'O teu pedido foi recebido. A Mia fala contigo em breve para confirmar os detalhes.',
+            'success',
+            array(),
+            (string)$row['order_code'],
+            '',
+            false,
+            'cart'
+        );
+    }
+    render_page(
+        'O teu pedido ainda está a ser enviado.',
+        'Espera um minuto antes de tentar outra vez. Se não receberes confirmação, fala com a Mia pelo Instagram.',
+        'error',
+        array()
+    );
+}
+
+function cart_release_order_submission($key)
+{
+    if ($key === '') {
+        return;
+    }
+    try {
+        mp_db_release_order_submission($key);
+    } catch (Exception $e) {
+        @error_log('[miaandpaper] libertar a reserva do pedido falhou: ' . $e->getMessage());
+    }
+}
+
+function cart_mark_order_submission($key, $orderCode, $result = null)
+{
+    if ($key === '') {
+        return;
+    }
+    try {
+        mp_db_update_order_submission($key, $orderCode, $result === null ? null : json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    } catch (Exception $e) {
+        @error_log('[miaandpaper] marcar a reserva do pedido falhou: ' . $e->getMessage());
+    }
+}
+
+function cart_render_order_result($result)
+{
+    render_page(
+        isset($result['title']) ? (string)$result['title'] : 'Pedido feito com sucesso!',
+        isset($result['message']) ? (string)$result['message'] : '',
+        'success',
+        array(),
+        isset($result['order_code']) ? (string)$result['order_code'] : '',
+        isset($result['customer_name']) ? (string)$result['customer_name'] : '',
+        false,
+        isset($result['mode']) ? (string)$result['mode'] : 'cart',
+        isset($result['copy']) && is_array($result['copy']) ? $result['copy'] : null,
+        isset($result['payment']) && is_array($result['payment']) ? $result['payment'] : null
+    );
+}
+
 function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllowedDesigns, $defaultDeliveryOptions)
 {
     global $returnToPath;
@@ -4019,6 +4137,11 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         ? 'mixed'
         : (isset($catalogContexts[0]) ? $catalogContexts[0] : 'main');
 
+    $suspendedMessage = cart_orders_suspended_message($preparedItems);
+    if ($suspendedMessage !== '') {
+        render_page('Encomendas suspensas.', $suspendedMessage, 'error', array());
+    }
+
     if (!empty($errors)) {
         render_page(
             'Confirma os dados.',
@@ -4027,6 +4150,8 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
             $errors
         );
     }
+
+    $submissionKey = cart_claim_order_submission($rawJson);
 
     $orderCode = '';
     $orderUploadTemps = array();
@@ -4037,6 +4162,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         if ($orderCode !== '') {
             order_upload_cleanup_order($orderCode);
         }
+        cart_release_order_submission($submissionKey);
         @error_log('[miaandpaper] preparação dos anexos cart falhou: ' . $e->getMessage());
         render_page(
             'Não foi possível preparar as fotos.',
@@ -4235,6 +4361,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
             'raw_order_json' => json_encode($rawOrderSnapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         ));
         $orderStored = true;
+        cart_mark_order_submission($submissionKey, $orderCode);
         order_upload_consume_temp($orderUploadTemps);
         mp_db_log_order_event($orderId, 'created', array('source' => 'site_cart'));
         if ($funnelSessionId !== '') {
@@ -4270,6 +4397,7 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     } catch (Exception $e) {
         if (!$orderStored) {
             order_upload_cleanup_order($orderCode);
+            cart_release_order_submission($submissionKey);
         }
         @error_log('[miaandpaper] mp_db_insert_order cart falhou: ' . $e->getMessage());
         render_page(
@@ -4294,13 +4422,20 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
     ));
 
     if (!$sent) {
+        // EMAIL_FAIL_IS_SUCCESS_V1: a encomenda já está guardada e aparece em
+        // admin-orders.php. Mostrar erro ao cliente só o levava a enviar de
+        // novo (duplicando, ou falhando por as fotos já estarem gastas). O
+        // aviso fica para a Mia.
         mp_db_log_order_event($orderId, 'email_failed', array('to' => $recipient));
-        render_page(
-            'Pedido guardado mas email falhou.',
-            'O pedido (' . $orderCode . ') ficou guardado, mas houve um problema ao enviar a notificação à Mia por email. Por segurança, envia também uma mensagem pelo Instagram a confirmar.',
-            'error',
-            array('Código da encomenda guardado: ' . $orderCode)
-        );
+        require_once __DIR__ . '/lib/avisos.php';
+        mp_aviso('email_falhou', 'encomenda', 'Encomenda guardada, mas o email não saiu', array(
+            'A encomenda ' . $orderCode . ' está guardada e aparece em admin-orders.php.',
+            'O que falhou foi a notificação por email: o mail() devolveu false.',
+            '',
+            'Destinatário que falhou: ' . $recipient,
+            '',
+            'O cliente viu a página de sucesso normal.',
+        ));
     }
 
     if ($sendCopy && $copyEmail !== '') {
@@ -4345,24 +4480,23 @@ function process_cart_order($recipient, $from, $defaultPackPrices, $defaultAllow
         ));
     }
 
-    render_page(
-        is_array($paymentDetails) ? 'Obrigada pela tua encomenda.' : 'Pedido feito com sucesso!',
-        is_array($paymentDetails)
+    $orderResult = array(
+        'title' => is_array($paymentDetails) ? 'Obrigada pela tua encomenda.' : 'Pedido feito com sucesso!',
+        'message' => is_array($paymentDetails)
             ? 'Vamos começar a prepará-la assim que o pagamento estiver confirmado.'
             : 'O teu pedido foi recebido. A Mia fala contigo em breve para confirmar os detalhes.',
-        'success',
-        array(),
-        $orderCode,
-        $customerName,
-        false,
-        is_array($paymentDetails) ? 'cart-payment' : 'cart',
-        !$sendCopy ? array(
+        'order_code' => $orderCode,
+        'customer_name' => $customerName,
+        'mode' => is_array($paymentDetails) ? 'cart-payment' : 'cart',
+        'copy' => !$sendCopy ? array(
             'order_code' => $orderCode,
             'copy_token' => $postSuccessCopyToken,
             'email' => $contactEmail,
         ) : null,
-        $paymentDetails
+        'payment' => $paymentDetails,
     );
+    cart_mark_order_submission($submissionKey, $orderCode, $orderResult);
+    cart_render_order_result($orderResult);
 }
 
 $returnToPath = safe_return_to();
@@ -5159,15 +5293,8 @@ if (!$sent) {
         '',
         'Destinatário que falhou: ' . $recipient,
         '',
-        'Confirma a encomenda no painel; o cliente foi avisado para te',
-        'mandar também mensagem pelo Instagram.',
+        'O cliente viu a página de sucesso normal (EMAIL_FAIL_IS_SUCCESS_V1).',
     ));
-    render_page(
-        'Pedido guardado mas email falhou.',
-        'O pedido (' . $orderCode . ') ficou guardado, mas houve um problema ao enviar a notificação à Mia por email. Por segurança, envia também uma mensagem pelo Instagram a confirmar.',
-        'error',
-        array('Código da encomenda guardado: ' . $orderCode)
-    );
 }
 
 if ($sendCopy && $copyEmail !== '') {

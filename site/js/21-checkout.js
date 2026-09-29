@@ -773,6 +773,14 @@
       form.addEventListener("submit", function (event) {
         var error;
         var payload;
+        var submit;
+
+        // Um duplo clique não envia o pedido duas vezes (o servidor também o
+        // trava, mas assim nem sai o segundo).
+        if (form.getAttribute("data-submitting") === "1") {
+          event.preventDefault();
+          return;
+        }
 
         if (ordersAreSuspended()) {
           event.preventDefault();
@@ -803,6 +811,13 @@
         });
         payload = cartSubmissionPayload();
         appendHidden(form, "cart_json", JSON.stringify(payload));
+        form.setAttribute("data-submitting", "1");
+        submit = form.querySelector('button[type="submit"]');
+        if (submit) {
+          submit.setAttribute("aria-disabled", "true");
+          submit.classList.add("is-disabled");
+          submit.textContent = "A enviar…";
+        }
         trackOrderEvent("cart_order_submitted", {
           cart_id: payload.cartId,
           cart_context: payload.cart_context,
@@ -856,6 +871,13 @@
         bindCheckoutHistory(home);
         renderCheckoutPage(home);
         bindCheckoutPage(home);
+        // Voltar atrás depois de enviar pode trazer a página da cache com o
+        // botão ainda em "A enviar…": desenha-a de novo, com o carrinho actual.
+        window.addEventListener("pageshow", function (event) {
+          if (!event.persisted) return;
+          renderCheckoutPage(home);
+          bindCheckoutPage(home);
+        });
       });
     }).catch(function (error) {
       app.innerHTML = '<main class="fallback"><h1>Mia &amp; Paper</h1><p>' + escapeHtml(error.message) + '</p></main>';
