@@ -1,0 +1,72 @@
+/* Páginas da agenda — partilhado pelo editor, pela comparação e pela
+   impressão. Medidas em mm; as cores vêm dos dados do projecto. */
+:root {
+  --guia: rgba(80, 140, 200, .55);
+  --guia-furos: rgba(210, 90, 90, .12);
+}
+
+/* ---------- página ---------- */
+.pagina {
+  position: relative; overflow: hidden;
+  background: #fff;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.conteudo, .el { position: absolute; }
+.el-texto { display: flex; flex-direction: column; width: 100%; height: 100%; white-space: pre-wrap; }
+.el-forma, .el-minimes, .el-horas, .el-tabela { position: relative; width: 100%; height: 100%; }
+.el > svg { display: block; }
+.el-imagem { display: block; width: 100%; height: 100%; }
+
+.mm-cel { position: absolute; display: flex; align-items: center; justify-content: center; }
+.mm-cel span { position: relative; z-index: 1; }
+.mm-circ { position: absolute; border-radius: 50%; }
+.mm-titulo { position: absolute; left: 0; right: 0; text-align: center; }
+
+.el-calmes { position: relative; width: 100%; height: 100%; }
+.calmes-cab { position: absolute; top: 0; display: flex; align-items: center; justify-content: center; }
+.calmes-cel { position: absolute; }
+.calmes-num { position: absolute; top: 1.2mm; left: 1.6mm; right: 1.6mm; }
+.calmes-num.pos-topo-centro { text-align: center; }
+.calmes-num.pos-topo-dir { text-align: right; }
+.calmes-n { position: relative; display: inline-block; }
+.calmes-n.com-feriado::before {
+  content: ''; position: absolute; left: 50%; top: 50%; width: var(--diam); height: var(--diam);
+  border: .2mm solid var(--cor-feriado); border-radius: 50%; transform: translate(-50%, -50%);
+}
+.horas-rotulo { position: absolute; left: 0; text-align: right; }
+
+.el-campo { display: flex; align-items: flex-end; gap: 1.6mm; width: 100%; height: 100%; }
+.el-campo span:first-child { white-space: nowrap; line-height: 1; padding-bottom: .5mm; }
+.campo-linha { flex: 1; }
+
+.el-lista { display: flex; flex-direction: column; width: 100%; height: 100%; }
+.lista-item { display: flex; align-items: flex-end; gap: 2mm; }
+.lista-marca { flex: none; margin-bottom: .9mm; }
+.lista-linha { flex: 1; }
+
+.tabela-cab { position: absolute; top: 0; display: flex; align-items: flex-end; }
+
+/* ---------- guias (só no ecrã) ---------- */
+.guias { position: absolute; inset: 0; pointer-events: none; }
+.guia-conteudo { position: absolute; outline: .2mm dashed var(--guia); }
+.guia-furos { position: absolute; top: 0; bottom: 0; background: var(--guia-furos); }
+
+/* ---------- impressão ---------- */
+#impressao { display: none; }
+.folha { display: flex; overflow: hidden; }
+.folha.rodar { transform: rotate(180deg); }
+.meia { width: 50%; height: 100%; display: flex; justify-content: center; }
+
+/* Folha de teste da impressora */
+.pagina-teste { display: flex; align-items: center; justify-content: center; }
+.teste-numero { position: absolute; top: 18mm; left: 0; right: 0; text-align: center; font: 600 90pt/1 'Jost', sans-serif; color: #333; }
+.teste-seta { position: absolute; top: 60mm; left: 0; right: 0; text-align: center; font: 40pt/1 'Jost', sans-serif; color: #333; }
+.teste-cruz { position: absolute; left: 50%; top: 150mm; width: 40mm; height: 40mm; transform: translate(-50%, -50%);
+  background: linear-gradient(#333, #333) center / .3mm 100% no-repeat, linear-gradient(#333, #333) center / 100% .3mm no-repeat; }
+
+@media print {
+  html, body { height: auto !important; overflow: visible !important; display: block !important; background: #fff !important; }
+  body > :not(#impressao) { display: none !important; }
+  #impressao { display: block !important; }
+  #impressao > * { break-after: page; }
+}

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agendas · Mia &amp; Paper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500&family=Montserrat:wght@300;400;500;600&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Sacramento&family=Parisienne&family=Allura&family=Ephesis&family=Italianno&display=block">
+  <link rel="stylesheet" href="css/01-paginas.css">
+  <link rel="stylesheet" href="css/02-comparar.css">
+  <style id="estilo-pagina"></style>
+</head>
+<body>
+  <header class="barra">
+    <div class="grupo"><span class="etiqueta">Direcção</span><div class="chips" id="direccoes"></div></div>
+    <div class="grupo"><span class="etiqueta">Edição</span><div class="chips" id="edicoes"></div></div>
+    <div class="grupo"><span class="etiqueta">Cores</span><div class="chips" id="temas"></div></div>
+    <div class="grupo" id="grupo-letra"><span class="etiqueta">Letra</span><select id="letra"></select></div>
+    <div class="grupo"><span class="etiqueta">Semana</span><select id="semana"></select></div>
+    <label class="interruptor"><input type="checkbox" id="guias"> Guias</label>
+    <div class="accoes">
+      <button type="button" class="botao" id="pdf-a5">PDF A5</button>
+      <button type="button" class="botao principal" id="pdf-imposto">PDF para imprimir</button>
+    </div>
+  </header>
+  <main id="livro"></main>
+  <div id="impressao"></div>
+
+  <script src="js/01-calendario.js"></script>
+  <script src="js/02-campos.js"></script>
+  <script src="js/03-decoracoes.js"></script>
+  <script src="js/04-componentes.js"></script>
+  <script src="js/05-desenhar.js"></script>
+  <script src="js/06-gerador.js"></script>
+  <script src="js/07-imposicao.js"></script>
+  <script src="js/08-direccoes.js"></script>
+  <script src="js/90-comparar.js"></script>
+</body>
+</html>

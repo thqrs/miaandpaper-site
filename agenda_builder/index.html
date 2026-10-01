@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agendas · Mia &amp; Paper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500&family=Montserrat:wght@300;400;500;600&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Sacramento&family=Parisienne&family=Allura&family=Ephesis&family=Italianno&display=block">
+  <link rel="stylesheet" href="css/01-paginas.css">
+  <link rel="stylesheet" href="css/03-editor.css">
+  <style id="estilo-pagina"></style>
+</head>
+<body>
+  <header id="topo">
+    <div class="topo-projecto">
+      <select id="projectos" aria-label="Projecto"></select>
+      <input id="nome-projecto" type="text" aria-label="Nome do projecto">
+    </div>
+    <nav id="edicoes-tabs" class="tabs" aria-label="Edições"></nav>
+    <div class="topo-accoes">
+      <span id="gravacao" data-estado="gravado">Gravado</span>
+      <button type="button" class="btn" id="desfazer">Desfazer</button>
+      <button type="button" class="btn" id="refazer">Refazer</button>
+      <button type="button" class="btn principal" id="exportar">Exportar</button>
+    </div>
+  </header>
+
+  <main id="area">
+    <aside id="lateral">
+      <nav id="lateral-tabs" class="tabs">
+        <button type="button" class="tab activo" data-tab="paginas">Páginas</button>
+        <button type="button" class="tab" data-tab="biblioteca">Biblioteca</button>
+      </nav>
+      <div id="lateral-conteudo"></div>
+    </aside>
+
+    <section id="centro">
+      <div id="inserir" aria-label="Inserir"></div>
+      <div id="barra-palco">
+        <div id="modo" class="segmentos modo"></div>
+        <div class="navegar">
+          <button type="button" class="btn" id="anterior" aria-label="Página anterior">◀</button>
+          <span id="pagina-rotulo"></span>
+          <button type="button" class="btn" id="seguinte" aria-label="Página seguinte">▶</button>
+        </div>
+        <div class="vista">
+          <button type="button" class="btn" id="zoom-ajustar">Ajustar</button>
+          <label class="caixa-verificar"><input type="checkbox" id="guias" checked> Guias</label>
+        </div>
+      </div>
+      <div id="palco"></div>
+    </section>
+
+    <aside id="painel"></aside>
+  </main>
+
+  <div id="impressao"></div>
+
+  <script src="js/01-calendario.js"></script>
+  <script src="js/02-campos.js"></script>
+  <script src="js/03-decoracoes.js"></script>
+  <script src="js/04-componentes.js"></script>
+  <script src="js/05-desenhar.js"></script>
+  <script src="js/06-gerador.js"></script>
+  <script src="js/07-imposicao.js"></script>
+  <script src="js/08-direccoes.js"></script>
+  <script src="js/09-paginas-prontas.js"></script>
+  <script src="js/10-modelo.js"></script>
+  <script src="js/11-biblioteca.js"></script>
+  <script src="js/12-editor.js"></script>
+  <script src="js/13-controlos.js"></script>
+  <script src="js/14-paineis.js"></script>
+  <script src="js/15-exportar.js"></script>
+  <script src="js/16-arranque.js"></script>
+</body>
+</html>
