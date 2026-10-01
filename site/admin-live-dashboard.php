@@ -1540,8 +1540,8 @@ $teiaPayload = array(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Live Dashboard · Mia &amp; Paper admin</title>
-<link rel="stylesheet" href="admin-nav.css?v=20260929141649">
-<script src="admin-nav.js?v=20260929141649" defer></script>
+<link rel="stylesheet" href="admin-nav.css?v=20261001160327">
+<script src="admin-nav.js?v=20261001160327" defer></script>
 <style>
 :root {
   --ink: #30251f;
