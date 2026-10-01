@@ -1,5 +1,6 @@
-/* 12 · Editor — o palco: página dupla, selecção, arrastar, redimensionar,
-   ímanes, teclado, e as operações sobre elementos (no molde ou só nesta página). */
+/* 12 · Editor — o palco: página dupla, selecção (um ou vários elementos),
+   arrastar, redimensionar, rectângulo de selecção, ímanes, teclado, e as
+   operações sobre elementos (no molde ou só nesta página). */
 (function () {
   'use strict';
   const A = window.Agenda;
@@ -7,11 +8,12 @@
   const E = A.editor = {};
   const $ = s => document.querySelector(s);
 
-  E.estado = { edicao: null, pagina: 0, seleccao: null, modo: 'molde', zoom: null, guias: true };
+  /* seleccao: o elemento principal (o do painel); outros: os restantes da selecção múltipla. */
+  E.estado = { edicao: null, pagina: 0, seleccao: null, outros: [], modo: 'molde', zoom: null, guias: true };
   const PX_MM = 96 / 25.4;
   const IMAN = 1.6;
 
-  /* ---------- páginas geradas (em cache até o projecto mudar) ---------- */
+  /* ---------- páginas geradas (em cache até o projecto ou a edição mudarem) ---------- */
   let cache = null;
   M.ouvir(() => { cache = null; });
   E.gerado = function () {
@@ -27,7 +29,8 @@
   E.env = function (guias) {
     const p = M.obter();
     const ed = p.edicoes[E.estado.edicao];
-    return { estilos: p.estilos, tema: ed.tema || p.tema, feriados: E.gerado().feriados, edicaoId: E.estado.edicao, guias };
+    const g = E.gerado();
+    return { estilos: p.estilos, tema: ed.tema || p.tema, feriados: g.feriados, eventos: g.eventos, edicaoId: E.estado.edicao, guias };
   };
 
   /* ---------- elementos ---------- */
@@ -41,9 +44,16 @@
     return A.gerador.aplicarExcepcao(molde(p, pagina).elementos, exc);
   };
 
+  E.ids = () => (E.estado.seleccao ? [E.estado.seleccao, ...E.estado.outros] : []);
+
   E.seleccionado = function () {
     const id = E.estado.seleccao;
     return id ? E.elementosEfectivos().find(el => el.id === id) || null : null;
+  };
+
+  E.seleccionados = function () {
+    const ids = new Set(E.ids());
+    return E.elementosEfectivos().filter(el => ids.has(el.id));
   };
 
   /* Excepção da página actual, criada se for preciso. */
@@ -66,16 +76,15 @@
     if (!Object.keys(exc).length) delete lista[pg.chave];
   }
 
-  /* Onde vive o elemento na estrutura: no molde ou numa excepção (acrescentado). */
+  /* Onde vive o elemento: no molde ou numa excepção (acrescentado só nesta página). */
   function localizar(p, id) {
-    const pg = E.paginaActual();
     const exc = excepcao(p, false);
     const acrescentados = exc && exc.acrescentar;
     if (acrescentados) {
       const i = acrescentados.findIndex(el => el.id === id);
       if (i >= 0) return { lista: acrescentados, indice: i, el: acrescentados[i], acrescentado: true };
     }
-    const lista = molde(p, pg).elementos;
+    const lista = molde(p, E.paginaActual()).elementos;
     const i = lista.findIndex(el => el.id === id);
     return i >= 0 ? { lista, indice: i, el: lista[i], acrescentado: false } : null;
   }
@@ -91,23 +100,31 @@
     }
   }
 
-  /* Muda propriedades do elemento seleccionado, no molde ou só nesta página. */
+  function definirEm(p, id, props) {
+    const loc = localizar(p, id);
+    if (!loc) return;
+    if (loc.acrescentado || E.estado.modo === 'molde') {
+      aplicarProps(loc.el, props);
+    } else {
+      const exc = excepcao(p, true);
+      exc.alterar = exc.alterar || {};
+      exc.alterar[id] = exc.alterar[id] || {};
+      aplicarProps(exc.alterar[id], props);
+      limparExcepcao(p);
+    }
+  }
+
+  /* Muda propriedades de um elemento (o seleccionado, por omissão). */
   E.definir = function (props, juntar, id) {
     id = id || E.estado.seleccao;
     if (!id) return;
-    M.alterar(p => {
-      const loc = localizar(p, id);
-      if (!loc) return;
-      if (loc.acrescentado || E.estado.modo === 'molde') {
-        aplicarProps(loc.el, props);
-      } else {
-        const exc = excepcao(p, true);
-        exc.alterar = exc.alterar || {};
-        exc.alterar[id] = exc.alterar[id] || {};
-        aplicarProps(exc.alterar[id], props);
-        limparExcepcao(p);
-      }
-    }, juntar ? juntar + ':' + id : null);
+    M.alterar(p => definirEm(p, id, props), juntar ? juntar + ':' + id : null);
+  };
+
+  /* Várias alterações num só passo de desfazer: [[id, props], …]. */
+  E.definirVarios = function (lista, juntar) {
+    if (!lista.length) return;
+    M.alterar(p => { for (const [id, props] of lista) definirEm(p, id, props); }, juntar || null);
   };
 
   E.repor = function (id) {
@@ -121,19 +138,22 @@
   };
 
   E.apagar = function () {
-    const id = E.estado.seleccao;
-    if (!id) return;
+    const ids = E.ids();
+    if (!ids.length) return;
     M.alterar(p => {
-      const loc = localizar(p, id);
-      if (!loc) return;
-      if (loc.acrescentado || E.estado.modo === 'molde') loc.lista.splice(loc.indice, 1);
-      else {
-        const exc = excepcao(p, true);
-        exc.ocultar = [...new Set([...(exc.ocultar || []), id])];
+      for (const id of ids) {
+        const loc = localizar(p, id);
+        if (!loc) continue;
+        if (loc.acrescentado || E.estado.modo === 'molde') loc.lista.splice(loc.indice, 1);
+        else {
+          const exc = excepcao(p, true);
+          exc.ocultar = [...new Set([...(exc.ocultar || []), id])];
+        }
       }
       limparExcepcao(p);
     });
     E.estado.seleccao = null;
+    E.estado.outros = [];
   };
 
   function semMarcas(el) {
@@ -142,29 +162,33 @@
     return c;
   }
 
-  /* Junta um elemento novo: no molde, ou só nesta página. */
-  function juntarElemento(el) {
+  /* Junta elementos novos (no molde ou só nesta página) e selecciona-os. */
+  function juntarElementos(els) {
     M.alterar(p => {
-      if (E.estado.modo === 'molde') molde(p, E.paginaActual()).elementos.push(el);
-      else {
-        const exc = excepcao(p, true);
-        exc.acrescentar = exc.acrescentar || [];
-        exc.acrescentar.push(el);
+      for (const el of els) {
+        if (E.estado.modo === 'molde') molde(p, E.paginaActual()).elementos.push(el);
+        else {
+          const exc = excepcao(p, true);
+          exc.acrescentar = exc.acrescentar || [];
+          exc.acrescentar.push(el);
+        }
       }
     });
-    E.estado.seleccao = el.id;
+    E.estado.seleccao = els[0].id;
+    E.estado.outros = els.slice(1).map(el => el.id);
   }
 
   E.duplicar = function () {
-    const el = E.seleccionado();
-    if (!el) return;
-    const novo = Object.assign(semMarcas(el), { id: M.novoId(), x: el.x + 3, y: el.y + 3 });
-    juntarElemento(novo);
+    const els = E.seleccionados();
+    if (!els.length) return;
+    juntarElementos(els.map(el => Object.assign(semMarcas(el), { id: M.novoId(), x: el.x + 3, y: el.y + 3 })));
   };
 
-  let copiado = null;
-  E.copiar = () => { const el = E.seleccionado(); if (el) copiado = semMarcas(el); };
-  E.colar = () => { if (copiado) juntarElemento(Object.assign(JSON.parse(JSON.stringify(copiado)), { id: M.novoId() })); };
+  let copiados = [];
+  E.copiar = () => { copiados = E.seleccionados().map(semMarcas); };
+  E.colar = () => {
+    if (copiados.length) juntarElementos(copiados.map(el => Object.assign(JSON.parse(JSON.stringify(el)), { id: M.novoId() })));
+  };
 
   E.inserir = function (tipo, extra) {
     const pg = E.paginaActual();
@@ -180,7 +204,7 @@
     el.a = Math.min(el.a || 20, geo.altura);
     el.x = Math.round((geo.largura - el.l) / 2);
     el.y = Math.round((geo.altura - el.a) / 2);
-    juntarElemento(el);
+    juntarElementos([el]);
   };
 
   /* Muda a ordem (para a frente / para trás) dentro da mesma lista. */
@@ -195,17 +219,61 @@
     });
   };
 
+  /* ---------- alinhar e distribuir vários ---------- */
+  function rectsSeleccionados() {
+    const pg = E.paginaActual();
+    return E.seleccionados().map(el => Object.assign(rectEcra(el, pg), { el }));
+  }
+
+  function guardarRect(r, x, y) {
+    const pg = E.paginaActual();
+    const geo = A.desenhar.geometria(M.obter(), pg.lado);
+    const espelhado = r.el.espelhar && pg.lado === 'esquerda';
+    const xr = +(espelhado ? geo.largura - x - r.l : x).toFixed(2);
+    return [r.el.id, { x: xr, y: +y.toFixed(2) }];
+  }
+
+  E.alinhar = function (como) {
+    const rs = rectsSeleccionados();
+    if (rs.length < 2) return;
+    const x1 = Math.min(...rs.map(r => r.x)), x2 = Math.max(...rs.map(r => r.x + r.l));
+    const y1 = Math.min(...rs.map(r => r.y)), y2 = Math.max(...rs.map(r => r.y + r.a));
+    E.definirVarios(rs.map(r => {
+      const x = { esquerda: x1, centro: (x1 + x2 - r.l) / 2, direita: x2 - r.l }[como];
+      const y = { topo: y1, meio: (y1 + y2 - r.a) / 2, base: y2 - r.a }[como];
+      return guardarRect(r, x == null ? r.x : x, y == null ? r.y : y);
+    }));
+  };
+
+  E.distribuir = function (eixo) {
+    const rs = rectsSeleccionados();
+    if (rs.length < 3) return;
+    const pos = eixo === 'h' ? 'x' : 'y', tam = eixo === 'h' ? 'l' : 'a';
+    rs.sort((a, b) => a[pos] - b[pos]);
+    const inicio = rs[0][pos], fim = rs[rs.length - 1][pos] + rs[rs.length - 1][tam];
+    const ocupado = rs.reduce((s, r) => s + r[tam], 0);
+    const folga = (fim - inicio - ocupado) / (rs.length - 1);
+    let cursor = inicio;
+    E.definirVarios(rs.map(r => {
+      const v = cursor;
+      cursor += r[tam] + folga;
+      return eixo === 'h' ? guardarRect(r, v, r.y) : guardarRect(r, r.x, v);
+    }));
+  };
+
   /* ---------- navegação ---------- */
   E.irPara = function (indice) {
     const n = E.paginas().length;
     E.estado.pagina = Math.max(0, Math.min(n - 1, indice));
     const ids = new Set(E.elementosEfectivos().map(el => el.id));
-    if (!ids.has(E.estado.seleccao)) E.estado.seleccao = null;
+    if (!ids.has(E.estado.seleccao)) { E.estado.seleccao = null; E.estado.outros = []; }
+    E.estado.outros = E.estado.outros.filter(id => ids.has(id));
     E.redesenhar();
   };
 
-  E.seleccionar = function (id) {
+  E.seleccionar = function (id, ids) {
     E.estado.seleccao = id;
+    E.estado.outros = (ids || []).filter(x => x !== id);
     E.redesenhar();
   };
 
@@ -261,7 +329,7 @@
     desenharSeleccao();
   };
 
-  /* Rectângulo do elemento em coordenadas do ecrã da caixa de conteúdo (mm). */
+  /* Rectângulo do elemento como aparece na página (mm, caixa de conteúdo). */
   function rectEcra(el, pg) {
     const geo = A.desenhar.geometria(M.obter(), pg.lado);
     const espelhado = el.espelhar && pg.lado === 'esquerda';
@@ -272,27 +340,38 @@
     return document.querySelector('#palco .pagina.actual .conteudo');
   }
 
+  function caixaDe(id) {
+    const c = conteudoActual();
+    return c && c.querySelector(`:scope > .el[data-id="${id}"]`);
+  }
+
   function desenharSeleccao() {
-    const el = E.seleccionado();
     const conteudo = conteudoActual();
-    if (!el || !conteudo) return;
-    const r = rectEcra(el, E.paginaActual());
-    const s = document.createElement('div');
-    s.className = 'seleccao';
-    s.id = 'seleccao';
-    posicionar(s, r);
-    for (const h of ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']) {
-      const ph = document.createElement('div');
-      ph.className = 'puxador p-' + h;
-      ph.dataset.puxador = h;
-      s.appendChild(ph);
+    const els = E.seleccionados();
+    if (!conteudo || !els.length) return;
+    const unico = els.length === 1;
+    for (const el of els) {
+      const s = document.createElement('div');
+      s.className = 'seleccao' + (unico ? '' : ' multipla');
+      s.dataset.para = el.id;
+      posicionar(s, rectEcra(el, E.paginaActual()));
+      if (unico) {
+        s.id = 'seleccao';
+        for (const h of ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']) {
+          const ph = document.createElement('div');
+          ph.className = 'puxador p-' + h;
+          ph.dataset.puxador = h;
+          s.appendChild(ph);
+        }
+      }
+      conteudo.appendChild(s);
+      const caixa = caixaDe(el.id);
+      if (caixa) caixa.classList.add('seleccionado');
     }
-    conteudo.appendChild(s);
-    const caixa = conteudo.querySelector(`:scope > .el[data-id="${el.id}"]`);
-    if (caixa) caixa.classList.add('seleccionado');
   }
 
   function posicionar(no, r) {
+    if (!no) return;
     Object.assign(no.style, { left: r.x + 'mm', top: r.y + 'mm', width: r.l + 'mm', height: r.a + 'mm' });
   }
 
@@ -302,7 +381,7 @@
     const geo = A.desenhar.geometria(M.obter(), pg.lado);
     const xs = [0, geo.largura / 2, geo.largura], ys = [0, geo.altura / 2, geo.altura];
     for (const el of E.elementosEfectivos()) {
-      if (el.id === excluir || (el.edicoes && !el.edicoes.includes(E.estado.edicao))) continue;
+      if (excluir.has(el.id) || (el.edicoes && !el.edicoes.includes(E.estado.edicao))) continue;
       const r = rectEcra(el, pg);
       xs.push(r.x, r.x + r.l / 2, r.x + r.l);
       ys.push(r.y, r.y + r.a / 2, r.y + r.a);
@@ -310,13 +389,12 @@
     return { xs, ys };
   }
 
-  /* Encaixa uma lista de posições candidatas (ex.: esquerda, centro, direita) no alvo mais próximo. */
   function encaixar(posicoes, lista, tolerancia) {
     let melhor = null;
-    for (const [i, v] of posicoes.entries()) {
+    for (const v of posicoes) {
       for (const t of lista) {
         const d = t - v;
-        if (Math.abs(d) <= tolerancia && (!melhor || Math.abs(d) < Math.abs(melhor.d))) melhor = { d, linha: t, i };
+        if (Math.abs(d) <= tolerancia && (!melhor || Math.abs(d) < Math.abs(melhor.d))) melhor = { d, linha: t };
       }
     }
     return melhor;
@@ -345,14 +423,21 @@
   /* ---------- rato ---------- */
   let gesto = null;
 
-  function escala(paginaDom) {
-    return paginaDom.getBoundingClientRect().width / M.obter().formato.pagina.largura;
+  function escala() {
+    return document.querySelector('#palco .pagina.actual').getBoundingClientRect().width / M.obter().formato.pagina.largura;
+  }
+
+  /* Posição do rato em mm, relativa à caixa de conteúdo da página actual. */
+  function emMm(ev) {
+    const c = conteudoActual().getBoundingClientRect();
+    const k = escala();
+    return [(ev.clientX - c.left) / k, (ev.clientY - c.top) / k];
   }
 
   function aoPremir(ev) {
     if (ev.button !== 0) return;
     const paginaDom = ev.target.closest('.pagina');
-    if (!paginaDom) { if (E.estado.seleccao) E.seleccionar(null); return; }
+    if (!paginaDom) { if (E.ids().length) E.seleccionar(null); return; }
     const indice = +paginaDom.dataset.indice;
     const puxador = ev.target.dataset && ev.target.dataset.puxador;
     const caixa = ev.target.closest('.conteudo > .el[data-id]');
@@ -360,46 +445,77 @@
     if (indice !== E.estado.pagina) {
       E.estado.pagina = indice;
       E.estado.seleccao = caixa ? caixa.dataset.id : null;
+      E.estado.outros = [];
       E.redesenhar();
       return;
     }
-    if (!puxador && !caixa) { E.seleccionar(null); return; }
+    ev.preventDefault();
+
+    // Shift + clique: junta ou tira da selecção.
+    if (caixa && ev.shiftKey && !puxador) {
+      const id = caixa.dataset.id;
+      const ids = E.ids();
+      const novos = ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id];
+      E.seleccionar(novos[0] || null, novos);
+      return;
+    }
+
+    // Clique no vazio: rectângulo de selecção.
+    if (!puxador && !caixa) {
+      gesto = { tipo: 'rectangulo', inicio: emMm(ev), mexeu: false, aditivo: ev.shiftKey };
+      window.addEventListener('pointermove', aoMover);
+      window.addEventListener('pointerup', aoLargar, { once: true });
+      return;
+    }
 
     const id = puxador ? E.estado.seleccao : caixa.dataset.id;
-    if (id !== E.estado.seleccao) { E.estado.seleccao = id; E.redesenhar(); }
-    const el = E.seleccionado();
-    if (!el) return;
-    ev.preventDefault();
-    const r = rectEcra(el, E.paginaActual());
+    if (!E.ids().includes(id)) { E.estado.seleccao = id; E.estado.outros = []; E.redesenhar(); }
+    const els = puxador ? [E.seleccionado()] : E.seleccionados();
+    if (!els.length || !els[0]) return;
+    const pg = E.paginaActual();
     gesto = {
-      tipo: puxador ? 'redimensionar' : 'mover', puxador, el, r0: r, inicio: [ev.clientX, ev.clientY],
-      escala: escala(document.querySelector('#palco .pagina.actual')), alvos: alvos(el.id), mexeu: false
+      tipo: puxador ? 'redimensionar' : 'mover', puxador, inicio: [ev.clientX, ev.clientY], escala: escala(),
+      itens: els.map(el => ({ el, r0: rectEcra(el, pg) })), alvos: alvos(new Set(els.map(el => el.id))), mexeu: false
     };
     window.addEventListener('pointermove', aoMover);
     window.addEventListener('pointerup', aoLargar, { once: true });
   }
 
+  function caixaEnvolvente(rs) {
+    const x1 = Math.min(...rs.map(r => r.x)), y1 = Math.min(...rs.map(r => r.y));
+    const x2 = Math.max(...rs.map(r => r.x + r.l)), y2 = Math.max(...rs.map(r => r.y + r.a));
+    return { x: x1, y: y1, l: x2 - x1, a: y2 - y1 };
+  }
+
   function aoMover(ev) {
     if (!gesto) return;
+    if (gesto.tipo === 'rectangulo') return moverRectangulo(ev);
     const dx = (ev.clientX - gesto.inicio[0]) / gesto.escala;
     const dy = (ev.clientY - gesto.inicio[1]) / gesto.escala;
     if (!gesto.mexeu && Math.hypot(dx, dy) < .6) return;
     gesto.mexeu = true;
-    const r0 = gesto.r0;
-    const r = { x: r0.x, y: r0.y, l: r0.l, a: r0.a };
     const linhasX = [], linhasY = [];
     const semIman = ev.altKey;
 
     if (gesto.tipo === 'mover') {
-      r.x = r0.x + dx; r.y = r0.y + dy;
+      const caixa0 = caixaEnvolvente(gesto.itens.map(i => i.r0));
+      let mx = dx, my = dy;
       if (!semIman) {
-        const mx = encaixar([r.x, r.x + r.l / 2, r.x + r.l], gesto.alvos.xs, IMAN);
-        const my = encaixar([r.y, r.y + r.a / 2, r.y + r.a], gesto.alvos.ys, IMAN);
-        if (mx) { r.x += mx.d; linhasX.push(mx.linha); } else r.x = arred(r.x);
-        if (my) { r.y += my.d; linhasY.push(my.linha); } else r.y = arred(r.y);
+        const x = caixa0.x + dx, y = caixa0.y + dy;
+        const ix = encaixar([x, x + caixa0.l / 2, x + caixa0.l], gesto.alvos.xs, IMAN);
+        const iy = encaixar([y, y + caixa0.a / 2, y + caixa0.a], gesto.alvos.ys, IMAN);
+        mx = ix ? dx + ix.d : arred(x) - caixa0.x;
+        my = iy ? dy + iy.d : arred(y) - caixa0.y;
+        if (ix) linhasX.push(ix.linha);
+        if (iy) linhasY.push(iy.linha);
+      }
+      for (const it of gesto.itens) {
+        it.r = { x: it.r0.x + mx, y: it.r0.y + my, l: it.r0.l, a: it.r0.a };
+        posicionar(caixaDe(it.el.id), it.r);
+        posicionar(document.querySelector(`#palco .seleccao[data-para="${it.el.id}"]`), it.r);
       }
     } else {
-      const h = gesto.puxador;
+      const it = gesto.itens[0], r0 = it.r0, h = gesto.puxador;
       let x1 = r0.x, y1 = r0.y, x2 = r0.x + r0.l, y2 = r0.y + r0.a;
       if (h.includes('w')) x1 += dx;
       if (h.includes('e')) x2 += dx;
@@ -417,31 +533,56 @@
         if (h.includes('s')) y2 = snap(y2, gesto.alvos.ys, linhasY);
       }
       if (ev.shiftKey && h.length === 2) {
-        const prop = r0.l / r0.a;
-        const l = Math.max(1, x2 - x1);
-        const a = l / prop;
+        const a = Math.max(1, x2 - x1) * r0.a / r0.l;
         if (h.includes('n')) y1 = y2 - a; else y2 = y1 + a;
       }
-      r.x = Math.min(x1, x2 - 1); r.y = Math.min(y1, y2 - 1);
-      r.l = Math.max(1, x2 - x1); r.a = Math.max(1, y2 - y1);
+      it.r = { x: Math.min(x1, x2 - 1), y: Math.min(y1, y2 - 1), l: Math.max(1, x2 - x1), a: Math.max(1, y2 - y1) };
+      posicionar(caixaDe(it.el.id), it.r);
+      posicionar(document.getElementById('seleccao'), it.r);
     }
-    gesto.r = r;
-    const caixa = conteudoActual().querySelector(`:scope > .el[data-id="${gesto.el.id}"]`);
-    if (caixa) posicionar(caixa, r);
-    posicionar(document.getElementById('seleccao'), r);
     mostrarGuias(linhasX, linhasY);
-    document.dispatchEvent(new CustomEvent('agendas:arrastar', { detail: r }));
+  }
+
+  function moverRectangulo(ev) {
+    const [x, y] = emMm(ev);
+    const [x0, y0] = gesto.inicio;
+    if (!gesto.mexeu && Math.hypot(x - x0, y - y0) < 1) return;
+    gesto.mexeu = true;
+    gesto.r = { x: Math.min(x, x0), y: Math.min(y, y0), l: Math.abs(x - x0), a: Math.abs(y - y0) };
+    let no = document.getElementById('rectangulo-seleccao');
+    if (!no) {
+      no = document.createElement('div');
+      no.id = 'rectangulo-seleccao';
+      no.className = 'rectangulo-seleccao';
+      conteudoActual().appendChild(no);
+    }
+    posicionar(no, gesto.r);
   }
 
   function aoLargar() {
     window.removeEventListener('pointermove', aoMover);
     const g = gesto;
     gesto = null;
-    if (!g || !g.mexeu || !g.r) return;
-    const r = g.r;
-    const x = g.r0.espelhado ? g.r0.geo.largura - r.x - r.l : r.x;
+    if (!g) return;
+    if (g.tipo === 'rectangulo') {
+      if (!g.mexeu) { E.seleccionar(null); return; }
+      const r = g.r, pg = E.paginaActual();
+      const dentro = E.elementosEfectivos().filter(el => {
+        if (el.edicoes && !el.edicoes.includes(E.estado.edicao)) return false;
+        const e = rectEcra(el, pg);
+        return e.x < r.x + r.l && e.x + e.l > r.x && e.y < r.y + r.a && e.y + e.a > r.y;
+      }).map(el => el.id);
+      const ids = g.aditivo ? [...new Set([...E.ids(), ...dentro])] : dentro;
+      E.seleccionar(ids[0] || null, ids);
+      return;
+    }
+    if (!g.mexeu) return;
     const arr = v => Math.round(v * 100) / 100;
-    E.definir({ x: arr(x), y: arr(r.y), l: arr(r.l), a: arr(r.a) });
+    E.definirVarios(g.itens.filter(it => it.r).map(it => {
+      const r = it.r;
+      const x = it.r0.espelhado ? it.r0.geo.largura - r.x - r.l : r.x;
+      return [it.el.id, { x: arr(x), y: arr(r.y), l: arr(r.l), a: arr(r.a) }];
+    }));
   }
 
   /* ---------- teclado ---------- */
@@ -452,23 +593,33 @@
 
   function aoTeclar(ev) {
     const ctrl = ev.ctrlKey || ev.metaKey;
-    if (ctrl && ev.key.toLowerCase() === 'z' && !aEscrever(ev)) { ev.preventDefault(); ev.shiftKey ? M.refazer() : M.desfazer(); return; }
-    if (ctrl && ev.key.toLowerCase() === 'y' && !aEscrever(ev)) { ev.preventDefault(); M.refazer(); return; }
+    const tecla = ev.key.toLowerCase();
+    if (ctrl && tecla === 'z' && !aEscrever(ev)) { ev.preventDefault(); ev.shiftKey ? M.refazer() : M.desfazer(); return; }
+    if (ctrl && tecla === 'y' && !aEscrever(ev)) { ev.preventDefault(); M.refazer(); return; }
     if (aEscrever(ev)) return;
     if (ev.key === 'PageDown') { ev.preventDefault(); E.irPara(E.estado.pagina + 1); return; }
     if (ev.key === 'PageUp') { ev.preventDefault(); E.irPara(E.estado.pagina - 1); return; }
-    if (ctrl && ev.key.toLowerCase() === 'v') { ev.preventDefault(); E.colar(); return; }
-    const el = E.seleccionado();
-    if (!el) return;
+    if (ctrl && tecla === 'v') { ev.preventDefault(); E.colar(); return; }
+    if (ctrl && tecla === 'a') {
+      ev.preventDefault();
+      const ids = E.elementosEfectivos().filter(el => !el.edicoes || el.edicoes.includes(E.estado.edicao)).map(el => el.id);
+      E.seleccionar(ids[0] || null, ids);
+      return;
+    }
+    const els = E.seleccionados();
+    if (!els.length) return;
     const passo = ev.shiftKey ? 5 : .5;
     const mover = { ArrowLeft: [-passo, 0], ArrowRight: [passo, 0], ArrowUp: [0, -passo], ArrowDown: [0, passo] }[ev.key];
     if (mover) {
       ev.preventDefault();
-      const espelhado = el.espelhar && E.paginaActual().lado === 'esquerda';
-      E.definir({ x: +(el.x + (espelhado ? -mover[0] : mover[0])).toFixed(2), y: +(el.y + mover[1]).toFixed(2) }, 'setas');
+      const lado = E.paginaActual().lado;
+      E.definirVarios(els.map(el => {
+        const espelhado = el.espelhar && lado === 'esquerda';
+        return [el.id, { x: +(el.x + (espelhado ? -mover[0] : mover[0])).toFixed(2), y: +(el.y + mover[1]).toFixed(2) }];
+      }), 'setas');
     } else if (ev.key === 'Delete' || ev.key === 'Backspace') { ev.preventDefault(); E.apagar(); }
-    else if (ctrl && ev.key.toLowerCase() === 'd') { ev.preventDefault(); E.duplicar(); }
-    else if (ctrl && ev.key.toLowerCase() === 'c') { E.copiar(); }
+    else if (ctrl && tecla === 'd') { ev.preventDefault(); E.duplicar(); }
+    else if (ctrl && tecla === 'c') { E.copiar(); }
     else if (ev.key === 'Escape') E.seleccionar(null);
   }
 

@@ -13,7 +13,8 @@
   const CAMPOS = [
     ['Dia', '{dia.numero}'], ['Dia da semana', '{dia.nome}'], ['Mês', '{mes.nome}'], ['Ano', '{mes.ano}'],
     ['Feriado', '{dia.rotuloFeriado}'], ['Ano da agenda', '{periodo.rotulo}'], ['Ano anterior', '{periodo.anterior}'],
-    ['Semana', '{semana.titulo}'], ['Ano da semana', '{semana.ano}'], ['Nº da semana', '{semana.numero}']
+    ['Semana', '{semana.titulo}'], ['Ano da semana', '{semana.ano}'], ['Nº da semana', '{semana.numero}'],
+    ['Evento', '{dia.evento}'], ['Frase do mês', '{conteudo.fraseMes}'], ['Texto da semana', '{conteudo.textoSemana}']
   ];
   const REPETIR = [['', 'Uma vez'], ['dia', 'Cada dia'], ['semana', 'Cada semana'], ['mes', 'Cada mês']];
 
@@ -51,6 +52,7 @@
     $('#desfazer').disabled = !M.podeDesfazer();
     $('#refazer').disabled = !M.podeRefazer();
     $('#exportar').classList.toggle('activo', P.painel === 'exportar');
+    $('#conteudos').classList.toggle('activo', P.painel === 'conteudos');
   }
 
   function novaEdicao() {
@@ -422,6 +424,27 @@
     return frag;
   }
 
+  /* Vários elementos seleccionados: alinhar, distribuir, duplicar, apagar. */
+  function painelVarios() {
+    const n = E.ids().length;
+    const frag = document.createDocumentFragment();
+    const cabeca = no('div', 'cabeca-elemento');
+    cabeca.appendChild(no('h2', null, `${n} elementos`));
+    const accoes = no('div', 'fila');
+    accoes.append(K.botao('Duplicar', E.duplicar), K.botao('Apagar', E.apagar, 'perigo'));
+    cabeca.appendChild(accoes);
+    frag.appendChild(cabeca);
+    const alinhar = no('div', 'segmentos alinhar');
+    for (const [como, rotulo] of [['esquerda', 'Esquerda'], ['centro', 'Centro'], ['direita', 'Direita'], ['topo', 'Topo'], ['meio', 'Meio'], ['base', 'Base']]) {
+      alinhar.appendChild(K.botao(rotulo, () => E.alinhar(como)));
+    }
+    const distribuir = no('div', 'segmentos');
+    distribuir.append(K.botao('Na horizontal', () => E.distribuir('h')), K.botao('Na vertical', () => E.distribuir('v')));
+    frag.appendChild(K.seccao('Alinhar entre si', alinhar));
+    if (n >= 3) frag.appendChild(K.seccao('Distribuir com espaço igual', distribuir));
+    return frag;
+  }
+
   /* A que pode um elemento ligar-se nesta página: dias da semana ou meses do período. */
   function opcoesLigacao(pg) {
     const r = [['', 'Esta página']];
@@ -441,10 +464,15 @@
   function seccaoCamadas() {
     const lista = no('div', 'camadas');
     const els = E.elementosEfectivos();
+    const seleccionados = new Set(E.ids());
     for (const el of [...els].reverse()) {
       const fora = el.edicoes && !el.edicoes.includes(E.estado.edicao);
-      const b = K.botao(nomeCamada(el), () => E.seleccionar(el.id),
-        'camada' + (el.id === E.estado.seleccao ? ' activo' : '') + (fora ? ' fora' : '') + (el._alterado || el._acrescentado ? ' com-excepcao' : ''));
+      const b = K.botao(nomeCamada(el), ev => {
+        if (!ev.shiftKey) return E.seleccionar(el.id);
+        const ids = E.ids();
+        const novos = ids.includes(el.id) ? ids.filter(x => x !== el.id) : [...ids, el.id];
+        E.seleccionar(novos[0] || null, novos);
+      }, 'camada' + (seleccionados.has(el.id) ? ' activo' : '') + (fora ? ' fora' : '') + (el._alterado || el._acrescentado ? ' com-excepcao' : ''));
       lista.appendChild(b);
     }
     const pg = E.paginaActual();
@@ -665,10 +693,14 @@
     const topo = painel.scrollTop;
     let conteudo;
     if (P.painel === 'exportar') conteudo = A.exportar.painel();
+    else if (P.painel === 'conteudos') conteudo = A.conteudos.painel();
     else {
       const el = E.seleccionado();
       conteudo = document.createDocumentFragment();
-      if (el) {
+      if (E.ids().length > 1) {
+        conteudo.appendChild(painelVarios());
+        conteudo.appendChild(seccaoCamadas());
+      } else if (el) {
         conteudo.appendChild(painelElemento(el));
         conteudo.appendChild(seccaoCamadas());
       } else conteudo.appendChild(painelPagina());
@@ -726,6 +758,7 @@
     $('#desfazer').addEventListener('click', M.desfazer);
     $('#refazer').addEventListener('click', M.refazer);
     $('#exportar').addEventListener('click', () => { P.painel = P.painel === 'exportar' ? 'propriedades' : 'exportar'; P.agendar(); });
+    $('#conteudos').addEventListener('click', () => { P.painel = P.painel === 'conteudos' ? 'propriedades' : 'conteudos'; P.agendar(); });
     $('#anterior').addEventListener('click', () => E.irPara(E.estado.pagina - 1));
     $('#seguinte').addEventListener('click', () => E.irPara(E.estado.pagina + 1));
     $('#zoom-ajustar').addEventListener('click', E.zoomAjustar);

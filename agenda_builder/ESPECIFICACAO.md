@@ -860,13 +860,26 @@ agenda_builder/
     13-controlos.js     números arrastáveis, cores, opções, texto com campos
     14-paineis.js       topo, sequência, biblioteca, propriedades
     15-exportar.js      PDF A5 ou imposto, folha de teste
-    16-arranque.js
+    17-conteudos.js     eventos, frase de cada mês, texto de cada semana
+    18-arranque.js
   css/
     01-paginas.css      páginas e impressão (partilhado)
     02-comparar.css
     03-editor.css
   dados/                os projectos (fora do git)
 ```
+
+**Selecção múltipla:** Shift + clique (na página ou nas camadas), rectângulo
+arrastado num espaço vazio da página, Ctrl+A. Move-se em grupo (um só passo de
+desfazer), alinha-se entre si e distribui-se com espaço igual.
+
+**Conteúdos** (botão no topo): por edição, os eventos (`ed.eventos`, um dia ou
+um intervalo) e duas listas presas a datas — `ed.conteudos.fraseMes["2027-02"]`
+e `ed.conteudos.textoSemana["2027-01-04"]` (segunda-feira da semana). Colar uma
+coluna de uma folha de cálculo num campo enche os seguintes; de várias colunas
+fica a última. Nos textos: `{dia.evento}`, `{conteudo.fraseMes}`,
+`{conteudo.textoSemana}`. A grelha do mês escreve os eventos no dia; o mini-mês
+marca-os com um círculo.
 
 Um elemento pode estar **ligado** a um dia da semana (`liga: { dia: 0…6 }`,
 numa página semanal) ou a um mês do período (`liga: { mes: 0…11 }`, no

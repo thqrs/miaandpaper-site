@@ -139,6 +139,8 @@ textarea { width: 100%; resize: vertical; }
 .p-ne { left: 100%; top: 0; cursor: nesw-resize; } .p-e { left: 100%; top: 50%; cursor: ew-resize; }
 .p-se { left: 100%; top: 100%; cursor: nwse-resize; } .p-s { left: 50%; top: 100%; cursor: ns-resize; }
 .p-sw { left: 0; top: 100%; cursor: nesw-resize; } .p-w { left: 0; top: 50%; cursor: ew-resize; }
+.seleccao.multipla { outline-style: dashed; }
+.rectangulo-seleccao { position: absolute; z-index: 21; pointer-events: none; background: rgba(58, 123, 213, .08); outline: calc(1px / var(--zoom)) solid var(--sel); }
 .guia-iman { position: absolute; z-index: 19; pointer-events: none; background: #e0457b; }
 .guia-iman.v { top: -200mm; bottom: -200mm; width: calc(1px / var(--zoom)); }
 .guia-iman.h { left: -200mm; right: -200mm; height: calc(1px / var(--zoom)); }
@@ -183,6 +185,12 @@ textarea { width: 100%; resize: vertical; }
 .cor-mes { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--tinta-suave); cursor: pointer; }
 .cor-mes input { width: 100%; height: 26px; padding: 0; border: 1px solid var(--borda); border-radius: 5px; background: none; cursor: pointer; }
 .resumo { color: var(--tinta-suave); margin: 2px 0; }
+.tabela-conteudos { display: flex; flex-direction: column; gap: 3px; }
+.fila-conteudo { display: grid; grid-template-columns: 62px 1fr; gap: 6px; align-items: center; }
+.rotulo-conteudo { color: var(--tinta-suave); font-size: 12px; }
+.eventos { display: flex; flex-direction: column; gap: 6px; }
+.evento { display: grid; grid-template-columns: 1fr 1fr 24px; gap: 4px; }
+.evento > input[type="text"] { grid-column: 1 / -1; }
 
 /* ---------- estados ---------- */
 body.a-largar #palco { outline: 3px dashed var(--sel); outline-offset: -10px; }

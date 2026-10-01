@@ -29,6 +29,9 @@
     const paginas = [];
 
     const excepcoes = ed.excepcoes || {};
+    const eventos = mapaEventos(ed.eventos);
+    base._conteudos = ed.conteudos || {};
+    base.conteudo = conteudoDe(base._conteudos, null, null);
     function juntar(molde, ctx, chave, bloco) {
       const numero = paginas.length + 1;
       paginas.push({ molde, ctx, chave, numero, bloco, lado: ladoDe(numero, primeira), excepcao: excepcoes[chave] || null });
@@ -37,7 +40,10 @@
     function ctxDia(dt, extra) {
       const dia = C.infoDia(dt, feriados);
       dia.rotuloFeriado = dia.feriado ? dia.feriado.nomeNeutro : '';
-      return Object.assign({}, extra, { dia, mes: C.infoMes(dia.ano, dia.mes) });
+      dia.evento = (eventos.get(dia.chave) || []).join(' · ');
+      dia.semana = C.chave(C.inicioSemana(dt));
+      const mes = C.infoMes(dia.ano, dia.mes);
+      return Object.assign({}, extra, { dia, mes, conteudo: conteudoDe(base._conteudos, mes, dia.semana) });
     }
 
     projecto.sequencia.forEach((b, indice) => {
@@ -56,7 +62,7 @@
         }
       } else if (b.repetir === 'mes') {
         for (const mes of C.listaMeses(ini, fim)) {
-          const ctx = Object.assign({}, ctxBloco, { mes });
+          const ctx = Object.assign({}, ctxBloco, { mes, conteudo: conteudoDe(base._conteudos, mes, null) });
           const k = mes.ano + '-' + String(mes.numero).padStart(2, '0');
           for (const m of moldes) juntar(m, ctx, m + '@' + k, indice);
         }
@@ -80,7 +86,32 @@
       }
     }
 
-    return { paginas, feriados };
+    return { paginas, feriados, eventos };
+  }
+
+  /* Eventos da edição (dia ou intervalo) → Map chave do dia → [nomes]. */
+  function mapaEventos(lista) {
+    const C = A.calendario;
+    const mapa = new Map();
+    for (const ev of lista || []) {
+      if (!ev.de || !ev.nome) continue;
+      const ini = C.deChave(ev.de), fim = C.deChave(ev.ate && ev.ate >= ev.de ? ev.ate : ev.de);
+      for (const d of C.listaDias(ini, fim)) {
+        const k = C.chave(d);
+        if (!mapa.has(k)) mapa.set(k, []);
+        mapa.get(k).push(ev.nome);
+      }
+    }
+    return mapa;
+  }
+
+  /* Textos da edição ligados a datas: a frase do mês e o texto da semana. */
+  function chaveMes(mes) { return mes ? mes.ano + '-' + String(mes.numero).padStart(2, '0') : null; }
+  function conteudoDe(conteudos, mes, semana) {
+    return {
+      fraseMes: (mes && conteudos.fraseMes && conteudos.fraseMes[chaveMes(mes)]) || '',
+      textoSemana: (semana && conteudos.textoSemana && conteudos.textoSemana[semana]) || ''
+    };
   }
 
   /* Título de uma semana: "Janeiro" ou "Dezembro/Janeiro", "2027" ou "2026/2027". */
@@ -99,13 +130,16 @@
   function contextoLigado(el, ctx) {
     const liga = el.liga;
     if (!liga) return ctx;
+    const conteudos = ctx._conteudos || {};
     if (liga.dia != null && ctx.semana) {
       const dia = ctx.semana.dias[liga.dia];
-      return dia ? Object.assign({}, ctx, { dia, mes: A.calendario.infoMes(dia.ano, dia.mes) }) : ctx;
+      if (!dia) return ctx;
+      const mes = A.calendario.infoMes(dia.ano, dia.mes);
+      return Object.assign({}, ctx, { dia, mes, conteudo: conteudoDe(conteudos, mes, dia.semana) });
     }
     if (liga.mes != null && ctx.periodo && ctx.periodo.meses) {
       const mes = ctx.periodo.meses[liga.mes];
-      return mes ? Object.assign({}, ctx, { mes, dia: null }) : null;
+      return mes ? Object.assign({}, ctx, { mes, dia: null, conteudo: conteudoDe(conteudos, mes, null) }) : null;
     }
     return ctx;
   }
@@ -129,5 +163,5 @@
     return r;
   }
 
-  A.gerador = { gerar, ladoDe, aplicarExcepcao, contextoLigado };
+  A.gerador = { gerar, ladoDe, aplicarExcepcao, contextoLigado, chaveMes };
 })(typeof window !== 'undefined' ? window : globalThis);

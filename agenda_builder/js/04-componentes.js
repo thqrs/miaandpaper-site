@@ -142,7 +142,7 @@
         const pos = desvio + n - 1;
         const dt = C.data(mes.ano, mes.numero, n);
         const k = C.chave(dt);
-        const feriado = env.feriados.get(k);
+        const feriado = env.feriados.get(k) || (el.marcarEventos !== false && env.eventos && env.eventos.get(k));
         const ehHoje = k === hoje;
         celula((pos % 7) * larg, y + Math.floor(pos / 7) * alt, String(n),
           ehHoje ? el.estiloDestaque || el.estiloNumero : el.estiloNumero, (c, t) => {
@@ -215,6 +215,13 @@
             }
             num.appendChild(t);
             cel.appendChild(num);
+            const evs = env.eventos && env.eventos.get(k);
+            if (evs && el.eventos !== 'nada') {
+              const ev = div('calmes-evento');
+              aplicarTexto(ev, el.estiloEvento || el.estiloCabecalho, null, env, ctx);
+              ev.textContent = evs.join(' · ');
+              cel.appendChild(ev);
+            }
           }
           d.appendChild(cel);
         }
@@ -469,6 +476,8 @@
         { chave: 'corCelula', tipo: 'cor', etiqueta: 'Caixas' },
         { chave: 'corFds', tipo: 'cor', etiqueta: 'Fim-de-semana' },
         { chave: 'corFeriado', tipo: 'cor', etiqueta: 'Feriados' },
+        { chave: 'eventos', tipo: 'opcoes', etiqueta: 'Eventos', opcoes: [['mostrar', 'Escritos no dia'], ['nada', 'Não mostrar']] },
+        { chave: 'estiloEvento', tipo: 'estilo', etiqueta: 'Estilo dos eventos' },
         { chave: 'espaco', tipo: 'numero', etiqueta: 'Espaço', min: 0, max: 10, passo: .25, unidade: 'mm' },
         { chave: 'raio', tipo: 'numero', etiqueta: 'Cantos', min: 0, max: 10, passo: .25, unidade: 'mm' },
         { chave: 'foraDoMes', tipo: 'opcoes', etiqueta: 'Fora do mês', opcoes: [['caixa', 'Caixa vazia'], ['nada', 'Nada']] }
@@ -489,7 +498,8 @@
         { chave: 'estiloDestaque', tipo: 'estilo', etiqueta: 'Dia destacado' },
         { chave: 'estiloTitulo', tipo: 'estilo', etiqueta: 'Nome do mês' },
         { chave: 'corDestaque', tipo: 'cor', etiqueta: 'Destaque' },
-        { chave: 'corFeriado', tipo: 'cor', etiqueta: 'Feriados' }
+        { chave: 'corFeriado', tipo: 'cor', etiqueta: 'Feriados e eventos' },
+        { chave: 'marcarEventos', tipo: 'booleano', etiqueta: 'Marcar os eventos', omissao: true }
       ],
       omissao: { l: 36, a: 26, destacar: 'dia', semanaComeca: 'segunda' }
     }

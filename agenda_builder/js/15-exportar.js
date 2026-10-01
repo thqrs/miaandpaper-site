@@ -41,10 +41,10 @@
      limita as páginas — só para o PDF A5. */
   X.preparar = async function (edicaoId, imposto, intervalo) {
     const p = M.obter();
-    let { paginas, feriados } = A.gerador.gerar(p, edicaoId);
+    let { paginas, feriados, eventos } = A.gerador.gerar(p, edicaoId);
     if (intervalo && !imposto) paginas = paginas.slice(intervalo[0] - 1, intervalo[1]);
     const ed = p.edicoes[edicaoId];
-    const env = { estilos: p.estilos, tema: ed.tema || p.tema, feriados, edicaoId, guias: false };
+    const env = { estilos: p.estilos, tema: ed.tema || p.tema, feriados, eventos, edicaoId, guias: false };
     const destino = $('#impressao');
     destino.replaceChildren();
     const doms = paginas.map(pg => A.desenhar.pagina(pg, p, env));

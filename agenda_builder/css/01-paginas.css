@@ -29,6 +29,7 @@
 .calmes-num.pos-topo-centro { text-align: center; }
 .calmes-num.pos-topo-dir { text-align: right; }
 .calmes-n { position: relative; display: inline-block; }
+.calmes-evento { position: absolute; left: 1.2mm; right: 1.2mm; bottom: 1.2mm; text-align: center; line-height: 1.15; }
 .calmes-n.com-feriado::before {
   content: ''; position: absolute; left: 50%; top: 50%; width: var(--diam); height: var(--diam);
   border: .2mm solid var(--cor-feriado); border-radius: 50%; transform: translate(-50%, -50%);
