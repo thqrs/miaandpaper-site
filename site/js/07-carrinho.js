@@ -243,16 +243,26 @@
 
   function cartEditUrl(item, returnTo) {
     var id = item && item.id ? String(item.id) : "";
-    var href = cartProductPage(item && item.productSlug, item && item.selections);
+    var href = cartItemIsFromBuilder(item) ? BUILDER_PAGE : cartProductPage(item && item.productSlug, item && item.selections);
     return href + "?mode=edit&cartItem=" + encodeURIComponent(id) + "&returnTo=" + encodeURIComponent(safeCartReturnTo(returnTo));
   }
 
   // PERSONALIZACAO_BUILDER_V1: as linhas com artwork proprio sao montadas em
   // personalizacao.html e o wizard do catalogo ja nao sabe editá-las (perdeu o
-  // passo de upload). Podem ser removidas e refeitas, mas nao editadas.
+  // passo de upload). Por isso o "Editar" delas volta ao construtor, que
+  // reabre o cartão a partir da própria linha (builderLineFromCartItem).
+  var BUILDER_PAGE = "personalizacao.html";
+
+  function cartItemIsFromBuilder(item) {
+    var selections = item && item.selections && typeof item.selections === "object" ? item.selections : {};
+    return String(selections.design_source || "") === "custom";
+  }
+
   function cartItemIsEditable(item) {
     var selections = item && item.selections && typeof item.selections === "object" ? item.selections : {};
-    return String(selections.design_source || "") !== "custom";
+    var uploads = Array.isArray(selections.custom_artwork_uploads) ? selections.custom_artwork_uploads : [];
+    // Sem o ficheiro na linha não há nada para reabrir no construtor.
+    return !cartItemIsFromBuilder(item) || !!(uploads[0] && uploads[0].token);
   }
 
   function findCartItemById(itemId) {
@@ -1094,6 +1104,11 @@
       return;
     }
 
+    if (isArtworkBuilderProduct(product)) {
+      saveBuilderEditToCart(product);
+      return;
+    }
+
     if (!validateProductForCart(product)) {
       return;
     }
@@ -1278,6 +1293,21 @@
     }
 
     item = findCartItemById(itemId);
+    // No construtor da personalização a linha é de outro slug (o produto de
+    // destino); quem decide se a consegue reabrir é o próprio construtor.
+    if (item && isArtworkBuilderProduct(product) && cartItemIsFromBuilder(item)) {
+      if (!loadBuilderCartItem(product, item)) {
+        state.errors = "Não foi possível carregar este item do carrinho para edição.";
+        return;
+      }
+      state.editingCartItemId = item.id;
+      state.editingCartReturnTo = safeCartReturnTo(params.get("returnTo"));
+      state.editingCartOriginalItem = cloneJson(item);
+      state.currentStep = Math.max(0, cartEntryStepIndex(product));
+      state.maxVisitedStep = state.currentStep;
+      state.invalidFields = [];
+      return;
+    }
     if (!item || item.productSlug !== product.slug) {
       state.errors = "Não foi possível carregar este item do carrinho para edição.";
       return;

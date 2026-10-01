@@ -1323,6 +1323,12 @@
     selections.customization_file_count = 1;
     selections.customization_fee_cents = fee;
     selections.artwork_total_quantity = quantity;
+    // A receita do cartão, para o "Editar" do carrinho o reabrir no construtor.
+    selections.builder_line = {
+      productId: String(entry.id),
+      choices: Object.assign({}, line.choices || {}),
+      finishes: finishes.slice()
+    };
     selections.finishes = finishes;
 
     Object.keys((entry.fixedSelections && typeof entry.fixedSelections === "object") ? entry.fixedSelections : {}).forEach(function (key) {
@@ -1369,6 +1375,111 @@
         image: builderUploadIsPdf(upload) ? null : ORDER_MEDIA_PREVIEW_API + "?token=" + encodeURIComponent(upload.token)
       }
     };
+  }
+
+  // O cartão de uma linha do carrinho. As linhas gravadas antes de existir o
+  // `builder_line` não sabem o id do cartão: procura-se pelo slug e medida,
+  // desempatando pelas opções escolhidas.
+  function builderLineFromCartItem(product, item) {
+    var selections = item && item.selections && typeof item.selections === "object" ? item.selections : {};
+    var receita = selections.builder_line && typeof selections.builder_line === "object" ? selections.builder_line : null;
+    var upload = Array.isArray(selections.custom_artwork_uploads) ? selections.custom_artwork_uploads[0] : null;
+    var entry = receita ? builderEntry(product, receita.productId) : null;
+    var candidatos;
+    var finishes;
+    var line;
+
+    if (!upload || !upload.token) {
+      return null;
+    }
+    if (!entry) {
+      candidatos = builderCatalog(product).filter(function (candidate) {
+        return candidate && String(candidate.slug) === String(item.productSlug || "")
+          && String(candidate.size || "") === String(selections.size || "");
+      });
+      entry = candidatos.filter(function (candidate) {
+        return builderEntryChoices(candidate).every(function (choice) {
+          var value = String(selections[choice.field] || "");
+          return !value || (Array.isArray(choice.items) ? choice.items : []).some(function (option) {
+            return String(option.value) === value;
+          });
+        });
+      })[0] || candidatos[0] || null;
+    }
+    if (!entry) {
+      return null;
+    }
+
+    line = builderCreateLine(product, upload.token, entry.id);
+    builderEntryChoices(entry).forEach(function (choice) {
+      var value = receita && receita.choices ? receita.choices[choice.field] : selections[choice.field];
+      if (value) {
+        line.choices[choice.field] = String(value);
+      }
+    });
+    finishes = receita ? receita.finishes : selections.finishes;
+    if (Array.isArray(finishes)) {
+      line.finishes = finishes.map(String);
+    }
+    line.quantity = Math.max(0, parseInt(selections.artwork_total_quantity, 10) || 0) || line.quantity;
+    return line;
+  }
+
+  function loadBuilderCartItem(product, item) {
+    var line = builderLineFromCartItem(product, item);
+    var upload;
+
+    if (!line) {
+      return false;
+    }
+    upload = Object.assign({}, item.selections.custom_artwork_uploads[0]);
+    delete upload.quantity;
+    delete upload.feeCents;
+    state.selections = {};
+    state.selections[customArtworkConfig(product).uploadKey] = [upload];
+    state.selections.builder_lines = [line];
+    return true;
+  }
+
+  // Guardar a edição: os cartões do construtor ocupam o lugar da linha editada
+  // no cesto. Se a pessoa acrescentou produtos durante a edição, entram ali.
+  function saveBuilderEditToCart(product) {
+    var cart;
+    var items;
+    var editedIndex;
+    var total = 0;
+
+    if (!validateProductForCart(product)) {
+      return;
+    }
+    items = builderLines(product).map(function (line) {
+      return builderCartItem(product, line);
+    }).filter(Boolean);
+    if (!items.length) {
+      state.errors = "Adiciona pelo menos um produto.";
+      rerenderProduct(product);
+      return;
+    }
+
+    cart = loadCart();
+    editedIndex = cart.items.findIndex(function (item) { return item.id === state.editingCartItemId; });
+    if (cartLimitBlocks(product, items.length, editedIndex >= 0 ? 1 : 0)) return;
+    items = items.map(normalizeCartItem);
+    if (editedIndex >= 0) {
+      items[0].id = state.editingCartItemId;
+      Array.prototype.splice.apply(cart.items, [editedIndex, 1].concat(items));
+    } else {
+      cart.items = cart.items.concat(items);
+    }
+    cart = saveCart(cart);
+    items.forEach(function (item) { total += item.summary.priceCents || 0; });
+    trackProductEvent(product, editedIndex >= 0 ? "cart_item_updated" : "cart_item_added", {
+      cart_id: cart.cartId,
+      item_count: cart.items.length,
+      item_price_cents: total
+    });
+    state.selections.builder_lines = [];
+    window.location.href = state.editingCartReturnTo || "checkout.html";
   }
 
   function addBuilderLinesToCart(product, destination) {
