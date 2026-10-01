@@ -48,6 +48,7 @@ que se pretende verificar.
 | `homepage-menu-design.php` | o menu e a homepage | abaixo |
 | `carrousel.php` | os carrosséis dos cartões da homepage | abaixo |
 | `materiais.php` | quanto custa mesmo fazer uma unidade | abaixo |
+| `orcamentos.php` | orçamentos em PDF para clientes | abaixo |
 | `faqs.php` | as perguntas e respostas da página pública | abaixo |
 | `produtos.php` | os designs seleccionáveis no passo 1 de cada produto | abaixo |
 
@@ -287,6 +288,56 @@ Guarda em `private/materiais.json`, **fora da raiz web**, pelo mesmo motivo que
 os custos: são as margens do negócio e o `content/` é servido publicamente. Não
 está no git; viaja por scp no `[2]upload-or-download.bat`, junto com o
 `custos.json`.
+
+---
+
+## `orcamentos.php`
+
+`ORCAMENTOS_UI_V1`. Cria orçamentos em PDF com o logótipo
+(`content/brand/logo.jpg`) e as cores do `theme` do `content/home.json`. O
+objectivo é o cliente ver o preço real e cada desconto, em vez de um número só:
+
+```
+Crachás 32 mm                      100 × 1,75 €    175,00 €
+Imagens originais                    2 × 3,00 €      6,00 €
+Desconto de quantidade · 20 % sobre os crachás     – 35,00 €
+Oferta da segunda imagem original                   – 3,00 €
+Preço sem descontos 181,00 € · Descontos – 38,00 € · Total 143,00 €
+```
+
+Há dois tipos de linha. Um **artigo** é quantidade × preço unitário. Um
+**desconto** é uma percentagem de um artigo (ou de todos) ou um valor fixo.
+O desconto percentual aponta para o `id` do artigo, não para a posição, para
+reordenar linhas não mudar o que se desconta.
+
+**Do catálogo** acrescenta um produto do `content/pricing.json` pelo mesmo
+`precos_calcular()` do cross-check do `precos.php` (o `precos-api.php` é
+incluído em modo embutido — não há uma terceira cópia das contas). Põe o
+artigo ao preço unitário da primeira quantidade que a tabela vende e, se a
+tabela fizer melhor preço para aquela quantidade, uma linha «Desconto de
+quantidade» com a diferença: em percentagem quando é redonda, em euros quando
+não é. Se o produto cobra imagens originais (`customArtworkFeePerFileCents`),
+acrescenta-as também. Ofertas e descontos combinados à parte escrevem-se à mão.
+
+O número (`2026-001`) é dado ao gravar, por ano, e nunca muda nem se
+reutiliza — um orçamento apagado não devolve o número (`quote_counters`).
+*Duplicar* cria uma cópia por gravar que recebe número novo.
+
+As **Definições** guardam os dados da empresa, o IBAN, o regime de IVA (não
+mostrar, isento com menção legal, incluído, ou acrescido), a validade e as notas
+por omissão. O modo de IVA vale para todos os orçamentos, incluindo os antigos
+quando se volta a gerar o PDF.
+
+As contas vivem em `lib/orcamentos.php` (`orc_totais()`), o PDF em
+`lib/orcamento-pdf.php` — escrito à mão, sem biblioteca, com as fontes de base
+do PDF (Times nos títulos, como o Georgia do site; Helvetica no corpo). O editor
+repete as contas em JavaScript só para mostrar o total enquanto se escreve; o
+que conta é o PHP.
+
+Os orçamentos e as definições ficam na base SQLite privada (tabelas `quotes`,
+`quote_counters` e `quote_settings`): têm nomes, contactos e NIF de clientes e
+**não estão no git**. Também não viajam no `[2]upload-or-download.bat` — um
+orçamento criado no PC fica no PC, um criado no site fica no site.
 
 ---
 

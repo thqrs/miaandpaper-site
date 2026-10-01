@@ -176,6 +176,7 @@ está em `tools/parametros.php`. Aqui fica só o índice — o que existe e onde
 | `admin-orders.php` | página | admin | `view`, `id`, `f`, `p`, `q`, `page`, `saved`, `paid`, `shipped`, `cancelled`, `created`, `email` |
 | `bot.php` | página | admin | `tab`, `id`, `page`, `notice` |
 | `erros.php` | página | admin | `tab`, `saved` |
+| `orcamentos.php` | página | admin | `id` |
 | `modulos.php` | página | público | `snapshot` |
 | `tools/parametros.php` | página | admin | `formato`, `tipo`, `recurso`, `vazios` |
 | `tools/gerador-cartoes.php` | ferramenta | admin | 24 parâmetros, lidos no browser — ver [`README-url-cartoes.md`](../site/tools/README-url-cartoes.md) |
@@ -185,6 +186,7 @@ está em `tools/parametros.php`. Aqui fica só o índice — o que existe e onde
 | `produtos-api.php` | API | admin | `action` |
 | `carrousel-api.php` | API | admin | `action` |
 | `materiais-api.php` | API | admin | `action` |
+| `orcamentos-api.php` | API | admin | `action`, `id`, `slug`, `chave`, `qtd`, `imagens`, `descarregar` |
 | `homepage-menu-api.php` | API | admin | `action` |
 | `reviews-api.php` | API | depende da acção | `action` |
 | `admin-order-file.php` | ficheiro | admin | `order_id`, `file`, `inline` |

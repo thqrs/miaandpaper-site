@@ -340,6 +340,31 @@ if (!defined('MIAANDPAPER_DB_LOADED')) {
                 order_code TEXT,
                 response_json TEXT
             )",
+            // ORCAMENTOS_V1: ver lib/orcamentos.php. O número é por ano e
+            // vem de quote_counters, para um orçamento apagado não devolver o
+            // seu número a outro cliente.
+            '2026-10-01_init_quotes' => "CREATE TABLE IF NOT EXISTS quotes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                number TEXT NOT NULL UNIQUE,
+                year INTEGER NOT NULL,
+                seq INTEGER NOT NULL,
+                status TEXT NOT NULL DEFAULT 'rascunho',
+                client_name TEXT NOT NULL DEFAULT '',
+                title TEXT NOT NULL DEFAULT '',
+                total_cents INTEGER NOT NULL DEFAULT 0,
+                data_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )",
+            '2026-10-01_init_quote_counters' => "CREATE TABLE IF NOT EXISTS quote_counters (
+                year INTEGER PRIMARY KEY,
+                last_seq INTEGER NOT NULL
+            )",
+            '2026-10-01_init_quote_settings' => "CREATE TABLE IF NOT EXISTS quote_settings (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                data_json TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )",
             '2026-08-09_scrub_admin_login_passwords' => "UPDATE admin_login_attempts SET input_text = NULL WHERE input_text IS NOT NULL",
             // FUNNEL_CREATED_INDEX_V1: os quatro índices de funnel_events têm
             // todos `created_at` como SEGUNDA coluna, o que não serve para a

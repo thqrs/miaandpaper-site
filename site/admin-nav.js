@@ -24,6 +24,7 @@
     { id: "errors", label: "Erros", href: "erros.php", files: ["erros.php"] },
     { id: "prices", label: "Preços", href: "precos.php", files: ["precos.php"] },
     { id: "materials", label: "Materiais", href: "materiais.php", files: ["materiais.php"] },
+    { id: "quotes", label: "Orçamentos", href: "orcamentos.php", files: ["orcamentos.php"] },
     { id: "home", label: "Homepage & Menu", href: "homepage-menu-design.php", files: ["homepage-menu-design.php"] },
     { id: "carousels", label: "Carrosséis", href: "carrousel.php", files: ["carrousel.php"] },
     { id: "funnel", label: "Funil", href: "admin-funnel.php", files: ["admin-funnel.php", "admin-live-dashboard.php"] },

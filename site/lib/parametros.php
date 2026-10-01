@@ -472,6 +472,20 @@ function mp_parametros_registo()
             'descricao' => 'Editor de materiais e custos. O estado vive em materiais-api.php.',
             'parametros' => array(),
         ),
+        'orcamentos.php' => array(
+            'titulo' => 'Orçamentos',
+            'tipo' => 'pagina', 'guarda' => 'admin', 'metodos' => array('GET'),
+            'descricao' => 'Orçamentos em PDF. O estado vive em orcamentos-api.php.',
+            'parametros' => array(
+                'id' => array(
+                    'tipo' => 'inteiro',
+                    'omissao' => '',
+                    'minimo' => 1,
+                    'descricao' => 'Orçamento a abrir. Sem id, ou com um id que não existe, abre um orçamento novo.',
+                    'lido' => 'orcamentos.php:879',
+                ),
+            ),
+        ),
         'carrousel.php' => array(
             'titulo' => 'Carrosséis',
             'tipo' => 'pagina', 'guarda' => 'admin', 'metodos' => array('GET'),
@@ -787,6 +801,36 @@ function mp_parametros_registo()
                     'invalido' => 'erro',
                     'lido' => 'materiais-api.php:455',
                 ),
+            ),
+        ),
+
+        'orcamentos-api.php' => array(
+            'titulo' => 'API dos orçamentos',
+            'tipo' => 'api', 'guarda' => 'admin', 'metodos' => array('GET', 'POST'),
+            'descricao' => 'Orçamentos, definições, preços do catálogo e PDF.',
+            'parametros' => array(
+                'action' => array(
+                    'tipo' => 'enum', 'omissao' => 'data', 'descricao' => 'Função a executar.',
+                    'valores' => array(
+                        'data' => 'ler lista, definições e catálogo (GET)',
+                        'parametros' => 'esquema desta API (GET)',
+                        'obter' => 'um orçamento (GET)',
+                        'preco' => 'linhas de um produto do catálogo (GET)',
+                        'pdf' => 'PDF de um orçamento gravado (GET)',
+                        'gravar' => 'gravar um orçamento (POST)',
+                        'apagar' => 'apagar um orçamento (POST)',
+                        'definicoes' => 'gravar as definições (POST)',
+                        'previa' => 'PDF do que está no editor (POST)',
+                    ),
+                    'invalido' => 'erro',
+                    'lido' => 'orcamentos-api.php:172',
+                ),
+                'id' => array('tipo' => 'inteiro', 'omissao' => 0, 'minimo' => 1, 'descricao' => 'Orçamento, para obter ou pdf.', 'invalido' => 'erro', 'lido' => 'orcamentos-api.php:192,249'),
+                'slug' => array('tipo' => 'texto', 'omissao' => '', 'descricao' => 'Produto do content/pricing.json.', 'depende' => array('action' => 'preco'), 'invalido' => 'erro', 'lido' => 'orcamentos-api.php:201'),
+                'chave' => array('tipo' => 'texto', 'omissao' => '', 'descricao' => 'Medida (priceKey) do produto.', 'depende' => array('action' => 'preco'), 'invalido' => 'erro', 'lido' => 'orcamentos-api.php:202'),
+                'qtd' => array('tipo' => 'inteiro', 'omissao' => 1, 'minimo' => 1, 'descricao' => 'Quantidade, até 1000.', 'depende' => array('action' => 'preco'), 'lido' => 'orcamentos-api.php:203'),
+                'imagens' => array('tipo' => 'inteiro', 'omissao' => 0, 'minimo' => 0, 'descricao' => 'Imagens originais a acrescentar.', 'depende' => array('action' => 'preco'), 'lido' => 'orcamentos-api.php:204'),
+                'descarregar' => array('tipo' => 'flag', 'omissao' => '', 'descricao' => 'Descarrega o PDF em vez de o mostrar no browser.', 'depende' => array('action' => 'pdf'), 'lido' => 'orcamentos-api.php:253'),
             ),
         ),
 
